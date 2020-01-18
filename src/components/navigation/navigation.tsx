@@ -15,11 +15,15 @@ export interface NavigationProps { }
 
 export class Navigation extends React.PureComponent<NavigationProps> {
   public render() {
-    console.log("test")
-    axios.get('http://127.0.0.1:8000/api/').then(res => {
+    axios.get('rack-city-dev.herokuapp.com/api/').then(res => {
       console.log(res.data);
 
     })
+
+    // axios.get('http://127.0.0.1:8000/api/').then(res => {
+    //    console.log(res.data);
+ 
+    //  })
 
     return (
       <Navbar className={Classes.DARK}>
