@@ -5,13 +5,19 @@ class ITModel(models.Model):
     vendor = models.CharField(max_length=120)
     model_number = models.CharField(max_length=120)
     height = models.IntegerField()
-    display_color = models.CharField(max_length=120)
-    num_ethernet_ports = models.IntegerField()
-    num_power_ports = models.IntegerField()
-    cpu = models.CharField(max_length=120)
-    memory_gb = models.IntegerField()
-    storage = models.CharField(max_length=120)
+    display_color = models.CharField(max_length=120, null=True, blank=True)
+    num_ethernet_ports = models.IntegerField(null=True, blank=True)
+    num_power_ports = models.IntegerField(null=True, blank=True)
+    cpu = models.CharField(max_length=120, null=True, blank=True)
+    memory_gb = models.IntegerField(null=True, blank=True)
+    storage = models.CharField(max_length=120, null=True, blank=True)
     comment = models.TextField()
+
+    def save(self, *args, **kwargs): 
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs): 
+        super().delete(*args, **kwargs)
 
     class Meta: 
         ordering = [model_id]

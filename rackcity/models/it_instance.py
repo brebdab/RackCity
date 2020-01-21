@@ -1,16 +1,22 @@
 from django.db import models
 from .it_model import ITModel
+from .user import User
 
 class ITInstance(models.Model): 
     instance_id = models.CharField(max_length=120)
-    model_id = models.CharField(max_length=120) # id to specify model
     model = models.ForeignKey(
         ITModel, 
         on_delete=models.CASCADE,
         verbose_name="related model",
-    ) # links to the actual ITModel model
-    owner_used_id = models.CharField(max_length=120)
-    comment = models.TextField()
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=model.CASCADE, 
+        verbose_name="related user",
+        null=True, 
+        blank=True,
+    )
+    comment = models.TextField(null=True, blank=True)
     unique_id = models.CharField(max_length=120)
 
     def save(self, *args, **kwargs): 
