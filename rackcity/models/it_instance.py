@@ -11,7 +11,7 @@ class ITInstance(models.Model):
     )
     user = models.ForeignKey(
         User,
-        on_delete=model.CASCADE, 
+        on_delete=models.CASCADE, 
         verbose_name="related user",
         null=True, 
         blank=True,
@@ -26,7 +26,5 @@ class ITInstance(models.Model):
         super().delete(*args, **kwargs)
 
     class Meta: 
-        ordering = [unique_id]
-
         def __str__(self):
             return self.instance_id

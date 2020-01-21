@@ -10,7 +10,5 @@ class User(models.Model):
         super().delete(*args, **kwargs)
 
     class Meta: 
-        ordering = [user_id]
-
         def __str__(self):
             return self.user_id
