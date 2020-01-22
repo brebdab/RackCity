@@ -3,6 +3,7 @@ import * as React from "react";
 
 import {Cell, Column,Table } from "@blueprintjs/table";
 import "@blueprintjs/table/lib/css/table.css";
+import "@blueprintjs/core/lib/css/blueprint.css";
 import {  Tab, Tabs, Classes, NonIdealState } from "@blueprintjs/core";
 import './elementView.scss';
 //import { Classes} from "@blueprintjs/core";
@@ -145,28 +146,60 @@ export class ElementTable extends React.Component<ElementTableProps, ElementTabl
         console.log(this.state.columns)
     
         return (
-            
-         <Table 
-         className = "table"
-            numRows={2}
-            >
+            <table className="bp3-html-table .bp3-interactive">
+                <thead>
                 {this.state.columns.map((col:string) => {
                     console.log((col)) 
-                    return (<Column name = {col} cellRenderer = {this.cellRenderer}/>);
+                    return (<th>{col}</th>);
+
 
                 })
             }
-             {/* {this.state.data.map(item => {
+
+                </thead>
+            <tbody>
             
-                 const {title,content} = item; 
-                 console.log(title)
-                 return (<Column name = {this.state.columns[]} cellRenderer = {this.cellRenderer}/>);
+               
+               {
+                   this.state.data.map((item:any)=>
+              
+                   {
+                    return <tr>
+                       {this.state.columns.map((col:string) => {
+                       return <td>{item[col]}</td>
+                   })
+                }
+                
+                   </tr>
+                   })
 
-             }
+
+
+               }
+         
+            </tbody>
+        </table> 
+        //<Table 
+        //  className = "table"
+        //     numRows={2}
+        //     >
+        //         {this.state.columns.map((col:string) => {
+        //             console.log((col)) 
+        //             return (<Column name = {col} cellRenderer = {this.cellRenderer}/>);
+
+        //         })
+        //     }
+        //      {/* {this.state.data.map(item => {
+            
+        //          const {title,content} = item; 
+        //          console.log(title)
+        //          return (<Column name = {this.state.columns[]} cellRenderer = {this.cellRenderer}/>);
+
+        //      }
                  
-             )} */}
+        //      )} */}
 
-        </Table>
+        // </Table>
 
         )
         
