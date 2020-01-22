@@ -16,6 +16,8 @@ class ITInstance(models.Model):
         Rack,
         on_delete=models.CASCADE,
         verbose_name="related rack",
+        null=True,
+        blank=True,
     )
     user = models.ForeignKey(
         User,

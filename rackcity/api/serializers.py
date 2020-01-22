@@ -18,7 +18,7 @@ class ArticleSerializer(serializers.ModelSerializer):
 class ITInstanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = ITInstance
-        fields = ('instance_id', 'model', 'user', 'comment', 'unique_id')
+        fields = ('hostname', 'height', 'model', 'rack', 'user', 'comment')
 
 
 class ITModelSerializer(serializers.ModelSerializer):
@@ -42,7 +42,7 @@ class ITModelSerializer(serializers.ModelSerializer):
 class RackSerializer(serializers.ModelSerializer):
     class Meta:
         model = Rack
-        fields = ('rack_id', 'row_letter', 'rack_num')
+        fields = ('rack_id', 'row_letter', 'rack_num', 'height')
 
 
 class UserSerializer(serializers.ModelSerializer):
