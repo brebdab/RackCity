@@ -20,7 +20,6 @@ def model_list(request):
             return JsonResponse(serializer.data, status=201)
         return JsonResponse(serializer.errors, status=400)
 
-
 def model_detail(request, pk):
     """
     Retrieve, update or delete a model.
