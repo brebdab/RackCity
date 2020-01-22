@@ -1,5 +1,5 @@
 from django.urls import path
-from rackcity.api import views
+from rackcity import views
 
 urlpatterns = [
     path('models/', views.model_list),
