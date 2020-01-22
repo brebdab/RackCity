@@ -9,6 +9,7 @@ import './elementView.scss';
 import { useState, useEffect,useMemo } from "react";
 import axios, { AxiosResponse } from 'axios';
 import { ENGINE_METHOD_NONE } from "constants";
+import { constants } from "crypto";
 
 
 export interface ElementViewProps { 
@@ -39,11 +40,15 @@ export class ElementView extends React.PureComponent<ElementViewProps> {
          );
     }
 }
-// interface ElementTableState {
-//     columns: Array<String>,
-//     data:  any,
+interface ElementTableState {
+    columns: Array<string>,
+    data:  any,
 
-// }
+}
+interface ElementTableProps {
+
+
+}
 //function getData(){
 // const data = axios.get('https://rack-city-dev.herokuapp.com/api/').then(res => {
 //     console.log(res.data);
@@ -52,11 +57,17 @@ export class ElementView extends React.PureComponent<ElementViewProps> {
 //   });
 //   return data;
 // }
-export class ElementTable extends React.Component<{}>{
-    public state = {
-        columns: [],
-        data: [],
+export class ElementTable extends React.Component<ElementTableProps, ElementTableState>{
+  
+   
+       public state: ElementTableState = { 
+            columns : [],
+            data: [],
+
+        
     }
+       
+    
     
     componentDidMount(){
         // this.setState({data:getData()})
@@ -65,23 +76,36 @@ export class ElementTable extends React.Component<{}>{
  
     //  })
         axios.get('https://rack-city-dev.herokuapp.com/api/').then(res => {
+            console.log("test")
             console.log(res.data)
+            const cols : Array<Array<string>> = res.data.map((item: any)=> {
+                console.log(Object.keys(item));
+                return Object.keys(item);
+            // title: `${item.title}`,
+            // content: `${item.content}`
+
+            });
             this.setState({
+                columns: cols[0],
                 // columns: res.data.map((item: any)=> {
-                //     console.log(Object.keys(item))
-              
+                //     console.log(Object.keys(item));
+                //     return Object.keys(item);
                 // // title: `${item.title}`,
                 // // content: `${item.content}`
 
                 // }),
-            data: res.data.map((item: { title: any; content: any; }) => {
-                 title: `${item.title}`;
-                 content: `${item.content}`
+            data: res.data.map((item: { title: any; content: any; id: any; }) => ({
+                 title: `${item.title}`,
+                 content: `${item.content}`,
+                 id : `${item.id}`
+
 
             
-            })
+            }))
         }
+        
             );
+            console.log("After set state");
 
             // .then((items: any) => this.setState({
             //     data: items
@@ -90,21 +114,24 @@ export class ElementTable extends React.Component<{}>{
             // this.setState({
             //     data: res.data
 
-      
-            console.log(this.state.data)
+         
         });
+
+
       
     }
     public render(){
+        console.log("render")
+        console.log(this.state.columns)
     
         return (
             
          <Table 
          className = "table"
-            numRows={4}
+            numRows={5}
             >
-
-                {this.state.columns.map(col => {
+                {this.state.columns.map((col:string) => {
+                    console.log((col)) 
                     return (<Column name = {col} cellRenderer = {this.cellRenderer}/>);
 
                 })
@@ -125,11 +152,14 @@ export class ElementTable extends React.Component<{}>{
         
 
     }
-    cellRenderer = (rowID:number )=>{
+    cellRenderer = (rowID:number,colID:number )=>{
         const item = this.state.data[rowID];
-        console.log(item)
-        const {title,content} = item; 
-        return <Cell>{content}</Cell>
+        
+        const col = this.state.columns[colID]
+        console.log(`item.${col}`)
+       
+        const {idd, title,content} = item; 
+        return <Cell>{title}</Cell>
     }
 }
 
