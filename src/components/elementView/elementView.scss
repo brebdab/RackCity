@@ -3,9 +3,9 @@
     outline:none;
     width:10pt;
 }
-table {
+.table {
     border-spacing: 0;
-    border: 1px solid #ededed;
+    border: 0px solid #ededed;
   }
   table tr:last-child td {
     border-bottom: 0;
@@ -22,7 +22,7 @@ table {
   table td:last-child {
     border-right: 0;
   }
-  table tr:nth-child(even) {
+  .table tr:nth-child(even) {
     background-color:grey;
   }
   
