@@ -1,10 +1,8 @@
 from rest_framework.parsers import JSONParser
 from django.http import HttpResponse, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from rackcity.models import ITModel
 from rackcity.api.serializers import ITModelSerializer
 
-@csrf_exempt
 def model_list(request):
     """
     List all models, or create a new model.
@@ -23,7 +21,6 @@ def model_list(request):
         return JsonResponse(serializer.errors, status=400)
 
 
-@csrf_exempt
 def model_detail(request, pk):
     """
     Retrieve, update or delete a model.
