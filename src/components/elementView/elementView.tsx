@@ -29,9 +29,9 @@ export class ElementView extends React.PureComponent<ElementViewProps> {
             renderActiveTabPanelOnly={false}
             vertical={true}
         >
-            <Tab className="tab" id="instance" title="Instances" panel={<ElementTable getData = {getModels} />} />
-            <Tab  className="tab"id="model" title="Models" panel={<ElementTable getData = {getModels} />} />
-            <Tab  className="tab"id="rack" title="Racks" />
+            <Tab className="tab" id="instance" title="Instances" panel={<ElementTable element = "instances"/>} />
+            <Tab  className="tab"id="model" title="Models" panel={<ElementTable element = "models"  />} />
+            <Tab  className="tab"id="rack" title="Racks" panel={<ElementTable element = "racks"  />}/>
             <Tabs.Expander />
             {/* <InputGroup className={Classes.FILL} type="text" placeholder="Search..." /> */}
         </Tabs>
@@ -47,16 +47,13 @@ interface ElementTableState {
 
 }
 interface ElementTableProps {
-    getData() : Promise<{
-        cols: string[][];
-        data: any;
-    }>
+    element: string,
 
 
 }
 
-async function getModels(){
-    return await axios.get('https://rack-city-dev.herokuapp.com/api/models/').then(res => {
+async function getData(path:string ){
+    return await axios.get('https://rack-city-dev.herokuapp.com/api/' + path ).then(res => {
         console.log("test")
         const data = res.data;
         const cols : Array<Array<string>> = data.map((item: any)=> {
@@ -85,7 +82,7 @@ export class ElementTable extends React.Component<ElementTableProps, ElementTabl
     async componentDidMount(){
 
   
-   const resp = await this.props.getData();
+   const resp = await getData(this.props.element);
     
         console.log(resp.cols[0])
         this.setState({
