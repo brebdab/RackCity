@@ -5,7 +5,7 @@ import {Cell, Column,Table } from "@blueprintjs/table";
 
 import "@blueprintjs/core/lib/css/blueprint.css";
 import {  Tab, Tabs, Classes, NonIdealState } from "@blueprintjs/core";
-// import './elementView.scss';
+import './elementView.scss';
 //import { Classes} from "@blueprintjs/core";
 import { useState, useEffect,useMemo } from "react";
 import axios, { AxiosResponse } from 'axios';
