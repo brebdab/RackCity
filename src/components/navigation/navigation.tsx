@@ -28,7 +28,7 @@ export class Navigation extends React.PureComponent<NavigationProps> {
     return (
       <Navbar className={Classes.DARK}>
         <NavbarGroup>
-          <NavbarHeading>HyperSoft</NavbarHeading>
+          <NavbarHeading>HypoSoft</NavbarHeading>
           
           <NavbarDivider />
        

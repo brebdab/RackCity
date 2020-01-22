@@ -2,10 +2,10 @@ import * as React from "react";
 
 
 import {Cell, Column,Table } from "@blueprintjs/table";
-import "@blueprintjs/table/lib/css/table.css";
+
 import "@blueprintjs/core/lib/css/blueprint.css";
 import {  Tab, Tabs, Classes, NonIdealState } from "@blueprintjs/core";
-import './elementView.scss';
+// import './elementView.scss';
 //import { Classes} from "@blueprintjs/core";
 import { useState, useEffect,useMemo } from "react";
 import axios, { AxiosResponse } from 'axios';
@@ -29,8 +29,8 @@ export class ElementView extends React.PureComponent<ElementViewProps> {
             renderActiveTabPanelOnly={false}
             vertical={true}
         >
-            <Tab className="tab" id="instance" title="Instances" />
-            <Tab  className="tab"id="model" title="Models" panel={<ElementTable />} />
+            <Tab className="tab" id="instance" title="Instances" panel={<ElementTable getData = {getModels} />} />
+            <Tab  className="tab"id="model" title="Models" panel={<ElementTable getData = {getModels} />} />
             <Tab  className="tab"id="rack" title="Racks" />
             <Tabs.Expander />
             {/* <InputGroup className={Classes.FILL} type="text" placeholder="Search..." /> */}
@@ -47,31 +47,28 @@ interface ElementTableState {
 
 }
 interface ElementTableProps {
+    getData() : Promise<{
+        cols: string[][];
+        data: any;
+    }>
 
 
 }
-//function getData(){
-// const data = axios.get('https://rack-city-dev.herokuapp.com/api/').then(res => {
-//     console.log(res.data);
-//     return res.data();
 
-//   });
-//   return data;
-async function func(){
-    // this.setState({data:getData()})
-     // axios.get('http://127.0.0.1:8000/api/').then(res => {
-//    console.log(res.data);
+async function getModels(){
+    return await axios.get('https://rack-city-dev.herokuapp.com/api/models/').then(res => {
+        console.log("test")
+        const data = res.data;
+        const cols : Array<Array<string>> = data.map((item: any)=> {
+            console.log(Object.keys(item));
+            return Object.keys(item);     
 
-//  })
-let res = await axios.get('https://api.github.com/users/janbodnar');
+        });
+        return {cols,data}
 
-const nOfFollowers = res.data.followers;
-const location = res.data.test;
-return {nOfFollowers,location};
-// }
+     
+    });
 }
-
-
 export class ElementTable extends React.Component<ElementTableProps, ElementTableState>{
   
    
@@ -82,61 +79,22 @@ export class ElementTable extends React.Component<ElementTableProps, ElementTabl
         
     }
        
+
     
     
-    componentDidMount(){
-        // this.setState({data:getData()})
-         // axios.get('http://127.0.0.1:8000/api/').then(res => {
-    //    console.log(res.data);
- 
-    //  })
+    async componentDidMount(){
 
   
+   const resp = await this.props.getData();
+    
+        console.log(resp.cols[0])
+        this.setState({
+            columns: resp.cols[0],
    
-        axios.get('https://rack-city-dev.herokuapp.com/api/models/').then(res => {
-            console.log("test")
-            console.log(res.data)
-            const cols : Array<Array<string>> = res.data.map((item: any)=> {
-                console.log(Object.keys(item));
-                return Object.keys(item);
-                
-            // title: `${item.title}`,
-            // content: `${item.content}`
-
-            });
-            console.log(cols[0])
-            this.setState({
-                columns: cols[0],
-                // columns: res.data.map((item: any)=> {
-                //     console.log(Object.keys(item));
-                //     return Object.keys(item);
-                // // title: `${item.title}`,
-                // // content: `${item.content}`
-
-                // }),
-            // data: res.data.map((item: { title: any; content: any; id: any; }) => ({
-            //      title: `${item.title}`,
-            //      content: `${item.content}`,
-            //      id : `${item.id}`
-
-
-            
-            // }))
-                data : res.data
-        }
-        
-            );
-            console.log("After set state");
-
-            // .then((items: any) => this.setState({
-            //     data: items
-            // }))
-
-            // this.setState({
-            //     data: res.data
-
-         
-        });
+            data : resp.data
+    }
+    
+        );
 
 
       
@@ -146,7 +104,8 @@ export class ElementTable extends React.Component<ElementTableProps, ElementTabl
         console.log(this.state.columns)
     
         return (
-            <table className="bp3-html-table .bp3-interactive">
+            <div className = "ElementTable">
+           <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered">
                 <thead>
                 {this.state.columns.map((col:string) => {
                     console.log((col)) 
@@ -179,27 +138,8 @@ export class ElementTable extends React.Component<ElementTableProps, ElementTabl
          
             </tbody>
         </table> 
-        //<Table 
-        //  className = "table"
-        //     numRows={2}
-        //     >
-        //         {this.state.columns.map((col:string) => {
-        //             console.log((col)) 
-        //             return (<Column name = {col} cellRenderer = {this.cellRenderer}/>);
-
-        //         })
-        //     }
-        //      {/* {this.state.data.map(item => {
-            
-        //          const {title,content} = item; 
-        //          console.log(title)
-        //          return (<Column name = {this.state.columns[]} cellRenderer = {this.cellRenderer}/>);
-
-        //      }
-                 
-        //      )} */}
-
-        // </Table>
+        </div>
+ 
 
         )
         
