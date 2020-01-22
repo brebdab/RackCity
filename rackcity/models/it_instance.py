@@ -1,14 +1,21 @@
 from django.db import models
 from .it_model import ITModel
+from .rack import Rack
 from .user import User
 
 
 class ITInstance(models.Model):
-    instance_id = models.CharField(max_length=120)
+    hostname = models.CharField(max_length=120)
+    height = models.IntegerField()
     model = models.ForeignKey(
         ITModel,
         on_delete=models.CASCADE,
         verbose_name="related model",
+    )
+    rack = models.ForeignKey(
+        Rack,
+        on_delete=models.CASCADE,
+        verbose_name="related rack",
     )
     user = models.ForeignKey(
         User,
@@ -18,7 +25,6 @@ class ITInstance(models.Model):
         blank=True,
     )
     comment = models.TextField(null=True, blank=True)
-    unique_id = models.CharField(max_length=120)
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
