@@ -1,9 +1,8 @@
 import * as React from "react";
-import axios from 'axios';
-import './navigation.css';
+import axios from "axios";
+import "./navigation.css";
+import { AnchorButton } from "@blueprintjs/core";
 import {
-  Alignment,
-  AnchorButton,
   Classes,
   Navbar,
   NavbarGroup,
@@ -11,26 +10,28 @@ import {
   NavbarDivider
 } from "@blueprintjs/core";
 
-export interface NavigationProps { }
+export interface NavigationProps {}
 
 export class Navigation extends React.PureComponent<NavigationProps> {
   public render() {
-    axios.get('https://rack-city-dev.herokuapp.com/api/').then(res => {
+    axios.get("https://rack-city-dev.herokuapp.com/api/").then(res => {
       console.log(res.data);
-
-    })
+    });
 
     // axios.get('http://127.0.0.1:8000/api/').then(res => {
     //    console.log(res.data);
- 
+
     //  })
 
     return (
       <Navbar className={Classes.DARK}>
-        <NavbarGroup align={Alignment.LEFT}>
-          <NavbarHeading>Blueprint Sandbox</NavbarHeading>
+        <NavbarGroup>
+          <NavbarHeading>HypoSoft</NavbarHeading>
+
           <NavbarDivider />
-          <AnchorButton
+
+          <AnchorButton icon="home" text="Home" minimal />
+          {/* <AnchorButton
             href="http://blueprintjs.com/docs/v2/"
             text="Docs"
             target="_blank"
@@ -43,7 +44,7 @@ export class Navigation extends React.PureComponent<NavigationProps> {
             target="_blank"
             minimal
             rightIcon="code"
-          />
+          /> */}
         </NavbarGroup>
       </Navbar>
     );

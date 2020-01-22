@@ -1,5 +1,17 @@
 {
   "compilerOptions": {
+     "typeRoots": [
+            "node_modules/@types"
+        ],
+        "plugins": [
+          {
+            "name": "typescript-tslint-plugin",
+            "alwaysShowRuleFailuresAsWarnings": false,
+            "ignoreDefinitionFiles": true,
+            "configFile": "../tslint.json",
+            "suppressWhileTypeErrorsPresent": false
+          }
+        ],
     "target": "es5",
     "lib": [
       "dom",

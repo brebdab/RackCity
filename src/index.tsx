@@ -1,14 +1,17 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
+import './index.scss';
 import Navigation from './components/navigation/navigation';
+import ElementView from './components/elementView/elementView';
 import * as serviceWorker from './serviceWorker';
-import "normalize.css";
+import "normalize.css/normalize.css";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import "@blueprintjs/icons/lib/css/blueprint-icons.css";
+
 const App = () => (
     <div>
         <Navigation />
+        <ElementView />
 
 
     </div>
