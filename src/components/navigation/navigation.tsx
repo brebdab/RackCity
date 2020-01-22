@@ -1,15 +1,15 @@
 import * as React from "react";
 import axios from 'axios';
 import './navigation.css';
+import { AnchorButton } from "@blueprintjs/core";
 import {
-  Alignment,
-  AnchorButton,
   Classes,
   Navbar,
   NavbarGroup,
   NavbarHeading,
   NavbarDivider
 } from "@blueprintjs/core";
+
 
 export interface NavigationProps { }
 
@@ -27,10 +27,13 @@ export class Navigation extends React.PureComponent<NavigationProps> {
 
     return (
       <Navbar className={Classes.DARK}>
-        <NavbarGroup align={Alignment.LEFT}>
-          <NavbarHeading>Blueprint Sandbox</NavbarHeading>
+        <NavbarGroup>
+          <NavbarHeading>HyperSoft</NavbarHeading>
+          
           <NavbarDivider />
-          <AnchorButton
+       
+          <AnchorButton icon="home" text = "Home" minimal/>
+          {/* <AnchorButton
             href="http://blueprintjs.com/docs/v2/"
             text="Docs"
             target="_blank"
@@ -43,7 +46,7 @@ export class Navigation extends React.PureComponent<NavigationProps> {
             target="_blank"
             minimal
             rightIcon="code"
-          />
+          /> */}
         </NavbarGroup>
       </Navbar>
     );
