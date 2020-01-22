@@ -7,7 +7,7 @@ This project is broken up into a backend and frontend. The backend contains the 
 Run the following commands to get started:
 
 ```json
-virtualenv env
+virtualenv env # OR: source <env dir name>/bin/activate
 pip install -r requirements.txt
 npm i
 npm run build
@@ -39,4 +39,22 @@ and this on windows:
 
 ```json
 rmdir .git
+```
+## Migrations
+
+Whenever any changes are made to the Django models, these changes are not automatically applied to the app's database. These changes must be applied via migrations.
+
+In order to reflect model changes in a new migration, run: 
+```json
+python manage.py makemigrations
+```
+
+Once these migrations are created, apply them to the database with: 
+```json
+python manage.py migrate
+```
+
+You can also view all previous migrations with: 
+```json
+python manage.py showmigrations
 ```
