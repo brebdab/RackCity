@@ -3,6 +3,7 @@ from django.http import HttpResponse, JsonResponse
 from rackcity.models import ITModel
 from rackcity.api.serializers import ITModelSerializer
 
+
 def model_list(request):
     """
     List all models, or create a new model.
@@ -19,6 +20,7 @@ def model_list(request):
             serializer.save()
             return JsonResponse(serializer.data, status=201)
         return JsonResponse(serializer.errors, status=400)
+
 
 def model_detail(request, pk):
     """
