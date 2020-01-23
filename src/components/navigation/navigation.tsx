@@ -1,18 +1,19 @@
-import * as React from "react";
-import "./navigation.scss";
-import { Route, Link, BrowserRouter as Router, Switch } from 'react-router-dom';
-import { AnchorButton } from "@blueprintjs/core";
 import {
+  AnchorButton,
   Classes,
   Navbar,
+  NavbarDivider,
   NavbarGroup,
-  NavbarHeading,
-  NavbarDivider
+  NavbarHeading
 } from "@blueprintjs/core";
+import * as React from "react";
+import { RouteComponentProps } from "react-router";
+import { BrowserRouter as Router, withRouter } from "react-router-dom";
+import "./navigation.scss";
 
 export interface NavigationProps {}
 
-export class Navigation extends React.PureComponent<NavigationProps> {
+export class Navigation extends React.PureComponent<RouteComponentProps> {
   public render() {
     return (
       <Router>
@@ -23,6 +24,7 @@ export class Navigation extends React.PureComponent<NavigationProps> {
 
               <NavbarDivider />
               <AnchorButton
+                onClick={() => this.props.history.push("/")}
                 className="nav-bar-button"
                 icon="home"
                 text="Home"
@@ -35,4 +37,4 @@ export class Navigation extends React.PureComponent<NavigationProps> {
     );
   }
 }
-export default Navigation;
+export default withRouter(Navigation);

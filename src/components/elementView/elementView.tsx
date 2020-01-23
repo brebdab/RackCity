@@ -2,11 +2,12 @@ import { Classes, Tab, Tabs } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
+import { RouteComponentProps, withRouter } from "react-router";
 import "./elementView.scss";
 
-export interface ElementViewProps {}
+//export interface ElementViewProps {}
 
-export class ElementView extends React.PureComponent<ElementViewProps> {
+export class ElementView extends React.PureComponent<RouteComponentProps> {
   public render() {
     return (
       <Tabs
@@ -40,6 +41,7 @@ export class ElementView extends React.PureComponent<ElementViewProps> {
     );
   }
 }
+
 interface ElementTableState {
   columns: Array<string>;
   data: any;
@@ -59,6 +61,7 @@ async function getData(path: string) {
       return { cols, data };
     });
 }
+
 export class ElementTable extends React.Component<
   ElementTableProps,
   ElementTableState
@@ -105,4 +108,4 @@ export class ElementTable extends React.Component<
   }
 }
 
-export default ElementView;
+export default withRouter(ElementView);
