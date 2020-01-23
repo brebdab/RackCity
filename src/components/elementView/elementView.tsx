@@ -22,32 +22,26 @@ export class ElementView extends React.PureComponent<RouteComponentProps> {
           className="tab"
           id="instance"
           title="Instances"
-          panel={<ElementTable element="instances" />}
+          panel={
+            <ElementTable element="instances" history={this.props.history} />
+          }
         />
         <Tab
           className="tab"
           id="model"
           title="Models"
-          panel={<ElementTable element="models" />}
+          panel={<ElementTable element="models" history={this.props.history} />}
         />
         <Tab
           className="tab"
           id="rack"
           title="Racks"
-          panel={<ElementTable element="racks" />}
+          panel={<ElementTable element="racks" history={this.props.history} />}
         />
         <Tabs.Expander />
       </Tabs>
     );
   }
-}
-
-interface ElementTableState {
-  columns: Array<string>;
-  data: any;
-}
-interface ElementTableProps {
-  element: string;
 }
 
 async function getData(path: string) {
@@ -60,6 +54,15 @@ async function getData(path: string) {
       });
       return { cols, data };
     });
+}
+
+interface ElementTableState {
+  columns: Array<string>;
+  data: any;
+}
+interface ElementTableProps {
+  element: string;
+  history: any;
 }
 
 export class ElementTable extends React.Component<
@@ -94,7 +97,13 @@ export class ElementTable extends React.Component<
           <tbody>
             {this.state.data.map((item: any) => {
               return (
-                <tr>
+                <tr
+                  onClick={() =>
+                    this.props.history.push(
+                      "/" + this.props.element + "/" + "test_rid"
+                    )
+                  }
+                >
                   {this.state.columns.map((col: string) => {
                     return <td>{item[col]}</td>;
                   })}
