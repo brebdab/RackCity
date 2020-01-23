@@ -18,7 +18,7 @@ const App = () => (
       <Switch>
         <Route exact path="/" component={ElementView} />
         {/* Landing page shows table viewer */}
-        <Route path="/rack/:rid" component={RackView} />
+        <Route path="/racks/:rid" component={RackView} />
         {/* Rack view based on rack id (rid)*/}
         {/*<Route path="/rack" component={View}/> {/* path and which component to be rendered */}
         <Route component={Notfound} />
