@@ -4,6 +4,7 @@ import './index.scss';
 import { Route, Link, BrowserRouter as Router, Switch } from 'react-router-dom';
 import Navigation from './components/navigation/navigation';
 import ElementView from './components/elementView/elementView';
+import RackView from './components/detailedView/rackView/rackView';
 import Notfound from './components/fallback'; // 404 page
 import * as serviceWorker from './serviceWorker';
 import "normalize.css/normalize.css";
@@ -16,6 +17,7 @@ const App = () => (
           <Navigation />
           <Switch>
             <Route exact path="/" component={ElementView} /> {/* Landing page shows table viewer */}
+            <Route path="/rack/:rid" component={RackView} /> {/* Rack view based on rack id (rid)*/}
             {/*<Route path="/rack" component={View}/> {/* path and which component to be rendered */}
             <Route component={Notfound} />
           </Switch>
