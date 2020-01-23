@@ -1,280 +1,114 @@
+import { Classes, Tab, Tabs } from "@blueprintjs/core";
+import "@blueprintjs/core/lib/css/blueprint.css";
+import axios from "axios";
 import * as React from "react";
+import "./elementView.scss";
 
-
-import {Cell, Column,Table } from "@blueprintjs/table";
-import "@blueprintjs/table/lib/css/table.css";
-import {  Tab, Tabs, Classes, NonIdealState } from "@blueprintjs/core";
-import './elementView.scss';
-//import { Classes} from "@blueprintjs/core";
-import { useState, useEffect,useMemo } from "react";
-import axios, { AxiosResponse } from 'axios';
-import { ENGINE_METHOD_NONE } from "constants";
-import { constants } from "crypto";
-
-
-export interface ElementViewProps { 
-    
-}
+export interface ElementViewProps {}
 
 export class ElementView extends React.PureComponent<ElementViewProps> {
-    public render() {
-        return (
-
-            <Tabs
-             className = {Classes.DARK}
-            animate= {true}
-            id="ElementViewer"
-            key={"vertical"}
-            renderActiveTabPanelOnly={false}
-            vertical={true}
-        >
-            <Tab className="tab" id="instance" title="Instances" />
-            <Tab  className="tab"id="model" title="Models" panel={<ElementTable />} />
-            <Tab  className="tab"id="rack" title="Racks" />
-            <Tabs.Expander />
-            {/* <InputGroup className={Classes.FILL} type="text" placeholder="Search..." /> */}
-        </Tabs>
-
-
-
-         );
-    }
+  public render() {
+    return (
+      <Tabs
+        className={Classes.DARK}
+        animate={true}
+        id="ElementViewer"
+        key={"vertical"}
+        renderActiveTabPanelOnly={false}
+        vertical={true}
+      >
+        <Tab
+          className="tab"
+          id="instance"
+          title="Instances"
+          panel={<ElementTable element="instances" />}
+        />
+        <Tab
+          className="tab"
+          id="model"
+          title="Models"
+          panel={<ElementTable element="models" />}
+        />
+        <Tab
+          className="tab"
+          id="rack"
+          title="Racks"
+          panel={<ElementTable element="racks" />}
+        />
+        <Tabs.Expander />
+        {/* <InputGroup className={Classes.FILL} type="text" placeholder="Search..." /> */}
+      </Tabs>
+    );
+  }
 }
 interface ElementTableState {
-    columns: Array<string>,
-    data:  any,
-
+  columns: Array<string>;
+  data: any;
 }
 interface ElementTableProps {
-
-
-}
-//function getData(){
-// const data = axios.get('https://rack-city-dev.herokuapp.com/api/').then(res => {
-//     console.log(res.data);
-//     return res.data();
-
-//   });
-//   return data;
-async function func(){
-    // this.setState({data:getData()})
-     // axios.get('http://127.0.0.1:8000/api/').then(res => {
-//    console.log(res.data);
-
-//  })
-let res = await axios.get('https://api.github.com/users/janbodnar');
-
-const nOfFollowers = res.data.followers;
-const location = res.data.test;
-return {nOfFollowers,location};
-// }
+  element: string;
 }
 
+async function getData(path: string) {
+  return await axios
+    .get("https://rack-city-dev.herokuapp.com/api/" + path)
+    .then(res => {
+      console.log("test");
+      const data = res.data;
+      const cols: Array<Array<string>> = data.map((item: any) => {
+        console.log(Object.keys(item));
+        return Object.keys(item);
+      });
+      return { cols, data };
+    });
+}
+export class ElementTable extends React.Component<
+  ElementTableProps,
+  ElementTableState
+> {
+  public state: ElementTableState = {
+    columns: [],
+    data: []
+  };
 
-export class ElementTable extends React.Component<ElementTableProps, ElementTableState>{
-  
-   
-       public state: ElementTableState = { 
-            columns : [],
-            data: [],
+  async componentDidMount() {
+    const resp = await getData(this.props.element);
 
-        
-    }
-       
-    
-    
-    componentDidMount(){
-        // this.setState({data:getData()})
-         // axios.get('http://127.0.0.1:8000/api/').then(res => {
-    //    console.log(res.data);
- 
-    //  })
+    console.log(resp.cols[0]);
+    this.setState({
+      columns: resp.cols[0],
 
-  
-   
-        axios.get('https://rack-city-dev.herokuapp.com/api/models/').then(res => {
-            console.log("test")
-            console.log(res.data)
-            const cols : Array<Array<string>> = res.data.map((item: any)=> {
-                console.log(Object.keys(item));
-                return Object.keys(item);
-                
-            // title: `${item.title}`,
-            // content: `${item.content}`
+      data: resp.data
+    });
+  }
+  public render() {
+    console.log("render");
+    console.log(this.state.columns);
 
-            });
-            console.log(cols[0])
-            this.setState({
-                columns: cols[0],
-                // columns: res.data.map((item: any)=> {
-                //     console.log(Object.keys(item));
-                //     return Object.keys(item);
-                // // title: `${item.title}`,
-                // // content: `${item.content}`
-
-                // }),
-            // data: res.data.map((item: { title: any; content: any; id: any; }) => ({
-            //      title: `${item.title}`,
-            //      content: `${item.content}`,
-            //      id : `${item.id}`
-
-
-            
-            // }))
-                data : res.data
-        }
-        
-            );
-            console.log("After set state");
-
-            // .then((items: any) => this.setState({
-            //     data: items
-            // }))
-
-            // this.setState({
-            //     data: res.data
-
-         
-        });
-
-
-      
-    }
-    public render(){
-        console.log("render")
-        console.log(this.state.columns)
-    
-        return (
-            
-         <Table 
-         className = "table"
-            numRows={2}
-            >
-                {this.state.columns.map((col:string) => {
-                    console.log((col)) 
-                    return (<Column name = {col} cellRenderer = {this.cellRenderer}/>);
-
-                })
-            }
-             {/* {this.state.data.map(item => {
-            
-                 const {title,content} = item; 
-                 console.log(title)
-                 return (<Column name = {this.state.columns[]} cellRenderer = {this.cellRenderer}/>);
-
-             }
-                 
-             )} */}
-
-        </Table>
-
-        )
-        
-
-    }
-    cellRenderer = (rowID:number,colID:number )=>{
-        const item = this.state.data[rowID];
-        
-        const col = this.state.columns[colID]
-        let val = '';
-        for (let index = 0; index < this.state.columns.length; index++){
-            const colName = this.state.columns[index];
-            if(index === colID){
-                val = item[colName]
-            }
-        }
-
-        
-
-        
-        // const {id, title,content} = item; 
-        // if (colID ===0){
-        //     val = id       
-        //   }
-        //   if (colID ===1){
-        //       val = title
-        //   }
-        //   else{
-        //       val= content
-        //   }
-          
-          console.log(colID,rowID,val)
-        return <Cell>{val}</Cell>
-    }
+    return (
+      <div className="ElementTable">
+        <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered">
+          <thead>
+            {this.state.columns.map((col: string) => {
+              console.log(col);
+              return <th>{col}</th>;
+            })}
+          </thead>
+          <tbody>
+            {this.state.data.map((item: any) => {
+              return (
+                <tr>
+                  {this.state.columns.map((col: string) => {
+                    return <td>{item[col]}</td>;
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
 }
 
-
-const TableExample: React.FunctionComponent<{}> = () => (
-    <Table 
-        numRows={5}
-    >
-        <Column name = "test"/>
-
-        
-        </Table>
- 
-
-);
-
-
-
-
-    // // data state to store the TV Maze API data. Its initial value is an empty array
-    // const [data, setData] = useState([]);
-  
-    // // Using useEffect to call the API once mounted and set the data
-    // useEffect(() => {
-    //   (async () => {
-    //     const result = await axios("https://api.tvmaze.com/search/shows?q=snow");
-    //     setData(result.data);
-    //   })();
-    // }, []);
-
-    // const columns = useMemo(
-    //     () => [
-    //       {
-    //         // first group - TV Show
-    //         Header: "TV Show",
-    //         // First group columns
-    //         columns: [
-    //           {
-    //             Header: "Name",
-    //             accessor: "show.name"
-    //           },
-    //           {
-    //             Header: "Type",
-    //             accessor: "show.type"
-    //           }
-    //         ]
-    //       },
-    //       {
-    //         // Second group - Details
-    //         Header: "Details",
-    //         // Second group columns
-    //         columns: [
-    //           {
-    //             Header: "Language",
-    //             accessor: "show.language"
-    //           },
-    //           {
-    //             Header: "Genre(s)",
-    //             accessor: "show.genres"
-    //           },
-    //           {
-    //             Header: "Runtime",
-    //             accessor: "show.runtime"
-    //           },
-    //           {
-    //             Header: "Status",
-    //             accessor: "show.status"
-    //           }
-    //         ]
-    //       }
-    //     ],
-    //     []
-    //   );
-  
-
-
-
-export default ElementView
+export default ElementView;

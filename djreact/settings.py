@@ -1,10 +1,21 @@
 import os
-
+import dj_database_url
+import dotenv
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+dotenv_file = os.path.join(BASE_DIR, ".env")
+if os.path.isfile(dotenv_file):
+    dotenv.load_dotenv(dotenv_file)
 SECRET_KEY = '-05sgp9!deq=q1nltm@^^2cc+v29i(tyybv3v2t77qi66czazj'
 DEBUG = True
-## update these to include the current domain names
-ALLOWED_HOSTS = ['rack-city-dev.herokuapp.com','rack-city-staging.herokuapp.com' , 'rack-city-prod.heroku.app.com','127.0.0.1']
+# update these to include the current domain names
+ALLOWED_HOSTS = [
+    'rack-city-dev.herokuapp.com',
+    'rack-city-staging.herokuapp.com',
+    'rack-city-prod.heroku.app.com',
+    '127.0.0.1',
+    'localhost',
+]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -40,7 +51,6 @@ MIDDLEWARE = [
 ]
 
 
-
 ROOT_URLCONF = 'djreact.urls'
 
 TEMPLATES = [
@@ -61,18 +71,20 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'djreact.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#     }
+# }
+DATABASES = {}
+DATABASES['default'] = dj_database_url.config(conn_max_age=600)
 
 AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'}, # noqa
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'}, # noqa
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'}, # noqa
 ]
 
 LANGUAGE_CODE = 'en-us'
@@ -108,4 +120,3 @@ CSRF_COOKIE_NAME = "csrftoken"
 ACCOUNT_EMAIL_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = 'username'
 ACCOUNT_EMAIL_VERIFICATION = 'none'
-
