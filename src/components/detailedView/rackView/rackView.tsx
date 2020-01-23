@@ -1,10 +1,15 @@
 import * as React from "react";
+import { RouteComponentProps } from "react-router";
 
-export interface RackViewProps {};
+export interface RackViewProps { mId: string };
 
-export class RackView extends React.PureComponent<RackViewProps> {
+
+export class RackView extends React.PureComponent<RouteComponentProps> {
+
   public render() {
-    return <h1>rack</h1>
+    let params: any;
+    params = this.props.match.params
+    return <h1>rack {params.mId}</h1>
   }
 
 }
