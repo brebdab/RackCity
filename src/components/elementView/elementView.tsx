@@ -10,7 +10,7 @@ export class ElementView extends React.PureComponent<ElementViewProps> {
   public render() {
     return (
       <Tabs
-        className={Classes.DARK}
+        className={Classes.DARK + " element-view"}
         animate={true}
         id="ElementViewer"
         key={"vertical"}
@@ -82,9 +82,11 @@ export class ElementTable extends React.Component<
       <div className="ElementTable">
         <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered">
           <thead>
-            {this.state.columns.map((col: string) => {
-              return <th>{col}</th>;
-            })}
+            <tr>
+              {this.state.columns.map((col: string) => {
+                return <th>{col}</th>;
+              })}
+            </tr>
           </thead>
           <tbody>
             {this.state.data.map((item: any) => {
