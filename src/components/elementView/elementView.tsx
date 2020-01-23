@@ -36,7 +36,6 @@ export class ElementView extends React.PureComponent<ElementViewProps> {
           panel={<ElementTable element="racks" />}
         />
         <Tabs.Expander />
-        {/* <InputGroup className={Classes.FILL} type="text" placeholder="Search..." /> */}
       </Tabs>
     );
   }
@@ -53,10 +52,8 @@ async function getData(path: string) {
   return await axios
     .get("https://rack-city-dev.herokuapp.com/api/" + path)
     .then(res => {
-      console.log("test");
       const data = res.data;
       const cols: Array<Array<string>> = data.map((item: any) => {
-        console.log(Object.keys(item));
         return Object.keys(item);
       });
       return { cols, data };
@@ -74,7 +71,6 @@ export class ElementTable extends React.Component<
   async componentDidMount() {
     const resp = await getData(this.props.element);
 
-    console.log(resp.cols[0]);
     this.setState({
       columns: resp.cols[0],
 
@@ -82,15 +78,11 @@ export class ElementTable extends React.Component<
     });
   }
   public render() {
-    console.log("render");
-    console.log(this.state.columns);
-
     return (
       <div className="ElementTable">
         <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered">
           <thead>
             {this.state.columns.map((col: string) => {
-              console.log(col);
               return <th>{col}</th>;
             })}
           </thead>
