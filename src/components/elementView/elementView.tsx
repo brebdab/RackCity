@@ -13,7 +13,7 @@ export class ElementView extends React.PureComponent<ElementViewProps> {
         className={Classes.DARK + " element-view"}
         animate={true}
         id="ElementViewer"
-        key={"horizontal"}
+        key={"vertical"}
         renderActiveTabPanelOnly={false}
         vertical={true}
       >
