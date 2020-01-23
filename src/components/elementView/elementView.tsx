@@ -10,10 +10,10 @@ export class ElementView extends React.PureComponent<ElementViewProps> {
   public render() {
     return (
       <Tabs
-        className={Classes.DARK}
+        className={Classes.DARK + " element-view"}
         animate={true}
         id="ElementViewer"
-        key={"vertical"}
+        key={"horizontal"}
         renderActiveTabPanelOnly={false}
         vertical={true}
       >

@@ -1,6 +1,5 @@
 import * as React from "react";
-import axios from "axios";
-import "./navigation.css";
+import "./navigation.scss";
 import { AnchorButton } from "@blueprintjs/core";
 import {
   Classes,
@@ -20,7 +19,12 @@ export class Navigation extends React.PureComponent<NavigationProps> {
           <NavbarHeading>HypoSoft</NavbarHeading>
 
           <NavbarDivider />
-          <AnchorButton icon="home" text="Home" minimal />
+          <AnchorButton
+            className="nav-bar-button"
+            icon="home"
+            text="Home"
+            minimal
+          />
         </NavbarGroup>
       </Navbar>
     );
