@@ -1,45 +1,34 @@
 # Django + React Introduction
 
-[![alt text](https://github.com/justdjango/DjReact/blob/master/thumbnail.png "Logo")](https://youtu.be/uZgRbnIsgrA)
+
 
 This project is broken up into a backend and frontend. The backend contains the Django project which uses the Django Rest Framework to host a simple API. The frontend uses React and queries data from the API.
+
+
+## Backend Dev workflow: 
 
 Run the following commands to get started:
 
 ```json
-virtualenv env # OR: source <env dir name>/bin/activate
+source <env dir name>/bin/activate
 pip install -r requirements.txt
 npm i
-npm run build
-python manage.py runserver
+npm run build   ## note you need to rerun this step everytime there are changes in the front-end code 
+python manage.py runserver #only `http://127.0.0.1:8000` is whitelisted.
 ```
 
-To navigate back to the starting code of [video 2](https://www.youtube.com/watch?v=w-QJiQwlZzU&t=4s):
-
-```json
-git init
-git clone https://github.com/justdjango/DjReact.git
-cd DjReact
-git reset --hard 815eb83e0894d9bc5ebef66501721dc5063cf6a0
+## Frontend Dev workflow:
+I have found that it is easier to dev locally with the following workflow:
+First, run your Django project with the above commands.
+Then, start a node server with: 
+```bash
+npm start #only localhost:3000 is whitelisted 
 ```
 
-For [video 3](https://www.youtube.com/watch?v=BxzO2M7QcZw):
+## Corsheader issues for Local dev
 
-```json
-git reset --hard 3030f494a799e5b7996342e5176f7c604dcf868b
-```
+There are certain domains that are whitelisted under CORS_ORIGIN_WHITELIST in `settings.py`. If you are running code locally from any address that is not included in this, you will have to add it to this section. 
 
-Remove the git repo with this command on mac/linux:
-
-```json
-rm -rf .git
-```
-
-and this on windows:
-
-```json
-rmdir .git
-```
 ## Migrations
 
 Whenever any changes are made to the Django models, these changes are not automatically applied to the app's database. These changes must be applied via migrations.
