@@ -4,7 +4,8 @@ import {
   Navbar,
   NavbarDivider,
   NavbarGroup,
-  NavbarHeading
+  NavbarHeading,
+  Alignment
 } from "@blueprintjs/core";
 import * as React from "react";
 import { RouteComponentProps } from "react-router";
@@ -27,7 +28,16 @@ export class Navigation extends React.PureComponent<RouteComponentProps> {
                 onClick={() => this.props.history.push("/")}
                 className="nav-bar-button"
                 icon="home"
-                text="Home"
+                text="Home!!!!!!"
+                minimal
+              />
+            </NavbarGroup>
+            <NavbarGroup align={Alignment.RIGHT}>
+              <AnchorButton
+                onClick={() => this.props.history.push("/login")}
+                className="nav-bar-button"
+                icon="user"
+                text="Login"
                 minimal
               />
             </NavbarGroup>
