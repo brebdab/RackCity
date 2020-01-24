@@ -1,6 +1,7 @@
 import { Classes, Tab, Tabs } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
+import { API_ROOT } from "../../api-config";
 import * as React from "react";
 import { RouteComponentProps, withRouter } from "react-router";
 import "./elementView.scss";
@@ -45,8 +46,10 @@ export class ElementView extends React.PureComponent<RouteComponentProps> {
 }
 
 async function getData(path: string) {
+  console.log(API_ROOT + path);
   return await axios
-    .get("https://rack-city-dev.herokuapp.com/api/" + path)
+    //.get("https://rack-city-dev.herokuapp.com/api/" + path)
+    .get(API_ROOT + path)
     .then(res => {
       const data = res.data;
       const cols: Array<Array<string>> = data.map((item: any) => {
