@@ -2,11 +2,12 @@ import { Classes, Tab, Tabs } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
+import { RouteComponentProps, withRouter } from "react-router";
 import "./elementView.scss";
 
-export interface ElementViewProps {}
+//export interface ElementViewProps {}
 
-export class ElementView extends React.PureComponent<ElementViewProps> {
+export class ElementView extends React.PureComponent<RouteComponentProps> {
   public render() {
     return (
       <Tabs
@@ -21,31 +22,26 @@ export class ElementView extends React.PureComponent<ElementViewProps> {
           className="tab"
           id="instance"
           title="Instances"
-          panel={<ElementTable element="instances" />}
+          panel={
+            <ElementTable element="instances" history={this.props.history} />
+          }
         />
         <Tab
           className="tab"
           id="model"
           title="Models"
-          panel={<ElementTable element="models" />}
+          panel={<ElementTable element="models" history={this.props.history} />}
         />
         <Tab
           className="tab"
           id="rack"
           title="Racks"
-          panel={<ElementTable element="racks" />}
+          panel={<ElementTable element="racks" history={this.props.history} />}
         />
         <Tabs.Expander />
       </Tabs>
     );
   }
-}
-interface ElementTableState {
-  columns: Array<string>;
-  data: any;
-}
-interface ElementTableProps {
-  element: string;
 }
 
 async function getData(path: string) {
@@ -59,6 +55,16 @@ async function getData(path: string) {
       return { cols, data };
     });
 }
+
+interface ElementTableState {
+  columns: Array<string>;
+  data: any;
+}
+interface ElementTableProps {
+  element: string;
+  history: any;
+}
+
 export class ElementTable extends React.Component<
   ElementTableProps,
   ElementTableState
@@ -91,7 +97,13 @@ export class ElementTable extends React.Component<
           <tbody>
             {this.state.data.map((item: any) => {
               return (
-                <tr>
+                <tr
+                  onClick={() =>
+                    this.props.history.push(
+                      "/" + this.props.element + "/test_rid"
+                    )
+                  }
+                >
                   {this.state.columns.map((col: string) => {
                     return <td>{item[col]}</td>;
                   })}
@@ -105,4 +117,4 @@ export class ElementTable extends React.Component<
   }
 }
 
-export default ElementView;
+export default withRouter(ElementView);
