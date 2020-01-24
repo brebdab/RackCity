@@ -5,7 +5,7 @@
 This project is broken up into a backend and frontend. The backend contains the Django project which uses the Django Rest Framework to host a simple API. The frontend uses React and queries data from the API.
 
 
-## Backend Dev workflow: 
+##Dev workflow: 
 
 Run the following commands to get started:
 
@@ -14,15 +14,12 @@ source <env dir name>/bin/activate
 pip install -r requirements.txt
 npm i
 npm run build   ## note you need to rerun this step everytime there are changes in the front-end code 
-python manage.py runserver #only `http://127.0.0.1:8000` is whitelisted.
+python manage.py runserver 
 ```
 
-## Frontend Dev workflow:
-I have found that it is easier to dev locally with the following workflow:
-First, run your Django project with the above commands.
-Then, start a node server with: 
+In another terminal, run: 
 ```bash
-npm start #only localhost:3000 is whitelisted 
+npm start #This is only configured to  localhost:3000 is whitelisted 
 ```
 
 ## Corsheader issues for Local dev
