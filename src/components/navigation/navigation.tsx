@@ -28,7 +28,7 @@ export class Navigation extends React.PureComponent<RouteComponentProps> {
                 onClick={() => this.props.history.push("/")}
                 className="nav-bar-button"
                 icon="home"
-                text="Home!!!!!!"
+                text="Home"
                 minimal
               />
             </NavbarGroup>
