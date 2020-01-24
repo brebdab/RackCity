@@ -2,13 +2,18 @@
 from django.http import HttpResponse, JsonResponse
 from rackcity.models import ITModel
 from rackcity.api.serializers import ITModelSerializer
+from rest_framework.decorators import permission_classes, api_view
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
 
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
 def model_list(request):
     """
     List all models.
     """
     if request.method == 'GET':
+        # print(request.auth)
         models = ITModel.objects.all()
         serializer = ITModelSerializer(models, many=True)
         return JsonResponse(serializer.data, safe=False)
