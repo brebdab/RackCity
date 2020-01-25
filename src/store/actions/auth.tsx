@@ -1,7 +1,7 @@
 import * as actionTypes from "./actionTypes";
 import axios from "axios";
 import { API_ROOT } from "../../api-config";
-
+import jQuery from "jquery";
 export const authStart = () => {
   return {
     type: actionTypes.AUTH_START
@@ -17,13 +17,13 @@ export const authSuccess = (token: string) => {
 
 export const authFail = (error: string) => {
   return {
-    type: actionTypes.AUTH_SUCCESS,
+    type: actionTypes.AUTH_FAIL,
     error: error
   };
 };
 
 export const logout = () => {
-  localStorage.removeItem("user");
+  localStorage.removeItem("token");
   localStorage.removeItem("experiationDate");
   return {
     type: actionTypes.AUTH_LOGOUT
@@ -36,17 +36,45 @@ export const checkAuthTimeout = (expirationTime: number) => {
     }, expirationTime * 1000);
   };
 };
+function getCookie(name: string) {
+  var cookieValue = null;
+  if (document.cookie && document.cookie !== "") {
+    var cookies = document.cookie.split(";");
+    for (var i = 0; i < cookies.length; i++) {
+      var cookie = jQuery.trim(cookies[i]);
+      console.log(cookie);
+      if (cookie.substring(0, name.length + 1) === name + "=") {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
 
 export const authLogin = (username: string, password: string) => {
   return (dispatch: any) => {
     dispatch(authStart());
+    var csrf_token = getCookie("csrftoken");
+    console.log(csrf_token);
+    console.log(API_ROOT + "rest-auth/login/");
+
     axios
-      .post(API_ROOT + "rest_auth/login/", {
-        username: username,
-        password: password
-      })
+      .post(
+        API_ROOT + "rest-auth/login/",
+        {
+          username: username,
+          password: password
+        },
+        {
+          headers: {
+            "X-CSRFToken": csrf_token
+          }
+        }
+      )
       .then(res => loginHelper(res, dispatch))
       .catch(err => {
+        console.log("failed");
         dispatch(authFail(err));
       });
   };
@@ -61,8 +89,12 @@ export const authSignup = (
 ) => {
   return (dispatch: any) => {
     dispatch(authStart());
+    axios.defaults.xsrfCookieName = "csrftoken";
+    axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
+    axios.defaults.withCredentials = true;
+    let res = axios.get("rest_");
     axios
-      .post(API_ROOT + "rest_auth/registration/", {
+      .post(API_ROOT + "rest-auth/registration/", {
         username: username,
         email: email,
         displayName: displayName,
@@ -78,6 +110,7 @@ export const authSignup = (
 
 export const loginHelper = (res: any, dispatch: any) => {
   const token = res.data.key;
+  console.log("success" + token);
   const expirationDate = new Date(new Date().getTime() + 3600 * 1000);
   localStorage.setItem("token", token);
   localStorage.setItem("expirationDate", expirationDate.toString());
@@ -88,6 +121,7 @@ export const loginHelper = (res: any, dispatch: any) => {
 export const authCheckState = () => {
   return (dispatch: any) => {
     const token = localStorage.getItem("token");
+    console.log(token);
     if (token === undefined) {
       dispatch(logout());
     } else {
