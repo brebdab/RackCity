@@ -45,7 +45,7 @@ export class InstanceView extends React.PureComponent<RouteComponentProps, Insta
   }
 
   async componentDidMount() {
-    const resp = await getData("1"); // TODO change to dynamic path
+    const resp = await getData("2"); // TODO change to dynamic path
     this.setState({
       hostname: resp.hostname,
       model: resp.model,
@@ -62,7 +62,6 @@ export class InstanceView extends React.PureComponent<RouteComponentProps, Insta
     const rid = temp.rid
     return (
       <div style={{color: "white"}}>
-        <h1>instance {rid}</h1>
         <div>
           <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered color-table">
             <thead>
