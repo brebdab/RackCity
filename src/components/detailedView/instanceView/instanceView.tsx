@@ -61,9 +61,9 @@ export class InstanceView extends React.PureComponent<RouteComponentProps, Insta
     temp = this.props.match.params
     const rid = temp.rid
     return (
-      <div style={{color: "white"}}>
+      <div className={Classes.DARK + " instance-view"}>
         <div>
-          <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered color-table">
+          <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered">
             <thead>
               <tr>
                 <th>Hostname</th>

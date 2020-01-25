@@ -66,9 +66,9 @@ export class modelView extends React.PureComponent<RouteComponentProps, ModelVie
     let params: any;
     params = this.props.match.params
     return (
-      <div>
+      <div className={Classes.DARK + " model-view"}>
         <h1>Model Specs</h1>
-        <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered color-table">
+        <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered">
           <thead>
             <tr>
               <th>Comment</th>
