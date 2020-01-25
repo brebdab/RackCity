@@ -1,17 +1,36 @@
+// import { Classes } from "@blueprintjs/core";
+import "@blueprintjs/core/lib/css/blueprint.css";
+// import axios from "axios";
 import * as React from "react";
-import { RouteComponentProps } from "react-router";
+import { RouteComponentProps, withRouter } from "react-router";
 
-export interface RackViewProps { rid: string };
+// pass in rack info as props
+
+export interface RackViewProps { instances: any };
 
 
-export class RackView extends React.PureComponent<RouteComponentProps> {
+export class RackView extends React.PureComponent<RouteComponentProps, RackViewProps> {
 
   public render() {
-    let params: any;
-    params = this.props.match.params
-    return <h1>rack {params.rid}</h1>
+    // let params: any;
+    // params = this.props.location.state;
+    // console.log(params.rackname)
+    // let params: any;
+    // params = this.props.match.params
+    return <h1>rack</h1>
   }
 
 }
 
-export default RackView;
+interface State {
+  columns: Array<string>;
+  data: any;
+}
+
+export class RackTable extends React.Component {
+  public render() {
+    return <p>hello</p>
+  }
+}
+
+export default withRouter(RackView);
