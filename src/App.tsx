@@ -11,6 +11,9 @@ import WrappedNormalLoginForm from "./components/login/login";
 import WrappedNormalRegistrationForm from "./components/login/register";
 import Navigation from "./components/navigation/navigation";
 import "./index.scss";
+
+import ModelView from "./components/detailedView/modelView/modelView";
+import InstanceViewWrap from "./components/detailedView/instanceView/instanceView";
 import * as actions from "./store/actions/auth";
 
 export interface AppProps {
@@ -39,6 +42,9 @@ class App extends React.Component<AppProps> {
             <Route path="/racks/:rid" component={RackView} />
             <Route path="/login" component={WrappedNormalLoginForm} />
             <Route path="/register" component={WrappedNormalRegistrationForm} />
+            <Route path="/racks/:rid" component={RackView} />
+            <Route path="/models/:rid" component={ModelView} />
+            <Route path="/instances/:rid" component={InstanceViewWrap} />
             {/* Rack view based on rack id (rid)*/}
             {/*<Route path="/rack" component={View}/> {/* path and which component to be rendered */}
             <Route component={Notfound} />
