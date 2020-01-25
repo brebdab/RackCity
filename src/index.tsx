@@ -3,37 +3,26 @@ import "@blueprintjs/icons/lib/css/blueprint-icons.css";
 import "normalize.css/normalize.css";
 import React from "react";
 import ReactDOM from "react-dom";
-import { BrowserRouter, Route, Switch } from "react-router-dom";
-import RackView from "./components/detailedView/rackView/rackView";
-import ModelView from "./components/detailedView/modelView/modelView";
-import InstanceViewWrap from "./components/detailedView/instanceView/instanceView";
-import ElementView from "./components/elementView/elementView";
-import Notfound from "./components/fallback"; // 404 page
-import Navigation from "./components/navigation/navigation";
 import "./index.scss";
 import * as serviceWorker from "./serviceWorker";
-import { LoginView } from "./components/login/login";
+import App from "./App";
+import { createStore, compose, applyMiddleware } from "redux";
+import reducer from "./store/reducers/auth";
+import thunk from "redux-thunk";
+import { Provider } from "react-redux";
 
-const App = () => (
-  <BrowserRouter basename="/">
-    <div>
-      <Navigation />
-      <Switch>
-        <Route exact path="/" component={ElementView} />
-        {/* Landing page shows table viewer */}
-        <Route path="/racks/:rid" component={RackView} />
-        <Route path="/models/:rid" component={ModelView} />
-        <Route path="/instances/:rid" component={InstanceViewWrap} />
-        <Route path="/login" component={LoginView} />
-        {/* Rack view based on rack id (rid)*/}
-        {/*<Route path="/rack" component={View}/> {/* path and which component to be rendered */}
-        <Route component={Notfound} />
-      </Switch>
-    </div>
-  </BrowserRouter>
+const composeEnhances =
+  (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose || compose;
+
+const store = createStore(reducer, composeEnhances(applyMiddleware(thunk)));
+
+const app = (
+  <Provider store={store}>
+    <App />
+  </Provider>
 );
 
-ReactDOM.render(<App />, document.getElementById("root"));
+ReactDOM.render(app, document.getElementById("root"));
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.
