@@ -3,41 +3,33 @@ from rackcity.models import (
     ITInstance,
     ITModel,
     Rack,
-    User,
 )
 
 
 class ITInstanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = ITInstance
-        fields = ('hostname', 'height', 'model', 'rack', 'user', 'comment')
+        fields = ('hostname', 'height', 'model', 'rack', 'owner', 'comment')
 
 
 class ITModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = ITModel
         fields = (
-            'model_id',
             'vendor',
             'model_number',
             'height',
-            'comment',
             'display_color',
             'num_ethernet_ports',
             'num_power_ports',
             'cpu',
             'memory_gb',
             'storage',
+            'comment',
         )
 
 
 class RackSerializer(serializers.ModelSerializer):
     class Meta:
         model = Rack
-        fields = ('rack_id', 'row_letter', 'rack_num', 'height')
-
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ('user_id')
+        fields = ('row_letter', 'rack_num', 'height')
