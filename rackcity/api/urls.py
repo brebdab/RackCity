@@ -11,4 +11,5 @@ urlpatterns = [
     path('instances/<int:pk>', views.instance_detail),
     path('racks', views.rack_list),
     path('racks/<int:pk>', views.rack_detail),
+    path('iamadmin', views.i_am_admin)
 ]

@@ -18,21 +18,22 @@ def model_list(request):
         return JsonResponse(serializer.data, safe=False)
 
 
-
-def model_add(request): # TODO: make it only accept POSTs
+def model_add(request):  # TODO: make it only accept POSTs
     """
     Add a new model
     """
     if request.method == 'POST':
         data = JSONParser().parse(request)
         serializer = ITModelSerializer(data=data)
-        if serializer.is_valid(): # TODO: figure out what .valid() does.  Different fields are required for add, update, etc
+        if serializer.is_valid():  # TODO: figure out what .valid() does.  Different fields are required for add, update, etc
             print("valid")
             serializer.save()
-            return HttpResponse(status=201) # should return something better maybe
+            # should return something better maybe
+            return HttpResponse(status=201)
         else:
             print("invalid")
-            return HttpResponse(status=400) # should return something better definitely
+            # should return something better definitely
+            return HttpResponse(status=400)
 
 
 @api_view(['GET'])
@@ -46,7 +47,6 @@ def model_auth(request):
         models = ITModel.objects.all()
         serializer = ITModelSerializer(models, many=True)
         return JsonResponse(serializer.data, safe=False)
-
 
 
 @api_view(['GET'])
@@ -75,3 +75,14 @@ def model_detail(request, pk):
     if request.method == 'GET':
         serializer = ITModelSerializer(model)
         return JsonResponse(serializer.data)
+
+
+@api_view(['GET'])
+def i_am_admin(request):
+    print("yeah")
+    if(request.user.is_superuser):
+        print("yeah")
+        return JsonResponse({"is_admin": True})
+    else:
+        print("nah")
+        return JsonResponse({"is_admin": False})
