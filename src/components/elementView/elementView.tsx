@@ -100,7 +100,8 @@ export class ElementTable extends React.Component<
                 <tr
                   onClick={() =>
                     this.props.history.push(
-                      "/" + this.props.element + "/test_rid"
+                      "/" + this.props.element + "/test_rid" // TODO replace test_rid with param */
+                      // { rackname: "hello" } // pass additional props here
                     )
                   }
                 >

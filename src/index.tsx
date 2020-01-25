@@ -6,7 +6,7 @@ import ReactDOM from "react-dom";
 import { BrowserRouter, Route, Switch } from "react-router-dom";
 import RackView from "./components/detailedView/rackView/rackView";
 import ModelView from "./components/detailedView/modelView/modelView";
-import InstanceView from "./components/detailedView/instanceView/instanceView";
+import InstanceViewWrap from "./components/detailedView/instanceView/instanceView";
 import ElementView from "./components/elementView/elementView";
 import Notfound from "./components/fallback"; // 404 page
 import Navigation from "./components/navigation/navigation";
@@ -21,8 +21,8 @@ const App = () => (
         <Route exact path="/" component={ElementView} />
         {/* Landing page shows table viewer */}
         <Route path="/racks/:rid" component={RackView} />
-        <Route path="/models/:mid" component={ModelView} />
-        <Route path="/instances/:iid" component={InstanceView} />
+        <Route path="/models/:rid" component={ModelView} />
+        <Route path="/instances/:rid" component={InstanceViewWrap} />
         {/* Rack view based on rack id (rid)*/}
         {/*<Route path="/rack" component={View}/> {/* path and which component to be rendered */}
         <Route component={Notfound} />
