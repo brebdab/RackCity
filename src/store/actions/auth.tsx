@@ -68,7 +68,9 @@ export const authLogin = (username: string, password: string) => {
         },
         {
           headers: {
-            "X-CSRFToken": csrf_token
+            xsrfCookieName: "XSRF-TOKEN",
+            xsrfHeaderName: "X-XSRF-TOKEN",
+            "X-XSRF-TOKEN": csrf_token
           }
         }
       )
@@ -89,9 +91,6 @@ export const authSignup = (
 ) => {
   return (dispatch: any) => {
     dispatch(authStart());
-    axios.defaults.xsrfCookieName = "csrftoken";
-    axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
-    axios.defaults.withCredentials = true;
     let res = axios.get("rest_");
     axios
       .post(API_ROOT + "rest-auth/registration/", {
