@@ -1,11 +1,10 @@
 from django.db import models
 from .it_model import ITModel
 from .rack import Rack
-from .user import User
 
 
 class ITInstance(models.Model):
-    hostname = models.CharField(max_length=120)
+    hostname = models.CharField(max_length=150)
     height = models.IntegerField()
     model = models.ForeignKey(
         ITModel,
@@ -19,11 +18,5 @@ class ITInstance(models.Model):
         null=True,
         blank=True,
     )
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        verbose_name="related user",
-        null=True,
-        blank=True,
-    )
+    owner = models.CharField(max_length=100)
     comment = models.TextField(null=True, blank=True)

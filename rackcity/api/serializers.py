@@ -1,18 +1,10 @@
 from rest_framework import serializers
-
 from rackcity.models import (
-    Article,
     ITInstance,
     ITModel,
     Rack,
     User,
 )
-
-
-class ArticleSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Article
-        fields = ('id', 'title', 'content')
 
 
 class ITInstanceSerializer(serializers.ModelSerializer):
