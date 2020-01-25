@@ -14,6 +14,17 @@ npm run build
 python manage.py runserver
 ```
 
+### Testing on Postman with auth!
+Run the server as above and navigate to http://127.0.0.1:8000/rest-auth/login/
+Login (slack Ben or Julia if you don't know how)
+It should reply with your auth token--copy that
+In Postman, go to the request's Headers, and add this:
+```
+Authorization: Token <your token>
+```
+Make sure the check box next to that part of the header is checked
+Voila!
+
 To navigate back to the starting code of [video 2](https://www.youtube.com/watch?v=w-QJiQwlZzU&t=4s):
 
 ```json

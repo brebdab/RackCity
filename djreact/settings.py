@@ -81,10 +81,10 @@ DATABASES = {}
 DATABASES['default'] = dj_database_url.config(conn_max_age=600)
 
 AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'}, # noqa
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},  # noqa
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'}, # noqa
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'}, # noqa
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},  # noqa
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},  # noqa
 ]
 
 LANGUAGE_CODE = 'en-us'
@@ -118,6 +118,6 @@ CORS_ORIGIN_WHITELIST = (
 
 CSRF_COOKIE_NAME = "csrftoken"
 
-ACCOUNT_EMAIL_REQUIRED = False
+ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_AUTHENTICATION_METHOD = 'username'
 ACCOUNT_EMAIL_VERIFICATION = 'none'
