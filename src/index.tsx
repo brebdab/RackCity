@@ -12,6 +12,7 @@ import Notfound from "./components/fallback"; // 404 page
 import Navigation from "./components/navigation/navigation";
 import "./index.scss";
 import * as serviceWorker from "./serviceWorker";
+import { LoginView } from "./components/login/login";
 
 const App = () => (
   <BrowserRouter basename="/">
@@ -23,6 +24,7 @@ const App = () => (
         <Route path="/racks/:rid" component={RackView} />
         <Route path="/models/:rid" component={ModelView} />
         <Route path="/instances/:rid" component={InstanceViewWrap} />
+        <Route path="/login" component={LoginView} />
         {/* Rack view based on rack id (rid)*/}
         {/*<Route path="/rack" component={View}/> {/* path and which component to be rendered */}
         <Route component={Notfound} />

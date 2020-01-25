@@ -71,7 +71,6 @@ export class modelView extends React.PureComponent<RouteComponentProps, ModelVie
         <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered">
           <thead>
             <tr>
-              <th>Comment</th>
               <th>CPU</th>
               <th>Display Color</th>
               <th>Height</th>
@@ -82,11 +81,11 @@ export class modelView extends React.PureComponent<RouteComponentProps, ModelVie
               <th># Power Ports</th>
               <th>Storage</th>
               <th>Vendor</th>
+              <th>Comments</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td>{this.state.comment}</td>
               <td>{this.state.cpu}</td>
               <td>{this.state.display_color}</td>
               <td>{this.state.height}</td>
@@ -97,6 +96,7 @@ export class modelView extends React.PureComponent<RouteComponentProps, ModelVie
               <td>{this.state.num_power_ports}</td>
               <td>{this.state.storage}</td>
               <td>{this.state.vendor}</td>
+              <td>{this.state.comment}</td>
             </tr>
           </tbody>
         </table>
