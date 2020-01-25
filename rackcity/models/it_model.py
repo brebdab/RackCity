@@ -2,7 +2,6 @@ from django.db import models
 
 
 class ITModel(models.Model):
-    model_id = models.CharField(max_length=120)
     vendor = models.CharField(max_length=120)
     model_number = models.CharField(max_length=120)
     height = models.IntegerField()
@@ -14,8 +13,9 @@ class ITModel(models.Model):
     memory_gb = models.IntegerField(null=True, blank=True)
     storage = models.CharField(max_length=120, null=True, blank=True)
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-
-    def delete(self, *args, **kwargs):
-        super().delete(*args, **kwargs)
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['vendor', 'model_number'],
+                name='unique vendor model number'),
+        ]
