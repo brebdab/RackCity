@@ -27,9 +27,3 @@ class ITInstance(models.Model):
         blank=True,
     )
     comment = models.TextField(null=True, blank=True)
-
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-
-    def delete(self, *args, **kwargs):
-        super().delete(*args, **kwargs)
