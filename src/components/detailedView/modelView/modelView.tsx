@@ -1,4 +1,4 @@
-import { Classes, Tab, Tabs } from "@blueprintjs/core";
+import { Classes } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
@@ -63,8 +63,8 @@ export class modelView extends React.PureComponent<RouteComponentProps, ModelVie
   }
 
   public render() {
-    let params: any;
-    params = this.props.match.params
+    // let params: any;
+    // params = this.props.match.params
     return (
       <div className={Classes.DARK + " model-view"}>
         <h1>Model Specs</h1>

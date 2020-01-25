@@ -1,4 +1,4 @@
-import { Classes, Tab, Tabs } from "@blueprintjs/core";
+import { Classes } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
@@ -57,9 +57,9 @@ export class InstanceView extends React.PureComponent<RouteComponentProps, Insta
   }
 
   public render() {
-    let temp: any;
-    temp = this.props.match.params
-    const rid = temp.rid
+    // let temp: any;
+    // temp = this.props.match.params
+    // const rid = temp.rid
     return (
       <div className={Classes.DARK + " instance-view"}>
         <div>
