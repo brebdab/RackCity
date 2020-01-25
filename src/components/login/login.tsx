@@ -4,13 +4,10 @@ import { Form } from "antd";
 import { FormComponentProps } from "antd/lib/form/Form";
 import * as React from "react";
 import { connect } from "react-redux";
-import { RouteComponentProps, withRouter, Redirect } from "react-router";
+import { Redirect, RouteComponentProps } from "react-router";
 import { NavLink } from "react-router-dom";
 import * as actions from "../../store/actions/auth";
 import "./login.scss";
-import { resolve } from "dns";
-import { reject } from "q";
-import { render } from "react-dom";
 interface LoginFormProps {
   loading: boolean;
   error: string;

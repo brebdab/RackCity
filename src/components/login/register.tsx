@@ -1,11 +1,10 @@
-import React from "react";
+import { Button, Classes, InputGroup } from "@blueprintjs/core";
 import { Form } from "antd";
+import { FormComponentProps } from "antd/lib/form";
+import React from "react";
 import { connect } from "react-redux";
 import { NavLink, RouteComponentProps } from "react-router-dom";
-import * as actions from "../../store/actions/auth";
-import { FormComponentProps } from "antd/lib/form";
 import "./login.scss";
-import { InputGroup, Classes, Button } from "@blueprintjs/core";
 const FormItem = Form.Item;
 interface RegistrationFormProps {
   loading: boolean;

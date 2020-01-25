@@ -1,5 +1,4 @@
 import axios from "axios";
-import jQuery from "jquery";
 import { API_ROOT } from "../../api-config";
 import * as actionTypes from "./actionTypes";
 export const authStart = () => {
@@ -36,28 +35,28 @@ export const checkAuthTimeout = (expirationTime: number) => {
     }, expirationTime * 1000);
   };
 };
-function getCookie(name: string) {
-  var cookieValue = null;
-  if (document.cookie && document.cookie !== "") {
-    var cookies = document.cookie.split(";");
-    for (var i = 0; i < cookies.length; i++) {
-      var cookie = jQuery.trim(cookies[i]);
-      console.log(cookie);
-      if (cookie.substring(0, name.length + 1) === name + "=") {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
-      }
-    }
-  }
-  return cookieValue;
-}
+// function getCookie(name: string) {
+//   var cookieValue = null;
+//   if (document.cookie && document.cookie !== "") {
+//     var cookies = document.cookie.split(";");
+//     for (var i = 0; i < cookies.length; i++) {
+//       var cookie = jQuery.trim(cookies[i]);
+//       console.log(cookie);
+//       if (cookie.substring(0, name.length + 1) === name + "=") {
+//         cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+//         break;
+//       }
+//     }
+//   }
+//   return cookieValue;
+// }
 
 export const authLogin = (username: string, password: string) => {
   return (dispatch: any) => {
     dispatch(authStart());
     // axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
     // axios.defaults.xsrfCookieName = "csrftoken";
-    var csrf_token = getCookie("csrftoken");
+    // var csrf_token = getCookie("csrftoken");
     console.log({
       username: username,
       password: password
