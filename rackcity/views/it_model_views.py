@@ -7,7 +7,6 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
 def model_list(request):
     """
     List all models.
@@ -18,15 +17,34 @@ def model_list(request):
         serializer = ITModelSerializer(models, many=True)
         return JsonResponse(serializer.data, safe=False)
 
-    # elif request.method == 'POST':
-    #     data = JSONParser().parse(request)
-    #     serializer = ITModelSerializer(data=data)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return JsonResponse(serializer.data, status=201)
-    #     return JsonResponse(serializer.errors, status=400)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def model_auth(request):
+    """
+    List all models, but requires user authentication in header.
+    (Temporary for auth testing on front end)
+    """
+    if request.method == 'GET':
+        models = ITModel.objects.all()
+        serializer = ITModelSerializer(models, many=True)
+        return JsonResponse(serializer.data, safe=False)
 
 
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def model_admin(request):
+    """ 
+    List all models, but requires request comes from admin user.
+    (Temporary for auth testing on front end)
+    """
+    if request.method == 'GET':
+        models = ITModel.objects.all()
+        serializer = ITModelSerializer(models, many=True)
+        return JsonResponse(serializer.data, safe=False)
+
+
+@api_view(['GET'])
 def model_detail(request, pk):
     """
     Retrieve a single model.
@@ -39,15 +57,3 @@ def model_detail(request, pk):
     if request.method == 'GET':
         serializer = ITModelSerializer(model)
         return JsonResponse(serializer.data)
-
-    # elif request.method == 'PUT':
-    #     data = JSONParser().parse(request)
-    #     serializer = ITModelSerializer(model, data=data)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return JsonResponse(serializer.data)
-    #     return JsonResponse(serializer.errors, status=400)
-
-    # elif request.method == 'DELETE':
-    #     model.delete()
-    #     return HttpResponse(status=204)
