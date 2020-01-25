@@ -1,11 +1,11 @@
-import * as React from "react";
-import { Form, Icon, Input } from "antd";
-import { FormComponentProps } from "antd/lib/form/Form";
-import { Button, Classes, Spinner, InputGroup } from "@blueprintjs/core";
-import { NavLink } from "react-router-dom";
-import { connect } from "react-redux";
-import { RouteComponentProps, withRouter } from "react-router";
+import { Button, Classes, InputGroup } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
+import { Form } from "antd";
+import { FormComponentProps } from "antd/lib/form/Form";
+import * as React from "react";
+import { connect } from "react-redux";
+import { RouteComponentProps } from "react-router";
+import { NavLink } from "react-router-dom";
 import * as actions from "../../store/actions/auth";
 interface LoginFormProps {
   loading: boolean;
@@ -27,10 +27,10 @@ class NormalLoginForm extends React.Component<
 
   render() {
     const { getFieldDecorator } = this.props.form;
-    let errorMessage = null;
-    if (this.props.error) {
-      errorMessage = <p>{this.props.error}</p>;
-    }
+    // let errorMessage = null;
+    // if (this.props.error) {
+    //   errorMessage = <p>{this.props.error}</p>;
+    // }
     return (
       <div className={Classes.DARK}>
         <Form onSubmit={this.handleSubmit} className="login-form">

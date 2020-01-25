@@ -1,7 +1,7 @@
-import * as actionTypes from "./actionTypes";
 import axios from "axios";
-import { API_ROOT } from "../../api-config";
 import jQuery from "jquery";
+import { API_ROOT } from "../../api-config";
+import * as actionTypes from "./actionTypes";
 export const authStart = () => {
   return {
     type: actionTypes.AUTH_START
@@ -91,7 +91,6 @@ export const authSignup = (
 ) => {
   return (dispatch: any) => {
     dispatch(authStart());
-    let res = axios.get("rest_");
     axios
       .post(API_ROOT + "rest-auth/registration/", {
         username: username,
