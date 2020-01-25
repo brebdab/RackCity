@@ -8,6 +8,8 @@ import RackView from "./components/detailedView/rackView/rackView";
 import ElementView from "./components/elementView/elementView";
 import Notfound from "./components/fallback"; // 404 page
 import WrappedNormalLoginForm from "./components/login/login";
+import WrappedNormalRegistrationForm from "./components/login/register";
+
 import Navigation from "./components/navigation/navigation";
 import "./index.scss";
 import * as actions from "./store/actions/auth";
@@ -29,6 +31,7 @@ class App extends React.Component<AppProps> {
             {/* Landing page shows table viewer */}
             <Route path="/racks/:rid" component={RackView} />
             <Route path="/login" component={WrappedNormalLoginForm} />
+            <Route path="/register" component={WrappedNormalRegistrationForm} />
             {/* Rack view based on rack id (rid)*/}
             {/*<Route path="/rack" component={View}/> {/* path and which component to be rendered */}
             <Route component={Notfound} />

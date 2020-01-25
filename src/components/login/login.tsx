@@ -4,9 +4,10 @@ import { Form } from "antd";
 import { FormComponentProps } from "antd/lib/form/Form";
 import * as React from "react";
 import { connect } from "react-redux";
-import { RouteComponentProps } from "react-router";
+import { RouteComponentProps, withRouter } from "react-router";
 import { NavLink } from "react-router-dom";
 import * as actions from "../../store/actions/auth";
+import "./login.scss";
 interface LoginFormProps {
   loading: boolean;
   error: string;
@@ -31,23 +32,25 @@ class NormalLoginForm extends React.Component<
     // if (this.props.error) {
     //   errorMessage = <p>{this.props.error}</p>;
     // }
+
     return (
-      <div className={Classes.DARK}>
-        <Form onSubmit={this.handleSubmit} className="login-form">
+      <div className={Classes.DARK + " login-container"}>
+        <Form
+          onSubmit={this.handleSubmit}
+          className="login-form .bp3-form-group"
+        >
+          <h2>Login</h2>
           <Form.Item>
             {getFieldDecorator("username", {
               rules: [
                 { required: true, message: "Please input your username!" }
               ]
             })(
-              <InputGroup id="field" placeholder="username" />
-              //   <Input
-              //     className="field"
-              //     prefix={
-              //       <Icon type="user" style={{ color: "rgba(0,0,0,.25)" }} />
-              //     }
-              //     placeholder="Username"
-              //   />
+              <InputGroup
+                className="field"
+                id="username"
+                placeholder="username"
+              />
             )}
           </Form.Item>
           <Form.Item>
@@ -56,23 +59,20 @@ class NormalLoginForm extends React.Component<
                 { required: true, message: "Please input your Password!" }
               ]
             })(
-              <InputGroup type="password" id="field" placeholder="password" />
-              //   <Input
-              //     className="field"
-              //     prefix={
-              //       <Icon type="lock" style={{ color: "rgba(0,0,0,.25)" }} />
-              //     }
-              //     type="password"
-              //     placeholder="Password"
-              //   />
+              <InputGroup
+                className="field"
+                type="password"
+                id="password"
+                placeholder="password"
+              />
             )}
           </Form.Item>
           <Form.Item>
             <Button className="login-button" type="submit">
               Login
             </Button>
-            or
-            <NavLink to="/signup/">Sign up!</NavLink>
+            <p></p>
+            <NavLink to="/register">Create an account</NavLink>
           </Form.Item>
         </Form>
       </div>

@@ -55,6 +55,8 @@ function getCookie(name: string) {
 export const authLogin = (username: string, password: string) => {
   return (dispatch: any) => {
     dispatch(authStart());
+    axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
+    axios.defaults.xsrfCookieName = "csrftoken";
     var csrf_token = getCookie("csrftoken");
     console.log(csrf_token);
     console.log(API_ROOT + "rest-auth/login/");
@@ -65,14 +67,14 @@ export const authLogin = (username: string, password: string) => {
         {
           username: username,
           password: password
-        },
-        {
-          headers: {
-            xsrfCookieName: "XSRF-TOKEN",
-            xsrfHeaderName: "X-XSRF-TOKEN",
-            "X-XSRF-TOKEN": csrf_token
-          }
         }
+        // {
+        //   headers: {
+        //     xsrfCookieName: "XSRF-TOKEN",
+        //     xsrfHeaderName: "X-XSRF-TOKEN",
+        //     "X-XSRF-TOKEN": csrf_token
+        //   }
+        //}
       )
       .then(res => loginHelper(res, dispatch))
       .catch(err => {
