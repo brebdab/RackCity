@@ -30,13 +30,17 @@ export class Navigation extends React.Component<NavigationPropsAll> {
             <NavbarGroup>
               <NavbarHeading>HypoSoft</NavbarHeading>
               <NavbarDivider />
-              <AnchorButton
-                onClick={() => this.props.history.push("/")}
-                className="nav-bar-button"
-                icon="home"
-                text="Home"
-                minimal
-              />
+              {this.props.isAuthenticated ? (
+                <AnchorButton
+                  onClick={() => this.props.history.push("/")}
+                  className="nav-bar-button"
+                  icon="home"
+                  text="Home"
+                  minimal
+                />
+              ) : (
+                <p></p>
+              )}
             </NavbarGroup>
             <NavbarGroup align={Alignment.RIGHT}>
               {this.props.isAuthenticated ? (
