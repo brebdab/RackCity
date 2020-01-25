@@ -1,11 +1,11 @@
-# Django + React Introduction
+# IT Asset Management Application
 
 
 
 This project is broken up into a backend and frontend. The backend contains the Django project which uses the Django Rest Framework to host a simple API. The frontend uses React and queries data from the API.
 
 
-##Dev workflow: 
+## Development workflow
 
 Run the following commands to get started:
 
@@ -21,6 +21,17 @@ In another terminal, run:
 ```bash
 npm start #This is only configured to  localhost:3000 is whitelisted 
 ```
+
+## Testing on Postman with auth
+Run the server as above and navigate to http://127.0.0.1:8000/rest-auth/login/
+Login (slack Ben or Julia if you don't know how)
+It should reply with your auth token--copy that
+In Postman, go to the request's Headers, and add this:
+```
+Authorization: Token <your token>
+```
+Make sure the check box next to that part of the header is checked
+Voila!
 
 ## Corsheader issues for Local dev
 
