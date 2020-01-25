@@ -55,30 +55,26 @@ function getCookie(name: string) {
 export const authLogin = (username: string, password: string) => {
   return (dispatch: any) => {
     dispatch(authStart());
-    axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
-    axios.defaults.xsrfCookieName = "csrftoken";
+    // axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
+    // axios.defaults.xsrfCookieName = "csrftoken";
     var csrf_token = getCookie("csrftoken");
-    console.log(csrf_token);
+    console.log({
+      username: username,
+      password: password
+    });
     console.log(API_ROOT + "rest-auth/login/");
 
     axios
-      .post(
-        API_ROOT + "rest-auth/login/",
-        {
-          username: username,
-          password: password
-        }
-        // {
-        //   headers: {
-        //     xsrfCookieName: "XSRF-TOKEN",
-        //     xsrfHeaderName: "X-XSRF-TOKEN",
-        //     "X-XSRF-TOKEN": csrf_token
-        //   }
-        //}
-      )
-      .then(res => loginHelper(res, dispatch))
+      .post(API_ROOT + "rest-auth/login/", {
+        username: username,
+        password: password
+      })
+      .then(res => {
+        console.log(res);
+        loginHelper(res, dispatch);
+      })
       .catch(err => {
-        console.log("failed");
+        console.log("login failed");
         dispatch(authFail(err));
       });
   };

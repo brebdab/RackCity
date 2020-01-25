@@ -3,7 +3,13 @@ import "@blueprintjs/icons/lib/css/blueprint-icons.css";
 import "normalize.css/normalize.css";
 import React from "react";
 import { connect } from "react-redux";
-import { BrowserRouter, Route, Switch } from "react-router-dom";
+import {
+  BrowserRouter,
+  Route,
+  Switch,
+  Redirect,
+  withRouter
+} from "react-router-dom";
 import RackView from "./components/detailedView/rackView/rackView";
 import ElementView from "./components/elementView/elementView";
 import Notfound from "./components/fallback"; // 404 page
@@ -22,12 +28,19 @@ class App extends React.Component<AppProps> {
     this.props.onTryAutoSignup();
   }
   render() {
+    console.log(this.props.isAuthenticated);
     return (
       <BrowserRouter basename="/">
         <div>
           <Navigation {...this.props} />
           <Switch>
-            <Route exact path="/" component={ElementView} />
+            <Route exact path="/">
+              {this.props.isAuthenticated ? (
+                <ElementView />
+              ) : (
+                <Redirect to="/login" />
+              )}
+            </Route>
             {/* Landing page shows table viewer */}
             <Route path="/racks/:rid" component={RackView} />
             <Route path="/login" component={WrappedNormalLoginForm} />
@@ -36,6 +49,7 @@ class App extends React.Component<AppProps> {
             {/*<Route path="/rack" component={View}/> {/* path and which component to be rendered */}
             <Route component={Notfound} />
           </Switch>
+          )
         </div>
       </BrowserRouter>
     );

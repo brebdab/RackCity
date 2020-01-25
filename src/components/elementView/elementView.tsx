@@ -46,10 +46,10 @@ export class ElementView extends React.PureComponent<RouteComponentProps> {
 }
 
 async function getData(path: string) {
-  console.log(API_ROOT + path);
+  console.log(API_ROOT + "api/" + path);
   return await axios
     //.get("https://rack-city-dev.herokuapp.com/api/" + path)
-    .get(API_ROOT + path)
+    .get(API_ROOT + "api/" + path)
     .then(res => {
       const data = res.data;
       const cols: Array<Array<string>> = data.map((item: any) => {

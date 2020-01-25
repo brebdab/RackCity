@@ -83,7 +83,7 @@ class RegistrationForm extends React.Component<
               rules: [
                 { required: true, message: "Please input your username!" }
               ]
-            })(<InputGroup placeholder="Username" />)}
+            })(<InputGroup className="field" placeholder="Username" />)}
           </FormItem>
           <FormItem>
             {getFieldDecorator("displayName", {
@@ -172,10 +172,7 @@ const mapDispatchToProps = (dispatch: any) => {
       displayName: string,
       password1: string,
       password2: string
-    ) =>
-      dispatch(
-        actions.authSignup(username, email, displayName, password1, password2)
-      )
+    ) => dispatch()
   };
 };
 
