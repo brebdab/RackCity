@@ -11,6 +11,7 @@ import WrappedNormalLoginForm from "./components/login/login";
 import WrappedNormalRegistrationForm from "./components/login/register";
 import Navigation from "./components/navigation/navigation";
 import "./index.scss";
+
 import ModelView from "./components/detailedView/modelView/modelView";
 import InstanceViewWrap from "./components/detailedView/instanceView/instanceView";
 import * as actions from "./store/actions/auth";
