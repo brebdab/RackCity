@@ -13,6 +13,6 @@
 
     "python.linting.enabled": true,
     "python.linting.flake8Enabled": true,
-    "python.pythonPath": "env/bin/python3.6"
+    "python.pythonPath": "env/bin/python3"
 
 }
