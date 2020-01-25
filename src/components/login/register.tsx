@@ -143,8 +143,8 @@ class RegistrationForm extends React.Component<
           </FormItem>
 
           <FormItem>
-            <Button type="submit" style={{ marginRight: "10px" }}>
-              Signup
+            <Button className="login-button" type="submit">
+              Register
             </Button>
             <p></p>
             <NavLink to="/login">Login</NavLink>
