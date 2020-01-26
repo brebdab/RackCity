@@ -49,7 +49,6 @@ class App extends React.Component<AppProps> {
 
             <Route component={Notfound} />
           </Switch>
-          )
         </div>
       </BrowserRouter>
     );
