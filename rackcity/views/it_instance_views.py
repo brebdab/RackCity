@@ -1,7 +1,10 @@
 # from rest_framework.parsers import JSONParser
 from django.http import HttpResponse, JsonResponse
 from rackcity.models import ITInstance
-from rackcity.api.serializers import ITInstanceSerializer, RecursiveITInstanceSerializer
+from rackcity.api.serializers import (
+    ITInstanceSerializer,
+    RecursiveITInstanceSerializer,
+)
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.parsers import JSONParser
@@ -27,18 +30,15 @@ def instance_page(request):
     """
     List a page of instances.
     """
-    data = JSONParser().parse(request)
-    if 'page_size' not in data:
-        return JsonResponse(
-            {"error_description": "Page size not specified (use page_size)."},
-            status=HTTPStatus.BAD_REQUEST,
-        )
     paginator = PageNumberPagination()
-    paginator.page_size = data['page_size']
-    instances = ITInstance.objects.all()
+    paginator.page_size = 10
     page_of_instances = paginator.paginate_queryset(instances, request)
     serializer = RecursiveITInstanceSerializer(page_of_instances, many=True)
-    return JsonResponse(serializer.data, safe=False)
+    return JsonResponse(
+        serializer.data,
+        safe=False,
+        status=HTTPStatus.OK,
+    )
 
 
 @api_view(['GET'])
