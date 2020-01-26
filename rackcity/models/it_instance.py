@@ -5,7 +5,7 @@ from .rack import Rack
 
 class ITInstance(models.Model):
     hostname = models.CharField(max_length=150)
-    height = models.IntegerField()
+    elevation = models.IntegerField()
     model = models.ForeignKey(
         ITModel,
         on_delete=models.CASCADE,

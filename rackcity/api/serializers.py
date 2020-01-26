@@ -9,7 +9,7 @@ from rackcity.models import (
 class ITInstanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = ITInstance
-        fields = ('hostname', 'height', 'model', 'rack', 'owner', 'comment')
+        fields = ('hostname', 'elevation', 'model', 'rack', 'owner', 'comment')
 
 
 class ITModelSerializer(serializers.ModelSerializer):
