@@ -14,13 +14,15 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='ITModel',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True,
+                                        primary_key=True, serialize=False, verbose_name='ID')),
                 ('model_id', models.CharField(max_length=120)),
                 ('vendor', models.CharField(max_length=120)),
                 ('model_number', models.CharField(max_length=120)),
                 ('height', models.IntegerField()),
                 ('comment', models.TextField()),
-                ('display_color', models.CharField(blank=True, max_length=120, null=True)),
+                ('display_color', models.CharField(
+                    blank=True, max_length=120, null=True)),
                 ('num_ethernet_ports', models.IntegerField(blank=True, null=True)),
                 ('num_power_ports', models.IntegerField(blank=True, null=True)),
                 ('cpu', models.CharField(blank=True, max_length=120, null=True)),
@@ -31,7 +33,8 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Rack',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True,
+                                        primary_key=True, serialize=False, verbose_name='ID')),
                 ('rack_id', models.CharField(max_length=120)),
                 ('row_letter', models.CharField(max_length=1)),
                 ('rack_num', models.CharField(max_length=120)),
@@ -40,19 +43,23 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='User',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True,
+                                        primary_key=True, serialize=False, verbose_name='ID')),
                 ('user_id', models.CharField(max_length=120)),
             ],
         ),
         migrations.CreateModel(
             name='ITInstance',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True,
+                                        primary_key=True, serialize=False, verbose_name='ID')),
                 ('instance_id', models.CharField(max_length=120)),
                 ('comment', models.TextField(blank=True, null=True)),
                 ('unique_id', models.CharField(max_length=120)),
-                ('model', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='rackcity.ITModel', verbose_name='related model')),
-                ('user', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='rackcity.User', verbose_name='related user')),
+                ('model', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
+                                            to='rackcity.ITModel', verbose_name='related model')),
+                ('user', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
+                                           to='rackcity.User', verbose_name='related user')),
             ],
         ),
     ]
