@@ -1,9 +1,9 @@
 from rackcity.models import ITInstance, ITModel, Rack
-# from snippets.serializers import SnippetSerializer
-# from rest_framework.renderers import JSONRenderer
-# from rest_framework.parsers import JSONParser
+Run `python manage.py shell` and run the following commands
 
+Imports:
 
+Making data:
 rack_A1 = Rack(row_letter='A', rack_num=1, height=42)
 rack_A1.save()
 
@@ -92,11 +92,14 @@ instance = ITInstance(
 instance.save()
 
 
-print('Racks:')
+Printing data:
 print(Rack.objects.all())
 
-print('Models:')
 print(ITModel.objects.all())
 
-print('Instances:')
 print(ITInstance.objects.all())
+
+Deleting data:
+Rack.objects.all().delete()
+ITModel.objects.all().delete()
+ITInstance.objects.all().delete()
