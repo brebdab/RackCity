@@ -38,7 +38,6 @@ def instance_page(request):
     return JsonResponse(
         serializer.data,
         safe=False,
-        status=HTTPStatus.OK,
     )
 
 
