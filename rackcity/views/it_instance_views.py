@@ -28,7 +28,8 @@ def instance_list(request):
 @permission_classes([IsAuthenticated])
 def instance_page(request):
     """
-    List a page of instances. If page not specified as query param, then the first page is returned.
+    List a page of instances. If page not specified as query param (i.e.
+    /get-many?page=2), then the first page is returned.
     """
     instances = ITInstance.objects.all()
     paginator = PageNumberPagination()
