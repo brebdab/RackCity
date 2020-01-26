@@ -13,6 +13,11 @@ export const authSuccess = (token: string) => {
     token: token
   };
 };
+export const authAdmin = () => {
+  return {
+    type: actionTypes.AUTH_ADMIN
+  };
+};
 
 export const authFail = (error: string) => {
   return {
@@ -23,7 +28,7 @@ export const authFail = (error: string) => {
 
 export const logout = () => {
   localStorage.removeItem("token");
-  localStorage.removeItem("experiationDate");
+  localStorage.removeItem("expirationDate");
   return {
     type: actionTypes.AUTH_LOGOUT
   };
@@ -79,6 +84,26 @@ export const authLogin = (username: string, password: string) => {
   };
 };
 
+export const checkAdmin = (token: string) => {
+  return (dispatch: any) => {
+    const headers = {
+      headers: {
+        Authorization: "Token " + token
+      }
+    };
+    axios
+      .get(API_ROOT + "api/iamadmin", headers)
+      .then(res => {
+        if (res.data.is_admin) {
+          dispatch(authAdmin());
+        }
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  };
+};
+
 export const authSignup = (
   username: string,
   email: string,
@@ -109,7 +134,9 @@ export const loginHelper = (res: any, dispatch: any) => {
   const expirationDate = new Date(new Date().getTime() + 3600 * 1000);
   localStorage.setItem("token", token);
   localStorage.setItem("expirationDate", expirationDate.toString());
+
   dispatch(authSuccess(token));
+  dispatch(checkAdmin(token));
   dispatch(checkAuthTimeout(3600));
 };
 
@@ -125,6 +152,7 @@ export const authCheckState = () => {
         dispatch(logout());
       } else {
         dispatch(authSuccess(token!));
+        dispatch(checkAdmin(token!));
         dispatch(
           checkAuthTimeout(
             (expirationDate.getTime() - new Date().getTime()) / 1000

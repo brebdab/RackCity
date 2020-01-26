@@ -5,7 +5,6 @@ import { FormComponentProps } from "antd/lib/form/Form";
 import * as React from "react";
 import { connect } from "react-redux";
 import { Redirect, RouteComponentProps } from "react-router";
-import { NavLink } from "react-router-dom";
 import * as actions from "../../store/actions/auth";
 import "./login.scss";
 interface LoginFormProps {
@@ -22,19 +21,6 @@ class NormalLoginForm extends React.Component<
     this.props.form.validateFields((err, values) => {
       if (!err) {
         this.props.onAuth(values.username, values.password);
-        //   if (this.props.token !== undefined) {
-        //     console.log(this.props.token);
-
-        //   }
-        // console.log(this.props.loading);
-        // while (this.props.loading) {
-        //   console.log("Wait for login");
-        // }
-        // console.log("login_finished");
-        // console.log(this.props.token);
-        // if (this.props.token !== null) {
-        //   this.props.history.push("/");
-        // }
       }
     });
   };
@@ -75,8 +61,6 @@ class NormalLoginForm extends React.Component<
             <Button className="login-button" type="submit">
               Login
             </Button>
-            <p></p>
-            <NavLink to="/register">Create an account</NavLink>
           </Form.Item>
         </Form>
         {this.props.loading ? <p>loading</p> : <p></p>}

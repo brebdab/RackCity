@@ -40,12 +40,12 @@ class App extends React.Component<AppProps> {
             {/* Landing page shows table viewer */}
             <Route path="/racks/:rid" component={RackView} />
             <Route path="/login" component={WrappedNormalLoginForm} />
-            <Route path="/register" component={WrappedNormalRegistrationForm} />
             <Route path="/racks/:rid" component={RackView} />
             <Route path="/models/:rid" component={ModelView} />
             <Route path="/instances/:rid" component={InstanceViewWrap} />
-            {/* Rack view based on rack id (rid)*/}
-            {/*<Route path="/rack" component={View}/> {/* path and which component to be rendered */}
+            {/* admin paths */}
+            <Route path="/admin" component={WrappedNormalRegistrationForm} />
+
             <Route component={Notfound} />
           </Switch>
           )
