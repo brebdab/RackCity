@@ -16,13 +16,14 @@ import { connect } from "react-redux";
 
 export interface NavigationProps {
   isAuthenticated: boolean;
+  isAdmin: boolean;
   logout(): any;
 }
 
 type NavigationPropsAll = NavigationProps & RouteComponentProps;
 export class Navigation extends React.Component<NavigationPropsAll> {
   public render() {
-    console.log(this.props.isAuthenticated);
+    console.log(this.props.isAdmin);
     return (
       <Router>
         <div>
@@ -38,11 +39,18 @@ export class Navigation extends React.Component<NavigationPropsAll> {
                   text="Home"
                   minimal
                 />
-              ) : (
-                <p></p>
-              )}
+              ) : null}
             </NavbarGroup>
+
             <NavbarGroup align={Alignment.RIGHT}>
+              {this.props.isAdmin ? (
+                <AnchorButton
+                  onClick={() => this.props.history.push("/admin")}
+                  text="Admin Settings"
+                  minimal
+                />
+              ) : null}
+              <NavbarDivider />
               {this.props.isAuthenticated ? (
                 <AnchorButton
                   onClick={this.props.logout}
@@ -68,9 +76,17 @@ export class Navigation extends React.Component<NavigationPropsAll> {
   }
 }
 
+const mapStateToProps = (state: any) => {
+  return {
+    isAdmin: state.admin
+  };
+};
+
 const mapDispatchToProps = (dispatch: any) => {
   return {
     logout: () => dispatch(actions.logout())
   };
 };
-export default withRouter(connect(null, mapDispatchToProps)(Navigation));
+export default withRouter(
+  connect(mapStateToProps, mapDispatchToProps)(Navigation)
+);
