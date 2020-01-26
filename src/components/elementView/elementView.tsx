@@ -109,6 +109,7 @@ export class ElementTable extends React.Component<
                 if (col !== "id") {
                   return <th>{col}</th>;
                 }
+                return null;
               })}
             </tr>
           </thead>
@@ -127,6 +128,7 @@ export class ElementTable extends React.Component<
                     if (col !== "id") {
                       return <td>{item[col]}</td>;
                     }
+                    return null;
                   })}
                 </tr>
               );
