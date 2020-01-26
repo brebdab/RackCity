@@ -49,35 +49,6 @@ def model_add(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
-def model_modify(request):
-    """
-    Modify an existing model
-    """
-    # TODO: THIS ISN'T MODIFY!!!
-    data = JSONParser().parse(request)
-    failure_message = ""
-    if 'id' in data:
-        failure_message = failure_message + "Don't include id when adding a model. "
-    serializer = ITModelSerializer(data=data)
-    if not serializer.is_valid(raise_exception=False):
-        failure_message = failure_message + str(serializer.errors)
-    if failure_message == "":
-        try:
-            serializer.save()
-            return HttpResponse(status=HTTPStatus.CREATED)
-        except Exception as error:
-            failure_message = failure_message + str(error)
-
-    failure_message = "Request was invalid. " + failure_message
-    return JsonResponse({
-        "failure_message": failure_message
-    },
-        status=HTTPStatus.NOT_ACCEPTABLE
-    )
-
-
-@api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def model_page(request):
     """
