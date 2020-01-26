@@ -1,7 +1,9 @@
-import { Classes } from "@blueprintjs/core";
+import { Classes, Tab, Tabs } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
+import { API_ROOT } from "../../../api-config";
+import PropertiesView from "../propertiesView";
 import { RouteComponentProps, withRouter } from "react-router";
 
 export interface ModelViewProps { rid: string };
@@ -21,8 +23,9 @@ interface ModelViewState {
 }
 
 async function getData(modelkey: string) {
+  console.log( API_ROOT + "api/models/" + modelkey)
   return await axios
-    .get("https://rack-city-dev.herokuapp.com/api/models/" + modelkey)
+    .get(API_ROOT + "api/models/" + modelkey)
     .then(res => {
       const data = res.data;
       return data;
@@ -62,12 +65,24 @@ export class modelView extends React.PureComponent<RouteComponentProps, ModelVie
     })
   }
 
+  // private handleTabChange = (tabId: TabId) => this.setState({ tabId });
+
   public render() {
     // let params: any;
     // params = this.props.match.params
     return (
       <div className={Classes.DARK + " model-view"}>
-        <h1>Model Specs</h1>
+        <Tabs
+          id="ModelViewer"
+          animate={true}
+          renderActiveTabPanelOnly={false}
+        >
+          <Tab id="ModelProperties" title="Properties" panel={<PropertiesView
+            history={this.props.history} location={this.props.location} match={this.props.match}/>} />
+          <Tab id="Instances" title="Instances" panel={<h1>googdbye</h1>} panelClassName="ember-panel" />
+          <Tabs.Expander />
+        </Tabs>
+        {/*<h1>Model Specs</h1>
         <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered">
           <thead>
             <tr>
@@ -104,7 +119,7 @@ export class modelView extends React.PureComponent<RouteComponentProps, ModelVie
         <div>
           <h1>TODO: Get instances</h1>
         </div>
-        <h1>Options</h1>
+        <h1>Options</h1> */}
       </div>
     )
   }
