@@ -4,6 +4,7 @@ from rackcity.models import ITModel
 from rackcity.api.serializers import ITModelSerializer
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from http import HTTPStatus
 
 
 @api_view(['GET'])
@@ -34,7 +35,7 @@ def model_add(request):
     if failure_message == "":
         try:
             serializer.save()
-            return JsonResponse({"success": True}, status=201)
+            return HttpResponse(status=HTTPStatus.CREATED)
         except Exception as error:
             failure_message = failure_message + str(error)
 
@@ -43,7 +44,7 @@ def model_add(request):
         "success": False,
         "failure_message": failure_message
     },
-        status=406
+        status=HTTPStatus.NOT_ACCEPTABLE
     )
 
 
