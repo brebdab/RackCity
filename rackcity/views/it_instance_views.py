@@ -36,23 +36,30 @@ def instance_page(request):
     paginator.page_size = 10
     page_of_instances = paginator.paginate_queryset(instances, request)
     serializer = RecursiveITInstanceSerializer(page_of_instances, many=True)
-    return JsonResponse({"instances": serializer.data})
+    return JsonResponse(
+        {"instances": serializer.data},
+        status=HTTPStatus.OK,
+    )
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def instance_detail(request, pk):
+def instance_detail(request, id):
     """
     Retrieve a single instance.
     """
-    try:
-        instance = ITInstance.objects.get(pk=pk)
-    except ITInstance.DoesNotExist:
-        return HttpResponse(status=404)
 
-    if request.method == 'GET':
-        serializer = RecursiveITInstanceSerializer(instance)
-        return JsonResponse(serializer.data)
+    try:
+        instance = ITInstance.objects.get(id=id)
+    except ITInstance.DoesNotExist:
+        failure_message = "No model exists with id=" + str(id)
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+
+    serializer = RecursiveITInstanceSerializer(instance)
+    return JsonResponse(serializer.data, status=HTTPStatus.OK)
 
 
 @api_view(['POST'])
