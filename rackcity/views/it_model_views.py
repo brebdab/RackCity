@@ -41,7 +41,6 @@ def model_add(request):
 
     failure_message = "Request was invalid. " + failure_message
     return JsonResponse({
-        "success": False,
         "failure_message": failure_message
     },
         status=HTTPStatus.NOT_ACCEPTABLE
@@ -64,7 +63,7 @@ def model_auth(request):
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
 def model_admin(request):
-    """ 
+    """
     List all models, but requires request comes from admin user.
     (Temporary for auth testing on front end)
     """
