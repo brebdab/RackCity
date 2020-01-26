@@ -13,4 +13,10 @@ from .it_instance_views import (
     instance_add,
     instance_page,
 )
-from .rack_views import rack_detail, rack_list
+from .rack_views import (
+    rack_detail,
+    rack_list,
+    rack_get,
+    rack_create,
+    rack_delete,
+)

@@ -2,9 +2,11 @@
 from django.http import HttpResponse, JsonResponse
 from rackcity.models import Rack
 from rackcity.api.serializers import RackSerializer
+from rest_framework.decorators import permission_classes, api_view
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
 
-def rack_list(request):
+def rack_list(request):  # DEPRECATED !
     """
     List all racks.
     """
@@ -14,7 +16,7 @@ def rack_list(request):
         return JsonResponse(serializer.data, safe=False)
 
 
-def rack_detail(request, pk):
+def rack_detail(request, pk):  # DEPRECATED !
     """
     Retrieve a single rack.
     """
@@ -26,3 +28,30 @@ def rack_detail(request, pk):
     if request.method == 'GET':
         serializer = RackSerializer(rack)
         return JsonResponse(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def rack_get(request):
+    """
+    List all racks within specified range.
+    """
+    return JsonResponse({})
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def rack_create(request):
+    """
+    Create racks within specified range.
+    """
+    return JsonResponse({})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def rack_delete(request):
+    """
+    Delete racks within specified range.
+    """
+    return JsonResponse({})
