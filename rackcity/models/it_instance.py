@@ -5,7 +5,7 @@ from .rack import Rack
 
 class ITInstance(models.Model):
     hostname = models.CharField(max_length=150)
-    elevation = models.IntegerField()
+    elevation = models.PositiveIntegerField()
     model = models.ForeignKey(
         ITModel,
         on_delete=models.CASCADE,
@@ -18,3 +18,6 @@ class ITInstance(models.Model):
     )
     owner = models.CharField(max_length=100)
     comment = models.TextField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'instance'
