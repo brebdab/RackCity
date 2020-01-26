@@ -49,18 +49,75 @@ def model_add(request):
 
 
 @api_view(['POST'])
+@permission_classes([IsAdminUser])
+def model_modify(request):
+    """
+    Modify an existing model
+    """
+    # TODO: THIS ISN'T MODIFY!!!
+    data = JSONParser().parse(request)
+    failure_message = ""
+    if 'id' in data:
+        failure_message = failure_message + "Don't include id when adding a model. "
+    serializer = ITModelSerializer(data=data)
+    if not serializer.is_valid(raise_exception=False):
+        failure_message = failure_message + str(serializer.errors)
+    if failure_message == "":
+        try:
+            serializer.save()
+            return HttpResponse(status=HTTPStatus.CREATED)
+        except Exception as error:
+            failure_message = failure_message + str(error)
+
+    failure_message = "Request was invalid. " + failure_message
+    return JsonResponse({
+        "failure_message": failure_message
+    },
+        status=HTTPStatus.NOT_ACCEPTABLE
+    )
+
+
+@api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def model_page(request):
     """
-    List a page of models. If page not specified as query param (i.e.
-    /get-many?page=2), then the first page is returned.
+    List a page of models. Page and page size must be specified as query
+    parameters.
     """
+
+    failure_message = ""
+
+    if not request.query_params.get('page'):
+        failure_message += "Must specify page. "
+    if not request.query_params.get('page_size'):
+        failure_message += "Must specify page_size. "
+    elif int(request.query_params.get('page_size')) <= 0:
+        failure_message += "The page_size must be an integer greater than 0. "
+
+    if failure_message != "":
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+
     models = ITModel.objects.all()
     paginator = PageNumberPagination()
-    paginator.page_size = 5
-    page_of_models = paginator.paginate_queryset(models, request)
+    paginator.page_size = request.query_params.get('page_size')
+
+    try:
+        page_of_models = paginator.paginate_queryset(models, request)
+    except Exception:
+        failure_message += "Invalid page requested. "
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+
     serializer = ITModelSerializer(page_of_models, many=True)
-    return JsonResponse({"models": serializer.data})
+    return JsonResponse(
+        {"models": serializer.data},
+        status=HTTPStatus.OK,
+    )
 
 
 @api_view(['GET'])
