@@ -127,4 +127,4 @@ def instance_page_count(request):
     page_size = int(request.query_params.get('page_size'))
     instance_count = ITInstance.objects.all().count()
     page_count = math.ceil(instance_count / page_size)
-    return JsonResponse({"pages": page_count})
+    return JsonResponse({"page_count": page_count})
