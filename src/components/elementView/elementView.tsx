@@ -5,10 +5,15 @@ import * as React from "react";
 import { RouteComponentProps, withRouter } from "react-router";
 import { API_ROOT } from "../../api-config";
 import "./elementView.scss";
+import { connect } from "react-redux";
 
-//export interface ElementViewProps {}
+export interface ElementViewProps {
+  token: string;
+}
 
-export class ElementView extends React.PureComponent<RouteComponentProps> {
+export class ElementView extends React.PureComponent<
+  RouteComponentProps & ElementViewProps
+> {
   public render() {
     return (
       <Tabs
@@ -24,32 +29,53 @@ export class ElementView extends React.PureComponent<RouteComponentProps> {
           id="instance"
           title="Instances"
           panel={
-            <ElementTable element="instances" history={this.props.history} />
+            <ElementTable
+              element="instances"
+              token={this.props.token}
+              history={this.props.history}
+            />
           }
         />
         <Tab
           className="tab"
           id="model"
           title="Models"
-          panel={<ElementTable element="models" history={this.props.history} />}
+          panel={
+            <ElementTable
+              element="models"
+              token={this.props.token}
+              history={this.props.history}
+            />
+          }
         />
         <Tab
           className="tab"
           id="rack"
           title="Racks"
-          panel={<ElementTable element="racks" history={this.props.history} />}
+          panel={
+            <ElementTable
+              element="racks"
+              token={this.props.token}
+              history={this.props.history}
+            />
+          }
         />
         <Tabs.Expander />
       </Tabs>
     );
   }
 }
-
-async function getData(path: string) {
-  console.log(API_ROOT + "api/" + path);
+//testing models/test-auth
+async function getData(path: string, token: string) {
+  console.log(API_ROOT + "api/models/test-auth", token);
+  const headers = {
+    headers: {
+      Authorization: "Token " + token
+    }
+  };
   return await axios
     //.get("https://rack-city-dev.herokuapp.com/api/" + path)
-    .get(API_ROOT + "api/" + path)
+    .get(API_ROOT + "api/models/test-auth", headers)
     .then(res => {
       const data = res.data;
       const cols: Array<Array<string>> = data.map((item: any) => {
@@ -66,6 +92,7 @@ interface ElementTableState {
 interface ElementTableProps {
   element: string;
   history: any;
+  token: string;
 }
 
 export class ElementTable extends React.Component<
@@ -78,7 +105,7 @@ export class ElementTable extends React.Component<
   };
 
   async componentDidMount() {
-    const resp = await getData(this.props.element);
+    const resp = await getData(this.props.element, this.props.token);
     console.log(resp.cols);
     const cols = resp.cols.length === 0 ? [] : resp.cols[0];
 
@@ -134,4 +161,10 @@ export class ElementTable extends React.Component<
   }
 }
 
-export default withRouter(ElementView);
+const mapStatetoProps = (state: any) => {
+  return {
+    token: state.token
+  };
+};
+
+export default withRouter(connect(mapStatetoProps)(ElementView));
