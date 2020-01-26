@@ -4,5 +4,6 @@ from .it_instance_views import (
     instance_list,
     instance_add,
     instance_page,
+    instance_page_count,
 )
 from .rack_views import rack_detail, rack_list

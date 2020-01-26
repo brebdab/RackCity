@@ -10,6 +10,7 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.parsers import JSONParser
 from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
+import math
 
 
 @api_view(['GET'])
@@ -82,3 +83,15 @@ def instance_add(request):
         {"failure_message": failure_message},
         status=HTTPStatus.NOT_ACCEPTABLE,
     )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def instance_page_count(request):
+    """
+    Return total number of pages according to page size.
+    """
+    page_size = 10
+    instance_count = ITInstance.objects.all().count()
+    page_count = math.ceil(instance_count / page_size)
+    return JsonResponse({"pages": page_count})
