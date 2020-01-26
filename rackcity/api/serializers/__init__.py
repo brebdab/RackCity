@@ -1,3 +1,3 @@
-from .it_instance_serializers import ITInstanceSerializer
+from .it_instance_serializers import ITInstanceSerializer, ITInstanceSerializerRecursive
 from .it_model_serializers import ITModelSerializer
 from .rack_serializers import RackSerializer
