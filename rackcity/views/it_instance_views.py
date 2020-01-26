@@ -29,13 +29,38 @@ def instance_list(request):
 @permission_classes([IsAuthenticated])
 def instance_page(request):
     """
-    List a page of instances. If page not specified as query param (i.e.
-    /get-many?page=2), then the first page is returned.
+    List a page of instances. Page and page size must be specified as query
+    parameters.
     """
+
+    failure_message = ""
+
+    if not request.query_params.get('page'):
+        failure_message += "Must specify page. "
+    if not request.query_params.get('page_size'):
+        failure_message += "Must specify page_size. "
+    elif int(request.query_params.get('page_size')) <= 0:
+        failure_message += "The page_size must be an integer greater than 0. "
+
+    if failure_message != "":
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+
     instances = ITInstance.objects.all()
     paginator = PageNumberPagination()
-    paginator.page_size = 10
-    page_of_instances = paginator.paginate_queryset(instances, request)
+    paginator.page_size = request.query_params.get('page_size')
+
+    try:
+        page_of_instances = paginator.paginate_queryset(instances, request)
+    except Exception:
+        failure_message += "Invalid page requested. "
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+
     serializer = RecursiveITInstanceSerializer(page_of_instances, many=True)
     return JsonResponse({"instances": serializer.data})
 
@@ -89,9 +114,17 @@ def instance_add(request):
 @permission_classes([IsAuthenticated])
 def instance_page_count(request):
     """
-    Return total number of pages according to page size.
+    Return total number of pages according to page size, which must be
+    specified as query parameter.
     """
-    page_size = 10
+
+    if not request.query_params.get('page_size') or int(request.query_params.get('page_size')) <= 0:
+        return JsonResponse(
+            {"failure_message": "Must specify positive integer page_size."},
+            status=HTTPStatus.NOT_ACCEPTABLE,
+        )
+
+    page_size = int(request.query_params.get('page_size'))
     instance_count = ITInstance.objects.all().count()
     page_count = math.ceil(instance_count / page_size)
     return JsonResponse({"pages": page_count})
