@@ -1,21 +1,12 @@
 from rest_framework import serializers
-from rackcity.models import (
-    ITInstance,
-    ITModel,
-    Rack,
-)
-
-
-class ITInstanceSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ITInstance
-        fields = ('hostname', 'elevation', 'model', 'rack', 'owner', 'comment')
+from rackcity.models import ITModel
 
 
 class ITModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = ITModel
         fields = (
+            'id',
             'vendor',
             'model_number',
             'height',
@@ -27,9 +18,3 @@ class ITModelSerializer(serializers.ModelSerializer):
             'storage',
             'comment',
         )
-
-
-class RackSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Rack
-        fields = ('row_letter', 'rack_num', 'height')
