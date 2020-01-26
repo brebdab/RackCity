@@ -3,7 +3,7 @@ from django.db import models
 
 class Rack(models.Model):
     row_letter = models.CharField(max_length=1)
-    rack_num = models.IntegerField()
+    rack_num = models.PositiveIntegerField()
     height = models.PositiveIntegerField(default=42)
 
     class Meta:

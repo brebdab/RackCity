@@ -3,6 +3,7 @@ from rackcity.models import ITInstance, ITModel, Rack
 # from rest_framework.renderers import JSONRenderer
 # from rest_framework.parsers import JSONParser
 
+
 rack_A1 = Rack(row_letter='A', rack_num=1, height=42)
 rack_A1.save()
 
@@ -14,6 +15,9 @@ rack_B1.save()
 
 rack_B2 = Rack(row_letter='B', rack_num=2, height=42)
 rack_B2.save()
+
+rack_C1 = Rack(row_letter='C', rack_num=1)
+rack_C1.save()
 
 model_1 = ITModel(
     vendor='Dell',
@@ -51,39 +55,48 @@ model_3.save()
 
 instance = ITInstance(
     hostname='server9',
-    height=5,
-    model=model_1,
-    rack=rack_A1,
+    elevation=5,
+    model=ITModel.objects.all()[0],
+    rack=Rack.objects.all()[0],
     owner='bauriemma',
     comment='Reserved for Palaemon project',
 )
 instance.save()
 
 instance = ITInstance(
-    hostname='server9',
-    height=5,
-    model=model_2,
-    rack=rack_A1,
+    hostname='kali4',
+    elevation=30,
+    model=ITModel.objects.all()[1],
+    rack=Rack.objects.all()[0],
     owner='julias',
+    comment='Best server ever',
 )
 instance.save()
 
 instance = ITInstance(
-    hostname='server9',
-    height=5,
-    model=model_3,
-    rack=rack_B2,
+    hostname='vcm78',
+    elevation=5,
+    model=ITModel.objects.all()[2],
+    rack=Rack.objects.all()[1],
     owner='bauriemma',
-    comment='Reserved for Palaemon project',
 )
 instance.save()
 
 instance = ITInstance(
-    hostname='server9',
-    height=5,
-    model=model_3,
-    rack=rack_A2,
+    hostname='server0',
+    elevation=3,
+    model=ITModel.objects.all()[0],
+    rack=Rack.objects.all()[3],
     owner='julias',
-    comment='Reserved for Palaemon project',
 )
 instance.save()
+
+
+print('Racks:')
+print(Rack.objects.all())
+
+print('Models:')
+print(ITModel.objects.all())
+
+print('Instances:')
+print(ITInstance.objects.all())
