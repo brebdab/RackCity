@@ -2,8 +2,10 @@
 from django.http import HttpResponse, JsonResponse
 from rackcity.models import Rack
 from rackcity.api.serializers import RackSerializer
+from rackcity.api.objects import RackRangeSerializer
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from http import HTTPStatus
 
 
 def rack_list(request):  # DEPRECATED !
@@ -36,6 +38,10 @@ def rack_get(request):
     """
     List all racks within specified range.
     """
+    rack_range_deserialized = RackRangeSerializer(data=request.data)
+    if not rack_range_deserialized.is_valid():
+        return JsonResponse({"failure_message": "Invalid body"}, status=HTTPStatus.BAD_REQUEST)
+
     return JsonResponse({})
 
 
