@@ -106,7 +106,7 @@ def instance_add(request):
     failure_message = "Request was invalid. " + failure_message
     return JsonResponse(
         {"failure_message": failure_message},
-        status=HTTPStatus.NOT_ACCEPTABLE,
+        status=HTTPStatus.BAD_REQUEST,
     )
 
 
@@ -121,7 +121,7 @@ def instance_page_count(request):
     if not request.query_params.get('page_size') or int(request.query_params.get('page_size')) <= 0:
         return JsonResponse(
             {"failure_message": "Must specify positive integer page_size."},
-            status=HTTPStatus.NOT_ACCEPTABLE,
+            status=HTTPStatus.BAD_REQUEST,
         )
 
     page_size = int(request.query_params.get('page_size'))
