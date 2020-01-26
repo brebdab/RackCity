@@ -1,7 +1,7 @@
 from rest_framework.parsers import JSONParser
 from django.http import HttpResponse, JsonResponse
 from rackcity.models import ITModel
-from rackcity.api.serializers import ITModelSerializer, ResponseMessageSerializer
+from rackcity.api.serializers import ITModelSerializer
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
