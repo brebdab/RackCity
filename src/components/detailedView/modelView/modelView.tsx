@@ -19,7 +19,17 @@ interface ModelViewState {
   num_ethernet_ports: any,
   num_power_ports: any,
   storage: any,
-  vendor: any
+  vendor: any,
+  columns: Array<string>
+}
+
+class StateWrapper {
+
+  state: ModelViewState
+
+  constructor(data: ModelViewState) {
+    this.state = data;
+  }
 }
 
 async function getData(modelkey: string) {
@@ -45,7 +55,9 @@ export class modelView extends React.PureComponent<RouteComponentProps, ModelVie
     num_ethernet_ports: "",
     num_power_ports: "",
     storage: "",
-    vendor: ""
+    vendor: "",
+    columns: ["Model ID", "Model #", "CPU", "Height", "Display Color", "Memory (GB)", "# Ethernet Ports",
+                "# Power Ports", "Storage", "Vendor"]
   }
 
   async componentDidMount() {
@@ -65,11 +77,10 @@ export class modelView extends React.PureComponent<RouteComponentProps, ModelVie
     })
   }
 
-  // private handleTabChange = (tabId: TabId) => this.setState({ tabId });
-
   public render() {
     // let params: any;
     // params = this.props.match.params
+    var param = new StateWrapper(this.state)
     return (
       <div className={Classes.DARK + " model-view"}>
         <Tabs
@@ -78,48 +89,14 @@ export class modelView extends React.PureComponent<RouteComponentProps, ModelVie
           renderActiveTabPanelOnly={false}
         >
           <Tab id="ModelProperties" title="Properties" panel={<PropertiesView
-            history={this.props.history} location={this.props.location} match={this.props.match}/>} />
-          <Tab id="Instances" title="Instances" panel={<h1>googdbye</h1>} panelClassName="ember-panel" />
+            history={this.props.history} location={this.props.location}
+            match={this.props.match} {...param}/>}
+            />
+          <Tab id="Instances" title="Instances"
+            panel={<h1>googdbye</h1>} panelClassName="ember-panel"
+            />
           <Tabs.Expander />
         </Tabs>
-        {/*<h1>Model Specs</h1>
-        <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered">
-          <thead>
-            <tr>
-              <th>CPU</th>
-              <th>Display Color</th>
-              <th>Height</th>
-              <th>Memory (GB)</th>
-              <th>Model ID</th>
-              <th>Model #</th>
-              <th># Ethernet Ports</th>
-              <th># Power Ports</th>
-              <th>Storage</th>
-              <th>Vendor</th>
-              <th>Comments</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>{this.state.cpu}</td>
-              <td>{this.state.display_color}</td>
-              <td>{this.state.height}</td>
-              <td>{this.state.memory_gb}</td>
-              <td>{this.state.model_id}</td>
-              <td>{this.state.model_number}</td>
-              <td>{this.state.num_ethernet_ports}</td>
-              <td>{this.state.num_power_ports}</td>
-              <td>{this.state.storage}</td>
-              <td>{this.state.vendor}</td>
-              <td>{this.state.comment}</td>
-            </tr>
-          </tbody>
-        </table>
-        <h1>Instances of this model</h1>
-        <div>
-          <h1>TODO: Get instances</h1>
-        </div>
-        <h1>Options</h1> */}
       </div>
     )
   }
