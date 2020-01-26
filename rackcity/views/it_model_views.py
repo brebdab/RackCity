@@ -70,6 +70,20 @@ def model_detail(request, id):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+def model_vendors(request):
+    """
+    Get all known vendors.
+    """
+    vendors = ITModel.objects.values('vendor').distinct()
+    vendors_names = [vendor['vendor'] for vendor in vendors]
+    return JsonResponse(
+        {"vendors": vendors_names},
+        status=HTTPStatus.OK
+    )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def model_auth(request):
     """
     List all models, but requires user authentication in header.
