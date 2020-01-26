@@ -2,6 +2,7 @@ from .it_model_views import model_detail, model_list, model_add, model_auth, mod
 from .it_instance_views import (
     instance_detail,
     instance_list,
-    instance_add
+    instance_add,
+    instance_page,
 )
 from .rack_views import rack_detail, rack_list

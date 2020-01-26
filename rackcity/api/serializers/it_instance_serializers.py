@@ -1,5 +1,4 @@
 from rest_framework import serializers
-from rest_framework import pagination
 from rackcity.models import ITInstance
 from .it_model_serializers import ITModelSerializer
 from .rack_serializers import RackSerializer
