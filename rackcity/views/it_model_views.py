@@ -1,7 +1,7 @@
 from rest_framework.parsers import JSONParser
 from django.http import HttpResponse, JsonResponse
 from rackcity.models import ITModel
-from rackcity.api.serializers import ITModelSerializer
+from rackcity.api.serializers import ITModelSerializer, ResponseMessageSerializer
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
@@ -18,22 +18,31 @@ def model_list(request):
         return JsonResponse(serializer.data, safe=False)
 
 
-def model_add(request):  # TODO: make it only accept POSTs
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def model_add(request):
     """
     Add a new model
     """
-    if request.method == 'POST':
-        data = JSONParser().parse(request)
-        serializer = ITModelSerializer(data=data)
-        if serializer.is_valid():  # TODO: figure out what .valid() does.  Different fields are required for add, update, etc
-            print("valid")
+    data = JSONParser().parse(request)
+    failure_message = ""
+    if 'id' in data:
+        failure_message = failure_message + "Don't include id when adding a model. "
+    serializer = ITModelSerializer(data=data)
+    if not serializer.is_valid(raise_exception=False):
+        failure_message = failure_message + str(serializer.errors)
+    if failure_message == "":
+        try:
             serializer.save()
-            # should return something better maybe
-            return HttpResponse(status=201)
-        else:
-            print("invalid")
-            # should return something better definitely
-            return HttpResponse(status=400)
+            return JsonResponse({"success": True})
+        except Exception as error:
+            failure_message = failure_message + str(error)
+
+    failure_message = "Request was invalid. " + failure_message
+    return JsonResponse({
+        "success": False,
+        "failure_message": failure_message
+    })
 
 
 @api_view(['GET'])
