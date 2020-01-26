@@ -12,6 +12,7 @@ urlpatterns = [
     path('instances/get-many', views.instance_page),
     path('instances/<int:id>', views.instance_detail),
     path('instances/add', views.instance_add),
+    path('instances/pages', views.instance_page_count),
     path('racks', views.rack_list),
     path('racks/<int:pk>', views.rack_detail),
     path('iamadmin', views.i_am_admin)
