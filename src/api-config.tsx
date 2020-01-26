@@ -12,4 +12,4 @@ if (hostname === "rack-city-dev.herokuapp.com") {
   backendHost = process.env.REACT_APP_BACKEND_HOST || "http://127.0.0.1:8000";
 }
 
-export const API_ROOT = `${backendHost}/api/`;
+export const API_ROOT = `${backendHost}/`;

@@ -6,46 +6,13 @@
   outline: none;
 }
 
-// .table {
-//     border-spacing: 0;
-//     border: 0px solid #ededed;
-//   }
-//   table tr:last-child td {
-//     border-bottom: 0;
-//   }
-//   table th,
-//   table td {
-//     margin: 0;
-//     padding: 0.5rem;
-//     border-bottom: 1px solid #ededed;
-//     border-right: 20px solid #ededed;
-//     position: relative;
-//   }
-//   table th:last-child,
-//   table td:last-child {
-//     border-right: 0;
-//   }
-//   .table tr:nth-child(even) {
-//     background-color:grey;
-//   }
-
-//   table th::before {
-//     position: absolute;
-//     right: 15px;
-//     top: 16px;
-//     content: "";
-//     width: 0;
-//     height: 0;
-//     border-left: 5px solid transparent;
-//     border-right: 5px solid transparent;
-//   }
-//   table th.sort-asc::before {
-//     border-bottom: 5px solid #22543d;
-//   }
-//   table th.sort-desc::before {
-//     border-top: 5px solid #22543d;
-//   }
-
+.loading-container {
+  text-align: center;
+}
+.center {
+  display: inline-block;
+  padding: 10px;
+}
 .TableView {
   display: flex;
   flex-direction: column;

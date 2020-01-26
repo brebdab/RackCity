@@ -1,24 +1,18 @@
 {
   "compilerOptions": {
-     "typeRoots": [
-            "node_modules/@types"
-        ],
-        "plugins": [
-          {
-            "name": "typescript-tslint-plugin",
-            "alwaysShowRuleFailuresAsWarnings": false,
-            "ignoreDefinitionFiles": true,
-            "configFile": "../tslint.json",
-            "suppressWhileTypeErrorsPresent": false
-          }
-        ],
-    "target": "es5",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
+    "typeRoots": ["node_modules/@types"],
+    "plugins": [
+      {
+        "name": "typescript-tslint-plugin",
+        "alwaysShowRuleFailuresAsWarnings": false,
+        "ignoreDefinitionFiles": true,
+        "configFile": "../tslint.json",
+        "suppressWhileTypeErrorsPresent": false
+      }
     ],
-    "allowJs": false,
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -31,7 +25,5 @@
     "noEmit": true,
     "jsx": "react"
   },
-  "include": [
-    "src"
-  ]
+  "include": ["src"]
 }

@@ -1,9 +1,9 @@
-import { Classes, Tab, Tabs } from "@blueprintjs/core";
+import { Classes, Spinner, Tab, Tabs } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
-import { API_ROOT } from "../../api-config";
 import * as React from "react";
 import { RouteComponentProps, withRouter } from "react-router";
+import { API_ROOT } from "../../api-config";
 import "./elementView.scss";
 
 //export interface ElementViewProps {}
@@ -46,10 +46,10 @@ export class ElementView extends React.PureComponent<RouteComponentProps> {
 }
 
 async function getData(path: string) {
-  console.log(API_ROOT + path);
+  console.log(API_ROOT + "api/" + path);
   return await axios
     //.get("https://rack-city-dev.herokuapp.com/api/" + path)
-    .get(API_ROOT + path)
+    .get(API_ROOT + "api/" + path)
     .then(res => {
       const data = res.data;
       const cols: Array<Array<string>> = data.map((item: any) => {
@@ -79,15 +79,28 @@ export class ElementTable extends React.Component<
 
   async componentDidMount() {
     const resp = await getData(this.props.element);
+    console.log(resp.cols);
+    const cols = resp.cols.length === 0 ? [] : resp.cols[0];
 
     this.setState({
-      columns: resp.cols[0],
+      columns: cols,
 
       data: resp.data
     });
   }
   public render() {
-    return (
+    console.log(this.props.element);
+    return this.state.columns.length === 0 ? (
+      <div className="loading-container">
+        <p className="center">No {this.props.element} data found </p>
+        <p></p>
+        <Spinner
+          className="center"
+          intent="primary"
+          size={Spinner.SIZE_STANDARD}
+        />
+      </div>
+    ) : (
       <div className="ElementTable">
         <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered">
           <thead>
@@ -103,7 +116,8 @@ export class ElementTable extends React.Component<
                 <tr
                   onClick={() =>
                     this.props.history.push(
-                      "/" + this.props.element + "/test_rid"
+                      "/" + this.props.element + "/test_rid" // TODO replace test_rid with param */
+                      // { rackname: "hello" } // pass additional props here
                     )
                   }
                 >
