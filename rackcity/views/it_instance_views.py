@@ -64,29 +64,23 @@ def instance_add(request):
     Add a new instance.
     """
     data = JSONParser().parse(request)
-    error_description = ""
+    failure_message = ""
     if 'id' in data:
-        error_description += "Don't include id on add. "
-        return JsonResponse(
-            {"error_description": error_description},
-            status=HTTPStatus.BAD_REQUEST,
-        )
+        failure_message += "Don't include id when adding an instance. "
 
     serializer = ITInstanceSerializer(data=data)
     if not serializer.is_valid(raise_exception=False):
-        error_description += str(serializer.errors)
+        failure_message += str(serializer.errors)
 
-    if error_description == "":
+    if failure_message == "":
         try:
             serializer.save()
-            return JsonResponse(
-                {},
-                status=HTTPStatus.OK
-            )
+            return HttpResponse(status=HTTPStatus.CREATED)
         except Exception as error:
-            error_description += str(error)
+            failure_message += str(error)
 
+    failure_message = "Request was invalid. " + failure_message
     return JsonResponse(
-        {"error_description": error_description},
-        status=HTTPStatus.BAD_REQUEST,
+        {"failure_message": failure_message},
+        status=HTTPStatus.NOT_ACCEPTABLE,
     )
