@@ -20,7 +20,8 @@ interface ModelViewState {
   num_power_ports: any,
   storage: any,
   vendor: any,
-  columns: Array<string>
+  columns: Array<string>,
+  fields: Array<string>
 }
 
 class StateWrapper {
@@ -57,7 +58,9 @@ export class modelView extends React.PureComponent<RouteComponentProps, ModelVie
     storage: "",
     vendor: "",
     columns: ["Model ID", "Model #", "CPU", "Height", "Display Color", "Memory (GB)", "# Ethernet Ports",
-                "# Power Ports", "Storage", "Vendor"]
+                "# Power Ports", "Storage", "Vendor"],
+    fields: ["model_id", "model_number", "cpu", "height", "display_color", "memory_gb", "num_ethernet_ports",
+                "num_power_ports", "storage", "vendor"]
   }
 
   async componentDidMount() {
@@ -93,7 +96,7 @@ export class modelView extends React.PureComponent<RouteComponentProps, ModelVie
             match={this.props.match} {...param}/>}
             />
           <Tab id="Instances" title="Instances"
-            panel={<h1>googdbye</h1>} panelClassName="ember-panel"
+            panel={<h1>All instances</h1>} panelClassName="ember-panel"
             />
           <Tabs.Expander />
         </Tabs>

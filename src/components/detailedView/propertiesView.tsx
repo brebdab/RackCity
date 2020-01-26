@@ -4,20 +4,16 @@ import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
 import { RouteComponentProps } from "react-router";
 
-export interface PropertiesProps {
-  data: any;
- };
-
-export class PropertiesView extends React.PureComponent<
-  RouteComponentProps,
-  PropertiesProps
-  > {
+export class PropertiesView extends React.PureComponent<RouteComponentProps> {
 
     renderData(data: any) {
+      var i = -1;
       return (
         <div>
           {data.columns.map((item: string) => {
-            return <h1 key={item}>{item}</h1>
+            i++;
+            var key = data.fields[i];
+            return <h1 key={item}>{item}: {data[key]}</h1>
           })}
         </div>
       )
