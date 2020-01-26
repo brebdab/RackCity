@@ -1,8 +1,7 @@
+import { Classes } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
-import { withRouter } from "react-router";
 import "./rackView.scss";
-import { Classes } from "@blueprintjs/core";
 
 //export interface ElementViewProps {}
 
@@ -20,7 +19,7 @@ export class RackView extends React.Component<
     const maxHeight = 42;
     let unit = 1;
     let currHeight = 0;
-    while (currHeight <= maxHeight) {
+    while (currHeight < maxHeight) {
       console.log(currHeight);
       if (currHeight === instances[0]) {
         currHeight = widths[0] + currHeight;
@@ -49,7 +48,7 @@ export class RackView extends React.Component<
       );
     }
     return (
-      <div className={Classes.DARK}>
+      <div className={Classes.DARK + " whole"}>
         <table className=" bp3-html-table bp3-interactive bp3-html-table-bordered rack-table">
           <thead>
             <tr>

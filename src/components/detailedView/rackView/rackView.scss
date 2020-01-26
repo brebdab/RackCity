@@ -1,8 +1,16 @@
 $row-height: 6px;
+.whole {
+  border: 10px grey;
+}
 .rack-table {
   //background: grey;
+  border: 10pt grey !important;
+  outline: 10pt white !important;
   width: 100pt;
   float: left;
+}
+.loc-table {
+  border: 1pt grey;
 }
 
 .header {
@@ -10,6 +18,10 @@ $row-height: 6px;
   font-size: 10px;
   background-color: grey;
 }
+// .table-rack{
+//     border: 1pt black
+//     flaot
+// }
 
 .cell {
   text-align: center !important;
