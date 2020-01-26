@@ -4,6 +4,7 @@ from rackcity.models import ITModel, ITInstance
 from rackcity.api.serializers import ITModelSerializer, ITInstanceSerializer
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
 
 
@@ -44,6 +45,49 @@ def model_add(request):
         "failure_message": failure_message
     },
         status=HTTPStatus.NOT_ACCEPTABLE
+    )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def model_page(request):
+    """
+    List a page of models. Page and page size must be specified as query
+    parameters.
+    """
+
+    failure_message = ""
+
+    if not request.query_params.get('page'):
+        failure_message += "Must specify page. "
+    if not request.query_params.get('page_size'):
+        failure_message += "Must specify page_size. "
+    elif int(request.query_params.get('page_size')) <= 0:
+        failure_message += "The page_size must be an integer greater than 0. "
+
+    if failure_message != "":
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+
+    models = ITModel.objects.all()
+    paginator = PageNumberPagination()
+    paginator.page_size = request.query_params.get('page_size')
+
+    try:
+        page_of_models = paginator.paginate_queryset(models, request)
+    except Exception:
+        failure_message += "Invalid page requested. "
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+
+    serializer = ITModelSerializer(page_of_models, many=True)
+    return JsonResponse(
+        {"models": serializer.data},
+        status=HTTPStatus.OK,
     )
 
 

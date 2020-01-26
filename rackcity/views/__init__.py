@@ -1,5 +1,6 @@
 from .it_model_views import (
     model_add,
+    model_page,
     model_detail,
     model_vendors,
     model_list,
