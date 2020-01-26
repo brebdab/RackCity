@@ -1,4 +1,12 @@
-from .it_model_views import model_detail, model_list, model_add, model_auth, model_admin, i_am_admin
+from .it_model_views import (
+    model_add,
+    model_detail,
+    model_page,
+    model_list,
+    model_auth,
+    model_admin,
+    i_am_admin
+)
 from .it_instance_views import (
     instance_detail,
     instance_list,

@@ -4,6 +4,7 @@ from rackcity.models import ITModel
 from rackcity.api.serializers import ITModelSerializer
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
 
 
@@ -45,6 +46,21 @@ def model_add(request):
     },
         status=HTTPStatus.NOT_ACCEPTABLE
     )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def model_page(request):
+    """
+    List a page of models. If page not specified as query param (i.e.
+    /get-many?page=2), then the first page is returned.
+    """
+    models = ITModel.objects.all()
+    paginator = PageNumberPagination()
+    paginator.page_size = 5
+    page_of_models = paginator.paginate_queryset(models, request)
+    serializer = ITModelSerializer(page_of_models, many=True)
+    return JsonResponse({"models": serializer.data})
 
 
 @api_view(['GET'])
