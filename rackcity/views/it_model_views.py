@@ -1,14 +1,14 @@
 from rest_framework.parsers import JSONParser
 from django.http import HttpResponse, JsonResponse
-from rackcity.models import ITModel
-from rackcity.api.serializers import ITModelSerializer
+from rackcity.models import ITModel, ITInstance
+from rackcity.api.serializers import ITModelSerializer, ITInstanceSerializer
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from http import HTTPStatus
 
 
 @api_view(['GET'])
-def model_list(request):
+def model_list(request):  # DEPRECATED!
     """
     List all models.
     """
@@ -49,6 +49,27 @@ def model_add(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+def model_detail(request, id):
+    """
+    Retrieve a single model.
+    """
+    try:
+        model = ITModel.objects.get(id=id)
+        model_serializer = ITModelSerializer(model)
+        instances = ITInstance.objects.filter(model=id)
+        instances_serializer = ITInstanceSerializer(instances, many=True)
+        model_detail = {
+            "model": model_serializer.data,
+            "instances": instances_serializer.data
+        }
+        return JsonResponse(model_detail, status=HTTPStatus.OK)
+    except ITModel.DoesNotExist:
+        failure_message = "No model exists with id="+str(id)
+        return JsonResponse({"failure_message": failure_message}, status=HTTPStatus.NOT_FOUND)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def model_auth(request):
     """
     List all models, but requires user authentication in header.
@@ -71,21 +92,6 @@ def model_admin(request):
         models = ITModel.objects.all()
         serializer = ITModelSerializer(models, many=True)
         return JsonResponse(serializer.data, safe=False)
-
-
-@api_view(['GET'])
-def model_detail(request, pk):
-    """
-    Retrieve a single model.
-    """
-    try:
-        model = ITModel.objects.get(pk=pk)
-    except ITModel.DoesNotExist:
-        return HttpResponse(status=404)
-
-    if request.method == 'GET':
-        serializer = ITModelSerializer(model)
-        return JsonResponse(serializer.data)
 
 
 @api_view(['GET'])
