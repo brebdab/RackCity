@@ -3,9 +3,11 @@ import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
 import { RouteComponentProps, withRouter } from "react-router";
-import "./instanceView.scss"
+import "./instanceView.scss";
 
-export interface InstanceViewProps { rid: string };
+export interface InstanceViewProps {
+  rid: string;
+}
 
 // Given an rid, will perform a GET request of that rid and display info about that instnace
 
@@ -18,23 +20,34 @@ async function getData(instancekey: string) {
     });
 }
 
-export class InstanceViewWrapper extends React.PureComponent<RouteComponentProps, InstanceViewProps> {
+export class InstanceViewWrapper extends React.PureComponent<
+  RouteComponentProps,
+  InstanceViewProps
+> {
   public render() {
-    return <InstanceView history={this.props.history} location={this.props.location} match={this.props.match}  />;
+    return (
+      <InstanceView
+        history={this.props.history}
+        location={this.props.location}
+        match={this.props.match}
+      />
+    );
   }
 }
 
 interface InstanceViewState {
-  hostname: any,
-  model: any,
-  rack: any,
-  height: any,
-  user: any,
-  comment: any
+  hostname: any;
+  model: any;
+  rack: any;
+  height: any;
+  user: any;
+  comment: any;
 }
 
-export class InstanceView extends React.PureComponent<RouteComponentProps, InstanceViewState> {
-
+export class InstanceView extends React.PureComponent<
+  RouteComponentProps,
+  InstanceViewState
+> {
   public state: InstanceViewState = {
     hostname: "",
     model: "",
@@ -42,7 +55,7 @@ export class InstanceView extends React.PureComponent<RouteComponentProps, Insta
     height: "",
     user: "",
     comment: ""
-  }
+  };
 
   async componentDidMount() {
     const resp = await getData("2"); // TODO change to dynamic path
@@ -87,9 +100,8 @@ export class InstanceView extends React.PureComponent<RouteComponentProps, Insta
           </table>
         </div>
       </div>
-    )
+    );
   }
-
 }
 
 export default withRouter(InstanceViewWrapper);
