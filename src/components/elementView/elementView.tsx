@@ -106,7 +106,10 @@ export class ElementTable extends React.Component<
           <thead>
             <tr>
               {this.state.columns.map((col: string) => {
-                return <th>{col}</th>;
+                if (col !== "id") {
+                  return <th>{col}</th>;
+                }
+                return null;
               })}
             </tr>
           </thead>
@@ -116,13 +119,16 @@ export class ElementTable extends React.Component<
                 <tr
                   onClick={() =>
                     this.props.history.push(
-                      "/" + this.props.element + "/test_rid" // TODO replace test_rid with param */
+                      "/" + this.props.element + "/" + item["id"] // TODO replace test_rid with param */
                       // { rackname: "hello" } // pass additional props here
                     )
                   }
                 >
                   {this.state.columns.map((col: string) => {
-                    return <td>{item[col]}</td>;
+                    if (col !== "id") {
+                      return <td>{item[col]}</td>;
+                    }
+                    return null;
                   })}
                 </tr>
               );

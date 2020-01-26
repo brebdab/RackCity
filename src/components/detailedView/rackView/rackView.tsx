@@ -2,15 +2,20 @@ import { Classes } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
 import "./rackView.scss";
+import { RouteComponentProps } from "react-router";
 
 //export interface ElementViewProps {}
 
-interface ElementTableState {}
-interface ElementTableProps {}
+export interface RackViewProps {
+  instances: any;
+}
+export interface RouteParams {
+  rid: string;
+}
 
-export class RackView extends React.Component<
-  ElementTableProps,
-  ElementTableState
+export class RackView extends React.PureComponent<
+  RouteComponentProps<RouteParams>,
+  RackViewProps
 > {
   public render() {
     let rows = [];
@@ -52,7 +57,9 @@ export class RackView extends React.Component<
         <table className=" bp3-html-table bp3-interactive bp3-html-table-bordered rack-table">
           <thead>
             <tr>
-              <th className=" cell header">Rack View</th>
+              <th className=" cell header">
+                Rack {this.props.match.params.rid}
+              </th>
             </tr>
           </thead>
           <tbody>{rows}</tbody>
