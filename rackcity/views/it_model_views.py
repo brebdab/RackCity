@@ -34,7 +34,7 @@ def model_add(request):
     if failure_message == "":
         try:
             serializer.save()
-            return JsonResponse({"success": True})
+            return JsonResponse({"success": True}, status=201)
         except Exception as error:
             failure_message = failure_message + str(error)
 
@@ -42,7 +42,9 @@ def model_add(request):
     return JsonResponse({
         "success": False,
         "failure_message": failure_message
-    })
+    },
+        status=406
+    )
 
 
 @api_view(['GET'])
