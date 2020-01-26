@@ -8,7 +8,9 @@ urlpatterns = [
     path('models/test-auth', views.model_auth),
     path('models/test-admin', views.model_admin),
     path('instances', views.instance_list),
+    path('instances/get-many', views.instance_page),
     path('instances/<int:pk>', views.instance_detail),
+    path('instances/add', views.instance_add),
     path('racks', views.rack_list),
     path('racks/<int:pk>', views.rack_detail),
     path('iamadmin', views.i_am_admin)
