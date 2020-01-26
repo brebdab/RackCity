@@ -9,7 +9,7 @@ urlpatterns = [
     path('models/test-admin', views.model_admin),
     path('instances', views.instance_list),
     path('instances/get-many', views.instance_page),
-    path('instances/<int:pk>', views.instance_detail),
+    path('instances/<int:id>', views.instance_detail),
     path('instances/add', views.instance_add),
     path('racks', views.rack_list),
     path('racks/<int:pk>', views.rack_detail),
