@@ -21,7 +21,7 @@ def instance_list(request):
     if request.method == 'GET':
         instances = ITInstance.objects.all()
         serializer = RecursiveITInstanceSerializer(instances, many=True)
-        return JsonResponse(serializer.data, safe=False)
+        return JsonResponse({"instances": serializer.data})
 
 
 @api_view(['POST'])
@@ -35,10 +35,7 @@ def instance_page(request):
     paginator.page_size = 10
     page_of_instances = paginator.paginate_queryset(instances, request)
     serializer = RecursiveITInstanceSerializer(page_of_instances, many=True)
-    return JsonResponse(
-        serializer.data,
-        safe=False,
-    )
+    return JsonResponse({"instances": serializer.data})
 
 
 @api_view(['GET'])
