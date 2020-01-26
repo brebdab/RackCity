@@ -6,20 +6,26 @@ import { RouteComponentProps, withRouter } from "react-router";
 
 // pass in rack info as props
 
-export interface RackViewProps { instances: any };
+export interface RackViewProps {
+  instances: any;
+}
+export interface RouteParams {
+  rid: string;
+}
 
-
-export class RackView extends React.PureComponent<RouteComponentProps, RackViewProps> {
-
+export class RackView extends React.PureComponent<
+  RouteComponentProps<RouteParams>,
+  RackViewProps
+> {
   public render() {
+    console.log(this.props.match.params);
     // let params: any;
     // params = this.props.location.state;
     // console.log(params.rackname)
     // let params: any;
     // params = this.props.match.params
-    return <h1>rack</h1>
+    return <h1>rack: {this.props.match.params.rid}</h1>;
   }
-
 }
 
 interface State {
@@ -29,7 +35,7 @@ interface State {
 
 export class RackTable extends React.Component {
   public render() {
-    return <p>hello</p>
+    return <p>hello</p>;
   }
 }
 
