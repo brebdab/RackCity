@@ -3,8 +3,7 @@ import {
   Classes,
   FormGroup,
   InputGroup,
-  MenuItem,
-  Dialog
+  MenuItem
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import Form, { FormComponentProps } from "antd/lib/form";
@@ -19,37 +18,12 @@ import {
   StringSuggest
 } from "./formUtils";
 import "./login.scss";
-export interface IPopUpForm {
-  handleClose(): any;
-  isOpen: boolean;
-  title: string;
-}
-
-export class PopUpForm extends React.Component<IPopUpForm> {
-  render() {
-    return (
-      <Dialog
-        className={Classes.DARK}
-        usePortal={true}
-        enforceFocus={true}
-        canEscapeKeyClose={true}
-        canOutsideClickClose={true}
-        isOpen={this.props.isOpen}
-        onClose={this.props.handleClose}
-        title={this.props.title}
-      >
-        <WrappedCreateModelForm />
-      </Dialog>
-    );
-  }
-}
 
 export interface IModelState {
   vendors: Array<string>;
 }
 export interface CreateModelFormProps {
   token: string;
-  closeOnSubmit(): any;
 }
 export interface IModelObject {
   vendor: string | undefined;
@@ -122,7 +96,6 @@ export class CreateModelForm extends React.Component<
         console.log(modelObject);
         axios
           .post(API_ROOT + "api/models/add", modelObject, headers)
-          .then(this.props.closeOnSubmit())
           .catch(err => console.log(err));
       }
     });
