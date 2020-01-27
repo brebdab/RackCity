@@ -6,6 +6,7 @@ from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
+import math
 
 
 @api_view(['GET'])
@@ -128,7 +129,34 @@ def model_vendors(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def model_auth(request):
+def model_page_count(request):
+    """
+    Return total number of pages according to page size, which must be
+    specified as query parameter.
+    """
+    if not request.query_params.get('page_size') or int(request.query_params.get('page_size')) <= 0:
+        return JsonResponse(
+            {"failure_message": "Must specify positive integer page_size."},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    page_size = int(request.query_params.get('page_size'))
+    model_count = ITModel.objects.all().count()
+    page_count = math.ceil(model_count / page_size)
+    return JsonResponse({"page_count": page_count})
+
+
+@api_view(['GET'])
+def i_am_admin(request):
+    print("yeah")
+    if(request.user.is_superuser):
+        return JsonResponse({"is_admin": True})
+    else:
+        return JsonResponse({"is_admin": False})
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def model_auth(request):  # DEPRECATED!
     """
     List all models, but requires user authentication in header.
     (Temporary for auth testing on front end)
@@ -141,7 +169,7 @@ def model_auth(request):
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
-def model_admin(request):
+def model_admin(request):  # DEPRECATED!
     """
     List all models, but requires request comes from admin user.
     (Temporary for auth testing on front end)
@@ -150,14 +178,3 @@ def model_admin(request):
         models = ITModel.objects.all()
         serializer = ITModelSerializer(models, many=True)
         return JsonResponse(serializer.data, safe=False)
-
-
-@api_view(['GET'])
-def i_am_admin(request):
-    print("yeah")
-    if(request.user.is_superuser):
-        print("yeah")
-        return JsonResponse({"is_admin": True})
-    else:
-        print("nah")
-        return JsonResponse({"is_admin": False})

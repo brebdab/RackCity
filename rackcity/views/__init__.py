@@ -3,10 +3,11 @@ from .it_model_views import (
     model_page,
     model_detail,
     model_vendors,
+    model_page_count,
+    i_am_admin,
     model_list,
     model_auth,
-    model_admin,
-    i_am_admin
+    model_admin
 )
 from .it_instance_views import (
     instance_detail,
