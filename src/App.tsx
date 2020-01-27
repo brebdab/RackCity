@@ -45,9 +45,10 @@ class App extends React.Component<AppProps> {
             <Route path="/racks/:rid" component={RackView} />
             <Route path="/models/:rid" component={ModelView} />
             <Route path="/instances/:rid" component={InstanceViewWrap} />
-            <Route path="/create" component={WrappedCreateModelForm} />
+
             {/* admin paths */}
             <Route path="/admin" component={WrappedNormalRegistrationForm} />
+            <Route path="/create" component={WrappedCreateModelForm} />
 
             <Route component={Notfound} />
           </Switch>

@@ -108,6 +108,7 @@ export const renderCreateFilmOption = (
     shouldDismissPopover={false}
   />
 );
+
 const VendorSuggest = Suggest.ofType<string>();
 export class CreateModelForm extends React.Component<
   CreateModelFormProps,
@@ -126,20 +127,22 @@ export class CreateModelForm extends React.Component<
     comment: undefined
   };
 
-  async getVendors() {
+  getVendors() {
     console.log(this.props.token);
     const headers = {
       headers: {
-        Authorization: "Token " + this.props.token
+        Authorization: "Token 58ae9de1d44827f23abfafd23d2a121502ab3490"
       }
     };
-    await axios
+
+    axios
       //.get("https://rack-city-dev.herokuapp.com/api/" + path)
       .get(API_ROOT + "api/models/vendors", headers)
       .then(res => {
-        const data = res.data;
+        const vendors: Array<string> = res.data.vendors;
+        res.data.vendors.map((items: any) => console.log(items));
         this.setState({
-          vendors: data
+          vendors: vendors
         });
       })
       .catch(err => {
@@ -147,12 +150,11 @@ export class CreateModelForm extends React.Component<
       });
   }
 
-  async componentDidMount() {
-    await this.getVendors();
-  }
+  async componentDidMount() {}
 
   render() {
-    console.log("test");
+    this.getVendors();
+    console.log(this.state.vendors.toString);
     return (
       <div className={Classes.DARK + " login-container"}>
         <Form

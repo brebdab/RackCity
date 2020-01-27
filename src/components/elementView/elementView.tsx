@@ -1,10 +1,20 @@
-import { Classes, Spinner, Tab, Tabs } from "@blueprintjs/core";
+import {
+  Callout,
+  Classes,
+  Spinner,
+  Tab,
+  Tabs,
+  AnchorButton,
+  Dialog
+} from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
 import { RouteComponentProps, withRouter } from "react-router";
 import { API_ROOT } from "../../api-config";
 import "./elementView.scss";
+import { tsThisType } from "@babel/types";
+import CreateModelForm from "../../forms/createModelForm";
 
 //export interface ElementViewProps {}
 
@@ -62,6 +72,7 @@ async function getData(path: string) {
 interface ElementTableState {
   columns: Array<string>;
   data: any;
+  isOpen: boolean;
 }
 interface ElementTableProps {
   element: string;
@@ -74,7 +85,8 @@ export class ElementTable extends React.Component<
 > {
   public state: ElementTableState = {
     columns: [],
-    data: []
+    data: [],
+    isOpen: false
   };
 
   async componentDidMount() {
@@ -88,53 +100,81 @@ export class ElementTable extends React.Component<
       data: resp.data
     });
   }
+
+  private handleOpen = () => {
+    this.setState({
+      isOpen: true
+    });
+  };
+  private handleClose = () => this.setState({ isOpen: false });
   public render() {
     console.log(this.props.element);
-    return this.state.columns.length === 0 ? (
-      <div className="loading-container">
-        <p className="center">No {this.props.element} data found </p>
-        <p></p>
-        <Spinner
-          className="center"
-          intent="primary"
-          size={Spinner.SIZE_STANDARD}
+    return (
+      <div>
+        <AnchorButton
+          text={"Add " + this.props.element.slice(0, -1)}
+          icon="add"
+          onClick={this.handleOpen}
         />
-      </div>
-    ) : (
-      <div className="ElementTable">
-        <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered">
-          <thead>
-            <tr>
-              {this.state.columns.map((col: string) => {
-                if (col !== "id") {
-                  return <th>{col}</th>;
-                }
-                return null;
-              })}
-            </tr>
-          </thead>
-          <tbody>
-            {this.state.data.map((item: any) => {
-              return (
-                <tr
-                  onClick={() =>
-                    this.props.history.push(
-                      "/" + this.props.element + "/" + item["id"] // TODO replace test_rid with param */
-                      // { rackname: "hello" } // pass additional props here
-                    )
-                  }
-                >
+        <Dialog
+          className={Classes.DARK}
+          usePortal={true}
+          enforceFocus={true}
+          canEscapeKeyClose={true}
+          canOutsideClickClose={true}
+          isOpen={this.state.isOpen}
+          onClose={this.handleClose}
+          title={"Add " + this.props.element.slice(0, -1)}
+        >
+          {this.props.element === "models" ? <CreateModelForm /> : null}
+        </Dialog>
+        {this.state.columns.length === 0 ? (
+          <div className="loading-container">
+            <p className="center">No {this.props.element} data found </p>
+            <p></p>
+            <Spinner
+              className="center"
+              intent="primary"
+              size={Spinner.SIZE_STANDARD}
+            />
+          </div>
+        ) : (
+          <div className="ElementTable">
+            <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered">
+              <thead>
+                <tr>
                   {this.state.columns.map((col: string) => {
                     if (col !== "id") {
-                      return <td>{item[col]}</td>;
+                      return <th>{col}</th>;
                     }
                     return null;
                   })}
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
+              </thead>
+              <tbody>
+                {this.state.data.map((item: any) => {
+                  return (
+                    <tr
+                      onClick={() =>
+                        this.props.history.push(
+                          "/" + this.props.element + "/" + item["id"] // TODO replace test_rid with param */
+                          // { rackname: "hello" } // pass additional props here
+                        )
+                      }
+                    >
+                      {this.state.columns.map((col: string) => {
+                        if (col !== "id") {
+                          return <td>{item[col]}</td>;
+                        }
+                        return null;
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     );
   }
