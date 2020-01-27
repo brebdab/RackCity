@@ -18,5 +18,8 @@ urlpatterns = [
     path('instances/pages', views.instance_page_count),
     path('racks', views.rack_list),
     path('racks/<int:pk>', views.rack_detail),
+    path('racks/get', views.rack_get),
+    path('racks/create', views.rack_create),
+    path('racks/delete', views.rack_delete),
     path('iamadmin', views.i_am_admin)
 ]
