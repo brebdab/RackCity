@@ -1,20 +1,18 @@
 import {
-  Callout,
+  AnchorButton,
   Classes,
+  Dialog,
   Spinner,
   Tab,
-  Tabs,
-  AnchorButton,
-  Dialog
+  Tabs
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
 import { RouteComponentProps, withRouter } from "react-router";
 import { API_ROOT } from "../../api-config";
-import "./elementView.scss";
-import { tsThisType } from "@babel/types";
 import WrappedCreateModelForm from "../../forms/createModelForm";
+import "./elementView.scss";
 
 //export interface ElementViewProps {}
 

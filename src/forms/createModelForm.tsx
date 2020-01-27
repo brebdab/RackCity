@@ -1,22 +1,19 @@
-import * as React from "react";
-import "@blueprintjs/core/lib/css/blueprint.css";
-import { connect } from "react-redux";
-import axios from "axios";
-import "./login.scss";
 import {
-  FormGroup,
-  Classes,
-  InputGroup,
   Button,
+  Classes,
+  FormGroup,
+  InputGroup,
   MenuItem
 } from "@blueprintjs/core";
-import { Suggest, ItemRenderer, ItemPredicate } from "@blueprintjs/select";
-
+import "@blueprintjs/core/lib/css/blueprint.css";
+import { ItemPredicate, ItemRenderer, Suggest } from "@blueprintjs/select";
 import Form, { FormComponentProps } from "antd/lib/form";
-import { render } from "react-dom";
-import { modelView } from "../components/detailedView/modelView/modelView";
-import { withRouter } from "react-router";
+import axios from "axios";
+import * as React from "react";
+import { connect } from "react-redux";
 import { API_ROOT } from "../api-config";
+import "./login.scss";
+
 export interface IModelState {
   vendors: Array<string>;
 }
@@ -38,6 +35,7 @@ export interface IModelObject {
 }
 
 function escapeRegExpChars(text: string) {
+    // eslint-disable-next-line
   return text.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
 }
 const FormItem = Form.Item;
