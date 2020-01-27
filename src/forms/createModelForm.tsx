@@ -96,6 +96,15 @@ export class CreateModelForm extends React.Component<
         console.log(modelObject);
         axios
           .post(API_ROOT + "api/models/add", modelObject, headers)
+          .then(res => {
+            this.props.form.resetFields();
+
+            this.setState({
+              vendor: undefined
+            });
+
+            console.log("success");
+          })
           .catch(err => console.log(err));
       }
     });
@@ -139,6 +148,7 @@ export class CreateModelForm extends React.Component<
           </FormItem>
           <FormItem label="Height">
             {getFieldDecorator("height", {
+              initialValue: undefined,
               rules: [{ required: true, message: "Please input your height!" }]
             })(
               <InputGroup
@@ -150,6 +160,7 @@ export class CreateModelForm extends React.Component<
           </FormItem>
           <FormItem label="Display Color">
             {getFieldDecorator("display_color", {
+              initialValue: undefined,
               rules: [
                 { required: false, message: "Please input your display_color!" }
               ]
@@ -163,6 +174,7 @@ export class CreateModelForm extends React.Component<
           </FormItem>
           <FormItem label="Number of Ethernet Ports ">
             {getFieldDecorator("num_ethernet_ports", {
+              initialValue: undefined,
               rules: [
                 {
                   required: false,
@@ -179,6 +191,7 @@ export class CreateModelForm extends React.Component<
           </FormItem>
           <FormItem label="Number of Power Ports ">
             {getFieldDecorator("num_power_ports", {
+              initialValue: undefined,
               rules: [
                 {
                   required: false,
@@ -195,6 +208,7 @@ export class CreateModelForm extends React.Component<
           </FormItem>
           <FormItem label="CPU">
             {getFieldDecorator("cpu", {
+              initialValue: undefined,
               rules: [{ required: false, message: "Please input CPU!" }]
             })(
               <InputGroup
@@ -206,6 +220,7 @@ export class CreateModelForm extends React.Component<
           </FormItem>
           <FormItem label="Memory (GB)">
             {getFieldDecorator("memory_gb", {
+              initialValue: undefined,
               rules: [{ required: false, message: "Please input Memory!" }]
             })(
               <InputGroup
@@ -217,6 +232,7 @@ export class CreateModelForm extends React.Component<
           </FormItem>
           <FormItem label="Storage">
             {getFieldDecorator("storage", {
+              initialValue: undefined,
               rules: [
                 { required: false, message: "Please input your username!" }
               ]

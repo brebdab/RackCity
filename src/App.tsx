@@ -48,7 +48,6 @@ class App extends React.Component<AppProps> {
 
             {/* admin paths */}
             <Route path="/admin" component={WrappedNormalRegistrationForm} />
-            <Route path="/create" component={WrappedCreateModelForm} />
 
             <Route component={Notfound} />
           </Switch>
