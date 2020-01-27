@@ -35,7 +35,6 @@ class StateWrapper {
 }
 
 async function getData(modelkey: string, token: string) {
-  console.log(token)
   console.log( API_ROOT + "api/models/" + modelkey)
   const headers = {
     headers: {
@@ -70,28 +69,11 @@ export class modelView extends React.PureComponent<RouteComponentProps & ModelVi
                 "num_power_ports", "storage", "vendor"]
   }
 
-  // async componentDidMount() {
-  //   const resp = await getData("8", this.state.token);
-  //   this.setState({
-  //     comment: resp.comment,
-  //     cpu: resp.cpu,
-  //     display_color: resp.display_color,
-  //     height: resp.height,
-  //     memory_gb: resp.memory_gb,
-  //     model_id: resp.model_id,
-  //     model_number: resp.model_number,
-  //     num_ethernet_ports: resp.num_ethernet_ports,
-  //     num_power_ports: resp.num_power_ports,
-  //     storage: resp.storage,
-  //     vendor: resp.vendor
-  //   })
-  // }
-
   public render() {
     let params: any;
     params = this.props.match.params
     var param = new StateWrapper(this.state)
-    /*const resp = */getData(params.rid, this.props.token).then((result) => {
+    getData(params.rid, this.props.token).then((result) => {
     this.setState({
       comment: result.model.comment,
       cpu: result.model.cpu,
@@ -105,7 +87,6 @@ export class modelView extends React.PureComponent<RouteComponentProps & ModelVi
       storage: result.model.storage,
       vendor: result.model.vendor
     })
-    console.log(result)
       })
     return (
       <div className={Classes.DARK + " model-view"}>
@@ -119,7 +100,8 @@ export class modelView extends React.PureComponent<RouteComponentProps & ModelVi
             match={this.props.match} {...param}/>}
             />
           <Tab id="Instances" title="Instances"
-            panel={<h1>All instances</h1>} panelClassName="ember-panel"
+            panel={<ModelInstance history={this.props.history} location={this.props.location}
+            match={this.props.match} {...param}/>}
             />
           <Tabs.Expander />
         </Tabs>
@@ -127,35 +109,32 @@ export class modelView extends React.PureComponent<RouteComponentProps & ModelVi
     )
   }
 
-  // static async getDerivedStateFromProps(props: any, state: any) {
-  //   console.log(props.token)
-  //   const resp = await getData("1", props.token);
-  //   // this.setState({
-  //   //   comment: resp.comment,
-  //   //   cpu: resp.cpu,
-  //   //   display_color: resp.display_color,
-  //   //   height: resp.height,
-  //   //   memory_gb: resp.memory_gb,
-  //   //   model_id: resp.model_id,
-  //   //   model_number: resp.model_number,
-  //   //   num_ethernet_ports: resp.num_ethernet_ports,
-  //   //   num_power_ports: resp.num_power_ports,
-  //   //   storage: resp.storage,
-  //   //   vendor: resp.vendor
-  //   // })
-  //   state.comment = resp.comment
-  //   state.cpu = resp.cpu
-  //   state.display_color = resp.display_color
-  //   state.height = resp.height
-  //   state.memory_gb = resp.memory_gb
-  //   state.model_id = resp.model_id
-  //   state.model_number = resp.model_number
-  //   state.num_ethernet_ports = resp.num_ethernet_ports
-  //   state.num_power_ports = resp.num_power_ports
-  //   state.storage = resp.storage
-  //   state.vendor = resp.vendor
-  // }
+}
 
+class ModelInstance extends React.PureComponent<RouteComponentProps> {
+
+  renderData(data: any) {
+    var i = -1;
+    return (
+      <div>
+        {data.columns.map((item: string) => {
+          i++;
+          var key = data.fields[i];
+          return <h1 key={item}>{item}: {data[key]}</h1>
+        })}
+      </div>
+    )
+  }
+
+  render() {
+    let state: any;
+    state = this.props;
+    console.log(state)
+    return (
+      <div className={Classes.DARK + " propsview"}>
+      </div>
+    )
+  }
 }
 
 const mapStatetoProps = (state: any) => {
