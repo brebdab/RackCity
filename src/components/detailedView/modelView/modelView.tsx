@@ -88,11 +88,10 @@ export class modelView extends React.PureComponent<RouteComponentProps & ModelVi
   // }
 
   public render() {
-    // let params: any;
-    // params = this.props.match.params
-    // console.log(params)
+    let params: any;
+    params = this.props.match.params
     var param = new StateWrapper(this.state)
-    /*const resp = */getData("8", this.props.token).then((result) => {
+    /*const resp = */getData(params.rid, this.props.token).then((result) => {
     this.setState({
       comment: result.model.comment,
       cpu: result.model.cpu,
