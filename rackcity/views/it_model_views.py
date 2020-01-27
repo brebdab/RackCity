@@ -62,12 +62,14 @@ def model_delete(request):
     else:
         id = data['id']
         try:
-            ITModel.objects.get(id=id)
+            existing_model = ITModel.objects.get(id=id)
         except ObjectDoesNotExist:
             failure_message += "No existing model with id="+str(id)+". "
         else:
+            instances = ITInstance.objects.filter(model=id)
+            if instances:
+                failure_message += "Cannot delete this model because instances of it exist. "
             if failure_message == "":
-                existing_model = ITModel.objects.get(id=id)
                 try:
                     existing_model.delete()
                     return HttpResponse(status=HTTPStatus.OK)
