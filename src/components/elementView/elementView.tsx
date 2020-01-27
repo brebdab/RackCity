@@ -14,7 +14,7 @@ import { RouteComponentProps, withRouter } from "react-router";
 import { API_ROOT } from "../../api-config";
 import "./elementView.scss";
 import { tsThisType } from "@babel/types";
-import CreateModelForm from "../../forms/createModelForm";
+import WrappedCreateModelForm from "../../forms/createModelForm";
 
 //export interface ElementViewProps {}
 
@@ -126,7 +126,7 @@ export class ElementTable extends React.Component<
           onClose={this.handleClose}
           title={"Add " + this.props.element.slice(0, -1)}
         >
-          {this.props.element === "models" ? <CreateModelForm /> : null}
+          {this.props.element === "models" ? <WrappedCreateModelForm /> : null}
         </Dialog>
         {this.state.columns.length === 0 ? (
           <div className="loading-container">
