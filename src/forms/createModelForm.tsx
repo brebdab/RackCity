@@ -1,7 +1,7 @@
 import * as React from "react";
 import "@blueprintjs/core/lib/css/blueprint.css";
-import { string } from "prop-types";
-
+import { connect } from "react-redux";
+import axios from "axios";
 import "./login.scss";
 import {
   Classes,
@@ -15,10 +15,15 @@ import FormItem from "antd/lib/form/FormItem";
 import Form, { FormComponentProps } from "antd/lib/form";
 import { render } from "react-dom";
 import { modelView } from "../components/detailedView/modelView/modelView";
+import { withRouter } from "react-router";
+import { API_ROOT } from "../api-config";
 export interface IModelState {
   vendors: Array<string>;
 }
-
+export interface CreateModelFormProps {
+  token: string;
+  dispatch: any;
+}
 export interface IModel {
   vendor: string | undefined;
   model_number: string | undefined;
@@ -105,7 +110,7 @@ export const renderCreateFilmOption = (
 );
 const VendorSuggest = Suggest.ofType<string>();
 export class CreateModelForm extends React.Component<
-  null,
+  CreateModelFormProps,
   IModelState & IModel
 > {
   public state = {
@@ -120,7 +125,34 @@ export class CreateModelForm extends React.Component<
     storage: undefined,
     comment: undefined
   };
+
+  async getVendors() {
+    console.log(this.props.token);
+    const headers = {
+      headers: {
+        Authorization: "Token " + this.props.token
+      }
+    };
+    await axios
+      //.get("https://rack-city-dev.herokuapp.com/api/" + path)
+      .get(API_ROOT + "api/models/vendors", headers)
+      .then(res => {
+        const data = res.data;
+        this.setState({
+          vendors: data
+        });
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  }
+
+  async componentDidMount() {
+    await this.getVendors();
+  }
+
   render() {
+    console.log("test");
     return (
       <div className={Classes.DARK + " login-container"}>
         <Form
@@ -214,5 +246,12 @@ export class CreateModelForm extends React.Component<
   }
 }
 
+const mapStateToProps = (state: any) => {
+  console.log(state.token);
+  return {
+    token: state.token
+  };
+};
 const WrappedCreateModelForm = Form.create()(CreateModelForm);
-export default WrappedCreateModelForm;
+
+export default connect(mapStateToProps)(CreateModelForm);
