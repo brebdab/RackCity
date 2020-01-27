@@ -1,60 +1,23 @@
-import { Classes, Tab, Tabs, AnchorButton, Dialog } from "@blueprintjs/core";
+import { AnchorButton, Classes, Dialog } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
-import { RouteComponentProps, withRouter } from "react-router";
+
 import WrappedCreateModelForm from "../../forms/createModelForm";
-import "./elementView.scss";
 import ElementTable from "./elementTable";
-
-//export interface ElementViewProps {}
-
-export class ElementTabView extends React.PureComponent<RouteComponentProps> {
-  public render() {
-    return (
-      <Tabs
-        className={Classes.DARK + " element-view"}
-        animate={true}
-        id="ElementViewer"
-        key={"vertical"}
-        renderActiveTabPanelOnly={false}
-        vertical={true}
-      >
-        <Tab
-          className="tab"
-          id="instance"
-          title="Instances"
-          panel={
-            <ElementView element="instances" history={this.props.history} />
-          }
-        />
-        <Tab
-          className="tab"
-          id="model"
-          title="Models"
-          panel={<ElementView element="models" history={this.props.history} />}
-        />
-        <Tab
-          className="tab"
-          id="rack"
-          title="Racks"
-          panel={<ElementView element="racks" history={this.props.history} />}
-        />
-        <Tabs.Expander />
-      </Tabs>
-    );
-  }
-}
+import "./elementView.scss";
 
 interface ElementViewState {
   isOpen: boolean;
 }
 interface ElementViewProps {
   element: string;
-  history: any;
+}
+interface ElementStateProps {
+  isAdmin: boolean;
 }
 
 export class ElementView extends React.Component<
-  ElementViewProps,
+  ElementViewProps & ElementStateProps,
   ElementViewState
 > {
   public state: ElementViewState = {
@@ -71,27 +34,33 @@ export class ElementView extends React.Component<
     console.log(this.props.element);
     return (
       <div>
-        <AnchorButton
-          text={"Add " + this.props.element.slice(0, -1)}
-          icon="add"
-          onClick={this.handleOpen}
-        />
-        <Dialog
-          className={Classes.DARK}
-          usePortal={true}
-          enforceFocus={true}
-          canEscapeKeyClose={true}
-          canOutsideClickClose={true}
-          isOpen={this.state.isOpen}
-          onClose={this.handleClose}
-          title={"Add " + this.props.element.slice(0, -1)}
-        >
-          {this.props.element === "models" ? <WrappedCreateModelForm /> : null}
-        </Dialog>
-        <ElementTable {...this.props} />
+        {this.props.isAdmin
+          ? [
+              <AnchorButton
+                text={"Add " + this.props.element.slice(0, -1)}
+                icon="add"
+                onClick={this.handleOpen}
+              />,
+              <Dialog
+                className={Classes.DARK}
+                usePortal={true}
+                enforceFocus={true}
+                canEscapeKeyClose={true}
+                canOutsideClickClose={true}
+                isOpen={this.state.isOpen}
+                onClose={this.handleClose}
+                title={"Add " + this.props.element.slice(0, -1)}
+              >
+                {this.props.element === "models" ? (
+                  <WrappedCreateModelForm />
+                ) : null}
+              </Dialog>
+            ]
+          : null}
+        <ElementTable element={this.props.element} />
       </div>
     );
   }
 }
 
-export default withRouter(ElementTabView);
+export default ElementView;

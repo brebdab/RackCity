@@ -1,7 +1,8 @@
 import { Spinner } from "@blueprintjs/core";
-import React from "react";
 import axios from "axios";
+import React from "react";
 import { API_ROOT } from "../../api-config";
+import { RouteComponentProps, withRouter } from "react-router";
 
 interface ElementTableState {
   columns: Array<string>;
@@ -10,7 +11,6 @@ interface ElementTableState {
 
 interface ElementTableProps {
   element: string;
-  history: any;
 }
 async function getData(path: string) {
   console.log(API_ROOT + "api/" + path);
@@ -26,7 +26,7 @@ async function getData(path: string) {
     });
 }
 export class ElementTable extends React.Component<
-  ElementTableProps,
+  ElementTableProps & RouteComponentProps,
   ElementTableState
 > {
   public state: ElementTableState = {
@@ -95,4 +95,4 @@ export class ElementTable extends React.Component<
     );
   }
 }
-export default ElementTable;
+export default withRouter(ElementTable);
