@@ -22,7 +22,8 @@ interface ModelViewState {
   storage: any,
   vendor: any,
   columns: Array<string>,
-  fields: Array<string>
+  fields: Array<string>,
+  instances: Array<any>
 }
 
 class StateWrapper {
@@ -66,28 +67,32 @@ export class modelView extends React.PureComponent<RouteComponentProps & ModelVi
     columns: ["Model ID", "Model #", "CPU", "Height", "Display Color", "Memory (GB)", "# Ethernet Ports",
                 "# Power Ports", "Storage", "Vendor"],
     fields: ["model_id", "model_number", "cpu", "height", "display_color", "memory_gb", "num_ethernet_ports",
-                "num_power_ports", "storage", "vendor"]
+                "num_power_ports", "storage", "vendor"],
+    instances: []
   }
 
   public render() {
     let params: any;
     params = this.props.match.params
     var param = new StateWrapper(this.state)
-    getData(params.rid, this.props.token).then((result) => {
-    this.setState({
-      comment: result.model.comment,
-      cpu: result.model.cpu,
-      display_color: result.model.display_color,
-      height: result.model.height,
-      memory_gb: result.model.memory_gb,
-      model_id: result.model.id,
-      model_number: result.model.model_number,
-      num_ethernet_ports: result.model.num_ethernet_ports,
-      num_power_ports: result.model.num_power_ports,
-      storage: result.model.storage,
-      vendor: result.model.vendor
-    })
+    console.log(this.state.instances.length)
+    if (this.state.vendor.length == 0) {
+      getData(params.rid, this.props.token).then((result) => {
+      this.setState({
+        comment: result.model.comment,
+        cpu: result.model.cpu,
+        display_color: result.model.display_color,
+        height: result.model.height,
+        memory_gb: result.model.memory_gb,
+        model_id: result.model.id,
+        model_number: result.model.model_number,
+        num_ethernet_ports: result.model.num_ethernet_ports,
+        num_power_ports: result.model.num_power_ports,
+        storage: result.model.storage,
+        vendor: result.model.vendor,
+        instances: result.instances
       })
+        })}
     return (
       <div className={Classes.DARK + " model-view"}>
         <Tabs
