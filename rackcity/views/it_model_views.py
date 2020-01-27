@@ -1,5 +1,6 @@
 from rest_framework.parsers import JSONParser
 from django.http import HttpResponse, JsonResponse
+from django.core.exceptions import ObjectDoesNotExist
 from rackcity.models import ITModel, ITInstance
 from rackcity.api.serializers import ITModelSerializer, ITInstanceSerializer
 from rest_framework.decorators import permission_classes, api_view
@@ -40,6 +41,38 @@ def model_add(request):
         except Exception as error:
             failure_message = failure_message + str(error)
 
+    failure_message = "Request was invalid. " + failure_message
+    return JsonResponse({
+        "failure_message": failure_message
+    },
+        status=HTTPStatus.NOT_ACCEPTABLE
+    )
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def model_delete(request):
+    """
+    Delete an existing model
+    """
+    data = JSONParser().parse(request)
+    failure_message = ""
+    if 'id' not in data:
+        failure_message += "Must include id when deleting a model. "
+    else:
+        id = data['id']
+        try:
+            ITModel.objects.get(id=id)
+        except ObjectDoesNotExist:
+            failure_message += "No existing model with id="+str(id)+". "
+        else:
+            if failure_message == "":
+                existing_model = ITModel.objects.get(id=id)
+                try:
+                    existing_model.delete()
+                    return HttpResponse(status=HTTPStatus.OK)
+                except Exception as error:
+                    failure_message = failure_message + str(error)
     failure_message = "Request was invalid. " + failure_message
     return JsonResponse({
         "failure_message": failure_message
