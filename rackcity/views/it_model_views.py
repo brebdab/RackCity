@@ -1,11 +1,13 @@
 from rest_framework.parsers import JSONParser
 from django.http import HttpResponse, JsonResponse
+from django.core.exceptions import ObjectDoesNotExist
 from rackcity.models import ITModel, ITInstance
 from rackcity.api.serializers import ITModelSerializer, ITInstanceSerializer
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
+import math
 
 
 @api_view(['GET'])
@@ -40,6 +42,40 @@ def model_add(request):
         except Exception as error:
             failure_message = failure_message + str(error)
 
+    failure_message = "Request was invalid. " + failure_message
+    return JsonResponse({
+        "failure_message": failure_message
+    },
+        status=HTTPStatus.NOT_ACCEPTABLE
+    )
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def model_delete(request):
+    """
+    Delete an existing model
+    """
+    data = JSONParser().parse(request)
+    failure_message = ""
+    if 'id' not in data:
+        failure_message += "Must include id when deleting a model. "
+    else:
+        id = data['id']
+        try:
+            existing_model = ITModel.objects.get(id=id)
+        except ObjectDoesNotExist:
+            failure_message += "No existing model with id="+str(id)+". "
+        else:
+            instances = ITInstance.objects.filter(model=id)
+            if instances:
+                failure_message += "Cannot delete this model because instances of it exist. "
+            if failure_message == "":
+                try:
+                    existing_model.delete()
+                    return HttpResponse(status=HTTPStatus.OK)
+                except Exception as error:
+                    failure_message = failure_message + str(error)
     failure_message = "Request was invalid. " + failure_message
     return JsonResponse({
         "failure_message": failure_message
@@ -128,7 +164,34 @@ def model_vendors(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def model_auth(request):
+def model_page_count(request):
+    """
+    Return total number of pages according to page size, which must be
+    specified as query parameter.
+    """
+    if not request.query_params.get('page_size') or int(request.query_params.get('page_size')) <= 0:
+        return JsonResponse(
+            {"failure_message": "Must specify positive integer page_size."},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    page_size = int(request.query_params.get('page_size'))
+    model_count = ITModel.objects.all().count()
+    page_count = math.ceil(model_count / page_size)
+    return JsonResponse({"page_count": page_count})
+
+
+@api_view(['GET'])
+def i_am_admin(request):
+    print("yeah")
+    if(request.user.is_superuser):
+        return JsonResponse({"is_admin": True})
+    else:
+        return JsonResponse({"is_admin": False})
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def model_auth(request):  # DEPRECATED!
     """
     List all models, but requires user authentication in header.
     (Temporary for auth testing on front end)
@@ -141,7 +204,7 @@ def model_auth(request):
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
-def model_admin(request):
+def model_admin(request):  # DEPRECATED!
     """
     List all models, but requires request comes from admin user.
     (Temporary for auth testing on front end)
@@ -150,14 +213,3 @@ def model_admin(request):
         models = ITModel.objects.all()
         serializer = ITModelSerializer(models, many=True)
         return JsonResponse(serializer.data, safe=False)
-
-
-@api_view(['GET'])
-def i_am_admin(request):
-    print("yeah")
-    if(request.user.is_superuser):
-        print("yeah")
-        return JsonResponse({"is_admin": True})
-    else:
-        print("nah")
-        return JsonResponse({"is_admin": False})
