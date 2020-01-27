@@ -39,23 +39,16 @@ def rack_get(request):
     List all racks within specified range.
     """
     range_serializer = RackRangeSerializer(data=request.data)
-    if range_serializer.is_valid():
-        try:
-            range_serializer.validate(request.data)
-        except Exception as error:
-            return JsonResponse(
-                {"failure_message": str(error)},
-                status=HTTPStatus.BAD_REQUEST
-            )
-    else:
+
+    if not range_serializer.is_valid():
         return JsonResponse(
-            {"failure_message": "invalid keys or values"},
+            {"failure_message": "Invalid keys or values in request."},
             status=HTTPStatus.BAD_REQUEST,
         )
 
     racks = Rack.objects.filter(
-        rack_num__range=range_serializer.get_number_range(request.data),
-        row_letter__range=range_serializer.get_row_range(request.data),
+        rack_num__range=range_serializer.get_number_range(),  # inclusive range
+        row_letter__range=range_serializer.get_row_range(),
     )
     racks_with_instances = []
     for rack in racks:
@@ -83,7 +76,7 @@ def rack_create(request):
     """
     Create racks within specified range.
     """
-    return JsonResponse({})
+    return JsonResponse({}, status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])
@@ -92,4 +85,4 @@ def rack_delete(request):
     """
     Delete racks within specified range.
     """
-    return JsonResponse({})
+    return JsonResponse({}, status=HTTPStatus.INTERNAL_SERVER_ERROR)

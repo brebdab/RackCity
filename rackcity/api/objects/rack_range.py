@@ -25,20 +25,32 @@ class RackRangeSerializer(serializers.Serializer):
 
         return data
 
-    def get_row_range(self, data):
+    def get_row_range(self):
         """
         Returns tuple specifying rack row range
         """
-        if 'letter_end' in data:
-            return (data['letter_start'], data['letter_end'])
+        if 'letter_end' in self.validated_data:
+            return (
+                self.validated_data['letter_start'],
+                self.validated_data['letter_end']
+            )
         else:
-            return (data['letter_start'], data['letter_start'])
+            return (
+                self.validated_data['letter_start'],
+                self.validated_data['letter_start']
+            )
 
-    def get_number_range(self, data):
+    def get_number_range(self):
         """
         Returns tuple specifying rack number range
         """
-        if 'num_end' in data:
-            return (data['num_start'], data['num_end'])
+        if 'num_end' in self.validated_data:
+            return (
+                self.validated_data['num_start'],
+                self.validated_data['num_end']
+            )
         else:
-            return (data['num_start'], data['num_start'])
+            return (
+                self.validated_data['num_start'],
+                self.validated_data['num_start']
+            )
