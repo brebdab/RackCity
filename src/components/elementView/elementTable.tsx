@@ -1,7 +1,6 @@
-import { AnchorButton, Classes, Dialog, Spinner } from "@blueprintjs/core";
+import { Spinner } from "@blueprintjs/core";
 import React from "react";
 import axios from "axios";
-import { withRouter } from "react-router";
 import { API_ROOT } from "../../api-config";
 
 interface ElementTableState {
