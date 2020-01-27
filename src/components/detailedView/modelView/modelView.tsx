@@ -7,7 +7,7 @@ import PropertiesView from "../propertiesView";
 import { RouteComponentProps, withRouter } from "react-router";
 import { connect } from "react-redux";
 
-export interface ModelViewProps { token: string };
+export interface ModelViewProps { token: string, rid: any };
 
 interface ModelViewState {
   comment: any,
@@ -35,6 +35,7 @@ class StateWrapper {
 }
 
 async function getData(modelkey: string, token: string) {
+  console.log(token)
   console.log( API_ROOT + "api/models/" + modelkey)
   const headers = {
     headers: {
@@ -69,27 +70,44 @@ export class modelView extends React.PureComponent<RouteComponentProps & ModelVi
                 "num_power_ports", "storage", "vendor"]
   }
 
-  async componentDidMount() {
-    const resp = await getData("1", this.props.token);
-    this.setState({
-      comment: resp.comment,
-      cpu: resp.cpu,
-      display_color: resp.display_color,
-      height: resp.height,
-      memory_gb: resp.memory_gb,
-      model_id: resp.model_id,
-      model_number: resp.model_number,
-      num_ethernet_ports: resp.num_ethernet_ports,
-      num_power_ports: resp.num_power_ports,
-      storage: resp.storage,
-      vendor: resp.vendor
-    })
-  }
+  // async componentDidMount() {
+  //   const resp = await getData("8", this.state.token);
+  //   this.setState({
+  //     comment: resp.comment,
+  //     cpu: resp.cpu,
+  //     display_color: resp.display_color,
+  //     height: resp.height,
+  //     memory_gb: resp.memory_gb,
+  //     model_id: resp.model_id,
+  //     model_number: resp.model_number,
+  //     num_ethernet_ports: resp.num_ethernet_ports,
+  //     num_power_ports: resp.num_power_ports,
+  //     storage: resp.storage,
+  //     vendor: resp.vendor
+  //   })
+  // }
 
   public render() {
     // let params: any;
     // params = this.props.match.params
+    // console.log(params)
     var param = new StateWrapper(this.state)
+    /*const resp = */getData("8", this.props.token).then((result) => {
+    this.setState({
+      comment: result.model.comment,
+      cpu: result.model.cpu,
+      display_color: result.model.display_color,
+      height: result.model.height,
+      memory_gb: result.model.memory_gb,
+      model_id: result.model.id,
+      model_number: result.model.model_number,
+      num_ethernet_ports: result.model.num_ethernet_ports,
+      num_power_ports: result.model.num_power_ports,
+      storage: result.model.storage,
+      vendor: result.model.vendor
+    })
+    console.log(result)
+      })
     return (
       <div className={Classes.DARK + " model-view"}>
         <Tabs
@@ -109,6 +127,35 @@ export class modelView extends React.PureComponent<RouteComponentProps & ModelVi
       </div>
     )
   }
+
+  // static async getDerivedStateFromProps(props: any, state: any) {
+  //   console.log(props.token)
+  //   const resp = await getData("1", props.token);
+  //   // this.setState({
+  //   //   comment: resp.comment,
+  //   //   cpu: resp.cpu,
+  //   //   display_color: resp.display_color,
+  //   //   height: resp.height,
+  //   //   memory_gb: resp.memory_gb,
+  //   //   model_id: resp.model_id,
+  //   //   model_number: resp.model_number,
+  //   //   num_ethernet_ports: resp.num_ethernet_ports,
+  //   //   num_power_ports: resp.num_power_ports,
+  //   //   storage: resp.storage,
+  //   //   vendor: resp.vendor
+  //   // })
+  //   state.comment = resp.comment
+  //   state.cpu = resp.cpu
+  //   state.display_color = resp.display_color
+  //   state.height = resp.height
+  //   state.memory_gb = resp.memory_gb
+  //   state.model_id = resp.model_id
+  //   state.model_number = resp.model_number
+  //   state.num_ethernet_ports = resp.num_ethernet_ports
+  //   state.num_power_ports = resp.num_power_ports
+  //   state.storage = resp.storage
+  //   state.vendor = resp.vendor
+  // }
 
 }
 
