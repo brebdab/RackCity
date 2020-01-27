@@ -5,8 +5,9 @@ import * as React from "react";
 import { API_ROOT } from "../../../api-config";
 import PropertiesView from "../propertiesView";
 import { RouteComponentProps, withRouter } from "react-router";
+import { connect } from "react-redux";
 
-export interface ModelViewProps { rid: string };
+export interface ModelViewProps { token: string };
 
 interface ModelViewState {
   comment: any,
@@ -26,24 +27,29 @@ interface ModelViewState {
 
 class StateWrapper {
 
-  state: ModelViewState
+  state: ModelViewState;
 
   constructor(data: ModelViewState) {
     this.state = data;
   }
 }
 
-async function getData(modelkey: string) {
+async function getData(modelkey: string, token: string) {
   console.log( API_ROOT + "api/models/" + modelkey)
+  const headers = {
+    headers: {
+      Authorization: "Token " + token
+    }
+  }
   return await axios
-    .get(API_ROOT + "api/models/" + modelkey)
+    .get(API_ROOT + "api/models/" + modelkey, headers)
     .then(res => {
       const data = res.data;
       return data;
     });
 }
 
-export class modelView extends React.PureComponent<RouteComponentProps, ModelViewState> {
+export class modelView extends React.PureComponent<RouteComponentProps & ModelViewProps, ModelViewState> {
 
   public state: ModelViewState = {
     comment: "",
@@ -64,7 +70,7 @@ export class modelView extends React.PureComponent<RouteComponentProps, ModelVie
   }
 
   async componentDidMount() {
-    const resp = await getData("1");
+    const resp = await getData("1", this.props.token);
     this.setState({
       comment: resp.comment,
       cpu: resp.cpu,
@@ -106,4 +112,10 @@ export class modelView extends React.PureComponent<RouteComponentProps, ModelVie
 
 }
 
-export default withRouter(modelView);
+const mapStatetoProps = (state: any) => {
+  return {
+    token: state.token
+  };
+};
+
+export default withRouter(connect(mapStatetoProps)(modelView));
