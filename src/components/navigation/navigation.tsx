@@ -22,7 +22,6 @@ export interface NavigationProps {
 type NavigationPropsAll = NavigationProps & RouteComponentProps;
 export class Navigation extends React.Component<NavigationPropsAll> {
   public render() {
-    console.log(this.props.isAuthenticated);
     return (
       <Router>
         <div>

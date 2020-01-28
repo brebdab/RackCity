@@ -25,7 +25,6 @@ export class RackView extends React.PureComponent<
     let unit = 1;
     let currHeight = 0;
     while (currHeight < maxHeight) {
-      console.log(currHeight);
       if (currHeight === instances[0]) {
         currHeight = widths[0] + currHeight;
         rows.unshift(

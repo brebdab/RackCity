@@ -35,7 +35,6 @@ function getElementData(
       page
     }
   };
-  console.log(config);
   return axios
     .post(API_ROOT + "api/" + path + "/get-many", {}, config)
     .then(res => {
@@ -58,7 +57,6 @@ class ElementView extends React.Component<ElementViewProps, ElementViewState> {
 
   private handleClose = () => this.setState({ isOpen: false });
   public render() {
-    console.log(this.props.element);
     return (
       <div>
         {this.props.isAdmin

@@ -25,7 +25,6 @@ class App extends React.Component<AppProps> {
     this.props.onTryAutoSignup();
   }
   render() {
-    console.log(this.props.isAuthenticated);
     return (
       <BrowserRouter basename="/">
         <div>
