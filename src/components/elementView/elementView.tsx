@@ -9,6 +9,7 @@ import { ElementObjectType, ElementType, ModelObject } from "../utils";
 import ElementTable from "./elementTable";
 import "./elementView.scss";
 import ModelForm, { FormTypes } from "../../forms/modelForm";
+import FormPopup from "../../forms/FormPopup";
 
 interface ElementViewState {
   isOpen: boolean;
@@ -74,23 +75,30 @@ class ElementView extends React.Component<ElementViewProps, ElementViewState> {
                 icon="add"
                 onClick={this.handleOpen}
               />,
-              <Dialog
-                className={Classes.DARK}
-                usePortal={true}
-                enforceFocus={true}
-                canEscapeKeyClose={true}
-                canOutsideClickClose={true}
+              <FormPopup
+                type={FormTypes.CREATE}
+                elementName={this.props.element}
+                submitForm={this.createModel}
                 isOpen={this.state.isOpen}
-                onClose={this.handleClose}
-                title={"Add " + this.props.element.slice(0, -1)}
-              >
-                {this.props.element === "models" ? (
-                  <ModelForm
-                    type={FormTypes.CREATE}
-                    submitForm={this.createModel}
-                  />
-                ) : null}
-              </Dialog>
+                handleClose={this.handleClose}
+              />
+              //     <Dialog
+              //       className={Classes.DARK}
+              //       usePortal={true}
+              //       enforceFocus={true}
+              //       canEscapeKeyClose={true}
+              //       canOutsideClickClose={true}
+              //       isOpen={this.state.isOpen}
+              //       onClose={this.handleClose}
+              //       title={"Add " + this.props.element.slice(0, -1)}
+              //     >
+              //       {this.props.element === "models" ? (
+              //         <ModelForm
+              //           type={FormTypes.CREATE}
+              //           submitForm={this.createModel}
+              //         />
+              //       ) : null}
+              //     </Dialog>
             ]
           : null}
 
