@@ -4,10 +4,11 @@ import axios from "axios";
 import * as React from "react";
 import { connect } from "react-redux";
 import { API_ROOT } from "../../api-config";
-import WrappedCreateModelForm from "../../forms/createModelForm";
-import { ElementObjectType, ElementType } from "../utils";
+
+import { ElementObjectType, ElementType, ModelObject } from "../utils";
 import ElementTable from "./elementTable";
 import "./elementView.scss";
+import ModelForm, { FormTypes } from "../../forms/modelForm";
 
 interface ElementViewState {
   isOpen: boolean;
@@ -54,8 +55,15 @@ class ElementView extends React.Component<ElementViewProps, ElementViewState> {
       isOpen: true
     });
   };
-
   private handleClose = () => this.setState({ isOpen: false });
+  createModel = (model: ModelObject, headers: any): Promise<any> => {
+    return axios.post(API_ROOT + "api/models/add", model, headers).then(res => {
+      console.log("success");
+      this.handleClose();
+      console.log(this.state.isOpen);
+    });
+  };
+
   public render() {
     return (
       <div>
@@ -77,7 +85,10 @@ class ElementView extends React.Component<ElementViewProps, ElementViewState> {
                 title={"Add " + this.props.element.slice(0, -1)}
               >
                 {this.props.element === "models" ? (
-                  <WrappedCreateModelForm />
+                  <ModelForm
+                    type={FormTypes.CREATE}
+                    submitForm={this.createModel}
+                  />
                 ) : null}
               </Dialog>
             ]

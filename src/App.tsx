@@ -16,6 +16,7 @@ import "./index.scss";
 import ModelView from "./components/detailedView/modelView/modelView";
 import InstanceView from "./components/detailedView/instanceView/instanceView";
 import * as actions from "./store/actions/auth";
+import ModelForm from "./forms/modelForm";
 
 export interface AppProps {
   isAuthenticated: boolean;
@@ -48,7 +49,7 @@ class App extends React.Component<AppProps> {
             {/* admin paths */}
             <Route path="/admin" component={WrappedNormalRegistrationForm} />
             <Route path="/bulk-upload" component={BulkImport} />
-
+            <Route path="/create" component={ModelForm} />
             <Route component={Notfound} />
           </Switch>
         </div>
