@@ -77,7 +77,7 @@ class RegistrationForm extends React.Component<
           className="login-form .bp3-form-group"
         >
           <h2>Add a new user</h2>
-          <FormItem>
+          <FormItem label="username">
             {getFieldDecorator("userName", {
               rules: [
                 { required: true, message: "Please input your username!" }

@@ -1,6 +1,7 @@
 # from rest_framework.parsers import JSONParser
 from django.http import HttpResponse, JsonResponse
 from rackcity.models import ITInstance, ITModel, Rack
+from django.core.exceptions import ObjectDoesNotExist
 from rackcity.api.serializers import (
     ITInstanceSerializer,
     RecursiveITInstanceSerializer,
@@ -13,7 +14,7 @@ from http import HTTPStatus
 import math
 
 
-@api_view(['GET'])
+@api_view(['GET'])  # DEPRECATED !
 @permission_classes([IsAuthenticated])
 def instance_list(request):
     """
@@ -124,6 +125,38 @@ def instance_add(request):
     )
 
 
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def instance_delete(request):
+    """
+    Delete a single existing instance
+    """
+    data = JSONParser().parse(request)
+    failure_message = ""
+    if 'id' not in data:
+        failure_message += "Must include id when deleting an instance. "
+    else:
+        id = data['id']
+        try:
+            existing_instance = ITInstance.objects.get(id=id)
+        except ObjectDoesNotExist:
+            failure_message += "No existing instance with id="+str(id)+". "
+
+    if failure_message == "":
+        try:
+            existing_instance.delete()
+            return HttpResponse(status=HTTPStatus.OK)
+        except Exception as error:
+            failure_message = failure_message + str(error)
+
+    failure_message = "Request was invalid. " + failure_message
+
+    return JsonResponse(
+        {"failure_message": failure_message},
+        status=HTTPStatus.BAD_REQUEST,
+    )
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def instance_page_count(request):
@@ -131,7 +164,6 @@ def instance_page_count(request):
     Return total number of pages according to page size, which must be
     specified as query parameter.
     """
-
     if not request.query_params.get('page_size') or int(request.query_params.get('page_size')) <= 0:
         return JsonResponse(
             {"failure_message": "Must specify positive integer page_size."},

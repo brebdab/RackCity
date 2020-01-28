@@ -1,5 +1,6 @@
 from .it_model_views import (
     model_add,
+    model_modify,
     model_delete,
     model_page,
     model_detail,
@@ -14,6 +15,7 @@ from .it_instance_views import (
     instance_detail,
     instance_list,
     instance_add,
+    instance_delete,
     instance_page,
     instance_page_count,
 )
