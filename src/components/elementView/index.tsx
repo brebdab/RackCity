@@ -1,1 +1,1 @@
-export {default} from "./elementView";
+export { default } from "./elementView";

@@ -5,7 +5,7 @@ import React from "react";
 import { connect } from "react-redux";
 import { BrowserRouter, Redirect, Route, Switch } from "react-router-dom";
 import RackView from "./components/detailedView/rackView/rackView";
-import ElementView from "./components/elementView/elementView";
+import ElementTabView from "./components/elementView/elementTabView";
 import Notfound from "./components/fallback"; // 404 page
 import WrappedNormalLoginForm from "./components/login/login";
 import WrappedNormalRegistrationForm from "./components/login/register";
@@ -33,7 +33,7 @@ class App extends React.Component<AppProps> {
           <Switch>
             <Route exact path="/">
               {this.props.isAuthenticated ? (
-                <ElementView />
+                <ElementTabView />
               ) : (
                 <Redirect to="/login" />
               )}
@@ -44,6 +44,7 @@ class App extends React.Component<AppProps> {
             <Route path="/racks/:rid" component={RackView} />
             <Route path="/models/:rid" component={ModelView} />
             <Route path="/instances/:rid" component={InstanceViewWrap} />
+
             {/* admin paths */}
             <Route path="/admin" component={WrappedNormalRegistrationForm} />
 
