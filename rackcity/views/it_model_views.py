@@ -52,6 +52,38 @@ def model_add(request):
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
+def model_modify(request):
+    """
+    Modify an existing model
+    """
+    data = JSONParser().parse(request)
+    failure_message = ""
+    if 'id' not in data:
+        failure_message += "Must include id when modifying a model. "
+    else:
+        id = data['id']
+        try:
+            existing_model = ITModel.objects.get(id=id)
+        except ObjectDoesNotExist:
+            failure_message += "No existing model with id="+str(id)+". "
+        else:
+            for field in data.keys():
+                setattr(existing_model, field, data[field])
+            try:
+                existing_model.save()
+                return HttpResponse(status=HTTPStatus.OK)
+            except Exception as error:
+                failure_message = failure_message + str(error)
+    failure_message = "Request was invalid. " + failure_message
+    return JsonResponse({
+        "failure_message": failure_message
+    },
+        status=HTTPStatus.NOT_ACCEPTABLE
+    )
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
 def model_delete(request):
     """
     Delete an existing model
