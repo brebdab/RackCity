@@ -19,11 +19,11 @@ interface ElementViewProps {
   isAdmin: boolean;
 }
 
-function getElementData(
+export function getElementData(
   path: string,
   token: string
 ): Promise<Array<ElementObjectType>> {
-  console.log(API_ROOT + "api/" + path + "get-many");
+  console.log(API_ROOT + "api/" + path + "/get-many");
 
   const page_size = 30;
   const page = 1;

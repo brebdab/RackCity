@@ -11,16 +11,20 @@ import axios from "axios";
 import * as React from "react";
 import { connect } from "react-redux";
 import { API_ROOT } from "../api-config";
-import { InstanceObject } from "../components/utils";
+import { InstanceObject, ModelObject } from "../components/utils";
 import { updateObject } from "../store/utility";
 import Field, { IFieldProps } from "./field";
 import {
   filterString,
   renderCreateItemOption,
   renderStringItem,
-  StringSuggest
+  StringSuggest,
+  renderModelItem,
+  ModelSuggest,
+  filterModel
 } from "./formUtils";
 import "./login.scss";
+import { getElementData } from "../components/elementView/elementView";
 //TO DO : add validation of types!!!
 export enum FormTypes {
   CREATE = "create",
@@ -35,7 +39,7 @@ export interface InstanceFormProps {
 }
 interface InstanceFormState {
   values: InstanceObject;
-  vendors: Array<string>;
+  models: Array<ModelObject>;
   errors: Array<string>;
 }
 
@@ -58,7 +62,7 @@ class InstanceForm extends React.Component<
     : ({} as InstanceObject);
   public state = {
     values: this.initialState,
-    vendors: [],
+    models: [],
     errors: []
   };
   headers = {
@@ -93,21 +97,6 @@ class InstanceForm extends React.Component<
     }
   };
 
-  private getVendors() {
-    axios
-      //.get("https://rack-city-dev.herokuapp.com/api/" + path)
-      .get(API_ROOT + "api/models/vendors", this.headers)
-      .then(res => {
-        const vendors: Array<string> = res.data.vendors;
-        this.setState({
-          vendors: vendors
-        });
-      })
-      .catch(err => {
-        console.log(err);
-      });
-  }
-
   handleChange = (field: { [key: string]: any }) => {
     this.setState({
       values: updateObject(this.state.values, {
@@ -118,8 +107,12 @@ class InstanceForm extends React.Component<
 
   render() {
     console.log(this.state.values);
-    if (this.state.vendors.length === 0) {
-      this.getVendors();
+    if (this.state.models.length === 0) {
+      getElementData("models", this.props.token).then(res => {
+        this.setState({
+          models: res as Array<ModelObject>
+        });
+      });
     }
     const { values } = this.state;
     return (
@@ -132,23 +125,23 @@ class InstanceForm extends React.Component<
           className="create-form bp3-form-group"
         >
           <h2>Add a New Instance</h2>
-          {/* <FormGroup label="Vendor">
-              <StringSuggest
-                defaultSelectedItem={this.state.values.vendor}
-                inputValueRenderer={(vendor: string) => vendor}
-                items={this.state.vendors}
-                onItemSelect={(vendor: string) =>
-                  this.setState({
-                    values: updateObject(values, { vendor: vendor })
-                  })
-                }
-                createNewItemRenderer={renderCreateItemOption}
-                createNewItemFromQuery={(vendor: string) => vendor}
-                itemRenderer={renderStringItem}
-                itemPredicate={filterString}
-                noResults={<MenuItem disabled={true} text="No results." />}
-              />
-            </FormGroup> */}
+          <FormGroup label="Model">
+            <ModelSuggest
+              defaultSelectedItem={this.state.values.model}
+              inputValueRenderer={(model: ModelObject) =>
+                model.vendor + " " + model.model_number
+              }
+              items={this.state.models}
+              onItemSelect={(model: ModelObject) =>
+                this.setState({
+                  values: updateObject(values, { model: model })
+                })
+              }
+              itemRenderer={renderModelItem}
+              itemPredicate={filterModel}
+              noResults={<MenuItem disabled={true} text="No results." />}
+            />
+          </FormGroup>
 
           <FormGroup>
             <Field

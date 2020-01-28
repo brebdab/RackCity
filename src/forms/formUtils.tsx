@@ -1,6 +1,7 @@
 import { ItemPredicate, ItemRenderer, Suggest } from "@blueprintjs/select";
 import React from "react";
 import { MenuItem } from "@blueprintjs/core";
+import { ModelObject } from "../components/utils";
 
 export function escapeRegExpChars(text: string) {
   // eslint-disable-next-line
@@ -19,6 +20,27 @@ export const filterString: ItemPredicate<string> = (
     return normalizedTitle === normalizedQuery;
   } else {
     return normalizedTitle.indexOf(normalizedQuery) >= 0;
+  }
+};
+
+export const filterModel: ItemPredicate<ModelObject> = (
+  query,
+  model,
+  _index,
+  exactMatch
+) => {
+  const normalizedVendor = model.vendor.toLowerCase();
+  const normalizedModel = model.model_number.toLowerCase();
+  const normalizedQuery = query.toLowerCase();
+
+  if (exactMatch) {
+    return (
+      normalizedVendor === normalizedQuery || normalizedModel == normalizedQuery
+    );
+  } else {
+    return (
+      `. ${normalizedVendor} ${normalizedModel}`.indexOf(normalizedQuery) >= 0
+    );
   }
 };
 
@@ -62,6 +84,23 @@ export const renderStringItem: ItemRenderer<string> = (
   }
   return <MenuItem text={highlightText(vendor, query)} onClick={handleClick} />;
 };
+
+export const renderModelItem: ItemRenderer<ModelObject> = (
+  model: ModelObject,
+  { handleClick, modifiers, query }
+) => {
+  if (!modifiers.matchesPredicate) {
+    return null;
+  }
+  const text = model.vendor;
+  return (
+    <MenuItem
+      label={model.model_number}
+      text={highlightText(text, query)}
+      onClick={handleClick}
+    />
+  );
+};
 export const renderCreateItemOption = (
   query: string,
   active: boolean,
@@ -77,3 +116,4 @@ export const renderCreateItemOption = (
 );
 
 export const StringSuggest = Suggest.ofType<string>();
+export const ModelSuggest = Suggest.ofType<ModelObject>();
