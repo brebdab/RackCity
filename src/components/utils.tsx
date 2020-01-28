@@ -8,7 +8,7 @@ export enum ElementType {
 }
 export interface InstanceObject extends ElementObject {
   hostname: string;
-  elevation: number;
+  elevation: string;
   model: ModelObject;
   rack: RackObject;
   owner?: string;

@@ -5,8 +5,10 @@ import {
   ElementType,
   ModelObject,
   ElementObjectType,
-  isModelObject
+  isModelObject,
+  isInstanceObject
 } from "../components/utils";
+import InstanceForm from "./InstanceForm";
 interface FormPopupState {}
 interface FormPopupProps {
   isOpen: boolean;
@@ -40,7 +42,17 @@ class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
                 : undefined
             }
           />
-        ) : null}
+        ) : (
+          <InstanceForm
+            type={FormTypes.CREATE}
+            submitForm={this.props.submitForm}
+            initialValues={
+              isInstanceObject(this.props.initialValues)
+                ? this.props.initialValues
+                : undefined
+            }
+          />
+        )}
       </Dialog>
     );
   }
