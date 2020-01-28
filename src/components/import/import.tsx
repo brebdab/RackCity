@@ -82,7 +82,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps, AlertSt
   private handleModelOpen = () => this.setState({ uploadModelIsOpen: true });
   private handleModelCancel = () => this.setState({ uploadModelIsOpen: false });
   private handleModelUpload = () => {
-    alert("Models were successfully uploaded");
+    alert("Models were successfully uploaded: " + this.state.selectedFile);
     this.setState({ uploadModelIsOpen: false });
   };
 
