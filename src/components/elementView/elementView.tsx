@@ -1,4 +1,12 @@
-import { AnchorButton, Classes, Dialog } from "@blueprintjs/core";
+import {
+  AnchorButton,
+  Classes,
+  Dialog,
+  Navbar,
+  NavbarGroup,
+  NavbarHeading,
+  Alignment
+} from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
@@ -69,13 +77,18 @@ class ElementView extends React.Component<ElementViewProps, ElementViewState> {
   public render() {
     return (
       <div>
-        {this.props.isAdmin
-          ? [
+        <Navbar className={Classes.DARK}>
+          <NavbarGroup>
+            <NavbarHeading>{this.props.element}</NavbarHeading>
+          </NavbarGroup>
+          {this.props.isAdmin ? (
+            <NavbarGroup align={Alignment.RIGHT}>
               <AnchorButton
+                className="add"
                 text={"Add " + this.props.element.slice(0, -1)}
                 icon="add"
                 onClick={this.handleOpen}
-              />,
+              />
               <FormPopup
                 type={FormTypes.CREATE}
                 elementName={this.props.element}
@@ -83,27 +96,12 @@ class ElementView extends React.Component<ElementViewProps, ElementViewState> {
                 isOpen={this.state.isOpen}
                 handleClose={this.handleClose}
               />
-              //     <Dialog
-              //       className={Classes.DARK}
-              //       usePortal={true}
-              //       enforceFocus={true}
-              //       canEscapeKeyClose={true}
-              //       canOutsideClickClose={true}
-              //       isOpen={this.state.isOpen}
-              //       onClose={this.handleClose}
-              //       title={"Add " + this.props.element.slice(0, -1)}
-              //     >
-              //       {this.props.element === "models" ? (
-              //         <ModelForm
-              //           type={FormTypes.CREATE}
-              //           submitForm={this.createModel}
-              //         />
-              //       ) : null}
-              //     </Dialog>
-            ]
-          : null}
-
-        <ElementTable type={this.props.element} getData={getElementData} />
+            </NavbarGroup>
+          ) : null}
+        </Navbar>
+        <div className="element-table">
+          <ElementTable type={this.props.element} getData={getElementData} />
+        </div>
       </div>
     );
   }

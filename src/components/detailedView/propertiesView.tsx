@@ -67,7 +67,8 @@ class PropertiesView extends React.PureComponent<
     const mid = state.columns.length / 2 + 1;
     return (
       <div className={Classes.DARK + " propsview"}>
-        <Card interactive={true} elevation={Elevation.TWO}>
+        <Card interactive={false} elevation={Elevation.TWO}>
+          <h5>Properties</h5>
           <div className={"row"}>
             <div className={"column"}>
               {this.renderData(

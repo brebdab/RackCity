@@ -82,7 +82,13 @@ export const renderStringItem: ItemRenderer<string> = (
   if (!modifiers.matchesPredicate) {
     return null;
   }
-  return <MenuItem text={highlightText(vendor, query)} onClick={handleClick} />;
+  return (
+    <MenuItem
+      active={modifiers.active}
+      text={highlightText(vendor, query)}
+      onClick={handleClick}
+    />
+  );
 };
 
 export const renderModelItem: ItemRenderer<ModelObject> = (
@@ -95,6 +101,7 @@ export const renderModelItem: ItemRenderer<ModelObject> = (
   const text = model.vendor;
   return (
     <MenuItem
+      active={modifiers.active}
       label={model.model_number}
       text={highlightText(text, query)}
       onClick={handleClick}

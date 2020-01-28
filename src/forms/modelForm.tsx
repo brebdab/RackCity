@@ -20,7 +20,7 @@ import {
   renderStringItem,
   StringSuggest
 } from "./formUtils";
-import "./login.scss";
+import "./forms.scss";
 //TO DO : add validation of types!!!
 export enum FormTypes {
   CREATE = "create",
@@ -131,6 +131,11 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
           <h2>Add a New Model</h2>
           <FormGroup label="Vendor">
             <StringSuggest
+              popoverProps={{
+                minimal: true,
+                popoverClassName: "model-options",
+                usePortal: true
+              }}
               defaultSelectedItem={this.state.values.vendor}
               inputValueRenderer={(vendor: string) => vendor}
               items={this.state.vendors}

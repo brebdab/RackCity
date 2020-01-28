@@ -7,7 +7,7 @@ import {
   Intent
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
-import axios from "axios";
+
 import * as React from "react";
 import { connect } from "react-redux";
 import { API_ROOT } from "../api-config";
@@ -23,7 +23,7 @@ import {
   ModelSuggest,
   filterModel
 } from "./formUtils";
-import "./login.scss";
+import "./forms.scss";
 import { getElementData } from "../components/elementView/elementView";
 //TO DO : add validation of types!!!
 export enum FormTypes {
@@ -125,23 +125,6 @@ class InstanceForm extends React.Component<
           className="create-form bp3-form-group"
         >
           <h2>Add a New Instance</h2>
-          <FormGroup label="Model">
-            <ModelSuggest
-              defaultSelectedItem={this.state.values.model}
-              inputValueRenderer={(model: ModelObject) =>
-                model.vendor + " " + model.model_number
-              }
-              items={this.state.models}
-              onItemSelect={(model: ModelObject) =>
-                this.setState({
-                  values: updateObject(values, { model: model })
-                })
-              }
-              itemRenderer={renderModelItem}
-              itemPredicate={filterModel}
-              noResults={<MenuItem disabled={true} text="No results." />}
-            />
-          </FormGroup>
 
           <FormGroup>
             <Field
@@ -161,13 +144,26 @@ class InstanceForm extends React.Component<
               onChange={this.handleChange}
             />
           </FormGroup>
-          <FormGroup>
-            <Field
-              field="model"
-              className="field"
-              placeholder="model"
-              value="modelObject"
-              onChange={this.handleChange}
+          <FormGroup label="Model" inline={true}>
+            <ModelSuggest
+              popoverProps={{
+                minimal: true,
+                popoverClassName: "model-options",
+                usePortal: true
+              }}
+              defaultSelectedItem={this.state.values.model}
+              inputValueRenderer={(model: ModelObject) =>
+                model.vendor + " " + model.model_number
+              }
+              items={this.state.models}
+              onItemSelect={(model: ModelObject) =>
+                this.setState({
+                  values: updateObject(values, { model: model })
+                })
+              }
+              itemRenderer={renderModelItem}
+              itemPredicate={filterModel}
+              noResults={<MenuItem disabled={true} text="No results." />}
             />
           </FormGroup>
           <FormGroup>
