@@ -2,14 +2,18 @@ import {
   Button,
   Classes,
   FormGroup,
-  InputGroup,
-  MenuItem
+  MenuItem,
+  Callout,
+  Intent
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
 import { connect } from "react-redux";
 import { API_ROOT } from "../api-config";
+import { ModelObject } from "../components/utils";
+import { updateObject } from "../store/utility";
+import Field, { IFieldProps } from "./field";
 import {
   filterString,
   renderCreateItemOption,
@@ -17,8 +21,6 @@ import {
   StringSuggest
 } from "./formUtils";
 import "./login.scss";
-import { ModelObject } from "../components/utils";
-import { updateObject } from "../store/utility";
 //TO DO : add validation of types!!!
 export enum FormTypes {
   CREATE = "create",
@@ -34,7 +36,18 @@ export interface ModelFormProps {
 interface ModelFormState {
   values: ModelObject;
   vendors: Array<string>;
+  errors: Array<string>;
 }
+
+export const required = (
+  values: ModelObject,
+  fieldName: keyof ModelObject
+): string =>
+  values[fieldName] === undefined ||
+  values[fieldName] === null ||
+  values[fieldName] === ""
+    ? "This must be populated"
+    : "";
 
 class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
   initialState: ModelObject = this.props.initialValues
@@ -42,7 +55,8 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
     : ({} as ModelObject);
   public state = {
     values: this.initialState,
-    vendors: []
+    vendors: [],
+    errors: []
   };
   headers = {
     headers: {
@@ -51,12 +65,28 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
   };
 
   private handleSubmit = (e: any) => {
+    this.setState({
+      errors: []
+    });
     e.preventDefault();
     console.log(this.state);
     if (this.state.values) {
-      this.props
-        .submitForm(this.state.values, this.headers)
-        .catch(err => console.log(err));
+      if (this.props.initialValues) {
+        console.log(this.props.initialValues);
+        this.setState({
+          values: updateObject(this.state.values, {
+            id: this.props.initialValues.id
+          })
+        });
+      }
+      this.props.submitForm(this.state.values, this.headers).catch(err => {
+        console.log(err.response.data.failure_message);
+        let errors: Array<string> = this.state.errors;
+        errors.push(err.response.data.failure_message as string);
+        this.setState({
+          errors: errors
+        });
+      });
     }
   };
 
@@ -75,19 +105,13 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
       });
   }
 
-  handleChange(field: { [key: string]: any }) {
+  handleChange = (field: { [key: string]: any }) => {
     this.setState({
       values: updateObject(this.state.values, {
         ...field
       })
     });
-  }
-  required = (values: ModelObject, fieldName: keyof ModelObject): string =>
-    values[fieldName] === undefined ||
-    values[fieldName] === null ||
-    values[fieldName] === ""
-      ? "This must be populated"
-      : "";
+  };
 
   render() {
     console.log(this.state.values);
@@ -97,6 +121,9 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
     const { values } = this.state;
     return (
       <div className={Classes.DARK + " login-container"}>
+        {this.state.errors.map((err: string) => {
+          return <Callout intent={Intent.DANGER}>{err}</Callout>;
+        })}
         <form
           onSubmit={this.handleSubmit}
           className="create-form bp3-form-group"
@@ -120,93 +147,84 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
             />
           </FormGroup>
           <FormGroup>
-            <InputGroup
+            <Field
               className="field"
-              onChange={(e: any) =>
-                this.handleChange({ model_number: e.currentTarget.value })
-              }
               placeholder="model_number"
+              onChange={this.handleChange}
               value={values.model_number}
+              field="model_number"
             />
           </FormGroup>
           <FormGroup>
-            <InputGroup
+            <Field
+              field="height"
               className="field"
               placeholder="height"
               value={values.height}
-              onChange={(e: any) =>
-                this.handleChange({ height: e.currentTarget.value })
-              }
+              onChange={this.handleChange}
             />
           </FormGroup>
           <FormGroup>
-            <InputGroup
+            <Field
+              field="display_color"
               className="field"
               placeholder="display_color"
               value={values.display_color}
-              onChange={(e: any) =>
-                this.handleChange({ display_color: e.currentTarget.value })
-              }
+              onChange={this.handleChange}
             />
           </FormGroup>
           <FormGroup>
-            <InputGroup
+            <Field
+              field="num_ethernet_ports"
               className="field"
               placeholder="num_ethernet_ports"
               value={values.num_ethernet_ports}
-              onChange={(e: any) =>
-                this.handleChange({ num_ethernet_ports: e.currentTarget.value })
-              }
+              onChange={this.handleChange}
             />
           </FormGroup>
           <FormGroup>
-            <InputGroup
+            <Field
+              field="num_power_ports"
               className="field"
               placeholder="num_power_ports"
               value={values.num_power_ports}
-              onChange={(e: any) =>
-                this.handleChange({ num_power_ports: e.currentTarget.value })
-              }
+              onChange={this.handleChange}
             />
           </FormGroup>
           <FormGroup>
-            <InputGroup
+            <Field
+              field="cpu"
               className="field"
               placeholder="cpu"
               value={values.cpu}
-              onChange={(e: any) =>
-                this.handleChange({ cpu: e.currentTarget.value })
-              }
+              onChange={this.handleChange}
             />
           </FormGroup>
           <FormGroup>
-            <InputGroup
+            <Field
+              field="memory_gb"
               className="field"
               placeholder="memory_gb"
               value={values.memory_gb}
-              onChange={(e: any) =>
-                this.handleChange({ memory_gb: e.currentTarget.value })
-              }
+              onChange={this.handleChange}
             />
           </FormGroup>
           <FormGroup>
-            <InputGroup
+            <Field
+              field="storage"
               className="field"
               placeholder="storage"
               value={values.storage}
-              onChange={(e: any) =>
-                this.handleChange({ storage: e.currentTarget.value })
-              }
+              onChange={this.handleChange}
             />
           </FormGroup>
           <FormGroup>
-            <InputGroup
+            <Field
+              field="comment"
               className="field"
               placeholder="comment"
               value={values.comment}
-              onChange={(e: any) =>
-                this.handleChange({ comment: e.currentTarget.value })
-              }
+              onChange={this.handleChange}
             />
           </FormGroup>
 

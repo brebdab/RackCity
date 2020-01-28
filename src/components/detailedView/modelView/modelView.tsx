@@ -20,6 +20,7 @@ import FormPopup from "../../../forms/FormPopup";
 export interface ModelViewProps {
   token: string;
   rid: any;
+  isAdmin: boolean;
 }
 
 interface ModelViewState {
@@ -119,43 +120,46 @@ export class modelView extends React.PureComponent<
     var data = this.state.model;
     return (
       <div className={Classes.DARK + " model-view"}>
-        <div className={"row"}>
-          <div className={"column"}>
-            <AnchorButton
-              large={true}
-              intent="primary"
-              icon="edit"
-              text="Edit"
-              onClick={() => this.handleFormOpen()}
-            />
-            <FormPopup
-              isOpen={this.state.isFormOpen}
-              type={FormTypes.MODIFY}
-              elementName={ElementType.MODEL}
-              handleClose={this.handleFormClose}
-              submitForm={this.updateModel}
-            />
+        {this.props.isAdmin ? (
+          <div className={"row"}>
+            <div className={"column"}>
+              <AnchorButton
+                large={true}
+                intent="primary"
+                icon="edit"
+                text="Edit"
+                onClick={() => this.handleFormOpen()}
+              />
+              <FormPopup
+                isOpen={this.state.isFormOpen}
+                initialValues={this.state.model}
+                type={FormTypes.MODIFY}
+                elementName={ElementType.MODEL}
+                handleClose={this.handleFormClose}
+                submitForm={this.updateModel}
+              />
+            </div>
+            <div className={"column"}>
+              <AnchorButton
+                large={true}
+                intent="danger"
+                icon="trash"
+                text="Delete Model"
+                onClick={this.handleDeleteOpen}
+              />
+              <Alert
+                cancelButtonText="Cancel"
+                confirmButtonText="Delete"
+                intent="danger"
+                isOpen={this.state.isDeleteOpen}
+                onCancel={this.handleDeleteCancel}
+                onConfirm={this.handleDelete}
+              >
+                <p>Are you sure you want to delete?</p>
+              </Alert>
+            </div>
           </div>
-          <div className={"column"}>
-            <AnchorButton
-              large={true}
-              intent="danger"
-              icon="trash"
-              text="Delete Model"
-              onClick={this.handleDeleteOpen}
-            />
-            <Alert
-              cancelButtonText="Cancel"
-              confirmButtonText="Delete"
-              intent="danger"
-              isOpen={this.state.isDeleteOpen}
-              onCancel={this.handleDeleteCancel}
-              onConfirm={this.handleDelete}
-            >
-              <p>Are you sure you want to delete?</p>
-            </Alert>
-          </div>
-        </div>
+        ) : null}
         <Tabs
           id="ModelViewer"
           animate={true}
@@ -218,7 +222,8 @@ class ModelInstance extends React.PureComponent<RouteComponentProps> {
 
 const mapStatetoProps = (state: any) => {
   return {
-    token: state.token
+    token: state.token,
+    isAdmin: state.admin
   };
 };
 
