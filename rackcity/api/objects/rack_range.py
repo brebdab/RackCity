@@ -25,9 +25,27 @@ class RackRangeSerializer(serializers.Serializer):
 
         return data
 
+    def get_num_racks_in_range(self):
+        """
+        Returns int total number racks within rack range
+        """
+        if 'letter_end' in self.validated_data:
+            num_row = 1 + \
+                ord(self.validated_data['letter_end']) - \
+                ord(self.validated_data['letter_start'])
+        else:
+            num_row = 1
+        if 'num_end' in self.validated_data:
+            num_col = 1 + \
+                self.validated_data['num_end'] - \
+                self.validated_data['num_start']
+        else:
+            num_col = 1
+        return num_row * num_col
+
     def get_row_range(self):
         """
-        Returns tuple specifying rack row range
+        Returns str tuple specifying rack row range
         """
         if 'letter_end' in self.validated_data:
             return (
@@ -40,9 +58,23 @@ class RackRangeSerializer(serializers.Serializer):
                 self.validated_data['letter_start']
             )
 
+    def get_row_list(self):
+        """
+        Returns str list specifying all rack rows
+        """
+        if 'letter_end' not in self.validated_data:
+            return [self.validated_data['letter_start']]
+        else:
+            return [
+                chr(ch_ord) for ch_ord in range(
+                    ord(self.validated_data['letter_start']),
+                    ord(self.validated_data['letter_end']) + 1,
+                )
+            ]
+
     def get_number_range(self):
         """
-        Returns tuple specifying rack number range
+        Returns int tuple specifying rack number range
         """
         if 'num_end' in self.validated_data:
             return (
@@ -54,3 +86,17 @@ class RackRangeSerializer(serializers.Serializer):
                 self.validated_data['num_start'],
                 self.validated_data['num_start']
             )
+
+    def get_number_list(self):
+        """
+        Returns int list specifying all rack numbers
+        """
+        if 'num_end' not in self.validated_data:
+            return [self.validated_data['num_start']]
+        else:
+            return [
+                i for i in range(
+                    self.validated_data['num_start'],
+                    self.validated_data['num_end'] + 1,
+                )
+            ]
