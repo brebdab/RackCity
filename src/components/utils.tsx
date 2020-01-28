@@ -33,6 +33,11 @@ export interface ModelObject extends ElementObject {
   storage: string | undefined;
   comment: string | undefined;
 }
+
+export interface ModelDetailObject {
+  model: ModelObject;
+  instances: Array<InstanceObject>;
+}
 export type ElementObjectType = ModelObject | RackObject | InstanceObject;
 export function isModelObject(obj: any): obj is ModelObject {
   return obj && obj.model_number;
