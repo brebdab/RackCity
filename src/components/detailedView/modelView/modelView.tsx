@@ -6,7 +6,7 @@ import { API_ROOT } from "../../../api-config";
 import PropertiesView from "../propertiesView";
 import { RouteComponentProps, withRouter } from "react-router";
 import { connect } from "react-redux";
-import { ModelObject, ElementType } from "../../utils";
+import { ModelObject } from "../../utils";
 import ModelForm, { FormTypes } from "../../../forms/modelForm";
 
 export interface ModelViewProps {
