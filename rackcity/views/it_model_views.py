@@ -211,23 +211,18 @@ def model_bulk_upload(request):
     models_to_add = []
     potential_modifications = []
     for model_data in model_datas:
-        if 'vendor' not in model_data or 'model_number' not in model_data:
+        model_serializer = ITModelSerializer(data=model_data)
+        if not model_serializer.is_valid():
+            failure_message = str(model_serializer.errors)
+            failure_message = "At least one provided model was not valid. "+failure_message
             return JsonResponse(
-                {"failure_message": "Vendor and model number must be provided. "},
+                {"failure_message": failure_message},
                 status=HTTPStatus.BAD_REQUEST
             )
         try:
             existing_model = ITModel.objects.get(
                 vendor=model_data['vendor'], model_number=model_data['model_number'])
         except ObjectDoesNotExist:
-            model_serializer = ITModelSerializer(data=model_data)
-            if not model_serializer.is_valid():
-                failure_message = str(model_serializer.errors)
-                failure_message = "At least one new model was not valid. "+failure_message
-                return JsonResponse(
-                    {"failure_message": failure_message},
-                    status=HTTPStatus.BAD_REQUEST
-                )
             models_to_add.append(model_serializer)
         else:
             potential_modifications.append(
@@ -240,32 +235,21 @@ def model_bulk_upload(request):
     records_ignored = 0
     modifications_to_approve = []
     for potential_modification in potential_modifications:
-        if records_are_identical(potential_modification):
+        new_data = potential_modification['new_data']
+        existing_data = ITModelSerializer(
+            potential_modification['existing_model']
+        ).data
+        if records_are_identical(existing_data, new_data):
             records_ignored += 1
         else:
-            new_data = potential_modification['new_data']
-            modified_model = copy(potential_modification['existing_model'])
-            for field in new_data.keys():
-                setattr(modified_model, field, new_data[field])
-            try:
-                modified_model_data = ITModelSerializer(modified_model).data
-            except Exception as e:
-                failure_message = str(e)
-                failure_message = "At least one modification was not valid. "+failure_message
-                return JsonResponse(
-                    {"failure_message": failure_message},
-                    status=HTTPStatus.BAD_REQUEST
-                )
-            else:
-                existing_model_data = ITModelSerializer(
-                    potential_modification['existing_model']
-                ).data
-                modifications_to_approve.append(
-                    {
-                        "existing": existing_model_data,
-                        "modified": modified_model_data
-                    }
-                )
+            # bletsch changed mind on piazza.  if something left out, it would delete it
+            new_data['id'] = existing_data['id']
+            modifications_to_approve.append(
+                {
+                    "existing": existing_data,
+                    "modified": new_data  # THIS WILL NEED TO HAVE SAME ID ON IT BEFORE SAVING
+                }
+            )
     return JsonResponse(
         {
             "added": records_added,
@@ -276,11 +260,13 @@ def model_bulk_upload(request):
     )
 
 
-def records_are_identical(potential_modification):
-    new_data = potential_modification['new_data']
-    existing_model = potential_modification['existing_model']
-    for field in new_data.keys():
-        if new_data[field] != getattr(existing_model, field):
+def records_are_identical(existing_data, new_data):
+    existing_keys = existing_data.keys()
+    new_keys = new_data.keys()
+    for key in existing_keys:
+        if key not in new_keys and existing_data[key] is not None and key != 'id':
+            return False
+        if key in new_keys and new_data[key] != existing_data[key]:
             return False
     return True
 
