@@ -128,8 +128,6 @@ def instance_delete(request):
     failure_message = ""
     if 'id' not in data:
         failure_message += "Must include id when deleting an instance. "
-    elif not isinstance(data['id'], int):
-        failure_message += "Field id must be positive integer. "
     else:
         id = data['id']
         try:
