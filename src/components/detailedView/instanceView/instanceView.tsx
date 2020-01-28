@@ -2,106 +2,75 @@ import { Classes } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
+import { API_ROOT } from "../../../api-config";
+import PropertiesView from "../propertiesView";
 import { RouteComponentProps, withRouter } from "react-router";
 import "./instanceView.scss";
+import { connect } from "react-redux"
+import { InstanceObject } from "../../utils"
 
 export interface InstanceViewProps {
-  rid: string;
+  token: string;
+  rid: any;
 }
-
 // Given an rid, will perform a GET request of that rid and display info about that instnace
 
-async function getData(instancekey: string) {
+async function getData(instancekey: string, token: string) {
+  const headers = {
+    headers: {
+      Authorization: "Token " + token
+    }
+  }
   return await axios
-    .get("https://rack-city-dev.herokuapp.com/api/instances/" + instancekey)
+    .get(API_ROOT + "api/instances/" + instancekey, headers)
     .then(res => {
       const data = res.data;
       return data;
     });
 }
 
-export class InstanceViewWrapper extends React.PureComponent<
-  RouteComponentProps,
-  InstanceViewProps
-> {
-  public render() {
-    return (
-      <InstanceView
-        history={this.props.history}
-        location={this.props.location}
-        match={this.props.match}
-      />
-    );
-  }
-}
-
 interface InstanceViewState {
-  hostname: any;
-  model: any;
-  rack: any;
-  height: any;
-  user: any;
-  comment: any;
+  state: InstanceObject | undefined,
+  columns: Array<string>,
+  fields: Array<string>
 }
 
 export class InstanceView extends React.PureComponent<
-  RouteComponentProps,
+  RouteComponentProps & InstanceViewProps,
   InstanceViewState
 > {
-  public state: InstanceViewState = {
-    hostname: "",
-    model: "",
-    rack: "",
-    height: "",
-    user: "",
-    comment: ""
-  };
 
-  async componentDidMount() {
-    const resp = await getData("2"); // TODO change to dynamic path
-    this.setState({
-      hostname: resp.hostname,
-      model: resp.model,
-      rack: resp.rack,
-      height: resp.height,
-      user: resp.user,
-      comment: resp.comment
-    });
+  public state: InstanceViewState = {
+    state: undefined,
+    columns: ["Hostname", "Model", "Rack", "Elevation", "Owner"],
+    fields: ["hostname", "model", "rack", "elevation", "owner"]
   }
 
   public render() {
-    // let temp: any;
-    // temp = this.props.match.params
-    // const rid = temp.rid
+    let params: any;
+    params = this.props.match.params;
+    if (this.state.state === undefined){
+      getData(params.rid, this.props.token).then((result) => {
+        this.setState({
+          state: result
+        })
+      })
+    }
     return (
       <div className={Classes.DARK + " instance-view"}>
-        <div>
-          <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered">
-            <thead>
-              <tr>
-                <th>Hostname</th>
-                <th>Model</th>
-                <th>Rack</th>
-                <th>Rack U</th>
-                <th>Owner</th>
-                <th>Comments</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>{this.state.hostname}</td>
-                <td>{this.state.model}</td>
-                <td>{this.state.rack}</td>
-                <td>{this.state.height}</td>
-                <td>{this.state.user}</td>
-                <td>{this.state.comment}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <PropertiesView
+          history={this.props.history} location={this.props.location}
+          match={this.props.match} data={this.state.state} {...this.state}
+        />
       </div>
     );
   }
 }
 
-export default withRouter(InstanceViewWrapper);
+const mapStatetoProps = (state: any) => {
+  return {
+    token: state.token
+  };
+};
+
+export default withRouter(connect(mapStatetoProps)(InstanceView));
