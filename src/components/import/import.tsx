@@ -7,6 +7,7 @@ import { RouteComponentProps, withRouter } from "react-router";
 import { connect } from "react-redux";
 import { InstanceObject } from "../utils";
 import "./import.scss";
+import { FileSelector } from "../lib/fileSelect"
 
 interface AlertState {
   uploadModelIsOpen: boolean,
@@ -61,6 +62,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps, AlertSt
               onConfirm={this.handleModelUpload}
             >
               <p>Choose a file</p>
+              <FileSelector {...this.props} />
             </Alert>
           </div>
         </div>
