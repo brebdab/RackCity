@@ -56,7 +56,7 @@ class App extends React.Component<AppProps> {
   }
 }
 
-const mapStateToProps = (state: any, ownProps: any = {}) => {
+const mapStateToProps = (state: any) => {
   return {
     isAuthenticated: state.token !== null
   };
