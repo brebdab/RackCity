@@ -1,9 +1,8 @@
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
 import { Tabs, Classes, Tab } from "@blueprintjs/core";
-
+import ElementView from "./elementView";
 import "./elementView.scss";
-import { ElementView } from "./elementView";
 import { connect } from "react-redux";
 
 interface ElementTabViewProps {
@@ -24,22 +23,20 @@ export class ElementTabView extends React.Component<ElementTabViewProps> {
           className="tab"
           id="instance"
           title="Instances"
-          panel={
-            <ElementView isAdmin={this.props.isAdmin} element="instances" />
-          }
+          panel={<ElementView element="instances" />}
         />
         <Tab
           className="tab"
           id="model"
           title="Models"
-          panel={<ElementView isAdmin={this.props.isAdmin} element="models" />}
+          panel={<ElementView element="models" />}
         />
-        <Tab
+        {/* <Tab
           className="tab"
           id="rack"
           title="Racks"
-          panel={<ElementView isAdmin={this.props.isAdmin} element="racks" />}
-        />
+          panel={<ElementView element="racks" />}
+        /> */}
         <Tabs.Expander />
       </Tabs>
     );
