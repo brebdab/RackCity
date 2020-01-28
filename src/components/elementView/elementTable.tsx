@@ -2,26 +2,32 @@ import { Spinner } from "@blueprintjs/core";
 import React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
-import { ElementType, ModelObject } from "../utils";
+import {
+  ElementType,
+  isModelObject,
+  isRackObject,
+  ElementObjectType
+} from "../utils";
 
-interface IModelTableState {
-  items: Array<ModelObject>;
+interface IElementTableState {
+  items: Array<ElementObjectType>;
 }
 
-interface IModelTableProps {
+interface IElementTableProps {
+  type: ElementType;
   token: string;
-  getData(token: string): Promise<Array<ModelObject>>;
+  getData(type: string, token: string): Promise<Array<ElementObjectType>>;
 }
 
-class ModelTable extends React.Component<
-  IModelTableProps & RouteComponentProps,
-  IModelTableState
+class ElementTable extends React.Component<
+  IElementTableProps & RouteComponentProps,
+  IElementTableState
 > {
-  public state: IModelTableState = {
+  public state: IElementTableState = {
     items: []
   };
   componentDidMount() {
-    this.props.getData(this.props.token).then(res => {
+    this.props.getData(this.props.type, this.props.token).then(res => {
       this.setState({
         items: res
       });
@@ -53,17 +59,21 @@ class ModelTable extends React.Component<
             </tr>
           </thead>
           <tbody>
-            {this.state.items.map((item: ModelObject) => {
+            {this.state.items.map((item: ElementObjectType) => {
               return (
                 <tr
                   onClick={() =>
                     this.props.history.push(
-                      "/" + ElementType.MODEL + "/" + item.id
+                      "/" + this.props.type + "/" + item.id
                     )
                   }
                 >
                   {Object.entries(item).map(([col, value]) => {
-                    if (col !== "id") {
+                    if (isModelObject(value)) {
+                      return <td>{value.vendor + " " + value.model_number}</td>;
+                    } else if (isRackObject(value)) {
+                      return <td>{value.row_letter + " " + value.rack_num}</td>;
+                    } else if (col !== "id") {
                       return <td>{value}</td>;
                     }
                     return null;
@@ -82,4 +92,4 @@ const mapStateToProps = (state: any) => {
     token: state.token
   };
 };
-export default connect(mapStateToProps)(withRouter(ModelTable));
+export default connect(mapStateToProps)(withRouter(ElementTable));

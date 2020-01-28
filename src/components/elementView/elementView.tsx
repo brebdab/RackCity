@@ -2,41 +2,21 @@ import { AnchorButton, Classes, Dialog } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
+import { connect } from "react-redux";
 import { API_ROOT } from "../../api-config";
 import WrappedCreateModelForm from "../../forms/createModelForm";
-import InstanceTable from "./instanceTable";
-import ModelTable from "./modelTable";
+import { ElementObjectType, ElementType } from "../utils";
+import ElementTable from "./elementTable";
 import "./elementView.scss";
-import { connect } from "react-redux";
-import {
-  InstanceObject,
-  ElementType,
-  ModelObject,
-  ElementObjectType
-} from "../utils";
 
 interface ElementViewState {
   isOpen: boolean;
 }
 interface ElementViewProps {
-  element: string;
+  element: ElementType;
   isAdmin: boolean;
 }
-function getInstanceData(token: string): Promise<Array<InstanceObject>> {
-  console.log(
-    getElementData(ElementType.INSTANCE, token) as Promise<
-      Array<InstanceObject>
-    >
-  );
-  return getElementData(ElementType.INSTANCE, token) as Promise<
-    Array<InstanceObject>
-  >;
-}
-function getModelData(token: string): Promise<Array<ModelObject>> {
-  return getElementData(ElementType.MODEL, token) as Promise<
-    Array<ModelObject>
-  >;
-}
+
 function getElementData(
   path: string,
   token: string
@@ -104,11 +84,8 @@ class ElementView extends React.Component<ElementViewProps, ElementViewState> {
               </Dialog>
             ]
           : null}
-        {this.props.element === ElementType.MODEL ? (
-          <ModelTable getData={getModelData} />
-        ) : (
-          <InstanceTable getData={getInstanceData} />
-        )}
+
+        <ElementTable type={this.props.element} getData={getElementData} />
       </div>
     );
   }

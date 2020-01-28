@@ -4,6 +4,7 @@ import { Tabs, Classes, Tab } from "@blueprintjs/core";
 import ElementView from "./elementView";
 import "./elementView.scss";
 import { connect } from "react-redux";
+import { ElementType } from "../utils";
 
 interface ElementTabViewProps {
   isAdmin: boolean;
@@ -23,13 +24,13 @@ export class ElementTabView extends React.Component<ElementTabViewProps> {
           className="tab"
           id="instance"
           title="Instances"
-          panel={<ElementView element="instances" />}
+          panel={<ElementView element={ElementType.INSTANCE} />}
         />
         <Tab
           className="tab"
           id="model"
           title="Models"
-          panel={<ElementView element="models" />}
+          panel={<ElementView element={ElementType.MODEL} />}
         />
         {/* <Tab
           className="tab"
