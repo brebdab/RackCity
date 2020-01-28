@@ -36,10 +36,7 @@ interface ModelFormState {
   vendors: Array<string>;
 }
 
-class ModelForm extends React.Component<
-  ModelFormProps,
-  ModelFormState
-> {
+class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
   initialState: ModelObject = this.props.initialValues
     ? this.props.initialValues
     : ({} as ModelObject);
@@ -93,6 +90,7 @@ class ModelForm extends React.Component<
       : "";
 
   render() {
+    console.log(this.state.values);
     if (this.state.vendors.length === 0) {
       this.getVendors();
     }
@@ -106,6 +104,7 @@ class ModelForm extends React.Component<
           <h2>Add a New Model</h2>
           <FormGroup label="Vendor">
             <StringSuggest
+              defaultSelectedItem={this.state.values.vendor}
               inputValueRenderer={(vendor: string) => vendor}
               items={this.state.vendors}
               onItemSelect={(vendor: string) =>

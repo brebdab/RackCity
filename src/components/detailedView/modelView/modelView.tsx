@@ -124,14 +124,7 @@ export class modelView extends React.PureComponent<
           <Tab
             id="ModelProperties"
             title="Properties"
-            panel={
-              <PropertiesView
-                isOpen={this.state.isOpen}
-                type={ElementType.MODEL}
-                data={data}
-                handleEdit={this.updateModel}
-              />
-            }
+            panel={<PropertiesView data={data} {...this.state} />}
           />
           <Tab
             id="Instances"

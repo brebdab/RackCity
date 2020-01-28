@@ -57,10 +57,7 @@ export class InstanceView extends React.PureComponent<
     }
     return (
       <div className={Classes.DARK + " instance-view"}>
-        {/* <PropertiesView
-          history={this.props.history} location={this.props.location}
-          match={this.props.match} data={this.state.state} {...this.state}
-        /> */}
+        <PropertiesView data={this.state.state} {...this.state} />
       </div>
     );
   }

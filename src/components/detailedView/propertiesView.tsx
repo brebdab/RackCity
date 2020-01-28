@@ -8,7 +8,7 @@ import {
 import "@blueprintjs/core/lib/css/blueprint.css";
 // import axios from "axios";
 import * as React from "react";
-import { RouteComponentProps } from "react-router";
+import { RouteComponentProps, withRouter } from "react-router";
 import "./propertiesView.scss";
 
 export interface AlertState {
@@ -64,7 +64,6 @@ export class PropertiesView extends React.PureComponent<
   public render() {
     let state: any;
     state = this.props;
-    console.log(state);
     const mid = state.columns.length / 2 + 1;
     return (
       <div className={Classes.DARK + " propsview"}>
@@ -90,15 +89,7 @@ export class PropertiesView extends React.PureComponent<
           <p> </p>
         </div>
         <div className={"row"}>
-          <div className={"column"}>
-            <AnchorButton
-              large={true}
-              intent="primary"
-              icon="edit"
-              text="Edit Model"
-              onClick={this.handleEdit}
-            />
-          </div>
+          <div className={"column"}></div>
           <div className={"column"}>
             <AnchorButton
               large={true}
@@ -132,4 +123,4 @@ export class PropertiesView extends React.PureComponent<
   };
 }
 
-export default PropertiesView;
+export default withRouter(PropertiesView);
