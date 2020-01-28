@@ -11,27 +11,27 @@ export interface InstanceObject extends ElementObject {
   elevation: number;
   model: ModelObject;
   rack: RackObject;
-  owner: string;
-  comment: string;
+  owner?: string;
+  comment?: string;
 }
 
 export interface RackObject extends ElementObject {
   row_letter: string;
-  rack_num: number;
-  height: number;
+  rack_num: string;
+  height: string;
 }
 
 export interface ModelObject extends ElementObject {
   vendor: string;
   model_number: string;
-  height: number;
-  display_color: string | undefined;
-  num_ethernet_ports: number | undefined;
-  num_power_ports: number | undefined;
-  cpu: string | undefined;
-  memory_gb: number | undefined;
-  storage: string | undefined;
-  comment: string | undefined;
+  height: string;
+  display_color?: string;
+  num_ethernet_ports?: string;
+  num_power_ports?: string;
+  cpu?: string;
+  memory_gb?: string;
+  storage?: string;
+  comment?: string;
 }
 
 export interface ModelDetailObject {

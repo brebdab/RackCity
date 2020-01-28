@@ -15,6 +15,7 @@ import "./index.scss";
 import ModelView from "./components/detailedView/modelView/modelView";
 import InstanceViewWrap from "./components/detailedView/instanceView/instanceView";
 import * as actions from "./store/actions/auth";
+import CreateModelForm from "./forms/createModelForm";
 
 export interface AppProps {
   isAuthenticated: boolean;
@@ -46,7 +47,7 @@ class App extends React.Component<AppProps> {
 
             {/* admin paths */}
             <Route path="/admin" component={WrappedNormalRegistrationForm} />
-
+            <Route path="/create" component={CreateModelForm} />
             <Route component={Notfound} />
           </Switch>
         </div>

@@ -6,7 +6,6 @@ import {
   MenuItem
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
-import Form, { FormComponentProps } from "antd/lib/form";
 import axios from "axios";
 import * as React from "react";
 import { connect } from "react-redux";
@@ -18,56 +17,56 @@ import {
   StringSuggest
 } from "./formUtils";
 import "./login.scss";
-
-export interface IModelState {
-  vendors: Array<string>;
+import { ModelObject } from "../components/utils";
+import { updateObject } from "../store/utility";
+//TO DO : add validation of types!!!
+export enum FormTypes {
+  CREATE = "create",
+  MODIFY = "modify"
 }
+
 export interface CreateModelFormProps {
   token: string;
+  type: FormTypes;
+  initialValues?: ModelObject;
+  submitForm(model: ModelObject, headers: any): Promise<any>;
 }
-export interface IModelObject {
-  vendor: string | undefined;
-  model_number: string | undefined;
-  height: number | undefined;
-  display_color: string | undefined;
-  num_ethernet_ports: number | undefined;
-  num_power_ports: number | undefined;
-  cpu: string | undefined;
-  memory_gb: number | undefined;
-  storage: string | undefined;
-  comment: string | undefined;
+interface CreateModelFormState {
+  values: ModelObject;
+  vendors: Array<string>;
 }
 
-const FormItem = Form.Item;
-
-export class CreateModelForm extends React.Component<
-  CreateModelFormProps & FormComponentProps,
-  IModelState & IModelObject
+class CreateModelForm extends React.Component<
+  CreateModelFormProps,
+  CreateModelFormState
 > {
+  initialState: ModelObject = this.props.initialValues
+    ? this.props.initialValues
+    : ({} as ModelObject);
   public state = {
-    vendors: [],
-    vendor: undefined,
-    model_number: undefined,
-    height: undefined,
-    display_color: undefined,
-    num_power_ports: undefined,
-    num_ethernet_ports: undefined,
-    cpu: undefined,
-    memory_gb: undefined,
-    storage: undefined,
-    comment: undefined
+    values: this.initialState,
+    vendors: []
+  };
+  headers = {
+    headers: {
+      Authorization: "Token " + this.props.token
+    }
   };
 
-  getVendors() {
-    const headers = {
-      headers: {
-        Authorization: "Token " + this.props.token
-      }
-    };
+  private handleSubmit = (e: any) => {
+    e.preventDefault();
+    console.log(this.state);
+    if (this.state.values) {
+      this.props
+        .submitForm(this.state.values, this.headers)
+        .catch(err => console.log(err));
+    }
+  };
 
+  private getVendors() {
     axios
       //.get("https://rack-city-dev.herokuapp.com/api/" + path)
-      .get(API_ROOT + "api/models/vendors", headers)
+      .get(API_ROOT + "api/models/vendors", this.headers)
       .then(res => {
         const vendors: Array<string> = res.data.vendors;
         this.setState({
@@ -79,46 +78,28 @@ export class CreateModelForm extends React.Component<
       });
   }
 
-  handleSubmit = (e: any) => {
-    console.log(e);
-    e.preventDefault();
-    this.props.form.validateFieldsAndScroll((err, values) => {
-      if (!err) {
-        console.log(values);
-        let modelObject: IModelObject;
-        modelObject = { ...values };
-        modelObject["vendor"] = this.state.vendor;
-        const headers = {
-          headers: {
-            Authorization: "Token " + this.props.token
-          }
-        };
-
-        axios
-          .post(API_ROOT + "api/models/add", modelObject, headers)
-          .then(res => {
-            this.props.form.resetFields();
-
-            this.setState({
-              vendor: undefined
-            });
-
-            console.log("success");
-          })
-          .catch(err => console.log(err));
-      }
+  handleChange(field: { [key: string]: any }) {
+    this.setState({
+      values: updateObject(this.state.values, {
+        ...field
+      })
     });
-  };
+  }
+  required = (values: ModelObject, fieldName: keyof ModelObject): string =>
+    values[fieldName] === undefined ||
+    values[fieldName] === null ||
+    values[fieldName] === ""
+      ? "This must be populated"
+      : "";
 
   render() {
     if (this.state.vendors.length === 0) {
       this.getVendors();
     }
-    const { getFieldDecorator } = this.props.form;
-
+    const { values } = this.state;
     return (
       <div className={Classes.DARK + " login-container"}>
-        <Form
+        <form
           onSubmit={this.handleSubmit}
           className="create-form bp3-form-group"
         >
@@ -129,138 +110,111 @@ export class CreateModelForm extends React.Component<
               items={this.state.vendors}
               onItemSelect={(vendor: string) =>
                 this.setState({
-                  vendor: vendor
+                  values: updateObject(values, { vendor: vendor })
                 })
               }
               createNewItemRenderer={renderCreateItemOption}
               createNewItemFromQuery={(vendor: string) => vendor}
-              // onItemSelect={() => {}}
               itemRenderer={renderStringItem}
               itemPredicate={filterString}
               noResults={<MenuItem disabled={true} text="No results." />}
             />
           </FormGroup>
+          <FormGroup>
+            <InputGroup
+              className="field"
+              onChange={(e: any) =>
+                this.handleChange({ model_number: e.currentTarget.value })
+              }
+              placeholder="model_number"
+              value={values.model_number}
+            />
+          </FormGroup>
+          <FormGroup>
+            <InputGroup
+              className="field"
+              placeholder="height"
+              value={values.height}
+              onChange={(e: any) =>
+                this.handleChange({ height: e.currentTarget.value })
+              }
+            />
+          </FormGroup>
+          <FormGroup>
+            <InputGroup
+              className="field"
+              placeholder="display_color"
+              value={values.display_color}
+              onChange={(e: any) =>
+                this.handleChange({ display_color: e.currentTarget.value })
+              }
+            />
+          </FormGroup>
+          <FormGroup>
+            <InputGroup
+              className="field"
+              placeholder="num_ethernet_ports"
+              value={values.num_ethernet_ports}
+              onChange={(e: any) =>
+                this.handleChange({ num_ethernet_ports: e.currentTarget.value })
+              }
+            />
+          </FormGroup>
+          <FormGroup>
+            <InputGroup
+              className="field"
+              placeholder="num_power_ports"
+              value={values.num_power_ports}
+              onChange={(e: any) =>
+                this.handleChange({ num_power_ports: e.currentTarget.value })
+              }
+            />
+          </FormGroup>
+          <FormGroup>
+            <InputGroup
+              className="field"
+              placeholder="cpu"
+              value={values.cpu}
+              onChange={(e: any) =>
+                this.handleChange({ cpu: e.currentTarget.value })
+              }
+            />
+          </FormGroup>
+          <FormGroup>
+            <InputGroup
+              className="field"
+              placeholder="memory_gb"
+              value={values.memory_gb}
+              onChange={(e: any) =>
+                this.handleChange({ memory_gb: e.currentTarget.value })
+              }
+            />
+          </FormGroup>
+          <FormGroup>
+            <InputGroup
+              className="field"
+              placeholder="storage"
+              value={values.storage}
+              onChange={(e: any) =>
+                this.handleChange({ storage: e.currentTarget.value })
+              }
+            />
+          </FormGroup>
+          <FormGroup>
+            <InputGroup
+              className="field"
+              placeholder="comment"
+              value={values.comment}
+              onChange={(e: any) =>
+                this.handleChange({ comment: e.currentTarget.value })
+              }
+            />
+          </FormGroup>
 
-          <FormItem label="Model Number">
-            {getFieldDecorator("model_number", {
-              rules: [{ required: true, message: "Please input model number!" }]
-            })(<InputGroup className="field" placeholder="model_number" />)}
-          </FormItem>
-          <FormItem label="Height">
-            {getFieldDecorator("height", {
-              initialValue: undefined,
-              rules: [{ required: true, message: "Please input your height!" }]
-            })(
-              <InputGroup
-                className="field"
-                placeholder="height"
-                type="number"
-              />
-            )}
-          </FormItem>
-          <FormItem label="Display Color">
-            {getFieldDecorator("display_color", {
-              initialValue: undefined,
-              rules: [
-                { required: false, message: "Please input your display_color!" }
-              ]
-            })(
-              <InputGroup
-                className="field"
-                placeholder="display color "
-                type="number"
-              ></InputGroup>
-            )}
-          </FormItem>
-          <FormItem label="Number of Ethernet Ports ">
-            {getFieldDecorator("num_ethernet_ports", {
-              initialValue: undefined,
-              rules: [
-                {
-                  required: false,
-                  message: "Please input your num_ethernet_ports!"
-                }
-              ]
-            })(
-              <InputGroup
-                className="field"
-                placeholder="ethernet ports"
-                type="number"
-              ></InputGroup>
-            )}
-          </FormItem>
-          <FormItem label="Number of Power Ports ">
-            {getFieldDecorator("num_power_ports", {
-              initialValue: undefined,
-              rules: [
-                {
-                  required: false,
-                  message: "Please input your num_power_ports!"
-                }
-              ]
-            })(
-              <InputGroup
-                className="field"
-                placeholder="power ports"
-                type="number"
-              ></InputGroup>
-            )}
-          </FormItem>
-          <FormItem label="CPU">
-            {getFieldDecorator("cpu", {
-              initialValue: undefined,
-              rules: [{ required: false, message: "Please input CPU!" }]
-            })(
-              <InputGroup
-                className="field"
-                placeholder="cpu"
-                type="string"
-              ></InputGroup>
-            )}
-          </FormItem>
-          <FormItem label="Memory (GB)">
-            {getFieldDecorator("memory_gb", {
-              initialValue: undefined,
-              rules: [{ required: false, message: "Please input Memory!" }]
-            })(
-              <InputGroup
-                className="field"
-                placeholder="memory"
-                type="number"
-              ></InputGroup>
-            )}
-          </FormItem>
-          <FormItem label="Storage">
-            {getFieldDecorator("storage", {
-              initialValue: undefined,
-              rules: [
-                { required: false, message: "Please input your username!" }
-              ]
-            })(
-              <InputGroup
-                className="field"
-                placeholder="storage"
-                type="number"
-              ></InputGroup>
-            )}
-          </FormItem>
-          <FormItem label="Comment">
-            {getFieldDecorator("comment", {
-              rules: [
-                { required: false, message: "Please input your username!" }
-              ]
-            })(
-              <InputGroup
-                className="field"
-                placeholder="Comment"
-                type="text"
-              ></InputGroup>
-            )}
-          </FormItem>
           <Button className="login-button" type="submit">
             Login
           </Button>
-        </Form>
+        </form>
       </div>
     );
   }
@@ -271,7 +225,7 @@ const mapStateToProps = (state: any) => {
     token: state.token
   };
 };
+export default connect(mapStateToProps)(CreateModelForm);
+// const WrappedCreateModelForm = Form.create()(CreateModelForm);
 
-const WrappedCreateModelForm = Form.create()(CreateModelForm);
-
-export default connect(mapStateToProps)(WrappedCreateModelForm);
+// export default connect(mapStateToProps)(WrappedCreateModelForm);
