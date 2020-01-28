@@ -1,143 +1,98 @@
-import { Classes, Spinner, Tab, Tabs } from "@blueprintjs/core";
+import { AnchorButton, Classes, Dialog } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
-import { RouteComponentProps, withRouter } from "react-router";
+import { connect } from "react-redux";
 import { API_ROOT } from "../../api-config";
+import WrappedCreateModelForm from "../../forms/createModelForm";
+import { ElementObjectType, ElementType } from "../utils";
+import ElementTable from "./elementTable";
 import "./elementView.scss";
 
-//export interface ElementViewProps {}
-
-export class ElementView extends React.PureComponent<RouteComponentProps> {
-  public render() {
-    return (
-      <Tabs
-        className={Classes.DARK + " element-view"}
-        animate={true}
-        id="ElementViewer"
-        key={"vertical"}
-        renderActiveTabPanelOnly={false}
-        vertical={true}
-      >
-        <Tab
-          className="tab"
-          id="instance"
-          title="Instances"
-          panel={
-            <ElementTable element="instances" history={this.props.history} />
-          }
-        />
-        <Tab
-          className="tab"
-          id="model"
-          title="Models"
-          panel={<ElementTable element="models" history={this.props.history} />}
-        />
-        <Tab
-          className="tab"
-          id="rack"
-          title="Racks"
-          panel={<ElementTable element="racks" history={this.props.history} />}
-        />
-        <Tabs.Expander />
-      </Tabs>
-    );
-  }
+interface ElementViewState {
+  isOpen: boolean;
+}
+interface ElementViewProps {
+  element: ElementType;
+  isAdmin: boolean;
 }
 
-async function getData(path: string) {
-  console.log(API_ROOT + "api/" + path);
-  return await axios
-    //.get("https://rack-city-dev.herokuapp.com/api/" + path)
-    .get(API_ROOT + "api/" + path)
+function getElementData(
+  path: string,
+  token: string
+): Promise<Array<ElementObjectType>> {
+  console.log(API_ROOT + "api/" + path + "get-many");
+
+  const page_size = 30;
+  const page = 1;
+
+  const config = {
+    headers: {
+      Authorization: "Token " + token
+    },
+    params: {
+      page_size,
+      page
+    }
+  };
+  console.log(config);
+  return axios
+    .post(API_ROOT + "api/" + path + "/get-many", {}, config)
     .then(res => {
-      const data = res.data;
-      const cols: Array<Array<string>> = data.map((item: any) => {
-        return Object.keys(item);
-      });
-      return { cols, data };
-    });
-}
+      const items = res.data[path];
 
-interface ElementTableState {
-  columns: Array<string>;
-  data: any;
+      return items;
+    })
+    .catch(err => console.log(err));
 }
-interface ElementTableProps {
-  element: string;
-  history: any;
-}
-
-export class ElementTable extends React.Component<
-  ElementTableProps,
-  ElementTableState
-> {
-  public state: ElementTableState = {
-    columns: [],
-    data: []
+class ElementView extends React.Component<ElementViewProps, ElementViewState> {
+  public state: ElementViewState = {
+    isOpen: false
   };
 
-  async componentDidMount() {
-    const resp = await getData(this.props.element);
-    console.log(resp.cols);
-    const cols = resp.cols.length === 0 ? [] : resp.cols[0];
-
+  private handleOpen = () => {
     this.setState({
-      columns: cols,
-
-      data: resp.data
+      isOpen: true
     });
-  }
+  };
+
+  private handleClose = () => this.setState({ isOpen: false });
   public render() {
     console.log(this.props.element);
-    return this.state.columns.length === 0 ? (
-      <div className="loading-container">
-        <p className="center">No {this.props.element} data found </p>
-        <p></p>
-        <Spinner
-          className="center"
-          intent="primary"
-          size={Spinner.SIZE_STANDARD}
-        />
-      </div>
-    ) : (
-      <div className="ElementTable">
-        <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered">
-          <thead>
-            <tr>
-              {this.state.columns.map((col: string) => {
-                if (col !== "id") {
-                  return <th>{col}</th>;
-                }
-                return null;
-              })}
-            </tr>
-          </thead>
-          <tbody>
-            {this.state.data.map((item: any) => {
-              return (
-                <tr
-                  onClick={() =>
-                    this.props.history.push(
-                      "/" + this.props.element + "/" + item["id"] // TODO replace test_rid with param */
-                      // { rackname: "hello" } // pass additional props here
-                    )
-                  }
-                >
-                  {this.state.columns.map((col: string) => {
-                    if (col !== "id") {
-                      return <td>{item[col]}</td>;
-                    }
-                    return null;
-                  })}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+    return (
+      <div>
+        {this.props.isAdmin
+          ? [
+              <AnchorButton
+                text={"Add " + this.props.element.slice(0, -1)}
+                icon="add"
+                onClick={this.handleOpen}
+              />,
+              <Dialog
+                className={Classes.DARK}
+                usePortal={true}
+                enforceFocus={true}
+                canEscapeKeyClose={true}
+                canOutsideClickClose={true}
+                isOpen={this.state.isOpen}
+                onClose={this.handleClose}
+                title={"Add " + this.props.element.slice(0, -1)}
+              >
+                {this.props.element === "models" ? (
+                  <WrappedCreateModelForm />
+                ) : null}
+              </Dialog>
+            ]
+          : null}
+
+        <ElementTable type={this.props.element} getData={getElementData} />
       </div>
     );
   }
 }
-
-export default withRouter(ElementView);
+const mapStateToProps = (state: any) => {
+  return {
+    isAdmin: state.admin
+  };
+};
+export default connect(mapStateToProps)(ElementView);
