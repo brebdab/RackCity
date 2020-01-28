@@ -9,6 +9,7 @@ urlpatterns = [
     path('models/get-many', views.model_page),
     path('models/<int:id>', views.model_detail),
     path('models/vendors', views.model_vendors),
+    path('models/bulk-upload', views.model_bulk_upload),
     path('models/pages', views.model_page_count),
     path('models/test-auth', views.model_auth),
     path('models/test-admin', views.model_admin),

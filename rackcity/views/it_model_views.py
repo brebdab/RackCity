@@ -7,6 +7,7 @@ from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
+from copy import copy
 import math
 
 
@@ -192,6 +193,82 @@ def model_vendors(request):
         {"vendors": vendors_names},
         status=HTTPStatus.OK
     )
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def model_bulk_upload(request):
+    """
+    Bulk upload many models to add or modify
+    """
+    data = JSONParser().parse(request)
+    if 'models' not in data:
+        return JsonResponse({"failure_message": "Bulk upload request should have a parameter 'models'"}, status=HTTPStatus.BAD_REQUEST)
+    model_datas = data['models']
+    models_to_add = []
+    potential_modifications = []
+    for model_data in model_datas:
+        if 'vendor' not in model_data or 'model_number' not in model_data:
+            return JsonResponse({"failure_message": "Vendor and model number must be provided. "}, status=HTTPStatus.BAD_REQUEST)
+        try:
+            existing_model = ITModel.objects.get(
+                vendor=model_data['vendor'], model_number=model_data['model_number'])
+        except ObjectDoesNotExist:
+            model_serializer = ITModelSerializer(data=model_data)
+            if not model_serializer.is_valid():
+                failure_message = str(model_serializer.errors)
+                failure_message = "At least one new model was not valid. "+failure_message
+                return JsonResponse({"failure_message": failure_message}, status=HTTPStatus.BAD_REQUEST)
+            models_to_add.append(model_serializer)
+        else:
+            potential_modifications.append(
+                {"existing_model": existing_model, "new_data": model_data})
+    records_added = 0
+    for model_to_add in models_to_add:
+        records_added += 1
+        # this should always pass for now, only constraint is uniqueness which was already checked
+        model_to_add.save()
+    records_ignored = 0
+    modifications_to_approve = []
+    for potential_modification in potential_modifications:
+        if records_are_identical(potential_modification):
+            records_ignored += 1
+        else:
+            new_data = potential_modification['new_data']
+            modified_model = copy(potential_modification['existing_model'])
+            for field in new_data.keys():
+                setattr(modified_model, field, new_data[field])
+            try:
+                modified_model_data = ITModelSerializer(modified_model).data
+            except Exception as e:
+                failure_message = str(e)
+                failure_message = "At least one modification was not valid. "+failure_message
+                return JsonResponse({"failure_message": failure_message}, status=HTTPStatus.BAD_REQUEST)
+            else:
+                modifications_to_approve.append(
+                    {
+                        "existing": ITModelSerializer(potential_modification['existing_model']).data,
+                        "modified": modified_model_data
+                    }
+                )
+    return JsonResponse(
+        {
+            "added": records_added,
+            "ignored": records_ignored,
+            "modifications": modifications_to_approve
+        },
+        status=200
+    )
+    # return the approval list
+
+
+def records_are_identical(potential_modification):
+    new_data = potential_modification['new_data']
+    existing_model = potential_modification['existing_model']
+    for field in new_data.keys():
+        if new_data[field] != getattr(existing_model, field):
+            return False
+    return True
 
 
 @api_view(['GET'])
