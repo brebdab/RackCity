@@ -64,9 +64,9 @@ export class modelView extends React.PureComponent<RouteComponentProps & ModelVi
     num_power_ports: "",
     storage: "",
     vendor: "",
-    columns: ["Model ID", "Model #", "CPU", "Height", "Display Color", "Memory (GB)", "# Ethernet Ports",
+    columns: ["Model #", "CPU", "Height", "Display Color", "Memory (GB)", "# Ethernet Ports",
                 "# Power Ports", "Storage", "Vendor"],
-    fields: ["model_id", "model_number", "cpu", "height", "display_color", "memory_gb", "num_ethernet_ports",
+    fields: ["model_number", "cpu", "height", "display_color", "memory_gb", "num_ethernet_ports",
                 "num_power_ports", "storage", "vendor"],
     instances: []
   }
