@@ -93,7 +93,7 @@ export class CreateModelForm extends React.Component<
             Authorization: "Token " + this.props.token
           }
         };
-        console.log(modelObject);
+
         axios
           .post(API_ROOT + "api/models/add", modelObject, headers)
           .then(res => {
