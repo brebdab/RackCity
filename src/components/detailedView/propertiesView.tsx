@@ -1,24 +1,19 @@
-import { Classes, Card, Elevation } from "@blueprintjs/core";
+import { Classes, Card, Elevation, AnchorButton, Alert } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 // import axios from "axios";
 import * as React from "react";
 import { RouteComponentProps } from "react-router";
 import "./propertiesView.scss";
 
-export class PropertiesView extends React.PureComponent<RouteComponentProps> {
+export interface AlertState {
+  isDeleteOpen: boolean;
+}
 
-    // renderData(data: any) {
-    //   var i = -1;
-    //   return (
-    //     <div>
-    //       {data.columns.map((item: string) => {
-    //         i++;
-    //         var key = data.fields[i];
-    //         return <h3 key={item}>{item}: {data[key]}</h3>
-    //       })}
-    //     </div>
-    //   )
-    // }
+export class PropertiesView extends React.PureComponent<RouteComponentProps, AlertState> {
+
+  public state: AlertState = {
+    isDeleteOpen: false
+  }
 
     renderData(columns: Array<any>, fields: Array<any>, data: any) {
       var i = -1;
@@ -50,8 +45,35 @@ export class PropertiesView extends React.PureComponent<RouteComponentProps> {
               </div>
             </div>
           </Card>
+          <div><p> </p></div>
+          <div className={"row"}>
+            <div className={"column"}>
+              <AnchorButton large={true} intent="primary" icon="edit" text="Edit Model" onClick={this.handleEdit} />
+            </div>
+            <div className={"column"}>
+              <AnchorButton large={true} intent="danger" icon="trash" text="Delete Model" onClick={this.handleDeleteOpen}/>
+              <Alert
+                cancelButtonText="Cancel"
+                confirmButtonText="Delete"
+                intent="danger"
+                isOpen={this.state.isDeleteOpen}
+                onCancel={this.handleDeleteCancel}
+                onConfirm={this.handleDelete}
+              >
+                <p>Are you sure you want to delete?</p>
+              </Alert>
+            </div>
+          </div>
         </div>
       )
+    }
+
+    private handleEdit = () => alert("Editor here")
+    private handleDeleteOpen = () => this.setState({isDeleteOpen: true});
+    private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
+    private handleDelete = () => {
+      alert("Model was successfully deleted") // TODO change to real deletion
+      this.setState({ isDeleteOpen: false })
     }
 
 }
