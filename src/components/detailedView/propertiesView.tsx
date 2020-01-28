@@ -9,49 +9,63 @@ export interface AlertState {
   isDeleteOpen: boolean;
 }
 
-export class PropertiesView extends React.PureComponent<RouteComponentProps, AlertState> {
+interface PropertiesViewProps {
+  data: any
+}
+
+export class PropertiesView extends React.PureComponent<RouteComponentProps & PropertiesViewProps, AlertState> {
 
   public state: AlertState = {
     isDeleteOpen: false
   }
 
     renderData(columns: Array<any>, fields: Array<any>, data: any) {
-      var i = -1;
-      return (
-        <div>
-          {columns.map((item: string) => {
-            i++;
-            var key = fields[i];
-            // return <h3 key={item}>{item}: {data[key]}</h3>
-            return (
-              <div className={"row"}>
-                <div className={"column"}>
-                  <p key={item}>{item}:</p>
+      try {
+        var i = -1;
+        return (
+          <div>
+            {columns.map((item: string) => {
+              i++;
+              var key = fields[i];
+              var dat = ""
+              if (key === "model") {
+                dat = data[key].vendor + "" + data[key].model_number;
+              } else if (key === "rack") {
+                dat = data[key].rack_num + "" + data[key].row_letter
+              } else {
+                dat = data[key];
+              }
+              return (
+                <div className={"row"}>
+                  <div className={"column"}>
+                    <p key={item}>{item}:</p>
+                  </div>
+                  <div className={"column"}>
+                    <p>{dat}</p>
+                  </div>
                 </div>
-                <div className={"column"}>
-                  <p>{data[key]}</p>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )
+              )
+            })}
+          </div>
+        )
+      } catch (Error) {
+        console.log(Error)
+      }
     }
 
     public render() {
       let state: any;
       state = this.props;
-      const data = state.state;
-      const mid = data.columns.length/2 + 1
+      const mid = state.columns.length/2 + 1
       return (
         <div className={Classes.DARK + " propsview"}>
           <Card interactive={true} elevation={Elevation.TWO}>
             <div className={"row"}>
               <div className={"column"}>
-                {this.renderData(data.columns.slice(0, mid), data.fields.slice(0, mid), data)}
+                {this.renderData(state.columns.slice(0, mid), state.fields.slice(0, mid), state.data)}
               </div>
               <div className={"column-right"}>
-                {this.renderData(data.columns.slice(mid, data.fields.length), data.fields.slice(mid, data.fields.length), data)}
+                {this.renderData(state.columns.slice(mid, state.fields.length), state.fields.slice(mid, state.fields.length), state.data)}
               </div>
             </div>
           </Card>

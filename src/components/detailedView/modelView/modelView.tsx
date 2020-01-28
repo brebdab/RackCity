@@ -6,33 +6,15 @@ import { API_ROOT } from "../../../api-config";
 import PropertiesView from "../propertiesView";
 import { RouteComponentProps, withRouter } from "react-router";
 import { connect } from "react-redux";
+import { ModelObject } from "../../utils";
 
 export interface ModelViewProps { token: string, rid: any };
 
 interface ModelViewState {
-  comment: any,
-  cpu: any,
-  display_color: any,
-  height: any,
-  memory_gb: any,
-  model_id: any,
-  model_number: any,
-  num_ethernet_ports: any,
-  num_power_ports: any,
-  storage: any,
-  vendor: any,
+  instances: Array<any> | undefined,
+  model: ModelObject | undefined,
   columns: Array<string>,
-  fields: Array<string>,
-  instances: Array<any>
-}
-
-class StateWrapper {
-
-  state: ModelViewState;
-
-  constructor(data: ModelViewState) {
-    this.state = data;
-  }
+  fields: Array<string>
 }
 
 async function getData(modelkey: string, token: string) {
@@ -53,46 +35,25 @@ async function getData(modelkey: string, token: string) {
 export class modelView extends React.PureComponent<RouteComponentProps & ModelViewProps, ModelViewState> {
 
   public state: ModelViewState = {
-    comment: "",
-    cpu: "",
-    display_color: "",
-    height: "",
-    memory_gb: "",
-    model_id: "",
-    model_number: "",
-    num_ethernet_ports: "",
-    num_power_ports: "",
-    storage: "",
-    vendor: "",
+    instances: undefined,
+    model: undefined,
     columns: ["Model #", "CPU", "Height", "Display Color", "Memory (GB)", "# Ethernet Ports",
                 "# Power Ports", "Storage", "Vendor"],
     fields: ["model_number", "cpu", "height", "display_color", "memory_gb", "num_ethernet_ports",
-                "num_power_ports", "storage", "vendor"],
-    instances: []
+                "num_power_ports", "storage", "vendor"]
   }
 
   public render() {
     let params: any;
     params = this.props.match.params
-    var param = new StateWrapper(this.state)
-    console.log(this.state.instances.length)
-    if (this.state.vendor.length === 0) {
+    if (this.state.model === undefined) {
       getData(params.rid, this.props.token).then((result) => {
       this.setState({
-        comment: result.model.comment,
-        cpu: result.model.cpu,
-        display_color: result.model.display_color,
-        height: result.model.height,
-        memory_gb: result.model.memory_gb,
-        model_id: result.model.id,
-        model_number: result.model.model_number,
-        num_ethernet_ports: result.model.num_ethernet_ports,
-        num_power_ports: result.model.num_power_ports,
-        storage: result.model.storage,
-        vendor: result.model.vendor,
+        model: result.model,
         instances: result.instances
       })
         })}
+    var data = this.state.model
     return (
       <div className={Classes.DARK + " model-view"}>
         <Tabs
@@ -102,11 +63,11 @@ export class modelView extends React.PureComponent<RouteComponentProps & ModelVi
         >
           <Tab id="ModelProperties" title="Properties" panel={<PropertiesView
             history={this.props.history} location={this.props.location}
-            match={this.props.match} {...param}/>}
+            match={this.props.match} data={data} {...this.state} />}
             />
           <Tab id="Instances" title="Instances"
             panel={<ModelInstance history={this.props.history} location={this.props.location}
-            match={this.props.match} {...param}/>}
+            match={this.props.match} {...this.state}/>}
             />
           <Tabs.Expander />
         </Tabs>

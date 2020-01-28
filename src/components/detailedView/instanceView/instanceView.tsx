@@ -22,44 +22,46 @@ async function getData(instancekey: string, token: string) {
     }
   }
   return await axios
-    .get(API_ROOT + "api/instances" + instancekey, headers)
+    .get(API_ROOT + "api/instances/" + instancekey, headers)
     .then(res => {
       const data = res.data;
       return data;
     });
 }
 
-// interface InstanceViewState {
-//   hostname: any;
-//   model: any;
-//   rack: any;
-//   height: any;
-//   user: any;
-//   comment: any;
-// }
+interface InstanceViewState {
+  state: InstanceObject | undefined,
+  columns: Array<string>,
+  fields: Array<string>
+}
 
 export class InstanceView extends React.PureComponent<
   RouteComponentProps & InstanceViewProps,
-  InstanceObject
+  InstanceViewState
 > {
 
-  public state = { instance: InstanceObject }
-
-  async componentDidMount() {
-    const resp = await getData("2", ""); // TODO change to dynamic path
-    this.setState({
-      hostname: resp.hostname,
-      elevation: resp.elevation,
-      model: resp.model,
-      rack: resp.rack,
-      owner: resp.owner,
-      comment: resp.comment
-    });
+  public state: InstanceViewState = {
+    state: undefined,
+    columns: ["Hostname", "Model", "Rack", "Elevation", "Owner"],
+    fields: ["hostname", "model", "rack", "elevation", "owner"]
   }
 
   public render() {
+    let params: any;
+    params = this.props.match.params;
+    if (this.state.state === undefined){
+      getData(params.rid, this.props.token).then((result) => {
+        this.setState({
+          state: result
+        })
+      })
+    }
     return (
       <div className={Classes.DARK + " instance-view"}>
+        <PropertiesView
+          history={this.props.history} location={this.props.location}
+          match={this.props.match} data={this.state.state} {...this.state}
+        />
       </div>
     );
   }
