@@ -7,6 +7,7 @@ import PropertiesView from "../propertiesView";
 import { RouteComponentProps, withRouter } from "react-router";
 import "./instanceView.scss";
 import { connect } from "react-redux"
+import { InstanceObject } from "../../utils"
 
 export interface InstanceViewProps {
   token: string;
@@ -28,70 +29,37 @@ async function getData(instancekey: string, token: string) {
     });
 }
 
-interface InstanceViewState {
-  hostname: any;
-  model: any;
-  rack: any;
-  height: any;
-  user: any;
-  comment: any;
-}
+// interface InstanceViewState {
+//   hostname: any;
+//   model: any;
+//   rack: any;
+//   height: any;
+//   user: any;
+//   comment: any;
+// }
 
 export class InstanceView extends React.PureComponent<
   RouteComponentProps & InstanceViewProps,
-  InstanceViewState
+  InstanceObject
 > {
-  public state: InstanceViewState = {
-    hostname: "",
-    model: "",
-    rack: "",
-    height: "",
-    user: "",
-    comment: ""
-  };
+
+  public state = { instance: InstanceObject }
 
   async componentDidMount() {
     const resp = await getData("2", ""); // TODO change to dynamic path
     this.setState({
       hostname: resp.hostname,
+      elevation: resp.elevation,
       model: resp.model,
       rack: resp.rack,
-      height: resp.height,
-      user: resp.user,
+      owner: resp.owner,
       comment: resp.comment
     });
   }
 
   public render() {
-    // let temp: any;
-    // temp = this.props.match.params
-    // const rid = temp.rid
     return (
       <div className={Classes.DARK + " instance-view"}>
-        <div>
-          <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered">
-            <thead>
-              <tr>
-                <th>Hostname</th>
-                <th>Model</th>
-                <th>Rack</th>
-                <th>Rack U</th>
-                <th>Owner</th>
-                <th>Comments</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>{this.state.hostname}</td>
-                <td>{this.state.model}</td>
-                <td>{this.state.rack}</td>
-                <td>{this.state.height}</td>
-                <td>{this.state.user}</td>
-                <td>{this.state.comment}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
       </div>
     );
   }

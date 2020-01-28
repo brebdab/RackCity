@@ -22,7 +22,17 @@ export class PropertiesView extends React.PureComponent<RouteComponentProps, Ale
           {columns.map((item: string) => {
             i++;
             var key = fields[i];
-            return <h3 key={item}>{item}: {data[key]}</h3>
+            // return <h3 key={item}>{item}: {data[key]}</h3>
+            return (
+              <div className={"row"}>
+                <div className={"column"}>
+                  <p key={item}>{item}:</p>
+                </div>
+                <div className={"column"}>
+                  <p>{data[key]}</p>
+                </div>
+              </div>
+            )
           })}
         </div>
       )
@@ -40,7 +50,7 @@ export class PropertiesView extends React.PureComponent<RouteComponentProps, Ale
               <div className={"column"}>
                 {this.renderData(data.columns.slice(0, mid), data.fields.slice(0, mid), data)}
               </div>
-              <div className={"column"}>
+              <div className={"column-right"}>
                 {this.renderData(data.columns.slice(mid, data.fields.length), data.fields.slice(mid, data.fields.length), data)}
               </div>
             </div>

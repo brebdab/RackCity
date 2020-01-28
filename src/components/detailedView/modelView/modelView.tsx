@@ -76,7 +76,7 @@ export class modelView extends React.PureComponent<RouteComponentProps & ModelVi
     params = this.props.match.params
     var param = new StateWrapper(this.state)
     console.log(this.state.instances.length)
-    if (this.state.vendor.length == 0) {
+    if (this.state.vendor.length === 0) {
       getData(params.rid, this.props.token).then((result) => {
       this.setState({
         comment: result.model.comment,
