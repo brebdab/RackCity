@@ -108,7 +108,7 @@ def instance_add(request):
     height = ITModel.objects.get(id=data['model']).height
 
     if is_location_full(rack_id, elevation, height):
-        failure_message += "Instance does not fit in this location"
+        failure_message += "Instance does not fit in this location. "
 
     if failure_message == "":
         try:
