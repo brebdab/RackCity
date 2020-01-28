@@ -63,24 +63,17 @@ def model_modify(request):
     else:
         id = data['id']
         try:
-            ITModel.objects.get(id=id)
+            existing_model = ITModel.objects.get(id=id)
         except ObjectDoesNotExist:
             failure_message += "No existing model with id="+str(id)+". "
         else:
-            serializer = ITModelSerializer(data=data)
-            if not serializer.is_valid(raise_exception=False):
-                failure_message += str(serializer.errors)
-            if failure_message == "":
-                existing_model = ITModel.objects.get(id=id)
-                print(serializer.data)
-                for field in serializer.data.keys():
-                    if serializer.data[field] is not None:
-                        setattr(existing_model, field,
-                                serializer.data[field])
-                try:
-                    existing_model.save()
-                    return HttpResponse(status=HTTPStatus.CREATED)
-                    failure_message = failure_message + str(error)
+            for field in data.keys():
+                setattr(existing_model, field, data[field])
+            try:
+                existing_model.save()
+                return HttpResponse(status=HTTPStatus.OK)
+            except Exception as error:
+                failure_message = failure_message + str(error)
     failure_message = "Request was invalid. " + failure_message
     return JsonResponse({
         "failure_message": failure_message
