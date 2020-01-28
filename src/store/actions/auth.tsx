@@ -62,10 +62,7 @@ export const authLogin = (username: string, password: string) => {
     // axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
     // axios.defaults.xsrfCookieName = "csrftoken";
     // var csrf_token = getCookie("csrftoken");
-    console.log({
-      username: username,
-      password: password
-    });
+
     console.log(API_ROOT + "rest-auth/login/");
 
     axios
@@ -143,7 +140,6 @@ export const loginHelper = (res: any, dispatch: any) => {
 export const authCheckState = () => {
   return (dispatch: any) => {
     const token = localStorage.getItem("token");
-    console.log(token);
     if (token === undefined) {
       dispatch(logout());
     } else {
