@@ -8,7 +8,7 @@ import { API_ROOT } from "../../api-config";
 import { ElementObjectType, ElementType, ModelObject } from "../utils";
 import ElementTable from "./elementTable";
 import "./elementView.scss";
-import CreateModelForm, { FormTypes } from "../../forms/createModelForm";
+import ModelForm, { FormTypes } from "../../forms/modelForm";
 
 interface ElementViewState {
   isOpen: boolean;
@@ -55,6 +55,7 @@ class ElementView extends React.Component<ElementViewProps, ElementViewState> {
       isOpen: true
     });
   };
+  private handleClose = () => this.setState({ isOpen: false });
   createModel = (model: ModelObject, headers: any): Promise<any> => {
     return axios.post(API_ROOT + "api/models/add", model, headers).then(res => {
       console.log("success");
@@ -62,7 +63,7 @@ class ElementView extends React.Component<ElementViewProps, ElementViewState> {
       console.log(this.state.isOpen);
     });
   };
-  private handleClose = () => this.setState({ isOpen: false });
+
   public render() {
     return (
       <div>
@@ -84,7 +85,7 @@ class ElementView extends React.Component<ElementViewProps, ElementViewState> {
                 title={"Add " + this.props.element.slice(0, -1)}
               >
                 {this.props.element === "models" ? (
-                  <CreateModelForm
+                  <ModelForm
                     type={FormTypes.CREATE}
                     submitForm={this.createModel}
                   />

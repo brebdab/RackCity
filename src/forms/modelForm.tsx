@@ -25,20 +25,20 @@ export enum FormTypes {
   MODIFY = "modify"
 }
 
-export interface CreateModelFormProps {
+export interface ModelFormProps {
   token: string;
   type: FormTypes;
   initialValues?: ModelObject;
   submitForm(model: ModelObject, headers: any): Promise<any>;
 }
-interface CreateModelFormState {
+interface ModelFormState {
   values: ModelObject;
   vendors: Array<string>;
 }
 
-class CreateModelForm extends React.Component<
-  CreateModelFormProps,
-  CreateModelFormState
+class ModelForm extends React.Component<
+  ModelFormProps,
+  ModelFormState
 > {
   initialState: ModelObject = this.props.initialValues
     ? this.props.initialValues
@@ -225,7 +225,7 @@ const mapStateToProps = (state: any) => {
     token: state.token
   };
 };
-export default connect(mapStateToProps)(CreateModelForm);
+export default connect(mapStateToProps)(ModelForm);
 // const WrappedCreateModelForm = Form.create()(CreateModelForm);
 
 // export default connect(mapStateToProps)(WrappedCreateModelForm);
