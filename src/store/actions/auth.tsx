@@ -127,7 +127,6 @@ export const authSignup = (
 
 export const loginHelper = (res: any, dispatch: any) => {
   const token = res.data.key;
-  console.log("success" + token);
   const expirationDate = new Date(new Date().getTime() + 3600 * 1000);
   localStorage.setItem("token", token);
   localStorage.setItem("expirationDate", expirationDate.toString());
