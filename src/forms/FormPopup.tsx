@@ -4,12 +4,14 @@ import ModelForm, { FormTypes } from "./modelForm";
 import {
   ElementType,
   ModelObject,
-  ElementObjectType
+  ElementObjectType,
+  isModelObject
 } from "../components/utils";
 interface FormPopupState {}
 interface FormPopupProps {
   isOpen: boolean;
   type: FormTypes;
+  initialValues?: ElementObjectType;
   elementName: ElementType;
   handleClose(): void;
   submitForm(model: ElementObjectType, headers: any): Promise<any>;
@@ -32,6 +34,11 @@ class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
           <ModelForm
             type={FormTypes.CREATE}
             submitForm={this.props.submitForm}
+            initialValues={
+              isModelObject(this.props.initialValues)
+                ? this.props.initialValues
+                : undefined
+            }
           />
         ) : null}
       </Dialog>

@@ -19,7 +19,7 @@ interface PropertiesViewProps {
   data: any;
 }
 
-export class PropertiesView extends React.PureComponent<
+class PropertiesView extends React.PureComponent<
   RouteComponentProps & PropertiesViewProps,
   AlertState
 > {
@@ -87,28 +87,6 @@ export class PropertiesView extends React.PureComponent<
         </Card>
         <div>
           <p> </p>
-        </div>
-        <div className={"row"}>
-          <div className={"column"}></div>
-          <div className={"column"}>
-            <AnchorButton
-              large={true}
-              intent="danger"
-              icon="trash"
-              text="Delete Model"
-              onClick={this.handleDeleteOpen}
-            />
-            <Alert
-              cancelButtonText="Cancel"
-              confirmButtonText="Delete"
-              intent="danger"
-              isOpen={this.state.isDeleteOpen}
-              onCancel={this.handleDeleteCancel}
-              onConfirm={this.handleDelete}
-            >
-              <p>Are you sure you want to delete?</p>
-            </Alert>
-          </div>
         </div>
       </div>
     );
