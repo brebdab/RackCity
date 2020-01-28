@@ -13,7 +13,7 @@ import Navigation from "./components/navigation/navigation";
 import "./index.scss";
 
 import ModelView from "./components/detailedView/modelView/modelView";
-import InstanceViewWrap from "./components/detailedView/instanceView/instanceView";
+import InstanceView from "./components/detailedView/instanceView/instanceView";
 import * as actions from "./store/actions/auth";
 
 export interface AppProps {
@@ -42,7 +42,7 @@ class App extends React.Component<AppProps> {
             <Route path="/login" component={WrappedNormalLoginForm} />
             <Route path="/racks/:rid" component={RackView} />
             <Route path="/models/:rid" component={ModelView} />
-            <Route path="/instances/:rid" component={InstanceViewWrap} />
+            <Route path="/instances/:rid" component={InstanceView} />
 
             {/* admin paths */}
             <Route path="/admin" component={WrappedNormalRegistrationForm} />

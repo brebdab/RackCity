@@ -1,114 +1,113 @@
-import { Classes } from "@blueprintjs/core";
+import { Classes, Tab, Tabs } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
+import { API_ROOT } from "../../../api-config";
+import PropertiesView from "../propertiesView";
 import { RouteComponentProps, withRouter } from "react-router";
+import { connect } from "react-redux";
+import { ModelObject } from "../../utils";
 
-export interface ModelViewProps { rid: string };
+export interface ModelViewProps { token: string, rid: any };
 
 interface ModelViewState {
-  comment: any,
-  cpu: any,
-  display_color: any,
-  height: any,
-  memory_gb: any,
-  model_id: any,
-  model_number: any,
-  num_ethernet_ports: any,
-  num_power_ports: any,
-  storage: any,
-  vendor: any
+  instances: Array<any> | undefined,
+  model: ModelObject | undefined,
+  columns: Array<string>,
+  fields: Array<string>
 }
 
-async function getData(modelkey: string) {
+async function getData(modelkey: string, token: string) {
+  console.log( API_ROOT + "api/models/" + modelkey)
+  const headers = {
+    headers: {
+      Authorization: "Token " + token
+    }
+  }
   return await axios
-    .get("https://rack-city-dev.herokuapp.com/api/models/" + modelkey)
+    .get(API_ROOT + "api/models/" + modelkey, headers)
     .then(res => {
       const data = res.data;
       return data;
     });
 }
 
-export class modelView extends React.PureComponent<RouteComponentProps, ModelViewState> {
+export class modelView extends React.PureComponent<RouteComponentProps & ModelViewProps, ModelViewState> {
 
   public state: ModelViewState = {
-    comment: "",
-    cpu: "",
-    display_color: "",
-    height: "",
-    memory_gb: "",
-    model_id: "",
-    model_number: "",
-    num_ethernet_ports: "",
-    num_power_ports: "",
-    storage: "",
-    vendor: ""
-  }
-
-  async componentDidMount() {
-    const resp = await getData("1");
-    this.setState({
-      comment: resp.comment,
-      cpu: resp.cpu,
-      display_color: resp.display_color,
-      height: resp.height,
-      memory_gb: resp.memory_gb,
-      model_id: resp.model_id,
-      model_number: resp.model_number,
-      num_ethernet_ports: resp.num_ethernet_ports,
-      num_power_ports: resp.num_power_ports,
-      storage: resp.storage,
-      vendor: resp.vendor
-    })
+    instances: undefined,
+    model: undefined,
+    columns: ["Model #", "CPU", "Height", "Display Color", "Memory (GB)", "# Ethernet Ports",
+                "# Power Ports", "Storage", "Vendor"],
+    fields: ["model_number", "cpu", "height", "display_color", "memory_gb", "num_ethernet_ports",
+                "num_power_ports", "storage", "vendor"]
   }
 
   public render() {
-    // let params: any;
-    // params = this.props.match.params
+    let params: any;
+    params = this.props.match.params
+    if (this.state.model === undefined) {
+      getData(params.rid, this.props.token).then((result) => {
+      this.setState({
+        model: result.model,
+        instances: result.instances
+      })
+        })}
+    var data = this.state.model
     return (
       <div className={Classes.DARK + " model-view"}>
-        <h1>Model Specs</h1>
-        <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered">
-          <thead>
-            <tr>
-              <th>CPU</th>
-              <th>Display Color</th>
-              <th>Height</th>
-              <th>Memory (GB)</th>
-              <th>Model ID</th>
-              <th>Model #</th>
-              <th># Ethernet Ports</th>
-              <th># Power Ports</th>
-              <th>Storage</th>
-              <th>Vendor</th>
-              <th>Comments</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>{this.state.cpu}</td>
-              <td>{this.state.display_color}</td>
-              <td>{this.state.height}</td>
-              <td>{this.state.memory_gb}</td>
-              <td>{this.state.model_id}</td>
-              <td>{this.state.model_number}</td>
-              <td>{this.state.num_ethernet_ports}</td>
-              <td>{this.state.num_power_ports}</td>
-              <td>{this.state.storage}</td>
-              <td>{this.state.vendor}</td>
-              <td>{this.state.comment}</td>
-            </tr>
-          </tbody>
-        </table>
-        <h1>Instances of this model</h1>
-        <div>
-          <h1>TODO: Get instances</h1>
-        </div>
-        <h1>Options</h1>
+        <Tabs
+          id="ModelViewer"
+          animate={true}
+          renderActiveTabPanelOnly={false}
+        >
+          <Tab id="ModelProperties" title="Properties" panel={<PropertiesView
+            history={this.props.history} location={this.props.location}
+            match={this.props.match} data={data} {...this.state} />}
+            />
+          <Tab id="Instances" title="Instances"
+            panel={<ModelInstance history={this.props.history} location={this.props.location}
+            match={this.props.match} {...this.state}/>}
+            />
+          <Tabs.Expander />
+        </Tabs>
       </div>
     )
   }
 
 }
 
-export default withRouter(modelView);
+class ModelInstance extends React.PureComponent<RouteComponentProps> {
+
+  renderData(data: any) {
+    var i = -1;
+    return (
+      <div>
+        {data.columns.map((item: string) => {
+          i++;
+          var key = data.fields[i];
+          return <h1 key={item}>{item}: {data[key]}</h1>
+        })}
+      </div>
+    )
+  }
+
+  render() {
+    let state: any;
+    state = this.props;
+    console.log(state)
+    return (
+      <div className={Classes.DARK + " propsview"}>
+        <p>i n s t a n c e</p>
+      </div>
+    )
+  }
+}
+
+const mapStatetoProps = (state: any) => {
+  return {
+    token: state.token
+  };
+};
+
+export default withRouter(connect(mapStatetoProps)(modelView));
