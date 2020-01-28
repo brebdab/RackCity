@@ -137,6 +137,7 @@ class ModelInstance extends React.PureComponent<RouteComponentProps> {
     console.log(state)
     return (
       <div className={Classes.DARK + " propsview"}>
+        <p>i n s t a n c e</p>
       </div>
     )
   }

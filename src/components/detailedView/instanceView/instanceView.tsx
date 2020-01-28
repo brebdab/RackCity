@@ -2,37 +2,30 @@ import { Classes } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
+import { API_ROOT } from "../../../api-config";
+import PropertiesView from "../propertiesView";
 import { RouteComponentProps, withRouter } from "react-router";
 import "./instanceView.scss";
+import { connect } from "react-redux"
 
 export interface InstanceViewProps {
-  rid: string;
+  token: string;
+  rid: any;
 }
-
 // Given an rid, will perform a GET request of that rid and display info about that instnace
 
-async function getData(instancekey: string) {
+async function getData(instancekey: string, token: string) {
+  const headers = {
+    headers: {
+      Authorization: "Token " + token
+    }
+  }
   return await axios
-    .get("https://rack-city-dev.herokuapp.com/api/instances/" + instancekey)
+    .get(API_ROOT + "api/instances" + instancekey, headers)
     .then(res => {
       const data = res.data;
       return data;
     });
-}
-
-export class InstanceViewWrapper extends React.PureComponent<
-  RouteComponentProps,
-  InstanceViewProps
-> {
-  public render() {
-    return (
-      <InstanceView
-        history={this.props.history}
-        location={this.props.location}
-        match={this.props.match}
-      />
-    );
-  }
 }
 
 interface InstanceViewState {
@@ -45,7 +38,7 @@ interface InstanceViewState {
 }
 
 export class InstanceView extends React.PureComponent<
-  RouteComponentProps,
+  RouteComponentProps & InstanceViewProps,
   InstanceViewState
 > {
   public state: InstanceViewState = {
@@ -58,7 +51,7 @@ export class InstanceView extends React.PureComponent<
   };
 
   async componentDidMount() {
-    const resp = await getData("2"); // TODO change to dynamic path
+    const resp = await getData("2", ""); // TODO change to dynamic path
     this.setState({
       hostname: resp.hostname,
       model: resp.model,
@@ -104,4 +97,10 @@ export class InstanceView extends React.PureComponent<
   }
 }
 
-export default withRouter(InstanceViewWrapper);
+const mapStatetoProps = (state: any) => {
+  return {
+    token: state.token
+  };
+};
+
+export default withRouter(connect(mapStatetoProps)(InstanceView));
