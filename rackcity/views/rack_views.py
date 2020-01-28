@@ -42,7 +42,7 @@ def rack_get(request):
 
     if not range_serializer.is_valid():
         return JsonResponse(
-            {"failure_message": "Invalid keys or values in request."},
+            {"failure_message": str(range_serializer.errors)},
             status=HTTPStatus.BAD_REQUEST,
         )
 
@@ -79,7 +79,7 @@ def rack_create(request):
     range_serializer = RackRangeSerializer(data=request.data)
     if not range_serializer.is_valid():
         return JsonResponse(
-            {"failure_message": "Invalid keys or values in request."},
+            {"failure_message": str(range_serializer.errors)},
             status=HTTPStatus.BAD_REQUEST,
         )
     racks = Rack.objects.filter(
@@ -112,7 +112,7 @@ def rack_delete(request):
     range_serializer = RackRangeSerializer(data=request.data)
     if not range_serializer.is_valid():
         return JsonResponse(
-            {"failure_message": "Invalid keys or values in request."},
+            {"failure_message": str(range_serializer.errors)},
             status=HTTPStatus.BAD_REQUEST,
         )
     racks = Rack.objects.filter(
