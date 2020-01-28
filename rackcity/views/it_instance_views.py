@@ -1,6 +1,6 @@
 # from rest_framework.parsers import JSONParser
 from django.http import HttpResponse, JsonResponse
-from rackcity.models import ITInstance, ITModel
+from rackcity.models import ITInstance, ITModel, Rack
 from rackcity.api.serializers import (
     ITInstanceSerializer,
     RecursiveITInstanceSerializer,
@@ -107,8 +107,8 @@ def instance_add(request):
     elevation = data['elevation']
     height = ITModel.objects.get(id=data['model']).height
 
-    if not instance_fits_in_rack(rack_id, elevation, height):
-        failure_message += "Instance does not fit in rack. "
+    if is_location_full(rack_id, elevation, height):
+        failure_message += "Instance does not fit in this location"
 
     if failure_message == "":
         try:
@@ -144,18 +144,13 @@ def instance_page_count(request):
     return JsonResponse({"page_count": page_count})
 
 
-def instance_fits_in_rack(rack_id, elevation, height):  # returns bool
-    rack = Rack.objects.get(id=rack_id)
-    rack_availability = [False]*rack.height  # noqa want `height` field on Rack model
+def is_location_full(rack_id, elevation, height):
+    rack_u = [elevation + i for i in range(height)]
     instances_in_rack = ITInstance.objects.filter(rack=rack_id)
-    modelid_to_height = {}
     for instance in instances_in_rack:
-        modelid = instance.model  # noqa want `model` field on ITInstance model
-        if modelid not in modelid_to_height:
-            model = ITModel.objects.get(id=modelid)  # noqa want `height` field on ITModel model
-            modelid_to_height[model] = model.height
-        height = modelid_to_height[modelid]
-        bottom_ind = instance.elevation  # noqa want `elevation` field on ITInstance model
-        rack_availability[bottom_ind:bottom_ind+height] = [True] * height
-
+        for u in [
+            instance.elevation + i for i in range(instance.model.height)
+        ]:
+            if u in rack_u:
+                return True
     return False
