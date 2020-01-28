@@ -1,6 +1,8 @@
 import * as React from "react";
 
-interface FileProps { }
+interface FileProps {
+  callback: any
+}
 
 interface FileState {
   prompt: string
@@ -21,10 +23,11 @@ export class FileSelector extends React.Component<FileProps, FileState>
 
     handleChange(selectorFiles: FileList)
     {
-        console.log(selectorFiles[0].name);
+        // console.log(selectorFiles[0].name);
         this.setState({
           prompt: selectorFiles[0].name
         })
+        this.props.callback(selectorFiles[0].name)
     }
 
     render ()
@@ -32,7 +35,7 @@ export class FileSelector extends React.Component<FileProps, FileState>
         return (
           <label className={"bp3-file-input"}>
             <input type="file" onChange={ (e: any) => this.handleChange(e.target.files) } />
-            <span className={"bp3-file-upload-input"}>{this.state.prompt}</span>
+            <span className={"bp3-file-upload-input bp3-text-overflow-ellipsis"}>{this.state.prompt}</span>
           </label>
       );
     }

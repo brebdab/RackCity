@@ -11,14 +11,16 @@ import { FileSelector } from "../lib/fileSelect"
 
 interface AlertState {
   uploadModelIsOpen: boolean,
-  uploadInstanceIsOpen: boolean
+  uploadInstanceIsOpen: boolean,
+  selectedFile: string
 }
 
 export class BulkImport extends React.PureComponent<RouteComponentProps, AlertState> {
 
   public state: AlertState = {
     uploadModelIsOpen: false,
-    uploadInstanceIsOpen: false
+    uploadInstanceIsOpen: false,
+    selectedFile: ""
   }
 
   render() {
@@ -62,7 +64,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps, AlertSt
               onConfirm={this.handleModelUpload}
             >
               <p>Choose a file</p>
-              <FileSelector {...this.props} />
+              <FileSelector {...this.props} callback={this.setFile}/>
             </Alert>
           </div>
         </div>
@@ -83,6 +85,12 @@ export class BulkImport extends React.PureComponent<RouteComponentProps, AlertSt
     alert("Models were successfully uploaded");
     this.setState({ uploadModelIsOpen: false });
   };
+
+  private setFile = (file: string) => {
+    this.setState({
+      selectedFile: file
+    })
+  }
 
 }
 
