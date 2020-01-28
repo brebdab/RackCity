@@ -127,6 +127,45 @@ def instance_add(request):
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
+def instance_modify(request):
+    """
+    Modify a single existing instance
+    """
+    data = JSONParser().parse(request)
+    failure_message = ""
+    if 'id' not in data:
+        failure_message += "Must include id when modifying an instance. "
+    else:
+        id = data['id']
+        try:
+            existing_instance = ITInstance.objects.get(id=id)
+        except ObjectDoesNotExist:
+            failure_message += "No existing instance with id="+str(id)+". "
+        else:
+            for field in data.keys():
+                if is_valid_location_update(existing_instance, field, data[field]):
+                    setattr(existing_instance, field, data[field])
+                else:
+                    failure_message += "Invalid location for instance. "
+            try:
+                existing_instance.save()
+            except Exception as error:
+                failure_message = failure_message + \
+                    " Error on save: " + str(error)
+            else:
+                return JsonResponse(
+                    {"hello": "hello"},
+                    status=HTTPStatus.OK,
+                )
+    failure_message = "Request was invalid. " + failure_message
+    return JsonResponse(
+        {"failure_message": failure_message},
+        status=HTTPStatus.BAD_REQUEST
+    )
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
 def instance_delete(request):
     """
     Delete a single existing instance
@@ -185,4 +224,19 @@ def is_location_full(rack_id, elevation, height):
         ]:
             if u in rack_u:
                 return True
+    return False
+
+
+def is_valid_location_update(existing_instance, field, value):
+    if field in ['elevation', 'model', 'rack'] and isinstance(value, int):
+        rack_id = existing_instance.rack.id
+        elevation = existing_instance.elevation
+        height = existing_instance.model.height
+        if (field == 'elevation'):
+            elevation = value
+        elif (field == 'model'):
+            height = ITModel.objects.get(id=value).height
+        elif (field == 'rack'):
+            rack_id = value
+        return not is_location_full(rack_id, elevation, height)
     return False
