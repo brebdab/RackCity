@@ -6,6 +6,9 @@
   outline: none;
 }
 
+.table-nav-bar {
+  padding-top: 20pt;
+}
 .loading-container {
   text-align: center;
 }
@@ -13,10 +16,17 @@
   display: inline-block;
   padding: 10px;
 }
-.TableView {
-  display: flex;
-  flex-direction: column;
-  padding: 20px;
+.element-table {
+  position: relative;
+  float: right;
+}
+.add {
+  float: right;
+}
+.table {
+  margin-top: 20px;
+  display: inline-block;
+  overflow: auto;
 }
 .badge {
   background-color: #9ae6b4;

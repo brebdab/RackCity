@@ -5,10 +5,33 @@
 .column {
   text-align: center;
   flex: 50%;
+  padding-top: 40px
+}
+
+.column-third {
+  text-align: center;
+  flex: 20%;
+  align-items: center;
+}
+
+.column-third-left {
+  text-align: right;
+  flex: 40%;
+}
+
+.column-third-right {
+  text-align: left;
+  flex: 40%;
 }
 
 .column-right {
   text-align: center;
   flex: 50%;
   border-left: 1px solid white;
+}
+
+.upload-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

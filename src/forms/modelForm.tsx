@@ -1,8 +1,9 @@
 import {
   Button,
+  Callout,
   Classes,
   FormGroup,
-  InputGroup,
+  Intent,
   MenuItem
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
@@ -10,15 +11,16 @@ import axios from "axios";
 import * as React from "react";
 import { connect } from "react-redux";
 import { API_ROOT } from "../api-config";
+import { ModelObject } from "../components/utils";
+import { updateObject } from "../store/utility";
+import Field from "./field";
+import "./forms.scss";
 import {
   filterString,
   renderCreateItemOption,
   renderStringItem,
   StringSuggest
 } from "./formUtils";
-import "./login.scss";
-import { ModelObject } from "../components/utils";
-import { updateObject } from "../store/utility";
 //TO DO : add validation of types!!!
 export enum FormTypes {
   CREATE = "create",
@@ -34,7 +36,18 @@ export interface ModelFormProps {
 interface ModelFormState {
   values: ModelObject;
   vendors: Array<string>;
+  errors: Array<string>;
 }
+
+export const required = (
+  values: ModelObject,
+  fieldName: keyof ModelObject
+): string =>
+  values[fieldName] === undefined ||
+  values[fieldName] === null ||
+  values[fieldName] === ""
+    ? "This must be populated"
+    : "";
 
 class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
   initialState: ModelObject = this.props.initialValues
@@ -42,7 +55,8 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
     : ({} as ModelObject);
   public state = {
     values: this.initialState,
-    vendors: []
+    vendors: [],
+    errors: []
   };
   headers = {
     headers: {
@@ -51,12 +65,28 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
   };
 
   private handleSubmit = (e: any) => {
+    this.setState({
+      errors: []
+    });
     e.preventDefault();
     console.log(this.state);
     if (this.state.values) {
-      this.props
-        .submitForm(this.state.values, this.headers)
-        .catch(err => console.log(err));
+      if (this.props.initialValues) {
+        console.log(this.props.initialValues);
+        this.setState({
+          values: updateObject(this.state.values, {
+            id: this.props.initialValues.id
+          })
+        });
+      }
+      this.props.submitForm(this.state.values, this.headers).catch(err => {
+        console.log(err.response.data.failure_message);
+        let errors: Array<string> = this.state.errors;
+        errors.push(err.response.data.failure_message as string);
+        this.setState({
+          errors: errors
+        });
+      });
     }
   };
 
@@ -75,19 +105,13 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
       });
   }
 
-  handleChange(field: { [key: string]: any }) {
+  handleChange = (field: { [key: string]: any }) => {
     this.setState({
       values: updateObject(this.state.values, {
         ...field
       })
     });
-  }
-  required = (values: ModelObject, fieldName: keyof ModelObject): string =>
-    values[fieldName] === undefined ||
-    values[fieldName] === null ||
-    values[fieldName] === ""
-      ? "This must be populated"
-      : "";
+  };
 
   render() {
     console.log(this.state.values);
@@ -97,6 +121,9 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
     const { values } = this.state;
     return (
       <div className={Classes.DARK + " login-container"}>
+        {this.state.errors.map((err: string) => {
+          return <Callout intent={Intent.DANGER}>{err}</Callout>;
+        })}
         <form
           onSubmit={this.handleSubmit}
           className="create-form bp3-form-group"
@@ -104,6 +131,11 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
           <h2>Add a New Model</h2>
           <FormGroup label="Vendor">
             <StringSuggest
+              popoverProps={{
+                minimal: true,
+                popoverClassName: "model-options",
+                usePortal: true
+              }}
               defaultSelectedItem={this.state.values.vendor}
               inputValueRenderer={(vendor: string) => vendor}
               items={this.state.vendors}
@@ -119,99 +151,90 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
               noResults={<MenuItem disabled={true} text="No results." />}
             />
           </FormGroup>
-          <FormGroup>
-            <InputGroup
+          <FormGroup label="Model Number" inline={true}>
+            <Field
               className="field"
-              onChange={(e: any) =>
-                this.handleChange({ model_number: e.currentTarget.value })
-              }
               placeholder="model_number"
+              onChange={this.handleChange}
               value={values.model_number}
+              field="model_number"
             />
           </FormGroup>
-          <FormGroup>
-            <InputGroup
+          <FormGroup label="Height" inline={true}>
+            <Field
+              field="height"
               className="field"
               placeholder="height"
               value={values.height}
-              onChange={(e: any) =>
-                this.handleChange({ height: e.currentTarget.value })
-              }
+              onChange={this.handleChange}
             />
           </FormGroup>
-          <FormGroup>
-            <InputGroup
+          <FormGroup label="Display Color" inline={true}>
+            <Field
+              field="display_color"
               className="field"
               placeholder="display_color"
               value={values.display_color}
-              onChange={(e: any) =>
-                this.handleChange({ display_color: e.currentTarget.value })
-              }
+              onChange={this.handleChange}
             />
           </FormGroup>
-          <FormGroup>
-            <InputGroup
+          <FormGroup label="# Ethernet Ports" inline={true}>
+            <Field
+              field="num_ethernet_ports"
               className="field"
               placeholder="num_ethernet_ports"
               value={values.num_ethernet_ports}
-              onChange={(e: any) =>
-                this.handleChange({ num_ethernet_ports: e.currentTarget.value })
-              }
+              onChange={this.handleChange}
             />
           </FormGroup>
-          <FormGroup>
-            <InputGroup
+          <FormGroup label="# Power Ports" inline={true}>
+            <Field
+              field="num_power_ports"
               className="field"
               placeholder="num_power_ports"
               value={values.num_power_ports}
-              onChange={(e: any) =>
-                this.handleChange({ num_power_ports: e.currentTarget.value })
-              }
+              onChange={this.handleChange}
             />
           </FormGroup>
-          <FormGroup>
-            <InputGroup
+          <FormGroup label="CPU" inline={true}>
+            <Field
+              field="cpu"
               className="field"
               placeholder="cpu"
               value={values.cpu}
-              onChange={(e: any) =>
-                this.handleChange({ cpu: e.currentTarget.value })
-              }
+              onChange={this.handleChange}
             />
           </FormGroup>
-          <FormGroup>
-            <InputGroup
+          <FormGroup label="Memory(GB)" inline={true}>
+            <Field
+              field="memory_gb"
               className="field"
               placeholder="memory_gb"
               value={values.memory_gb}
-              onChange={(e: any) =>
-                this.handleChange({ memory_gb: e.currentTarget.value })
-              }
+              onChange={this.handleChange}
             />
           </FormGroup>
-          <FormGroup>
-            <InputGroup
+          <FormGroup label="Storage" inline={true}>
+            <Field
+              field="storage"
               className="field"
               placeholder="storage"
               value={values.storage}
-              onChange={(e: any) =>
-                this.handleChange({ storage: e.currentTarget.value })
-              }
+              onChange={this.handleChange}
             />
           </FormGroup>
-          <FormGroup>
-            <InputGroup
+          <FormGroup label="Comment" inline={true}>
+            <Field
+              field="comment"
               className="field"
               placeholder="comment"
               value={values.comment}
-              onChange={(e: any) =>
-                this.handleChange({ comment: e.currentTarget.value })
-              }
+              onChange={this.handleChange}
             />
           </FormGroup>
 
           <Button className="login-button" type="submit">
-            Login
+            Submit
           </Button>
         </form>
       </div>

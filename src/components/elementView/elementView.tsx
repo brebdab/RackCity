@@ -1,14 +1,26 @@
-import { AnchorButton, Classes, Dialog } from "@blueprintjs/core";
+import {
+  Alignment,
+  AnchorButton,
+  Classes,
+  Navbar,
+  NavbarGroup,
+  NavbarHeading
+} from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
 import { connect } from "react-redux";
 import { API_ROOT } from "../../api-config";
-
-import { ElementObjectType, ElementType, ModelObject } from "../utils";
+import FormPopup from "../../forms/FormPopup";
+import { FormTypes } from "../../forms/modelForm";
+import {
+  ElementObjectType,
+  ElementType,
+  ModelObject,
+  InstanceInfoObject
+} from "../utils";
 import ElementTable from "./elementTable";
 import "./elementView.scss";
-import ModelForm, { FormTypes } from "../../forms/modelForm";
 
 interface ElementViewState {
   isOpen: boolean;
@@ -18,13 +30,13 @@ interface ElementViewProps {
   isAdmin: boolean;
 }
 
-function getElementData(
+export function getElementData(
   path: string,
   token: string
 ): Promise<Array<ElementObjectType>> {
-  console.log(API_ROOT + "api/" + path + "get-many");
+  console.log(API_ROOT + "api/" + path + "/get-many");
 
-  const page_size = 30;
+  const page_size = 100;
   const page = 1;
 
   const config = {
@@ -56,7 +68,8 @@ class ElementView extends React.Component<ElementViewProps, ElementViewState> {
     });
   };
   private handleClose = () => this.setState({ isOpen: false });
-  createModel = (model: ModelObject, headers: any): Promise<any> => {
+
+  private createModel = (model: ModelObject, headers: any): Promise<any> => {
     return axios.post(API_ROOT + "api/models/add", model, headers).then(res => {
       console.log("success");
       this.handleClose();
@@ -64,37 +77,52 @@ class ElementView extends React.Component<ElementViewProps, ElementViewState> {
     });
   };
 
+  private createInstance = (
+    instance: InstanceInfoObject,
+    headers: any
+  ): Promise<any> => {
+    console.log("api/instances/add");
+    return axios
+      .post(API_ROOT + "api/instances/add", instance, headers)
+      .then(res => {
+        console.log("success");
+        this.handleClose();
+        console.log(this.state.isOpen);
+      });
+  };
+
   public render() {
     return (
       <div>
-        {this.props.isAdmin
-          ? [
+        <Navbar className={Classes.DARK}>
+          <NavbarGroup>
+            <NavbarHeading>{this.props.element}</NavbarHeading>
+          </NavbarGroup>
+          {this.props.isAdmin ? (
+            <NavbarGroup align={Alignment.RIGHT}>
               <AnchorButton
+                className="add"
                 text={"Add " + this.props.element.slice(0, -1)}
                 icon="add"
                 onClick={this.handleOpen}
-              />,
-              <Dialog
-                className={Classes.DARK}
-                usePortal={true}
-                enforceFocus={true}
-                canEscapeKeyClose={true}
-                canOutsideClickClose={true}
+              />
+              <FormPopup
+                type={FormTypes.CREATE}
+                elementName={this.props.element}
+                submitForm={
+                  this.props.element === ElementType.MODEL
+                    ? this.createModel
+                    : this.createInstance
+                }
                 isOpen={this.state.isOpen}
-                onClose={this.handleClose}
-                title={"Add " + this.props.element.slice(0, -1)}
-              >
-                {this.props.element === "models" ? (
-                  <ModelForm
-                    type={FormTypes.CREATE}
-                    submitForm={this.createModel}
-                  />
-                ) : null}
-              </Dialog>
-            ]
-          : null}
-
-        <ElementTable type={this.props.element} getData={getElementData} />
+                handleClose={this.handleClose}
+              />
+            </NavbarGroup>
+          ) : null}
+        </Navbar>
+        <div className="element-table">
+          <ElementTable type={this.props.element} getData={getElementData} />
+        </div>
       </div>
     );
   }

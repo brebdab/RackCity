@@ -8,7 +8,11 @@ import { connect } from "react-redux";
 import { InstanceObject, ModelObject } from "../utils";
 import "./import.scss";
 import { FileSelector } from "../lib/fileSelect"
-import csvtojson from "csvtojson";
+
+interface ImportProps {
+  token: string,
+  isAdmin: boolean
+}
 
 interface AlertState {
   uploadModelIsOpen: boolean,
@@ -20,7 +24,7 @@ interface AlertState {
 
 const c2j = require('csvtojson')
 
-export class BulkImport extends React.PureComponent<RouteComponentProps, AlertState> {
+export class BulkImport extends React.PureComponent<RouteComponentProps & ImportProps, AlertState> {
 
   public state: AlertState = {
     uploadModelIsOpen: false,
@@ -28,16 +32,18 @@ export class BulkImport extends React.PureComponent<RouteComponentProps, AlertSt
   };
 
   render() {
+    console.log(this.props.isAdmin)
     return (
       <div className={Classes.DARK + " import"}>
         <h1>Upload instructions here</h1>
         <div className={"row"}>
-          <div className={"column"}>
+          <div className={"column-third-left"}>
+            <p> </p>
             <AnchorButton
               large={true}
               intent="primary"
-              icon="export"
-              text="Upload Instances"
+              icon="import"
+              text="Select Instances File"
               onClick={this.handleInstanceOpen}
             />
             <Alert
@@ -51,12 +57,16 @@ export class BulkImport extends React.PureComponent<RouteComponentProps, AlertSt
               <p>Choose a file</p>
             </Alert>
           </div>
-          <div className={"column"}>
+          <div className={"column-third"}>
+            <h1>OR</h1>
+          </div>
+          <div className={"column-third-right"}>
+            <p> </p>
             <AnchorButton
               large={true}
               intent="primary"
-              icon="export"
-              text="Upload Models"
+              icon="import"
+              text="Select Models File"
               onClick={this.handleModelOpen}
             />
             <Alert
@@ -70,6 +80,19 @@ export class BulkImport extends React.PureComponent<RouteComponentProps, AlertSt
               <p>Choose a file</p>
               <FileSelector {...this.props} callback={this.setFile}/>
             </Alert>
+          </div>
+          <div className={"column"}>
+            <h1> </h1>
+            <h1> </h1>
+            <h1> </h1>
+            <h1> </h1>
+            <AnchorButton
+              large={true}
+              intent="success"
+              icon="upload"
+              text="Upload Data"
+              onClick={this.handleUpload}
+            />
           </div>
         </div>
       </div>
@@ -87,7 +110,13 @@ export class BulkImport extends React.PureComponent<RouteComponentProps, AlertSt
 
   private handleModelOpen = () => this.setState({ uploadModelIsOpen: true });
   private handleModelCancel = () => this.setState({ uploadModelIsOpen: false });
+
+  /*
+   * serializes data to JSON and
+   * makes backend requests
+   */
   private handleModelUpload = () => {
+    /* Serialize to JSON */
     if (this.state.selectedFile !== undefined) {
       parse(this.state.selectedFile).then((res) => {
         c2j({
@@ -95,6 +124,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps, AlertSt
           output: "json"
         }).fromString(res).then((csvRow: Array<any>) => {
           for (var i = 0; i < csvRow.length; i++) {
+            /* This next block is just to fix field names from the csv format to our backend format */
             const model: ModelObject = {
               vendor: csvRow[i].vendor,
               model_number: csvRow[i].model_number,
@@ -109,22 +139,35 @@ export class BulkImport extends React.PureComponent<RouteComponentProps, AlertSt
             };
             csvRow[i] = model;
           }
+          /* set state variable to JSON array with proper field names */
           this.setState({
             loadedModels: csvRow
           })
-
+          /* Now make API request with JSON as header */
           console.log(this.state.loadedModels)
         })
-        // console.log(data)
       })
-      alert("Models were successfully uploaded: " + this.state.selectedFile);
+      // alert("Models have been loaded to browser, proceed to upload");
       this.setState({ uploadModelIsOpen: false });
     } else {
       alert("No file selected")
     }
   };
 
-  /* Set file from fileSelect component to state in this component */
+  private handleUpload = () => {
+    if (this.state.loadedModels !== undefined) {
+      uploadBulk(this.state.loadedModels, this.props.token)
+    } else if (this.state.loadedInstances !== undefined) {
+
+    } else {
+      alert("No data to upload")
+    }
+  }
+
+  /*
+   * Set file from fileSelect component
+   * to state in this component
+   */
   private setFile = (file: File) => {
     this.setState({
       selectedFile: file
@@ -133,7 +176,27 @@ export class BulkImport extends React.PureComponent<RouteComponentProps, AlertSt
 
 }
 
-/* Reads file to string */
+
+async function uploadBulk(modelList: Array<ModelObject>, token: string) {
+  console.log(API_ROOT + "api/models/bulk-upload");
+  console.log(token)
+  const headers = {
+    headers: {
+      Authorization: "Token " + token
+    }
+  };
+  return await axios
+    .post(API_ROOT + "api/models/bulk-upload", modelList, headers)
+    .then(res => {
+      console.log(res.data)
+      const data = res.data;
+      return data;
+    });
+}
+
+/*
+ * Reads file to string
+ */
 async function parse(file: File) {
   return new Promise((resolve, reject) => {
     let content = '';
@@ -152,7 +215,8 @@ async function parse(file: File) {
 
 const mapStatetoProps = (state: any) => {
   return {
-    token: state.token
+    token: state.token,
+    isAdmin: state.admin
   };
 };
 

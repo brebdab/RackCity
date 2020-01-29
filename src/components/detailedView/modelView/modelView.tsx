@@ -1,17 +1,19 @@
-import { Classes, Tab, Tabs, AnchorButton, Dialog } from "@blueprintjs/core";
+import { Alert, AnchorButton, Classes, Tab, Tabs } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
-import { API_ROOT } from "../../../api-config";
-import PropertiesView from "../propertiesView";
-import { RouteComponentProps, withRouter } from "react-router";
 import { connect } from "react-redux";
-import { ModelObject } from "../../utils";
-import ModelForm, { FormTypes } from "../../../forms/modelForm";
+import { RouteComponentProps, withRouter } from "react-router";
+import { API_ROOT } from "../../../api-config";
+import FormPopup from "../../../forms/FormPopup";
+import { FormTypes } from "../../../forms/modelForm";
+import { ElementType, ModelObject } from "../../utils";
+import PropertiesView from "../propertiesView";
 
 export interface ModelViewProps {
   token: string;
   rid: any;
+  isAdmin: boolean;
 }
 
 interface ModelViewState {
@@ -19,7 +21,8 @@ interface ModelViewState {
   model: ModelObject | undefined;
   columns: Array<string>;
   fields: Array<string>;
-  isOpen: boolean;
+  isFormOpen: boolean;
+  isDeleteOpen: boolean;
 }
 
 async function getData(modelkey: string, token: string) {
@@ -44,7 +47,8 @@ export class modelView extends React.PureComponent<
   public state: ModelViewState = {
     instances: undefined,
     model: undefined,
-    isOpen: false,
+    isFormOpen: false,
+    isDeleteOpen: false,
     columns: [
       "Model #",
       "CPU",
@@ -68,20 +72,32 @@ export class modelView extends React.PureComponent<
       "vendor"
     ]
   };
-  private handleOpen = () => {
-    this.setState({
-      isOpen: true
-    });
-  };
-  private handleClose = () => this.setState({ isOpen: false });
-  updateModel = (model: ModelObject, headers: any): Promise<any> => {
+
+  private updateModel = (model: ModelObject, headers: any): Promise<any> => {
     return axios
       .post(API_ROOT + "api/models/modify", model, headers)
       .then(res => {
         console.log("success");
-        this.handleClose();
-        console.log(this.state.isOpen);
+        this.handleFormClose();
+        console.log(this.state.isFormOpen);
       });
+  };
+  private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
+  private handleFormOpen = () => {
+    this.setState({
+      isFormOpen: true
+    });
+  };
+  handleFormSubmit = () => {
+    this.setState({
+      isFormOpen: false
+    });
+  };
+  private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
+  private handleFormClose = () => this.setState({ isFormOpen: false });
+  private handleDelete = () => {
+    alert("Model was successfully deleted"); // TODO change to real deletion
+    this.setState({ isDeleteOpen: false });
   };
   public render() {
     let params: any;
@@ -97,30 +113,52 @@ export class modelView extends React.PureComponent<
     var data = this.state.model;
     return (
       <div className={Classes.DARK + " model-view"}>
-        <AnchorButton
-          large={true}
-          intent="primary"
-          icon="edit"
-          text="Edit"
-          onClick={() => this.handleOpen()}
-        />
-        <Dialog
-          className={Classes.DARK}
-          usePortal={true}
-          enforceFocus={true}
-          canEscapeKeyClose={true}
-          canOutsideClickClose={true}
-          isOpen={this.state.isOpen}
-          onClose={this.handleClose}
-          title={"Modify Model"}
+        {this.props.isAdmin ? (
+          <div className={"row"}>
+            <div className={"column"}>
+              <AnchorButton
+                large={true}
+                intent="primary"
+                icon="edit"
+                text="Edit"
+                onClick={() => this.handleFormOpen()}
+              />
+              <FormPopup
+                isOpen={this.state.isFormOpen}
+                initialValues={this.state.model}
+                type={FormTypes.MODIFY}
+                elementName={ElementType.MODEL}
+                handleClose={this.handleFormClose}
+                submitForm={this.updateModel}
+              />
+            </div>
+            <div className={"column"}>
+              <AnchorButton
+                large={true}
+                intent="danger"
+                icon="trash"
+                text="Delete Model"
+                onClick={this.handleDeleteOpen}
+              />
+              <Alert
+                cancelButtonText="Cancel"
+                confirmButtonText="Delete"
+                intent="danger"
+                isOpen={this.state.isDeleteOpen}
+                onCancel={this.handleDeleteCancel}
+                onConfirm={this.handleDelete}
+              >
+                <p>Are you sure you want to delete?</p>
+              </Alert>
+            </div>
+          </div>
+        ) : null}
+        <Tabs
+          id="ModelViewer"
+          animate={true}
+          large
+          renderActiveTabPanelOnly={false}
         >
-          <ModelForm
-            initialValues={this.state.model}
-            type={FormTypes.CREATE}
-            submitForm={this.updateModel}
-          />
-        </Dialog>
-        <Tabs id="ModelViewer" animate={true} renderActiveTabPanelOnly={false}>
           <Tab
             id="ModelProperties"
             title="Properties"
@@ -177,7 +215,8 @@ class ModelInstance extends React.PureComponent<RouteComponentProps> {
 
 const mapStatetoProps = (state: any) => {
   return {
-    token: state.token
+    token: state.token,
+    isAdmin: state.admin
   };
 };
 

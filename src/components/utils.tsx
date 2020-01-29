@@ -8,9 +8,26 @@ export enum ElementType {
 }
 export interface InstanceObject extends ElementObject {
   hostname: string;
-  elevation: number; // this name changes to rack_position. bulk file also has vendor and model #
+  // elevation: number; // this name changes to rack_position. bulk file also has vendor and model #
+  elevation: string;
   model: ModelObject;
   rack: RackObject;
+  owner?: string;
+  comment?: string;
+}
+export const getHeaders = (token: string) => {
+  return {
+    headers: {
+      Authorization: "Token " + token
+    }
+  };
+};
+
+export interface InstanceInfoObject extends ElementObject {
+  hostname: string;
+  elevation: string;
+  model?: string;
+  rack?: string;
   owner?: string;
   comment?: string;
 }
@@ -38,7 +55,11 @@ export interface ModelDetailObject {
   model: ModelObject;
   instances: Array<InstanceObject>;
 }
-export type ElementObjectType = ModelObject | RackObject | InstanceObject;
+export type ElementObjectType =
+  | ModelObject
+  | RackObject
+  | InstanceObject
+  | InstanceInfoObject;
 export function isModelObject(obj: any): obj is ModelObject {
   return obj && obj.model_number;
 }

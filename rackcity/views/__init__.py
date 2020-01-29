@@ -5,6 +5,7 @@ from .it_model_views import (
     model_page,
     model_detail,
     model_vendors,
+    model_bulk_upload,
     model_page_count,
     i_am_admin,
     model_list,
@@ -20,9 +21,8 @@ from .it_instance_views import (
     instance_page_count,
 )
 from .rack_views import (
-    rack_detail,
-    rack_list,
     rack_get,
     rack_create,
     rack_delete,
+    rack_summary,
 )

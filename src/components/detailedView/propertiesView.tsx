@@ -1,10 +1,4 @@
-import {
-  Classes,
-  Card,
-  Elevation,
-  AnchorButton,
-  Alert
-} from "@blueprintjs/core";
+import { Card, Classes, Elevation } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 // import axios from "axios";
 import * as React from "react";
@@ -19,7 +13,7 @@ interface PropertiesViewProps {
   data: any;
 }
 
-export class PropertiesView extends React.PureComponent<
+class PropertiesView extends React.PureComponent<
   RouteComponentProps & PropertiesViewProps,
   AlertState
 > {
@@ -67,7 +61,8 @@ export class PropertiesView extends React.PureComponent<
     const mid = state.columns.length / 2 + 1;
     return (
       <div className={Classes.DARK + " propsview"}>
-        <Card interactive={true} elevation={Elevation.TWO}>
+        <Card interactive={false} elevation={Elevation.TWO}>
+          <h5>Properties</h5>
           <div className={"row"}>
             <div className={"column"}>
               {this.renderData(
@@ -87,28 +82,6 @@ export class PropertiesView extends React.PureComponent<
         </Card>
         <div>
           <p> </p>
-        </div>
-        <div className={"row"}>
-          <div className={"column"}></div>
-          <div className={"column"}>
-            <AnchorButton
-              large={true}
-              intent="danger"
-              icon="trash"
-              text="Delete Model"
-              onClick={this.handleDeleteOpen}
-            />
-            <Alert
-              cancelButtonText="Cancel"
-              confirmButtonText="Delete"
-              intent="danger"
-              isOpen={this.state.isDeleteOpen}
-              onCancel={this.handleDeleteCancel}
-              onConfirm={this.handleDelete}
-            >
-              <p>Are you sure you want to delete?</p>
-            </Alert>
-          </div>
         </div>
       </div>
     );
