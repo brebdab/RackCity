@@ -54,8 +54,12 @@ def instance_page(request):
         sort_args = []
         for sort in sort_by:
             field_name = sort['field']
-            order = "" if sort['ascending'] else "-"
+            order = "-" if not sort['ascending'] else ""
             sort_args.append(order + field_name)
+        return JsonResponse(
+            {"failure_message": sort_args},
+            status=HTTPStatus.BAD_REQUEST,
+        )
         instances = ITInstance.objects.order_by(*sort_args)
     else:
         instances = ITInstance.objects.all()
