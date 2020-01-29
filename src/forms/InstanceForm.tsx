@@ -135,11 +135,18 @@ class InstanceForm extends React.Component<
   };
   getRacks = (token: string) => {
     const headers = getHeaders(token);
-    axios.get(API_ROOT + "/api/racks/summary").then(res => {
-      this.setState({
-        racks: res.data
+    console.log(API_ROOT + "api/racks/summary");
+    axios
+      .get(API_ROOT + "api/racks/summary", headers)
+      .then(res => {
+        console.log(res.data.racks);
+        this.setState({
+          racks: res.data.racks as Array<RackObject>
+        });
+      })
+      .catch(err => {
+        console.log(err);
       });
-    });
   };
   render() {
     console.log(this.state.values);

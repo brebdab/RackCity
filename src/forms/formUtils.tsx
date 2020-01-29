@@ -29,7 +29,7 @@ export const filterRack: ItemPredicate<RackObject> = (
   exactMatch
 ) => {
   const rowLetter = rack.row_letter.toLowerCase();
-  const rackNum = rack.rack_num.toLowerCase();
+  const rackNum = rack.rack_num;
   const normalizedQuery = query.toLowerCase();
 
   if (exactMatch) {

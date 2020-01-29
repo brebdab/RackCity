@@ -72,6 +72,7 @@ export class InstanceView extends React.PureComponent<
           instance: result
         });
       });
+      console.log(this.state.instance);
     }
     return (
       <div className={Classes.DARK + " instance-view"}>
@@ -89,7 +90,7 @@ export class InstanceView extends React.PureComponent<
                 isOpen={this.state.isFormOpen}
                 initialValues={this.state.instance}
                 type={FormTypes.MODIFY}
-                elementName={ElementType.MODEL}
+                elementName={ElementType.INSTANCE}
                 handleClose={this.handleFormClose}
                 submitForm={this.updateInstance}
               />
