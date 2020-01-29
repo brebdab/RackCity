@@ -1,7 +1,7 @@
 # from rest_framework.parsers import JSONParser
 from django.http import HttpResponse, JsonResponse
+from rackcity.models import ITInstance, ITModel, Rack
 from django.core.exceptions import ObjectDoesNotExist
-from rackcity.models import ITInstance
 from rackcity.api.serializers import (
     ITInstanceSerializer,
     RecursiveITInstanceSerializer,
@@ -49,14 +49,30 @@ def instance_page(request):
             status=HTTPStatus.BAD_REQUEST,
         )
 
-    instances = ITInstance.objects.all()
+    if 'sort_by' in request.data:
+        sort_by = request.data['sort_by']
+        sort_args = []
+        for sort in sort_by:
+            if ('field' not in sort) or ('ascending' not in sort):
+                failure_message += "Must specify 'field' and 'ascending' fields. "
+                return JsonResponse(
+                    {"failure_message": failure_message},
+                    status=HTTPStatus.BAD_REQUEST,
+                )
+            field_name = sort['field']
+            order = "-" if not bool(sort['ascending']) else ""
+            sort_args.append(order + field_name)
+        instances = ITInstance.objects.order_by(*sort_args)
+    else:
+        instances = ITInstance.objects.all()
+
     paginator = PageNumberPagination()
     paginator.page_size = request.query_params.get('page_size')
 
     try:
         page_of_instances = paginator.paginate_queryset(instances, request)
-    except Exception:
-        failure_message += "Invalid page requested. "
+    except Exception as error:
+        failure_message += "Invalid page requested: " + str(error)
         return JsonResponse(
             {"failure_message": failure_message},
             status=HTTPStatus.BAD_REQUEST,
@@ -103,6 +119,13 @@ def instance_add(request):
     serializer = ITInstanceSerializer(data=data)
     if not serializer.is_valid(raise_exception=False):
         failure_message += str(serializer.errors)
+
+    rack_id = data['rack']
+    elevation = data['elevation']
+    height = ITModel.objects.get(id=data['model']).height
+
+    if is_location_full(rack_id, elevation, height):
+        failure_message += "Instance does not fit in this location. "
 
     if failure_message == "":
         try:
@@ -167,3 +190,18 @@ def instance_page_count(request):
     instance_count = ITInstance.objects.all().count()
     page_count = math.ceil(instance_count / page_size)
     return JsonResponse({"page_count": page_count})
+
+
+def is_location_full(rack_id, instance_elevation, instance_height):
+    new_instance_location_range = [
+        instance_elevation + i for i in range(instance_height)
+    ]
+    instances_in_rack = ITInstance.objects.filter(rack=rack_id)
+    for instance_in_rack in instances_in_rack:
+        for occupied_location in [
+            instance_in_rack.elevation + i for i
+                in range(instance_in_rack.model.height)
+        ]:
+            if occupied_location in new_instance_location_range:
+                return True
+    return False
