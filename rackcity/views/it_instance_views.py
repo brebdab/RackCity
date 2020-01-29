@@ -49,9 +49,45 @@ def instance_page(request):
             status=HTTPStatus.BAD_REQUEST,
         )
 
+#   query = Goods.objects
+#   sort_by = request.GET.pop('sort_by', 'id')
+#   for k, v in request.GET.items():
+#        query.filter(k=v)
+#   result = query.order_by(sort_by)
+
+    instances_query = ITInstance.objects
+
+    filters = []
+    if 'filters' in request.data:
+        filters = request.data['filters']
+        for filter in filters:
+            if (
+                ('field' not in filter)
+                or ('filter_type' not in filter)
+                or ('filter' not in filter)
+            ):
+                failure_message += "Must specifiy 'field', 'filter_type', and 'filter' fields. "
+                return JsonResponse(
+                    {"failure_message": failure_message},
+                    status=HTTPStatus.BAD_REQUEST
+                )
+            field_name = filter['field']
+            filter_type = filter['filter_type']
+            if filter_type == 'text':
+                instances_query.filter()
+            elif filter_type == 'numeric':
+                range_value = (int(filter['filter']['min']), int(
+                    filter['filter']['max']))
+                filter_args = {
+                    '{0}__range'.format(filter['field']): range_value
+                }
+                instances_query.filter(**filter_args)
+            elif filter_type == 'rack_range':
+                instances_query.filter()
+
+    sort_args = []
     if 'sort_by' in request.data:
         sort_by = request.data['sort_by']
-        sort_args = []
         for sort in sort_by:
             if ('field' not in sort) or ('ascending' not in sort):
                 failure_message += "Must specify 'field' and 'ascending' fields. "
@@ -62,9 +98,8 @@ def instance_page(request):
             field_name = sort['field']
             order = "-" if not bool(sort['ascending']) else ""
             sort_args.append(order + field_name)
-        instances = ITInstance.objects.order_by(*sort_args)
-    else:
-        instances = ITInstance.objects.all()
+
+    instances = instances_query.order_by(*sort_args)
 
     paginator = PageNumberPagination()
     paginator.page_size = request.query_params.get('page_size')
@@ -78,7 +113,8 @@ def instance_page(request):
             status=HTTPStatus.BAD_REQUEST,
         )
 
-    serializer = RecursiveITInstanceSerializer(page_of_instances, many=True)
+    # serializer = RecursiveITInstanceSerializer(page_of_instances, many=True)
+    serializer = ITInstanceSerializer(page_of_instances, many=True)
     return JsonResponse(
         {"instances": serializer.data},
         status=HTTPStatus.OK,
