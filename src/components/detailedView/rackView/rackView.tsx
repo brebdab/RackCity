@@ -35,9 +35,9 @@ class RackView extends React.PureComponent<
     const headers = getHeaders(token);
     const body = {
       letter_start: "A",
-      letter_end: "B",
+      letter_end: "Z",
       num_start: 1,
-      num_end: 2
+      num_end: 100
     };
     axios.post(API_ROOT + "api/racks/get", body, headers).then(res => {
       console.log(res);
@@ -57,9 +57,9 @@ class RackView extends React.PureComponent<
       [],
       rackResp.instances
     );
-    console.log(row_letter, rack_num, height);
-    console.log("rackResp", rackResp);
-    console.log("initial", instances, rackResp.instances);
+    // console.log(row_letter, rack_num, height);
+    // console.log("rackResp", rackResp);
+    // console.log("initial", instances, rackResp.instances);
 
     let maxHeight: number = +height;
 
@@ -86,8 +86,12 @@ class RackView extends React.PureComponent<
               className="cell"
               onClick={() => this.props.history.push("/instances/" + id)}
             >
-              {" "}
-              {instances[0].hostname}
+              <span>
+                {instances[0].model.vendor +
+                  " " +
+                  instances[0].model.model_number}
+              </span>
+              <span>{instances[0].hostname}</span>
             </td>
           </tr>
         );
@@ -121,7 +125,6 @@ class RackView extends React.PureComponent<
     return unitBarRows;
   }
   public render() {
-    console.log(this.state.racks);
     if (this.state.racks.length === 0) {
       this.getRackRange(this.props.token);
     }
@@ -130,24 +133,29 @@ class RackView extends React.PureComponent<
       <div className="rack-container">
         {this.state.racks.map((rackResp: RackResponseObject) => {
           return (
-            <div className={Classes.DARK + " rack"}>
-              <table className=" bp3-html-table bp3-interactive bp3-html-table-bordered rack-table">
-                <thead>
-                  <tr>
-                    <th className=" cell header">Rack</th>
-                  </tr>
-                </thead>
-                <tbody>{this.getRows(rackResp)}</tbody>
-              </table>
-              <table className="bp3-html-table bp3-html-table-bordered loc-table">
-                <thead>
-                  <tr>
-                    <th className=" cell header"> (U)</th>
-                  </tr>
-                </thead>
-                <tbody>{this.getUnitRows(rackResp)}</tbody>
-              </table>
-            </div>
+            <span>
+              <div className={Classes.DARK + " rack"}>
+                <table className=" bp3-html-table bp3-interactive bp3-html-table-bordered rack-table">
+                  <thead>
+                    <tr>
+                      <th className=" cell header">
+                        Rack {rackResp.rack.row_letter}
+                        {rackResp.rack.rack_num}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>{this.getRows(rackResp)}</tbody>
+                </table>
+                <table className="bp3-html-table bp3-html-table-bordered loc-table">
+                  <thead>
+                    <tr>
+                      <th className=" cell header"> (U)</th>
+                    </tr>
+                  </thead>
+                  <tbody>{this.getUnitRows(rackResp)}</tbody>
+                </table>
+              </div>
+            </span>
           );
         })}
       </div>
