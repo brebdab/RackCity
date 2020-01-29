@@ -20,7 +20,7 @@ export class RackView extends React.PureComponent<
   public render() {
     let rows = [];
     let instances = [1, 5, 10];
-    let widths = [1, 2, 5];
+    let widths = [2, 2, 5];
     const maxHeight = 42;
     let unit = 1;
     let currHeight = 0;
