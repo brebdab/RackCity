@@ -6,6 +6,7 @@ from .it_model_views import (
     model_detail,
     model_vendors,
     model_bulk_upload,
+    model_bulk_approve,
     model_page_count,
     i_am_admin,
     model_list,
