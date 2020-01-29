@@ -8,22 +8,6 @@ interface FileState {
   prompt: string
 }
 
-async function parse(file: File) {
-  return new Promise((resolve, reject) => {
-    let content = '';
-    const reader = new FileReader();
-    reader.onloadend = function(e: any) {
-      content = e.target.result;
-      const result = content//.split(/\r\n|\n/);
-      resolve(result);
-    };
-    reader.onerror = function(e: any) {
-      reject(e);
-    };
-    reader.readAsText(file)
-  });
-}
-
 export class FileSelector extends React.Component<FileProps, FileState>
 {
 
@@ -38,10 +22,15 @@ export class FileSelector extends React.Component<FileProps, FileState>
     }
 
     handleChange(target: any) {
-      parse(target.files[0]).then((res) => {
-        console.log(res);
-        this.props.callback(target.files[0].name)
-      })
+      if (target.files[0].name.split(".")[1] !== "csv") {
+        alert("WARNING: file must be .csv. You selected a file of type: ." +
+            target.files[0].name.split(".")[1])
+      } else {
+        this.setState({
+          prompt: target.files[0].name
+        })
+        this.props.callback(target.files[0])
+      }
     }
 
     render ()

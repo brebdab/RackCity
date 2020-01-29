@@ -5,23 +5,25 @@ import * as React from "react";
 import { API_ROOT } from "../../api-config";
 import { RouteComponentProps, withRouter } from "react-router";
 import { connect } from "react-redux";
-import { InstanceObject } from "../utils";
+import { InstanceObject, ModelObject } from "../utils";
 import "./import.scss";
 import { FileSelector } from "../lib/fileSelect"
+import csvtojson from "csvtojson";
 
 interface AlertState {
   uploadModelIsOpen: boolean,
   uploadInstanceIsOpen: boolean,
-  selectedFile: string
+  selectedFile?: File
 }
+
+const c2j = require('csvtojson')
 
 export class BulkImport extends React.PureComponent<RouteComponentProps, AlertState> {
 
   public state: AlertState = {
     uploadModelIsOpen: false,
-    uploadInstanceIsOpen: false,
-    selectedFile: ""
-  }
+    uploadInstanceIsOpen: false
+  };
 
   render() {
     return (
@@ -72,6 +74,8 @@ export class BulkImport extends React.PureComponent<RouteComponentProps, AlertSt
     )
   }
 
+  /*********** Functions ***********************/
+
   private handleInstanceOpen = () => this.setState({ uploadInstanceIsOpen: true });
   private handleInstanceCancel = () => this.setState({ uploadInstanceIsOpen: false });
   private handleInstanceUpload = () => {
@@ -82,16 +86,50 @@ export class BulkImport extends React.PureComponent<RouteComponentProps, AlertSt
   private handleModelOpen = () => this.setState({ uploadModelIsOpen: true });
   private handleModelCancel = () => this.setState({ uploadModelIsOpen: false });
   private handleModelUpload = () => {
-    alert("Models were successfully uploaded: " + this.state.selectedFile);
-    this.setState({ uploadModelIsOpen: false });
+    if (this.state.selectedFile !== undefined) {
+      parse(this.state.selectedFile).then((res) => {
+        // let data: Array<ModelObject>
+        let data: any;
+        data = c2j({
+          noheader: false,
+          output: "json"
+
+        }).fromString(res).then((csvRow: Array<ModelObject>) => {
+          console.log(csvRow)
+        })
+        // console.log(data)
+      })
+      alert("Models were successfully uploaded: " + this.state.selectedFile);
+      this.setState({ uploadModelIsOpen: false });
+    } else {
+      alert("No file selected")
+    }
   };
 
-  private setFile = (file: string) => {
+  /* Set file from fileSelect component to state in this component */
+  private setFile = (file: File) => {
     this.setState({
       selectedFile: file
     })
   }
 
+}
+
+/* Reads file to string */
+async function parse(file: File) {
+  return new Promise((resolve, reject) => {
+    let content = '';
+    const reader = new FileReader();
+    reader.onloadend = function(e: any) {
+      content = e.target.result;
+      const result = content//.split(/\r\n|\n/);
+      resolve(result);
+    };
+    reader.onerror = function(e: any) {
+      reject(e);
+    };
+    reader.readAsText(file)
+  });
 }
 
 const mapStatetoProps = (state: any) => {
