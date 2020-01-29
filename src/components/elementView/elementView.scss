@@ -23,6 +23,11 @@
 .add {
   float: right;
 }
+.table {
+  margin-top: 20px;
+  display: inline-block;
+  overflow: auto;
+}
 .badge {
   background-color: #9ae6b4;
   color: #22543d;

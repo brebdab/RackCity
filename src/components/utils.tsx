@@ -14,6 +14,22 @@ export interface InstanceObject extends ElementObject {
   owner?: string;
   comment?: string;
 }
+export const getHeaders = (token: string) => {
+  return {
+    headers: {
+      Authorization: "Token " + token
+    }
+  };
+};
+
+export interface InstanceInfoObject extends ElementObject {
+  hostname: string;
+  elevation: string;
+  model?: string;
+  rack?: string;
+  owner?: string;
+  comment?: string;
+}
 
 export interface RackObject extends ElementObject {
   row_letter: string;
@@ -38,7 +54,11 @@ export interface ModelDetailObject {
   model: ModelObject;
   instances: Array<InstanceObject>;
 }
-export type ElementObjectType = ModelObject | RackObject | InstanceObject;
+export type ElementObjectType =
+  | ModelObject
+  | RackObject
+  | InstanceObject
+  | InstanceInfoObject;
 export function isModelObject(obj: any): obj is ModelObject {
   return obj && obj.model_number;
 }

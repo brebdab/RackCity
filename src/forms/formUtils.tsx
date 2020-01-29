@@ -1,7 +1,7 @@
 import { ItemPredicate, ItemRenderer, Suggest } from "@blueprintjs/select";
 import React from "react";
 import { MenuItem } from "@blueprintjs/core";
-import { ModelObject } from "../components/utils";
+import { ModelObject, RackObject } from "../components/utils";
 
 export function escapeRegExpChars(text: string) {
   // eslint-disable-next-line
@@ -22,7 +22,22 @@ export const filterString: ItemPredicate<string> = (
     return normalizedTitle.indexOf(normalizedQuery) >= 0;
   }
 };
+export const filterRack: ItemPredicate<RackObject> = (
+  query,
+  rack,
+  _index,
+  exactMatch
+) => {
+  const rowLetter = rack.row_letter.toLowerCase();
+  const rackNum = rack.rack_num.toLowerCase();
+  const normalizedQuery = query.toLowerCase();
 
+  if (exactMatch) {
+    return rackNum === normalizedQuery || rowLetter === normalizedQuery;
+  } else {
+    return (rowLetter + rackNum).indexOf(normalizedQuery) >= 0;
+  }
+};
 export const filterModel: ItemPredicate<ModelObject> = (
   query,
   model,
@@ -35,7 +50,8 @@ export const filterModel: ItemPredicate<ModelObject> = (
 
   if (exactMatch) {
     return (
-      normalizedVendor === normalizedQuery || normalizedModel == normalizedQuery
+      normalizedVendor === normalizedQuery ||
+      normalizedModel === normalizedQuery
     );
   } else {
     return (
@@ -90,6 +106,22 @@ export const renderStringItem: ItemRenderer<string> = (
     />
   );
 };
+export const renderRackItem: ItemRenderer<RackObject> = (
+  rack: RackObject,
+  { handleClick, modifiers, query }
+) => {
+  if (!modifiers.matchesPredicate) {
+    return null;
+  }
+  const text = rack.row_letter + rack.rack_num;
+  return (
+    <MenuItem
+      active={modifiers.active}
+      text={highlightText(text, query)}
+      onClick={handleClick}
+    />
+  );
+};
 
 export const renderModelItem: ItemRenderer<ModelObject> = (
   model: ModelObject,
@@ -124,3 +156,4 @@ export const renderCreateItemOption = (
 
 export const StringSuggest = Suggest.ofType<string>();
 export const ModelSuggest = Suggest.ofType<ModelObject>();
+export const RackSuggest = Suggest.ofType<RackObject>();

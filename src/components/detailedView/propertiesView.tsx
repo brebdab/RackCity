@@ -1,10 +1,4 @@
-import {
-  Classes,
-  Card,
-  Elevation,
-  AnchorButton,
-  Alert
-} from "@blueprintjs/core";
+import { Card, Classes, Elevation } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 // import axios from "axios";
 import * as React from "react";

@@ -1,10 +1,10 @@
 import {
   Button,
+  Callout,
   Classes,
   FormGroup,
-  MenuItem,
-  Callout,
-  Intent
+  Intent,
+  MenuItem
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -13,14 +13,14 @@ import { connect } from "react-redux";
 import { API_ROOT } from "../api-config";
 import { ModelObject } from "../components/utils";
 import { updateObject } from "../store/utility";
-import Field, { IFieldProps } from "./field";
+import Field from "./field";
+import "./forms.scss";
 import {
   filterString,
   renderCreateItemOption,
   renderStringItem,
   StringSuggest
 } from "./formUtils";
-import "./forms.scss";
 //TO DO : add validation of types!!!
 export enum FormTypes {
   CREATE = "create",
@@ -234,7 +234,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
           </FormGroup>
 
           <Button className="login-button" type="submit">
-            Login
+            Submit
           </Button>
         </form>
       </div>

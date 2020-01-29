@@ -1,23 +1,26 @@
 import {
+  Alignment,
   AnchorButton,
   Classes,
-  Dialog,
   Navbar,
   NavbarGroup,
-  NavbarHeading,
-  Alignment
+  NavbarHeading
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
 import { connect } from "react-redux";
 import { API_ROOT } from "../../api-config";
-
-import { ElementObjectType, ElementType, ModelObject } from "../utils";
+import FormPopup from "../../forms/FormPopup";
+import { FormTypes } from "../../forms/modelForm";
+import {
+  ElementObjectType,
+  ElementType,
+  ModelObject,
+  InstanceInfoObject
+} from "../utils";
 import ElementTable from "./elementTable";
 import "./elementView.scss";
-import ModelForm, { FormTypes } from "../../forms/modelForm";
-import FormPopup from "../../forms/FormPopup";
 
 interface ElementViewState {
   isOpen: boolean;
@@ -33,7 +36,7 @@ export function getElementData(
 ): Promise<Array<ElementObjectType>> {
   console.log(API_ROOT + "api/" + path + "/get-many");
 
-  const page_size = 30;
+  const page_size = 100;
   const page = 1;
 
   const config = {
@@ -66,12 +69,26 @@ class ElementView extends React.Component<ElementViewProps, ElementViewState> {
   };
   private handleClose = () => this.setState({ isOpen: false });
 
-  createModel = (model: ModelObject, headers: any): Promise<any> => {
+  private createModel = (model: ModelObject, headers: any): Promise<any> => {
     return axios.post(API_ROOT + "api/models/add", model, headers).then(res => {
       console.log("success");
       this.handleClose();
       console.log(this.state.isOpen);
     });
+  };
+
+  private createInstance = (
+    instance: InstanceInfoObject,
+    headers: any
+  ): Promise<any> => {
+    console.log("api/instances/add");
+    return axios
+      .post(API_ROOT + "api/instances/add", instance, headers)
+      .then(res => {
+        console.log("success");
+        this.handleClose();
+        console.log(this.state.isOpen);
+      });
   };
 
   public render() {
@@ -92,7 +109,11 @@ class ElementView extends React.Component<ElementViewProps, ElementViewState> {
               <FormPopup
                 type={FormTypes.CREATE}
                 elementName={this.props.element}
-                submitForm={this.createModel}
+                submitForm={
+                  this.props.element === ElementType.MODEL
+                    ? this.createModel
+                    : this.createInstance
+                }
                 isOpen={this.state.isOpen}
                 handleClose={this.handleClose}
               />

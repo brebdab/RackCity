@@ -1,6 +1,5 @@
-import * as React from "react";
 import { InputGroup } from "@blueprintjs/core";
-import { ElementObjectType } from "../components/utils";
+import * as React from "react";
 
 export interface IFieldProps {
   field: string;
