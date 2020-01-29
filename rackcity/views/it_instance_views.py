@@ -176,13 +176,16 @@ def instance_page_count(request):
     return JsonResponse({"page_count": page_count})
 
 
-def is_location_full(rack_id, elevation, height):
-    rack_u = [elevation + i for i in range(height)]
+def is_location_full(rack_id, instance_elevation, instance_height):
+    new_instance_location_range = [
+        instance_elevation + i for i in range(instance_height)
+    ]
     instances_in_rack = ITInstance.objects.filter(rack=rack_id)
-    for instance in instances_in_rack:
-        for u in [
-            instance.elevation + i for i in range(instance.model.height)
+    for instance_in_rack in instances_in_rack:
+        for occupied_location in [
+            instance_in_rack.elevation + i for i
+                in range(instance_in_rack.model.height)
         ]:
-            if u in rack_u:
+            if occupied_location in new_instance_location_range:
                 return True
     return False
