@@ -267,7 +267,8 @@ def records_are_identical(existing_data, new_data):
         if key not in new_keys and existing_data[key] is not None and key != 'id':
             return False
         if key in new_keys and new_data[key] != existing_data[key]:
-            return False
+            if not (isinstance(existing_data[key], int) and int(new_data[key]) == existing_data[key]):
+                return False
     return True
 
 
