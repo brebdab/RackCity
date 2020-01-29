@@ -8,30 +8,6 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from http import HTTPStatus
 
 
-def rack_list(request):  # DEPRECATED !
-    """
-    List all racks.
-    """
-    if request.method == 'GET':
-        racks = Rack.objects.all()
-        serializer = RackSerializer(racks, many=True)
-        return JsonResponse(serializer.data, safe=False)
-
-
-def rack_detail(request, pk):  # DEPRECATED !
-    """
-    Retrieve a single rack.
-    """
-    try:
-        rack = Rack.objects.get(pk=pk)
-    except Rack.DoesNotExist:
-        return HttpResponse(status=404)
-
-    if request.method == 'GET':
-        serializer = RackSerializer(rack)
-        return JsonResponse(serializer.data)
-
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def rack_get(request):
@@ -154,3 +130,11 @@ def rack_delete(request):
                 status=HTTPStatus.BAD_REQUEST,
             )
         return HttpResponse(status=HTTPStatus.OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def rack_summary(request):
+    racks = Rack.objects.all()
+    serializer = RackSerializer(racks, many=True)
+    return JsonResponse({"racks": serializer.data}, status=HTTPStatus.OK)

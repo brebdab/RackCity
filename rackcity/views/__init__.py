@@ -22,9 +22,8 @@ from .it_instance_views import (
     instance_page_count,
 )
 from .rack_views import (
-    rack_detail,
-    rack_list,
     rack_get,
     rack_create,
     rack_delete,
+    rack_summary,
 )
