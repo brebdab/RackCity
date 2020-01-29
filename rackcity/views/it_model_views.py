@@ -7,6 +7,7 @@ from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
+from copy import copy
 import math
 
 
@@ -192,6 +193,82 @@ def model_vendors(request):
         {"vendors": vendors_names},
         status=HTTPStatus.OK
     )
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def model_bulk_upload(request):
+    """
+    Bulk upload many models to add or modify
+    """
+    data = JSONParser().parse(request)
+    if 'models' not in data:
+        return JsonResponse(
+            {"failure_message": "Bulk upload request should have a parameter 'models'"},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    model_datas = data['models']
+    models_to_add = []
+    potential_modifications = []
+    for model_data in model_datas:
+        model_serializer = ITModelSerializer(data=model_data)
+        if not model_serializer.is_valid():
+            failure_message = str(model_serializer.errors)
+            failure_message = "At least one provided model was not valid. "+failure_message
+            return JsonResponse(
+                {"failure_message": failure_message},
+                status=HTTPStatus.BAD_REQUEST
+            )
+        try:
+            existing_model = ITModel.objects.get(
+                vendor=model_data['vendor'], model_number=model_data['model_number'])
+        except ObjectDoesNotExist:
+            models_to_add.append(model_serializer)
+        else:
+            potential_modifications.append(
+                {"existing_model": existing_model, "new_data": model_data})
+    records_added = 0
+    for model_to_add in models_to_add:
+        records_added += 1
+        # this should always pass for now, only constraint is uniqueness which was already checked
+        model_to_add.save()
+    records_ignored = 0
+    modifications_to_approve = []
+    for potential_modification in potential_modifications:
+        new_data = potential_modification['new_data']
+        existing_data = ITModelSerializer(
+            potential_modification['existing_model']
+        ).data
+        if records_are_identical(existing_data, new_data):
+            records_ignored += 1
+        else:
+            # bletsch changed mind on piazza.  if something left out, it would delete it
+            new_data['id'] = existing_data['id']
+            modifications_to_approve.append(
+                {
+                    "existing": existing_data,
+                    "modified": new_data  # THIS WILL NEED TO HAVE SAME ID ON IT BEFORE SAVING
+                }
+            )
+    return JsonResponse(
+        {
+            "added": records_added,
+            "ignored": records_ignored,
+            "modifications": modifications_to_approve
+        },
+        status=HTTPStatus.OK
+    )
+
+
+def records_are_identical(existing_data, new_data):
+    existing_keys = existing_data.keys()
+    new_keys = new_data.keys()
+    for key in existing_keys:
+        if key not in new_keys and existing_data[key] is not None and key != 'id':
+            return False
+        if key in new_keys and new_data[key] != existing_data[key]:
+            return False
+    return True
 
 
 @api_view(['GET'])
