@@ -151,7 +151,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
               noResults={<MenuItem disabled={true} text="No results." />}
             />
           </FormGroup>
-          <FormGroup>
+          <FormGroup label="Model Number" inline={true}>
             <Field
               className="field"
               placeholder="model_number"
@@ -160,7 +160,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
               field="model_number"
             />
           </FormGroup>
-          <FormGroup>
+          <FormGroup label="Height" inline={true}>
             <Field
               field="height"
               className="field"
@@ -169,7 +169,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
               onChange={this.handleChange}
             />
           </FormGroup>
-          <FormGroup>
+          <FormGroup label="Display Color" inline={true}>
             <Field
               field="display_color"
               className="field"
@@ -178,7 +178,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
               onChange={this.handleChange}
             />
           </FormGroup>
-          <FormGroup>
+          <FormGroup label="# Ethernet Ports" inline={true}>
             <Field
               field="num_ethernet_ports"
               className="field"
@@ -187,7 +187,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
               onChange={this.handleChange}
             />
           </FormGroup>
-          <FormGroup>
+          <FormGroup label="# Power Ports" inline={true}>
             <Field
               field="num_power_ports"
               className="field"
@@ -196,7 +196,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
               onChange={this.handleChange}
             />
           </FormGroup>
-          <FormGroup>
+          <FormGroup label="CPU" inline={true}>
             <Field
               field="cpu"
               className="field"
@@ -205,7 +205,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
               onChange={this.handleChange}
             />
           </FormGroup>
-          <FormGroup>
+          <FormGroup label="Memory(GB)" inline={true}>
             <Field
               field="memory_gb"
               className="field"
@@ -214,7 +214,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
               onChange={this.handleChange}
             />
           </FormGroup>
-          <FormGroup>
+          <FormGroup label="Storage" inline={true}>
             <Field
               field="storage"
               className="field"
@@ -223,7 +223,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
               onChange={this.handleChange}
             />
           </FormGroup>
-          <FormGroup>
+          <FormGroup label="Comment" inline={true}>
             <Field
               field="comment"
               className="field"

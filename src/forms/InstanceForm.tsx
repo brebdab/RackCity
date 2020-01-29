@@ -172,7 +172,7 @@ class InstanceForm extends React.Component<
         >
           <h2>Add a New Instance</h2>
 
-          <FormGroup>
+          <FormGroup label="Hostname" inline={true}>
             <Field
               className="field"
               placeholder="hostname"
@@ -181,7 +181,7 @@ class InstanceForm extends React.Component<
               field="hostname"
             />
           </FormGroup>
-          <FormGroup>
+          <FormGroup label="Elevation" inline={true}>
             <Field
               field="elevation"
               className="field"
@@ -235,7 +235,7 @@ class InstanceForm extends React.Component<
             />
           </FormGroup>
 
-          <FormGroup>
+          <FormGroup label="Owner" inline={true}>
             <Field
               field="owner"
               className="field"
@@ -244,7 +244,7 @@ class InstanceForm extends React.Component<
               onChange={this.handleChange}
             />
           </FormGroup>
-          <FormGroup>
+          <FormGroup label="Comment" inline={true}>
             <Field
               field="comment"
               className="field"
