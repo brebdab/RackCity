@@ -186,7 +186,7 @@ async function uploadBulk(modelList: Array<ModelObject>, token: string) {
     }
   };
   return await axios
-    .post(API_ROOT + "api/models/bulk-upload", modelList, headers)
+    .post(API_ROOT + "api/models/bulk-upload", {models: modelList}, headers)
     .then(res => {
       console.log(res.data)
       const data = res.data;
