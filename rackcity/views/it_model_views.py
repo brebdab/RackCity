@@ -295,6 +295,7 @@ def model_bulk_approve(request):
                 {"failure_message": failure_message},
                 status=HTTPStatus.BAD_REQUEST
             )
+    for model_data in model_datas:
         existing_model = ITModel.objects.get(id=model_data['id'])
         for field in model_data.keys():  # This is assumed to have all fields, and with null values for blank ones. That's how it's returned in bulk-upload
             setattr(existing_model, field, model_data[field])
