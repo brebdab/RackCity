@@ -1,4 +1,4 @@
-import { Classes, AnchorButton, Alert } from "@blueprintjs/core";
+import { Classes, AnchorButton, Alert, Dialog } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
@@ -8,15 +8,16 @@ import { connect } from "react-redux";
 import { InstanceObject, ModelObject } from "../utils";
 import "./import.scss";
 import { FileSelector } from "../lib/fileSelect"
+import { Modifier } from "./viewModified"
 
 interface ImportProps {
-  token: string,
-  isAdmin: boolean
+  token: string
 }
 
 interface AlertState {
   uploadModelIsOpen: boolean,
   uploadInstanceIsOpen: boolean,
+  modelAlterationsIsOpen: boolean,
   selectedFile?: File,
   loadedModels?: Array<ModelObject>,
   loadedInstances?: Array<InstanceObject>
@@ -28,11 +29,11 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
 
   public state: AlertState = {
     uploadModelIsOpen: false,
-    uploadInstanceIsOpen: false
+    uploadInstanceIsOpen: false,
+    modelAlterationsIsOpen: false
   };
 
   render() {
-    console.log(this.props.isAdmin)
     return (
       <div className={Classes.DARK + " import"}>
         <h1>Upload instructions here</h1>
@@ -82,10 +83,6 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
             </Alert>
           </div>
           <div className={"column"}>
-            <h1> </h1>
-            <h1> </h1>
-            <h1> </h1>
-            <h1> </h1>
             <AnchorButton
               large={true}
               intent="success"
@@ -94,6 +91,11 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
               onClick={this.handleUpload}
             />
           </div>
+        </div>
+        <div>
+          <Dialog isOpen={this.state.modelAlterationsIsOpen} onClose={() => this.setState({modelAlterationsIsOpen: false})}>
+            <Modifier {...this.props} models={this.state.loadedModels}/>
+          </Dialog>
         </div>
       </div>
     )
@@ -156,7 +158,10 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
 
   private handleUpload = () => {
     if (this.state.loadedModels !== undefined) {
-      uploadBulk(this.state.loadedModels, this.props.token)
+      uploadBulk(this.state.loadedModels, this.props.token);
+      this.setState({
+        modelAlterationsIsOpen: true
+      })
     } else if (this.state.loadedInstances !== undefined) {
 
     } else {
@@ -215,8 +220,7 @@ async function parse(file: File) {
 
 const mapStatetoProps = (state: any) => {
   return {
-    token: state.token,
-    isAdmin: state.admin
+    token: state.token
   };
 };
 
