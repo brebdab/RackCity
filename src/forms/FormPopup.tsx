@@ -1,14 +1,13 @@
+import { Classes, Dialog } from "@blueprintjs/core";
 import * as React from "react";
-import { Dialog, Classes } from "@blueprintjs/core";
-import ModelForm, { FormTypes } from "./modelForm";
 import {
-  ElementType,
-  ModelObject,
   ElementObjectType,
-  isModelObject,
-  isInstanceObject
+  ElementType,
+  isInstanceObject,
+  isModelObject
 } from "../components/utils";
 import InstanceForm from "./InstanceForm";
+import ModelForm, { FormTypes } from "./modelForm";
 interface FormPopupState {}
 interface FormPopupProps {
   isOpen: boolean;

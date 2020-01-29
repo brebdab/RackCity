@@ -1,21 +1,14 @@
-import {
-  Alert,
-  Classes,
-  Tab,
-  Tabs,
-  AnchorButton,
-  Dialog
-} from "@blueprintjs/core";
+import { Alert, AnchorButton, Classes, Tab, Tabs } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
-import { API_ROOT } from "../../../api-config";
-import PropertiesView from "../propertiesView";
-import { RouteComponentProps, withRouter } from "react-router";
 import { connect } from "react-redux";
-import { ModelObject, ElementType } from "../../utils";
-import ModelForm, { FormTypes } from "../../../forms/modelForm";
+import { RouteComponentProps, withRouter } from "react-router";
+import { API_ROOT } from "../../../api-config";
 import FormPopup from "../../../forms/FormPopup";
+import { FormTypes } from "../../../forms/modelForm";
+import { ElementType, ModelObject } from "../../utils";
+import PropertiesView from "../propertiesView";
 
 export interface ModelViewProps {
   token: string;
