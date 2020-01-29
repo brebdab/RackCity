@@ -13,7 +13,9 @@ import csvtojson from "csvtojson";
 interface AlertState {
   uploadModelIsOpen: boolean,
   uploadInstanceIsOpen: boolean,
-  selectedFile?: File
+  selectedFile?: File,
+  loadedModels?: Array<ModelObject>,
+  loadedInstances?: Array<InstanceObject>
 }
 
 const c2j = require('csvtojson')
@@ -88,14 +90,30 @@ export class BulkImport extends React.PureComponent<RouteComponentProps, AlertSt
   private handleModelUpload = () => {
     if (this.state.selectedFile !== undefined) {
       parse(this.state.selectedFile).then((res) => {
-        // let data: Array<ModelObject>
-        let data: any;
-        data = c2j({
+        c2j({
           noheader: false,
           output: "json"
+        }).fromString(res).then((csvRow: Array<any>) => {
+          for (var i = 0; i < csvRow.length; i++) {
+            const model: ModelObject = {
+              vendor: csvRow[i].vendor,
+              model_number: csvRow[i].model_number,
+              height: csvRow[i].height,
+              display_color: csvRow[i].display_color,
+              num_ethernet_ports: csvRow[i].ethernet_ports,
+              num_power_ports: csvRow[i].power_ports,
+              cpu: csvRow[i].cpu,
+              memory_gb: csvRow[i].memory,
+              storage: csvRow[i].storage,
+              comment: csvRow[i].comment
+            };
+            csvRow[i] = model;
+          }
+          this.setState({
+            loadedModels: csvRow
+          })
 
-        }).fromString(res).then((csvRow: Array<ModelObject>) => {
-          console.log(csvRow)
+          console.log(this.state.loadedModels)
         })
         // console.log(data)
       })

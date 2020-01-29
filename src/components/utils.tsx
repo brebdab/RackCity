@@ -1,5 +1,5 @@
 interface ElementObject {
-  id: string;
+  id?: string;
 }
 export enum ElementType {
   RACK = "racks",
@@ -8,7 +8,7 @@ export enum ElementType {
 }
 export interface InstanceObject extends ElementObject {
   hostname: string;
-  elevation: number;
+  elevation: number; // this name changes to rack_position. bulk file also has vendor and model #
   model: ModelObject;
   rack: RackObject;
   owner?: string;
@@ -26,10 +26,10 @@ export interface ModelObject extends ElementObject {
   model_number: string;
   height: string;
   display_color?: string;
-  num_ethernet_ports?: string;
-  num_power_ports?: string;
+  num_ethernet_ports?: string; //
+  num_power_ports?: string; //
   cpu?: string;
-  memory_gb?: string;
+  memory_gb?: string; //
   storage?: string;
   comment?: string;
 }
