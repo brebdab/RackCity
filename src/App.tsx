@@ -39,9 +39,8 @@ class App extends React.Component<AppProps> {
               )}
             </Route>
             {/* Landing page shows table viewer */}
-            <Route path="/racks/:rid" component={RackView} />
             <Route path="/login" component={WrappedNormalLoginForm} />
-            <Route path="/racks/:rid" component={RackView} />
+            <Route path="/racks" component={RackView} />
             <Route path="/models/:rid" component={ModelView} />
             <Route path="/instances/:rid" component={InstanceView} />
 
