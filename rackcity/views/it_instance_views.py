@@ -53,13 +53,15 @@ def instance_page(request):
         sort_by = request.data['sort_by']
         sort_args = []
         for sort in sort_by:
+            if ('field' not in sort) or ('ascending' not in sort):
+                failure_message += "Must specify 'field' and 'ascending' fields. "
+                return JsonResponse(
+                    {"failure_message": failure_message},
+                    status=HTTPStatus.BAD_REQUEST,
+                )
             field_name = sort['field']
             order = "-" if not sort['ascending'] else ""
             sort_args.append(order + field_name)
-        return JsonResponse(
-            {"failure_message": sort_args},
-            status=HTTPStatus.BAD_REQUEST,
-        )
         instances = ITInstance.objects.order_by(*sort_args)
     else:
         instances = ITInstance.objects.all()
@@ -77,6 +79,7 @@ def instance_page(request):
         )
 
     serializer = RecursiveITInstanceSerializer(page_of_instances, many=True)
+    # serializer = ITInstanceSerializer(page_of_instances, many=True)
     return JsonResponse(
         {"instances": serializer.data},
         status=HTTPStatus.OK,
