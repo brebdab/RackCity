@@ -243,7 +243,10 @@ def model_bulk_upload(request):
             records_ignored += 1
         else:
             # bletsch changed mind on piazza.  if something left out, it would delete it
-            new_data['id'] = existing_data['id']
+            new_data['id'] = existing_data['id']  # ADD ALL THE NULL FIELDS?
+            for field in existing_data.keys():
+                if field not in new_data:
+                    new_data[field] = None
             modifications_to_approve.append(
                 {
                     "existing": existing_data,
@@ -269,6 +272,35 @@ def records_are_identical(existing_data, new_data):
         if key in new_keys and new_data[key] != existing_data[key]:
             return False
     return True
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def model_bulk_approve(request):
+    """
+    Bulk approve many models to modify
+    """
+    data = JSONParser().parse(request)
+    if 'approved_modifications' not in data:
+        return JsonResponse(
+            {"failure_message": "Bulk approve request should have a parameter 'approved_modifications'"},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    model_datas = data['approved_modifications']
+    for model_data in model_datas:
+        model_serializer = ITModelSerializer(data=model_data)
+        if not model_serializer.is_valid():
+            failure_message = "At least one modification was not valid. " + \
+                str(model_serializer.errors)
+            return JsonResponse(
+                {"failure_message": failure_message},
+                status=HTTPStatus.BAD_REQUEST
+            )
+        existing_model = ITModel.objects.get(id=model_data['id'])
+        for field in model_data.keys():
+            setattr(existing_model, field, model_data[field])
+        existing_model.save()
+    return HttpResponse(status=HTTPStatus.OK)
 
 
 @api_view(['GET'])
