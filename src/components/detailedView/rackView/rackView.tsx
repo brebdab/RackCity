@@ -2,22 +2,44 @@ import { Classes } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
 import "./rackView.scss";
-import { RouteComponentProps } from "react-router";
-
+import { RouteComponentProps, withRouter } from "react-router";
+import { getHeaders, RackResponseObject } from "../../utils";
+import { API_ROOT } from "../../../api-config";
+import axios from "axios";
+import { connect } from "react-redux";
 //export interface ElementViewProps {}
 
 export interface RackViewProps {
-  instances: any;
+  token: string;
+  isAdmin: string;
 }
 export interface RouteParams {
   rid: string;
 }
-
-export class RackView extends React.PureComponent<
-  RouteComponentProps<RouteParams>,
-  RackViewProps
+export interface RackViewState {
+  rackResponse: Array<RackResponseObject>;
+}
+class RackView extends React.PureComponent<
+  RouteComponentProps<RouteParams> & RackViewProps,
+  RackViewState
 > {
+  public state = {
+    rackResponse: []
+  };
+  getRackRange(token: string) {
+    const headers = getHeaders(token);
+    const body = {
+      letter_start: "A",
+      letter_end: "B",
+      number_start: 1,
+      number_end: 2
+    };
+    axios
+      .post(API_ROOT + "api/racks/get", body, headers)
+      .then(res => console.log(res));
+  }
   public render() {
+    this.getRackRange(this.props.token);
     let rows = [];
     let instances = [1, 5, 10];
     let widths = [2, 2, 5];
@@ -75,5 +97,11 @@ export class RackView extends React.PureComponent<
     );
   }
 }
+const mapStatetoProps = (state: any) => {
+  return {
+    token: state.token,
+    isAdmin: state.admin
+  };
+};
 
-export default RackView;
+export default connect(mapStatetoProps)(withRouter(RackView));
