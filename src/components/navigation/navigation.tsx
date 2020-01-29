@@ -42,7 +42,7 @@ export class Navigation extends React.Component<NavigationPropsAll> {
                     onClick={() => this.props.history.push("/bulk-upload")}
                     className="nav-bar-button"
                     icon="export"
-                    text="Upload Instance File"
+                    text="Upload File"
                     minimal
                   />
                 </div>
