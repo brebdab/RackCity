@@ -22,7 +22,7 @@ export class RackView extends React.PureComponent<
     let instances = [1, 5, 10];
     let widths = [2, 2, 5];
     const maxHeight = 42;
-    let unit = 1;
+    let unit = 2;
     let currHeight = 0;
     while (currHeight < maxHeight) {
       if (currHeight === instances[0]) {
