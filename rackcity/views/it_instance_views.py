@@ -79,7 +79,6 @@ def instance_page(request):
         )
 
     serializer = RecursiveITInstanceSerializer(page_of_instances, many=True)
-    # serializer = ITInstanceSerializer(page_of_instances, many=True)
     return JsonResponse(
         {"instances": serializer.data},
         status=HTTPStatus.OK,
