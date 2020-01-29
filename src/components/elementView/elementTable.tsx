@@ -8,7 +8,7 @@ import {
   isRackObject,
   ElementObjectType
 } from "../utils";
-
+import "./elementView.scss";
 interface IElementTableState {
   items: Array<ElementObjectType>;
 }
