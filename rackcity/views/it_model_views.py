@@ -242,15 +242,14 @@ def model_bulk_upload(request):
         if records_are_identical(existing_data, new_data):
             records_ignored += 1
         else:
-            # bletsch changed mind on piazza.  if something left out, it would delete it
-            new_data['id'] = existing_data['id']  # ADD ALL THE NULL FIELDS?
+            new_data['id'] = existing_data['id']
             for field in existing_data.keys():
                 if field not in new_data:
                     new_data[field] = None
             modifications_to_approve.append(
                 {
                     "existing": existing_data,
-                    "modified": new_data  # THIS WILL NEED TO HAVE SAME ID ON IT BEFORE SAVING
+                    "modified": new_data
                 }
             )
     return JsonResponse(
@@ -297,7 +296,7 @@ def model_bulk_approve(request):
                 status=HTTPStatus.BAD_REQUEST
             )
         existing_model = ITModel.objects.get(id=model_data['id'])
-        for field in model_data.keys():
+        for field in model_data.keys():  # This is assumed to have all fields, and with null values for blank ones. That's how it's returned in bulk-upload
             setattr(existing_model, field, model_data[field])
         existing_model.save()
     return HttpResponse(status=HTTPStatus.OK)
