@@ -7,6 +7,7 @@ class Rack(models.Model):
     height = models.PositiveIntegerField(default=42)
 
     class Meta:
+        ordering = ['row_letter', 'rack_num']
         constraints = [
             models.UniqueConstraint(
                 fields=['row_letter', 'rack_num'],

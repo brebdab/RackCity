@@ -60,7 +60,7 @@ def instance_page(request):
                     status=HTTPStatus.BAD_REQUEST,
                 )
             field_name = sort['field']
-            order = "-" if not bool(sort['ascending']) else ""
+            order = "-" if not sort['ascending'] else ""
             sort_args.append(order + field_name)
         instances = ITInstance.objects.order_by(*sort_args)
     else:

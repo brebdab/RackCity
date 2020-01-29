@@ -20,4 +20,5 @@ class ITInstance(models.Model):
     comment = models.TextField(null=True, blank=True)
 
     class Meta:
+        ordering = ['hostname']
         verbose_name = 'instance'
