@@ -1,7 +1,7 @@
 # from rest_framework.parsers import JSONParser
 from django.http import HttpResponse, JsonResponse
 from rackcity.models import Rack, ITInstance
-from rackcity.api.serializers import RackSerializer, ITInstanceSerializer
+from rackcity.api.serializers import RackSerializer, ITInstanceSerializer, RecursiveITInstanceSerializer
 from rackcity.api.objects import RackRangeSerializer
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -29,8 +29,10 @@ def rack_get(request):
     racks_with_instances = []
     for rack in racks:
         rack_serializer = RackSerializer(rack)
-        instances = ITInstance.objects.filter(rack=rack.id)
-        instances_serializer = ITInstanceSerializer(
+        instances = ITInstance.objects \
+            .filter(rack=rack.id) \
+            .order_by("elevation")
+        instances_serializer = RecursiveITInstanceSerializer(
             instances,
             many=True
         )
