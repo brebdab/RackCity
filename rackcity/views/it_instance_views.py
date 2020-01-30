@@ -49,56 +49,12 @@ def instance_page(request):
             status=HTTPStatus.BAD_REQUEST,
         )
 
-#   query = Goods.objects
-#   sort_by = request.GET.pop('sort_by', 'id')
-#   for k, v in request.GET.items():
-#        query.filter(k=v)
-#   result = query.order_by(sort_by)
-
     instances_query = ITInstance.objects
 
-    filters = []
-    if 'filters' in request.data:
-        filters = request.data['filters']
-        for filter in filters:
-            if (
-                ('field' not in filter)
-                or ('filter_type' not in filter)
-                or ('filter' not in filter)
-            ):
-                failure_message += "Must specifiy 'field', 'filter_type', and 'filter' fields. "
-                return JsonResponse(
-                    {"failure_message": failure_message},
-                    status=HTTPStatus.BAD_REQUEST
-                )
-            field_name = filter['field']
-            filter_type = filter['filter_type']
-            if filter_type == 'text':
-                instances_query.filter()
-            elif filter_type == 'numeric':
-                range_value = (int(filter['filter']['min']), int(
-                    filter['filter']['max']))
-                filter_args = {
-                    '{0}__range'.format(filter['field']): range_value
-                }
-                instances_query.filter(**filter_args)
-            elif filter_type == 'rack_range':
-                instances_query.filter()
+    filter_args = get_filter_arguments(request.data)
+    instances_query = instances_query.filter(**filter_args)
 
-    sort_args = []
-    if 'sort_by' in request.data:
-        sort_by = request.data['sort_by']
-        for sort in sort_by:
-            if ('field' not in sort) or ('ascending' not in sort):
-                failure_message += "Must specify 'field' and 'ascending' fields. "
-                return JsonResponse(
-                    {"failure_message": failure_message},
-                    status=HTTPStatus.BAD_REQUEST,
-                )
-            field_name = sort['field']
-            order = "-" if not bool(sort['ascending']) else ""
-            sort_args.append(order + field_name)
-
+    sort_args = get_sort_arguments(request.data)
     instances = instances_query.order_by(*sort_args)
 
     paginator = PageNumberPagination()
@@ -113,8 +69,7 @@ def instance_page(request):
             status=HTTPStatus.BAD_REQUEST,
         )
 
-    # serializer = RecursiveITInstanceSerializer(page_of_instances, many=True)
-    serializer = ITInstanceSerializer(page_of_instances, many=True)
+    serializer = RecursiveITInstanceSerializer(page_of_instances, many=True)
     return JsonResponse(
         {"instances": serializer.data},
         status=HTTPStatus.OK,
@@ -241,3 +196,46 @@ def is_location_full(rack_id, instance_elevation, instance_height):
             if occupied_location in new_instance_location_range:
                 return True
     return False
+
+
+def get_sort_arguments(data):
+    sort_args = []
+    if 'sort_by' in data:
+        sort_by = data['sort_by']
+        for sort in sort_by:
+            if ('field' not in sort) or ('ascending' not in sort):
+                failure_message += "Must specify 'field' and 'ascending' fields. "
+                return JsonResponse(
+                    {"failure_message": failure_message},
+                    status=HTTPStatus.BAD_REQUEST,
+                )
+            field_name = sort['field']
+            order = "-" if not bool(sort['ascending']) else ""
+            sort_args.append(order + field_name)
+    return sort_args
+
+
+def get_filter_arguments(data):
+    filter_args = {}
+    if 'filters' in data:
+        filters = data['filters']
+        for filter in filters:
+            if (('field' not in filter) or ('filter_type' not in filter) or ('filter' not in filter)):
+                return filter_args
+            filter_type = filter['filter_type']
+            if filter_type == 'text':
+                if filter['filter']['match_type'] == 'exact':
+                    filter_args['{0}'.format(
+                        filter['field'])] = filter['filter']['value']
+                elif filter['filter']['match_type'] == 'contains':
+                    filter_args['{0}__icontains'.format(
+                        filter['field'])] = filter['filter']['value']
+            elif filter_type == 'numeric':
+                range_value = (
+                    int(filter['filter']['min']),
+                    int(filter['filter']['max'])
+                )
+                filter_args['{0}__range'.format(filter['field'])] = range_value
+            elif filter_type == 'rack_range':
+                return
+    return filter_args
