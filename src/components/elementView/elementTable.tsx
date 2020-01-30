@@ -16,7 +16,8 @@ interface IElementTableState {
 interface IElementTableProps {
   type: ElementType;
   token: string;
-  getData(type: string, token: string): Promise<Array<ElementObjectType>>;
+  getData?(type: string, token: string): Promise<Array<ElementObjectType>>;
+  data?: Array<ElementObjectType>;
 }
 
 class ElementTable extends React.Component<
@@ -27,15 +28,27 @@ class ElementTable extends React.Component<
     items: []
   };
   componentDidMount() {
-    this.props.getData(this.props.type, this.props.token).then(res => {
-      this.setState({
-        items: res
+    console.log(this.props.data);
+    if (this.props.getData) {
+      this.props.getData(this.props.type, this.props.token).then(res => {
+        this.setState({
+          items: res
+        });
       });
-    });
-    console.log("table mounted");
+      console.log("table mounted");
+    }
   }
 
   render() {
+    if (
+      this.props.data &&
+      this.props.data.length !== 0 &&
+      this.state.items.length === 0
+    ) {
+      this.setState({
+        items: this.props.data
+      });
+    }
     return this.state.items.length === 0 ? (
       <div className="loading-container">
         <Spinner
@@ -43,6 +56,7 @@ class ElementTable extends React.Component<
           intent="primary"
           size={Spinner.SIZE_STANDARD}
         />
+        <h4>no {this.props.type}</h4>
       </div>
     ) : (
       <div className="ElementTable">
