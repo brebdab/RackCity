@@ -1,14 +1,20 @@
-.row {
+.detail-buttons {
   display: flex;
+  float: right;
 }
 
-.column {
-  text-align: center;
-  flex: 50%;
-}
+// .column {
+//   text-align: center;
+//   flex: 50%;
+//   float: right;
+// }
 
-.column-right {
-  text-align: center;
-  flex: 50%;
-  border-left: 1px solid white;
+// .column-right {
+//   text-align: center;
+//   float: right;
+//   flex: 50%;
+//   border-left: 1px solid white;
+// }
+.button-add {
+  float: left;
 }
