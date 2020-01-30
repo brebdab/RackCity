@@ -123,11 +123,12 @@ def instance_add(request):
     if not serializer.is_valid(raise_exception=False):
         failure_message += str(serializer.errors)
 
+    instance_id = data['id']
     rack_id = data['rack']
     elevation = data['elevation']
     height = ITModel.objects.get(id=data['model']).height
 
-    if is_location_full(rack_id, elevation, height):
+    if is_location_full(rack_id, instance_id, elevation, height):
         failure_message += "Instance does not fit in this location. "
 
     if failure_message == "":
@@ -247,7 +248,12 @@ def instance_page_count(request):
     return JsonResponse({"page_count": page_count})
 
 
-def is_location_full(rack_id, instance_id, instance_elevation, instance_height):
+def is_location_full(
+    rack_id,
+    instance_id,
+    instance_elevation,
+    instance_height,
+):
     new_instance_location_range = [
         instance_elevation + i for i in range(instance_height)
     ]
