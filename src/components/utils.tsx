@@ -1,5 +1,5 @@
 interface ElementObject {
-  id?: string;
+  id: string;
 }
 export enum ElementType {
   RACK = "racks",

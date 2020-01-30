@@ -96,7 +96,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
         <div>
           <Dialog isOpen={this.state.modelAlterationsIsOpen} onClose={() => this.setState({modelAlterationsIsOpen: false})} className={"modify-table"}
                   usePortal={true}>
-            <Modifier {...this.props} models={this.state.modifiedModels}/>
+            <Modifier {...this.props} models={this.state.modifiedModels} callback={() => {this.setState({modelAlterationsIsOpen: false})}}/>
           </Dialog>
         </div>
       </div>
@@ -139,7 +139,8 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
               cpu: csvRow[i].cpu,
               memory_gb: csvRow[i].memory,
               storage: csvRow[i].storage,
-              comment: csvRow[i].comment
+              comment: csvRow[i].comment,
+              id: csvRow[i].id
             };
             csvRow[i] = model;
           }

@@ -42,8 +42,7 @@ class RackView extends React.PureComponent<
         const inst = instances.shift();
         console.warn("CONFLICTING INSTANCES ", inst);
       }
-      if (instances.length > 0 && instances[0] && currHeight === +instances[0].elevation) {
-      // if (instances.length > 0 && currHeight === +instances[0].elevation) {
+      if (instances.length > 0 && currHeight === +instances[0].elevation) {
         const width = +instances[0].model.height;
         const id: number = +instances[0].id
 

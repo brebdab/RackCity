@@ -9,7 +9,8 @@ import "./import.scss";
 
 interface ModifierProps {
   token: string,
-  models?: Array<any>
+  models?: Array<any>,
+  callback: Function
 }
 
 export interface ModelObject {
@@ -117,7 +118,11 @@ export class Modifier extends React.PureComponent<RouteComponentProps & Modifier
                       modified.push(this.state.modifiedModels[i].model);
                   }
                   uploadModified(modified, this.props.token).then(res => {
-                    console.log(res)
+                    alert("Modifications were successful")
+                    this.setState({
+                      modifiedModels: []
+                    })
+                    this.props.callback()
                   })
                 } else {
 
@@ -142,7 +147,7 @@ async function uploadModified(modelList: Array<ModelObject>, token: string) {
     }
   };
   return await axios
-    .post(API_ROOT + "api/models/bulk-approve", {models: modelList}, headers)
+    .post(API_ROOT + "api/models/bulk-approve", {approved_modifications: modelList}, headers)
     .then(res => {
       console.log(res.data)
       const data = res.data;
