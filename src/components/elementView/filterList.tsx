@@ -1,11 +1,8 @@
-import React, { Component } from "react";
-import ReactDOM from "react-dom";
+import React from "react";
 import {
   DragDropContext,
-  Droppable,
   Draggable,
-  DraggableStateSnapshot,
-  DraggableProvidedDraggableProps,
+  Droppable,
   DropResult
 } from "react-beautiful-dnd";
 

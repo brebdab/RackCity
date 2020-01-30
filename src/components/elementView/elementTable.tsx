@@ -1,20 +1,18 @@
-import { Spinner, Classes } from "@blueprintjs/core";
+import { Spinner } from "@blueprintjs/core";
+import "@blueprintjs/core/lib/css/blueprint.css";
+import "@blueprintjs/icons/lib/css/blueprint-icons.css";
 import React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import {
+  ElementObjectType,
   ElementType,
   isModelObject,
-  isRackObject,
-  ElementObjectType
+  isRackObject
 } from "../utils";
 import "./elementView.scss";
-import { FilterType } from "react-table";
-import { RackRangeFields } from "./rackSelectView";
-import { getElementData } from "./elementView";
 import FilterList from "./filterList";
-import "@blueprintjs/core/lib/css/blueprint.css";
-import "@blueprintjs/icons/lib/css/blueprint-icons.css";
+import { RackRangeFields } from "./rackSelectView";
 
 interface IElementTableState {
   items: Array<ElementObjectType>;
@@ -111,7 +109,7 @@ class ElementTable extends React.Component<
     let ascending;
     let sorts = this.state.sort_by;
     if (this.state.sorted_cols.includes(field)) {
-      ascending = !this.state.sort_by.find(item => item.field == field)!
+      ascending = !this.state.sort_by.find(item => item.field === field)!
         .ascending;
       sorts = sorts.filter(item => {
         return item.field !== field;
