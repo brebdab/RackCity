@@ -1,4 +1,4 @@
-import { Alert, AnchorButton, Classes, Tab, Tabs } from "@blueprintjs/core";
+import { AnchorButton } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
@@ -37,11 +37,6 @@ interface ModifierState {
   modifiedModels: Array<Check>
 }
 
-const keys = ["vendor", "model_number", "height", "display_color", "num_ethernet_ports",
-              "num_power_ports", "cpu", "memory_gb", "storage", "comment"]
-const fields = ["Vendor", "Model #", "Height", "Display Color", "# Ethernet Ports",
-                "# Power Ports", "CPU", "Memory (GB)", "Storage", "Comments"]
-
 export class Modifier extends React.PureComponent<RouteComponentProps & ModifierProps, ModifierState> {
 
   public state: ModifierState = {
@@ -50,9 +45,22 @@ export class Modifier extends React.PureComponent<RouteComponentProps & Modifier
 
   render() {
     if (this.props.models !== undefined) {
-      console.log(this.props.models[0])
+      console.log(this.props.models[0]);
       let model: ModelObject;
       model = this.props.models[0].existing;
+      const fields: ModelObject = {
+        vendor: "Vendor",
+        model_number: "Model #",
+        height: "Height",
+        display_color: "Display Color",
+        num_ethernet_ports: "# Ethernet Ports",
+        num_power_ports: "# Power Ports",
+        cpu: "CPU",
+        memory_gb: "Memory",
+        storage: "Storage",
+        comment: "Comments",
+        id: ""
+      }
       return (
         <div>
           {this.props.models.map((obj: any) => {
@@ -67,23 +75,29 @@ export class Modifier extends React.PureComponent<RouteComponentProps & Modifier
                         <th>Modified or Original?</th>
                         {Object.keys(model).map((item: string) => {
                           if (item !== "id")
-                            return <th>{item}</th>
+                            return <th>{fields[item]}</th>
+                          else
+                            return <th> </th>
                         })}
                       </tr>
                     </thead>
                     <tbody>
                       <tr>
                         <td>Existing</td>
-                        {keys.map((key: string) => {
+                        {Object.keys(model).map((key: string) => {
                           if (key !== "id")
                             return <td>{obj.existing[key]}</td>
+                          else
+                            return <td> </td>
                         })}
                       </tr>
                       <tr>
                         <td>Modified</td>
-                        {keys.map((key: string) => {
+                        {Object.keys(model).map((key: string) => {
                           if (key !== "id")
                             return <td>{obj.modified[key]}</td>
+                          else
+                            return <td> </td>
                         })}
                       </tr>
                     </tbody>
@@ -95,14 +109,20 @@ export class Modifier extends React.PureComponent<RouteComponentProps & Modifier
                         var index = this.state.modifiedModels.findIndex((element: Check) => {
                           return element.model === model
                         })
-                        this.state.modifiedModels[index].checked = !this.state.modifiedModels[index].checked
+                        let check: Array<Check>
+                        check = this.state.modifiedModels;
+                        check[index].checked = !check[index].checked
+                        this.setState({
+                          modifiedModels: check
+                        })
+                        // this.state.modifiedModels[index].checked = !this.state.modifiedModels[index].checked
                       }}
                     />
                   </div>
                 </div>
               )
             })}
-            <h1></h1>
+            <h1> </h1>
             <AnchorButton
               className={"upload-button"}
               large={true}
