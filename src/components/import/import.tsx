@@ -96,7 +96,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
         <div>
           <Dialog isOpen={this.state.modelAlterationsIsOpen} onClose={() => this.setState({modelAlterationsIsOpen: false})} className={"modify-table"}
                   usePortal={true}>
-            <Modifier {...this.props} models={this.state.modifiedModels} callback={() => {this.setState({modelAlterationsIsOpen: false})}}/>
+            <Modifier {...this.props} models={this.state.modifiedModels} callback={() => {this.setState({modelAlterationsIsOpen: false, modifiedModels: undefined, loadedModels: undefined})}}/>
           </Dialog>
         </div>
       </div>
