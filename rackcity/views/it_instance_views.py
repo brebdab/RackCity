@@ -51,10 +51,22 @@ def instance_page(request):
 
     instances_query = ITInstance.objects
 
-    filter_args = get_filter_arguments(request.data)
+    try:
+        filter_args = get_filter_arguments(request.data)
+    except Exception as error:
+        return JsonResponse(
+            {"failure_message": "Filter error: " + str(error)},
+            status=HTTPStatus.BAD_REQUEST
+        )
     instances_query = instances_query.filter(**filter_args)
 
-    sort_args = get_sort_arguments(request.data)
+    try:
+        sort_args = get_sort_arguments(request.data)
+    except Exception as error:
+        return JsonResponse(
+            {"failure_message": "Sort error: " + str(error)},
+            status=HTTPStatus.BAD_REQUEST
+        )
     instances = instances_query.order_by(*sort_args)
 
     paginator = PageNumberPagination()
@@ -205,6 +217,10 @@ def get_sort_arguments(data):
         for sort in sort_by:
             if ('field' not in sort) or ('ascending' not in sort):
                 raise Exception("Must specify 'field' and 'ascending' fields.")
+            if not isinstance(sort['field'], str):
+                raise Exception("Field 'field' must be of type string.")
+            if not isinstance(sort['ascending'], bool):
+                raise Exception("Field 'ascending' must be of type bool.")
             field_name = sort['field']
             order = "-" if not bool(sort['ascending']) else ""
             sort_args.append(order + field_name)
@@ -216,22 +232,48 @@ def get_filter_arguments(data):
     if 'filters' in data:
         filters = data['filters']
         for filter in filters:
-            if (('field' not in filter) or ('filter_type' not in filter) or ('filter' not in filter)):
-                return filter_args
+
+            if (
+                ('field' not in filter)
+                or ('filter_type' not in filter)
+                or ('filter' not in filter)
+            ):
+                raise Exception(
+                    "Must specify 'field', 'filter_type', and 'filter' fields."
+                )
+            if not isinstance(filter['field'], str):
+                raise Exception("Field 'field' must be of type string.")
+            if not isinstance(filter['filter_type'], str):
+                raise Exception("Field 'filter_type' must be of type string.")
+            if not isinstance(filter['filter'], dict):
+                raise Exception("Field 'filter' must be of type dict.")
+
+            filter_field = filter['field']
             filter_type = filter['filter_type']
+            filter_dict = filter['filter']
+
             if filter_type == 'text':
-                if filter['filter']['match_type'] == 'exact':
-                    filter_args['{0}'.format(
-                        filter['field'])] = filter['filter']['value']
-                elif filter['filter']['match_type'] == 'contains':
-                    filter_args['{0}__icontains'.format(
-                        filter['field'])] = filter['filter']['value']
+                if filter_dict['match_type'] == 'exact':
+                    filter_args['{0}'.format(filter_field)] = \
+                        filter_dict['value']
+                elif filter_dict['match_type'] == 'contains':
+                    filter_args['{0}__icontains'.format(filter_field)] = \
+                        filter_dict['value']
+
             elif filter_type == 'numeric':
                 range_value = (
-                    int(filter['filter']['min']),
-                    int(filter['filter']['max'])
+                    int(filter_dict['min']),
+                    int(filter_dict['max'])
                 )
-                filter_args['{0}__range'.format(filter['field'])] = range_value
+                filter_args['{0}__range'.format(filter_field)] = range_value
+
             elif filter_type == 'rack_range':
                 return
+
+            else:
+                raise Exception(
+                    "String field 'filter_type' must be either 'text', " +
+                    "'numeric', or 'rack_range'."
+                )
+
     return filter_args
