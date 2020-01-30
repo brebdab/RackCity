@@ -174,7 +174,13 @@ def instance_modify(request):
         )
 
     for field in data.keys():
-        setattr(existing_instance, field, data[field])
+        if field == 'model':
+            value = ITModel.objects.get(id=data[field])
+        elif field == 'rack':
+            value = Rack.objects.get(id=data[field])
+        else:
+            value = data[field]
+        setattr(existing_instance, field, value)
 
     try:
         existing_instance.save()
