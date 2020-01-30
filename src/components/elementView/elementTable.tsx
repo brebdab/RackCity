@@ -79,23 +79,39 @@ class ElementTable extends React.Component<
     return `${item.field} ${item.ascending ? "Ascending" : "Descending"}`;
   };
 
-  handleSort(field: string, ascending: boolean) {
-    if (!this.state.sorted_cols.includes(field)) {
-      const sorted_cols = this.state.sorted_cols;
-      const sorts = this.state.sort_by;
-      sorted_cols.push(field);
-      sorts.push({
-        field,
-        ascending,
-        id: field
+  handleSort(field: string) {
+    let ascending;
+    let sorts = this.state.sort_by;
+    if (this.state.sorted_cols.includes(field)) {
+      ascending = !this.state.sort_by.find(item => item.field == field)!
+        .ascending;
+      sorts = sorts.filter(item => {
+        return item.field !== field;
       });
       this.setState({
-        sort_by: sorts,
-        sorted_cols
+        sort_by: sorts
         // sort_by_id: sorts_id
       });
-      this.updateSortedData(sorts);
+    } else {
+      ascending = true;
     }
+    // if (!this.state.sorted_cols.includes(field)) {
+    const sorted_cols = this.state.sorted_cols;
+
+    sorted_cols.push(field);
+    sorts.push({
+      field,
+      ascending,
+      id: field
+    });
+    this.setState({
+      sort_by: sorts,
+      sorted_cols
+      // sort_by_id: sorts_id
+    });
+    this.updateSortedData(sorts);
+    // } else {
+    // }
   }
 
   updateSortedData = (sorts: Array<ITableSort>) => {
@@ -173,7 +189,7 @@ class ElementTable extends React.Component<
                           <div className="header-text">
                             <span>{col}</span>
                             <span
-                              onClick={() => this.handleSort(col, true)}
+                              onClick={() => this.handleSort(col)}
                               className="bp3-icon-large bp3-icon-layout-linear icon"
                             >
                               {" "}
