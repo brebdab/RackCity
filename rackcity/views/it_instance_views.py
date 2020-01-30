@@ -204,11 +204,7 @@ def get_sort_arguments(data):
         sort_by = data['sort_by']
         for sort in sort_by:
             if ('field' not in sort) or ('ascending' not in sort):
-                failure_message += "Must specify 'field' and 'ascending' fields. "
-                return JsonResponse(
-                    {"failure_message": failure_message},
-                    status=HTTPStatus.BAD_REQUEST,
-                )
+                raise Exception("Must specify 'field' and 'ascending' fields.")
             field_name = sort['field']
             order = "-" if not bool(sort['ascending']) else ""
             sort_args.append(order + field_name)
