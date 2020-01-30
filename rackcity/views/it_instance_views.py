@@ -271,9 +271,9 @@ def get_filter_arguments(data):
             elif filter_type == 'rack_range':
                 range_serializer = RackRangeSerializer(data=filter_dict)
                 if not range_serializer.is_valid():
-                    return JsonResponse(
-                        {"failure_message": str(range_serializer.errors)},
-                        status=HTTPStatus.BAD_REQUEST,
+                    raise Exception(
+                        "Invalid rack_range filter: " +
+                        str(range_serializer.errors)
                     )
                 filter_args['rack__rack_num__range'] = \
                     range_serializer.get_number_range()
