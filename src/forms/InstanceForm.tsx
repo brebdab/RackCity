@@ -151,7 +151,7 @@ class InstanceForm extends React.Component<
   render() {
     console.log(this.state.values);
     if (this.state.models.length === 0) {
-      getElementData("models", this.props.token).then(res => {
+      getElementData("models", {}, this.props.token).then(res => {
         this.setState({
           models: res as Array<ModelObject>
         });

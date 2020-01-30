@@ -29,6 +29,12 @@
   overflow: scroll;
   max-height: 500px;
 }
+.header-cell {
+  cursor: pointer !important;
+}
+.header-cell:hover {
+  background-color: #394b59 !important;
+}
 .badge {
   background-color: #9ae6b4;
   color: #22543d;

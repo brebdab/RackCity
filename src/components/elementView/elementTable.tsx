@@ -9,14 +9,47 @@ import {
   ElementObjectType
 } from "../utils";
 import "./elementView.scss";
+import { FilterType } from "react-table";
+import { RackRangeFields } from "./rackSelectView";
+import { getElementData } from "./elementView";
 interface IElementTableState {
   items: Array<ElementObjectType>;
+  sort_by: Array<ITableSort>;
+  filters: Array<IFilter>;
+  sorted_cols: Array<string>;
+}
+export interface ITableSort {
+  field: string;
+  ascending: boolean;
+}
+
+export enum FilterTypes {
+  TEXT = "text",
+  NUMERIC = "numeric",
+  RACKRANGE = "rack_range"
+}
+export interface NumericFilter {
+  min: number;
+  max: number;
+}
+export interface TextFilter {
+  value: string;
+  match_type: string;
+}
+export interface IFilter {
+  field: string;
+  filter_type: FilterTypes;
+  filter: TextFilter | NumericFilter | RackRangeFields;
 }
 
 interface IElementTableProps {
   type: ElementType;
   token: string;
-  getData(type: string, token: string): Promise<Array<ElementObjectType>>;
+  getData(
+    type: string,
+    body: any,
+    token: string
+  ): Promise<Array<ElementObjectType>>;
 }
 
 class ElementTable extends React.Component<
@@ -24,10 +57,38 @@ class ElementTable extends React.Component<
   IElementTableState
 > {
   public state: IElementTableState = {
-    items: []
+    filters: [],
+    sort_by: [],
+    items: [],
+    sorted_cols: []
   };
+
+  handleSort(field: string, ascending: boolean) {
+    if (!this.state.sorted_cols.includes(field)) {
+      const sorts = Object.assign([], this.state.sort_by);
+
+      sorts.push({
+        field,
+        ascending
+      });
+      this.setState({
+        sort_by: sorts
+      });
+    }
+    this.props
+      .getData(
+        this.props.type,
+        { sort_by: this.state.sort_by },
+        this.props.token
+      )
+      .then(res => {
+        this.setState({
+          items: res
+        });
+      });
+  }
   componentDidMount() {
-    this.props.getData(this.props.type, this.props.token).then(res => {
+    this.props.getData(this.props.type, {}, this.props.token).then(res => {
       this.setState({
         items: res
       });
@@ -36,6 +97,7 @@ class ElementTable extends React.Component<
   }
 
   render() {
+    console.log(this.state);
     return this.state.items.length === 0 ? (
       <div className="loading-container">
         <Spinner
@@ -51,7 +113,14 @@ class ElementTable extends React.Component<
             <tr>
               {Object.keys(this.state.items[0]).map((col: string) => {
                 if (col !== "id") {
-                  return <th>{col}</th>;
+                  return (
+                    <th
+                      className="header-cell"
+                      onClick={() => this.handleSort(col, true)}
+                    >
+                      {col}
+                    </th>
+                  );
                 }
 
                 return null;

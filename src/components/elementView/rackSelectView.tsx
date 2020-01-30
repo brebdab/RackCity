@@ -22,10 +22,10 @@ import { getHeaders } from "../utils";
 import "./elementView.scss";
 interface rackSelectViewState {
   viewRange: boolean;
-  values: RackSelectFields;
+  values: RackRangeFields;
   errors: Array<string>;
 }
-interface RackSelectFields {
+export interface RackRangeFields {
   letter_start: string;
   letter_end: string;
   num_start: number;
@@ -40,7 +40,7 @@ class RackSelectView extends React.Component<
 > {
   public state = {
     viewRange: false,
-    values: {} as RackSelectFields,
+    values: {} as RackRangeFields,
     errors: []
   };
   private handleSwitchChange = handleBooleanChange(viewRange =>
