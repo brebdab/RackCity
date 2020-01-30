@@ -104,7 +104,7 @@ class RackSelectView extends React.Component<
           />
 
           <div className="rack-select">
-            <FormGroup label="Rack Letter ">
+            <FormGroup className="rack-field" label="Rack Letter ">
               <RackSuggest
                 defaultSelectedItem={this.state.values.letter_start}
                 popoverProps={{
@@ -131,7 +131,38 @@ class RackSelectView extends React.Component<
                 }
               />
             </FormGroup>
-            <FormGroup label="Row number">
+            {this.state.viewRange ? (
+              <div className="rack-select">
+                <FormGroup className="rack-field" label="Rack Letter (end)">
+                  <RackSuggest
+                    defaultSelectedItem={this.state.values.letter_end}
+                    popoverProps={{
+                      minimal: true,
+                      popoverClassName: "dropdown",
+                      usePortal: true
+                    }}
+                    inputValueRenderer={(letter: string) => letter}
+                    itemRenderer={renderStringItem}
+                    items={alphabet}
+                    onItemSelect={(letter_end: string) =>
+                      this.setState({
+                        values: updateObject(this.state.values, {
+                          letter_end: letter_end
+                        })
+                      })
+                    }
+                    itemPredicate={filterString}
+                    noResults={
+                      <MenuItem
+                        disabled={true}
+                        text="Rack Letters range from A-Z"
+                      />
+                    }
+                  />
+                </FormGroup>
+              </div>
+            ) : null}
+            <FormGroup className="rack-field" label="Row number">
               <Field
                 value={this.state.values.num_start}
                 field="num_start"
@@ -141,49 +172,24 @@ class RackSelectView extends React.Component<
             </FormGroup>
           </div>
           {this.state.viewRange ? (
-            <div className="rack-select">
-              <FormGroup label="Rack Letter (end)">
-                <RackSuggest
-                  defaultSelectedItem={this.state.values.letter_end}
-                  popoverProps={{
-                    minimal: true,
-                    popoverClassName: "dropdown",
-                    usePortal: true
-                  }}
-                  inputValueRenderer={(letter: string) => letter}
-                  itemRenderer={renderStringItem}
-                  items={alphabet}
-                  onItemSelect={(letter_end: string) =>
-                    this.setState({
-                      values: updateObject(this.state.values, {
-                        letter_end: letter_end
-                      })
-                    })
-                  }
-                  itemPredicate={filterString}
-                  noResults={
-                    <MenuItem
-                      disabled={true}
-                      text="Rack Letters range from A-Z"
-                    />
-                  }
-                />
-              </FormGroup>
-              <FormGroup label="Row number (end)">
-                <Field
-                  value={this.state.values.num_end}
-                  field="num_end"
-                  type="number"
-                  onChange={this.handleChange}
-                />
-              </FormGroup>
-            </div>
+            <FormGroup className="rack-field" label="Row number (end)">
+              <Field
+                value={this.state.values.num_end}
+                field="num_end"
+                type="number"
+                onChange={this.handleChange}
+              />
+            </FormGroup>
           ) : null}
-          <div>
+          <div className="rack-field ">
             {this.state.viewRange ? (
-              <Button type="submit">View Racks</Button>
+              <Button className="button" icon="search" type="submit">
+                View Racks
+              </Button>
             ) : (
-              <Button type="submit">View Rack</Button>
+              <Button className="button" icon="search" type="submit">
+                View Rack
+              </Button>
             )}
           </div>
         </form>

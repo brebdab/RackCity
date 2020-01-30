@@ -45,6 +45,13 @@
   font-weight: bold;
   text-transform: uppercase;
 }
+.rack-field {
+  float: left;
+}
+.rack-field .button {
+  float: left;
+  margin-top: 20px;
+}
 input {
   padding: 10px;
   margin-bottom: 20px;
