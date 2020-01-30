@@ -194,7 +194,7 @@ class InstanceForm extends React.Component<
             <ModelSuggest
               popoverProps={{
                 minimal: true,
-                popoverClassName: "model-options",
+                popoverClassName: "dropdown",
                 usePortal: true
               }}
               defaultSelectedItem={this.state.values.model}
@@ -216,7 +216,7 @@ class InstanceForm extends React.Component<
             <RackSuggest
               popoverProps={{
                 minimal: true,
-                popoverClassName: "model-options",
+                popoverClassName: "dropdown",
                 usePortal: true
               }}
               defaultSelectedItem={this.state.values.rack}
