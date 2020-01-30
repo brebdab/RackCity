@@ -166,7 +166,7 @@ def instance_modify(request):
         )
 
     try:
-        validate_location_modification()
+        validate_location_modification(data, existing_instance)
     except Exception as error:
         return JsonResponse(
             {"failure_message": "Invalid location change: " + str(error)},
