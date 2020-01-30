@@ -20,7 +20,8 @@ interface AlertState {
   modelAlterationsIsOpen: boolean,
   selectedFile?: File,
   loadedModels?: Array<ModelObject>,
-  loadedInstances?: Array<InstanceObject>
+  loadedInstances?: Array<InstanceObject>,
+  modifiedModels?: Array<any>
 }
 
 const c2j = require('csvtojson')
@@ -93,8 +94,9 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
           </div>
         </div>
         <div>
-          <Dialog isOpen={this.state.modelAlterationsIsOpen} onClose={() => this.setState({modelAlterationsIsOpen: false})}>
-            <Modifier {...this.props} models={this.state.loadedModels}/>
+          <Dialog isOpen={this.state.modelAlterationsIsOpen} onClose={() => this.setState({modelAlterationsIsOpen: false})} className={"modify-table"}
+                  usePortal={true}>
+            <Modifier {...this.props} models={this.state.modifiedModels}/>
           </Dialog>
         </div>
       </div>
@@ -158,9 +160,15 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
 
   private handleUpload = () => {
     if (this.state.loadedModels !== undefined) {
-      uploadBulk(this.state.loadedModels, this.props.token);
-      this.setState({
-        modelAlterationsIsOpen: true
+      uploadBulk(this.state.loadedModels, this.props.token).then(res => {
+        if (res.modifications.length !== 0) {
+          this.setState({
+            modelAlterationsIsOpen: true,
+            modifiedModels: res.modifications
+          })
+        } else {
+          alert("Upload successful with no modifications")
+        }
       })
     } else if (this.state.loadedInstances !== undefined) {
 
