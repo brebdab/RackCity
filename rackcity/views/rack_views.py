@@ -26,6 +26,13 @@ def rack_get(request):
         rack_num__range=range_serializer.get_number_range(),  # inclusive range
         row_letter__range=range_serializer.get_row_range(),
     )
+
+    if racks.count() == 0:
+        return JsonResponse(
+            {"failure_message": "There are no existing racks within this range. "},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+
     racks_with_instances = []
     for rack in racks:
         rack_serializer = RackSerializer(rack)
