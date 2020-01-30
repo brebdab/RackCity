@@ -200,10 +200,19 @@ def instance_bulk_upload(request):
                 {"failure_message": "Instance records must include 'vendor' and 'model_number'. "},
                 status=HTTPStatus.BAD_REQUEST
             )
-        model = ITModel.objects.get(
-            vendor=instance_data['vendor'],
-            model_number=instance_data['model_number']
-        )
+        try:
+            model = ITModel.objects.get(
+                vendor=instance_data['vendor'],
+                model_number=instance_data['model_number']
+            )
+        except ObjectDoesNotExist:
+            failure_message = "Model does not exist: " + \
+                "vendor="+instance_data['vendor'] + \
+                ", model_number="+instance_data['model_number']
+            return JsonResponse(
+                {"failure_message": failure_message},
+                status=HTTPStatus.BAD_REQUEST
+            )
         instance_data['model'] = model.id
         del instance_data['vendor']
         del instance_data['model_number']
@@ -212,14 +221,15 @@ def instance_bulk_upload(request):
                 {"failure_message": "Instance records must include 'rack'"},
                 status=HTTPStatus.BAD_REQUEST
             )
-
         try:
             row_letter = instance_data['rack'][:1]
             rack_num = instance_data['rack'][1:]
             rack = Rack.objects.get(row_letter=row_letter, rack_num=rack_num)
-        except:
+        except ObjectDoesNotExist:
+            failure_message = "Provided rack doesn't exist: " + \
+                instance_data['rack']
             return JsonResponse(
-                {"failure_message": "Provided rack doesn't exist. "},
+                {"failure_message": failure_message},
                 status=HTTPStatus.BAD_REQUEST
             )
         instance_data['rack'] = rack.id
