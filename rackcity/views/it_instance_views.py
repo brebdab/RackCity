@@ -256,19 +256,20 @@ def is_location_full(rack_id, instance_id, instance_elevation, instance_height):
 
 
 def validate_location_modification(data, existing_instance):
+    instance_id = existing_instance.id
     rack_id = existing_instance.rack.id
-    elevation = existing_instance.elevation
-    height = existing_instance.model.height
+    instance_elevation = existing_instance.elevation
+    instance_height = existing_instance.model.height
 
     if 'elevation' in data:
         try:
-            elevation = int(data['elevation'])
+            instance_elevation = int(data['elevation'])
         except ValueError:
             raise Exception("Field 'elevation' must be of type int.")
 
     if 'model' in data:
         try:
-            height = ITModel.objects.get(id=data['model']).height
+            instance_height = ITModel.objects.get(id=data['model']).height
         except Exception:
             raise Exception("No existing model with id=" +
                             str(data['model']) + ".")
@@ -280,5 +281,10 @@ def validate_location_modification(data, existing_instance):
             raise Exception("No existing rack with id=" +
                             str(data['rack']) + ".")
 
-    if not is_location_full(rack_id, data['id'], elevation, height):
+    if is_location_full(
+        rack_id,
+        instance_id,
+        instance_elevation,
+        instance_height
+    ):
         raise Exception("Instance does not fit in modified location.")
