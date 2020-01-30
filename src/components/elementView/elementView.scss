@@ -18,16 +18,18 @@
 }
 .element-table {
   position: relative;
-  float: right;
+  float: left;
+  width: 100%;
 }
 .add {
   float: right;
 }
 .table {
   margin-top: 0px;
-  display: inline-block;
+  // display: inline-block;
   overflow: scroll;
   max-height: 500px;
+  float: left;
 }
 .badge {
   background-color: #9ae6b4;

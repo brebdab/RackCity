@@ -18,7 +18,8 @@ class ElementTabView extends React.Component<ElementTabViewProps> {
         id="ElementViewer"
         key={"vertical"}
         renderActiveTabPanelOnly={false}
-        vertical={true}
+        vertical={false}
+        large
       >
         <Tab
           className="tab"
