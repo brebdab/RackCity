@@ -13,6 +13,8 @@ import { FilterType } from "react-table";
 import { RackRangeFields } from "./rackSelectView";
 import { getElementData } from "./elementView";
 import FilterList from "./filterList";
+import "@blueprintjs/core/lib/css/blueprint.css";
+import "@blueprintjs/icons/lib/css/blueprint-icons.css";
 
 interface IElementTableState {
   items: Array<ElementObjectType>;
@@ -79,14 +81,17 @@ class ElementTable extends React.Component<
 
   handleSort(field: string, ascending: boolean) {
     if (!this.state.sorted_cols.includes(field)) {
+      const sorted_cols = this.state.sorted_cols;
       const sorts = this.state.sort_by;
+      sorted_cols.push(field);
       sorts.push({
         field,
         ascending,
         id: field
       });
       this.setState({
-        sort_by: sorts
+        sort_by: sorts,
+        sorted_cols
         // sort_by_id: sorts_id
       });
       this.updateSortedData(sorts);
@@ -164,11 +169,16 @@ class ElementTable extends React.Component<
                   {Object.keys(this.state.items[0]).map((col: string) => {
                     if (col !== "id") {
                       return (
-                        <th
-                          className="header-cell"
-                          onClick={() => this.handleSort(col, true)}
-                        >
-                          {col}
+                        <th className="header-cell">
+                          <div className="header-text">
+                            <span>{col}</span>
+                            <span
+                              onClick={() => this.handleSort(col, true)}
+                              className="bp3-icon-large bp3-icon-layout-linear icon"
+                            >
+                              {" "}
+                            </span>
+                          </div>
                         </th>
                       );
                     }
