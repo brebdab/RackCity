@@ -184,7 +184,7 @@ def instance_modify(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     else:
-        return HTTPStatus(status=HTTPStatus.OK)
+        return HttpResponse(status=HTTPStatus.OK)
 
 
 @api_view(['POST'])
