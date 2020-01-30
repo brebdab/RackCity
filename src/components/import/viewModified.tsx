@@ -5,6 +5,7 @@ import * as React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import { API_ROOT } from "../../api-config";
+import "./import.scss"
 // import { ElementType, ModelObject } from "../utils";
 
 interface ModifierProps {
@@ -70,10 +71,29 @@ export class Modifier extends React.PureComponent<RouteComponentProps & Modifier
                       </tr>
                     </tbody>
                   </table>
-                  <h1>BUTTON</h1>
+                  <div className={"upload-button"}>
+                    <AnchorButton
+                      intent="primary"
+                      icon="import"
+                      text="Choose Modified Model"
+                    />
+                    <AnchorButton
+                      intent="primary"
+                      icon="import"
+                      text="Choose Existing Model"
+                    />
+                  </div>
                 </div>
               )
             })}
+            <h1></h1>
+            <AnchorButton
+              className={"upload-button"}
+              large={true}
+              intent="success"
+              icon="import"
+              text="Confirm Changes"
+            />
         </div>
       )
     } else {
