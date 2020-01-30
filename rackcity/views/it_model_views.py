@@ -246,7 +246,7 @@ def model_bulk_upload(request):
     records_added = 0
     for model_to_add in models_to_add:
         records_added += 1
-        # this should always pass for now, only constraint is uniqueness which was already checked
+        # THIS COULD FAIL! IF IT WAS UNIQUE, BUT SOMETHING ADDED BEFORE IT MAKES IT NOT UNIQUE
         model_to_add.save()
     records_ignored = 0
     modifications_to_approve = []

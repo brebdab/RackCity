@@ -6,6 +6,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from rackcity.api.serializers import (
     ITInstanceSerializer,
     RecursiveITInstanceSerializer,
+    ITModelSerializer,
+    RackSerializer
 )
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -190,32 +192,54 @@ def instance_bulk_upload(request):
     instances_to_add = []
     potential_modifications = []
     for instance_data in instance_datas:
-        if 'model' not in instance_data or 'rack' not in instance_data:
+        if (
+            'vendor' not in instance_data
+            or 'model_number' not in instance_data
+        ):
             return JsonResponse(
-                {"failure_message": "At least one instance didn't have a model or rack. "},
-                status=HTTPStatus.BAD_REQUEST
-            )
-        model_data = instance_data['model']
-        if 'vendor' not in model_data or 'model_number' not in model_data:
-            return JsonResponse(
-                {"failure_message": "Model must be specified by vendor and model number. "},
+                {"failure_message": "Instance records must include 'vendor' and 'model_number'. "},
                 status=HTTPStatus.BAD_REQUEST
             )
         model = ITModel.objects.get(
-            vendor=model_data['vendor'],
-            model_number=model_data['model_number']
+            vendor=instance_data['vendor'],
+            model_number=instance_data['model_number']
         )
-        # want the whole thing on here. WE ALSO NEED TO DELETE THE FIELDS WE DON'T WANT
-        data['model'] = model
-        instance_serializer = RecursiveITInstanceSerializer(data=instance_data)
-        # ADD VALIDAITON FOR RACK LOCATION HERE. WILL NEED TO GET THE OG TO SEE IT'S ID WHEN CHECKING LOCATION
-        if not instance_serializer.is_valid():
-            failure_message = str(instance_serializer.errors)
-            failure_message = "At least one provided instance was not valid. "+failure_message
+        instance_data['model'] = model.id
+        del instance_data['vendor']
+        del instance_data['model_number']
+        if 'rack' not in instance_data:
             return JsonResponse(
-                {"failure_message": failure_message},
+                {"failure_message": "Instance records must include 'rack'"},
                 status=HTTPStatus.BAD_REQUEST
             )
+
+        try:
+            row_letter = instance_data['rack'][:1]
+            rack_num = instance_data['rack'][1:]
+            rack = Rack.objects.get(row_letter=row_letter, rack_num=rack_num)
+        except:
+            return JsonResponse(
+                {"failure_message": "Provided rack doesn't exist. "},
+                status=HTTPStatus.BAD_REQUEST
+            )
+        instance_data['rack'] = rack.id
+        instance_serializer = ITInstanceSerializer(
+            data=instance_data)  # non-recursive to validate
+        # ADD VALIDAITON FOR RACK LOCATION HERE
+        if not instance_serializer.is_valid():
+            errors = instance_serializer.errors
+            if not (  # if the only error is the hostname uniqueness, that's fine - it's a modify
+                len(errors.keys()) == 1
+                and 'hostname' in errors
+                and len(errors['hostname']) == 1
+                and errors['hostname'][0].code == 'unique'
+            ):
+                failure_message = str(instance_serializer.errors)
+                failure_message = "At least one provided instance was not valid. "+failure_message
+                return JsonResponse(
+                    {"failure_message": failure_message},
+                    status=HTTPStatus.BAD_REQUEST
+                )
         try:
             existing_instance = ITInstance.objects.get(
                 hostname=instance_data['hostname'])
@@ -223,25 +247,35 @@ def instance_bulk_upload(request):
             instances_to_add.append(instance_serializer)
         else:
             potential_modifications.append(
-                {"existing_instance": existing_instance, "new_data": instance_data})
+                {
+                    "existing_instance": existing_instance,
+                    "new_data": instance_data
+                }
+            )
     records_added = 0
     for instance_to_add in instances_to_add:
         records_added += 1
-        # this should always pass for now, only constraint is uniqueness which was already checked
+        # GOING TO HAVE TO RECHECK LOCATION AND UNIQUENESS WITH EACH ADDITION
         instance_to_add.save()
     records_ignored = 0
     modifications_to_approve = []
     for potential_modification in potential_modifications:
         new_data = potential_modification['new_data']
-        existing_data = ITInstanceSerializer(
+        new_data['model'] = ITModelSerializer(
+            ITModel.objects.get(id=new_data['model'])
+        ).data
+        new_data['rack'] = RackSerializer(
+            Rack.objects.get(id=new_data['rack'])
+        ).data
+        existing_data = RecursiveITInstanceSerializer(
             potential_modification['existing_instance']
         ).data
-        if records_are_identical(existing_data, new_data):  # Does this still work?
+        if records_are_identical(existing_data, new_data):
             records_ignored += 1
         else:
             new_data['id'] = existing_data['id']
             for field in existing_data.keys():
-                if field not in new_data:  # handle rack and modle fields differently?
+                if field not in new_data:
                     new_data[field] = None
             modifications_to_approve.append(
                 {
