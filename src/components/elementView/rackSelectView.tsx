@@ -181,9 +181,13 @@ class RackSelectView extends React.Component<
           ) : null}
           <div>
             {this.state.viewRange ? (
-              <Button type="submit">View Racks</Button>
+              <Button icon="search" type="submit">
+                View Racks
+              </Button>
             ) : (
-              <Button type="submit">View Rack</Button>
+              <Button icon="search" type="submit">
+                View Rack
+              </Button>
             )}
           </div>
         </form>

@@ -1,4 +1,4 @@
-import { Classes } from "@blueprintjs/core";
+import { Classes, AnchorButton } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
 import { connect } from "react-redux";
@@ -107,34 +107,45 @@ class RackView extends React.PureComponent<
         : [];
 
     return (
-      <div className="rack-container">
-        {racks.map((rackResp: RackResponseObject) => {
-          return (
-            <span>
-              <div className={Classes.DARK + " rack"}>
-                <table className=" bp3-html-table bp3-interactive bp3-html-table-bordered rack-table">
-                  <thead>
-                    <tr>
-                      <th className=" cell header">
-                        Rack {rackResp.rack.row_letter}
-                        {rackResp.rack.rack_num}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>{this.getRows(rackResp)}</tbody>
-                </table>
-                <table className="bp3-html-table bp3-html-table-bordered loc-table">
-                  <thead>
-                    <tr>
-                      <th className=" cell header"> (U)</th>
-                    </tr>
-                  </thead>
-                  <tbody>{this.getUnitRows(rackResp)}</tbody>
-                </table>
-              </div>
-            </span>
-          );
-        })}
+      <div>
+        <div className={Classes.DARK}>
+          <AnchorButton
+            onClick={() => this.props.history.push("/")}
+            className={"nav-bar-button"}
+            icon="search"
+            text="New Rack Search"
+            minimal
+          />
+        </div>
+        <div className="rack-container">
+          {racks.map((rackResp: RackResponseObject) => {
+            return (
+              <span>
+                <div className={Classes.DARK + " rack"}>
+                  <table className=" bp3-html-table bp3-interactive bp3-html-table-bordered rack-table">
+                    <thead>
+                      <tr>
+                        <th className=" cell header">
+                          Rack {rackResp.rack.row_letter}
+                          {rackResp.rack.rack_num}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>{this.getRows(rackResp)}</tbody>
+                  </table>
+                  <table className="bp3-html-table bp3-html-table-bordered loc-table">
+                    <thead>
+                      <tr>
+                        <th className=" cell header"> (U)</th>
+                      </tr>
+                    </thead>
+                    <tbody>{this.getUnitRows(rackResp)}</tbody>
+                  </table>
+                </div>
+              </span>
+            );
+          })}
+        </div>
       </div>
     );
   }
