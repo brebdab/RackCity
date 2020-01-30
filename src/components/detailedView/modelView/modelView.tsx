@@ -7,7 +7,8 @@ import { RouteComponentProps, withRouter } from "react-router";
 import { API_ROOT } from "../../../api-config";
 import FormPopup from "../../../forms/FormPopup";
 import { FormTypes } from "../../../forms/modelForm";
-import { ElementType, ModelObject } from "../../utils";
+import ElementTable from "../../elementView/elementTable";
+import { ElementType, InstanceObject, ModelObject } from "../../utils";
 import PropertiesView from "../propertiesView";
 
 export interface ModelViewProps {
@@ -17,7 +18,7 @@ export interface ModelViewProps {
 }
 
 interface ModelViewState {
-  instances: Array<any> | undefined;
+  instances: Array<InstanceObject> | undefined;
   model: ModelObject | undefined;
   columns: Array<string>;
   fields: Array<string>;
@@ -40,7 +41,7 @@ async function getData(modelkey: string, token: string) {
     });
 }
 
-export class modelView extends React.PureComponent<
+export class ModelView extends React.PureComponent<
   RouteComponentProps & ModelViewProps,
   ModelViewState
 > {
@@ -95,6 +96,7 @@ export class modelView extends React.PureComponent<
       isFormOpen: false
     });
   };
+
   private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
   private handleFormClose = () => this.setState({ isFormOpen: false });
   private handleDelete = () => {
@@ -102,16 +104,19 @@ export class modelView extends React.PureComponent<
     this.setState({ isDeleteOpen: false });
   };
   public render() {
+    console.log(this.state.instances);
     let params: any;
     params = this.props.match.params;
     if (this.state.model === undefined) {
       getData(params.rid, this.props.token).then(result => {
+        console.log(result);
         this.setState({
           model: result.model,
           instances: result.instances
         });
       });
     }
+
     var data = this.state.model;
     return (
       <div className={Classes.DARK + " model-view"}>
@@ -166,46 +171,14 @@ export class modelView extends React.PureComponent<
             id="Instances"
             title="Instances"
             panel={
-              <ModelInstance
-                history={this.props.history}
-                location={this.props.location}
-                match={this.props.match}
-                {...this.state}
+              <ElementTable
+                type={ElementType.INSTANCE}
+                data={this.state.instances}
               />
             }
           />
           <Tabs.Expander />
         </Tabs>
-      </div>
-    );
-  }
-}
-
-class ModelInstance extends React.PureComponent<RouteComponentProps> {
-  renderData(data: any) {
-    var i = -1;
-    return (
-      <div>
-        {data.columns.map((item: string) => {
-          i++;
-          var key = data.fields[i];
-          return (
-            <h1 key={item}>
-              {item}: {data[key]}
-            </h1>
-          );
-        })}
-      </div>
-    );
-  }
-
-  render() {
-    let state: any;
-    state = this.props;
-    console.log(state);
-    return (
-      <div className={Classes.DARK + " propsview"}>
-        <p>i n s t a n c e</p>
       </div>
     );
   }
@@ -218,4 +191,4 @@ const mapStatetoProps = (state: any) => {
   };
 };
 
-export default withRouter(connect(mapStatetoProps)(modelView));
+export default withRouter(connect(mapStatetoProps)(ModelView));
