@@ -133,7 +133,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
             <StringSuggest
               popoverProps={{
                 minimal: true,
-                popoverClassName: "model-options",
+                popoverClassName: "dropdown",
                 usePortal: true
               }}
               defaultSelectedItem={this.state.values.vendor}

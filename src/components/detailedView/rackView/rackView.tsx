@@ -1,17 +1,10 @@
 import { Classes } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
-import "./rackView.scss";
-import { RouteComponentProps, withRouter } from "react-router";
-import {
-  getHeaders,
-  RackResponseObject,
-  isInstanceObject,
-  InstanceObject
-} from "../../utils";
-import { API_ROOT } from "../../../api-config";
-import axios from "axios";
 import { connect } from "react-redux";
+import { RouteComponentProps, withRouter } from "react-router";
+import { InstanceObject, RackResponseObject } from "../../utils";
+import "./rackView.scss";
 //export interface ElementViewProps {}
 
 export interface RackViewProps {
@@ -21,38 +14,18 @@ export interface RackViewProps {
 export interface RouteParams {
   rid: string;
 }
-export interface RackViewState {
-  racks: Array<RackResponseObject>;
-}
+
+export interface RackViewState {}
 class RackView extends React.PureComponent<
   RouteComponentProps & RackViewProps,
   RackViewState
 > {
-  public state = {
-    racks: []
-  };
-  getRackRange(token: string) {
-    const headers = getHeaders(token);
-    const body = {
-      letter_start: "A",
-      letter_end: "Z",
-      num_start: 1,
-      num_end: 100
-    };
-    axios.post(API_ROOT + "api/racks/get", body, headers).then(res => {
-      console.log(res);
-      this.setState({
-        racks: res.data.racks
-      });
-    });
-  }
-
   private getRows(rackResp: RackResponseObject) {
     let rows = [];
 
     let unit = 1;
     let currHeight = 0;
-    const { row_letter, rack_num, height } = rackResp.rack;
+    const { height } = rackResp.rack;
     let instances: Array<InstanceObject> = Object.assign(
       [],
       rackResp.instances
@@ -125,13 +98,17 @@ class RackView extends React.PureComponent<
     return unitBarRows;
   }
   public render() {
-    if (this.state.racks.length === 0) {
-      this.getRackRange(this.props.token);
-    }
+    // if (this.props.location.state.length === 0) {
+    //   this.getRackRange(this.props.token);
+    // }
+    const racks: Array<RackResponseObject> =
+      this.props.location && this.props.location.state
+        ? (this.props.location.state as Array<RackResponseObject>)
+        : [];
 
     return (
       <div className="rack-container">
-        {this.state.racks.map((rackResp: RackResponseObject) => {
+        {racks.map((rackResp: RackResponseObject) => {
           return (
             <span>
               <div className={Classes.DARK + " rack"}>
