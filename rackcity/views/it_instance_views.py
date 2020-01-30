@@ -1,6 +1,7 @@
 # from rest_framework.parsers import JSONParser
 from django.http import HttpResponse, JsonResponse
 from rackcity.models import ITInstance, ITModel, Rack
+from rackcity.views.it_model_views import records_are_identical
 from django.core.exceptions import ObjectDoesNotExist
 from rackcity.api.serializers import (
     ITInstanceSerializer,
@@ -170,6 +171,91 @@ def instance_delete(request):
     return JsonResponse(
         {"failure_message": failure_message},
         status=HTTPStatus.BAD_REQUEST,
+    )
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def instance_bulk_upload(request):
+    """
+    Bulk upload many instances to add or modify
+    """
+    data = JSONParser().parse(request)
+    if 'instances' not in data:
+        return JsonResponse(
+            {"failure_message": "Bulk upload request should have a parameter 'instances'"},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    instance_datas = data['instances']
+    instances_to_add = []
+    potential_modifications = []
+    for instance_data in instance_datas:
+        if 'model' not in instance_data or 'rack' not in instance_data:
+            return JsonResponse(
+                {"failure_message": "At least one instance didn't have a model or rack. "},
+                status=HTTPStatus.BAD_REQUEST
+            )
+        model_data = instance_data['model']
+        if 'vendor' not in model_data or 'model_number' not in model_data:
+            return JsonResponse(
+                {"failure_message": "Model must be specified by vendor and model number. "},
+                status=HTTPStatus.BAD_REQUEST
+            )
+        model = ITModel.objects.get(
+            vendor=model_data['vendor'],
+            model_number=model_data['model_number']
+        )
+        # want the whole thing on here. WE ALSO NEED TO DELETE THE FIELDS WE DON'T WANT
+        data['model'] = model
+        instance_serializer = RecursiveITInstanceSerializer(data=instance_data)
+        # ADD VALIDAITON FOR RACK LOCATION HERE. WILL NEED TO GET THE OG TO SEE IT'S ID WHEN CHECKING LOCATION
+        if not instance_serializer.is_valid():
+            failure_message = str(instance_serializer.errors)
+            failure_message = "At least one provided instance was not valid. "+failure_message
+            return JsonResponse(
+                {"failure_message": failure_message},
+                status=HTTPStatus.BAD_REQUEST
+            )
+        try:
+            existing_instance = ITInstance.objects.get(
+                hostname=instance_data['hostname'])
+        except ObjectDoesNotExist:
+            instances_to_add.append(instance_serializer)
+        else:
+            potential_modifications.append(
+                {"existing_instance": existing_instance, "new_data": instance_data})
+    records_added = 0
+    for instance_to_add in instances_to_add:
+        records_added += 1
+        # this should always pass for now, only constraint is uniqueness which was already checked
+        instance_to_add.save()
+    records_ignored = 0
+    modifications_to_approve = []
+    for potential_modification in potential_modifications:
+        new_data = potential_modification['new_data']
+        existing_data = ITInstanceSerializer(
+            potential_modification['existing_instance']
+        ).data
+        if records_are_identical(existing_data, new_data):  # Does this still work?
+            records_ignored += 1
+        else:
+            new_data['id'] = existing_data['id']
+            for field in existing_data.keys():
+                if field not in new_data:  # handle rack and modle fields differently?
+                    new_data[field] = None
+            modifications_to_approve.append(
+                {
+                    "existing": existing_data,
+                    "modified": new_data
+                }
+            )
+    return JsonResponse(
+        {
+            "added": records_added,
+            "ignored": records_ignored,
+            "modifications": modifications_to_approve
+        },
+        status=HTTPStatus.OK
     )
 
 
