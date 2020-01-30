@@ -29,22 +29,22 @@ const getItemStyle = (isDragging: boolean, draggableStyle: any) => ({
   margin: `0 ${grid}px 0 0`,
 
   // change background colour if dragging
-  background: isDragging ? "lightgreen" : "grey",
+  background: "#30404D", //isDragging ? "#202B33" : "#30404D",
 
   // styles we need to apply on draggables
   ...draggableStyle
 });
 
 const getListStyle = (isDraggingOver: boolean) => ({
-  background: isDraggingOver ? "lightblue" : "lightgrey",
+  background: isDraggingOver ? "#293742" : "#202B33",
   display: "flex",
-  padding: grid,
+  padding: 5,
   overflow: "auto"
 });
 
 export interface FilterListProps {
   items: Array<any>;
-  renderItem(item: any): string;
+  renderItem(item: any): any;
   onChange?(items: Array<any>): void;
 }
 class FilterList extends React.Component<FilterListProps> {

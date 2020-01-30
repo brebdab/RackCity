@@ -1,4 +1,4 @@
-import { Spinner } from "@blueprintjs/core";
+import { Spinner, Classes } from "@blueprintjs/core";
 import React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
@@ -75,8 +75,36 @@ class ElementTable extends React.Component<
     sorted_cols: []
   };
 
-  renderSortItem = (item: ITableSort & IDragAndDrop) => {
-    return `${item.field} ${item.ascending ? "Ascending" : "Descending"}`;
+  renderSortItem = (item: ITableSort) => {
+    return (
+      <div className="header-text ">
+        <span>{`${item.field} ${
+          item.ascending ? "Ascending" : "Descending"
+        }`}</span>
+        <span
+          onClick={() => this.removeSortItem(item.field)}
+          className="bp3-icon-large bp3-icon-delete icon"
+        ></span>
+      </div>
+    );
+  };
+
+  removeSortItem = (field: string) => {
+    let sorts = this.state.sort_by;
+    let sorted_cols = this.state.sorted_cols;
+    const index = sorted_cols.indexOf(field, 0);
+    if (index > -1) {
+      sorted_cols.splice(index, 1);
+    }
+    sorts = sorts.filter(item => {
+      return item.field !== field;
+    });
+    this.setState({
+      sort_by: sorts,
+      sorted_cols
+      // sort_by_id: sorts_id
+    });
+    this.updateSortedData(sorts);
   };
 
   handleSort(field: string) {
