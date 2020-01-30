@@ -1,4 +1,4 @@
-import { Callout, Classes } from "@blueprintjs/core";
+import { Classes } from "@blueprintjs/core";
 import * as React from "react";
 import ElementTabView from "../elementView/elementTabView";
 import RackSelectView from "../elementView/rackSelectView";
