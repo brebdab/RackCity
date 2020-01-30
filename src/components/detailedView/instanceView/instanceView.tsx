@@ -83,6 +83,7 @@ export class InstanceView extends React.PureComponent<
               intent="primary"
               icon="edit"
               text="Edit"
+              minimal
               onClick={() => this.handleFormOpen()}
             />
             <FormPopup
@@ -94,6 +95,7 @@ export class InstanceView extends React.PureComponent<
               submitForm={this.updateInstance}
             />
             <AnchorButton
+              minimal
               className="button-add"
               intent="danger"
               icon="trash"
