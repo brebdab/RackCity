@@ -46,7 +46,7 @@ class ElementTable extends React.Component<
       </div>
     ) : (
       <div className="ElementTable">
-        <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered">
+        <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered table">
           <thead>
             <tr>
               {Object.keys(this.state.items[0]).map((col: string) => {

@@ -1,16 +1,37 @@
 $row-height: 6px;
-.whole {
-  border: 10px grey;
+@import "~@blueprintjs/core/lib/scss/variables";
+
+.rack-container {
+  padding-left: 20px;
+  display: inline-block;
+  overflow-x: scroll;
+  white-space: nowrap;
 }
+.rack-container span ~ span {
+  padding-left: 20px;
+  display: inline-block;
+}
+.rack {
+  outline: 10pt grey;
+  border-style: solid;
+  border-color: #202b33;
+  display: inline-block;
+  margin: left 10px;
+}
+
 .rack-table {
   //background: grey;
   border: 10pt grey !important;
   outline: 10pt white !important;
-  width: 100pt;
+  width: 150pt;
   float: left;
+  table-layout: fixed !important;
+  padding-left: 0px !important;
 }
 .loc-table {
-  border: 1pt grey;
+  border: 10pt grey !important;
+  outline: 10pt white !important;
+  padding-left: 0px !important;
 }
 
 .header {
@@ -26,9 +47,30 @@ $row-height: 6px;
 .cell {
   text-align: center !important;
   padding: 0 !important;
+
   margin: 0 !important;
   font-size: 2 * $row-height !important;
 }
+.rack-table .cell span ~ span {
+  padding-left: 10px !important;
+  display: inline-block;
+}
+.rack-table .cell {
+  max-width: 100px !important;
+  // text-overflow: clip !important;
+  overflow: auto !important;
+  position: relative !important;
+  white-space: nowrap !important;
+  padding-left: 0px !important;
+  margin: 0px !important;
+}
+.rack-table .cell span {
+  width: 80px;
+  white-space: nowrap;
+  margin: 0px !important;
+  float: left;
+}
+
 .empty {
   padding: $row-height !important;
 }

@@ -9,7 +9,7 @@ import { ElementType } from "../utils";
 interface ElementTabViewProps {
   isAdmin: boolean;
 }
-export class ElementTabView extends React.Component<ElementTabViewProps> {
+class ElementTabView extends React.Component<ElementTabViewProps> {
   public render() {
     return (
       <Tabs

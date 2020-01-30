@@ -140,7 +140,23 @@ def model_page(request):
             status=HTTPStatus.BAD_REQUEST,
         )
 
-    models = ITModel.objects.all()
+    if 'sort_by' in request.data:
+        sort_by = request.data['sort_by']
+        sort_args = []
+        for sort in sort_by:
+            if ('field' not in sort) or ('ascending' not in sort):
+                failure_message += "Must specify 'field' and 'ascending' fields. "
+                return JsonResponse(
+                    {"failure_message": failure_message},
+                    status=HTTPStatus.BAD_REQUEST,
+                )
+            field_name = sort['field']
+            order = "-" if not sort['ascending'] else ""
+            sort_args.append(order + field_name)
+        models = ITModel.objects.order_by(*sort_args)
+    else:
+        models = ITModel.objects.all()
+
     paginator = PageNumberPagination()
     paginator.page_size = request.query_params.get('page_size')
 
@@ -242,12 +258,14 @@ def model_bulk_upload(request):
         if records_are_identical(existing_data, new_data):
             records_ignored += 1
         else:
-            # bletsch changed mind on piazza.  if something left out, it would delete it
             new_data['id'] = existing_data['id']
+            for field in existing_data.keys():
+                if field not in new_data:
+                    new_data[field] = None
             modifications_to_approve.append(
                 {
                     "existing": existing_data,
-                    "modified": new_data  # THIS WILL NEED TO HAVE SAME ID ON IT BEFORE SAVING
+                    "modified": new_data
                 }
             )
     return JsonResponse(
@@ -264,11 +282,52 @@ def records_are_identical(existing_data, new_data):
     existing_keys = existing_data.keys()
     new_keys = new_data.keys()
     for key in existing_keys:
-        if key not in new_keys and existing_data[key] is not None and key != 'id':
+        if (
+            key not in new_keys
+            and existing_data[key] is not None
+            and key != 'id'
+        ):
             return False
-        if key in new_keys and new_data[key] != existing_data[key]:
-            return False
+        if (
+            key in new_keys
+            and new_data[key] != existing_data[key]
+        ):
+            if not (
+                isinstance(existing_data[key], int)
+                and int(new_data[key]) == existing_data[key]
+            ):
+                return False
     return True
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def model_bulk_approve(request):
+    """
+    Bulk approve many models to modify
+    """
+    data = JSONParser().parse(request)
+    if 'approved_modifications' not in data:
+        return JsonResponse(
+            {"failure_message": "Bulk approve request should have a parameter 'approved_modifications'"},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    model_datas = data['approved_modifications']
+    for model_data in model_datas:
+        model_serializer = ITModelSerializer(data=model_data)
+        if not model_serializer.is_valid():
+            failure_message = "At least one modification was not valid. " + \
+                str(model_serializer.errors)
+            return JsonResponse(
+                {"failure_message": failure_message},
+                status=HTTPStatus.BAD_REQUEST
+            )
+    for model_data in model_datas:
+        existing_model = ITModel.objects.get(id=model_data['id'])
+        for field in model_data.keys():  # This is assumed to have all fields, and with null values for blank ones. That's how it's returned in bulk-upload
+            setattr(existing_model, field, model_data[field])
+        existing_model.save()
+    return HttpResponse(status=HTTPStatus.OK)
 
 
 @api_view(['GET'])

@@ -14,10 +14,10 @@ class ITModel(models.Model):
     comment = models.TextField(null=True, blank=True)
 
     class Meta:
+        ordering = ['vendor', 'model_number']
         constraints = [
             models.UniqueConstraint(
                 fields=['vendor', 'model_number'],
                 name='unique vendor model number'),
         ]
-
         verbose_name = 'model'

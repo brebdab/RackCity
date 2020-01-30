@@ -106,6 +106,7 @@ export const renderStringItem: ItemRenderer<string> = (
     />
   );
 };
+
 export const renderRackItem: ItemRenderer<RackObject> = (
   rack: RackObject,
   { handleClick, modifiers, query }

@@ -222,7 +222,7 @@ def get_sort_arguments(data):
             if not isinstance(sort['ascending'], bool):
                 raise Exception("Field 'ascending' must be of type bool.")
             field_name = sort['field']
-            order = "-" if not bool(sort['ascending']) else ""
+            order = "-" if not sort['ascending'] else ""
             sort_args.append(order + field_name)
     return sort_args
 
