@@ -10,6 +10,7 @@ import Notfound from "./components/fallback"; // 404 page
 import WrappedNormalLoginForm from "./components/login/login";
 import WrappedNormalRegistrationForm from "./components/login/register";
 import Navigation from "./components/navigation/navigation";
+import BulkImport from "./components/import/import";
 import "./index.scss";
 
 import ModelView from "./components/detailedView/modelView/modelView";
@@ -47,6 +48,7 @@ class App extends React.Component<AppProps> {
 
             {/* admin paths */}
             <Route path="/admin" component={WrappedNormalRegistrationForm} />
+            <Route path="/bulk-upload" component={BulkImport} />
             <Route path="/create" component={ModelForm} />
             <Route component={Notfound} />
           </Switch>
