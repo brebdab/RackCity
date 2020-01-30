@@ -147,7 +147,7 @@ def instance_modify(request):
     """
     Modify a single existing instance
     """
-    data = JSONParser.parse(request)
+    data = JSONParser().parse(request)
     if 'id' not in data:
         return JsonResponse(
             {"failure_message": "Must include 'id' when modifying an " +
