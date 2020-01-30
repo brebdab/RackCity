@@ -17,6 +17,7 @@ from .it_instance_views import (
     instance_detail,
     instance_list,
     instance_add,
+    instance_modify,
     instance_delete,
     instance_page,
     instance_page_count,

@@ -18,6 +18,7 @@ urlpatterns = [
     path('instances/get-many', views.instance_page),
     path('instances/<int:id>', views.instance_detail),
     path('instances/add', views.instance_add),
+    path('instances/modify', views.instance_modify),
     path('instances/delete', views.instance_delete),
     path('instances/pages', views.instance_page_count),
     path('racks/get', views.rack_get),
