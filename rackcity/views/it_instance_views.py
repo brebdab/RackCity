@@ -2,6 +2,7 @@
 from django.http import HttpResponse, JsonResponse
 from rackcity.models import ITInstance, ITModel, Rack
 from django.core.exceptions import ObjectDoesNotExist
+from rackcity.api.objects import RackRangeSerializer
 from rackcity.api.serializers import (
     ITInstanceSerializer,
     RecursiveITInstanceSerializer,
@@ -268,7 +269,16 @@ def get_filter_arguments(data):
                 filter_args['{0}__range'.format(filter_field)] = range_value  # noqa inclusive on both min, max
 
             elif filter_type == 'rack_range':
-                return
+                range_serializer = RackRangeSerializer(data=filter_dict)
+                if not range_serializer.is_valid():
+                    return JsonResponse(
+                        {"failure_message": str(range_serializer.errors)},
+                        status=HTTPStatus.BAD_REQUEST,
+                    )
+                filter_args['rack__rack_num__range'] = \
+                    range_serializer.get_number_range()
+                filter_args['rack__row_letter__range'] = \
+                    range_serializer.get_row_range()  # noqa inclusive on both letter, number
 
             else:
                 raise Exception(
