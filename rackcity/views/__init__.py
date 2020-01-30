@@ -27,3 +27,4 @@ from .rack_views import (
     rack_delete,
     rack_summary,
 )
+from .report_views import report_rack_usage
