@@ -45,7 +45,11 @@ export interface IFilter {
 interface IElementTableProps {
   type: ElementType;
   token: string;
-  getData?(type: string, token: string): Promise<Array<ElementObjectType>>;
+  getData?(
+    type: string,
+    body: any,
+    token: string
+  ): Promise<Array<ElementObjectType>>;
   data?: Array<ElementObjectType>;
 }
 
@@ -61,7 +65,7 @@ class ElementTable extends React.Component<
   };
 
   handleSort(field: string, ascending: boolean) {
-    if (!this.state.sorted_cols.includes(field)) {
+    if (!this.state.sorted_cols.includes(field) && this.props.getData) {
       const sorts = Object.assign([], this.state.sort_by);
 
       sorts.push({
@@ -72,22 +76,20 @@ class ElementTable extends React.Component<
         sort_by: sorts
       });
     }
-    this.props
-      .getData(
-        this.props.type,
-        { sort_by: this.state.sort_by },
-        this.props.token
-      )
-      .then(res => {
-        this.setState({
-          items: res
-        });
+    this.props.getData!(
+      this.props.type,
+      { sort_by: this.state.sort_by },
+      this.props.token
+    ).then(res => {
+      this.setState({
+        items: res
       });
+    });
   }
   componentDidMount() {
     console.log(this.props.data);
     if (this.props.getData) {
-      this.props.getData(this.props.type, this.props.token).then(res => {
+      this.props.getData(this.props.type, {}, this.props.token).then(res => {
         this.setState({
           items: res
         });
