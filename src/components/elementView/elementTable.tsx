@@ -12,15 +12,19 @@ import "./elementView.scss";
 import { FilterType } from "react-table";
 import { RackRangeFields } from "./rackSelectView";
 import { getElementData } from "./elementView";
+import FilterList from "./filterList";
+
 interface IElementTableState {
   items: Array<ElementObjectType>;
   sort_by: Array<ITableSort>;
+  // sort_by_id: Array<ITableSort & IDragAndDrop>;
   filters: Array<IFilter>;
   sorted_cols: Array<string>;
 }
 export interface ITableSort {
   field: string;
   ascending: boolean;
+  id: string;
 }
 
 export enum FilterTypes {
@@ -42,6 +46,10 @@ export interface IFilter {
   filter: TextFilter | NumericFilter | RackRangeFields;
 }
 
+interface IDragAndDrop {
+  id: string;
+}
+
 interface IElementTableProps {
   type: ElementType;
   token: string;
@@ -58,34 +66,51 @@ class ElementTable extends React.Component<
   IElementTableState
 > {
   public state: IElementTableState = {
+    // sort_by_id: [],
     filters: [],
     sort_by: [],
     items: [],
     sorted_cols: []
   };
 
-  handleSort(field: string, ascending: boolean) {
-    if (!this.state.sorted_cols.includes(field) && this.props.getData) {
-      const sorts = Object.assign([], this.state.sort_by);
+  renderSortItem = (item: ITableSort & IDragAndDrop) => {
+    return `${item.field} ${item.ascending ? "Ascending" : "Descending"}`;
+  };
 
+  handleSort(field: string, ascending: boolean) {
+    if (!this.state.sorted_cols.includes(field)) {
+      const sorts = this.state.sort_by;
       sorts.push({
         field,
-        ascending
+        ascending,
+        id: field
       });
       this.setState({
         sort_by: sorts
+        // sort_by_id: sorts_id
+      });
+      this.updateSortedData(sorts);
+    }
+  }
+
+  updateSortedData = (sorts: Array<ITableSort>) => {
+    const sorts_body = sorts.map(item => {
+      const { field, ascending } = item;
+      return { field, ascending };
+    });
+    console.log("detected new order", sorts_body);
+    if (this.props.getData) {
+      this.props.getData!(
+        this.props.type,
+        { sort_by: sorts_body },
+        this.props.token
+      ).then(res => {
+        this.setState({
+          items: res
+        });
       });
     }
-    this.props.getData!(
-      this.props.type,
-      { sort_by: this.state.sort_by },
-      this.props.token
-    ).then(res => {
-      this.setState({
-        items: res
-      });
-    });
-  }
+  };
   componentDidMount() {
     console.log(this.props.data);
     if (this.props.getData) {
@@ -97,6 +122,13 @@ class ElementTable extends React.Component<
       console.log("table mounted");
     }
   }
+  updateSortOrder = (items: Array<ITableSort>) => {
+    console.log(items);
+    this.setState({
+      sort_by: items
+    });
+    this.updateSortedData(items);
+  };
 
   render() {
     if (
@@ -108,61 +140,74 @@ class ElementTable extends React.Component<
         items: this.props.data
       });
     }
-    return this.state.items.length === 0 ? (
-      <div className="loading-container">
-        <Spinner
-          className="center"
-          intent="primary"
-          size={Spinner.SIZE_STANDARD}
+    return (
+      <div>
+        <FilterList
+          items={this.state.sort_by}
+          renderItem={this.renderSortItem}
+          onChange={this.updateSortOrder}
         />
-        <h4>no {this.props.type}</h4>
-      </div>
-    ) : (
-      <div className="ElementTable">
-        <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered table">
-          <thead>
-            <tr>
-              {Object.keys(this.state.items[0]).map((col: string) => {
-                if (col !== "id") {
-                  return (
-                    <th
-                      className="header-cell"
-                      onClick={() => this.handleSort(col, true)}
-                    >
-                      {col}
-                    </th>
-                  );
-                }
-
-                return null;
-              })}
-            </tr>
-          </thead>
-          <tbody>
-            {this.state.items.map((item: ElementObjectType) => {
-              return (
-                <tr
-                  onClick={() =>
-                    this.props.history.push(
-                      "/" + this.props.type + "/" + item.id
-                    )
-                  }
-                >
-                  {Object.entries(item).map(([col, value]) => {
-                    if (isModelObject(value)) {
-                      return <td>{value.vendor + " " + value.model_number}</td>;
-                    } else if (isRackObject(value)) {
-                      return <td>{value.row_letter + " " + value.rack_num}</td>;
-                    } else if (col !== "id") {
-                      return <td>{value}</td>;
+        {this.state.items.length === 0 ? (
+          <div className="loading-container">
+            <Spinner
+              className="center"
+              intent="primary"
+              size={Spinner.SIZE_STANDARD}
+            />
+            <h4>no {this.props.type}</h4>
+          </div>
+        ) : (
+          <div className="ElementTable">
+            <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered table">
+              <thead>
+                <tr>
+                  {Object.keys(this.state.items[0]).map((col: string) => {
+                    if (col !== "id") {
+                      return (
+                        <th
+                          className="header-cell"
+                          onClick={() => this.handleSort(col, true)}
+                        >
+                          {col}
+                        </th>
+                      );
                     }
+
                     return null;
                   })}
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
+              </thead>
+              <tbody>
+                {this.state.items.map((item: ElementObjectType) => {
+                  return (
+                    <tr
+                      onClick={() =>
+                        this.props.history.push(
+                          "/" + this.props.type + "/" + item.id
+                        )
+                      }
+                    >
+                      {Object.entries(item).map(([col, value]) => {
+                        if (isModelObject(value)) {
+                          return (
+                            <td>{value.vendor + " " + value.model_number}</td>
+                          );
+                        } else if (isRackObject(value)) {
+                          return (
+                            <td>{value.row_letter + " " + value.rack_num}</td>
+                          );
+                        } else if (col !== "id") {
+                          return <td>{value}</td>;
+                        }
+                        return null;
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     );
   }
