@@ -58,7 +58,8 @@ export class modelView extends React.PureComponent<
       "# Ethernet Ports",
       "# Power Ports",
       "Storage",
-      "Vendor"
+      "Vendor",
+      "Comment"
     ],
     fields: [
       "model_number",
@@ -69,7 +70,8 @@ export class modelView extends React.PureComponent<
       "num_ethernet_ports",
       "num_power_ports",
       "storage",
-      "vendor"
+      "vendor",
+      "comment"
     ]
   };
 
@@ -114,43 +116,39 @@ export class modelView extends React.PureComponent<
     return (
       <div className={Classes.DARK + " model-view"}>
         {this.props.isAdmin ? (
-          <div className={"row"}>
-            <div className={"column"}>
-              <AnchorButton
-                large={true}
-                intent="primary"
-                icon="edit"
-                text="Edit"
-                onClick={() => this.handleFormOpen()}
-              />
-              <FormPopup
-                isOpen={this.state.isFormOpen}
-                initialValues={this.state.model}
-                type={FormTypes.MODIFY}
-                elementName={ElementType.MODEL}
-                handleClose={this.handleFormClose}
-                submitForm={this.updateModel}
-              />
-            </div>
-            <div className={"column"}>
-              <AnchorButton
-                large={true}
-                intent="danger"
-                icon="trash"
-                text="Delete Model"
-                onClick={this.handleDeleteOpen}
-              />
-              <Alert
-                cancelButtonText="Cancel"
-                confirmButtonText="Delete"
-                intent="danger"
-                isOpen={this.state.isDeleteOpen}
-                onCancel={this.handleDeleteCancel}
-                onConfirm={this.handleDelete}
-              >
-                <p>Are you sure you want to delete?</p>
-              </Alert>
-            </div>
+          <div className={"detail-buttons"}>
+            <AnchorButton
+              className="button-add"
+              intent="primary"
+              icon="edit"
+              text="Edit"
+              onClick={() => this.handleFormOpen()}
+            />
+            <FormPopup
+              isOpen={this.state.isFormOpen}
+              initialValues={this.state.model}
+              type={FormTypes.MODIFY}
+              elementName={ElementType.INSTANCE}
+              handleClose={this.handleFormClose}
+              submitForm={this.updateModel}
+            />
+            <AnchorButton
+              className="button-add"
+              intent="danger"
+              icon="trash"
+              text="Delete"
+              onClick={this.handleDeleteOpen}
+            />
+            <Alert
+              cancelButtonText="Cancel"
+              confirmButtonText="Delete"
+              intent="danger"
+              isOpen={this.state.isDeleteOpen}
+              onCancel={this.handleDeleteCancel}
+              onConfirm={this.handleDelete}
+            >
+              <p>Are you sure you want to delete?</p>
+            </Alert>
           </div>
         ) : null}
         <Tabs

@@ -37,6 +37,15 @@ export interface RackObject extends ElementObject {
   height: string;
 }
 
+export interface RackResponseObject {
+  rack: RackObject;
+  instances: Array<InstanceObject>;
+}
+export interface ModificationsObject {
+  existing: Array<ModelObject>;
+  modified: Array<ModelObject>;
+}
+
 export interface ModelObject extends ElementObject {
   vendor: string;
   model_number: string;

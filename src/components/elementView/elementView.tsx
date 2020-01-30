@@ -16,8 +16,8 @@ import { FormTypes } from "../../forms/modelForm";
 import {
   ElementObjectType,
   ElementType,
-  ModelObject,
-  InstanceInfoObject
+  InstanceInfoObject,
+  ModelObject
 } from "../utils";
 import ElementTable from "./elementTable";
 import "./elementView.scss";

@@ -48,8 +48,8 @@ export class InstanceView extends React.PureComponent<
     instance: undefined,
     isFormOpen: false,
     isDeleteOpen: false,
-    columns: ["Hostname", "Model", "Rack", "Elevation", "Owner"],
-    fields: ["hostname", "model", "rack", "elevation", "owner"]
+    columns: ["Hostname", "Model", "Rack", "Elevation", "Owner", "Comment"],
+    fields: ["hostname", "model", "rack", "elevation", "owner", "comment"]
   };
   private updateInstance = (
     instance: InstanceObject,
@@ -77,43 +77,41 @@ export class InstanceView extends React.PureComponent<
     return (
       <div className={Classes.DARK + " instance-view"}>
         {this.props.isAdmin ? (
-          <div className={"row"}>
-            <div className={"column"}>
-              <AnchorButton
-                large={true}
-                intent="primary"
-                icon="edit"
-                text="Edit"
-                onClick={() => this.handleFormOpen()}
-              />
-              <FormPopup
-                isOpen={this.state.isFormOpen}
-                initialValues={this.state.instance}
-                type={FormTypes.MODIFY}
-                elementName={ElementType.INSTANCE}
-                handleClose={this.handleFormClose}
-                submitForm={this.updateInstance}
-              />
-            </div>
-            <div className={"column"}>
-              <AnchorButton
-                large={true}
-                intent="danger"
-                icon="trash"
-                text="Delete Model"
-                onClick={this.handleDeleteOpen}
-              />
-              <Alert
-                cancelButtonText="Cancel"
-                confirmButtonText="Delete"
-                intent="danger"
-                isOpen={this.state.isDeleteOpen}
-                onCancel={this.handleDeleteCancel}
-                onConfirm={this.handleDelete}
-              >
-                <p>Are you sure you want to delete?</p>
-              </Alert>
-            </div>
+          <div className={"detail-buttons"}>
+            <AnchorButton
+              className="button-add"
+              intent="primary"
+              icon="edit"
+              text="Edit"
+              minimal
+              onClick={() => this.handleFormOpen()}
+            />
+            <FormPopup
+              isOpen={this.state.isFormOpen}
+              initialValues={this.state.instance}
+              type={FormTypes.MODIFY}
+              elementName={ElementType.INSTANCE}
+              handleClose={this.handleFormClose}
+              submitForm={this.updateInstance}
+            />
+            <AnchorButton
+              minimal
+              className="button-add"
+              intent="danger"
+              icon="trash"
+              text="Delete"
+              onClick={this.handleDeleteOpen}
+            />
+            <Alert
+              cancelButtonText="Cancel"
+              confirmButtonText="Delete"
+              intent="danger"
+              isOpen={this.state.isDeleteOpen}
+              onCancel={this.handleDeleteCancel}
+              onConfirm={this.handleDelete}
+            >
+              <p>Are you sure you want to delete?</p>
+            </Alert>
           </div>
         ) : null}
         <PropertiesView data={this.state.instance} {...this.state} />

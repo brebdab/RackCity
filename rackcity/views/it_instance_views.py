@@ -49,22 +49,25 @@ def instance_page(request):
             status=HTTPStatus.BAD_REQUEST,
         )
 
-    if 'sort_by' in request.data:
-        sort_by = request.data['sort_by']
-        sort_args = []
-        for sort in sort_by:
-            if ('field' not in sort) or ('ascending' not in sort):
-                failure_message += "Must specify 'field' and 'ascending' fields. "
-                return JsonResponse(
-                    {"failure_message": failure_message},
-                    status=HTTPStatus.BAD_REQUEST,
-                )
-            field_name = sort['field']
-            order = "-" if not sort['ascending'] else ""
-            sort_args.append(order + field_name)
-        instances = ITInstance.objects.order_by(*sort_args)
-    else:
-        instances = ITInstance.objects.all()
+    instances_query = ITInstance.objects
+
+    try:
+        filter_args = get_filter_arguments(request.data)
+    except Exception as error:
+        return JsonResponse(
+            {"failure_message": "Filter error: " + str(error)},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    instances_query = instances_query.filter(**filter_args)
+
+    try:
+        sort_args = get_sort_arguments(request.data)
+    except Exception as error:
+        return JsonResponse(
+            {"failure_message": "Sort error: " + str(error)},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    instances = instances_query.order_by(*sort_args)
 
     paginator = PageNumberPagination()
     paginator.page_size = request.query_params.get('page_size')
@@ -294,3 +297,72 @@ def validate_location_modification(data, existing_instance):
         instance_height
     ):
         raise Exception("Instance does not fit in modified location.")
+
+
+def get_sort_arguments(data):
+    sort_args = []
+    if 'sort_by' in data:
+        sort_by = data['sort_by']
+        for sort in sort_by:
+            if ('field' not in sort) or ('ascending' not in sort):
+                raise Exception("Must specify 'field' and 'ascending' fields.")
+            if not isinstance(sort['field'], str):
+                raise Exception("Field 'field' must be of type string.")
+            if not isinstance(sort['ascending'], bool):
+                raise Exception("Field 'ascending' must be of type bool.")
+            field_name = sort['field']
+            order = "-" if not sort['ascending'] else ""
+            sort_args.append(order + field_name)
+    return sort_args
+
+
+def get_filter_arguments(data):
+    filter_args = {}
+    if 'filters' in data:
+        filters = data['filters']
+        for filter in filters:
+
+            if (
+                ('field' not in filter)
+                or ('filter_type' not in filter)
+                or ('filter' not in filter)
+            ):
+                raise Exception(
+                    "Must specify 'field', 'filter_type', and 'filter' fields."
+                )
+            if not isinstance(filter['field'], str):
+                raise Exception("Field 'field' must be of type string.")
+            if not isinstance(filter['filter_type'], str):
+                raise Exception("Field 'filter_type' must be of type string.")
+            if not isinstance(filter['filter'], dict):
+                raise Exception("Field 'filter' must be of type dict.")
+
+            filter_field = filter['field']
+            filter_type = filter['filter_type']
+            filter_dict = filter['filter']
+
+            if filter_type == 'text':
+                if filter_dict['match_type'] == 'exact':
+                    filter_args['{0}'.format(filter_field)] = \
+                        filter_dict['value']
+                elif filter_dict['match_type'] == 'contains':
+                    filter_args['{0}__icontains'.format(filter_field)] = \
+                        filter_dict['value']
+
+            elif filter_type == 'numeric':
+                range_value = (
+                    int(filter_dict['min']),
+                    int(filter_dict['max'])
+                )
+                filter_args['{0}__range'.format(filter_field)] = range_value  # noqa inclusive on both min, max
+
+            elif filter_type == 'rack_range':
+                return
+
+            else:
+                raise Exception(
+                    "String field 'filter_type' must be either 'text', " +
+                    "'numeric', or 'rack_range'."
+                )
+
+    return filter_args
