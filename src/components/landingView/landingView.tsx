@@ -6,9 +6,7 @@ class LandingView extends React.PureComponent {
   public render() {
     return (
       <div className={Classes.DARK}>
-        <Callout title="View Racks">
-          <RackSelectView />
-        </Callout>
+        <RackSelectView />
         <ElementTabView />
       </div>
     );

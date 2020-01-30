@@ -24,9 +24,10 @@
   float: right;
 }
 .table {
-  margin-top: 20px;
+  margin-top: 0px;
   display: inline-block;
-  overflow: auto;
+  overflow: scroll;
+  max-height: 500px;
 }
 .badge {
   background-color: #9ae6b4;
