@@ -5,8 +5,7 @@ import * as React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import { API_ROOT } from "../../api-config";
-import "./import.scss"
-// import { ElementType, ModelObject } from "../utils";
+import "./import.scss";
 
 interface ModifierProps {
   token: string,
@@ -25,6 +24,16 @@ export interface ModelObject {
   memory_gb?: string; //
   storage?: string;
   comment?: string;
+  id: string
+}
+
+interface Check {
+  model: ModelObject,
+  checked: boolean
+}
+
+interface ModifierState {
+  modifiedModels: Array<Check>
 }
 
 const keys = ["vendor", "model_number", "height", "display_color", "num_ethernet_ports",
@@ -32,7 +41,11 @@ const keys = ["vendor", "model_number", "height", "display_color", "num_ethernet
 const fields = ["Vendor", "Model #", "Height", "Display Color", "# Ethernet Ports",
                 "# Power Ports", "CPU", "Memory (GB)", "Storage", "Comments"]
 
-export class Modifier extends React.PureComponent<RouteComponentProps & ModifierProps> {
+export class Modifier extends React.PureComponent<RouteComponentProps & ModifierProps, ModifierState> {
+
+  public state: ModifierState = {
+    modifiedModels: []
+  }
 
   render() {
     if (this.props.models !== undefined) {
@@ -42,6 +55,9 @@ export class Modifier extends React.PureComponent<RouteComponentProps & Modifier
       return (
         <div>
           {this.props.models.map((obj: any) => {
+              let checkObj: Check;
+              checkObj = { model: obj.modified, checked: false }
+              this.state.modifiedModels.push(checkObj)
               return (
                 <div>
                   <table className={"bp3-html-table"}>
@@ -72,15 +88,14 @@ export class Modifier extends React.PureComponent<RouteComponentProps & Modifier
                     </tbody>
                   </table>
                   <div className={"upload-button"}>
-                    <AnchorButton
-                      intent="primary"
-                      icon="import"
-                      text="Choose Modified Model"
-                    />
-                    <AnchorButton
-                      intent="primary"
-                      icon="import"
-                      text="Choose Existing Model"
+                    <Checks {...this.props}
+                      linkedModel={obj.modified}
+                      callback={(model: ModelObject) => {
+                        var index = this.state.modifiedModels.findIndex((element: Check) => {
+                          return element.model === model
+                        })
+                        this.state.modifiedModels[index].checked = !this.state.modifiedModels[index].checked
+                      }}
                     />
                   </div>
                 </div>
@@ -93,12 +108,72 @@ export class Modifier extends React.PureComponent<RouteComponentProps & Modifier
               intent="success"
               icon="import"
               text="Confirm Changes"
+              onClick={() => {
+                if (this.state.modifiedModels.length !== 0) {
+                  let modified: Array<ModelObject>
+                  modified = []
+                  for (var i = 0; i < this.state.modifiedModels.length; i++) {
+                    if (this.state.modifiedModels[i].checked)
+                      modified.push(this.state.modifiedModels[i].model);
+                  }
+                  uploadModified(modified, this.props.token).then(res => {
+                    console.log(res)
+                  })
+                } else {
+
+                }
+              }}
             />
         </div>
       )
     } else {
       return <p>No data</p>
     }
+  }
+
+}
+
+async function uploadModified(modelList: Array<ModelObject>, token: string) {
+  console.log(API_ROOT + "api/models/bulk-approve");
+  console.log(token)
+  const headers = {
+    headers: {
+      Authorization: "Token " + token
+    }
+  };
+  return await axios
+    .post(API_ROOT + "api/models/bulk-approve", {models: modelList}, headers)
+    .then(res => {
+      console.log(res.data)
+      const data = res.data;
+      return data;
+    });
+}
+
+interface CheckboxProps {
+  linkedModel: ModelObject,
+  callback: Function
+}
+
+class Checks extends React.PureComponent<RouteComponentProps & CheckboxProps> {
+
+  constructor(props: any) {
+    super(props)
+    this.handleChange = this.handleChange.bind(this)
+  }
+
+  render() {
+    return (
+      <label className={"bp3-control bp3-checkbox"}>
+        <input type="checkbox" onChange={this.handleChange} />
+        <span className={"bp3-control-indicator"}></span>
+        Replace existing with modified?
+      </label>
+    )
+  }
+
+  private handleChange() {
+    this.props.callback(this.props.linkedModel);
   }
 
 }
