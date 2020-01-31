@@ -96,6 +96,7 @@ class RackSelectView extends React.Component<
           />
           <div className="rack-select">
             <RackRangeOptions
+              className="rack-field"
               handleChange={this.handleChange}
               range={this.state.viewRange}
             />

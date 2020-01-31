@@ -89,12 +89,20 @@ class FilterSelectView extends React.Component<
     this.setState({});
   }
   getRackFilterOptions() {
-    return <RackRangeOptions handleChange={this.handleChange} range={true} />;
+    return (
+      <div className="field">
+        <RackRangeOptions
+          className="field"
+          handleChange={this.handleChange}
+          range={true}
+        />
+      </div>
+    );
   }
   getNumericFilterOptions() {
     return (
-      <div>
-        <FormGroup>
+      <div className="field">
+        <FormGroup label="Min" className="field">
           <Field
             field="min"
             placeholder="min"
@@ -102,7 +110,7 @@ class FilterSelectView extends React.Component<
             onChange={this.handleChange}
           />
         </FormGroup>
-        <FormGroup>
+        <FormGroup label="Max" className="field">
           <Field
             field="max"
             placeholder="max"
@@ -116,24 +124,27 @@ class FilterSelectView extends React.Component<
 
   getTextFilterOptions() {
     return (
-      <FormGroup>
-        <div className="bp3-select">
+      <div className="field">
+        <div className="bp3-select field test-select">
           <HTMLSelect
             onChange={(e: any) =>
               this.handleChange({ match_type: e.target.value })
             }
           >
+            {" "}
             <option> {TextFilterTypes.CONTAINS}</option>
             <option>{TextFilterTypes.EXACT}</option>
           </HTMLSelect>
         </div>
-        <Field
-          field="value"
-          placeholder="query"
-          type="string"
-          onChange={this.handleChange}
-        />
-      </FormGroup>
+        <FormGroup label="Query" className="field">
+          <Field
+            field="value"
+            placeholder="query"
+            type="string"
+            onChange={this.handleChange}
+          />
+        </FormGroup>
+      </div>
     );
   }
   setFilterType(field: string) {
@@ -186,8 +197,8 @@ class FilterSelectView extends React.Component<
   render() {
     console.log("STATE", this.state);
     return (
-      <div>
-        <FormGroup label="Select Field To Filter ">
+      <div className="test-fields">
+        <FormGroup className="field" label="Select Field To Filter ">
           {" "}
           <FieldSuggest
             popoverProps={{
@@ -204,10 +215,19 @@ class FilterSelectView extends React.Component<
           />
         </FormGroup>
 
-        {this.state.field ? this.renderFilterOptions(this.state.field) : null}
-        <Button className="button" icon="filter" onClick={this.handleSubmit}>
-          Add Filter
-        </Button>
+        {this.state.field ? (
+          <div className="field">
+            {" "}
+            {this.renderFilterOptions(this.state.field)}{" "}
+            <Button
+              className="button"
+              icon="filter"
+              onClick={this.handleSubmit}
+            >
+              Add Filter
+            </Button>{" "}
+          </div>
+        ) : null}
       </div>
     );
   }

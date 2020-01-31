@@ -128,14 +128,14 @@ class ElementTable extends React.Component<
           />
         </span>
         <span>{`${item.field} 
-        }`}</span>
+      `}</span>
 
         <span>
           <Icon
             className="icon"
             icon={IconNames.DELETE}
             iconSize={Icon.SIZE_STANDARD}
-            onClick={() => this.removeFilterItem(item.field)}
+            onClick={() => this.removeFilterItem(item)}
           />
         </span>
       </div>
@@ -181,9 +181,10 @@ class ElementTable extends React.Component<
     });
     this.updateSortData(sorts);
   };
-  removeFilterItem = (field: string) => {
+  removeFilterItem = (filter: IFilter) => {
     const filters = this.state.filters.filter(item => {
-      return item.field !== field;
+      console.log(item.filter, filter.filter);
+      return JSON.stringify(item) !== JSON.stringify(filter);
     });
     console.log(filters);
     this.setState({

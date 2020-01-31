@@ -21,6 +21,22 @@
   float: left;
   width: 100%;
 }
+.filter-select {
+  margin: 0 !important;
+}
+.field {
+  float: left !important;
+  margin: 0;
+}
+.test-fields {
+  display: inline-block;
+}
+.test-fields button {
+  margin-top: 20px;
+}
+.test-select {
+  margin-top: 20px !important;
+}
 .add {
   float: right;
 }
@@ -54,6 +70,7 @@
   display: inline-block;
 }
 .table-options {
+  margin: none !important;
   float: none !important;
 }
 .badge {
@@ -69,12 +86,10 @@
 .rack-field {
   float: left;
 }
-.filter-select {
-  float: none;
-}
-.table-options {
-  margin-top: 120px;
-}
+
+// .table-options {
+//   margin-top: 120px;
+// }
 .rack-field .button {
   float: left;
   margin-top: 20px;
