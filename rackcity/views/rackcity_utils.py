@@ -78,3 +78,27 @@ def records_are_identical(existing_data, new_data):
             ):
                 return False
     return True
+
+
+def no_infile_location_conflicts(instance_datas):
+    location_occupied_by = {}
+    for instance_data in instance_datas:
+        rack = instance_data['rack']
+        height = ITModel.objects.get(id=instance_data['model']).height
+        elevation = instance_data['elevation']
+        instance_location_range = [  # THIS IS REPEATED! FACTOR OUT.
+            elevation + i for i in range(height)
+        ]
+        if rack not in location_occupied_by:
+            location_occupied_by[rack] = {}
+        for location in instance_location_range:
+            if location_occupied_by[rack][location]:
+                raise Exception(
+                    "Instance '" +
+                    instance_data['hostname'] +
+                    "' conflicts with instance '" +
+                    location_occupied_by[rack][location] +
+                    "'. ")
+            else:
+                location_occupied_by[rack][location] = instance_data['hostname']
+    return
