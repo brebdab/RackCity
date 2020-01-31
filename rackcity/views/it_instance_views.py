@@ -1,7 +1,6 @@
 # from rest_framework.parsers import JSONParser
 from django.http import HttpResponse, JsonResponse
 from rackcity.models import ITInstance, ITModel, Rack
-from rackcity.views.rackcity_utils import records_are_identical
 from django.core.exceptions import ObjectDoesNotExist
 from rackcity.api.objects import RackRangeSerializer
 from rackcity.api.serializers import (
@@ -16,7 +15,11 @@ from rest_framework.parsers import JSONParser
 from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
 import math
-from rackcity.views.rackcity_utils import is_location_full
+from rackcity.views.rackcity_utils import (
+    is_location_full,
+    validate_location_modification,
+    records_are_identical
+)
 
 
 @api_view(['GET'])  # DEPRECATED !
@@ -147,6 +150,58 @@ def instance_add(request):
         {"failure_message": failure_message},
         status=HTTPStatus.BAD_REQUEST,
     )
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def instance_modify(request):
+    """
+    Modify a single existing instance
+    """
+    data = JSONParser().parse(request)
+    if 'id' not in data:
+        return JsonResponse(
+            {"failure_message": "Must include 'id' when modifying an " +
+             "instance. "},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+
+    id = data['id']
+    try:
+        existing_instance = ITInstance.objects.get(id=id)
+    except ObjectDoesNotExist:
+        return JsonResponse(
+            {"failure_message": "No existing instance with id=" +
+                str(id) + ". "},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+
+    try:
+        validate_location_modification(data, existing_instance)
+    except Exception as error:
+        return JsonResponse(
+            {"failure_message": "Invalid location change: " + str(error)},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+
+    for field in data.keys():
+        if field == 'model':
+            value = ITModel.objects.get(id=data[field])
+        elif field == 'rack':
+            value = Rack.objects.get(id=data[field])
+        else:
+            value = data[field]
+        setattr(existing_instance, field, value)
+
+    try:
+        existing_instance.save()
+    except Exception as error:
+        return JsonResponse(
+            {"failure_message": "Invalid updates: " + str(error)},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    else:
+        return HttpResponse(status=HTTPStatus.OK)
 
 
 @api_view(['POST'])

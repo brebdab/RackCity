@@ -105,7 +105,8 @@ def model_height_change_valid(new_model_data, existing_model):
             if is_location_full(
                 instance.rack,
                 instance.elevation,
-                new_model_data['height']
+                new_model_data['height'],
+                instance.id
             ):
                 return False
         return True
