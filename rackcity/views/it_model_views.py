@@ -11,7 +11,9 @@ from copy import copy
 import math
 from rackcity.views.rackcity_utils import (
     is_location_full,
-    records_are_identical
+    records_are_identical,
+    get_sort_arguments,
+    get_filter_arguments,
 )
 
 
@@ -169,22 +171,25 @@ def model_page(request):
             status=HTTPStatus.BAD_REQUEST,
         )
 
-    if 'sort_by' in request.data:
-        sort_by = request.data['sort_by']
-        sort_args = []
-        for sort in sort_by:
-            if ('field' not in sort) or ('ascending' not in sort):
-                failure_message += "Must specify 'field' and 'ascending' fields. "
-                return JsonResponse(
-                    {"failure_message": failure_message},
-                    status=HTTPStatus.BAD_REQUEST,
-                )
-            field_name = sort['field']
-            order = "-" if not sort['ascending'] else ""
-            sort_args.append(order + field_name)
-        models = ITModel.objects.order_by(*sort_args)
-    else:
-        models = ITModel.objects.all()
+    models_query = ITModel.objects
+
+    try:
+        filter_args = get_filter_arguments(request.data)
+    except Exception as error:
+        return JsonResponse(
+            {"failure_message": "Filter error: " + str(error)},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    models_query = models_query.filter(**filter_args)
+
+    try:
+        sort_args = get_sort_arguments(request.data)
+    except Exception as error:
+        return JsonResponse(
+            {"failure_message": "Sort error: " + str(error)},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    models = models_query.order_by(*sort_args)
 
     paginator = PageNumberPagination()
     paginator.page_size = request.query_params.get('page_size')
