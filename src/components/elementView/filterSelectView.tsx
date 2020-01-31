@@ -1,4 +1,4 @@
-import { FormGroup, HTMLSelect, MenuItem, Button } from "@blueprintjs/core";
+import { Button, FormGroup, HTMLSelect, MenuItem } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { Suggest } from "@blueprintjs/select";
 import * as React from "react";
@@ -9,8 +9,8 @@ import "../../forms/forms.scss";
 import { filterString, renderStringItem } from "../../forms/formUtils";
 import { updateObject } from "../../store/utility";
 import "./elementView.scss";
-import { RackRangeFields } from "./rackSelectView";
 import RackRangeOptions from "./rackRangeOptions";
+import { RackRangeFields } from "./rackSelectView";
 
 export enum TextFilterTypes {
   EXACT = "exact",
@@ -234,7 +234,7 @@ class FilterSelectView extends React.Component<
 }
 
 const FieldSuggest = Suggest.ofType<string>();
-const items = [""];
+
 const mapStateToProps = (state: any) => {
   return {
     token: state.token,

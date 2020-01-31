@@ -11,11 +11,9 @@ import {
   isModelObject,
   isRackObject
 } from "../utils";
-import "./elementView.scss";
 import DragDropList from "./dragDropList";
-import { RackRangeFields } from "./rackSelectView";
+import "./elementView.scss";
 import FilterSelectView, { IFilter } from "./filterSelectView";
-import { SORT_ASC } from "@blueprintjs/icons/lib/esm/generated/iconNames";
 interface IElementTableState {
   items: Array<ElementObjectType>;
   sort_by: Array<ITableSort>;
