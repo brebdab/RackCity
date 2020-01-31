@@ -11,6 +11,7 @@ import "../../forms/forms.scss";
 import { updateObject } from "../../store/utility";
 import { getHeaders } from "../utils";
 import "./elementView.scss";
+import RackRangeOptions from "./rackRangeOptions";
 interface rackSelectViewState {
   viewRange: boolean;
   values: RackRangeFields;
@@ -77,6 +78,7 @@ class RackSelectView extends React.Component<
     //   search: queryString.stringify(this.state.values)
     // });
   };
+  renderRackOptions(range: boolean) {}
   componentDidMount() {}
   render() {
     return (
@@ -93,45 +95,11 @@ class RackSelectView extends React.Component<
             onChange={this.handleSwitchChange}
             label="View Range of Racks"
           />
+          <RackRangeOptions
+            handleChange={this.handleChange}
+            range={this.state.viewRange}
+          />
 
-          <div className="rack-select">
-            <FormGroup className="rack-field" label="Rack Letter ">
-              <Field
-                field="letter_start"
-                type="text"
-                onChange={this.handleChange}
-              />
-            </FormGroup>
-            {this.state.viewRange ? (
-              <div className="rack-select">
-                <FormGroup className="rack-field" label="Rack Letter (end)">
-                  <Field
-                    field="letter_end"
-                    type="text"
-                    onChange={this.handleChange}
-                  />
-                </FormGroup>
-              </div>
-            ) : null}
-            <FormGroup className="rack-field" label="Row number">
-              <Field
-                value={this.state.values.num_start}
-                field="num_start"
-                type="number"
-                onChange={this.handleChange}
-              />
-            </FormGroup>
-          </div>
-          {this.state.viewRange ? (
-            <FormGroup className="rack-field" label="Row number (end)">
-              <Field
-                value={this.state.values.num_end}
-                field="num_end"
-                type="number"
-                onChange={this.handleChange}
-              />
-            </FormGroup>
-          ) : null}
           <div className="rack-field ">
             {this.state.viewRange ? (
               <Button className="button" icon="search" type="submit">
