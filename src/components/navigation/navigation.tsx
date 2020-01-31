@@ -17,6 +17,7 @@ import { connect } from "react-redux";
 export interface NavigationProps {
   isAuthenticated: boolean;
   logout(): any;
+  isAdmin: boolean;
 }
 
 type NavigationPropsAll = NavigationProps & RouteComponentProps;
@@ -38,6 +39,12 @@ export class Navigation extends React.Component<NavigationPropsAll> {
                     text="Home"
                     minimal
                   />
+                </div>
+              ) : (
+                <p></p>
+              )}
+              {this.props.isAdmin ? (
+                <div>
                   <AnchorButton
                     onClick={() => this.props.history.push("/bulk-upload")}
                     className="nav-bar-button"
@@ -76,9 +83,16 @@ export class Navigation extends React.Component<NavigationPropsAll> {
   }
 }
 
+const mapStateToProps = (state: any) => {
+  return {
+    isAuthenticated: state.token !== null,
+    isAdmin: state.admin
+  };
+};
+
 const mapDispatchToProps = (dispatch: any) => {
   return {
     logout: () => dispatch(actions.logout())
   };
 };
-export default withRouter(connect(null, mapDispatchToProps)(Navigation));
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(Navigation));
