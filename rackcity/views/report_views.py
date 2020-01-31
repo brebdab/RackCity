@@ -12,6 +12,17 @@ def report_rack_usage(request):
     Get summary of rack usage: the percentage of rackspace free versus used,
     allocated per vendor, allocated per model, and allocated per owner.
     """
+    total_num_rack_slots = 0
+    racks = Rack.objects.all()
+    for rack in racks:
+        total_num_rack_slots += rack.height
+
+    if total_num_rack_slots == 0:
+        return JsonResponse(
+            {"description": "No existing racks."},
+            status=HTTPStatus.NO_CONTENT
+        )
+
     model_allocation = {}
     vendor_allocation = {}
     owner_allocation = {}
@@ -32,11 +43,6 @@ def report_rack_usage(request):
         if owner not in owner_allocation:
             owner_allocation[owner] = 0
         owner_allocation[owner] += height
-
-    total_num_rack_slots = 0
-    racks = Rack.objects.all()
-    for rack in racks:
-        total_num_rack_slots += rack.height
 
     rack_usage_data = {}
     rack_usage_data['free_rackspace_percent'] = \
