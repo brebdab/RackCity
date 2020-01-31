@@ -19,7 +19,7 @@ from rackcity.views.rackcity_utils import (
     validate_location_modification,
     no_infile_location_conflicts,
     records_are_identical,
-    LocationException
+    LocationException,
     get_sort_arguments,
     get_filter_arguments,
 )
