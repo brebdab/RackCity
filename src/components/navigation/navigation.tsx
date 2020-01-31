@@ -30,13 +30,22 @@ export class Navigation extends React.Component<NavigationPropsAll> {
               <NavbarHeading>HypoSoft</NavbarHeading>
               <NavbarDivider />
               {this.props.isAuthenticated ? (
-                <AnchorButton
-                  onClick={() => this.props.history.push("/")}
-                  className="nav-bar-button"
-                  icon="home"
-                  text="Home"
-                  minimal
-                />
+                <div>
+                  <AnchorButton
+                    onClick={() => this.props.history.push("/")}
+                    className="nav-bar-button"
+                    icon="home"
+                    text="Home"
+                    minimal
+                  />
+                  <AnchorButton
+                    onClick={() => this.props.history.push("/bulk-upload")}
+                    className="nav-bar-button"
+                    icon="export"
+                    text="Upload File"
+                    minimal
+                  />
+                </div>
               ) : (
                 <p></p>
               )}
