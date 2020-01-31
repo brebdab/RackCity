@@ -20,6 +20,8 @@ import * as actions from "./store/actions/auth";
 import ModelForm from "./forms/modelForm";
 import LandingView from "./components/landingView/landingView";
 
+import Report from "./components/report/report";
+
 export interface AppProps {
   isAuthenticated: boolean;
   onTryAutoSignup: any;
@@ -47,6 +49,7 @@ class App extends React.Component<AppProps> {
             <Route path="/models/:rid" component={ModelView} />
             <Route path="/instances/:rid" component={InstanceView} />
             <Route path="/bulk-export" component={BulkExport} />
+            <Route path="/report" component={Report} />
 
             {/* admin paths */}
             <Route path="/admin" component={WrappedNormalRegistrationForm} />
