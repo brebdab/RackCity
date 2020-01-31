@@ -21,6 +21,7 @@ urlpatterns = [
     path('instances/modify', views.instance_modify),
     path('instances/delete', views.instance_delete),
     path('instances/bulk-upload', views.instance_bulk_upload),
+    path('instances/bulk-approve', views.instance_bulk_approve),
     path('instances/pages', views.instance_page_count),
     path('racks/get', views.rack_get),
     path('racks/create', views.rack_create),

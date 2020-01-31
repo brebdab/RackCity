@@ -1,25 +1,16 @@
-import {
-  Button,
-  Callout,
-  FormGroup,
-  Intent,
-  MenuItem,
-  Switch
-} from "@blueprintjs/core";
+import { Button, Callout, Intent, Switch } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { handleBooleanChange } from "@blueprintjs/docs-theme";
-import { Suggest } from "@blueprintjs/select";
 import axios from "axios";
 import * as React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import { API_ROOT } from "../../api-config";
-import Field from "../../forms/field";
 import "../../forms/forms.scss";
-import { filterString, renderStringItem } from "../../forms/formUtils";
 import { updateObject } from "../../store/utility";
 import { getHeaders } from "../utils";
 import "./elementView.scss";
+import RackRangeOptions from "./rackRangeOptions";
 interface rackSelectViewState {
   viewRange: boolean;
   values: RackRangeFields;
@@ -86,6 +77,7 @@ class RackSelectView extends React.Component<
     //   search: queryString.stringify(this.state.values)
     // });
   };
+  renderRackOptions(range: boolean) {}
   componentDidMount() {}
   render() {
     return (
@@ -102,85 +94,11 @@ class RackSelectView extends React.Component<
             onChange={this.handleSwitchChange}
             label="View Range of Racks"
           />
+          <RackRangeOptions
+            handleChange={this.handleChange}
+            range={this.state.viewRange}
+          />
 
-          <div className="rack-select">
-            <FormGroup className="rack-field" label="Rack Letter ">
-              <RackSuggest
-                defaultSelectedItem={this.state.values.letter_start}
-                popoverProps={{
-                  minimal: true,
-                  popoverClassName: "dropdown",
-                  usePortal: true
-                }}
-                inputValueRenderer={(letter: string) => letter}
-                itemRenderer={renderStringItem}
-                items={alphabet}
-                onItemSelect={(letter_start: string) =>
-                  this.setState({
-                    values: updateObject(this.state.values, {
-                      letter_start: letter_start
-                    })
-                  })
-                }
-                itemPredicate={filterString}
-                noResults={
-                  <MenuItem
-                    disabled={true}
-                    text="Rack Letters range from A-Z"
-                  />
-                }
-              />
-            </FormGroup>
-            {this.state.viewRange ? (
-              <div className="rack-select">
-                <FormGroup className="rack-field" label="Rack Letter (end)">
-                  <RackSuggest
-                    defaultSelectedItem={this.state.values.letter_end}
-                    popoverProps={{
-                      minimal: true,
-                      popoverClassName: "dropdown",
-                      usePortal: true
-                    }}
-                    inputValueRenderer={(letter: string) => letter}
-                    itemRenderer={renderStringItem}
-                    items={alphabet}
-                    onItemSelect={(letter_end: string) =>
-                      this.setState({
-                        values: updateObject(this.state.values, {
-                          letter_end: letter_end
-                        })
-                      })
-                    }
-                    itemPredicate={filterString}
-                    noResults={
-                      <MenuItem
-                        disabled={true}
-                        text="Rack Letters range from A-Z"
-                      />
-                    }
-                  />
-                </FormGroup>
-              </div>
-            ) : null}
-            <FormGroup className="rack-field" label="Row number">
-              <Field
-                value={this.state.values.num_start}
-                field="num_start"
-                type="number"
-                onChange={this.handleChange}
-              />
-            </FormGroup>
-          </div>
-          {this.state.viewRange ? (
-            <FormGroup className="rack-field" label="Row number (end)">
-              <Field
-                value={this.state.values.num_end}
-                field="num_end"
-                type="number"
-                onChange={this.handleChange}
-              />
-            </FormGroup>
-          ) : null}
           <div className="rack-field ">
             {this.state.viewRange ? (
               <Button className="button" icon="search" type="submit">
@@ -197,10 +115,6 @@ class RackSelectView extends React.Component<
     );
   }
 }
-const RackSuggest = Suggest.ofType<string>();
-const alphabet = "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z".split(
-  ","
-);
 
 const mapStateToProps = (state: any) => {
   return {
