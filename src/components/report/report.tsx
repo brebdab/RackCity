@@ -61,15 +61,15 @@ export class Report extends React.PureComponent<ReportProps & RouteComponentProp
     const modelFields = {
       vendor: "Vendor",
       model_number: "Model Number",
-      alloc_pct: "Allocation %"
+      allocation_percent: "Allocation %"
     }
     const ownerFields = {
       owner: "Owner",
-      alloc_pct: "Allocation %"
+      allocation_percent: "Allocation %"
     }
     const vendorFields = {
       vendor: "Vendor",
-      alloc_pct: "Allocation %"
+      allocation_percent: "Allocation %"
     }
     if (! this.state.state_loaded) {
       return <Spinner size={Spinner.SIZE_LARGE}/>
@@ -103,9 +103,9 @@ class Tabular extends React.PureComponent<TabProps> {
           <thead>
             <tr>
               {Object.keys(this.props.data[0]).map((item: string) => {
+                console.log(item)
                 return <th>{this.props.fields[item]}</th>
               })}
-              <th>Allocation %</th>
             </tr>
           </thead>
           <tbody>
@@ -113,7 +113,10 @@ class Tabular extends React.PureComponent<TabProps> {
               return (
                 <tr>
                   {Object.keys(entry).map((item: string) => {
-                    return <td>{entry[item]}</td>
+                    if (item === "allocation_percent")
+                      return <td>{entry[item]*100}</td>
+                    else
+                      return <td>{entry[item]}</td>
                   })}
                 </tr>
               )
