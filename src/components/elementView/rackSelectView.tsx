@@ -1,14 +1,6 @@
-import {
-  Button,
-  Callout,
-  FormGroup,
-  Intent,
-  MenuItem,
-  Switch
-} from "@blueprintjs/core";
+import { Button, Callout, FormGroup, Intent, Switch } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { handleBooleanChange } from "@blueprintjs/docs-theme";
-import { Suggest } from "@blueprintjs/select";
 import axios from "axios";
 import * as React from "react";
 import { connect } from "react-redux";
@@ -16,7 +8,6 @@ import { RouteComponentProps, withRouter } from "react-router";
 import { API_ROOT } from "../../api-config";
 import Field from "../../forms/field";
 import "../../forms/forms.scss";
-import { filterString, renderStringItem } from "../../forms/formUtils";
 import { updateObject } from "../../store/utility";
 import { getHeaders } from "../utils";
 import "./elementView.scss";
@@ -157,10 +148,6 @@ class RackSelectView extends React.Component<
     );
   }
 }
-const RackSuggest = Suggest.ofType<string>();
-const alphabet = "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z".split(
-  ","
-);
 
 const mapStateToProps = (state: any) => {
   return {
