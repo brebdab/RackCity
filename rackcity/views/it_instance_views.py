@@ -320,16 +320,8 @@ def instance_bulk_approve(request):
             status=HTTPStatus.BAD_REQUEST
         )
     instance_datas = data['approved_modifications']
-    # for instance_data in instance_datas:
-    #     instance_serializer = ITInstanceSerializer(data=instance_data)
-    #     # will this ^ fail? prob
-    #     if not instance_serializer.is_valid():
-    #         failure_message = "At least one modification was not valid. " + \
-    #             str(instance_serializer.errors)
-    #         return JsonResponse(
-    #             {"failure_message": failure_message},
-    #             status=HTTPStatus.BAD_REQUEST
-    #         )
+    # Don't do any validation here because we know we sent valid instances to the frontend,
+    # and they should send the same ones back
     for instance_data in instance_datas:
         existing_instance = ITInstance.objects.get(
             id=instance_data['id'])
