@@ -162,6 +162,8 @@ class ElementTable extends React.Component<
   handleSort(field: string) {
     let ascending;
     let sorts = this.state.sort_by;
+
+    const sorted_cols = this.state.sorted_cols;
     if (this.state.sorted_cols.includes(field)) {
       ascending = !this.state.sort_by.find(item => item.field === field)!
         .ascending;
@@ -174,11 +176,10 @@ class ElementTable extends React.Component<
       });
     } else {
       ascending = true;
+      sorted_cols.push(field);
     }
     // if (!this.state.sorted_cols.includes(field)) {
-    const sorted_cols = this.state.sorted_cols;
 
-    sorted_cols.push(field);
     sorts.push({
       field,
       ascending,
