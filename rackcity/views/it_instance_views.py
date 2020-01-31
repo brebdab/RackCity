@@ -259,10 +259,7 @@ def is_location_full(
     instances_in_rack = ITInstance.objects.filter(rack=rack_id)
     for instance_in_rack in instances_in_rack:
         # Ignore if instance being modified conflicts with its old location
-        if (
-            (instance_id is None)
-            or (instance_id is not None and instance_in_rack.id != instance_id)
-        ):
+        if (instance_id is None or instance_in_rack.id != instance_id):
             for occupied_location in [
                 instance_in_rack.elevation + i for i
                     in range(instance_in_rack.model.height)
