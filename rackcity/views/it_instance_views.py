@@ -314,14 +314,41 @@ def instance_bulk_upload(request):
             existing_instance = ITInstance.objects.get(
                 hostname=instance_data['hostname'])
         except ObjectDoesNotExist:
-            instances_to_add.append(instance_serializer)
+            model = ITModel.objects.get(id=instance_data['model'])
+            if is_location_full(
+                instance_data['rack'],
+                instance_data['elevation'],
+                model.height,
+                instance_id=None,
+            ):
+                failure_message = "Instance " + \
+                    instance_data['hostname'] + \
+                    " would conflict location with an existing instance. "
+                return JsonResponse(
+                    {"failure_message": failure_message},
+                    status=HTTPStatus.BAD_REQUEST
+                )
+            else:
+                instances_to_add.append(instance_serializer)
         else:
-            potential_modifications.append(
-                {
-                    "existing_instance": existing_instance,
-                    "new_data": instance_data
-                }
-            )
+            try:
+                validate_location_modification(
+                    instance_data, existing_instance)
+            except Exception:
+                failure_message = "Instance " + \
+                    instance_data['hostname'] + \
+                    " would conflict location with an existing instance. "
+                return JsonResponse(
+                    {"failure_message": failure_message},
+                    status=HTTPStatus.BAD_REQUEST
+                )
+            else:
+                potential_modifications.append(
+                    {
+                        "existing_instance": existing_instance,
+                        "new_data": instance_data
+                    }
+                )
     records_added = 0
     for instance_to_add in instances_to_add:
         records_added += 1
