@@ -19,7 +19,8 @@ from rackcity.views.rackcity_utils import (
     is_location_full,
     validate_location_modification,
     no_infile_location_conflicts,
-    records_are_identical
+    records_are_identical,
+    LocationException
 )
 
 
@@ -337,7 +338,7 @@ def instance_bulk_upload(request):
             )
     try:
         no_infile_location_conflicts(instance_datas)
-    except Exception as error:
+    except LocationException as error:
         failure_message = "Location conflicts among instances in import file. " + \
             str(error)
         return JsonResponse(
