@@ -32,6 +32,7 @@ interface ElementViewProps {
 
 export function getElementData(
   path: string,
+  body: any,
   token: string
 ): Promise<Array<ElementObjectType>> {
   console.log(API_ROOT + "api/" + path + "/get-many");
@@ -49,7 +50,7 @@ export function getElementData(
     }
   };
   return axios
-    .post(API_ROOT + "api/" + path + "/get-many", {}, config)
+    .post(API_ROOT + "api/" + path + "/get-many", body, config)
     .then(res => {
       const items = res.data[path];
 
