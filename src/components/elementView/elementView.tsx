@@ -29,21 +29,35 @@ interface ElementViewProps {
   element: ElementType;
   isAdmin: boolean;
 }
+export function getPages(path: string, page_size: number, token: string) {
+  const config = {
+    headers: {
+      Authorization: "Token " + token
+    },
+
+    params: {
+      page_size
+    }
+  };
+  return axios.get(API_ROOT + "api/" + path + "/pages", config).then(res => {
+    return res.data.page_count;
+  });
+}
 
 export function getElementData(
   path: string,
+  page: number,
+  page_size: number,
   body: any,
   token: string
 ): Promise<Array<ElementObjectType>> {
   console.log(API_ROOT + "api/" + path + "/get-many");
 
-  const page_size = 100;
-  const page = 1;
-
   const config = {
     headers: {
       Authorization: "Token " + token
     },
+
     params: {
       page_size,
       page
@@ -122,7 +136,11 @@ class ElementView extends React.Component<ElementViewProps, ElementViewState> {
           ) : null}
         </Navbar>
         <div className="element-table">
-          <ElementTable type={this.props.element} getData={getElementData} />
+          <ElementTable
+            type={this.props.element}
+            getData={getElementData}
+            getPages={getPages}
+          />
         </div>
       </div>
     );
