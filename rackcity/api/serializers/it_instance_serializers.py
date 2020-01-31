@@ -35,9 +35,9 @@ class RecursiveITInstanceSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'hostname',
-            'elevation',
             'model',
             'rack',
+            'elevation',
             'owner',
             'comment',
         )
