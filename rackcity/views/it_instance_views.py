@@ -123,12 +123,11 @@ def instance_add(request):
     if not serializer.is_valid(raise_exception=False):
         failure_message += str(serializer.errors)
 
-    instance_id = data['id']
     rack_id = data['rack']
     elevation = data['elevation']
     height = ITModel.objects.get(id=data['model']).height
 
-    if is_location_full(rack_id, instance_id, elevation, height):
+    if is_location_full(rack_id, elevation, height):
         failure_message += "Instance does not fit in this location. "
 
     if failure_message == "":
@@ -250,9 +249,9 @@ def instance_page_count(request):
 
 def is_location_full(
     rack_id,
-    instance_id,
     instance_elevation,
     instance_height,
+    instance_id=None,
 ):
     new_instance_location_range = [
         instance_elevation + i for i in range(instance_height)
@@ -260,7 +259,10 @@ def is_location_full(
     instances_in_rack = ITInstance.objects.filter(rack=rack_id)
     for instance_in_rack in instances_in_rack:
         # Ignore if instance being modified conflicts with its old location
-        if (instance_in_rack.id != instance_id):
+        if (
+            (instance_id is None)
+            or (instance_id is not None and instance_in_rack.id != instance_id)
+        ):
             for occupied_location in [
                 instance_in_rack.elevation + i for i
                     in range(instance_in_rack.model.height)
@@ -298,9 +300,9 @@ def validate_location_modification(data, existing_instance):
 
     if is_location_full(
         rack_id,
-        instance_id,
         instance_elevation,
-        instance_height
+        instance_height,
+        instance_id=instance_id,
     ):
         raise Exception("Instance does not fit in modified location.")
 
