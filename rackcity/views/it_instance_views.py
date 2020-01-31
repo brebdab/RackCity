@@ -17,7 +17,9 @@ import math
 from rackcity.views.rackcity_utils import (
     is_location_full,
     validate_location_modification,
+    no_infile_location_conflicts,
     records_are_identical,
+    LocationException,
     get_sort_arguments,
     get_filter_arguments,
 )
@@ -252,6 +254,7 @@ def instance_bulk_upload(request):
     instance_datas = data['instances']
     instances_to_add = []
     potential_modifications = []
+    hostnames_in_import = set()
     for instance_data in instance_datas:
         if (
             'vendor' not in instance_data
@@ -311,22 +314,67 @@ def instance_bulk_upload(request):
                     {"failure_message": failure_message},
                     status=HTTPStatus.BAD_REQUEST
                 )
+        # should this be whitespace/caps insenstive? Maybe later
+        if instance_data['hostname'] in hostnames_in_import:
+            failure_message = "Hostname must be unique, but '" + \
+                instance_data['hostname'] + \
+                "' appears more than once in import. "
+            return JsonResponse(
+                {"failure_message": failure_message},
+                status=HTTPStatus.BAD_REQUEST
+            )
+        else:
+            hostnames_in_import.add(instance_data['hostname'])
         try:
             existing_instance = ITInstance.objects.get(
                 hostname=instance_data['hostname'])
         except ObjectDoesNotExist:
-            instances_to_add.append(instance_serializer)
+            model = ITModel.objects.get(id=instance_data['model'])
+            if is_location_full(
+                instance_data['rack'],
+                instance_data['elevation'],
+                model.height,
+                instance_id=None,
+            ):
+                failure_message = "Instance " + \
+                    instance_data['hostname'] + \
+                    " would conflict location with an existing instance. "
+                return JsonResponse(
+                    {"failure_message": failure_message},
+                    status=HTTPStatus.BAD_REQUEST
+                )
+            else:
+                instances_to_add.append(instance_serializer)
         else:
+            try:
+                validate_location_modification(
+                    instance_data, existing_instance)
+            except Exception:
+                failure_message = "Instance " + \
+                    instance_data['hostname'] + \
+                    " would conflict location with an existing instance. "
+                return JsonResponse(
+                    {"failure_message": failure_message},
+                    status=HTTPStatus.BAD_REQUEST
+                )
             potential_modifications.append(
                 {
                     "existing_instance": existing_instance,
                     "new_data": instance_data
                 }
             )
+    try:
+        no_infile_location_conflicts(instance_datas)
+    except LocationException as error:
+        failure_message = "Location conflicts among instances in import file. " + \
+            str(error)
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST
+        )
     records_added = 0
     for instance_to_add in instances_to_add:
         records_added += 1
-        # GOING TO HAVE TO RECHECK LOCATION AND UNIQUENESS WITH EACH ADDITION
         instance_to_add.save()
     records_ignored = 0
     modifications_to_approve = []

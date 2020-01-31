@@ -73,7 +73,6 @@ def model_modify(request):
         except ObjectDoesNotExist:
             failure_message += "No existing model with id="+str(id)+". "
         else:
-            # location validation
             if not model_height_change_valid(data, existing_model):
                 failure_message = "Height change of model causes conflicts. "
                 return JsonResponse(
@@ -259,6 +258,7 @@ def model_bulk_upload(request):
     model_datas = data['models']
     models_to_add = []
     potential_modifications = []
+    models_in_import = set()
     for model_data in model_datas:
         model_serializer = ITModelSerializer(data=model_data)
         if not model_serializer.is_valid():
@@ -268,18 +268,40 @@ def model_bulk_upload(request):
                 {"failure_message": failure_message},
                 status=HTTPStatus.BAD_REQUEST
             )
+        if (model_data['vendor'], model_data['model_number']) in models_in_import:
+            failure_message = "Vendor+model_number combination must be unique, but " + \
+                "vendor="+model_data['vendor'] + \
+                ", model_number="+model_data['model_number'] + \
+                " appears more than once in import. "
+            return JsonResponse(
+                {"failure_message": failure_message},
+                status=HTTPStatus.BAD_REQUEST
+            )
+        else:
+            models_in_import.add(
+                (model_data['vendor'],
+                 model_data['model_number'])
+            )
         try:
             existing_model = ITModel.objects.get(
                 vendor=model_data['vendor'], model_number=model_data['model_number'])
         except ObjectDoesNotExist:
             models_to_add.append(model_serializer)
         else:
+            if not model_height_change_valid(model_data, existing_model):
+                failure_message = \
+                    "Height change of this model causes conflicts: " + \
+                    "vendor="+model_data['vendor'] + \
+                    ", model_number="+model_data['model_number']
+                return JsonResponse(
+                    {"failure_message": failure_message},
+                    status=HTTPStatus.NOT_ACCEPTABLE
+                )
             potential_modifications.append(
                 {"existing_model": existing_model, "new_data": model_data})
     records_added = 0
     for model_to_add in models_to_add:
         records_added += 1
-        # THIS COULD FAIL! IF IT WAS UNIQUE, BUT SOMETHING ADDED BEFORE IT MAKES IT NOT UNIQUE
         model_to_add.save()
     records_ignored = 0
     modifications_to_approve = []
