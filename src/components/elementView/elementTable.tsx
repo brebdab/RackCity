@@ -216,7 +216,7 @@ class ElementTable extends React.Component<
                             <span>{col}</span>
                             <span
                               onClick={() => this.handleSort(col)}
-                              className="bp3-icon-large bp3-icon-layout-linear icon"
+                              className="bp3-icon-medium bp3-icon-arrows-vertical icon"
                             >
                               {" "}
                             </span>
