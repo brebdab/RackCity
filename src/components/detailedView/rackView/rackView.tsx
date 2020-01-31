@@ -45,10 +45,11 @@ class RackView extends React.PureComponent<
       if (
         instances.length > 0 &&
         instances[0] &&
-        currHeight === +instances[0].elevation
+        currHeight === +instances[0].elevation - 1
       ) {
+        console.log(currHeight);
         const width = +instances[0].model.height;
-        const id: number = +instances[0].id
+        const id: number = +instances[0].id;
 
         currHeight = width + currHeight;
         rows.unshift(
@@ -76,10 +77,11 @@ class RackView extends React.PureComponent<
         instances.shift();
       } else {
         currHeight++;
+        console.log("empty cell at ", currHeight);
 
         rows.unshift(
           <tr className="rack-row">
-            <td className="cell empty"> </td>
+            <td className="cell empty"></td>
           </tr>
         );
       }
