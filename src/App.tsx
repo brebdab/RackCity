@@ -11,6 +11,7 @@ import WrappedNormalLoginForm from "./components/login/login";
 import WrappedNormalRegistrationForm from "./components/login/register";
 import Navigation from "./components/navigation/navigation";
 import BulkImport from "./components/import/import";
+import BulkExport from "./components/export/export"
 import "./index.scss";
 
 import ModelView from "./components/detailedView/modelView/modelView";
@@ -45,6 +46,7 @@ class App extends React.Component<AppProps> {
             <Route path="/racks" component={RackView} />
             <Route path="/models/:rid" component={ModelView} />
             <Route path="/instances/:rid" component={InstanceView} />
+            <Route path="/bulk-export" component={BulkExport} />
 
             {/* admin paths */}
             <Route path="/admin" component={WrappedNormalRegistrationForm} />
