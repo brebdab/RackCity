@@ -105,59 +105,19 @@ class RackSelectView extends React.Component<
 
           <div className="rack-select">
             <FormGroup className="rack-field" label="Rack Letter ">
-              <RackSuggest
-                defaultSelectedItem={this.state.values.letter_start}
-                popoverProps={{
-                  minimal: true,
-                  popoverClassName: "dropdown",
-                  usePortal: true
-                }}
-                inputValueRenderer={(letter: string) => letter}
-                itemRenderer={renderStringItem}
-                items={alphabet}
-                onItemSelect={(letter_start: string) =>
-                  this.setState({
-                    values: updateObject(this.state.values, {
-                      letter_start: letter_start
-                    })
-                  })
-                }
-                itemPredicate={filterString}
-                noResults={
-                  <MenuItem
-                    disabled={true}
-                    text="Rack Letters range from A-Z"
-                  />
-                }
+              <Field
+                field="letter_start"
+                type="text"
+                onChange={this.handleChange}
               />
             </FormGroup>
             {this.state.viewRange ? (
               <div className="rack-select">
                 <FormGroup className="rack-field" label="Rack Letter (end)">
-                  <RackSuggest
-                    defaultSelectedItem={this.state.values.letter_end}
-                    popoverProps={{
-                      minimal: true,
-                      popoverClassName: "dropdown",
-                      usePortal: true
-                    }}
-                    inputValueRenderer={(letter: string) => letter}
-                    itemRenderer={renderStringItem}
-                    items={alphabet}
-                    onItemSelect={(letter_end: string) =>
-                      this.setState({
-                        values: updateObject(this.state.values, {
-                          letter_end: letter_end
-                        })
-                      })
-                    }
-                    itemPredicate={filterString}
-                    noResults={
-                      <MenuItem
-                        disabled={true}
-                        text="Rack Letters range from A-Z"
-                      />
-                    }
+                  <Field
+                    field="letter_end"
+                    type="text"
+                    onChange={this.handleChange}
                   />
                 </FormGroup>
               </div>
