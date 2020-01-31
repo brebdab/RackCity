@@ -72,7 +72,6 @@ def model_modify(request):
         except ObjectDoesNotExist:
             failure_message += "No existing model with id="+str(id)+". "
         else:
-            # location validation
             if not model_height_change_valid(data, existing_model):
                 failure_message = "Height change of model causes conflicts. "
                 return JsonResponse(
@@ -270,6 +269,15 @@ def model_bulk_upload(request):
         except ObjectDoesNotExist:
             models_to_add.append(model_serializer)
         else:
+            if not model_height_change_valid(model_data, existing_model):
+                failure_message = \
+                    "Height change of this model causes conflicts: " + \
+                    "vendor="+model_data['vendor'] + \
+                    ", model_number="+model_data['model_number']
+                return JsonResponse(
+                    {"failure_message": failure_message},
+                    status=HTTPStatus.NOT_ACCEPTABLE
+                )
             potential_modifications.append(
                 {"existing_model": existing_model, "new_data": model_data})
     records_added = 0
