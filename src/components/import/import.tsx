@@ -18,10 +18,22 @@ interface AlertState {
   uploadModelIsOpen: boolean,
   uploadInstanceIsOpen: boolean,
   modelAlterationsIsOpen: boolean,
+  instanceAlterationsIsOpen: boolean,
   selectedFile?: File,
   loadedModels?: Array<ModelObject>,
   loadedInstances?: Array<InstanceObject>,
-  modifiedModels?: Array<any>
+  modifiedModels?: Array<any>,
+  modifiedInstances?: Array<any>
+}
+
+interface InstanceInfoObject {
+  hostname: string,
+  elevation: string,
+  vendor: string,
+  model_number: string,
+  rack: string,
+  owner: string,
+  comment: string
 }
 
 const c2j = require('csvtojson')
@@ -31,7 +43,8 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
   public state: AlertState = {
     uploadModelIsOpen: false,
     uploadInstanceIsOpen: false,
-    modelAlterationsIsOpen: false
+    modelAlterationsIsOpen: false,
+    instanceAlterationsIsOpen: false
   };
 
   render() {
@@ -57,6 +70,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
               onConfirm={this.handleInstanceUpload}
             >
               <p>Choose a file</p>
+              <FileSelector {...this.props} callback={this.setFile}/>
             </Alert>
           </div>
           <div className={"column-third"}>
@@ -89,14 +103,30 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
               intent="success"
               icon="upload"
               text="Upload Data"
+              disabled={this.state.selectedFile === undefined}
               onClick={this.handleUpload}
             />
+          </div>
+          <div className={"column"}>
+            <h2>Selected file: {this.state.selectedFile === undefined ? "none" : this.state.selectedFile.name}</h2>
           </div>
         </div>
         <div>
           <Dialog isOpen={this.state.modelAlterationsIsOpen} onClose={() => this.setState({modelAlterationsIsOpen: false})} className={"modify-table"}
                   usePortal={true}>
-            <Modifier {...this.props} models={this.state.modifiedModels} callback={() => {this.setState({modelAlterationsIsOpen: false, modifiedModels: undefined, loadedModels: undefined})}}/>
+            <Modifier {...this.props} models={this.state.modifiedModels}
+              callback={() => {this.setState({modelAlterationsIsOpen: false, modifiedModels: undefined, loadedModels: undefined}); console.log(this.state)}}
+              operation={"models"}
+            />
+          </Dialog>
+        </div>
+        <div>
+          <Dialog isOpen={this.state.instanceAlterationsIsOpen} onClose={() => this.setState({instanceAlterationsIsOpen: false})} className={"modify-table"}
+                  usePortal={true}>
+            <Modifier {...this.props} models={this.state.modifiedInstances}
+              callback={() => {this.setState({instanceAlterationsIsOpen: false, modifiedInstances: undefined, loadedInstances: undefined})}}
+              operation={"instances"}
+            />
           </Dialog>
         </div>
       </div>
@@ -108,8 +138,38 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
   private handleInstanceOpen = () => this.setState({ uploadInstanceIsOpen: true });
   private handleInstanceCancel = () => this.setState({ uploadInstanceIsOpen: false });
   private handleInstanceUpload = () => {
-    alert("Instances were successfully uploaded");
-    this.setState({ uploadInstanceIsOpen: false });
+    if (this.state.selectedFile !== undefined) {
+      parse(this.state.selectedFile).then((res) => {
+        c2j({
+          noheader: false,
+          output: "json"
+        }).fromString(res).then((csvRow: Array<any>) => {
+          for (var i = 0; i < csvRow.length; i++) {
+            /* This next block is just to fix field names from the csv format to our backend format */
+            const instance: InstanceInfoObject = {
+              hostname: csvRow[i].hostname,
+              elevation: csvRow[i].rack_position,
+              vendor: csvRow[i].vendor,
+              model_number: csvRow[i].model_number,
+              rack: csvRow[i].rack,
+              owner: csvRow[i].owner,
+              comment: csvRow[i].comment
+            };
+            csvRow[i] = instance;
+          }
+          /* set state variable to JSON array with proper field names */
+          this.setState({
+            loadedInstances: csvRow
+          });
+          /* Now make API request with JSON as header */
+          console.log(this.state.loadedInstances)
+        })
+      })
+      // alert("Models have been loaded to browser, proceed to upload");
+      this.setState({ uploadInstanceIsOpen: false });
+    } else {
+      alert("No file selected")
+    }
   };
 
   private handleModelOpen = () => this.setState({ uploadModelIsOpen: true });
@@ -161,7 +221,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
 
   private handleUpload = () => {
     if (this.state.loadedModels !== undefined) {
-      uploadBulk(this.state.loadedModels, this.props.token).then(res => {
+      uploadBulk({models: this.state.loadedModels}, this.props.token, "models").then(res => {
         if (res.modifications.length !== 0) {
           this.setState({
             modelAlterationsIsOpen: true,
@@ -172,7 +232,16 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
         }
       })
     } else if (this.state.loadedInstances !== undefined) {
-
+      uploadBulk({instances: this.state.loadedInstances}, this.props.token, "instances").then(res => {
+        if (res.modifications.length !== 0) {
+          this.setState({
+            instanceAlterationsIsOpen: true,
+            modifiedInstances: res.modifications
+          })
+        } else {
+          alert("Upload successful with no modifications");
+        }
+      })
     } else {
       alert("No data to upload")
     }
@@ -191,8 +260,9 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
 }
 
 
-async function uploadBulk(modelList: Array<ModelObject>, token: string) {
-  console.log(API_ROOT + "api/models/bulk-upload");
+async function uploadBulk(modelList: any, token: string, type: string) {
+  console.log(modelList)
+  console.log(API_ROOT + "api/" + type + "/bulk-upload");
   console.log(token)
   const headers = {
     headers: {
@@ -200,7 +270,7 @@ async function uploadBulk(modelList: Array<ModelObject>, token: string) {
     }
   };
   return await axios
-    .post(API_ROOT + "api/models/bulk-upload", {models: modelList}, headers)
+    .post(API_ROOT + "api/" + type + "/bulk-upload", modelList, headers)
     .then(res => {
       console.log(res.data)
       const data = res.data;
