@@ -256,6 +256,7 @@ class ElementTable extends React.Component<
   };
 
   render() {
+    console.log(this.state.items);
     console.log(!(this.state.items && this.state.items.length > 0));
     if (
       this.props.data &&
@@ -309,7 +310,34 @@ class ElementTable extends React.Component<
               <thead>
                 <tr>
                   {Object.keys(this.state.items[0]).map((col: string) => {
-                    if (col !== "id") {
+                    if (col === "model") {
+                      return [
+                        <th className="header-cell">
+                          <div className="header-text">
+                            <span>model vendor</span>
+                            <Icon
+                              className="icon"
+                              icon={IconNames.DOUBLE_CARET_VERTICAL}
+                              iconSize={Icon.SIZE_STANDARD}
+                              onClick={() => this.handleSort("model__vendor")}
+                            />
+                          </div>
+                        </th>,
+                        <th className="header-cell">
+                          <div className="header-text">
+                            <span>model number</span>
+                            <Icon
+                              className="icon"
+                              icon={IconNames.DOUBLE_CARET_VERTICAL}
+                              iconSize={Icon.SIZE_STANDARD}
+                              onClick={() =>
+                                this.handleSort("model__model_number")
+                              }
+                            />
+                          </div>
+                        </th>
+                      ];
+                    } else if (col !== "id") {
                       return (
                         <th className="header-cell">
                           <div className="header-text">
@@ -341,9 +369,10 @@ class ElementTable extends React.Component<
                     >
                       {Object.entries(item).map(([col, value]) => {
                         if (isModelObject(value)) {
-                          return (
-                            <td>{value.vendor + " " + value.model_number}</td>
-                          );
+                          return [
+                            <td>{value.vendor}</td>,
+                            <td>{value.model_number}</td>
+                          ];
                         } else if (isRackObject(value)) {
                           return (
                             <td>{value.row_letter + " " + value.rack_num}</td>
