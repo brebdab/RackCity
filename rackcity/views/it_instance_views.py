@@ -363,6 +363,36 @@ def instance_bulk_upload(request):
     )
 
 
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def instance_bulk_approve(request):
+    """
+    Bulk approve many instances to modify
+    """
+    data = JSONParser().parse(request)
+    if 'approved_modifications' not in data:
+        return JsonResponse(
+            {"failure_message": "Bulk approve request should have a parameter 'approved_modifications'"},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    instance_datas = data['approved_modifications']
+    # Don't do any validation here because we know we sent valid instances to the frontend,
+    # and they should send the same ones back
+    for instance_data in instance_datas:
+        existing_instance = ITInstance.objects.get(
+            id=instance_data['id'])
+        for field in instance_data.keys():  # This is assumed to have all fields, and with null values for blank ones. That's how it's returned in bulk-upload
+            if field == 'model':
+                value = ITModel.objects.get(id=instance_data[field]['id'])
+            elif field == 'rack':
+                value = Rack.objects.get(id=instance_data[field]['id'])
+            else:
+                value = instance_data[field]
+            setattr(existing_instance, field, value)
+        existing_instance.save()
+    return HttpResponse(status=HTTPStatus.OK)
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def instance_page_count(request):
