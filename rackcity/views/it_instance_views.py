@@ -17,7 +17,9 @@ import math
 from rackcity.views.rackcity_utils import (
     is_location_full,
     validate_location_modification,
+    no_infile_location_conflicts,
     records_are_identical,
+    LocationException,
     get_sort_arguments,
     get_filter_arguments,
 )
@@ -355,17 +357,24 @@ def instance_bulk_upload(request):
                     {"failure_message": failure_message},
                     status=HTTPStatus.BAD_REQUEST
                 )
-            else:
-                potential_modifications.append(
-                    {
-                        "existing_instance": existing_instance,
-                        "new_data": instance_data
-                    }
-                )
+            potential_modifications.append(
+                {
+                    "existing_instance": existing_instance,
+                    "new_data": instance_data
+                }
+            )
+    try:
+        no_infile_location_conflicts(instance_datas)
+    except LocationException as error:
+        failure_message = "Location conflicts among instances in import file. " + \
+            str(error)
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST
+        )
     records_added = 0
     for instance_to_add in instances_to_add:
         records_added += 1
-        # GOING TO HAVE TO RECHECK LOCATION WITH EACH ADDITION
         instance_to_add.save()
     records_ignored = 0
     modifications_to_approve = []
