@@ -9,6 +9,10 @@ from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
 from copy import copy
 import math
+from rackcity.views.rackcity_utils import (
+    is_location_full,
+    records_are_identical
+)
 
 
 @api_view(['GET'])
@@ -68,6 +72,13 @@ def model_modify(request):
         except ObjectDoesNotExist:
             failure_message += "No existing model with id="+str(id)+". "
         else:
+            # location validation
+            if not model_height_change_valid(data, existing_model):
+                failure_message = "Height change of model causes conflicts. "
+                return JsonResponse(
+                    {"failure_message": failure_message},
+                    status=HTTPStatus.NOT_ACCEPTABLE
+                )
             for field in data.keys():
                 setattr(existing_model, field, data[field])
             try:
@@ -81,6 +92,23 @@ def model_modify(request):
     },
         status=HTTPStatus.NOT_ACCEPTABLE
     )
+
+
+def model_height_change_valid(new_model_data, existing_model):
+    if 'height' not in new_model_data:
+        return True
+    if new_model_data['height'] <= existing_model.height:
+        return True
+    else:
+        instances = ITInstance.objects.filter(model=existing_model.id)
+        for instance in instances:
+            if is_location_full(
+                instance.rack,
+                instance.elevation,
+                new_model_data['height']
+            ):
+                return False
+        return True
 
 
 @api_view(['POST'])
@@ -276,28 +304,6 @@ def model_bulk_upload(request):
         },
         status=HTTPStatus.OK
     )
-
-
-def records_are_identical(existing_data, new_data):
-    existing_keys = existing_data.keys()
-    new_keys = new_data.keys()
-    for key in existing_keys:
-        if (
-            key not in new_keys
-            and existing_data[key] is not None
-            and key != 'id'
-        ):
-            return False
-        if (
-            key in new_keys
-            and new_data[key] != existing_data[key]
-        ):
-            if not (
-                isinstance(existing_data[key], int)
-                and int(new_data[key]) == existing_data[key]
-            ):
-                return False
-    return True
 
 
 @api_view(['POST'])

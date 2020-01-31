@@ -1,7 +1,7 @@
 # from rest_framework.parsers import JSONParser
 from django.http import HttpResponse, JsonResponse
 from rackcity.models import ITInstance, ITModel, Rack
-from rackcity.views.it_model_views import records_are_identical
+from rackcity.views.rackcity_utils import records_are_identical
 from django.core.exceptions import ObjectDoesNotExist
 from rackcity.api.objects import RackRangeSerializer
 from rackcity.api.serializers import (
@@ -16,6 +16,7 @@ from rest_framework.parsers import JSONParser
 from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
 import math
+from rackcity.views.rackcity_utils import is_location_full
 
 
 @api_view(['GET'])  # DEPRECATED !
@@ -324,21 +325,6 @@ def instance_page_count(request):
     instance_count = ITInstance.objects.all().count()
     page_count = math.ceil(instance_count / page_size)
     return JsonResponse({"page_count": page_count})
-
-
-def is_location_full(rack_id, instance_elevation, instance_height):
-    new_instance_location_range = [
-        instance_elevation + i for i in range(instance_height)
-    ]
-    instances_in_rack = ITInstance.objects.filter(rack=rack_id)
-    for instance_in_rack in instances_in_rack:
-        for occupied_location in [
-            instance_in_rack.elevation + i for i
-                in range(instance_in_rack.model.height)
-        ]:
-            if occupied_location in new_instance_location_range:
-                return True
-    return False
 
 
 def get_sort_arguments(data):
