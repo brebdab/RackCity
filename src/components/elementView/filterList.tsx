@@ -17,7 +17,7 @@ const reorder = (list: any, startIndex: number, endIndex: number) => {
   return result;
 };
 
-const grid = 8;
+const grid = 4;
 
 const getItemStyle = (isDragging: boolean, draggableStyle: any) => ({
   // some basic styles to make the items look a bit nicer

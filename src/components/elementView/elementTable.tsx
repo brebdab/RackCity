@@ -1,5 +1,6 @@
-import { Spinner } from "@blueprintjs/core";
+import { Icon, Spinner } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
+import { IconNames } from "@blueprintjs/icons";
 import "@blueprintjs/icons/lib/css/blueprint-icons.css";
 import React from "react";
 import { connect } from "react-redux";
@@ -20,12 +21,15 @@ interface IElementTableState {
   // sort_by_id: Array<ITableSort & IDragAndDrop>;
   filters: Array<IFilter>;
   sorted_cols: Array<string>;
+  curr_page: number;
+  total_pages: number;
 }
 export interface ITableSort {
   field: string;
   ascending: boolean;
   id: string;
 }
+const PAGE_SIZE = 10;
 
 export enum FilterTypes {
   TEXT = "text",
@@ -55,9 +59,12 @@ interface IElementTableProps {
   token: string;
   getData?(
     type: string,
+    page_num: number,
+    page_size: number,
     body: any,
     token: string
   ): Promise<Array<ElementObjectType>>;
+  getPages?(type: string, page_size: number, token: string): Promise<number>;
   data?: Array<ElementObjectType>;
 }
 
@@ -70,19 +77,66 @@ class ElementTable extends React.Component<
     filters: [],
     sort_by: [],
     items: [],
-    sorted_cols: []
+    sorted_cols: [],
+    curr_page: 1,
+    total_pages: 0
+  };
+  previousPage = () => {
+    if (this.state.curr_page > 1 && this.props.getData) {
+      const next_page = this.state.curr_page - 1;
+      const { sort_by } = this.state;
+      this.props
+        .getData(
+          this.props.type,
+          next_page,
+          PAGE_SIZE,
+          { sort_by },
+          this.props.token
+        )
+        .then(res => {
+          this.setState({
+            items: res,
+            curr_page: next_page
+          });
+        });
+    }
+  };
+  nextPage = () => {
+    if (this.state.curr_page < this.state.total_pages && this.props.getData) {
+      const next_page = this.state.curr_page + 1;
+      const { sort_by } = this.state;
+      this.props
+        .getData(
+          this.props.type,
+          next_page,
+          PAGE_SIZE,
+          { sort_by },
+          this.props.token
+        )
+        .then(res => {
+          this.setState({
+            items: res,
+            curr_page: next_page
+          });
+        });
+    }
   };
 
   renderSortItem = (item: ITableSort) => {
     return (
       <div className="header-text ">
-        <span>{`${item.field} ${
-          item.ascending ? "Ascending" : "Descending"
+        <span>{`${item.field} by ${
+          item.ascending ? "ascending" : "descending"
         }`}</span>
-        <span
-          onClick={() => this.removeSortItem(item.field)}
-          className="bp3-icon-large bp3-icon-delete icon"
-        ></span>
+
+        <span>
+          <Icon
+            className="icon"
+            icon={IconNames.DELETE}
+            iconSize={Icon.SIZE_STANDARD}
+            onClick={() => this.removeSortItem(item.field)}
+          />
+        </span>
       </div>
     );
   };
@@ -149,6 +203,8 @@ class ElementTable extends React.Component<
     if (this.props.getData) {
       this.props.getData!(
         this.props.type,
+        this.state.curr_page,
+        PAGE_SIZE,
         { sort_by: sorts_body },
         this.props.token
       ).then(res => {
@@ -161,12 +217,33 @@ class ElementTable extends React.Component<
   componentDidMount() {
     console.log(this.props.data);
     if (this.props.getData) {
-      this.props.getData(this.props.type, {}, this.props.token).then(res => {
-        this.setState({
-          items: res
+      this.props
+        .getData(
+          this.props.type,
+          this.state.curr_page,
+          PAGE_SIZE,
+          {},
+          this.props.token
+        )
+        .then(res => {
+          this.setState({
+            items: res
+          });
+        })
+        .catch(err => {
+          console.log(err);
         });
-      });
+
       console.log("table mounted");
+    }
+    if (this.props.getPages) {
+      this.props
+        .getPages(this.props.type, PAGE_SIZE, this.props.token)
+        .then(res => {
+          this.setState({
+            total_pages: res
+          });
+        });
     }
   }
   updateSortOrder = (items: Array<ITableSort>) => {
@@ -178,6 +255,7 @@ class ElementTable extends React.Component<
   };
 
   render() {
+    console.log(!(this.state.items && this.state.items.length > 0));
     if (
       this.props.data &&
       this.props.data.length !== 0 &&
@@ -194,7 +272,7 @@ class ElementTable extends React.Component<
           renderItem={this.renderSortItem}
           onChange={this.updateSortOrder}
         />
-        {this.state.items.length === 0 ? (
+        {!(this.state.items && this.state.items.length > 0) ? (
           <div className="loading-container">
             <Spinner
               className="center"
@@ -205,6 +283,27 @@ class ElementTable extends React.Component<
           </div>
         ) : (
           <div className="ElementTable">
+            <div className="table-control">
+              <span>
+                <Icon
+                  className="icon"
+                  icon={IconNames.CARET_LEFT}
+                  iconSize={Icon.SIZE_LARGE}
+                  onClick={() => this.previousPage()}
+                />
+              </span>
+              <span>
+                page {this.state.curr_page} of {this.state.total_pages}
+              </span>
+              <span>
+                <Icon
+                  className="icon"
+                  icon={IconNames.CARET_RIGHT}
+                  iconSize={Icon.SIZE_LARGE}
+                  onClick={() => this.nextPage()}
+                />
+              </span>
+            </div>
             <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered table">
               <thead>
                 <tr>
@@ -214,12 +313,12 @@ class ElementTable extends React.Component<
                         <th className="header-cell">
                           <div className="header-text">
                             <span>{col}</span>
-                            <span
+                            <Icon
+                              className="icon"
+                              icon={IconNames.DOUBLE_CARET_VERTICAL}
+                              iconSize={Icon.SIZE_STANDARD}
                               onClick={() => this.handleSort(col)}
-                              className="bp3-icon-medium bp3-icon-arrows-vertical icon"
-                            >
-                              {" "}
-                            </span>
+                            />
                           </div>
                         </th>
                       );

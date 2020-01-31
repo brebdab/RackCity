@@ -31,6 +31,12 @@
   max-height: 500px;
   float: left;
 }
+.table-control {
+  float: right;
+}
+.table-control span {
+  float: left;
+}
 .header-cell {
   // cursor: pointer !important;
   white-space: nowrap !important;
@@ -64,9 +70,11 @@
   float: left;
   margin-top: 20px;
 }
+.header-text icon {
+  float: right;
+}
 .icon {
   cursor: pointer !important;
-  float: right;
 }
 .icon:hover {
   background-color: #394b59 !important;
