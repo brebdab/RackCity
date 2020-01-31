@@ -143,6 +143,7 @@ export class InstanceView extends React.PureComponent<
       .then(res => {
         alert("Model was successfully deleted"); // TODO change to real deletion
         this.setState({ isDeleteOpen: false });
+        this.props.history.push("/");
       });
   };
 }
