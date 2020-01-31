@@ -1,6 +1,7 @@
 # from rest_framework.parsers import JSONParser
 from django.http import HttpResponse, JsonResponse
 from rackcity.models import ITInstance, ITModel, Rack
+from rackcity.views.it_model_views import records_are_identical
 from django.core.exceptions import ObjectDoesNotExist
 from rackcity.api.serializers import (
     ITInstanceSerializer,
@@ -14,6 +15,7 @@ from rest_framework.parsers import JSONParser
 from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
 import math
+<<<<<<< HEAD
 from rackcity.views.rackcity_utils import (
     is_location_full,
     validate_location_modification,
@@ -21,6 +23,8 @@ from rackcity.views.rackcity_utils import (
     get_sort_arguments,
     get_filter_arguments,
 )
+=======
+>>>>>>> parent of cc7766fa... Merge pull request #73 from brebdab/bauriemma-model-modification-validation
 
 
 @api_view(['GET'])  # DEPRECATED !
@@ -381,3 +385,141 @@ def instance_page_count(request):
     instance_count = ITInstance.objects.all().count()
     page_count = math.ceil(instance_count / page_size)
     return JsonResponse({"page_count": page_count})
+<<<<<<< HEAD
+=======
+
+
+def is_location_full(
+    rack_id,
+    instance_elevation,
+    instance_height,
+    instance_id=None,
+):
+    new_instance_location_range = [
+        instance_elevation + i for i in range(instance_height)
+    ]
+    instances_in_rack = ITInstance.objects.filter(rack=rack_id)
+    for instance_in_rack in instances_in_rack:
+        # Ignore if instance being modified conflicts with its old location
+        if (instance_id is None or instance_in_rack.id != instance_id):
+            for occupied_location in [
+                instance_in_rack.elevation + i for i
+                    in range(instance_in_rack.model.height)
+            ]:
+                if occupied_location in new_instance_location_range:
+                    return True
+    return False
+
+
+def validate_location_modification(data, existing_instance):
+    instance_id = existing_instance.id
+    rack_id = existing_instance.rack.id
+    instance_elevation = existing_instance.elevation
+    instance_height = existing_instance.model.height
+
+    if 'elevation' in data:
+        try:
+            instance_elevation = int(data['elevation'])
+        except ValueError:
+            raise Exception("Field 'elevation' must be of type int.")
+
+    if 'model' in data:
+        try:
+            instance_height = ITModel.objects.get(id=data['model']).height
+        except Exception:
+            raise Exception("No existing model with id=" +
+                            str(data['model']) + ".")
+
+    if 'rack' in data:
+        try:
+            rack_id = Rack.objects.get(id=data['rack']).id
+        except Exception:
+            raise Exception("No existing rack with id=" +
+                            str(data['rack']) + ".")
+
+    if is_location_full(
+        rack_id,
+        instance_elevation,
+        instance_height,
+        instance_id=instance_id,
+    ):
+        raise Exception("Instance does not fit in modified location.")
+
+
+def get_sort_arguments(data):
+    sort_args = []
+    if 'sort_by' in data:
+        sort_by = data['sort_by']
+        for sort in sort_by:
+            if ('field' not in sort) or ('ascending' not in sort):
+                raise Exception("Must specify 'field' and 'ascending' fields.")
+            if not isinstance(sort['field'], str):
+                raise Exception("Field 'field' must be of type string.")
+            if not isinstance(sort['ascending'], bool):
+                raise Exception("Field 'ascending' must be of type bool.")
+            field_name = sort['field']
+            order = "-" if not sort['ascending'] else ""
+            sort_args.append(order + field_name)
+    return sort_args
+
+
+def get_filter_arguments(data):
+    filter_args = {}
+    if 'filters' in data:
+        filters = data['filters']
+        for filter in filters:
+
+            if (
+                ('field' not in filter)
+                or ('filter_type' not in filter)
+                or ('filter' not in filter)
+            ):
+                raise Exception(
+                    "Must specify 'field', 'filter_type', and 'filter' fields."
+                )
+            if not isinstance(filter['field'], str):
+                raise Exception("Field 'field' must be of type string.")
+            if not isinstance(filter['filter_type'], str):
+                raise Exception("Field 'filter_type' must be of type string.")
+            if not isinstance(filter['filter'], dict):
+                raise Exception("Field 'filter' must be of type dict.")
+
+            filter_field = filter['field']
+            filter_type = filter['filter_type']
+            filter_dict = filter['filter']
+
+            if filter_type == 'text':
+                if filter_dict['match_type'] == 'exact':
+                    filter_args['{0}'.format(filter_field)] = \
+                        filter_dict['value']
+                elif filter_dict['match_type'] == 'contains':
+                    filter_args['{0}__icontains'.format(filter_field)] = \
+                        filter_dict['value']
+
+            elif filter_type == 'numeric':
+                range_value = (
+                    int(filter_dict['min']),
+                    int(filter_dict['max'])
+                )
+                filter_args['{0}__range'.format(filter_field)] = range_value  # noqa inclusive on both min, max
+
+            elif filter_type == 'rack_range':
+                range_serializer = RackRangeSerializer(data=filter_dict)
+                if not range_serializer.is_valid():
+                    raise Exception(
+                        "Invalid rack_range filter: " +
+                        str(range_serializer.errors)
+                    )
+                filter_args['rack__rack_num__range'] = \
+                    range_serializer.get_number_range()
+                filter_args['rack__row_letter__range'] = \
+                    range_serializer.get_row_range()  # noqa inclusive on both letter, number
+
+            else:
+                raise Exception(
+                    "String field 'filter_type' must be either 'text', " +
+                    "'numeric', or 'rack_range'."
+                )
+
+    return filter_args
+>>>>>>> parent of cc7766fa... Merge pull request #73 from brebdab/bauriemma-model-modification-validation
