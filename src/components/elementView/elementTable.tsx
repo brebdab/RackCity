@@ -190,6 +190,8 @@ class ElementTable extends React.Component<
   handleSort(field: string) {
     let ascending;
     let sorts = this.state.sort_by;
+
+    const sorted_cols = this.state.sorted_cols;
     if (this.state.sorted_cols.includes(field)) {
       ascending = !this.state.sort_by.find(item => item.field === field)!
         .ascending;
@@ -202,11 +204,10 @@ class ElementTable extends React.Component<
       });
     } else {
       ascending = true;
+      sorted_cols.push(field);
     }
     // if (!this.state.sorted_cols.includes(field)) {
-    const sorted_cols = this.state.sorted_cols;
 
-    sorted_cols.push(field);
     sorts.push({
       field,
       ascending,
@@ -296,6 +297,7 @@ class ElementTable extends React.Component<
   }
 
   render() {
+    console.log(this.state.items);
     console.log(!(this.state.items && this.state.items.length > 0));
     if (
       this.props.data &&
@@ -354,7 +356,34 @@ class ElementTable extends React.Component<
               <thead>
                 <tr>
                   {Object.keys(this.state.items[0]).map((col: string) => {
-                    if (col !== "id") {
+                    if (col === "model") {
+                      return [
+                        <th className="header-cell">
+                          <div className="header-text">
+                            <span>model vendor</span>
+                            <Icon
+                              className="icon"
+                              icon={IconNames.DOUBLE_CARET_VERTICAL}
+                              iconSize={Icon.SIZE_STANDARD}
+                              onClick={() => this.handleSort("model__vendor")}
+                            />
+                          </div>
+                        </th>,
+                        <th className="header-cell">
+                          <div className="header-text">
+                            <span>model number</span>
+                            <Icon
+                              className="icon"
+                              icon={IconNames.DOUBLE_CARET_VERTICAL}
+                              iconSize={Icon.SIZE_STANDARD}
+                              onClick={() =>
+                                this.handleSort("model__model_number")
+                              }
+                            />
+                          </div>
+                        </th>
+                      ];
+                    } else if (col !== "id") {
                       return (
                         <th className="header-cell">
                           <div className="header-text">
@@ -386,9 +415,10 @@ class ElementTable extends React.Component<
                     >
                       {Object.entries(item).map(([col, value]) => {
                         if (isModelObject(value)) {
-                          return (
-                            <td>{value.vendor + " " + value.model_number}</td>
-                          );
+                          return [
+                            <td>{value.vendor}</td>,
+                            <td>{value.model_number}</td>
+                          ];
                         } else if (isRackObject(value)) {
                           return (
                             <td>{value.row_letter + " " + value.rack_num}</td>

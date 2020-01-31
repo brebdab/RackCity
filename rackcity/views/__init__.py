@@ -17,8 +17,10 @@ from .it_instance_views import (
     instance_detail,
     instance_list,
     instance_add,
+    instance_modify,
     instance_delete,
     instance_page,
+    instance_bulk_upload,
     instance_page_count,
 )
 from .rack_views import (
