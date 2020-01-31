@@ -337,7 +337,7 @@ def instance_bulk_upload(request):
     records_added = 0
     for instance_to_add in instances_to_add:
         records_added += 1
-        # GOING TO HAVE TO RECHECK LOCATION AND UNIQUENESS WITH EACH ADDITION
+        # GOING TO HAVE TO RECHECK LOCATION WITH EACH ADDITION
         instance_to_add.save()
     records_ignored = 0
     modifications_to_approve = []
