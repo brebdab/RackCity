@@ -281,6 +281,19 @@ class ElementTable extends React.Component<
     });
     this.updateSortedData(items);
   };
+  getFieldNames = ()=>{
+    let fields:Array<string> = []
+    if (this.state.items && this.state.items.length > 0){
+      Object.keys(this.state.items[0]).forEach((col:string) => {
+
+        if ()
+        fields.push(col)
+
+      })
+
+    }
+    
+  }
 
   render() {
     console.log(!(this.state.items && this.state.items.length > 0));

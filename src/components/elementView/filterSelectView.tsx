@@ -44,55 +44,12 @@ interface FilterSelectViewState {}
 
 interface FilterSelectViewProps {
   token: string;
+  fields: Array<string>;
 }
 class FilterSelectView extends React.Component<
   FilterSelectViewProps & RouteComponentProps,
   FilterSelectViewState
 > {
-  private handleSwitchChange = handleBooleanChange(viewRange =>
-    this.setState({ viewRange: viewRange })
-  );
-
-  handleChange = (field: { [key: string]: any }) => {
-    this.setState({
-      values: updateObject(this.state.values, {
-        ...field
-      })
-    });
-  };
-  handleSubmit = (e: any) => {
-    this.setState({
-      errors: []
-    });
-
-    e.preventDefault();
-
-    const headers = getHeaders(this.props.token);
-
-    axios
-      .post(API_ROOT + "api/racks/get", this.state.values, headers)
-      .then(res => {
-        console.log(res);
-        this.props.history.push({
-          pathname: "/racks",
-          state: res.data.racks
-        });
-      })
-      .catch(err => {
-        console.log(err.response.data.failure_message);
-        let errors: Array<string> = this.state.errors;
-        errors.push(err.response.data.failure_message as string);
-        this.setState({
-          errors: errors
-        });
-      });
-
-    // this.props.history.push({
-    //   pathname: "/racks",
-    //   search: queryString.stringify(this.state.values)
-    // });
-  };
-  componentDidMount() {}
   render() {
     return <FormGroup label="Select Field To Filter "></FormGroup>;
   }
