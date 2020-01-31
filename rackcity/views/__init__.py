@@ -19,6 +19,7 @@ from .it_instance_views import (
     instance_add,
     instance_delete,
     instance_page,
+    instance_bulk_upload,
     instance_page_count,
 )
 from .rack_views import (
