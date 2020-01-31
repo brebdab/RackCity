@@ -14,7 +14,7 @@ import {
 import "./elementView.scss";
 import DragDropList from "./dragDropList";
 import { RackRangeFields } from "./rackSelectView";
-
+import FilterSelectView from "./filterSelectView";
 interface IElementTableState {
   items: Array<ElementObjectType>;
   sort_by: Array<ITableSort>;
@@ -282,19 +282,20 @@ class ElementTable extends React.Component<
     });
     this.updateSortedData(items);
   };
-  getFieldNames = ()=>{
-    let fields:Array<string> = []
-    if (this.state.items && this.state.items.length > 0){
-      Object.keys(this.state.items[0]).forEach((col:string) => {
-
-        if ()
-        fields.push(col)
-
-      })
-
+  getFieldNames = () => {
+    let fields: Array<string> = [];
+    if (this.state.items && this.state.items.length > 0) {
+      Object.keys(this.state.items[0]).forEach((col: string) => {
+        if (col === "model") {
+          fields.push("model vendor");
+          fields.push("model number");
+        } else if (col !== "id") {
+          fields.push(col);
+        }
+      });
     }
-    
-  }
+    return fields;
+  };
 
   render() {
     console.log(this.state.items);
@@ -310,6 +311,10 @@ class ElementTable extends React.Component<
     }
     return (
       <div>
+        <FilterSelectView
+          fields={this.getFieldNames()}
+  
+        />
         <DragDropList
           items={this.state.filters}
           renderItem={this.renderFilterItem}
