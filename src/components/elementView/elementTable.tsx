@@ -12,7 +12,7 @@ import {
   isRackObject
 } from "../utils";
 import "./elementView.scss";
-import FilterList from "./filterList";
+import DragDropList from "./dragDropList";
 import { RackRangeFields } from "./rackSelectView";
 
 interface IElementTableState {
@@ -120,6 +120,34 @@ class ElementTable extends React.Component<
           });
         });
     }
+  };
+  renderFilterItem = (item: IFilter) => {
+    return (
+      <div className="header-text ">
+        <span>
+          <Icon
+            className="icon"
+            icon={IconNames.FILTER_LIST}
+            iconSize={Icon.SIZE_STANDARD}
+            // onClick={() => this.removeFilterItem(item.field)}
+          />
+        </span>
+        <span>{`${item.field} 
+        }`}</span>
+
+        <span>
+          <Icon
+            className="icon"
+            icon={IconNames.DELETE}
+            iconSize={Icon.SIZE_STANDARD}
+            // onClick={() => this.removeFilterItem(item.field)}
+          />
+        </span>
+      </div>
+    );
+    // field: string;
+    // filter_type: FilterTypes;
+    // filter: TextFilter | NumericFilter | RackRangeFields;
   };
 
   renderSortItem = (item: ITableSort) => {
@@ -267,7 +295,12 @@ class ElementTable extends React.Component<
     }
     return (
       <div>
-        <FilterList
+        <DragDropList
+          items={this.state.filters}
+          renderItem={this.renderFilterItem}
+          onChange={this.updateSortOrder}
+        />
+        <DragDropList
           items={this.state.sort_by}
           renderItem={this.renderSortItem}
           onChange={this.updateSortOrder}

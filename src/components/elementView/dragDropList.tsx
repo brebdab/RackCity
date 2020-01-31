@@ -44,7 +44,7 @@ export interface FilterListProps {
   renderItem(item: any): any;
   onChange?(items: Array<any>): void;
 }
-class FilterList extends React.Component<FilterListProps> {
+class DragDropList extends React.Component<FilterListProps> {
   //   constructor(props) {
   //     super(props);
   //     this.state = {
@@ -111,4 +111,4 @@ class FilterList extends React.Component<FilterListProps> {
   }
 }
 
-export default FilterList;
+export default DragDropList;
