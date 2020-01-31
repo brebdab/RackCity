@@ -1,6 +1,5 @@
+import { FormGroup } from "@blueprintjs/core";
 import * as React from "react";
-import { Switch } from "react-router";
-import { FormGroup, Button } from "@blueprintjs/core";
 import Field from "../../forms/field";
 interface RackRangeProps {
   handleChange(field: { [key: string]: any }): void;
