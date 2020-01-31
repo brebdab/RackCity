@@ -48,7 +48,7 @@ class RackView extends React.PureComponent<
         currHeight === +instances[0].elevation
       ) {
         const width = +instances[0].model.height;
-        const id: number = +instances[0].id;
+        const id: number = +instances[0].id
 
         currHeight = width + currHeight;
         rows.unshift(
