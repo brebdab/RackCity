@@ -162,10 +162,9 @@ class ElementTable extends React.Component<
   handleSort(field: string) {
     let ascending;
     let sorts = this.state.sort_by;
-    console.log(this.state.sorted_cols);
+
     const sorted_cols = this.state.sorted_cols;
     if (this.state.sorted_cols.includes(field)) {
-      console.log(this.state.sort_by);
       ascending = !this.state.sort_by.find(item => item.field === field)!
         .ascending;
       sorts = sorts.filter(item => {
