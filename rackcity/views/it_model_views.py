@@ -254,6 +254,7 @@ def model_bulk_upload(request):
     model_datas = data['models']
     models_to_add = []
     potential_modifications = []
+    models_in_import = set()
     for model_data in model_datas:
         model_serializer = ITModelSerializer(data=model_data)
         if not model_serializer.is_valid():
@@ -262,6 +263,20 @@ def model_bulk_upload(request):
             return JsonResponse(
                 {"failure_message": failure_message},
                 status=HTTPStatus.BAD_REQUEST
+            )
+        if (model_data['vendor'], model_data['model_number']) in models_in_import:
+            failure_message = "Vendor+model_number combination must be unique, but " + \
+                "vendor="+model_data['vendor'] + \
+                ", model_number="+model_data['model_number'] + \
+                " appears more than once in import. "
+            return JsonResponse(
+                {"failure_message": failure_message},
+                status=HTTPStatus.BAD_REQUEST
+            )
+        else:
+            models_in_import.add(
+                (model_data['vendor'],
+                 model_data['model_number'])
             )
         try:
             existing_model = ITModel.objects.get(
