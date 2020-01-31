@@ -14,7 +14,8 @@ import {
 import "./elementView.scss";
 import DragDropList from "./dragDropList";
 import { RackRangeFields } from "./rackSelectView";
-import FilterSelectView from "./filterSelectView";
+import FilterSelectView, { IFilter } from "./filterSelectView";
+import { SORT_ASC } from "@blueprintjs/icons/lib/esm/generated/iconNames";
 interface IElementTableState {
   items: Array<ElementObjectType>;
   sort_by: Array<ITableSort>;
@@ -43,11 +44,6 @@ export interface NumericFilter {
 export interface TextFilter {
   value: string;
   match_type: string;
-}
-export interface IFilter {
-  field: string;
-  filter_type: FilterTypes;
-  filter: TextFilter | NumericFilter | RackRangeFields;
 }
 
 interface IDragAndDrop {
@@ -129,7 +125,6 @@ class ElementTable extends React.Component<
             className="icon"
             icon={IconNames.FILTER_LIST}
             iconSize={Icon.SIZE_STANDARD}
-            // onClick={() => this.removeFilterItem(item.field)}
           />
         </span>
         <span>{`${item.field} 
@@ -140,7 +135,7 @@ class ElementTable extends React.Component<
             className="icon"
             icon={IconNames.DELETE}
             iconSize={Icon.SIZE_STANDARD}
-            // onClick={() => this.removeFilterItem(item.field)}
+            onClick={() => this.removeFilterItem(item.field)}
           />
         </span>
       </div>
@@ -184,7 +179,17 @@ class ElementTable extends React.Component<
       sorted_cols
       // sort_by_id: sorts_id
     });
-    this.updateSortedData(sorts);
+    this.updateSortData(sorts);
+  };
+  removeFilterItem = (field: string) => {
+    const filters = this.state.filters.filter(item => {
+      return item.field !== field;
+    });
+    console.log(filters);
+    this.setState({
+      filters
+    });
+    this.updateFilterData(filters);
   };
 
   handleSort(field: string) {
@@ -218,23 +223,22 @@ class ElementTable extends React.Component<
       sorted_cols
       // sort_by_id: sorts_id
     });
-    this.updateSortedData(sorts);
+    this.updateSortData(sorts);
     // } else {
     // }
   }
 
-  updateSortedData = (sorts: Array<ITableSort>) => {
-    const sorts_body = sorts.map(item => {
-      const { field, ascending } = item;
-      return { field, ascending };
+  updateFilterData = (items: Array<IFilter>) => {
+    console.log("detected new filters", {
+      sort_by: this.state.sort_by,
+      filters: items
     });
-    console.log("detected new order", sorts_body);
     if (this.props.getData) {
       this.props.getData!(
         this.props.type,
         this.state.curr_page,
         PAGE_SIZE,
-        { sort_by: sorts_body },
+        { sort_by: this.state.sort_by, filters: items },
         this.props.token
       ).then(res => {
         this.setState({
@@ -243,6 +247,27 @@ class ElementTable extends React.Component<
       });
     }
   };
+  updateSortData = (items: Array<ITableSort>) => {
+    const sorts_body = items.map(item => {
+      const { field, ascending } = item;
+      return { field, ascending };
+    });
+    console.log("detected new sorts ", sorts_body);
+    if (this.props.getData) {
+      this.props.getData!(
+        this.props.type,
+        this.state.curr_page,
+        PAGE_SIZE,
+        { sort_by: sorts_body, filters: this.state.filters },
+        this.props.token
+      ).then(res => {
+        this.setState({
+          items: res
+        });
+      });
+    }
+  };
+
   componentDidMount() {
     console.log(this.props.data);
     if (this.props.getData) {
@@ -280,7 +305,7 @@ class ElementTable extends React.Component<
     this.setState({
       sort_by: items
     });
-    this.updateSortedData(items);
+    this.updateSortData(items);
   };
   getFieldNames = () => {
     let fields: Array<string> = [];
@@ -297,6 +322,15 @@ class ElementTable extends React.Component<
     return fields;
   };
 
+  addFilter = (filter: IFilter) => {
+    const filters = this.state.filters;
+    filters.push(filter);
+    console.log(filters);
+    this.setState({
+      filters
+    });
+    this.updateFilterData(filters);
+  };
   render() {
     console.log(this.state.items);
     console.log(!(this.state.items && this.state.items.length > 0));
@@ -311,20 +345,24 @@ class ElementTable extends React.Component<
     }
     return (
       <div>
-        <FilterSelectView
-          fields={this.getFieldNames()}
-  
-        />
-        <DragDropList
-          items={this.state.filters}
-          renderItem={this.renderFilterItem}
-          onChange={this.updateSortOrder}
-        />
-        <DragDropList
-          items={this.state.sort_by}
-          renderItem={this.renderSortItem}
-          onChange={this.updateSortOrder}
-        />
+        <div className="filter-select">
+          <FilterSelectView
+            handleAddFilter={this.addFilter}
+            fields={this.getFieldNames()}
+          />
+        </div>
+        <div className="table-options">
+          <DragDropList
+            items={this.state.filters}
+            renderItem={this.renderFilterItem}
+            onChange={this.updateSortOrder}
+          />
+          <DragDropList
+            items={this.state.sort_by}
+            renderItem={this.renderSortItem}
+            onChange={this.updateSortOrder}
+          />
+        </div>
         {!(this.state.items && this.state.items.length > 0) ? (
           <div className="loading-container">
             <Spinner

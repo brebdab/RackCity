@@ -8,7 +8,7 @@ interface RackRangeProps {
 class RackRangeOptions extends React.Component<RackRangeProps> {
   render() {
     return (
-      <div className="rack-select">
+      <div className="rack-field">
         <FormGroup className="rack-field" label="Rack Letter ">
           <Field
             field="letter_start"
@@ -17,15 +17,13 @@ class RackRangeOptions extends React.Component<RackRangeProps> {
           />
         </FormGroup>
         {this.props.range ? (
-          <div className="rack-select">
-            <FormGroup className="rack-field" label="Rack Letter (end)">
-              <Field
-                field="letter_end"
-                type="text"
-                onChange={this.props.handleChange}
-              />
-            </FormGroup>
-          </div>
+          <FormGroup className="rack-field" label="Rack Letter (end)">
+            <Field
+              field="letter_end"
+              type="text"
+              onChange={this.props.handleChange}
+            />
+          </FormGroup>
         ) : null}
         <FormGroup className="rack-field" label="Row number">
           <Field

@@ -1,31 +1,19 @@
-import {
-  Button,
-  Callout,
-  FormGroup,
-  Intent,
-  MenuItem,
-  Switch,
-  InputGroup,
-  HTMLSelect
-} from "@blueprintjs/core";
+import { FormGroup, HTMLSelect, MenuItem, Button } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
-import { handleBooleanChange } from "@blueprintjs/docs-theme";
-import { Suggest, Select } from "@blueprintjs/select";
-import axios from "axios";
+import { Suggest } from "@blueprintjs/select";
 import * as React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
-import { API_ROOT } from "../../api-config";
 import Field from "../../forms/field";
 import "../../forms/forms.scss";
 import { filterString, renderStringItem } from "../../forms/formUtils";
 import { updateObject } from "../../store/utility";
-import { ElementObjectType, getHeaders, RackObject } from "../utils";
 import "./elementView.scss";
 import { RackRangeFields } from "./rackSelectView";
+import RackRangeOptions from "./rackRangeOptions";
 
 export enum TextFilterTypes {
-  EXACT = "exact match",
+  EXACT = "exact",
   CONTAINS = "contains"
 }
 export enum FilterTypes {
@@ -43,19 +31,19 @@ export interface TextFilter {
 }
 export interface IFilter {
   field: string;
-  filter_type: FilterTypes;
-  filter: TextFilter | NumericFilter | RackRangeFields;
+  filter_type?: FilterTypes;
+  filter?: TextFilter | NumericFilter | RackRangeFields;
 }
-interface FilterSelectViewState {
-  field: string | undefined;
-  filter: TextFilter | NumericFilter | RackRangeFields | undefined;
-
+interface FilterSelectViewState extends IFilter {
+  // field: string | undefined;
+  // filter: TextFilter | NumericFilter | RackRangeFields | undefined;
   // type: string | number | RackObject;
 }
 
 interface FilterSelectViewProps {
   token: string;
   fields: Array<string>;
+  handleAddFilter(filter: IFilter): void;
 }
 const numberFields = [
   "elevation",
@@ -81,7 +69,7 @@ class FilterSelectView extends React.Component<
   FilterSelectViewState
 > {
   state = {
-    field: undefined,
+    field: "",
     filter: undefined
   };
   renderFilterOptions(field: string | undefined) {
@@ -92,10 +80,16 @@ class FilterSelectView extends React.Component<
     if (type === FilterTypes.NUMERIC) {
       return this.getNumericFilterOptions();
     }
+    if (type === FilterTypes.RACKRANGE) {
+      return this.getRackFilterOptions();
+    }
     return null;
   }
   setTextFilterType(type: TextFilterTypes) {
     this.setState({});
+  }
+  getRackFilterOptions() {
+    return <RackRangeOptions handleChange={this.handleChange} range={true} />;
   }
   getNumericFilterOptions() {
     return (
@@ -144,7 +138,8 @@ class FilterSelectView extends React.Component<
   }
   setFilterType(field: string) {
     this.setState({
-      field: field
+      field: field,
+      filter_type: getFilterType(field)
     });
     const type = getFilterType(field);
     if (type === FilterTypes.TEXT) {
@@ -162,6 +157,12 @@ class FilterSelectView extends React.Component<
         filter: filter
       });
     }
+    if (type === FilterTypes.RACKRANGE) {
+      const filter: RackRangeFields = {} as RackRangeFields;
+      this.setState({
+        filter: filter
+      });
+    }
   }
   handleChange = (field: { [key: string]: any }) => {
     const test = updateObject(this.state.filter, {
@@ -175,6 +176,12 @@ class FilterSelectView extends React.Component<
     this.setState({
       filter: test
     });
+  };
+  handleSubmit = (e: any) => {
+    e.preventDefault();
+    console.log("test");
+    const filter: IFilter = { ...this.state };
+    this.props.handleAddFilter(filter);
   };
   render() {
     console.log("STATE", this.state);
@@ -196,7 +203,11 @@ class FilterSelectView extends React.Component<
             noResults={<MenuItem disabled={true} text="No matching fields" />}
           />
         </FormGroup>
+
         {this.state.field ? this.renderFilterOptions(this.state.field) : null}
+        <Button className="button" icon="filter" onClick={this.handleSubmit}>
+          Add Filter
+        </Button>
       </div>
     );
   }

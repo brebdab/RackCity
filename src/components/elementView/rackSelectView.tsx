@@ -94,21 +94,23 @@ class RackSelectView extends React.Component<
             onChange={this.handleSwitchChange}
             label="View Range of Racks"
           />
-          <RackRangeOptions
-            handleChange={this.handleChange}
-            range={this.state.viewRange}
-          />
+          <div className="rack-select">
+            <RackRangeOptions
+              handleChange={this.handleChange}
+              range={this.state.viewRange}
+            />
 
-          <div className="rack-field ">
-            {this.state.viewRange ? (
-              <Button className="button" icon="search" type="submit">
-                View Racks
-              </Button>
-            ) : (
-              <Button className="button" icon="search" type="submit">
-                View Rack
-              </Button>
-            )}
+            <div className="rack-field ">
+              {this.state.viewRange ? (
+                <Button className="button" icon="search" type="submit">
+                  View Racks
+                </Button>
+              ) : (
+                <Button className="button" icon="search" type="submit">
+                  View Rack
+                </Button>
+              )}
+            </div>
           </div>
         </form>
       </div>
