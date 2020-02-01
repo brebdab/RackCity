@@ -1,11 +1,11 @@
-import { Classes, AnchorButton } from "@blueprintjs/core";
+import { Classes } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
+import RackSelectView from "../../elementView/rackSelectView";
 import { InstanceObject, RackResponseObject } from "../../utils";
 import "./rackView.scss";
-import RackSelectView from "../../elementView/rackSelectView";
 //export interface ElementViewProps {}
 
 export interface RackViewProps {
