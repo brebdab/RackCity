@@ -14,7 +14,10 @@ def validate_hostname(value):
 
 class ITInstance(models.Model):
     hostname = models.CharField(
-        max_length=150, unique=True, validators=[validate_hostname])
+        max_length=150,
+        unique=True,
+        validators=[validate_hostname]
+    )
     elevation = models.PositiveIntegerField()
     model = models.ForeignKey(
         ITModel,
