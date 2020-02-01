@@ -64,12 +64,13 @@ class RackView extends React.PureComponent<
               className="cell"
               onClick={() => this.props.history.push("/instances/" + id)}
             >
-              <span>
+              <div className="cell-text">
                 {instances[0].model.vendor +
                   " " +
-                  instances[0].model.model_number}
-              </span>
-              <span>{instances[0].hostname}</span>
+                  instances[0].model.model_number +
+                  " | " +
+                  instances[0].hostname}
+              </div>
             </td>
           </tr>
         );
