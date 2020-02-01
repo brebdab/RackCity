@@ -287,7 +287,7 @@ def instance_bulk_upload(request):
             )
         try:
             row_letter = instance_data['rack'][:1]
-            rack_num = int(instance_data['rack'][1:])
+            rack_num = instance_data['rack'][1:]
             rack = Rack.objects.get(row_letter=row_letter, rack_num=rack_num)
         except ObjectDoesNotExist:
             failure_message = "Provided rack doesn't exist: " + \
