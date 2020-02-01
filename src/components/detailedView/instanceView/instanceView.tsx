@@ -7,7 +7,7 @@ import PropertiesView from "../propertiesView";
 import { RouteComponentProps, withRouter } from "react-router";
 import "./instanceView.scss";
 import { connect } from "react-redux";
-import { InstanceObject, ElementType } from "../../utils";
+import { InstanceObject, ElementType, getHeaders } from "../../utils";
 import FormPopup from "../../../forms/FormPopup";
 import { FormTypes } from "../../../forms/modelForm";
 
@@ -132,8 +132,19 @@ export class InstanceView extends React.PureComponent<
   private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
   private handleFormClose = () => this.setState({ isFormOpen: false });
   private handleDelete = () => {
-    alert("Model was successfully deleted"); // TODO change to real deletion
-    this.setState({ isDeleteOpen: false });
+    console.log(this.props.rid);
+    const data = { id: this.state.instance!.id };
+    axios
+      .post(
+        API_ROOT + "api/instances/delete",
+        data,
+        getHeaders(this.props.token)
+      )
+      .then(res => {
+        alert("Model was successfully deleted"); // TODO change to real deletion
+        this.setState({ isDeleteOpen: false });
+        this.props.history.push("/");
+      });
   };
 }
 
