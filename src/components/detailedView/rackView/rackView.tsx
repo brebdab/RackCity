@@ -50,10 +50,18 @@ class RackView extends React.PureComponent<
         const width = +instances[0].model.height;
         const id: number = +instances[0].id;
 
-        currHeight = width + currHeight;
-        if (currHeight > 42) {
+        if (width + currHeight > maxHeight) {
           console.warn("INSTANCE OUT OF RANGE ", instances[0]);
+
+          currHeight++;
+
+          rows.unshift(
+            <tr className="rack-row">
+              <td className="cell empty"></td>
+            </tr>
+          );
         } else {
+          currHeight = width + currHeight;
           rows.unshift(
             <tr
               className="rack-row"
@@ -89,6 +97,7 @@ class RackView extends React.PureComponent<
         );
       }
     }
+    console.log(rows);
 
     return rows;
   }
