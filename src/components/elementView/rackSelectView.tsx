@@ -57,7 +57,8 @@ class RackSelectView extends React.Component<
     axios
       .post(API_ROOT + "api/racks/get", this.state.values, headers)
       .then(res => {
-        console.log(res);
+        console.log(this.props.location.state);
+        this.props.history.replace("/racks", res.data.racks);
         this.props.history.push({
           pathname: "/racks",
           state: res.data.racks

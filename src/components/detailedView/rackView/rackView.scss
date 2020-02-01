@@ -1,36 +1,38 @@
 $row-height: 6px;
 @import "~@blueprintjs/core/lib/scss/variables";
 
-.rack-container {
-  padding-left: 20px;
-  display: inline-block;
-  overflow-x: scroll;
-  white-space: nowrap;
+@media screen {
+  .rack-container {
+    padding-left: 20px;
+    display: inline-block;
+    overflow-x: scroll;
+    white-space: nowrap;
+    width: 100%;
+  }
+  .rack-container span ~ span {
+    padding-left: 20px;
+    display: inline-block;
+  }
 }
-.rack-container span ~ span {
-  padding-left: 20px;
-  display: inline-block;
-}
+
 .rack {
-  outline: 10pt grey;
+  // outline: 10pt grey;
   border-style: solid;
+  border-width: 6pt;
   border-color: #202b33;
   display: inline-block;
   margin: left 10px;
 }
 
 .rack-table {
-  //background: grey;
-  border: 10pt grey !important;
-  outline: 10pt white !important;
-  width: 150pt;
+  //background: grey;.
+
+  // outline: 10pt white !important;
+  //width: 150pt;
   float: left;
   table-layout: fixed !important;
-  padding-left: 0px !important;
 }
 .loc-table {
-  border: 10pt grey !important;
-  outline: 10pt white !important;
   padding-left: 0px !important;
 }
 
@@ -51,12 +53,10 @@ $row-height: 6px;
   margin: 0 !important;
   font-size: 2 * $row-height !important;
 }
-.rack-table .cell span ~ span {
-  padding-left: 10px !important;
-  display: inline-block;
-}
+
 .rack-table .cell {
-  max-width: 100px !important;
+  max-width: 200px;
+  min-width: 200px;
   // text-overflow: clip !important;
   overflow: auto !important;
   position: relative !important;
@@ -65,30 +65,42 @@ $row-height: 6px;
   margin: 0px !important;
 }
 .rack-table .cell span {
-  width: 80px;
+  //width: 80px;
   white-space: nowrap;
   margin: 0px !important;
   float: left;
 }
+.rack tr {
+  outline: 1px solid #202b33;
+}
 
+.rack table {
+  border-collapse: collapse !important;
+}
 .empty {
-  padding: $row-height !important;
+  padding-top: $row-height !important;
+  padding-bottom: $row-height !important;
+  // outline-color: #202b33 !important;
+  // outline-width: 5pt !important;
 }
 .flex-grid-thirds {
   display: flex;
   justify-content: space-between;
 }
 
-@media (max-width: 400px) {
-  .flex-grid,
-  .flex-grid-thirds {
-    display: block;
-    .col {
-      width: 100%;
-      margin: 10px 0 10px 0;
-    }
-  }
-}
+// .unit {
+
+// }
+// @media (max-width: 400px) {
+//   .flex-grid,
+//   .flex-grid-thirds {
+//     display: block;
+//     .col {
+//       width: 100%;
+//       margin: 10px 0 10px 0;
+//     }
+//   }
+// }
 
 * {
   box-sizing: border-box;
@@ -96,4 +108,41 @@ $row-height: 6px;
 
 .flex-grid {
   margin: 0 10pt 0 0;
+}
+
+@media print {
+  .rack-container {
+    display: block;
+    overflow-x: visible;
+    // white-space: nowrap;
+  }
+  .rack-container span ~ span {
+    padding-left: 20px;
+  }
+  .bp3-navbar {
+    display: none;
+  }
+  .nav-bar-button {
+    display: none;
+  }
+
+  @page {
+    margin: 0.5cm;
+  }
+  .rack-table .cell {
+    max-width: none !important;
+    width: fit-content !important;
+  }
+  .rack-row {
+    -webkit-print-color-adjust: exact !important;
+  }
+  .header,
+  .unit {
+    color: black !important;
+  }
+  .rack header,
+  .rack tr,
+  .rack thead {
+    outline: 1px solid #394b59 !important;
+  }
 }

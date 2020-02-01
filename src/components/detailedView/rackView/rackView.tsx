@@ -1,8 +1,9 @@
-import { Classes, AnchorButton } from "@blueprintjs/core";
+import { Classes } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
+import RackSelectView from "../../elementView/rackSelectView";
 import { InstanceObject, RackResponseObject } from "../../utils";
 import "./rackView.scss";
 //export interface ElementViewProps {}
@@ -50,10 +51,18 @@ class RackView extends React.PureComponent<
         const width = +instances[0].model.height;
         const id: number = +instances[0].id;
 
-        currHeight = width + currHeight;
-        if (currHeight > 42) {
+        if (width + currHeight > maxHeight) {
           console.warn("INSTANCE OUT OF RANGE ", instances[0]);
+
+          currHeight++;
+
+          rows.unshift(
+            <tr className="rack-row">
+              <td className="cell empty"></td>
+            </tr>
+          );
         } else {
+          currHeight = width + currHeight;
           rows.unshift(
             <tr
               className="rack-row"
@@ -66,13 +75,11 @@ class RackView extends React.PureComponent<
                 className="cell"
                 onClick={() => this.props.history.push("/instances/" + id)}
               >
-                <div className="cell-text">
-                  {instances[0].model.vendor +
-                    " " +
-                    instances[0].model.model_number +
-                    " | " +
-                    instances[0].hostname}
-                </div>
+                {instances[0].model.vendor +
+                  " " +
+                  instances[0].model.model_number +
+                  " | " +
+                  instances[0].hostname}
               </td>
             </tr>
           );
@@ -89,6 +96,7 @@ class RackView extends React.PureComponent<
         );
       }
     }
+    console.log(rows);
 
     return rows;
   }
@@ -100,7 +108,7 @@ class RackView extends React.PureComponent<
     for (let i = 1; i <= maxHeight; i++) {
       unitBarRows.unshift(
         <tr className="rack-row" style={{ lineHeight: 1 }}>
-          <td className="cell"> {i}U </td>
+          <td className="cell unit"> {i}U </td>
         </tr>
       );
     }
@@ -118,20 +126,14 @@ class RackView extends React.PureComponent<
     return (
       <div>
         <div className={Classes.DARK}>
-          <AnchorButton
-            onClick={() => this.props.history.push("/")}
-            className={"nav-bar-button"}
-            icon="search"
-            text="New Rack Search"
-            minimal
-          />
+          <RackSelectView />
         </div>
         <div className="rack-container">
           {racks.map((rackResp: RackResponseObject) => {
             return (
               <span>
                 <div className={Classes.DARK + " rack"}>
-                  <table className=" bp3-html-table bp3-interactive bp3-html-table-bordered rack-table">
+                  <table className=" bp3-html-table bp3-interactive rack-table">
                     <thead>
                       <tr>
                         <th className=" cell header">
@@ -142,7 +144,7 @@ class RackView extends React.PureComponent<
                     </thead>
                     <tbody>{this.getRows(rackResp)}</tbody>
                   </table>
-                  <table className="bp3-html-table bp3-html-table-bordered loc-table">
+                  <table className="bp3-html-table loc-table">
                     <thead>
                       <tr>
                         <th className=" cell header"> (U)</th>
