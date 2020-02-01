@@ -383,6 +383,28 @@ def model_page_count(request):
 
 
 @api_view(['GET'])
+def model_fields(request):
+    """
+    Return all fields on the ITModelSerializer. 
+    """
+    return JsonResponse(
+        {"fields": [
+            'vendor',
+            'model_number',
+            'height',
+            'display_color',
+            'num_ethernet_ports',
+            'num_power_ports',
+            'cpu',
+            'memory_gb',
+            'storage',
+            'comment',
+        ]},
+        status=HTTPStatus.OK,
+    )
+
+
+@api_view(['GET'])
 def i_am_admin(request):
     print("yeah")
     if(request.user.is_superuser):
