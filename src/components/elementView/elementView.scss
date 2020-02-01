@@ -45,13 +45,25 @@
 }
 .header-text {
   white-space: nowrap !important;
-  overflow: visible;
+  overflow: scroll;
   width: max-content !important;
   display: inline-block;
 }
-.header-text span ~ span {
-  padding-left: 10px !important;
-  display: inline-block;
+// .header-text span ~ span {
+//   padding-left: 30px !important;
+//   display: inline-block;
+// }
+.header-text span {
+  padding-right: 20px !important;
+  margin-right: 20px !important;
+}
+.modelname-text {
+  margin-right: 10px;
+}
+
+.hostname-text {
+  margin-left: 10px !important;
+  padding-right: 100px !important;
 }
 .badge {
   background-color: #9ae6b4;
