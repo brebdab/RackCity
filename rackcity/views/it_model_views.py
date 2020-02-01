@@ -97,7 +97,8 @@ def model_modify(request):
 def model_height_change_valid(new_model_data, existing_model):
     if 'height' not in new_model_data:
         return True
-    if new_model_data['height'] <= existing_model.height:
+    new_model_height = int(new_model_data['height'])
+    if new_model_height <= existing_model.height:
         return True
     else:
         instances = ITInstance.objects.filter(model=existing_model.id)
@@ -105,7 +106,7 @@ def model_height_change_valid(new_model_data, existing_model):
             if is_location_full(
                 instance.rack.id,
                 instance.elevation,
-                new_model_data['height'],
+                new_model_height,
                 instance.id
             ):
                 return False
