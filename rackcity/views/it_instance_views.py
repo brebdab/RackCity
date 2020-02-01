@@ -134,12 +134,13 @@ def instance_add(request):
     if not serializer.is_valid(raise_exception=False):
         failure_message += str(serializer.errors)
 
-    rack_id = serializer.validated_data['rack'].id
-    elevation = serializer.validated_data['elevation']
-    height = serializer.validated_data['model'].height
+    if failure_message == "":
+        rack_id = serializer.validated_data['rack'].id
+        elevation = serializer.validated_data['elevation']
+        height = serializer.validated_data['model'].height
 
-    if is_location_full(rack_id, elevation, height):
-        failure_message += "Instance does not fit in this location. "
+        if is_location_full(rack_id, elevation, height):
+            failure_message += "Instance does not fit in this location. "
 
     if failure_message == "":
         try:
