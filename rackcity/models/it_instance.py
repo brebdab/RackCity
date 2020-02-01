@@ -35,3 +35,11 @@ class ITInstance(models.Model):
     class Meta:
         ordering = ['hostname']
         verbose_name = 'instance'
+
+    def save(self, *args, **kwargs):
+        try:
+            validate_hostname(self.hostname)
+        except ValidationError as valid_error:
+            raise valid_error
+        else:
+            super(ITInstance, self).save(*args, **kwargs)
