@@ -77,24 +77,22 @@ export class Report extends React.PureComponent<ReportProps & RouteComponentProp
     } else {
       return (
         <div className={Classes.DARK}>
-          <Card elevation={Elevation.FOUR}>
-            <h4>Free Rack Space Pct: {this.state.freeRack * 100}%</h4>
-          </Card>
           <Card elevation={Elevation.TWO}>
             <div className={"row"}>
               <div className={"column-third"}>
-                <h1>Model Allocation:</h1>
+                <h4>Model Allocation:</h4>
                 <Tabular data={this.state.model_allocation} fields={modelFields}/>
               </div>
               <div className={"column-third"}>
-                <h1>Owner Allocation:</h1>
+                <h4>Owner Allocation:</h4>
                 <Tabular data={this.state.owner_allocation} fields={ownerFields}/>
               </div>
               <div className={"column-third"}>
-                <h1>Vendor Allocation:</h1>
+                <h4>Vendor Allocation:</h4>
                 <Tabular data={this.state.vendor_allocation} fields={vendorFields}/>
               </div>
             </div>
+            <h4 className={"column-third-left"}>Free Rack Space Pct: {this.state.freeRack * 100}%</h4>
           </Card>
         </div>
       )
