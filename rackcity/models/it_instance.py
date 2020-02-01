@@ -26,7 +26,7 @@ class ITInstance(models.Model):
         on_delete=models.CASCADE,
         verbose_name="related rack",
     )
-    owner = models.CharField(max_length=150)
+    owner = models.CharField(max_length=150, null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
 
     class Meta:
