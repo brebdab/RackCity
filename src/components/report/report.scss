@@ -1,0 +1,19 @@
+.column-third {
+  text-align: center;
+  flex: 33%;
+  align-items: center;
+}
+
+.column-third-left {
+  text-align: center;
+  flex: 33%;
+}
+
+.column-third-right {
+  text-align: center;
+  flex: 33%;
+}
+
+.row {
+  display: flex;
+}

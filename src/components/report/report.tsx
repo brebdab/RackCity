@@ -5,6 +5,7 @@ import axios from "axios";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import { API_ROOT } from "../../api-config";
+import "./report.scss"
 
 interface ReportProps {
   token: string
@@ -76,13 +77,25 @@ export class Report extends React.PureComponent<ReportProps & RouteComponentProp
     } else {
       return (
         <div className={Classes.DARK}>
-          <h1>Free Rack Space Pct: {this.state.freeRack * 100}%</h1>
-          <h1>Model Allocation:</h1>
-          <Tabular data={this.state.model_allocation} fields={modelFields}/>
-          <h1>Owner Allocation:</h1>
-          <Tabular data={this.state.owner_allocation} fields={ownerFields}/>
-          <h1>Vendor Allocation:</h1>
-          <Tabular data={this.state.vendor_allocation} fields={vendorFields}/>
+          <Card elevation={Elevation.FOUR}>
+            <h4>Free Rack Space Pct: {this.state.freeRack * 100}%</h4>
+          </Card>
+          <Card elevation={Elevation.TWO}>
+            <div className={"row"}>
+              <div className={"column-third"}>
+                <h1>Model Allocation:</h1>
+                <Tabular data={this.state.model_allocation} fields={modelFields}/>
+              </div>
+              <div className={"column-third"}>
+                <h1>Owner Allocation:</h1>
+                <Tabular data={this.state.owner_allocation} fields={ownerFields}/>
+              </div>
+              <div className={"column-third"}>
+                <h1>Vendor Allocation:</h1>
+                <Tabular data={this.state.vendor_allocation} fields={vendorFields}/>
+              </div>
+            </div>
+          </Card>
         </div>
       )
     }
@@ -98,7 +111,6 @@ class Tabular extends React.PureComponent<TabProps> {
 
   render() {
     return (
-      <Card elevation={Elevation.TWO}>
         <table className={"bp3-html-table"}>
           <thead>
             <tr>
@@ -123,7 +135,6 @@ class Tabular extends React.PureComponent<TabProps> {
             })}
           </tbody>
         </table>
-      </Card>
     )
   }
 }
