@@ -7,8 +7,13 @@ from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
-from copy import copy
 import math
+from rackcity.views.rackcity_utils import (
+    is_location_full,
+    records_are_identical,
+    get_sort_arguments,
+    get_filter_arguments,
+)
 
 
 @api_view(['GET'])
@@ -68,6 +73,12 @@ def model_modify(request):
         except ObjectDoesNotExist:
             failure_message += "No existing model with id="+str(id)+". "
         else:
+            if not model_height_change_valid(data, existing_model):
+                failure_message = "Height change of model causes conflicts. "
+                return JsonResponse(
+                    {"failure_message": failure_message},
+                    status=HTTPStatus.NOT_ACCEPTABLE
+                )
             for field in data.keys():
                 setattr(existing_model, field, data[field])
             try:
@@ -81,6 +92,24 @@ def model_modify(request):
     },
         status=HTTPStatus.NOT_ACCEPTABLE
     )
+
+
+def model_height_change_valid(new_model_data, existing_model):
+    if 'height' not in new_model_data:
+        return True
+    if new_model_data['height'] <= existing_model.height:
+        return True
+    else:
+        instances = ITInstance.objects.filter(model=existing_model.id)
+        for instance in instances:
+            if is_location_full(
+                instance.rack.id,
+                instance.elevation,
+                new_model_data['height'],
+                instance.id
+            ):
+                return False
+        return True
 
 
 @api_view(['POST'])
@@ -140,22 +169,25 @@ def model_page(request):
             status=HTTPStatus.BAD_REQUEST,
         )
 
-    if 'sort_by' in request.data:
-        sort_by = request.data['sort_by']
-        sort_args = []
-        for sort in sort_by:
-            if ('field' not in sort) or ('ascending' not in sort):
-                failure_message += "Must specify 'field' and 'ascending' fields. "
-                return JsonResponse(
-                    {"failure_message": failure_message},
-                    status=HTTPStatus.BAD_REQUEST,
-                )
-            field_name = sort['field']
-            order = "-" if not sort['ascending'] else ""
-            sort_args.append(order + field_name)
-        models = ITModel.objects.order_by(*sort_args)
-    else:
-        models = ITModel.objects.all()
+    models_query = ITModel.objects
+
+    try:
+        filter_args = get_filter_arguments(request.data)
+    except Exception as error:
+        return JsonResponse(
+            {"failure_message": "Filter error: " + str(error)},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    models_query = models_query.filter(**filter_args)
+
+    try:
+        sort_args = get_sort_arguments(request.data)
+    except Exception as error:
+        return JsonResponse(
+            {"failure_message": "Sort error: " + str(error)},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    models = models_query.order_by(*sort_args)
 
     paginator = PageNumberPagination()
     paginator.page_size = request.query_params.get('page_size')
@@ -226,6 +258,7 @@ def model_bulk_upload(request):
     model_datas = data['models']
     models_to_add = []
     potential_modifications = []
+    models_in_import = set()
     for model_data in model_datas:
         model_serializer = ITModelSerializer(data=model_data)
         if not model_serializer.is_valid():
@@ -235,18 +268,40 @@ def model_bulk_upload(request):
                 {"failure_message": failure_message},
                 status=HTTPStatus.BAD_REQUEST
             )
+        if (model_data['vendor'], model_data['model_number']) in models_in_import:
+            failure_message = "Vendor+model_number combination must be unique, but " + \
+                "vendor="+model_data['vendor'] + \
+                ", model_number="+model_data['model_number'] + \
+                " appears more than once in import. "
+            return JsonResponse(
+                {"failure_message": failure_message},
+                status=HTTPStatus.BAD_REQUEST
+            )
+        else:
+            models_in_import.add(
+                (model_data['vendor'],
+                 model_data['model_number'])
+            )
         try:
             existing_model = ITModel.objects.get(
                 vendor=model_data['vendor'], model_number=model_data['model_number'])
         except ObjectDoesNotExist:
             models_to_add.append(model_serializer)
         else:
+            if not model_height_change_valid(model_data, existing_model):
+                failure_message = \
+                    "Height change of this model causes conflicts: " + \
+                    "vendor="+model_data['vendor'] + \
+                    ", model_number="+model_data['model_number']
+                return JsonResponse(
+                    {"failure_message": failure_message},
+                    status=HTTPStatus.NOT_ACCEPTABLE
+                )
             potential_modifications.append(
                 {"existing_model": existing_model, "new_data": model_data})
     records_added = 0
     for model_to_add in models_to_add:
         records_added += 1
-        # this should always pass for now, only constraint is uniqueness which was already checked
         model_to_add.save()
     records_ignored = 0
     modifications_to_approve = []
@@ -276,28 +331,6 @@ def model_bulk_upload(request):
         },
         status=HTTPStatus.OK
     )
-
-
-def records_are_identical(existing_data, new_data):
-    existing_keys = existing_data.keys()
-    new_keys = new_data.keys()
-    for key in existing_keys:
-        if (
-            key not in new_keys
-            and existing_data[key] is not None
-            and key != 'id'
-        ):
-            return False
-        if (
-            key in new_keys
-            and new_data[key] != existing_data[key]
-        ):
-            if not (
-                isinstance(existing_data[key], int)
-                and int(new_data[key]) == existing_data[key]
-            ):
-                return False
-    return True
 
 
 @api_view(['POST'])

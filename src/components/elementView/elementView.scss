@@ -31,6 +31,28 @@
   max-height: 500px;
   float: left;
 }
+.table-control {
+  float: right;
+}
+.table-control span {
+  float: left;
+}
+.header-cell {
+  // cursor: pointer !important;
+  white-space: nowrap !important;
+  overflow: visible;
+  width: max-content !important;
+}
+.header-text {
+  white-space: nowrap !important;
+  overflow: visible;
+  width: max-content !important;
+  display: inline-block;
+}
+.header-text span ~ span {
+  padding-left: 10px !important;
+  display: inline-block;
+}
 .badge {
   background-color: #9ae6b4;
   color: #22543d;
@@ -47,6 +69,15 @@
 .rack-field .button {
   float: left;
   margin-top: 20px;
+}
+.header-text icon {
+  float: right;
+}
+.icon {
+  cursor: pointer !important;
+}
+.icon:hover {
+  background-color: #394b59 !important;
 }
 input {
   padding: 10px;

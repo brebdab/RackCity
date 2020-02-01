@@ -17,8 +17,11 @@ from .it_instance_views import (
     instance_detail,
     instance_list,
     instance_add,
+    instance_modify,
     instance_delete,
     instance_page,
+    instance_bulk_upload,
+    instance_bulk_approve,
     instance_page_count,
 )
 from .rack_views import (
@@ -27,3 +30,4 @@ from .rack_views import (
     rack_delete,
     rack_summary,
 )
+from .report_views import report_rack_usage
