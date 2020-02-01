@@ -74,13 +74,11 @@ class RackView extends React.PureComponent<
                 className="cell"
                 onClick={() => this.props.history.push("/instances/" + id)}
               >
-                <div className="cell-text">
-                  {instances[0].model.vendor +
-                    " " +
-                    instances[0].model.model_number +
-                    " | " +
-                    instances[0].hostname}
-                </div>
+                {instances[0].model.vendor +
+                  " " +
+                  instances[0].model.model_number +
+                  " | " +
+                  instances[0].hostname}
               </td>
             </tr>
           );
@@ -109,7 +107,7 @@ class RackView extends React.PureComponent<
     for (let i = 1; i <= maxHeight; i++) {
       unitBarRows.unshift(
         <tr className="rack-row" style={{ lineHeight: 1 }}>
-          <td className="cell"> {i}U </td>
+          <td className="cell unit"> {i}U </td>
         </tr>
       );
     }
@@ -140,7 +138,7 @@ class RackView extends React.PureComponent<
             return (
               <span>
                 <div className={Classes.DARK + " rack"}>
-                  <table className=" bp3-html-table bp3-interactive bp3-html-table-bordered rack-table">
+                  <table className=" bp3-html-table bp3-interactive rack-table">
                     <thead>
                       <tr>
                         <th className=" cell header">
@@ -151,7 +149,7 @@ class RackView extends React.PureComponent<
                     </thead>
                     <tbody>{this.getRows(rackResp)}</tbody>
                   </table>
-                  <table className="bp3-html-table bp3-html-table-bordered loc-table">
+                  <table className="bp3-html-table loc-table">
                     <thead>
                       <tr>
                         <th className=" cell header"> (U)</th>

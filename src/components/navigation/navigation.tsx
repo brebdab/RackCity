@@ -26,7 +26,7 @@ export class Navigation extends React.Component<NavigationPropsAll> {
     return (
       <Router>
         <div>
-          <Navbar className={Classes.DARK}>
+          <Navbar className={Classes.DARK + " nav-bar"}>
             <NavbarGroup>
               <NavbarHeading>HypoSoft</NavbarHeading>
               <NavbarDivider />
@@ -95,4 +95,6 @@ const mapDispatchToProps = (dispatch: any) => {
     logout: () => dispatch(actions.logout())
   };
 };
-export default withRouter(connect(mapStateToProps, mapDispatchToProps)(Navigation));
+export default withRouter(
+  connect(mapStateToProps, mapDispatchToProps)(Navigation)
+);
