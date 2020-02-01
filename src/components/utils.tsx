@@ -8,8 +8,7 @@ export enum ElementType {
 }
 export interface InstanceObject extends ElementObject {
   hostname: string;
-  // elevation: string;
-  elevation: number;
+  elevation: string;
   model: ModelObject;
   rack: RackObject;
   owner?: string;
@@ -25,8 +24,7 @@ export const getHeaders = (token: string) => {
 
 export interface InstanceInfoObject extends ElementObject {
   hostname: string;
-  elevation: number;
-  // elevation: string;
+  elevation: string;
   model?: string;
   rack?: string;
   owner?: string;
@@ -51,16 +49,12 @@ export interface ModificationsObject {
 export interface ModelObject extends ElementObject {
   vendor: string;
   model_number: string;
-  // height: string;
-  height: number;
+  height: string;
   display_color?: string;
-  // num_ethernet_ports?: string; //
-  // num_power_ports?: string; //
-  num_ethernet_ports?: number; //
-  num_power_ports?: number; //
+  num_ethernet_ports?: string; //
+  num_power_ports?: string; //
   cpu?: string;
-  // memory_gb?: string; //
-  memory_gb?: number
+  memory_gb?: string; //
   storage?: string;
   comment?: string;
 }

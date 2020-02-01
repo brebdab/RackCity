@@ -4,12 +4,13 @@ import Field from "../../forms/field";
 interface RackRangeProps {
   handleChange(field: { [key: string]: any }): void;
   range: boolean;
+  className?: string;
 }
 class RackRangeOptions extends React.Component<RackRangeProps> {
   render() {
     return (
-      <div className="rack-select">
-        <FormGroup className="rack-field" label="Rack Letter ">
+      <div className={this.props.className}>
+        <FormGroup className={this.props.className} label="Rack Letter ">
           <Field
             field="letter_start"
             type="text"
@@ -17,17 +18,15 @@ class RackRangeOptions extends React.Component<RackRangeProps> {
           />
         </FormGroup>
         {this.props.range ? (
-          <div className="rack-select">
-            <FormGroup className="rack-field" label="Rack Letter (end)">
-              <Field
-                field="letter_end"
-                type="text"
-                onChange={this.props.handleChange}
-              />
-            </FormGroup>
-          </div>
+          <FormGroup className={this.props.className} label="Rack Letter (end)">
+            <Field
+              field="letter_end"
+              type="text"
+              onChange={this.props.handleChange}
+            />
+          </FormGroup>
         ) : null}
-        <FormGroup className="rack-field" label="Row number">
+        <FormGroup className={this.props.className} label="Row number">
           <Field
             field="num_start"
             type="number"
@@ -36,7 +35,7 @@ class RackRangeOptions extends React.Component<RackRangeProps> {
         </FormGroup>
 
         {this.props.range ? (
-          <FormGroup className="rack-field" label="Row number (end)">
+          <FormGroup className={this.props.className} label="Row number (end)">
             <Field
               field="num_end"
               type="number"

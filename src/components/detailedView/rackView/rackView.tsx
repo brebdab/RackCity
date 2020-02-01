@@ -45,41 +45,46 @@ class RackView extends React.PureComponent<
       if (
         instances.length > 0 &&
         instances[0] &&
-        currHeight === +instances[0].elevation
+        currHeight === +instances[0].elevation - 1
       ) {
         const width = +instances[0].model.height;
-        const id: number = +instances[0].id
+        const id: number = +instances[0].id;
 
         currHeight = width + currHeight;
-        rows.unshift(
-          <tr
-            className="rack-row"
-            style={{
-              lineHeight: unit * width,
-              backgroundColor: instances[0].model.display_color
-            }}
-          >
-            <td
-              className="cell"
-              onClick={() => this.props.history.push("/instances/" + id)}
+        if (currHeight > 42) {
+          console.warn("INSTANCE OUT OF RANGE ", instances[0]);
+        } else {
+          rows.unshift(
+            <tr
+              className="rack-row"
+              style={{
+                lineHeight: unit * width,
+                backgroundColor: instances[0].model.display_color
+              }}
             >
-              <span>
-                {instances[0].model.vendor +
-                  " " +
-                  instances[0].model.model_number}
-              </span>
-              <span>{instances[0].hostname}</span>
-            </td>
-          </tr>
-        );
+              <td
+                className="cell"
+                onClick={() => this.props.history.push("/instances/" + id)}
+              >
+                <div className="cell-text">
+                  {instances[0].model.vendor +
+                    " " +
+                    instances[0].model.model_number +
+                    " | " +
+                    instances[0].hostname}
+                </div>
+              </td>
+            </tr>
+          );
 
-        instances.shift();
+          instances.shift();
+        }
       } else {
         currHeight++;
 
         rows.unshift(
           <tr className="rack-row">
-            <td className="cell empty"> </td>
+            <td className="cell empty"></td>
           </tr>
         );
       }

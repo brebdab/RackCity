@@ -134,9 +134,9 @@ def instance_add(request):
     if not serializer.is_valid(raise_exception=False):
         failure_message += str(serializer.errors)
 
-    rack_id = data['rack']
-    elevation = data['elevation']
-    height = ITModel.objects.get(id=data['model']).height
+    rack_id = serializer.validated_data['rack'].id
+    elevation = serializer.validated_data['elevation']
+    height = serializer.validated_data['model'].height
 
     if is_location_full(rack_id, elevation, height):
         failure_message += "Instance does not fit in this location. "
@@ -459,3 +459,21 @@ def instance_page_count(request):
     instance_count = ITInstance.objects.all().count()
     page_count = math.ceil(instance_count / page_size)
     return JsonResponse({"page_count": page_count})
+
+
+@api_view(['GET'])
+def instance_fields(request):
+    """
+    Return all fields on the ITInstanceSerializer. 
+    """
+    return JsonResponse(
+        {"fields": [
+            'hostname',
+            'model',
+            'rack',
+            'elevation',
+            'owner',
+            'comment',
+        ]},
+        status=HTTPStatus.OK,
+    )
