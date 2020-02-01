@@ -51,6 +51,8 @@ interface IDragAndDrop {
 interface IElementTableProps {
   type: ElementType;
   token: string;
+  disableSorting?: boolean;
+  disableFiltering?: boolean;
   getData?(
     type: string,
     page_num: number,
@@ -66,8 +68,13 @@ class ElementTable extends React.Component<
   IElementTableProps & RouteComponentProps,
   IElementTableState
 > {
+  public defaultProps: Partial<IElementTableProps> = {
+    disableSorting: false,
+    disableFiltering: false
+  };
   public state: IElementTableState = {
     // sort_by_id: [],
+
     filters: [],
     sort_by: [],
     items: [],
@@ -267,8 +274,15 @@ class ElementTable extends React.Component<
     }
   };
 
+  shouldComponentUpdate(
+    nextProps: IElementTableProps,
+    nextState: IElementTableState
+  ) {
+    console.log("updating", this.state.items && this.state.items.length === 0);
+    return this.state.items && this.state.items.length === 0;
+  }
   componentDidMount() {
-    console.log(this.props.data);
+    console.log("table view token", this.props.token);
     if (this.props.getData) {
       this.props
         .getData(
@@ -279,9 +293,12 @@ class ElementTable extends React.Component<
           this.props.token
         )
         .then(res => {
-          this.setState({
-            items: res
-          });
+          console.log("updating items", res);
+          if (res) {
+            this.setState({
+              items: res
+            });
+          }
         })
         .catch(err => {
           console.log(err);
@@ -331,8 +348,34 @@ class ElementTable extends React.Component<
     this.updateFilterData(filters);
   };
   render() {
-    console.log(this.state.items);
+    console.log("items", this.state.items);
     console.log(!(this.state.items && this.state.items.length > 0));
+    if (
+      this.state.items &&
+      this.state.items.length === 0 &&
+      this.props.getData
+    ) {
+      console.log("trying to get data");
+      this.props
+        .getData(
+          this.props.type,
+          this.state.curr_page,
+          PAGE_SIZE,
+          {},
+          this.props.token
+        )
+        .then(res => {
+          console.log("updating items", res);
+          if (res) {
+            this.setState({
+              items: res
+            });
+          }
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    }
     if (
       this.props.data &&
       this.props.data.length !== 0 &&
@@ -344,18 +387,25 @@ class ElementTable extends React.Component<
     }
     return (
       <div>
-        <div className="filter-select">
-          <FilterSelectView
-            handleAddFilter={this.addFilter}
-            fields={this.getFieldNames()}
-          />
-        </div>
+        {" "}
+        {this.props.disableFiltering
+          ? null
+          : [
+              <div className="filter-select">
+                <FilterSelectView
+                  handleAddFilter={this.addFilter}
+                  fields={this.getFieldNames()}
+                />
+              </div>,
+              <div className="table-options">
+                <DragDropList
+                  items={this.state.filters}
+                  renderItem={this.renderFilterItem}
+                  onChange={this.updateSortOrder}
+                />
+              </div>
+            ]}
         <div className="table-options">
-          <DragDropList
-            items={this.state.filters}
-            renderItem={this.renderFilterItem}
-            onChange={this.updateSortOrder}
-          />
           <DragDropList
             items={this.state.sort_by}
             renderItem={this.renderSortItem}

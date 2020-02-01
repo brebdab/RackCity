@@ -6,10 +6,18 @@ import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import { API_ROOT } from "../../../api-config";
 import FormPopup from "../../../forms/FormPopup";
-import { FormTypes } from "../../../forms/modelForm";
+import modelForm, { FormTypes } from "../../../forms/modelForm";
 import ElementTable from "../../elementView/elementTable";
 import { ElementType, InstanceObject, ModelObject } from "../../utils";
 import PropertiesView from "../propertiesView";
+import { getElementData } from "../../elementView/elementView";
+import {
+  IFilter,
+  FilterTypes,
+  TextFilterTypes
+} from "../../elementView/filterSelectView";
+import { filter } from "minimatch";
+import { updateObject } from "../../../store/utility";
 
 export interface ModelViewProps {
   token: string;
@@ -26,22 +34,20 @@ interface ModelViewState {
   isDeleteOpen: boolean;
 }
 
-async function getData(modelkey: string, token: string) {
+const getData = (modelkey: string, token: string) => {
   console.log(API_ROOT + "api/models/" + modelkey);
   const headers = {
     headers: {
       Authorization: "Token " + token
     }
   };
-  return await axios
-    .get(API_ROOT + "api/models/" + modelkey, headers)
-    .then(res => {
-      const data = res.data;
-      return data;
-    });
-}
+  return axios.get(API_ROOT + "api/models/" + modelkey, headers).then(res => {
+    const data = res.data;
+    return data;
+  });
+};
 
-export class ModelView extends React.PureComponent<
+export class ModelView extends React.Component<
   RouteComponentProps & ModelViewProps,
   ModelViewState
 > {
@@ -75,7 +81,56 @@ export class ModelView extends React.PureComponent<
       "comment"
     ]
   };
+  componentDidMount() {
+    let params: any;
+    params = this.props.match.params;
+    console.log("model view token", this.props.token);
+    getData(params.rid, this.props.token).then(result => {
+      console.log(result);
+      this.setState({
+        model: result.model,
+        instances: result.instances
+      });
+    });
+    console.log("MODEL LOADED", this.state.model);
+  }
+  getModelInstances = (
+    path: string,
+    page: number,
+    page_size: number,
+    body: any,
+    token: string
+  ) => {
+    const filters: Array<IFilter> = [];
+    console.log("GETTING INSTANCES", this.state.model, token);
 
+    if (this.state.model) {
+      console.log("GETTING INSTANCES WITH MODEL");
+      filters.push({
+        field: "model__vendor",
+        filter_type: FilterTypes.TEXT,
+        filter: {
+          value: this.state.model!.vendor,
+          match_type: TextFilterTypes.EXACT
+        }
+      });
+      filters.push({
+        field: "model__number",
+        filter_type: FilterTypes.TEXT,
+        filter: {
+          value: this.state.model!.model_number,
+          match_type: TextFilterTypes.EXACT
+        }
+      });
+      return getElementData(
+        path,
+        page,
+        page_size,
+        updateObject(body, filters),
+        token
+      );
+    }
+  };
   private updateModel = (model: ModelObject, headers: any): Promise<any> => {
     return axios
       .post(API_ROOT + "api/models/modify", model, headers)
@@ -118,6 +173,7 @@ export class ModelView extends React.PureComponent<
     }
 
     var data = this.state.model;
+    console.log("MODEL", data);
     return (
       <div className={Classes.DARK + " model-view"}>
         {this.props.isAdmin ? (
@@ -173,7 +229,8 @@ export class ModelView extends React.PureComponent<
             panel={
               <ElementTable
                 type={ElementType.INSTANCE}
-                data={this.state.instances}
+                getData={this.getModelInstances}
+                disableFiltering={true}
               />
             }
           />
