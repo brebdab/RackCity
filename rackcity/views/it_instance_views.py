@@ -460,3 +460,21 @@ def instance_page_count(request):
     instance_count = ITInstance.objects.all().count()
     page_count = math.ceil(instance_count / page_size)
     return JsonResponse({"page_count": page_count})
+
+
+@api_view(['GET'])
+def instance_fields(request):
+    """
+    Return all fields on the ITInstanceSerializer. 
+    """
+    return JsonResponse(
+        {"fields": [
+            'hostname',
+            'model',
+            'rack',
+            'elevation',
+            'owner',
+            'comment',
+        ]},
+        status=HTTPStatus.OK,
+    )

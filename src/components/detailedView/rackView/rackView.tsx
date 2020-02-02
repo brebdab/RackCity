@@ -1,8 +1,9 @@
-import { Classes, AnchorButton } from "@blueprintjs/core";
+import { Classes } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
+import RackSelectView from "../../elementView/rackSelectView";
 import { InstanceObject, RackResponseObject } from "../../utils";
 import "./rackView.scss";
 //export interface ElementViewProps {}
@@ -45,45 +46,57 @@ class RackView extends React.PureComponent<
       if (
         instances.length > 0 &&
         instances[0] &&
-        currHeight === +instances[0].elevation
+        currHeight === +instances[0].elevation - 1
       ) {
         const width = +instances[0].model.height;
-        const id: number = +instances[0].id
+        const id: number = +instances[0].id;
 
-        currHeight = width + currHeight;
-        rows.unshift(
-          <tr
-            className="rack-row"
-            style={{
-              lineHeight: unit * width,
-              backgroundColor: instances[0].model.display_color
-            }}
-          >
-            <td
-              className="cell"
-              onClick={() => this.props.history.push("/instances/" + id)}
+        if (width + currHeight > maxHeight) {
+          console.warn("INSTANCE OUT OF RANGE ", instances[0]);
+
+          currHeight++;
+
+          rows.unshift(
+            <tr className="rack-row">
+              <td className="cell empty"></td>
+            </tr>
+          );
+        } else {
+          currHeight = width + currHeight;
+          rows.unshift(
+            <tr
+              className="rack-row"
+              style={{
+                lineHeight: unit * width,
+                backgroundColor: instances[0].model.display_color
+              }}
             >
-              <span>
+              <td
+                className="cell"
+                onClick={() => this.props.history.push("/instances/" + id)}
+              >
                 {instances[0].model.vendor +
                   " " +
-                  instances[0].model.model_number}
-              </span>
-              <span>{instances[0].hostname}</span>
-            </td>
-          </tr>
-        );
+                  instances[0].model.model_number +
+                  " | " +
+                  instances[0].hostname}
+              </td>
+            </tr>
+          );
 
-        instances.shift();
+          instances.shift();
+        }
       } else {
         currHeight++;
 
         rows.unshift(
           <tr className="rack-row">
-            <td className="cell empty"> </td>
+            <td className="cell empty"></td>
           </tr>
         );
       }
     }
+    console.log(rows);
 
     return rows;
   }
@@ -95,7 +108,7 @@ class RackView extends React.PureComponent<
     for (let i = 1; i <= maxHeight; i++) {
       unitBarRows.unshift(
         <tr className="rack-row" style={{ lineHeight: 1 }}>
-          <td className="cell"> {i}U </td>
+          <td className="cell unit"> {i}U </td>
         </tr>
       );
     }
@@ -113,20 +126,14 @@ class RackView extends React.PureComponent<
     return (
       <div>
         <div className={Classes.DARK}>
-          <AnchorButton
-            onClick={() => this.props.history.push("/")}
-            className={"nav-bar-button"}
-            icon="search"
-            text="New Rack Search"
-            minimal
-          />
+          <RackSelectView />
         </div>
         <div className="rack-container">
           {racks.map((rackResp: RackResponseObject) => {
             return (
               <span>
                 <div className={Classes.DARK + " rack"}>
-                  <table className=" bp3-html-table bp3-interactive bp3-html-table-bordered rack-table">
+                  <table className=" bp3-html-table bp3-interactive rack-table">
                     <thead>
                       <tr>
                         <th className=" cell header">
@@ -137,7 +144,7 @@ class RackView extends React.PureComponent<
                     </thead>
                     <tbody>{this.getRows(rackResp)}</tbody>
                   </table>
-                  <table className="bp3-html-table bp3-html-table-bordered loc-table">
+                  <table className="bp3-html-table loc-table">
                     <thead>
                       <tr>
                         <th className=" cell header"> (U)</th>

@@ -57,7 +57,8 @@ class RackSelectView extends React.Component<
     axios
       .post(API_ROOT + "api/racks/get", this.state.values, headers)
       .then(res => {
-        console.log(res);
+        console.log(this.props.location.state);
+        this.props.history.replace("/racks", res.data.racks);
         this.props.history.push({
           pathname: "/racks",
           state: res.data.racks
@@ -94,21 +95,24 @@ class RackSelectView extends React.Component<
             onChange={this.handleSwitchChange}
             label="View Range of Racks"
           />
-          <RackRangeOptions
-            handleChange={this.handleChange}
-            range={this.state.viewRange}
-          />
+          <div className="rack-select">
+            <RackRangeOptions
+              className="rack-field"
+              handleChange={this.handleChange}
+              range={this.state.viewRange}
+            />
 
-          <div className="rack-field ">
-            {this.state.viewRange ? (
-              <Button className="button" icon="search" type="submit">
-                View Racks
-              </Button>
-            ) : (
-              <Button className="button" icon="search" type="submit">
-                View Rack
-              </Button>
-            )}
+            <div className="rack-field ">
+              {this.state.viewRange ? (
+                <Button className="button" icon="search" type="submit">
+                  View Racks
+                </Button>
+              ) : (
+                <Button className="button" icon="search" type="submit">
+                  View Rack
+                </Button>
+              )}
+            </div>
           </div>
         </form>
       </div>

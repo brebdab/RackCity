@@ -8,10 +8,11 @@ from .it_model_views import (
     model_bulk_upload,
     model_bulk_approve,
     model_page_count,
+    model_fields,
     i_am_admin,
     model_list,
     model_auth,
-    model_admin
+    model_admin,
 )
 from .it_instance_views import (
     instance_detail,
@@ -23,6 +24,7 @@ from .it_instance_views import (
     instance_bulk_upload,
     instance_bulk_approve,
     instance_page_count,
+    instance_fields,
 )
 from .rack_views import (
     rack_get,
