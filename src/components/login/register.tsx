@@ -1,20 +1,19 @@
 import {
   Button,
+  Callout,
   Classes,
   InputGroup,
-  Callout,
   Intent
 } from "@blueprintjs/core";
 import { Form } from "antd";
 import { FormComponentProps } from "antd/lib/form";
+import axios from "axios";
 import React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps } from "react-router-dom";
-import "./login.scss";
-import * as actions from "../../store/actions/auth";
-import axios from "axios";
 import { API_ROOT } from "../../api-config";
 import { getHeaders } from "../utils";
+import "./login.scss";
 const FormItem = Form.Item;
 interface RegistrationFormProps {
   loading: boolean;
