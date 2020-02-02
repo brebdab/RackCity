@@ -47,7 +47,7 @@ class App extends React.Component<AppProps> {
             <Route path="/instances/:rid" component={InstanceView} />
 
             {/* admin paths */}
-            <Route path="/admin" component={WrappedNormalRegistrationForm} />
+            <Route path="/register" component={WrappedNormalRegistrationForm} />
             <Route path="/bulk-upload" component={BulkImport} />
             <Route path="/create" component={ModelForm} />
             <Route component={Notfound} />
