@@ -4,7 +4,8 @@ import {
   Classes,
   FormGroup,
   Intent,
-  MenuItem
+  MenuItem,
+  InputGroup
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -170,12 +171,14 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
             />
           </FormGroup>
           <FormGroup label="Display Color" inline={true}>
-            <Field
-              field="display_color"
-              className="field"
-              placeholder="display_color"
-              value={values.display_color}
-              onChange={this.handleChange}
+            <InputGroup
+              // field="display_color"
+              // className="field"
+              type="color"
+              name="test"
+              // // value={values.display_color}
+              // value="#000"
+              // onChange={this.handleChange}
             />
           </FormGroup>
           <FormGroup label="# Ethernet Ports" inline={true}>
