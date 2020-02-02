@@ -133,7 +133,7 @@ export class ModelView extends React.PureComponent<
               isOpen={this.state.isFormOpen}
               initialValues={this.state.model}
               type={FormTypes.MODIFY}
-              elementName={ElementType.INSTANCE}
+              elementName={ElementType.MODEL}
               handleClose={this.handleFormClose}
               submitForm={this.updateModel}
             />
