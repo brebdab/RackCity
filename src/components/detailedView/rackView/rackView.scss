@@ -14,11 +14,12 @@ $row-height: 6px;
   }
   .rack-container span ~ span {
     padding-left: 20px;
+    display: inline-block;
   }
 }
-// .rack-parent {
-//   position: relative;
-// }
+.rack-parent {
+  display: inline-block;
+}
 // .delete-rack {
 //   position: relative;
 // }
@@ -123,7 +124,6 @@ $row-height: 6px;
   .rack-container {
     display: block;
     overflow-x: visible;
-    // white-space: nowrap;
   }
   .rack-container span ~ span {
     padding-left: 20px;
