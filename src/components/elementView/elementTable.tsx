@@ -327,6 +327,16 @@ class ElementTable extends React.Component<
     return fields;
   };
 
+  getScrollIcon = () => {
+    return this.props.disableSorting ? null : (
+      <Icon
+        className="icon"
+        icon={IconNames.DOUBLE_CARET_VERTICAL}
+        iconSize={Icon.SIZE_STANDARD}
+        onClick={() => this.handleSort("model__vendor")}
+      />
+    );
+  };
   addFilter = (filter: IFilter) => {
     const filters = this.state.filters;
     filters.push(filter);
@@ -423,25 +433,13 @@ class ElementTable extends React.Component<
                         <th className="header-cell">
                           <div className="header-text">
                             <span>model vendor</span>
-                            <Icon
-                              className="icon"
-                              icon={IconNames.DOUBLE_CARET_VERTICAL}
-                              iconSize={Icon.SIZE_STANDARD}
-                              onClick={() => this.handleSort("model__vendor")}
-                            />
+                            {this.getScrollIcon()}
                           </div>
                         </th>,
                         <th className="header-cell">
                           <div className="header-text">
                             <span>model number</span>
-                            <Icon
-                              className="icon"
-                              icon={IconNames.DOUBLE_CARET_VERTICAL}
-                              iconSize={Icon.SIZE_STANDARD}
-                              onClick={() =>
-                                this.handleSort("model__model_number")
-                              }
-                            />
+                            {this.getScrollIcon()}
                           </div>
                         </th>
                       ];
@@ -450,12 +448,7 @@ class ElementTable extends React.Component<
                         <th className="header-cell">
                           <div className="header-text">
                             <span>{col}</span>
-                            <Icon
-                              className="icon"
-                              icon={IconNames.DOUBLE_CARET_VERTICAL}
-                              iconSize={Icon.SIZE_STANDARD}
-                              onClick={() => this.handleSort(col)}
-                            />
+                            {this.getScrollIcon()}
                           </div>
                         </th>
                       );
