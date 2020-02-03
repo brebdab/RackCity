@@ -101,12 +101,13 @@ class ElementTable extends React.Component<
     if (this.state.curr_page < this.state.total_pages && this.props.getData) {
       const next_page = this.state.curr_page + 1;
       const { sort_by } = this.state;
+      const { filters } = this.state;
       this.props
         .getData(
           this.props.type,
           next_page,
           PAGE_SIZE,
-          { sort_by },
+          { sort_by, filters },
           this.props.token
         )
         .then(res => {
@@ -266,6 +267,15 @@ class ElementTable extends React.Component<
           items: res
         });
       });
+    }
+    if (this.props.getPages) {
+      this.props
+        .getPages(this.props.type, PAGE_SIZE, this.props.token)
+        .then(res => {
+          this.setState({
+            total_pages: res
+          });
+        });
     }
   };
   updateSortData = (items: Array<ITableSort>) => {
