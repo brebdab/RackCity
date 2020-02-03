@@ -181,10 +181,10 @@ class ElementTable extends React.Component<
   };
   removeFilterItem = (filter: IFilter) => {
     const filters = this.state.filters.filter(item => {
-      console.log(item.filter, filter.filter);
+      // console.log(item.filter, filter.filter);
       return JSON.stringify(item) !== JSON.stringify(filter);
     });
-    console.log(filters);
+    // console.log(filters);
     this.setState({
       filters
     });
@@ -300,7 +300,7 @@ class ElementTable extends React.Component<
     }
   }
   updateSortOrder = (items: Array<ITableSort>) => {
-    console.log(items);
+    // console.log(items);
     this.setState({
       sort_by: items
     });
@@ -324,15 +324,17 @@ class ElementTable extends React.Component<
   addFilter = (filter: IFilter) => {
     const filters = this.state.filters;
     filters.push(filter);
-    console.log(filters);
+    // console.log(filters);
     this.setState({
       filters
     });
     this.updateFilterData(filters);
   };
   render() {
-    console.log(this.state.items);
-    console.log(!(this.state.items && this.state.items.length > 0));
+    console.log("TABLE DATA", this.props.data);
+    // console.log(this.state.items);
+    // console.log(!(this.state.items && this.state.items.length > 0));
+    //
     if (
       this.props.data &&
       this.props.data.length !== 0 &&
