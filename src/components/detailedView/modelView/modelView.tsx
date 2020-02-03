@@ -109,7 +109,7 @@ export class ModelView extends React.PureComponent<
     params = this.props.match.params;
     if (this.state.model === undefined) {
       getData(params.rid, this.props.token).then(result => {
-        console.log(result);
+        console.log("result", result);
         this.setState({
           model: result.model,
           instances: result.instances
@@ -133,7 +133,7 @@ export class ModelView extends React.PureComponent<
               isOpen={this.state.isFormOpen}
               initialValues={this.state.model}
               type={FormTypes.MODIFY}
-              elementName={ElementType.INSTANCE}
+              elementName={ElementType.MODEL}
               handleClose={this.handleFormClose}
               submitForm={this.updateModel}
             />
@@ -174,6 +174,8 @@ export class ModelView extends React.PureComponent<
               <ElementTable
                 type={ElementType.INSTANCE}
                 data={this.state.instances}
+                disableFiltering={true}
+                disableSorting={true}
               />
             }
           />
