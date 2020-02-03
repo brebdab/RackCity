@@ -70,6 +70,9 @@
 //   padding-left: 30px !important;
 //   display: inline-block;
 // }
+.drag-drop-text span ~ span {
+  padding-left: 5px !important;
+}
 .header-text span {
   padding-right: 20px !important;
   margin-right: 20px !important;
