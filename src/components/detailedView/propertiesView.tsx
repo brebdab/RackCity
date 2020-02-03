@@ -29,22 +29,29 @@ class PropertiesView extends React.PureComponent<
           {columns.map((item: string) => {
             i++;
             var key = fields[i];
-            var dat = "";
+            var dat;
             if (key === "model") {
-              dat = data[key].vendor + "" + data[key].model_number;
+              dat = (
+                <p
+                  className="model-link"
+                  onClick={() =>
+                    this.props.history.push("/models/" + data[key].id)
+                  }
+                >
+                  {data[key].vendor + "" + data[key].model_number}
+                </p>
+              );
             } else if (key === "rack") {
-              dat = data[key].rack_num + "" + data[key].row_letter;
+              dat = <p>{data[key].rack_num + "" + data[key].row_letter}</p>;
             } else {
-              dat = data[key];
+              dat = <p>{data[key]}</p>;
             }
             return (
-              <div className={"row"}>
-                <div className={"column"}>
+              <div className={"row-props"}>
+                <div className={"column-props"}>
                   <p key={item}>{item}:</p>
                 </div>
-                <div className={"column"}>
-                  <p>{dat}</p>
-                </div>
+                <div className={"column-props"}>{dat}</div>
               </div>
             );
           })}
@@ -64,7 +71,7 @@ class PropertiesView extends React.PureComponent<
         <Card interactive={false} elevation={Elevation.TWO}>
           <h5>Properties</h5>
           <div className={"row"}>
-            <div className={"column"}>
+            <div className={"column-props"}>
               {this.renderData(
                 state.columns.slice(0, mid),
                 state.fields.slice(0, mid),
