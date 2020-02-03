@@ -247,7 +247,7 @@ def model_vendors(request):
         'vendor', flat=True).distinct('vendor')]
     return JsonResponse(
         {"vendors": vendors_names},
-        status=HTTPStatus.OK
+        status=HTTPStatus.OK,
     )
 
 
