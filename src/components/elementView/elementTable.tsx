@@ -431,41 +431,40 @@ class ElementTable extends React.Component<
           </div>
         )}
 
-        {!(this.state.items && this.state.items.length > 0) ? (
-          <div className="loading-container">
-            <Spinner
-              className="center"
-              intent="primary"
-              size={Spinner.SIZE_STANDARD}
-            />
-            <h4>no {this.props.type}</h4>
-          </div>
-        ) : (
-          <div>
-            {this.props.getPages ? (
-              <div className="table-control">
-                <span>
-                  <Icon
-                    className="icon"
-                    icon={IconNames.CARET_LEFT}
-                    iconSize={Icon.SIZE_LARGE}
-                    onClick={() => this.previousPage()}
-                  />
-                </span>
-                <span>
-                  page {this.state.curr_page} of {this.state.total_pages}
-                </span>
-                <span>
-                  <Icon
-                    className="icon"
-                    icon={IconNames.CARET_RIGHT}
-                    iconSize={Icon.SIZE_LARGE}
-                    onClick={() => this.nextPage()}
-                  />
-                </span>
-              </div>
-            ) : null}
-
+        <div>
+          {this.props.getPages ? (
+            <div className="table-control">
+              <span>
+                <Icon
+                  className="icon"
+                  icon={IconNames.CARET_LEFT}
+                  iconSize={Icon.SIZE_LARGE}
+                  onClick={() => this.previousPage()}
+                />
+              </span>
+              <span>
+                page {this.state.curr_page} of {this.state.total_pages}
+              </span>
+              <span>
+                <Icon
+                  className="icon"
+                  icon={IconNames.CARET_RIGHT}
+                  iconSize={Icon.SIZE_LARGE}
+                  onClick={() => this.nextPage()}
+                />
+              </span>
+            </div>
+          ) : null}
+          {!(this.state.items && this.state.items.length > 0) ? (
+            <div className="loading-container">
+              <Spinner
+                className="center"
+                intent="primary"
+                size={Spinner.SIZE_STANDARD}
+              />
+              <h4>no {this.props.type}</h4>
+            </div>
+          ) : (
             <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered element-table">
               <thead>
                 <tr>
@@ -540,8 +539,8 @@ class ElementTable extends React.Component<
                 })}
               </tbody>
             </table>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     );
   }
