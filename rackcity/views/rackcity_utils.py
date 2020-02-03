@@ -1,8 +1,6 @@
 from rackcity.models import ITInstance, ITModel, Rack
 from rackcity.api.objects import RackRangeSerializer
 
-# CHECK EVERYWHERE is_location_full ITS USED TO CATCH EXCEPTION, MAKE SURE THE ERROR IS PASSED UP
-
 
 def validate_instance_location(
     rack_id,
