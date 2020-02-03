@@ -30,7 +30,18 @@ class PropertiesView extends React.PureComponent<
             i++;
             var key = fields[i];
             var dat;
-            if (key === "model") {
+            if (key === "display_color") {
+              dat = (
+                <p
+                  className="color"
+                  style={{
+                    backgroundColor: data[key]
+                  }}
+                >
+                  {data[key]}
+                </p>
+              );
+            } else if (key === "model") {
               dat = (
                 <p
                   className="model-link"
