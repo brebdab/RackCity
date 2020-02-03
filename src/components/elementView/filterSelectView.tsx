@@ -30,15 +30,12 @@ export interface TextFilter {
   match_type: TextFilterTypes;
 }
 export interface IFilter {
+  id: string;
   field: string;
   filter_type?: FilterTypes;
   filter?: TextFilter | NumericFilter | RackRangeFields;
 }
-interface FilterSelectViewState extends IFilter {
-  // field: string | undefined;
-  // filter: TextFilter | NumericFilter | RackRangeFields | undefined;
-  // type: string | number | RackObject;
-}
+interface FilterSelectViewState extends IFilter {}
 
 interface FilterSelectViewProps {
   token: string;
@@ -66,11 +63,13 @@ function getFilterType(field: string | undefined) {
 
 class FilterSelectView extends React.Component<
   FilterSelectViewProps & RouteComponentProps,
-  FilterSelectViewState
+  IFilter
 > {
   state = {
+    id: "",
     field: "",
-    filter: undefined
+    filter: undefined,
+    filter_type: FilterTypes.TEXT
   };
   renderFilterOptions(field: string | undefined) {
     const type = getFilterType(field);
@@ -191,7 +190,13 @@ class FilterSelectView extends React.Component<
   handleSubmit = (e: any) => {
     e.preventDefault();
     console.log("test");
-    const filter: IFilter = { ...this.state };
+    const filter: IFilter = {
+      field: this.state.field,
+      filter_type: this.state.filter_type,
+      filter: this.state.filter,
+      id: this.state.field + JSON.stringify(this.state.filter)
+    };
+    console.log(filter);
     this.props.handleAddFilter(filter);
   };
   render() {
