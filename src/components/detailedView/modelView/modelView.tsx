@@ -125,11 +125,7 @@ export class ModelView extends React.PureComponent<
   private handleDelete = () => {
     const data = { id: this.state.model!.id };
     axios
-      .post(
-        API_ROOT + "api/instances/delete",
-        data,
-        getHeaders(this.props.token)
-      )
+      .post(API_ROOT + "api/models/delete", data, getHeaders(this.props.token))
       .then(res => {
         this.setState({ isDeleteOpen: false });
         this.props.history.push("/");
