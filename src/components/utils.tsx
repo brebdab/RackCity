@@ -1,3 +1,5 @@
+import { RackRangeFields } from "./elementView/rackSelectView";
+
 interface ElementObject {
   id: string;
 }
@@ -8,7 +10,6 @@ export enum ElementType {
 }
 export interface InstanceObject extends ElementObject {
   hostname: string;
-  // elevation: number; // this name changes to rack_position. bulk file also has vendor and model #
   elevation: string;
   model: ModelObject;
   rack: RackObject;
@@ -68,6 +69,13 @@ export type ElementObjectType =
   | ModelObject
   | RackObject
   | InstanceObject
+  | InstanceInfoObject;
+
+export type FormObjectType =
+  | ModelObject
+  | RackObject
+  | InstanceObject
+  | RackRangeFields
   | InstanceInfoObject;
 export function isModelObject(obj: any): obj is ModelObject {
   return obj && obj.model_number;

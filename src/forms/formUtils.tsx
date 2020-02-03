@@ -3,6 +3,11 @@ import React from "react";
 import { MenuItem } from "@blueprintjs/core";
 import { ModelObject, RackObject } from "../components/utils";
 
+export enum FormTypes {
+  CREATE = "create",
+  MODIFY = "modify",
+  DELETE = "delete"
+}
 export function escapeRegExpChars(text: string) {
   // eslint-disable-next-line
   return text.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");

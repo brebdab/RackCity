@@ -17,7 +17,7 @@ import "./instanceView.scss";
 import { connect } from "react-redux";
 import { InstanceObject, ElementType, getHeaders } from "../../utils";
 import FormPopup from "../../../forms/FormPopup";
-import { FormTypes } from "../../../forms/modelForm";
+import { FormTypes } from "../../../forms/formUtils";
 
 export interface InstanceViewProps {
   token: string;
@@ -145,7 +145,7 @@ export class InstanceView extends React.PureComponent<
       </div>
     );
   }
-  private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
+
   private handleFormOpen = () => {
     this.setState({
       isFormOpen: true
@@ -157,8 +157,9 @@ export class InstanceView extends React.PureComponent<
     });
   };
 
-  private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
   private handleFormClose = () => this.setState({ isFormOpen: false });
+  private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
+  private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
   private handleDelete = () => {
     console.log(this.props.rid);
     const data = { id: this.state.instance!.id };

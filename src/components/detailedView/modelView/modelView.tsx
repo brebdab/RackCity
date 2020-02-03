@@ -16,7 +16,7 @@ import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import { API_ROOT } from "../../../api-config";
 import FormPopup from "../../../forms/FormPopup";
-import { FormTypes } from "../../../forms/modelForm";
+
 import ElementTable from "../../elementView/elementTable";
 import {
   ElementType,
@@ -25,6 +25,7 @@ import {
   getHeaders
 } from "../../utils";
 import PropertiesView from "../propertiesView";
+import { FormTypes } from "../../../forms/formUtils";
 
 export interface ModelViewProps {
   token: string;

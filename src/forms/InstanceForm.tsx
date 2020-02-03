@@ -26,16 +26,13 @@ import {
   renderModelItem,
   RackSuggest,
   renderRackItem,
-  filterRack
+  filterRack,
+  FormTypes
 } from "./formUtils";
 import axios from "axios";
 import { API_ROOT } from "../api-config";
 
 //TO DO : add validation of types!!!
-export enum FormTypes {
-  CREATE = "create",
-  MODIFY = "modify"
-}
 
 export interface InstanceFormProps {
   token: string;
