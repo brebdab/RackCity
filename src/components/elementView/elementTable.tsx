@@ -14,7 +14,6 @@ import {
 import DragDropList from "./dragDropList";
 import "./elementView.scss";
 import FilterSelectView, { IFilter } from "./filterSelectView";
-import RackRangeOptions from "./rackRangeOptions";
 import { RackRangeFields } from "./rackSelectView";
 interface IElementTableState {
   items: Array<ElementObjectType>;
