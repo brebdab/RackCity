@@ -57,6 +57,33 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
             </div>
             <h3>General format:</h3>
               <ol className={"bp3-list"}>
+                <li>All files should be CSV format in compliance with RFC 4180. Important specifications are outlined as follows:
+                  <ul className={"bp3-list"}>
+                    <li>Each record is located on a separate line, delimited by a line break (Note: the last file may or may not have an ending line break)</li>
+                    <li>Each record should contain the same number of comma-separated fields</li>
+                    <li>Spaces are considered part of a field and should not be ignored</li>
+                    <li>Each field may or may not be enclosed in double quotes</li>
+                    <li>Fields containing a line break, double quote, or commas MUST be quoted</li>
+                    <li>If double quote are used to enclose fields, then a double quote appearing inside a field must be escaped by preceding it with another double quote</li>
+                  </ul>
+                </li>
+                <li>Deviations from this standard are as follows:
+                  <ul className={"bp3-list"}>
+                    <li>A header row is required. See below for column headers for various equipment files</li>
+                    <li> On import both *nix (LF) and Windows-style (CRLF) line endings are accepted
+                      <ul>
+                        <li>On export, Windows-style endings (CRLF) will be emitted in conformance to the standard</li>
+                        <li>Thes same rules apply to line breaks within multi-line string values (i.e. comments)</li>
+                      </ul>
+                    </li>
+                    <li>UTF-8 charset is used for both import and export
+                      <ul>
+                        <li>Double quotes should use code U+0022 QUOTATION MARK</li>
+                        <li>Commas should use code U+002C COMMA</li>
+                      </ul>
+                    </li>
+                  </ul>
+                </li>
               </ol>
             <h3>Model/Instance-specific fields:</h3>
               <Card elevation={Elevation.THREE}>
@@ -95,6 +122,8 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
               </Card>
             <h4>Notes:</h4>
             <ol className={"bp3-list"}>
+              <li>It is not possible to use the bulk import feature to modify a field marked "required always." Any attempt to do so will result in a new model/instance being created</li>
+              <li>Any field not included in an import will be considered "matching" (i.e. if the record exists, the empty field will not be overwritten)</li>
             </ol>
           </Card>
         </div>

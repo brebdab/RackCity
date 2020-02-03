@@ -81,14 +81,22 @@ export class Report extends React.PureComponent<ReportProps & RouteComponentProp
             <div className={"row"}>
               <div className={"column-third"}>
                 <h4>Model Allocation:</h4>
-                <Tabular data={this.state.model_allocation} fields={modelFields}/>
               </div>
               <div className={"column-third-right"}>
                 <h4>Owner Allocation:</h4>
-                <Tabular data={this.state.owner_allocation} fields={ownerFields}/>
               </div>
               <div className={"column-third-right"}>
                 <h4>Vendor Allocation:</h4>
+              </div>
+            </div>
+            <div className={"row"}>
+              <div className={"column-third"}>
+                <Tabular data={this.state.model_allocation} fields={modelFields}/>
+              </div>
+              <div className={"column-third-right"}>
+                <Tabular data={this.state.owner_allocation} fields={ownerFields}/>
+              </div>
+              <div className={"column-third-right"}>
                 <Tabular data={this.state.vendor_allocation} fields={vendorFields}/>
               </div>
             </div>
