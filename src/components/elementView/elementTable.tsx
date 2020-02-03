@@ -51,6 +51,8 @@ interface IDragAndDrop {
 interface IElementTableProps {
   type: ElementType;
   token: string;
+  disableSorting?: boolean;
+  disableFiltering?: boolean;
   getData?(
     type: string,
     page_num: number,
@@ -74,6 +76,10 @@ class ElementTable extends React.Component<
     sorted_cols: [],
     curr_page: 1,
     total_pages: 0
+  };
+  public defaultProps: Partial<IElementTableProps> = {
+    disableSorting: false,
+    disableFiltering: false
   };
   previousPage = () => {
     if (this.state.curr_page > 1 && this.props.getData) {
@@ -346,24 +352,33 @@ class ElementTable extends React.Component<
     }
     return (
       <div>
-        <div className="filter-select">
-          <FilterSelectView
-            handleAddFilter={this.addFilter}
-            fields={this.getFieldNames()}
-          />
-        </div>
-        <div className="table-options">
-          <DragDropList
-            items={this.state.filters}
-            renderItem={this.renderFilterItem}
-            onChange={this.updateSortOrder}
-          />
-          <DragDropList
-            items={this.state.sort_by}
-            renderItem={this.renderSortItem}
-            onChange={this.updateSortOrder}
-          />
-        </div>
+        {this.props.disableFiltering
+          ? null
+          : [
+              <div className="filter-select">
+                <FilterSelectView
+                  handleAddFilter={this.addFilter}
+                  fields={this.getFieldNames()}
+                />
+              </div>,
+              <div className="table-options">
+                <DragDropList
+                  items={this.state.filters}
+                  renderItem={this.renderFilterItem}
+                  onChange={this.updateSortOrder}
+                />
+              </div>
+            ]}
+        {this.props.disableSorting ? null : (
+          <div className="table-options">
+            <DragDropList
+              items={this.state.sort_by}
+              renderItem={this.renderSortItem}
+              onChange={this.updateSortOrder}
+            />
+          </div>
+        )}
+
         {!(this.state.items && this.state.items.length > 0) ? (
           <div className="loading-container">
             <Spinner
@@ -374,29 +389,32 @@ class ElementTable extends React.Component<
             <h4>no {this.props.type}</h4>
           </div>
         ) : (
-          <div className="ElementTable">
-            <div className="table-control">
-              <span>
-                <Icon
-                  className="icon"
-                  icon={IconNames.CARET_LEFT}
-                  iconSize={Icon.SIZE_LARGE}
-                  onClick={() => this.previousPage()}
-                />
-              </span>
-              <span>
-                page {this.state.curr_page} of {this.state.total_pages}
-              </span>
-              <span>
-                <Icon
-                  className="icon"
-                  icon={IconNames.CARET_RIGHT}
-                  iconSize={Icon.SIZE_LARGE}
-                  onClick={() => this.nextPage()}
-                />
-              </span>
-            </div>
-            <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered table">
+          <div>
+            {this.props.getPages ? (
+              <div className="table-control">
+                <span>
+                  <Icon
+                    className="icon"
+                    icon={IconNames.CARET_LEFT}
+                    iconSize={Icon.SIZE_LARGE}
+                    onClick={() => this.previousPage()}
+                  />
+                </span>
+                <span>
+                  page {this.state.curr_page} of {this.state.total_pages}
+                </span>
+                <span>
+                  <Icon
+                    className="icon"
+                    icon={IconNames.CARET_RIGHT}
+                    iconSize={Icon.SIZE_LARGE}
+                    onClick={() => this.nextPage()}
+                  />
+                </span>
+              </div>
+            ) : null}
+
+            <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered element-table">
               <thead>
                 <tr>
                   {Object.keys(this.state.items[0]).map((col: string) => {

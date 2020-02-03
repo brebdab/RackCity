@@ -174,6 +174,8 @@ export class ModelView extends React.PureComponent<
               <ElementTable
                 type={ElementType.INSTANCE}
                 data={this.state.instances}
+                disableFiltering={true}
+                disableSorting={true}
               />
             }
           />
