@@ -12,8 +12,13 @@ import LandingView from "./components/landingView/landingView";
 import WrappedNormalLoginForm from "./components/login/login";
 import WrappedNormalRegistrationForm from "./components/login/register";
 import Navigation from "./components/navigation/navigation";
+import BulkImport from "./components/import/import";
+// import BulkExport from "./components/export/export";
+
 import "./index.scss";
 import * as actions from "./store/actions/auth";
+
+import Report from "./components/report/report";
 
 export interface AppProps {
   isAuthenticated: boolean;
@@ -45,12 +50,19 @@ class App extends React.Component<AppProps> {
           <Switch>
             <this.PrivateRoute exact path="/" component={LandingView} />
             <Route path="/login" component={WrappedNormalLoginForm} />
+
+            {/*<Route path="/bulk-export" component={BulkExport} />*/}
+
             <this.PrivateRoute path="/racks" component={RackView} />
             {/* <Route path="/models/:rid" component={ModelView} /> */}
             <this.PrivateRoute path="/models/:rid" component={ModelView} />
             <this.PrivateRoute
               path="/instances/:rid"
               component={InstanceView}
+            />
+            <this.PrivateRoute
+              path="/report"
+              component={Report}
             />
             {/* admin paths */}
             <this.PrivateRoute
@@ -59,14 +71,12 @@ class App extends React.Component<AppProps> {
                 this.props.isAdmin ? WrappedNormalRegistrationForm : Notfound
               }
             />
-
             <this.PrivateRoute
               path="/bulk-upload"
               component={
-                this.props.isAdmin ? WrappedNormalRegistrationForm : Notfound
+                this.props.isAdmin ? BulkImport : Notfound
               }
             />
-            <Route component={Notfound} />
           </Switch>
         </div>
       </BrowserRouter>
