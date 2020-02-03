@@ -14,6 +14,8 @@ import {
 import DragDropList from "./dragDropList";
 import "./elementView.scss";
 import FilterSelectView, { IFilter } from "./filterSelectView";
+import RackRangeOptions from "./rackRangeOptions";
+import { RackRangeFields } from "./rackSelectView";
 interface IElementTableState {
   items: Array<ElementObjectType>;
   sort_by: Array<ITableSort>;
@@ -115,7 +117,27 @@ class ElementTable extends React.Component<
         });
     }
   };
+
+  renderTextFilterItem = (item: TextFilter) => {
+    return `${item.match_type} ${item.value}`;
+  };
+
+  renderNumericFilterItem = (item: NumericFilter) => {
+    return `between ${item.min} - ${item.max}`;
+  };
+  renderRackRangeFilterItem = (item: RackRangeFields) => {
+    return `rows  ${item.letter_start} - ${item.letter_end} & racks ${item.num_start} - ${item.num_end}`;
+  };
+
   renderFilterItem = (item: IFilter) => {
+    let display;
+    if (item.filter_type === FilterTypes.TEXT) {
+      display = this.renderTextFilterItem(item.filter! as TextFilter);
+    } else if (item.filter_type === FilterTypes.NUMERIC) {
+      display = this.renderNumericFilterItem(item.filter! as NumericFilter);
+    } else if (item.filter_type === FilterTypes.RACKRANGE) {
+      display = this.renderRackRangeFilterItem(item.filter as RackRangeFields);
+    }
     return (
       <div className="drag-drop-text">
         <span>
@@ -125,7 +147,7 @@ class ElementTable extends React.Component<
             iconSize={Icon.SIZE_STANDARD}
           />
         </span>
-        <span>{`${item.field} 
+        <span>{`${item.field} ${display} 
       `}</span>
 
         <span>
