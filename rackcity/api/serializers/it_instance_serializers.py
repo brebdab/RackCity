@@ -41,3 +41,6 @@ class RecursiveITInstanceSerializer(serializers.ModelSerializer):
             'owner',
             'comment',
         )
+
+
+class BulkITInstanceSerializer(serializers.ModelSerializer):
