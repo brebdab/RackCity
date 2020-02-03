@@ -4,7 +4,9 @@ import {
   IToastProps,
   Toaster,
   Position,
-  Intent
+  Intent,
+  Card,
+  Callout
 } from "@blueprintjs/core";
 import * as React from "react";
 import ElementTabView from "../elementView/elementTabView";
@@ -97,14 +99,18 @@ class LandingView extends React.Component<
 
         <AnchorButton
           className="add-rack-button"
-          text={"Add Rack"}
+          text={"Add Rack(s)"}
           icon="add"
+          minimal
+          intent={Intent.PRIMARY}
           onClick={this.handleOpen}
         />
         <AnchorButton
           className="delete-rack-button"
-          text={"Delete Rack"}
+          text={"Delete Rack(s)"}
           icon="trash"
+          minimal
+          intent={Intent.DANGER}
           onClick={this.handleDeleteOpen}
         />
         <FormPopup
@@ -121,7 +127,9 @@ class LandingView extends React.Component<
           isOpen={this.state.isDeleteOpen}
           handleClose={this.handleDeleteCancel}
         />
-        <RackSelectView submitForm={this.viewRackForm} />
+        <Callout title="View Racks">
+          <RackSelectView submitForm={this.viewRackForm} />
+        </Callout>
         <ElementTabView />
       </div>
     );
