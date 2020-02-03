@@ -1,4 +1,10 @@
-import { Button, Callout, Intent, Switch } from "@blueprintjs/core";
+import {
+  Button,
+  Callout,
+  Intent,
+  Switch,
+  AnchorButton
+} from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { handleBooleanChange } from "@blueprintjs/docs-theme";
 import axios from "axios";
@@ -24,6 +30,7 @@ export interface RackRangeFields {
 }
 interface rackSelectViewProps {
   token: string;
+  submitForm(model: RackRangeFields, headers: any): Promise<any>;
 }
 class RackSelectView extends React.Component<
   rackSelectViewProps & RouteComponentProps,
@@ -45,6 +52,7 @@ class RackSelectView extends React.Component<
       })
     });
   };
+
   handleSubmit = (e: any) => {
     this.setState({
       errors: []
@@ -53,25 +61,14 @@ class RackSelectView extends React.Component<
     e.preventDefault();
 
     const headers = getHeaders(this.props.token);
-
-    axios
-      .post(API_ROOT + "api/racks/get", this.state.values, headers)
-      .then(res => {
-        console.log(this.props.location.state);
-        this.props.history.replace("/racks", res.data.racks);
-        this.props.history.push({
-          pathname: "/racks",
-          state: res.data.racks
-        });
-      })
-      .catch(err => {
-        console.log(err.response.data.failure_message);
-        let errors: Array<string> = this.state.errors;
-        errors.push(err.response.data.failure_message as string);
-        this.setState({
-          errors: errors
-        });
+    this.props.submitForm(this.state.values, headers).catch(err => {
+      console.log(err.response.data.failure_message);
+      let errors: Array<string> = this.state.errors;
+      errors.push(err.response.data.failure_message as string);
+      this.setState({
+        errors: errors
       });
+    });
 
     // this.props.history.push({
     //   pathname: "/racks",
@@ -80,41 +77,38 @@ class RackSelectView extends React.Component<
   };
   renderRackOptions(range: boolean) {}
   componentDidMount() {}
+
   render() {
     return (
       <div>
-        {this.state.errors.map((err: string) => {
-          return <Callout intent={Intent.DANGER}>{err}</Callout>;
-        })}
-        <form
-          onSubmit={this.handleSubmit}
-          className="create-form bp3-form-group"
-        >
-          <Switch
-            defaultChecked={false}
-            onChange={this.handleSwitchChange}
-            label="View Range of Racks"
-          />
-          <div className="rack-select">
-            <RackRangeOptions
-              className="rack-field"
-              handleChange={this.handleChange}
-              range={this.state.viewRange}
+        <div>
+          {this.state.errors.map((err: string) => {
+            return <Callout intent={Intent.DANGER}>{err}</Callout>;
+          })}
+          <form
+            onSubmit={this.handleSubmit}
+            className="create-form bp3-form-group"
+          >
+            <Switch
+              defaultChecked={false}
+              onChange={this.handleSwitchChange}
+              label="Rack Range"
             />
+            <div className="rack-select">
+              <RackRangeOptions
+                className="rack-field"
+                handleChange={this.handleChange}
+                range={this.state.viewRange}
+              />
 
-            <div className="rack-field ">
-              {this.state.viewRange ? (
-                <Button className="button" icon="search" type="submit">
-                  View Racks
+              <div className="rack-field ">
+                <Button className="button" type="submit">
+                  Submit
                 </Button>
-              ) : (
-                <Button className="button" icon="search" type="submit">
-                  View Rack
-                </Button>
-              )}
+              </div>
             </div>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     );
   }

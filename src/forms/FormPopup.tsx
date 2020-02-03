@@ -4,8 +4,10 @@ import {
   ElementObjectType,
   ElementType,
   isInstanceObject,
-  isModelObject
+  isModelObject,
+  FormObjectType
 } from "../components/utils";
+import RackSelectView from "../components/elementView/rackSelectView";
 import InstanceForm from "./InstanceForm";
 import ModelForm, { FormTypes } from "./modelForm";
 interface FormPopupState {}
@@ -15,7 +17,7 @@ interface FormPopupProps {
   initialValues?: ElementObjectType;
   elementName: ElementType;
   handleClose(): void;
-  submitForm(model: ElementObjectType, headers: any): Promise<any>;
+  submitForm(model: FormObjectType, headers: any): Promise<any>;
 }
 
 class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
@@ -41,7 +43,8 @@ class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
                 : undefined
             }
           />
-        ) : (
+        ) : null}
+        {this.props.elementName === ElementType.INSTANCE ? (
           <InstanceForm
             type={FormTypes.CREATE}
             submitForm={this.props.submitForm}
@@ -51,6 +54,8 @@ class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
                 : undefined
             }
           />
+        ) : (
+          <RackSelectView submitForm={this.props.submitForm} />
         )}
       </Dialog>
     );
