@@ -16,7 +16,7 @@ from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
 import math
 from rackcity.views.rackcity_utils import (
-    is_location_full,
+    validate_instance_location,
     validate_location_modification,
     no_infile_location_conflicts,
     records_are_identical,
@@ -135,15 +135,18 @@ def instance_add(request):
     serializer = ITInstanceSerializer(data=data)
     if not serializer.is_valid(raise_exception=False):
         failure_message += str(serializer.errors)
-
     if failure_message == "":
         rack_id = serializer.validated_data['rack'].id
         elevation = serializer.validated_data['elevation']
         height = serializer.validated_data['model'].height
-
-        if is_location_full(rack_id, elevation, height):
-            failure_message += "Instance does not fit in this location. "
-
+        try:
+            validate_instance_location(rack_id, elevation, height)
+        except LocationException as error:
+            failure_message += str(error)
+            return JsonResponse(
+                {"failure_message": failure_message},
+                status=HTTPStatus.BAD_REQUEST,
+            )
     if failure_message == "":
         try:
             serializer.save()
@@ -302,7 +305,6 @@ def instance_bulk_upload(request):
         instance_data['rack'] = rack.id
         instance_serializer = ITInstanceSerializer(
             data=instance_data)  # non-recursive to validate
-        # ADD VALIDAITON FOR RACK LOCATION HERE
         if not instance_serializer.is_valid():
             errors = instance_serializer.errors
             if not (  # if the only error is the hostname uniqueness, that's fine - it's a modify
@@ -333,15 +335,17 @@ def instance_bulk_upload(request):
                 hostname=instance_data['hostname'])
         except ObjectDoesNotExist:
             model = ITModel.objects.get(id=instance_data['model'])
-            if is_location_full(
-                instance_serializer.validated_data['rack'],
-                instance_serializer.validated_data['elevation'],
-                model.height,
-                instance_id=None,
-            ):
+            try:
+                validate_instance_location(
+                    instance_serializer.validated_data['rack'].id,
+                    instance_serializer.validated_data['elevation'],
+                    model.height,
+                    instance_id=None,
+                )
+            except LocationException as error:
                 failure_message = "Instance " + \
                     instance_data['hostname'] + \
-                    " would conflict location with an existing instance. "
+                    " is invalid. " + str(error)
                 return JsonResponse(
                     {"failure_message": failure_message},
                     status=HTTPStatus.BAD_REQUEST

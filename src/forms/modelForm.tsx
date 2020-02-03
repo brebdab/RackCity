@@ -19,13 +19,10 @@ import {
   filterString,
   renderCreateItemOption,
   renderStringItem,
-  StringSuggest
+  StringSuggest,
+  FormTypes
 } from "./formUtils";
 //TO DO : add validation of types!!!
-export enum FormTypes {
-  CREATE = "create",
-  MODIFY = "modify"
-}
 
 export interface ModelFormProps {
   token: string;

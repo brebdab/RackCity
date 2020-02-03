@@ -12,7 +12,7 @@ import * as React from "react";
 import { connect } from "react-redux";
 import { API_ROOT } from "../../api-config";
 import FormPopup from "../../forms/FormPopup";
-import { FormTypes } from "../../forms/modelForm";
+
 import {
   ElementObjectType,
   ElementType,
@@ -21,6 +21,7 @@ import {
 } from "../utils";
 import ElementTable from "./elementTable";
 import "./elementView.scss";
+import { FormTypes } from "../../forms/formUtils";
 
 interface ElementViewState {
   isOpen: boolean;

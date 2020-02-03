@@ -16,7 +16,7 @@ import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import { API_ROOT } from "../../../api-config";
 import FormPopup from "../../../forms/FormPopup";
-import { FormTypes } from "../../../forms/modelForm";
+
 import ElementTable from "../../elementView/elementTable";
 import {
   ElementType,
@@ -25,6 +25,7 @@ import {
   getHeaders
 } from "../../utils";
 import PropertiesView from "../propertiesView";
+import { FormTypes } from "../../../forms/formUtils";
 
 export interface ModelViewProps {
   token: string;
@@ -125,11 +126,7 @@ export class ModelView extends React.PureComponent<
   private handleDelete = () => {
     const data = { id: this.state.model!.id };
     axios
-      .post(
-        API_ROOT + "api/instances/delete",
-        data,
-        getHeaders(this.props.token)
-      )
+      .post(API_ROOT + "api/models/delete", data, getHeaders(this.props.token))
       .then(res => {
         this.setState({ isDeleteOpen: false });
         this.props.history.push("/");
