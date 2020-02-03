@@ -1,4 +1,10 @@
-import { Button, Classes, InputGroup } from "@blueprintjs/core";
+import {
+  Button,
+  Classes,
+  InputGroup,
+  Callout,
+  Intent
+} from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { Form } from "antd";
 import { FormComponentProps } from "antd/lib/form/Form";
@@ -28,42 +34,52 @@ class NormalLoginForm extends React.Component<
   render() {
     const { getFieldDecorator } = this.props.form;
 
-    return this.props.token !== null ? (
-      <Redirect to="/" />
-    ) : (
-      <div className={Classes.DARK + " login-container"}>
-        <Form
-          onSubmit={this.handleSubmit}
-          className="login-form .bp3-form-group"
-        >
-          <h2>Login</h2>
-          <Form.Item>
-            {getFieldDecorator("username", {
-              rules: [
-                { required: true, message: "Please input your username!" }
-              ]
-            })(<InputGroup id="username" placeholder="username" />)}
-          </Form.Item>
-          <Form.Item>
-            {getFieldDecorator("password", {
-              rules: [
-                { required: true, message: "Please input your Password!" }
-              ]
-            })(
-              <InputGroup
-                type="password"
-                id="password"
-                placeholder="password"
-              />
-            )}
-          </Form.Item>
-          <Form.Item>
-            <Button className="login-button" type="submit">
-              Login
-            </Button>
-          </Form.Item>
-        </Form>
-        {this.props.loading ? <p>loading</p> : <p></p>}
+    return (
+      <div>
+        {this.props.error ? (
+          <Callout className={Classes.DARK} intent={Intent.DANGER}>
+            {"Invalid Credentials"}
+          </Callout>
+        ) : null}
+
+        {this.props.token !== null ? (
+          <Redirect to="/" />
+        ) : (
+          <div className={Classes.DARK + " login-container"}>
+            <Form
+              onSubmit={this.handleSubmit}
+              className="login-form .bp3-form-group"
+            >
+              <h2>Login</h2>
+              <Form.Item>
+                {getFieldDecorator("username", {
+                  rules: [
+                    { required: true, message: "Please input your username!" }
+                  ]
+                })(<InputGroup id="username" placeholder="username" />)}
+              </Form.Item>
+              <Form.Item>
+                {getFieldDecorator("password", {
+                  rules: [
+                    { required: true, message: "Please input your Password!" }
+                  ]
+                })(
+                  <InputGroup
+                    type="password"
+                    id="password"
+                    placeholder="password"
+                  />
+                )}
+              </Form.Item>
+              <Form.Item>
+                <Button className="login-button" type="submit">
+                  Login
+                </Button>
+              </Form.Item>
+            </Form>
+            {this.props.loading ? <p>loading</p> : <p></p>}
+          </div>
+        )}
       </div>
     );
   }
