@@ -52,7 +52,6 @@ class App extends React.Component<AppProps> {
             <Route path="/login" component={WrappedNormalLoginForm} />
 
             {/*<Route path="/bulk-export" component={BulkExport} />*/}
-            <Route path="/report" component={Report} />
 
             <this.PrivateRoute path="/racks" component={RackView} />
             {/* <Route path="/models/:rid" component={ModelView} /> */}
@@ -61,6 +60,10 @@ class App extends React.Component<AppProps> {
               path="/instances/:rid"
               component={InstanceView}
             />
+            <this.PrivateRoute
+              path="/report"
+              component={Report}
+            />
             {/* admin paths */}
             <this.PrivateRoute
               path="/register"
@@ -68,7 +71,6 @@ class App extends React.Component<AppProps> {
                 this.props.isAdmin ? WrappedNormalRegistrationForm : Notfound
               }
             />
-
             <this.PrivateRoute
               path="/bulk-upload"
               component={
