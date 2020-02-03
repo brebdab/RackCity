@@ -82,8 +82,8 @@ export const authLogin = (username: string, password: string) => {
         loginHelper(res, dispatch);
       })
       .catch(err => {
-        console.log("login failed");
-        dispatch(registrationFail(err));
+        console.log("login failed", err);
+        dispatch(authFail(err));
       });
   };
 };
