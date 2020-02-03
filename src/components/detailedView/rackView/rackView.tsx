@@ -1,15 +1,15 @@
-import { Classes } from "@blueprintjs/core";
+import { Alert, AnchorButton, Classes } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
+import axios from "axios";
 import * as React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
+import { API_ROOT } from "../../../api-config";
 import RackSelectView, {
   RackRangeFields
 } from "../../elementView/rackSelectView";
-import { InstanceObject, RackResponseObject } from "../../utils";
+import { getHeaders, InstanceObject, RackResponseObject } from "../../utils";
 import "./rackView.scss";
-import axios from "axios";
-import { API_ROOT } from "../../../api-config";
 //export interface ElementViewProps {}
 
 export interface RackViewProps {
@@ -20,11 +20,14 @@ export interface RouteParams {
   rid: string;
 }
 
-export interface RackViewState {}
+export interface RackViewState {
+  isDeleteOpen: boolean;
+}
 class RackView extends React.PureComponent<
   RouteComponentProps & RackViewProps,
   RackViewState
 > {
+  state = { isDeleteOpen: false };
   private getRows(rackResp: RackResponseObject) {
     let rows = [];
 
@@ -118,6 +121,24 @@ class RackView extends React.PureComponent<
     }
     return unitBarRows;
   }
+  private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
+  private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
+  private handleDelete = (letter: string, num: string) => {
+    const body = {
+      letter_start: letter,
+
+      num_start: num
+    };
+
+    axios
+      .post(API_ROOT + "api/racks/delete", body, getHeaders(this.props.token))
+      .then(res => {
+        this.setState({ isDeleteOpen: false });
+      })
+      .catch(err => {
+        console.log("ERROR", err);
+      });
+  };
   viewRackForm = (rack: RackRangeFields, headers: any) => {
     return axios.post(API_ROOT + "api/racks/get", rack, headers).then(res => {
       this.props.history.replace("/racks", res.data.racks);
@@ -145,26 +166,53 @@ class RackView extends React.PureComponent<
           {racks.map((rackResp: RackResponseObject) => {
             return (
               <span>
-                <div className={Classes.DARK + " rack"}>
-                  <table className=" bp3-html-table bp3-interactive rack-table">
-                    <thead>
-                      <tr>
-                        <th className=" cell header">
-                          Rack {rackResp.rack.row_letter}
-                          {rackResp.rack.rack_num}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>{this.getRows(rackResp)}</tbody>
-                  </table>
-                  <table className="bp3-html-table loc-table">
-                    <thead>
-                      <tr>
-                        <th className=" cell header"> (U)</th>
-                      </tr>
-                    </thead>
-                    <tbody>{this.getUnitRows(rackResp)}</tbody>
-                  </table>
+                <div className="rack-parent">
+                  <div className="delete-rack">
+                    <AnchorButton
+                      minimal
+                      intent="danger"
+                      icon="trash"
+                      text="Delete"
+                      onClick={this.handleDeleteOpen}
+                    />
+                  </div>
+                  <Alert
+                    cancelButtonText="Cancel"
+                    confirmButtonText="Delete"
+                    intent="danger"
+                    isOpen={this.state.isDeleteOpen}
+                    onCancel={this.handleDeleteCancel}
+                    onConfirm={() =>
+                      this.handleDelete(
+                        rackResp.rack.row_letter,
+                        rackResp.rack.rack_num
+                      )
+                    }
+                  >
+                    {" "}
+                    <p>Are you sure you want to delete?</p>
+                  </Alert>
+                  <div className={Classes.DARK + " rack"}>
+                    <table className=" bp3-html-table bp3-interactive rack-table">
+                      <thead>
+                        <tr>
+                          <th className=" cell header">
+                            Rack {rackResp.rack.row_letter}
+                            {rackResp.rack.rack_num}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>{this.getRows(rackResp)}</tbody>
+                    </table>
+                    <table className="bp3-html-table loc-table">
+                      <thead>
+                        <tr>
+                          <th className=" cell header"> (U)</th>
+                        </tr>
+                      </thead>
+                      <tbody>{this.getUnitRows(rackResp)}</tbody>
+                    </table>
+                  </div>
                 </div>
               </span>
             );

@@ -9,7 +9,8 @@ import {
 } from "../components/utils";
 import RackSelectView from "../components/elementView/rackSelectView";
 import InstanceForm from "./InstanceForm";
-import ModelForm, { FormTypes } from "./modelForm";
+import ModelForm from "./modelForm";
+import { FormTypes } from "./formUtils";
 interface FormPopupState {}
 interface FormPopupProps {
   isOpen: boolean;
@@ -31,7 +32,7 @@ class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
         canOutsideClickClose={true}
         isOpen={this.props.isOpen}
         onClose={this.props.handleClose}
-        title={"Add " + this.props.elementName.slice(0, -1)}
+        title={this.props.type + " " + this.props.elementName.slice(0, -1)}
       >
         {this.props.elementName === ElementType.MODEL ? (
           <ModelForm

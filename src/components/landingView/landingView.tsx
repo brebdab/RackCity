@@ -1,26 +1,33 @@
 import {
-  Classes,
   AnchorButton,
+  Callout,
+  Classes,
+  Intent,
   IToastProps,
-  Toaster,
   Position,
-  Intent
+  Toaster
 } from "@blueprintjs/core";
+import axios from "axios";
 import * as React from "react";
+import { connect } from "react-redux";
+import { RouteComponentProps, withRouter } from "react-router";
+import { API_ROOT } from "../../api-config";
+import FormPopup from "../../forms/FormPopup";
+import { FormTypes } from "../../forms/formUtils";
 import ElementTabView from "../elementView/elementTabView";
 import RackSelectView, { RackRangeFields } from "../elementView/rackSelectView";
-import { API_ROOT } from "../../api-config";
-import axios from "axios";
-import { RouteComponentProps, withRouter } from "react-router";
-import FormPopup from "../../forms/FormPopup";
-import { FormTypes } from "../../forms/modelForm";
 import { ElementType } from "../utils";
 
 interface LandingViewState {
   isOpen: boolean;
+  isDeleteOpen: boolean;
+}
+interface LandingViewProps {
+  token: string;
+  isAdmin: boolean;
 }
 class LandingView extends React.Component<
-  RouteComponentProps,
+  RouteComponentProps & LandingViewProps,
   LandingViewState
 > {
   viewRackForm = (rack: RackRangeFields, headers: any) => {
@@ -33,7 +40,8 @@ class LandingView extends React.Component<
     });
   };
   state = {
-    isOpen: false
+    isOpen: false,
+    isDeleteOpen: false
   };
   private handleOpen = () => {
     this.setState({
@@ -41,11 +49,23 @@ class LandingView extends React.Component<
     });
     console.log(this.state);
   };
+  deleteRack = (rack: RackRangeFields, headers: any) => {
+    return axios
+      .post(API_ROOT + "api/racks/delete", rack, headers)
+      .then(res => {
+        this.addToast({
+          message: "Deleted rack(s) successfully",
+          intent: Intent.PRIMARY
+        });
+        this.setState({ isDeleteOpen: false });
+      });
+  };
 
   createRack = (rack: RackRangeFields, headers: any) => {
     return axios
       .post(API_ROOT + "api/racks/create", rack, headers)
       .then(res => {
+        this.setState({ isOpen: false });
         this.addToast({
           message: "Created rack(s) successfully",
           intent: Intent.PRIMARY
@@ -61,6 +81,8 @@ class LandingView extends React.Component<
     toaster: (ref: Toaster) => (this.toaster = ref)
   };
 
+  private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
+  private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
   private handleClose = () => this.setState({ isOpen: false });
 
   public render() {
@@ -72,11 +94,22 @@ class LandingView extends React.Component<
           position={Position.TOP}
           ref={this.refHandlers.toaster}
         />
+
         <AnchorButton
           className="add-rack-button"
-          text={"Add Rack"}
+          text={"Add Rack(s)"}
           icon="add"
+          minimal
+          intent={Intent.PRIMARY}
           onClick={this.handleOpen}
+        />
+        <AnchorButton
+          className="delete-rack-button"
+          text={"Delete Rack(s)"}
+          icon="trash"
+          minimal
+          intent={Intent.DANGER}
+          onClick={this.handleDeleteOpen}
         />
         <FormPopup
           type={FormTypes.CREATE}
@@ -85,10 +118,26 @@ class LandingView extends React.Component<
           isOpen={this.state.isOpen}
           handleClose={this.handleClose}
         />
-        <RackSelectView submitForm={this.viewRackForm} />
+        <FormPopup
+          type={FormTypes.DELETE}
+          elementName={ElementType.RACK}
+          submitForm={this.deleteRack}
+          isOpen={this.state.isDeleteOpen}
+          handleClose={this.handleDeleteCancel}
+        />
+        <Callout title="View Racks">
+          <RackSelectView submitForm={this.viewRackForm} />
+        </Callout>
         <ElementTabView />
       </div>
     );
   }
 }
-export default withRouter(LandingView);
+
+const mapStatetoProps = (state: any) => {
+  return {
+    token: state.token,
+    isAdmin: state.admin
+  };
+};
+export default connect(mapStatetoProps)(withRouter(LandingView));
