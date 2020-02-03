@@ -221,7 +221,9 @@ def model_detail(request, id):
         model_serializer = ITModelSerializer(model)
         instances = ITInstance.objects.filter(model=id)
         instances_serializer = RecursiveITInstanceSerializer(
-            instances, many=True)
+            instances,
+            many=True,
+        )
         model_detail = {
             "model": model_serializer.data,
             "instances": instances_serializer.data
