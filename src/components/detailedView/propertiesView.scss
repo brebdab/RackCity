@@ -1,0 +1,18 @@
+.propsview .row-props {
+  display: flex;
+}
+
+.propsview .column-props {
+  text-align: center;
+  flex: 50%;
+}
+
+.model-link:hover {
+  background-color: #394b59 !important;
+  cursor: pointer !important;
+}
+.propsview .column-right-props {
+  text-align: center;
+  flex: 50%;
+  border-left: 1px solid white;
+}

@@ -13,6 +13,11 @@ export const authSuccess = (token: string) => {
     token: token
   };
 };
+export const authAdmin = () => {
+  return {
+    type: actionTypes.AUTH_ADMIN
+  };
+};
 
 export const authFail = (error: string) => {
   return {
@@ -23,7 +28,7 @@ export const authFail = (error: string) => {
 
 export const logout = () => {
   localStorage.removeItem("token");
-  localStorage.removeItem("experiationDate");
+  localStorage.removeItem("expirationDate");
   return {
     type: actionTypes.AUTH_LOGOUT
   };
@@ -57,10 +62,7 @@ export const authLogin = (username: string, password: string) => {
     // axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
     // axios.defaults.xsrfCookieName = "csrftoken";
     // var csrf_token = getCookie("csrftoken");
-    console.log({
-      username: username,
-      password: password
-    });
+
     console.log(API_ROOT + "rest-auth/login/");
 
     axios
@@ -75,6 +77,26 @@ export const authLogin = (username: string, password: string) => {
       .catch(err => {
         console.log("login failed");
         dispatch(authFail(err));
+      });
+  };
+};
+
+export const checkAdmin = (token: string) => {
+  return (dispatch: any) => {
+    const headers = {
+      headers: {
+        Authorization: "Token " + token
+      }
+    };
+    axios
+      .get(API_ROOT + "api/iamadmin", headers)
+      .then(res => {
+        if (res.data.is_admin) {
+          dispatch(authAdmin());
+        }
+      })
+      .catch(err => {
+        console.log(err);
       });
   };
 };
@@ -105,18 +127,18 @@ export const authSignup = (
 
 export const loginHelper = (res: any, dispatch: any) => {
   const token = res.data.key;
-  console.log("success" + token);
   const expirationDate = new Date(new Date().getTime() + 3600 * 1000);
   localStorage.setItem("token", token);
   localStorage.setItem("expirationDate", expirationDate.toString());
+
   dispatch(authSuccess(token));
+  dispatch(checkAdmin(token));
   dispatch(checkAuthTimeout(3600));
 };
 
 export const authCheckState = () => {
   return (dispatch: any) => {
     const token = localStorage.getItem("token");
-    console.log(token);
     if (token === undefined) {
       dispatch(logout());
     } else {
@@ -125,6 +147,7 @@ export const authCheckState = () => {
         dispatch(logout());
       } else {
         dispatch(authSuccess(token!));
+        dispatch(checkAdmin(token!));
         dispatch(
           checkAuthTimeout(
             (expirationDate.getTime() - new Date().getTime()) / 1000

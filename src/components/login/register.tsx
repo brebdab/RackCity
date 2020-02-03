@@ -3,7 +3,7 @@ import { Form } from "antd";
 import { FormComponentProps } from "antd/lib/form";
 import React from "react";
 import { connect } from "react-redux";
-import { NavLink, RouteComponentProps } from "react-router-dom";
+import { RouteComponentProps } from "react-router-dom";
 import "./login.scss";
 const FormItem = Form.Item;
 interface RegistrationFormProps {
@@ -29,14 +29,14 @@ class RegistrationForm extends React.Component<
     e.preventDefault();
     this.props.form.validateFieldsAndScroll((err, values) => {
       if (!err) {
-        this.props.onAuth(
-          values.userName,
-          values.email,
-          values.displayName,
-          values.password,
-          values.confirm
-        );
-        this.props.history.push("/");
+        // this.props.onAuth(
+        //   values.userName,
+        //   values.email,
+        //   values.displayName,
+        //   values.password,
+        //   values.confirm
+        // );
+        //  this.props.history.push("/");
       }
     });
   };
@@ -76,8 +76,8 @@ class RegistrationForm extends React.Component<
           onSubmit={this.handleSubmit}
           className="login-form .bp3-form-group"
         >
-          <h2>Register</h2>
-          <FormItem>
+          <h2>Add a new user</h2>
+          <FormItem label="username">
             {getFieldDecorator("userName", {
               rules: [
                 { required: true, message: "Please input your username!" }
@@ -143,10 +143,8 @@ class RegistrationForm extends React.Component<
 
           <FormItem>
             <Button className="login-button" type="submit">
-              Register
+              Add
             </Button>
-            <p></p>
-            <NavLink to="/login">Login</NavLink>
           </FormItem>
         </Form>
       </div>

@@ -5,16 +5,19 @@ import React from "react";
 import { connect } from "react-redux";
 import { BrowserRouter, Redirect, Route, Switch } from "react-router-dom";
 import RackView from "./components/detailedView/rackView/rackView";
-import ElementView from "./components/elementView/elementView";
+
 import Notfound from "./components/fallback"; // 404 page
 import WrappedNormalLoginForm from "./components/login/login";
 import WrappedNormalRegistrationForm from "./components/login/register";
 import Navigation from "./components/navigation/navigation";
+import BulkImport from "./components/import/import";
 import "./index.scss";
 
 import ModelView from "./components/detailedView/modelView/modelView";
-import InstanceViewWrap from "./components/detailedView/instanceView/instanceView";
+import InstanceView from "./components/detailedView/instanceView/instanceView";
 import * as actions from "./store/actions/auth";
+import ModelForm from "./forms/modelForm";
+import LandingView from "./components/landingView/landingView";
 
 export interface AppProps {
   isAuthenticated: boolean;
@@ -25,7 +28,6 @@ class App extends React.Component<AppProps> {
     this.props.onTryAutoSignup();
   }
   render() {
-    console.log(this.props.isAuthenticated);
     return (
       <BrowserRouter basename="/">
         <div>
@@ -33,23 +35,23 @@ class App extends React.Component<AppProps> {
           <Switch>
             <Route exact path="/">
               {this.props.isAuthenticated ? (
-                <ElementView />
+                <LandingView />
               ) : (
                 <Redirect to="/login" />
               )}
             </Route>
             {/* Landing page shows table viewer */}
-            <Route path="/racks/:rid" component={RackView} />
             <Route path="/login" component={WrappedNormalLoginForm} />
-            <Route path="/register" component={WrappedNormalRegistrationForm} />
-            <Route path="/racks/:rid" component={RackView} />
+            <Route path="/racks" component={RackView} />
             <Route path="/models/:rid" component={ModelView} />
-            <Route path="/instances/:rid" component={InstanceViewWrap} />
-            {/* Rack view based on rack id (rid)*/}
-            {/*<Route path="/rack" component={View}/> {/* path and which component to be rendered */}
+            <Route path="/instances/:rid" component={InstanceView} />
+
+            {/* admin paths */}
+            <Route path="/admin" component={WrappedNormalRegistrationForm} />
+            <Route path="/bulk-upload" component={BulkImport} />
+            <Route path="/create" component={ModelForm} />
             <Route component={Notfound} />
           </Switch>
-          )
         </div>
       </BrowserRouter>
     );

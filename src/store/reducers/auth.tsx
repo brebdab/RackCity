@@ -31,7 +31,14 @@ const authFail = (state: any, action: any) => {
 
 const authLogout = (state: any, action: any) => {
   return updateObject(state, {
-    token: null
+    token: null,
+    admin: null
+  });
+};
+
+const authAdmin = (state: any, aciton: any) => {
+  return updateObject(state, {
+    admin: true
   });
 };
 
@@ -47,6 +54,8 @@ const reducer = (state = initialState, action: any) => {
       return authFail(state, action);
     case actionTypes.AUTH_LOGOUT:
       return authLogout(state, action);
+    case actionTypes.AUTH_ADMIN:
+      return authAdmin(state, action);
     default:
       return state;
   }

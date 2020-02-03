@@ -6,6 +6,9 @@
   outline: none;
 }
 
+.table-nav-bar {
+  padding-top: 20pt;
+}
 .loading-container {
   text-align: center;
 }
@@ -13,10 +16,75 @@
   display: inline-block;
   padding: 10px;
 }
-.TableView {
-  display: flex;
-  flex-direction: column;
-  padding: 20px;
+.element-table {
+  position: relative;
+  float: left;
+  width: 100%;
+  overflow: scroll;
+}
+.filter-select {
+  margin: 0 !important;
+}
+.field {
+  float: left !important;
+  margin: 0;
+}
+.test-fields {
+  display: inline-block;
+}
+.test-fields button {
+  margin-top: 20px;
+}
+.test-select {
+  margin-top: 20px !important;
+}
+.add {
+  float: right;
+}
+.table {
+  margin-top: 0px;
+  // display: inline-block;
+  overflow: scroll;
+  max-height: 500px;
+  float: left;
+}
+.table-control {
+  float: right;
+}
+.table-control span {
+  float: left;
+}
+.header-cell {
+  // cursor: pointer !important;
+  white-space: nowrap !important;
+  overflow: visible;
+  width: max-content !important;
+}
+.header-text {
+  white-space: nowrap !important;
+  overflow: scroll;
+  width: max-content !important;
+  display: inline-block;
+}
+// .header-text span ~ span {
+//   padding-left: 30px !important;
+//   display: inline-block;
+// }
+.header-text span {
+  padding-right: 20px !important;
+  margin-right: 20px !important;
+}
+.modelname-text {
+  margin-right: 10px;
+}
+
+.hostname-text {
+  margin-left: 10px !important;
+  padding-right: 100px !important;
+}
+.table-options {
+  margin: none !important;
+  float: none !important;
 }
 .badge {
   background-color: #9ae6b4;
@@ -28,6 +96,26 @@
   font-weight: bold;
   text-transform: uppercase;
 }
+.rack-field {
+  float: left;
+}
+
+// .table-options {
+//   margin-top: 120px;
+// }
+.rack-field .button {
+  float: left;
+  margin-top: 20px;
+}
+.header-text icon {
+  float: right;
+}
+.icon {
+  cursor: pointer !important;
+}
+.icon:hover {
+  background-color: #394b59 !important;
+}
 input {
   padding: 10px;
   margin-bottom: 20px;
@@ -35,4 +123,8 @@ input {
   border-radius: 5px;
   border: 1px solid #ddd;
   box-shadow: none;
+}
+
+.rack-select {
+  float: left;
 }
