@@ -10,7 +10,7 @@ class RackRangeOptions extends React.Component<RackRangeProps> {
   render() {
     return (
       <div className={this.props.className}>
-        <FormGroup className={this.props.className} label="Rack Letter ">
+        <FormGroup className={this.props.className} label="Row Letter ">
           <Field
             field="letter_start"
             type="text"
@@ -18,7 +18,7 @@ class RackRangeOptions extends React.Component<RackRangeProps> {
           />
         </FormGroup>
         {this.props.range ? (
-          <FormGroup className={this.props.className} label="Rack Letter (end)">
+          <FormGroup className={this.props.className} label="Row Letter (end)">
             <Field
               field="letter_end"
               type="text"
@@ -26,7 +26,7 @@ class RackRangeOptions extends React.Component<RackRangeProps> {
             />
           </FormGroup>
         ) : null}
-        <FormGroup className={this.props.className} label="Row number">
+        <FormGroup className={this.props.className} label="Rack Number">
           <Field
             field="num_start"
             type="number"
@@ -35,7 +35,7 @@ class RackRangeOptions extends React.Component<RackRangeProps> {
         </FormGroup>
 
         {this.props.range ? (
-          <FormGroup className={this.props.className} label="Row number (end)">
+          <FormGroup className={this.props.className} label="Rack Number (end)">
             <Field
               field="num_end"
               type="number"
