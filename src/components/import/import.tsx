@@ -1,4 +1,4 @@
-import { Classes, AnchorButton, Alert, Dialog } from "@blueprintjs/core";
+import { Classes, AnchorButton, Alert, Dialog, Card, Elevation } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
@@ -50,7 +50,54 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
   render() {
     return (
       <div className={Classes.DARK + " import"}>
-        <h1>Upload instructions here</h1>
+        <div className={"bp3-heading"}>
+          <Card elevation={Elevation.ONE}>
+            <div>
+              <h2>Upload instructions:</h2>
+            </div>
+            <h3>General format:</h3>
+              <ol className={"bp3-list"}>
+              </ol>
+            <h3>Model/Instance-specific fields:</h3>
+              <Card elevation={Elevation.THREE}>
+                <h4>Model upload:</h4>
+                <ol className={"bp3-list"}>
+                  <li>Fields:
+                    <ul className={"bp3-list"}>
+                      <li>vendor: required always; string</li>
+                      <li>model_number: required always; string</li>
+                      <li>height: required for new modes, otherwise optional; positive integer; height in U</li>
+                      <li>display_color: optional; 6-digit, 3-byte hex triplet (RGB) preceded by pound sign (#); case insensitive; e.g. #7FFFD4</li>
+                      <li>ethernet_ports: optional; non-negative integer</li>
+                      <li>power_ports: optional, non-negative integer</li>
+                      <li>cpu: optional; string</li>
+                      <li>memory: optional; string</li>
+                      <li>comment: optional; string; must be enclosed by double quotes if the value contains line breaks</li>
+                    </ul>
+                  </li>
+                </ol>
+              </Card>
+              <Card elevation={Elevation.THREE}>
+                <h4>Instance upload:</h4>
+                <ol className={"bp3-list"}>
+                  <li>Fields:
+                    <ul className={"bp3-list"}>
+                      <li>hostname: required always; RFC-1034-compliant string</li>
+                      <li>rack: required for new instances, otherwise optional; string; address is by row letter (A-Z) then rack number (positive integer); There is no separator between row letter and rack number</li>
+                      <li>rack_position: required for new instances, otherwise optional; positive integer; refers to vertical location in U of bottom of equipment</li>
+                      <li>vendor: required for new instances, otherwise optional; string; refers to vendor of the model with which this instance is associated</li>
+                      <li>model_number: required for new instances, otherwise optional; string; refers to model number of the model with which this instance is associated. Together with vendor uniquely identifies a model</li>
+                      <li>owner: optional; string; refers to the username of an existing user in the system who owns this equipment</li>
+                      <li>comment: optiona; string; must be enclosed by double quotes if the value contains line breaks</li>
+                    </ul>
+                  </li>
+                </ol>
+              </Card>
+            <h4>Notes:</h4>
+            <ol className={"bp3-list"}>
+            </ol>
+          </Card>
+        </div>
         <div className={"row"}>
           <div className={"column-third-left"}>
             <p> </p>
@@ -97,6 +144,8 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
               <FileSelector {...this.props} callback={this.setFile}/>
             </Alert>
           </div>
+        </div>
+        <div className={"row"}>
           <div className={"column"}>
             <AnchorButton
               large={true}
