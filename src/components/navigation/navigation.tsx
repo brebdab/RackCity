@@ -39,13 +39,13 @@ export class Navigation extends React.Component<NavigationPropsAll> {
                     text="Home"
                     minimal
                   />
-                  <AnchorButton
+                  {/*<AnchorButton
                     onClick={() => this.props.history.push("/bulk-export")}
                     className="nav-bar-button"
                     icon="import"
                     text="Export"
                     minimal
-                  />
+                  />*/}
                   <AnchorButton
                     onClick={() => this.props.history.push("/report")}
                     className="nav-bar-button"
