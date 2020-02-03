@@ -9,10 +9,11 @@ from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
 import math
 from rackcity.views.rackcity_utils import (
-    is_location_full,
+    validate_instance_location,
     records_are_identical,
     get_sort_arguments,
     get_filter_arguments,
+    LocationException,
 )
 
 
@@ -73,8 +74,11 @@ def model_modify(request):
         except ObjectDoesNotExist:
             failure_message += "No existing model with id="+str(id)+". "
         else:
-            if not model_height_change_valid(data, existing_model):
-                failure_message = "Height change of model causes conflicts. "
+            try:
+                validate_model_height_change(data, existing_model)
+            except LocationException as error:
+                failure_message = "Height change of model causes conflicts. " + \
+                    str(error)
                 return JsonResponse(
                     {"failure_message": failure_message},
                     status=HTTPStatus.NOT_ACCEPTABLE
@@ -94,23 +98,25 @@ def model_modify(request):
     )
 
 
-def model_height_change_valid(new_model_data, existing_model):
+def validate_model_height_change(new_model_data, existing_model):
     if 'height' not in new_model_data:
-        return True
+        return
     new_model_height = int(new_model_data['height'])
     if new_model_height <= existing_model.height:
-        return True
+        return
     else:
         instances = ITInstance.objects.filter(model=existing_model.id)
         for instance in instances:
-            if is_location_full(
-                instance.rack.id,
-                instance.elevation,
-                new_model_height,
-                instance.id
-            ):
-                return False
-        return True
+            try:
+                validate_instance_location(
+                    instance.rack.id,
+                    instance.elevation,
+                    new_model_height,
+                    instance.id
+                )
+            except LocationException as error:
+                raise error
+        return
 
 
 @api_view(['POST'])
@@ -296,11 +302,15 @@ def model_bulk_upload(request):
         except ObjectDoesNotExist:
             models_to_add.append(model_serializer)
         else:
-            if not model_height_change_valid(model_data, existing_model):
+            try:
+                validate_model_height_change(model_data, existing_model)
+            except LocationException as error:
                 failure_message = \
                     "Height change of this model causes conflicts: " + \
                     "vendor="+model_data['vendor'] + \
-                    ", model_number="+model_data['model_number']
+                    ", model_number="+model_data['model_number'] + \
+                    ". " + \
+                    str(error)
                 return JsonResponse(
                     {"failure_message": failure_message},
                     status=HTTPStatus.NOT_ACCEPTABLE

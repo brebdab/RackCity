@@ -1,8 +1,10 @@
 from rackcity.models import ITInstance, ITModel, Rack
 from rackcity.api.objects import RackRangeSerializer
 
+# CHECK EVERYWHERE is_location_full ITS USED TO CATCH EXCEPTION, MAKE SURE THE ERROR IS PASSED UP
 
-def is_location_full(
+
+def validate_instance_location(
     rack_id,
     instance_elevation,
     instance_height,
@@ -11,6 +13,10 @@ def is_location_full(
     new_instance_location_range = [
         instance_elevation + i for i in range(instance_height)
     ]
+    rack_height = Rack.objects.get(id=rack_id).height
+    for location in new_instance_location_range:
+        if location <= 0 or location > rack_height:
+            raise LocationException("Cannot place instance outside of rack. ")
     instances_in_rack = ITInstance.objects.filter(rack=rack_id)
     for instance_in_rack in instances_in_rack:
         # Ignore if instance being modified conflicts with its old location
@@ -20,8 +26,11 @@ def is_location_full(
                     in range(instance_in_rack.model.height)
             ]:
                 if occupied_location in new_instance_location_range:
-                    return True
-    return False
+                    raise LocationException(
+                        "Instance location conflicts with another instance: '" +
+                        instance_in_rack.hostname +
+                        "'. "
+                    )
 
 
 def validate_location_modification(data, existing_instance):
@@ -50,13 +59,15 @@ def validate_location_modification(data, existing_instance):
             raise Exception("No existing rack with id=" +
                             str(data['rack']) + ".")
 
-    if is_location_full(
-        rack_id,
-        instance_elevation,
-        instance_height,
-        instance_id=instance_id,
-    ):
-        raise Exception("Instance does not fit in modified location.")
+    try:
+        validate_instance_location(
+            rack_id,
+            instance_elevation,
+            instance_height,
+            instance_id=instance_id,
+        )
+    except LocationException as error:
+        raise error
 
 
 def records_are_identical(existing_data, new_data):
