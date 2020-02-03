@@ -172,25 +172,23 @@ class InstanceForm extends React.Component<
         >
           <h2>Add a New Instance</h2>
 
-          <FormGroup label="Hostname" inline={true}>
+          <FormGroup label="Hostname" inline={false}>
             <Field
-              className="field"
               placeholder="hostname"
               onChange={this.handleChange}
               value={values.hostname}
               field="hostname"
             />
           </FormGroup>
-          <FormGroup label="Elevation" inline={true}>
+          <FormGroup label="Elevation" inline={false}>
             <Field
               field="elevation"
-              className="field"
               placeholder="elevation"
               value={values.elevation}
               onChange={this.handleChange}
             />
           </FormGroup>
-          <FormGroup label="Model" inline={true}>
+          <FormGroup label="Model" inline={false}>
             <ModelSuggest
               popoverProps={{
                 minimal: true,
@@ -212,7 +210,7 @@ class InstanceForm extends React.Component<
               noResults={<MenuItem disabled={true} text="No results." />}
             />
           </FormGroup>
-          <FormGroup label="Rack" inline={true}>
+          <FormGroup label="Rack" inline={false}>
             <RackSuggest
               popoverProps={{
                 minimal: true,
@@ -235,19 +233,17 @@ class InstanceForm extends React.Component<
             />
           </FormGroup>
 
-          <FormGroup label="Owner" inline={true}>
+          <FormGroup label="Owner" inline={false}>
             <Field
               field="owner"
-              className="field"
               placeholder="owner"
               value={values.owner}
               onChange={this.handleChange}
             />
           </FormGroup>
-          <FormGroup label="Comment" inline={true}>
+          <FormGroup label="Comment" inline={false}>
             <Field
               field="comment"
-              className="field"
               placeholder="comment"
               value={values.comment}
               onChange={this.handleChange}

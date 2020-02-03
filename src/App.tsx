@@ -4,58 +4,77 @@ import "normalize.css/normalize.css";
 import React from "react";
 import { connect } from "react-redux";
 import { BrowserRouter, Redirect, Route, Switch } from "react-router-dom";
+import InstanceView from "./components/detailedView/instanceView/instanceView";
+import ModelView from "./components/detailedView/modelView/modelView";
 import RackView from "./components/detailedView/rackView/rackView";
-
 import Notfound from "./components/fallback"; // 404 page
+import LandingView from "./components/landingView/landingView";
 import WrappedNormalLoginForm from "./components/login/login";
 import WrappedNormalRegistrationForm from "./components/login/register";
 import Navigation from "./components/navigation/navigation";
 import BulkImport from "./components/import/import";
-// import BulkExport from "./components/export/export"
-import "./index.scss";
+// import BulkExport from "./components/export/export";
 
-import ModelView from "./components/detailedView/modelView/modelView";
-import InstanceView from "./components/detailedView/instanceView/instanceView";
+import "./index.scss";
 import * as actions from "./store/actions/auth";
-import ModelForm from "./forms/modelForm";
-import LandingView from "./components/landingView/landingView";
 
 import Report from "./components/report/report";
 
 export interface AppProps {
   isAuthenticated: boolean;
   onTryAutoSignup: any;
+  isAdmin: boolean;
 }
+
 class App extends React.Component<AppProps> {
   componentDidMount() {
     this.props.onTryAutoSignup();
   }
+  PrivateRoute = ({ ...rest }: any) => {
+    console.log(rest);
+
+    return this.props.isAuthenticated ? (
+      <Route {...rest} />
+    ) : (
+      <Route {...rest}>
+        <Redirect to="/login" />
+      </Route>
+    );
+  };
+
   render() {
     return (
       <BrowserRouter basename="/">
         <div>
           <Navigation {...this.props} />
           <Switch>
-            <Route exact path="/">
-              {this.props.isAuthenticated ? (
-                <LandingView />
-              ) : (
-                <Redirect to="/login" />
-              )}
-            </Route>
-            {/* Landing page shows table viewer */}
+            <this.PrivateRoute exact path="/" component={LandingView} />
             <Route path="/login" component={WrappedNormalLoginForm} />
-            <Route path="/racks" component={RackView} />
-            <Route path="/models/:rid" component={ModelView} />
-            <Route path="/instances/:rid" component={InstanceView} />
+
             {/*<Route path="/bulk-export" component={BulkExport} />*/}
             <Route path="/report" component={Report} />
 
+            <this.PrivateRoute path="/racks" component={RackView} />
+            {/* <Route path="/models/:rid" component={ModelView} /> */}
+            <this.PrivateRoute path="/models/:rid" component={ModelView} />
+            <this.PrivateRoute
+              path="/instances/:rid"
+              component={InstanceView}
+            />
             {/* admin paths */}
-            <Route path="/admin" component={WrappedNormalRegistrationForm} />
-            <Route path="/bulk-upload" component={BulkImport} />
-            <Route path="/create" component={ModelForm} />
-            <Route component={Notfound} />
+            <this.PrivateRoute
+              path="/register"
+              component={
+                this.props.isAdmin ? WrappedNormalRegistrationForm : Notfound
+              }
+            />
+
+            <this.PrivateRoute
+              path="/bulk-upload"
+              component={
+                this.props.isAdmin ? BulkImport : Notfound
+              }
+            />
           </Switch>
         </div>
       </BrowserRouter>
@@ -65,7 +84,8 @@ class App extends React.Component<AppProps> {
 
 const mapStateToProps = (state: any) => {
   return {
-    isAuthenticated: state.token !== null
+    isAuthenticated: state.token !== null,
+    isAdmin: state.admin
   };
 };
 

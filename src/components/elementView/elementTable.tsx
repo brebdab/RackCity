@@ -369,13 +369,13 @@ class ElementTable extends React.Component<
     return fields;
   };
 
-  getScrollIcon = () => {
+  getScrollIcon = (field: string) => {
     return this.props.disableSorting ? null : (
       <Icon
         className="icon"
         icon={IconNames.DOUBLE_CARET_VERTICAL}
         iconSize={Icon.SIZE_STANDARD}
-        onClick={() => this.handleSort("model__vendor")}
+        onClick={() => this.handleSort(field)}
       />
     );
   };
@@ -475,13 +475,13 @@ class ElementTable extends React.Component<
                         <th className="header-cell">
                           <div className="header-text">
                             <span>model vendor</span>
-                            {this.getScrollIcon()}
+                            {this.getScrollIcon("model__vendor")}
                           </div>
                         </th>,
                         <th className="header-cell">
                           <div className="header-text">
                             <span>model number</span>
-                            {this.getScrollIcon()}
+                            {this.getScrollIcon("model__number")}
                           </div>
                         </th>
                       ];
@@ -490,7 +490,7 @@ class ElementTable extends React.Component<
                         <th className="header-cell">
                           <div className="header-text">
                             <span>{col}</span>
-                            {this.getScrollIcon()}
+                            {this.getScrollIcon(col)}
                           </div>
                         </th>
                       );
@@ -520,9 +520,19 @@ class ElementTable extends React.Component<
                           return (
                             <td>{value.row_letter + " " + value.rack_num}</td>
                           );
+                        } else if (col === "display_color") {
+                          console.log(value);
+                          return (
+                            <td
+                              style={{
+                                backgroundColor: value
+                              }}
+                            ></td>
+                          );
                         } else if (col !== "id") {
                           return <td>{value}</td>;
                         }
+
                         return null;
                       })}
                     </tr>
