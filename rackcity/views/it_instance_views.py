@@ -143,6 +143,10 @@ def instance_add(request):
             validate_instance_location(rack_id, elevation, height)
         except LocationException as error:
             failure_message += str(error)
+            return JsonResponse(
+                {"failure_message": failure_message},
+                status=HTTPStatus.BAD_REQUEST,
+            )
     if failure_message == "":
         try:
             serializer.save()
