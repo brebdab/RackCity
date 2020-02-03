@@ -70,7 +70,8 @@ def instance_page(request):
             {"failure_message": "Filter error: " + str(error)},
             status=HTTPStatus.BAD_REQUEST
         )
-    instances_query = instances_query.filter(**filter_args)
+    for filter_arg in filter_args:
+        instances_query = instances_query.filter(**filter_arg)
 
     try:
         sort_args = get_sort_arguments(request.data)
@@ -458,7 +459,8 @@ def instance_bulk_export(request):
             {"failure_message": "Filter error: " + str(error)},
             status=HTTPStatus.BAD_REQUEST
         )
-    instances_query = instances_query.filter(**filter_args)
+    for filter_arg in filter_args:
+        instances_query = instances_query.filter(**filter_arg)
 
     try:
         sort_args = get_sort_arguments(request.data)
