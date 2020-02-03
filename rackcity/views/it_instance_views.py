@@ -331,8 +331,8 @@ def instance_bulk_upload(request):
         except ObjectDoesNotExist:
             model = ITModel.objects.get(id=instance_data['model'])
             if is_location_full(
-                instance_data['rack'],
-                instance_data['elevation'],
+                instance_serializer.validated_data['rack'],
+                instance_serializer.validated_data['elevation'],
                 model.height,
                 instance_id=None,
             ):
