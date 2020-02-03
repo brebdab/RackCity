@@ -231,7 +231,10 @@ def model_detail(request, id):
         return JsonResponse(model_detail, status=HTTPStatus.OK)
     except ITModel.DoesNotExist:
         failure_message = "No model exists with id="+str(id)
-        return JsonResponse({"failure_message": failure_message}, status=HTTPStatus.NOT_FOUND)
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.NOT_FOUND
+        )
 
 
 @api_view(['GET'])
@@ -240,8 +243,8 @@ def model_vendors(request):
     """
     Get all known vendors.
     """
-    vendors = ITModel.objects.values('vendor').distinct()
-    vendors_names = [vendor['vendor'] for vendor in vendors]
+    vendors_names = [name for name in ITModel.objects.values_list(
+        'vendor', flat=True).distinct('vendor')]
     return JsonResponse(
         {"vendors": vendors_names},
         status=HTTPStatus.OK
