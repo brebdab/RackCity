@@ -8,7 +8,12 @@ import { API_ROOT } from "../../../api-config";
 import FormPopup from "../../../forms/FormPopup";
 import { FormTypes } from "../../../forms/modelForm";
 import ElementTable from "../../elementView/elementTable";
-import { ElementType, InstanceObject, ModelObject } from "../../utils";
+import {
+  ElementType,
+  InstanceObject,
+  ModelObject,
+  getHeaders
+} from "../../utils";
 import PropertiesView from "../propertiesView";
 
 export interface ModelViewProps {
@@ -100,8 +105,14 @@ export class ModelView extends React.PureComponent<
   private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
   private handleFormClose = () => this.setState({ isFormOpen: false });
   private handleDelete = () => {
-    alert("Model was successfully deleted"); // TODO change to real deletion
-    this.setState({ isDeleteOpen: false });
+    const data = { id: this.state.model!.id };
+    axios
+      .post(API_ROOT + "api/models/delete", data, getHeaders(this.props.token))
+      .then(res => {
+        alert("Model was successfully deleted"); // TODO change to real deletion
+        this.setState({ isDeleteOpen: false });
+        this.props.history.push("/");
+      });
   };
   public render() {
     console.log(this.state.instances);
