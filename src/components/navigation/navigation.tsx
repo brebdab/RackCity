@@ -39,6 +39,20 @@ export class Navigation extends React.Component<NavigationPropsAll> {
                     text="Home"
                     minimal
                   />
+                  {/*<AnchorButton
+                    onClick={() => this.props.history.push("/bulk-export")}
+                    className="nav-bar-button"
+                    icon="import"
+                    text="Export"
+                    minimal
+                  />*/}
+                  <AnchorButton
+                    onClick={() => this.props.history.push("/report")}
+                    className="nav-bar-button"
+                    icon="numbered-list"
+                    text="View Report"
+                    minimal
+                  />
                 </div>
               ) : (
                 <p></p>
@@ -49,7 +63,7 @@ export class Navigation extends React.Component<NavigationPropsAll> {
                     onClick={() => this.props.history.push("/bulk-upload")}
                     className="nav-bar-button"
                     icon="export"
-                    text="Upload File"
+                    text="UploadFile"
                     minimal
                   />
                 </div>

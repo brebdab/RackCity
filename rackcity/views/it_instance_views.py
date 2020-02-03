@@ -135,15 +135,14 @@ def instance_add(request):
     serializer = ITInstanceSerializer(data=data)
     if not serializer.is_valid(raise_exception=False):
         failure_message += str(serializer.errors)
-
-    rack_id = serializer.validated_data['rack'].id
-    elevation = serializer.validated_data['elevation']
-    height = serializer.validated_data['model'].height
-    try:
-        validate_instance_location(rack_id, elevation, height)
-    except LocationException as error:
-        failure_message += str(error)
-
+    if failure_message == "":
+        rack_id = serializer.validated_data['rack'].id
+        elevation = serializer.validated_data['elevation']
+        height = serializer.validated_data['model'].height
+        try:
+            validate_instance_location(rack_id, elevation, height)
+        except LocationException as error:
+            failure_message += str(error)
     if failure_message == "":
         try:
             serializer.save()

@@ -8,7 +8,6 @@ export enum ElementType {
 }
 export interface InstanceObject extends ElementObject {
   hostname: string;
-  // elevation: number; // this name changes to rack_position. bulk file also has vendor and model #
   elevation: string;
   model: ModelObject;
   rack: RackObject;
