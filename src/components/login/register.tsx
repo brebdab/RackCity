@@ -1,42 +1,88 @@
-import { Button, Classes, InputGroup } from "@blueprintjs/core";
+import {
+  Button,
+  Callout,
+  Classes,
+  InputGroup,
+  Intent
+} from "@blueprintjs/core";
 import { Form } from "antd";
 import { FormComponentProps } from "antd/lib/form";
+import axios from "axios";
 import React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps } from "react-router-dom";
+import { API_ROOT } from "../../api-config";
+import { getHeaders } from "../utils";
 import "./login.scss";
 const FormItem = Form.Item;
 interface RegistrationFormProps {
   loading: boolean;
   error: string;
-  onAuth(
+  token: string;
+}
+
+interface RegistrationFormState {
+  errors: Array<string>;
+  confirmDirty: boolean;
+}
+
+class RegistrationForm extends React.Component<
+  RegistrationFormProps & FormComponentProps & RouteComponentProps,
+  RegistrationFormState
+> {
+  public state = {
+    confirmDirty: false,
+    errors: []
+  };
+  authSignup = (
     username: string,
     email: string,
     displayName: string,
     password1: string,
-    password2: string
-  ): any;
-}
+    password2: string,
+    token: string
+  ) => {
+    const headers = getHeaders(token);
+    return axios
+      .post(
+        API_ROOT + "rest-auth/registration/",
+        {
+          username: username,
+          email: email,
+          displayName: displayName,
+          password1: password1,
+          password2: password2
+        },
+        headers
+      )
+      .then(res => {
+        console.log("Created user");
+        this.props.history.push("/");
+      }) //loginHelper(res, dispatch))
+      .catch(err => {
+        let errors: Array<string> = this.state.errors;
 
-class RegistrationForm extends React.Component<
-  RegistrationFormProps & FormComponentProps & RouteComponentProps
-> {
-  state = {
-    confirmDirty: false
+        errors.push(JSON.stringify(err.response.data));
+        this.setState({
+          errors: errors
+        });
+        console.log(errors);
+        // dispatch(authFail(err));
+      });
   };
 
   handleSubmit = (e: any) => {
     e.preventDefault();
     this.props.form.validateFieldsAndScroll((err, values) => {
       if (!err) {
-        // this.props.onAuth(
-        //   values.userName,
-        //   values.email,
-        //   values.displayName,
-        //   values.password,
-        //   values.confirm
-        // );
-        //  this.props.history.push("/");
+        this.authSignup(
+          values.userName,
+          values.email,
+          values.displayName,
+          values.password,
+          values.confirm,
+          this.props.token
+        );
       }
     });
   };
@@ -72,6 +118,9 @@ class RegistrationForm extends React.Component<
 
     return (
       <div className={Classes.DARK + " login-container"}>
+        {this.state.errors.map((err: string) => {
+          return <Callout intent={Intent.DANGER}>{err}</Callout>;
+        })}
         <Form
           onSubmit={this.handleSubmit}
           className="login-form .bp3-form-group"
@@ -82,7 +131,7 @@ class RegistrationForm extends React.Component<
               rules: [
                 { required: true, message: "Please input your username!" }
               ]
-            })(<InputGroup className="field" placeholder="Username" />)}
+            })(<InputGroup placeholder="Username" />)}
           </FormItem>
           <FormItem>
             {getFieldDecorator("displayName", {
@@ -157,23 +206,24 @@ const WrappedRegistrationForm = Form.create()(RegistrationForm);
 const mapStateToProps = (state: any) => {
   return {
     loading: state.loading,
-    error: state.error
+    error: state.error,
+    token: state.token
   };
 };
 
-const mapDispatchToProps = (dispatch: any) => {
-  return {
-    onAuth: (
-      username: string,
-      email: string,
-      displayName: string,
-      password1: string,
-      password2: string
-    ) => dispatch()
-  };
-};
+// const mapDispatchToProps = (dispatch: any) => {
+//   return {
+//     onAuth: (
+//       username: string,
+//       email: string,
+//       displayName: string,
+//       password1: string,
+//       password2: string
+//     ) =>
+//       dispatch(
+//         actions.authSignup(username, email, displayName, password1, password2)
+//       )
+//   };
+// };
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(WrappedRegistrationForm);
+export default connect(mapStateToProps)(WrappedRegistrationForm);
