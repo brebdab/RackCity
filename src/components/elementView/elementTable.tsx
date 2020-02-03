@@ -117,7 +117,7 @@ class ElementTable extends React.Component<
   };
   renderFilterItem = (item: IFilter) => {
     return (
-      <div className="header-text ">
+      <div className="drag-drop-text">
         <span>
           <Icon
             className="icon"
@@ -145,7 +145,7 @@ class ElementTable extends React.Component<
 
   renderSortItem = (item: ITableSort) => {
     return (
-      <div className="header-text ">
+      <div className="drag-drop-text ">
         <span>{`${item.field} by ${
           item.ascending ? "ascending" : "descending"
         }`}</span>
