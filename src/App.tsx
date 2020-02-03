@@ -4,21 +4,16 @@ import "normalize.css/normalize.css";
 import React from "react";
 import { connect } from "react-redux";
 import { BrowserRouter, Redirect, Route, Switch } from "react-router-dom";
+import InstanceView from "./components/detailedView/instanceView/instanceView";
+import ModelView from "./components/detailedView/modelView/modelView";
 import RackView from "./components/detailedView/rackView/rackView";
-
 import Notfound from "./components/fallback"; // 404 page
+import LandingView from "./components/landingView/landingView";
 import WrappedNormalLoginForm from "./components/login/login";
 import WrappedNormalRegistrationForm from "./components/login/register";
 import Navigation from "./components/navigation/navigation";
-import BulkImport from "./components/import/import";
 import "./index.scss";
-
-import ModelView from "./components/detailedView/modelView/modelView";
-import InstanceView from "./components/detailedView/instanceView/instanceView";
 import * as actions from "./store/actions/auth";
-import ModelForm from "./forms/modelForm";
-import LandingView from "./components/landingView/landingView";
-import { conditionalExpression } from "@babel/types";
 
 export interface AppProps {
   isAuthenticated: boolean;
@@ -64,7 +59,7 @@ class App extends React.Component<AppProps> {
                 this.props.isAdmin ? WrappedNormalRegistrationForm : Notfound
               }
             />
-            
+
             <this.PrivateRoute
               path="/bulk-upload"
               component={
