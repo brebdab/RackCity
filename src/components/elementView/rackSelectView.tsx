@@ -1,17 +1,9 @@
-import {
-  Button,
-  Callout,
-  Intent,
-  Switch,
-  AnchorButton
-} from "@blueprintjs/core";
+import { Button, Callout, Intent, Switch } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { handleBooleanChange } from "@blueprintjs/docs-theme";
-import axios from "axios";
 import * as React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
-import { API_ROOT } from "../../api-config";
 import "../../forms/forms.scss";
 import { updateObject } from "../../store/utility";
 import { getHeaders } from "../utils";
