@@ -1,4 +1,11 @@
-import { Classes, AnchorButton } from "@blueprintjs/core";
+import {
+  Classes,
+  AnchorButton,
+  IToastProps,
+  Toaster,
+  Position,
+  Intent
+} from "@blueprintjs/core";
 import * as React from "react";
 import ElementTabView from "../elementView/elementTabView";
 import RackSelectView, { RackRangeFields } from "../elementView/rackSelectView";
@@ -38,13 +45,33 @@ class LandingView extends React.Component<
   createRack = (rack: RackRangeFields, headers: any) => {
     return axios
       .post(API_ROOT + "api/racks/create", rack, headers)
-      .then(res => {});
+      .then(res => {
+        this.addToast({
+          message: "Created rack(s) successfully",
+          intent: Intent.PRIMARY
+        });
+      });
   };
+  private addToast(toast: IToastProps) {
+    toast.timeout = 5000;
+    this.toaster.show(toast);
+  }
+  private toaster: Toaster = {} as Toaster;
+  private refHandlers = {
+    toaster: (ref: Toaster) => (this.toaster = ref)
+  };
+
   private handleClose = () => this.setState({ isOpen: false });
 
   public render() {
     return (
       <div className={Classes.DARK}>
+        <Toaster
+          autoFocus={false}
+          canEscapeKeyClear={true}
+          position={Position.TOP}
+          ref={this.refHandlers.toaster}
+        />
         <AnchorButton
           className="add-rack-button"
           text={"Add Rack"}
