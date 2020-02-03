@@ -442,6 +442,13 @@ def instance_bulk_approve(request):
     return HttpResponse(status=HTTPStatus.OK)
 
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def instance_bulk_export(request):
+    """
+    """
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def instance_page_count(request):
