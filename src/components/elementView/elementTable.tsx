@@ -52,6 +52,8 @@ interface IDragAndDrop {
 interface IElementTableProps {
   type: ElementType;
   token: string;
+  disableSorting?: boolean;
+  disableFiltering?: boolean;
   getData?(
     type: string,
     page_num: number,
@@ -75,6 +77,10 @@ class ElementTable extends React.Component<
     sorted_cols: [],
     curr_page: 1,
     total_pages: 0
+  };
+  public defaultProps: Partial<IElementTableProps> = {
+    disableSorting: false,
+    disableFiltering: false
   };
   previousPage = () => {
     if (this.state.curr_page > 1 && this.props.getData) {
@@ -203,10 +209,10 @@ class ElementTable extends React.Component<
   };
   removeFilterItem = (filter: IFilter) => {
     const filters = this.state.filters.filter(item => {
-      console.log(item.filter, filter.filter);
+      // console.log(item.filter, filter.filter);
       return JSON.stringify(item) !== JSON.stringify(filter);
     });
-    console.log(filters);
+    // console.log(filters);
     this.setState({
       filters
     });
@@ -335,7 +341,7 @@ class ElementTable extends React.Component<
     }
   }
   updateSortOrder = (items: Array<ITableSort>) => {
-    console.log(items);
+    // console.log(items);
     this.setState({
       sort_by: items
     });
@@ -363,18 +369,30 @@ class ElementTable extends React.Component<
     return fields;
   };
 
+  getScrollIcon = () => {
+    return this.props.disableSorting ? null : (
+      <Icon
+        className="icon"
+        icon={IconNames.DOUBLE_CARET_VERTICAL}
+        iconSize={Icon.SIZE_STANDARD}
+        onClick={() => this.handleSort("model__vendor")}
+      />
+    );
+  };
   addFilter = (filter: IFilter) => {
     const filters = this.state.filters;
     filters.push(filter);
-    console.log(filters);
+    // console.log(filters);
     this.setState({
       filters
     });
     this.updateFilterData(filters);
   };
   render() {
-    console.log(this.state.items);
-    console.log(!(this.state.items && this.state.items.length > 0));
+    console.log("TABLE DATA", this.props.data);
+    // console.log(this.state.items);
+    // console.log(!(this.state.items && this.state.items.length > 0));
+    //
     if (
       this.props.data &&
       this.props.data.length !== 0 &&
@@ -386,59 +404,69 @@ class ElementTable extends React.Component<
     }
     return (
       <div>
-        <div className="filter-select">
-          <FilterSelectView
-            handleAddFilter={this.addFilter}
-            fields={this.getFieldNames()}
-          />
-        </div>
-        <div className="table-options">
-          <DragDropList
-            items={this.state.filters}
-            renderItem={this.renderFilterItem}
-            onChange={this.updateFilterOrder}
-          />
-          <div></div>
-          <DragDropList
-            items={this.state.sort_by}
-            renderItem={this.renderSortItem}
-            onChange={this.updateSortOrder}
-          />
-        </div>
-
-        <div className="ElementTable">
-          <div className="table-control">
-            <span>
-              <Icon
-                className="icon"
-                icon={IconNames.CARET_LEFT}
-                iconSize={Icon.SIZE_LARGE}
-                onClick={() => this.previousPage()}
-              />
-            </span>
-            <span>
-              page {this.state.curr_page} of {this.state.total_pages}
-            </span>
-            <span>
-              <Icon
-                className="icon"
-                icon={IconNames.CARET_RIGHT}
-                iconSize={Icon.SIZE_LARGE}
-                onClick={() => this.nextPage()}
-              />
-            </span>
+        {this.props.disableFiltering
+          ? null
+          : [
+              <div className="filter-select">
+                <FilterSelectView
+                  handleAddFilter={this.addFilter}
+                  fields={this.getFieldNames()}
+                />
+              </div>,
+              <div className="table-options">
+                <DragDropList
+                  items={this.state.filters}
+                  renderItem={this.renderFilterItem}
+                  onChange={this.updateFilterOrder}
+                />
+              </div>
+            ]}
+        {this.props.disableSorting ? null : (
+          <div className="table-options">
+            <DragDropList
+              items={this.state.sort_by}
+              renderItem={this.renderSortItem}
+              onChange={this.updateSortOrder}
+            />
           </div>
-          {!(this.state.items && this.state.items.length > 0) ? (
-            <div className="loading-container">
-              <Spinner
-                className="center"
-                intent="primary"
-                size={Spinner.SIZE_STANDARD}
-              />
-              <h4>no {this.props.type}</h4>
-            </div>
-          ) : (
-            <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered table">
+        )}
+
+        {!(this.state.items && this.state.items.length > 0) ? (
+          <div className="loading-container">
+            <Spinner
+              className="center"
+              intent="primary"
+              size={Spinner.SIZE_STANDARD}
+            />
+            <h4>no {this.props.type}</h4>
+          </div>
+        ) : (
+          <div>
+            {this.props.getPages ? (
+              <div className="table-control">
+                <span>
+                  <Icon
+                    className="icon"
+                    icon={IconNames.CARET_LEFT}
+                    iconSize={Icon.SIZE_LARGE}
+                    onClick={() => this.previousPage()}
+                  />
+                </span>
+                <span>
+                  page {this.state.curr_page} of {this.state.total_pages}
+                </span>
+                <span>
+                  <Icon
+                    className="icon"
+                    icon={IconNames.CARET_RIGHT}
+                    iconSize={Icon.SIZE_LARGE}
+                    onClick={() => this.nextPage()}
+                  />
+                </span>
+              </div>
+            ) : null}
+
+            <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered element-table">
               <thead>
                 <tr>
                   {Object.keys(this.state.items[0]).map((col: string) => {
@@ -447,25 +475,13 @@ class ElementTable extends React.Component<
                         <th className="header-cell">
                           <div className="header-text">
                             <span>model vendor</span>
-                            <Icon
-                              className="icon"
-                              icon={IconNames.DOUBLE_CARET_VERTICAL}
-                              iconSize={Icon.SIZE_STANDARD}
-                              onClick={() => this.handleSort("model__vendor")}
-                            />
+                            {this.getScrollIcon()}
                           </div>
                         </th>,
                         <th className="header-cell">
                           <div className="header-text">
                             <span>model number</span>
-                            <Icon
-                              className="icon"
-                              icon={IconNames.DOUBLE_CARET_VERTICAL}
-                              iconSize={Icon.SIZE_STANDARD}
-                              onClick={() =>
-                                this.handleSort("model__model_number")
-                              }
-                            />
+                            {this.getScrollIcon()}
                           </div>
                         </th>
                       ];
@@ -474,12 +490,7 @@ class ElementTable extends React.Component<
                         <th className="header-cell">
                           <div className="header-text">
                             <span>{col}</span>
-                            <Icon
-                              className="icon"
-                              icon={IconNames.DOUBLE_CARET_VERTICAL}
-                              iconSize={Icon.SIZE_STANDARD}
-                              onClick={() => this.handleSort(col)}
-                            />
+                            {this.getScrollIcon()}
                           </div>
                         </th>
                       );
@@ -519,8 +530,8 @@ class ElementTable extends React.Component<
                 })}
               </tbody>
             </table>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     );
   }

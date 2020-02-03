@@ -135,7 +135,7 @@ class ElementView extends React.Component<ElementViewProps, ElementViewState> {
             </NavbarGroup>
           ) : null}
         </Navbar>
-        <div className="element-table">
+        <div>
           <ElementTable
             type={this.props.element}
             getData={getElementData}
