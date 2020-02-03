@@ -2,7 +2,7 @@ from rest_framework.parsers import JSONParser
 from django.http import HttpResponse, JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
 from rackcity.models import ITModel, ITInstance
-from rackcity.api.serializers import ITModelSerializer, ITInstanceSerializer
+from rackcity.api.serializers import RecursiveITInstanceSerializer, ITModelSerializer
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.pagination import PageNumberPagination
@@ -179,7 +179,8 @@ def model_page(request):
             {"failure_message": "Filter error: " + str(error)},
             status=HTTPStatus.BAD_REQUEST
         )
-    models_query = models_query.filter(**filter_args)
+    for filter_arg in filter_args:
+        models_query = models_query.filter(**filter_arg)
 
     try:
         sort_args = get_sort_arguments(request.data)
@@ -219,7 +220,10 @@ def model_detail(request, id):
         model = ITModel.objects.get(id=id)
         model_serializer = ITModelSerializer(model)
         instances = ITInstance.objects.filter(model=id)
-        instances_serializer = ITInstanceSerializer(instances, many=True)
+        instances_serializer = RecursiveITInstanceSerializer(
+            instances,
+            many=True,
+        )
         model_detail = {
             "model": model_serializer.data,
             "instances": instances_serializer.data

@@ -5,6 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from rackcity.api.serializers import (
     ITInstanceSerializer,
     RecursiveITInstanceSerializer,
+    BulkITInstanceSerializer,
     ITModelSerializer,
     RackSerializer
 )
@@ -69,7 +70,8 @@ def instance_page(request):
             {"failure_message": "Filter error: " + str(error)},
             status=HTTPStatus.BAD_REQUEST
         )
-    instances_query = instances_query.filter(**filter_args)
+    for filter_arg in filter_args:
+        instances_query = instances_query.filter(**filter_arg)
 
     try:
         sort_args = get_sort_arguments(request.data)
@@ -331,8 +333,8 @@ def instance_bulk_upload(request):
         except ObjectDoesNotExist:
             model = ITModel.objects.get(id=instance_data['model'])
             if is_location_full(
-                instance_data['rack'],
-                instance_data['elevation'],
+                instance_serializer.validated_data['rack'],
+                instance_serializer.validated_data['elevation'],
                 model.height,
                 instance_id=None,
             ):
@@ -440,6 +442,40 @@ def instance_bulk_approve(request):
             setattr(existing_instance, field, value)
         existing_instance.save()
     return HttpResponse(status=HTTPStatus.OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def instance_bulk_export(request):
+    """
+    List all instances on bulk serializer.
+    """
+    instances_query = ITInstance.objects
+
+    try:
+        filter_args = get_filter_arguments(request.data)
+    except Exception as error:
+        return JsonResponse(
+            {"failure_message": "Filter error: " + str(error)},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    for filter_arg in filter_args:
+        instances_query = instances_query.filter(**filter_arg)
+
+    try:
+        sort_args = get_sort_arguments(request.data)
+    except Exception as error:
+        return JsonResponse(
+            {"failure_message": "Sort error: " + str(error)},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    instances = instances_query.order_by(*sort_args)
+
+    serializer = BulkITInstanceSerializer(instances, many=True)
+    return JsonResponse(
+        {"instances": serializer.data},
+        status=HTTPStatus.OK,
+    )
 
 
 @api_view(['GET'])

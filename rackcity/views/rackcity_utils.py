@@ -128,7 +128,7 @@ def get_sort_arguments(data):
 
 
 def get_filter_arguments(data):
-    filter_args = {}
+    filter_args = []
     if 'filters' in data:
         filters = data['filters']
         for filter in filters:
@@ -154,18 +154,29 @@ def get_filter_arguments(data):
 
             if filter_type == 'text':
                 if filter_dict['match_type'] == 'exact':
-                    filter_args['{0}'.format(filter_field)] = \
-                        filter_dict['value']
+                    filter_args.append(
+                        {
+                            '{0}'.format(filter_field): filter_dict['value']
+                        }
+                    )
                 elif filter_dict['match_type'] == 'contains':
-                    filter_args['{0}__icontains'.format(filter_field)] = \
-                        filter_dict['value']
+                    filter_args.append(
+                        {
+                            '{0}__icontains'.format(filter_field):
+                            filter_dict['value']
+                        }
+                    )
 
             elif filter_type == 'numeric':
                 range_value = (
                     int(filter_dict['min']),
                     int(filter_dict['max'])
                 )
-                filter_args['{0}__range'.format(filter_field)] = range_value  # noqa inclusive on both min, max
+                filter_args.append(
+                    {
+                        '{0}__range'.format(filter_field): range_value  # noqa inclusive on both min, max
+                    }
+                )
 
             elif filter_type == 'rack_range':
                 range_serializer = RackRangeSerializer(data=filter_dict)
@@ -174,10 +185,18 @@ def get_filter_arguments(data):
                         "Invalid rack_range filter: " +
                         str(range_serializer.errors)
                     )
-                filter_args['rack__rack_num__range'] = \
-                    range_serializer.get_number_range()
-                filter_args['rack__row_letter__range'] = \
-                    range_serializer.get_row_range()  # noqa inclusive on both letter, number
+                filter_args.append(
+                    {
+                        'rack__rack_num__range':
+                        range_serializer.get_number_range()
+                    }
+                )
+                filter_args.append(
+                    {
+                        'rack__row_letter__range':
+                        range_serializer.get_row_range()  # noqa inclusive on both letter, number
+                    }
+                )
 
             else:
                 raise Exception(
