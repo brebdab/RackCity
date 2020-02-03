@@ -23,6 +23,7 @@ from .it_instance_views import (
     instance_page,
     instance_bulk_upload,
     instance_bulk_approve,
+    instance_bulk_export,
     instance_page_count,
     instance_fields,
 )
