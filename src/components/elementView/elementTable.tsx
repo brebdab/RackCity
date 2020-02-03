@@ -255,12 +255,16 @@ class ElementTable extends React.Component<
       sort_by: this.state.sort_by,
       filters: items
     });
+    const filter_body = items.map(item => {
+      const { field, filter_type, filter } = item;
+      return { field, filter_type, filter };
+    });
     if (this.props.getData) {
       this.props.getData!(
         this.props.type,
         this.state.curr_page,
         PAGE_SIZE,
-        { sort_by: this.state.sort_by, filters: items },
+        { sort_by: this.state.sort_by, filters: filter_body },
         this.props.token
       ).then(res => {
         this.setState({
@@ -338,6 +342,13 @@ class ElementTable extends React.Component<
     });
     this.updateSortData(items);
   };
+
+  updateFilterOrder = (items: Array<IFilter>) => {
+    this.setState({
+      filters: items
+    });
+    this.updateFilterData(items);
+  };
   getFieldNames = () => {
     let fields: Array<string> = [];
     if (this.state.items && this.state.items.length > 0) {
@@ -386,46 +397,48 @@ class ElementTable extends React.Component<
           <DragDropList
             items={this.state.filters}
             renderItem={this.renderFilterItem}
-            onChange={this.updateSortOrder}
+            onChange={this.updateFilterOrder}
           />
+          <div></div>
           <DragDropList
             items={this.state.sort_by}
             renderItem={this.renderSortItem}
             onChange={this.updateSortOrder}
           />
         </div>
-        {!(this.state.items && this.state.items.length > 0) ? (
-          <div className="loading-container">
-            <Spinner
-              className="center"
-              intent="primary"
-              size={Spinner.SIZE_STANDARD}
-            />
-            <h4>no {this.props.type}</h4>
+
+        <div className="ElementTable">
+          <div className="table-control">
+            <span>
+              <Icon
+                className="icon"
+                icon={IconNames.CARET_LEFT}
+                iconSize={Icon.SIZE_LARGE}
+                onClick={() => this.previousPage()}
+              />
+            </span>
+            <span>
+              page {this.state.curr_page} of {this.state.total_pages}
+            </span>
+            <span>
+              <Icon
+                className="icon"
+                icon={IconNames.CARET_RIGHT}
+                iconSize={Icon.SIZE_LARGE}
+                onClick={() => this.nextPage()}
+              />
+            </span>
           </div>
-        ) : (
-          <div className="ElementTable">
-            <div className="table-control">
-              <span>
-                <Icon
-                  className="icon"
-                  icon={IconNames.CARET_LEFT}
-                  iconSize={Icon.SIZE_LARGE}
-                  onClick={() => this.previousPage()}
-                />
-              </span>
-              <span>
-                page {this.state.curr_page} of {this.state.total_pages}
-              </span>
-              <span>
-                <Icon
-                  className="icon"
-                  icon={IconNames.CARET_RIGHT}
-                  iconSize={Icon.SIZE_LARGE}
-                  onClick={() => this.nextPage()}
-                />
-              </span>
+          {!(this.state.items && this.state.items.length > 0) ? (
+            <div className="loading-container">
+              <Spinner
+                className="center"
+                intent="primary"
+                size={Spinner.SIZE_STANDARD}
+              />
+              <h4>no {this.props.type}</h4>
             </div>
+          ) : (
             <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered table">
               <thead>
                 <tr>
@@ -507,8 +520,8 @@ class ElementTable extends React.Component<
                 })}
               </tbody>
             </table>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     );
   }
