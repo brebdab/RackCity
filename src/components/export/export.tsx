@@ -38,20 +38,31 @@ export class BulkExport extends React.PureComponent<RouteComponentProps & Export
         <HTMLSelect
           options={options}
           large={true}
-          onChange={(event: any) => {
-            this.setState({exportData: []})
+          onChange={ async (event: any) => {
             event.persist();
+            this.setState({ exportData: [] }); // Reset data if we do two exports without refreshing
             this.setState({ selected: event.currentTarget.value })
-            getPages(this.state.selected, pageSize, this.props.token).then(res => {
-              const numPages = res;
-              for (let i = 1; i <= numPages; i++) {
-                getData(this.state.selected, this.props.token, [], [], i).then(result => {
-                  concatAsync(this.state.exportData, result).then((resu) => {
-                    this.setState({exportData: resu})
-                  })
-                })
-              }
-            })
+            const numPages = await getPages(this.state.selected, pageSize, this.props.token);
+            for (let i = 1; i <= numPages; i++) {
+              const pageDat = await getData(this.state.selected, this.props.token,
+                                            [], [], i);
+              const updatedDat = await concatAsync(this.state.exportData, pageDat);
+              this.setState({ exportData: updatedDat });
+            }
+            console.log(this.state.exportData)
+            // this.setState({exportData: []})
+            // event.persist();
+            // this.setState({ selected: event.currentTarget.value })
+            // getPages(this.state.selected, pageSize, this.props.token).then(res => {
+            //   const numPages = res;
+            //   for (let i = 1; i <= numPages; i++) {
+            //     getData(this.state.selected, this.props.token, [], [], i).then(result => {
+            //       concatAsync(this.state.exportData, result).then((resu) => {
+            //         this.setState({exportData: resu})
+            //       })
+            //     })
+            //   }
+            // })
           }}
         />
         <AnchorButton
@@ -70,6 +81,7 @@ export class BulkExport extends React.PureComponent<RouteComponentProps & Export
                 return 0
               })
             } else {
+                console.log(dat)
               Object.keys(dat[0].instances[0]).map((item: string) => {
                 csvStr = csvStr + item +","
                 return 0
