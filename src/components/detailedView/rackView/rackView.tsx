@@ -3,9 +3,13 @@ import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
-import RackSelectView from "../../elementView/rackSelectView";
+import RackSelectView, {
+  RackRangeFields
+} from "../../elementView/rackSelectView";
 import { InstanceObject, RackResponseObject } from "../../utils";
 import "./rackView.scss";
+import axios from "axios";
+import { API_ROOT } from "../../../api-config";
 //export interface ElementViewProps {}
 
 export interface RackViewProps {
@@ -114,6 +118,15 @@ class RackView extends React.PureComponent<
     }
     return unitBarRows;
   }
+  viewRackForm = (rack: RackRangeFields, headers: any) => {
+    return axios.post(API_ROOT + "api/racks/get", rack, headers).then(res => {
+      this.props.history.replace("/racks", res.data.racks);
+      this.props.history.push({
+        pathname: "/racks",
+        state: res.data.racks
+      });
+    });
+  };
   public render() {
     // if (this.props.location.state.length === 0) {
     //   this.getRackRange(this.props.token);
@@ -126,7 +139,7 @@ class RackView extends React.PureComponent<
     return (
       <div>
         <div className={Classes.DARK}>
-          <RackSelectView />
+          <RackSelectView submitForm={this.viewRackForm} />
         </div>
         <div className="rack-container">
           {racks.map((rackResp: RackResponseObject) => {

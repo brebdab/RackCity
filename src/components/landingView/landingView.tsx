@@ -1,15 +1,94 @@
-import { Classes } from "@blueprintjs/core";
+import {
+  Classes,
+  AnchorButton,
+  IToastProps,
+  Toaster,
+  Position,
+  Intent
+} from "@blueprintjs/core";
 import * as React from "react";
 import ElementTabView from "../elementView/elementTabView";
-import RackSelectView from "../elementView/rackSelectView";
-class LandingView extends React.PureComponent {
+import RackSelectView, { RackRangeFields } from "../elementView/rackSelectView";
+import { API_ROOT } from "../../api-config";
+import axios from "axios";
+import { RouteComponentProps, withRouter } from "react-router";
+import FormPopup from "../../forms/FormPopup";
+import { FormTypes } from "../../forms/modelForm";
+import { ElementType } from "../utils";
+
+interface LandingViewState {
+  isOpen: boolean;
+}
+class LandingView extends React.Component<
+  RouteComponentProps,
+  LandingViewState
+> {
+  viewRackForm = (rack: RackRangeFields, headers: any) => {
+    return axios.post(API_ROOT + "api/racks/get", rack, headers).then(res => {
+      this.props.history.replace("/racks", res.data.racks);
+      this.props.history.push({
+        pathname: "/racks",
+        state: res.data.racks
+      });
+    });
+  };
+  state = {
+    isOpen: false
+  };
+  private handleOpen = () => {
+    this.setState({
+      isOpen: true
+    });
+    console.log(this.state);
+  };
+
+  createRack = (rack: RackRangeFields, headers: any) => {
+    return axios
+      .post(API_ROOT + "api/racks/create", rack, headers)
+      .then(res => {
+        this.addToast({
+          message: "Created rack(s) successfully",
+          intent: Intent.PRIMARY
+        });
+      });
+  };
+  private addToast(toast: IToastProps) {
+    toast.timeout = 5000;
+    this.toaster.show(toast);
+  }
+  private toaster: Toaster = {} as Toaster;
+  private refHandlers = {
+    toaster: (ref: Toaster) => (this.toaster = ref)
+  };
+
+  private handleClose = () => this.setState({ isOpen: false });
+
   public render() {
     return (
       <div className={Classes.DARK}>
-        <RackSelectView />
+        <Toaster
+          autoFocus={false}
+          canEscapeKeyClear={true}
+          position={Position.TOP}
+          ref={this.refHandlers.toaster}
+        />
+        <AnchorButton
+          className="add-rack-button"
+          text={"Add Rack"}
+          icon="add"
+          onClick={this.handleOpen}
+        />
+        <FormPopup
+          type={FormTypes.CREATE}
+          elementName={ElementType.RACK}
+          submitForm={this.createRack}
+          isOpen={this.state.isOpen}
+          handleClose={this.handleClose}
+        />
+        <RackSelectView submitForm={this.viewRackForm} />
         <ElementTabView />
       </div>
     );
   }
 }
-export default LandingView;
+export default withRouter(LandingView);

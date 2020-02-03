@@ -1,3 +1,5 @@
+import { RackRangeFields } from "./elementView/rackSelectView";
+
 interface ElementObject {
   id: string;
 }
@@ -67,6 +69,13 @@ export type ElementObjectType =
   | ModelObject
   | RackObject
   | InstanceObject
+  | InstanceInfoObject;
+
+export type FormObjectType =
+  | ModelObject
+  | RackObject
+  | InstanceObject
+  | RackRangeFields
   | InstanceInfoObject;
 export function isModelObject(obj: any): obj is ModelObject {
   return obj && obj.model_number;
