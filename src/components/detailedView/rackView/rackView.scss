@@ -9,11 +9,19 @@ $row-height: 6px;
     white-space: nowrap;
     width: 100%;
   }
-  .rack-container span ~ span {
-    padding-left: 20px;
+  .rack-container span {
     display: inline-block;
   }
+  .rack-container span ~ span {
+    padding-left: 20px;
+  }
 }
+// .rack-parent {
+//   position: relative;
+// }
+// .delete-rack {
+//   position: relative;
+// }
 
 .rack {
   // outline: 10pt grey;
@@ -22,6 +30,7 @@ $row-height: 6px;
   border-color: #202b33;
   display: inline-block;
   margin: left 10px;
+  // position: relative;
 }
 
 .rack-table {
@@ -144,5 +153,8 @@ $row-height: 6px;
   .rack tr,
   .rack thead {
     outline: 1px solid #394b59 !important;
+  }
+  .delete-rack {
+    display: none;
   }
 }
