@@ -12,7 +12,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     'rack-city-dev.herokuapp.com',
     'rack-city-staging.herokuapp.com',
-    'rack-city-prod.heroku.app.com',
+    'rack-city-prod.herokuapp.com',
     '127.0.0.1',
     'localhost',
 ]
