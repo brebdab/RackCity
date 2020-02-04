@@ -94,23 +94,27 @@ class LandingView extends React.Component<
           position={Position.TOP}
           ref={this.refHandlers.toaster}
         />
+        {this.props.isAdmin ? (
+          <div>
+            <AnchorButton
+              className="add"
+              text={"Add Rack(s)"}
+              icon="add"
+              minimal
+              intent={Intent.PRIMARY}
+              onClick={this.handleOpen}
+            />
+            <AnchorButton
+              className="add "
+              text={"Delete Rack(s)"}
+              icon="trash"
+              minimal
+              intent={Intent.DANGER}
+              onClick={this.handleDeleteOpen}
+            />
+          </div>
+        ) : null}
 
-        <AnchorButton
-          className="add-rack-button"
-          text={"Add Rack(s)"}
-          icon="add"
-          minimal
-          intent={Intent.PRIMARY}
-          onClick={this.handleOpen}
-        />
-        <AnchorButton
-          className="delete-rack-button"
-          text={"Delete Rack(s)"}
-          icon="trash"
-          minimal
-          intent={Intent.DANGER}
-          onClick={this.handleDeleteOpen}
-        />
         <FormPopup
           type={FormTypes.CREATE}
           elementName={ElementType.RACK}

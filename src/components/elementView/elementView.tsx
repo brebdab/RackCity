@@ -1,18 +1,11 @@
-import {
-  Alignment,
-  AnchorButton,
-  Classes,
-  Navbar,
-  NavbarGroup,
-  NavbarHeading
-} from "@blueprintjs/core";
+import { AnchorButton, Intent } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
 import { connect } from "react-redux";
 import { API_ROOT } from "../../api-config";
 import FormPopup from "../../forms/FormPopup";
-
+import { FormTypes } from "../../forms/formUtils";
 import {
   ElementObjectType,
   ElementType,
@@ -21,7 +14,6 @@ import {
 } from "../utils";
 import ElementTable from "./elementTable";
 import "./elementView.scss";
-import { FormTypes } from "../../forms/formUtils";
 
 interface ElementViewState {
   isOpen: boolean;
@@ -110,32 +102,30 @@ class ElementView extends React.Component<ElementViewProps, ElementViewState> {
   public render() {
     return (
       <div>
-        <Navbar className={Classes.DARK}>
-          <NavbarGroup>
-            <NavbarHeading>{this.props.element}</NavbarHeading>
-          </NavbarGroup>
-          {this.props.isAdmin ? (
-            <NavbarGroup align={Alignment.RIGHT}>
-              <AnchorButton
-                className="add"
-                text={"Add " + this.props.element.slice(0, -1)}
-                icon="add"
-                onClick={this.handleOpen}
-              />
-              <FormPopup
-                type={FormTypes.CREATE}
-                elementName={this.props.element}
-                submitForm={
-                  this.props.element === ElementType.MODEL
-                    ? this.createModel
-                    : this.createInstance
-                }
-                isOpen={this.state.isOpen}
-                handleClose={this.handleClose}
-              />
-            </NavbarGroup>
-          ) : null}
-        </Navbar>
+        {this.props.isAdmin ? (
+          <div>
+            <AnchorButton
+              className="add"
+              text={"Add " + this.props.element.slice(0, -1)}
+              icon="add"
+              minimal
+              intent={Intent.PRIMARY}
+              onClick={this.handleOpen}
+            />
+            <FormPopup
+              type={FormTypes.CREATE}
+              elementName={this.props.element}
+              submitForm={
+                this.props.element === ElementType.MODEL
+                  ? this.createModel
+                  : this.createInstance
+              }
+              isOpen={this.state.isOpen}
+              handleClose={this.handleClose}
+            />
+          </div>
+        ) : null}
+
         <div>
           <ElementTable
             type={this.props.element}
