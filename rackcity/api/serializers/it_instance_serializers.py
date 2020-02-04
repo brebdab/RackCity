@@ -77,4 +77,4 @@ class BulkITInstanceSerializer(serializers.ModelSerializer):
         )
 
     def get_rack(self, instance):
-        return '{}{}'.format(instance.rack.row_letter, instance.rack.rack_num)
+        return instance.rack.row_letter + str(instance.rack.rack_num)
