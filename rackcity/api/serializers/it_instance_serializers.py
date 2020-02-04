@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
 from rackcity.models import ITInstance
 from .it_model_serializers import ITModelSerializer
 from .rack_serializers import RackSerializer
@@ -9,10 +10,10 @@ class ITInstanceSerializer(serializers.ModelSerializer):
     Serializes all fields on ITInstance model, where model and rack fields are
     defined by their pk only.
     """
-    # elevation = RCIntegerField(
-    #     max_value=2147483647,
-    #     min_value=0,
-    # )
+    hostname = serializers.CharField(validators=[
+        UniqueValidator(
+            queryset=ITInstance.objects.all(), lookup='iexact'
+        )])
 
     class Meta:
         model = ITInstance

@@ -35,3 +35,4 @@ from .rack_views import (
     rack_summary,
 )
 from .report_views import report_rack_usage
+from .user_views import usernames
