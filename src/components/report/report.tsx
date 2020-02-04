@@ -78,29 +78,30 @@ export class Report extends React.PureComponent<ReportProps & RouteComponentProp
       return (
         <div className={Classes.DARK}>
           <Card elevation={Elevation.TWO}>
+            <h2 className={"report-title"}>Allocation of used rack space:</h2>
+            <h4 className={"report-summary"}>Percent of unused rack space: {(this.state.freeRack * 100).toFixed(2)}%</h4>
             <div className={"row"}>
               <div className={"column-third-report"}>
-                <h4>Model Allocation:</h4>
+                <h5>Used rack space by vendor:</h5>
               </div>
               <div className={"column-third-right-report"}>
-                <h4>Owner Allocation:</h4>
+                <h5>Used rack space by model:</h5>
               </div>
               <div className={"column-third-right-report"}>
-                <h4>Vendor Allocation:</h4>
+                <h5>Used rack space by owner:</h5>
               </div>
             </div>
             <div className={"row"}>
               <div className={"column-third-report"}>
+                <Tabular data={this.state.vendor_allocation} fields={vendorFields}/>
+              </div>
+              <div className={"column-third-right-report"}>
                 <Tabular data={this.state.model_allocation} fields={modelFields}/>
               </div>
               <div className={"column-third-right-report"}>
                 <Tabular data={this.state.owner_allocation} fields={ownerFields}/>
               </div>
-              <div className={"column-third-right-report"}>
-                <Tabular data={this.state.vendor_allocation} fields={vendorFields}/>
-              </div>
             </div>
-            <h4 className={"column-third-left-report"}>Free Rack Space Pct: {this.state.freeRack * 100}%</h4>
           </Card>
         </div>
       )
@@ -117,7 +118,7 @@ class Tabular extends React.PureComponent<TabProps> {
 
   render() {
     return (
-        <table className={"bp3-html-table"}>
+        <table className={"bp3-html-table bp3-interactive bp3-html-table-bordered bp3-html-table-striped"}>
           <thead>
             <tr>
               {Object.keys(this.props.data[0]).map((item: string) => {
@@ -131,8 +132,10 @@ class Tabular extends React.PureComponent<TabProps> {
               return (
                 <tr>
                   {Object.keys(entry).map((item: string) => {
+                    if (item === "owner" && entry[item] === null)
+                      entry[item] = "(No owner)"
                     if (item === "allocation_percent")
-                      return <td>{entry[item]*100}</td>
+                      return <td>{(entry[item]*100).toFixed(2)}</td>
                     else
                       return <td>{entry[item]}</td>
                   })}
