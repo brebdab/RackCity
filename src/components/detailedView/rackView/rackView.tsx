@@ -1,4 +1,12 @@
-import { Alert, AnchorButton, Classes } from "@blueprintjs/core";
+import {
+  Alert,
+  AnchorButton,
+  Classes,
+  IToastProps,
+  Toaster,
+  Position,
+  Intent
+} from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
@@ -121,6 +129,14 @@ class RackView extends React.PureComponent<
     }
     return unitBarRows;
   }
+  private addToast(toast: IToastProps) {
+    toast.timeout = 5000;
+    this.toaster.show(toast);
+  }
+  private toaster: Toaster = {} as Toaster;
+  private refHandlers = {
+    toaster: (ref: Toaster) => (this.toaster = ref)
+  };
   private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
   private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
   private handleDelete = (letter: string, num: string) => {
@@ -136,7 +152,11 @@ class RackView extends React.PureComponent<
         this.setState({ isDeleteOpen: false });
       })
       .catch(err => {
-        console.log("ERROR", err);
+        this.handleDeleteCancel();
+        this.addToast({
+          message: err.response.data.failure_message,
+          intent: Intent.DANGER
+        });
       });
   };
   viewRackForm = (rack: RackRangeFields, headers: any) => {
@@ -160,6 +180,12 @@ class RackView extends React.PureComponent<
     return (
       <div>
         <div className={Classes.DARK}>
+          <Toaster
+            autoFocus={false}
+            canEscapeKeyClear={true}
+            position={Position.TOP}
+            ref={this.refHandlers.toaster}
+          />
           <RackSelectView submitForm={this.viewRackForm} />
         </div>
         <div className="rack-container">
