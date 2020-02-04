@@ -92,7 +92,9 @@ def instance_many(request):
         )
     instances = instances_query.order_by(*sort_args)
 
-    if should_paginate:
+    if not should_paginate:
+        serializer = RecursiveITInstanceSerializer(instances, many=True)
+    else:
         paginator = PageNumberPagination()
         paginator.page_size = request.query_params.get('page_size')
         try:
@@ -105,11 +107,6 @@ def instance_many(request):
             )
         serializer = RecursiveITInstanceSerializer(
             page_of_instances,
-            many=True,
-        )
-    else:
-        serializer = RecursiveITInstanceSerializer(
-            instances,
             many=True,
         )
 

@@ -2,7 +2,7 @@ from .it_model_views import (
     model_add,
     model_modify,
     model_delete,
-    model_page,
+    model_many,
     model_detail,
     model_vendors,
     model_bulk_upload,
