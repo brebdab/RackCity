@@ -36,7 +36,7 @@ class LandingView extends React.Component<
 > {
   viewRackForm = (rack: RackRangeFields, headers: any) => {
     return axios.post(API_ROOT + "api/racks/get", rack, headers).then(res => {
-      this.props.history.replace("/racks", res.data.racks);
+      // this.props.history.replace("/racks", res.data.racks);
       this.props.history.push({
         pathname: "/racks",
         state: res.data.racks

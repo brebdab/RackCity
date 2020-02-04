@@ -21,18 +21,19 @@ import * as actions from "./store/actions/auth";
 import Report from "./components/report/report";
 
 export interface AppProps {
-  isAuthenticated: boolean;
+  isAuthenticated?: boolean;
   onTryAutoSignup: any;
   isAdmin: boolean;
+  loading: boolean;
 }
 
 class App extends React.Component<AppProps> {
   componentDidMount() {
+    console.log(this.props.isAuthenticated);
     this.props.onTryAutoSignup();
   }
-  PrivateRoute = ({ ...rest }: any) => {
-    console.log(rest);
 
+  RedirectRoute = ({ ...rest }: any) => {
     return this.props.isAuthenticated ? (
       <Route {...rest} />
     ) : (
@@ -42,13 +43,22 @@ class App extends React.Component<AppProps> {
     );
   };
 
+  PrivateRoute = ({ path, component, ...rest }: any) => {
+    return (
+      <Route
+        path={path}
+        component={this.props.isAuthenticated ? component : Notfound}
+      />
+    );
+  };
+
   render() {
     return (
       <BrowserRouter basename="/">
         <div>
           <Navigation {...this.props} />
           <Switch>
-            <this.PrivateRoute exact path="/" component={LandingView} />
+            <this.RedirectRoute exact path="/" component={LandingView} />
             <Route path="/login" component={WrappedNormalLoginForm} />
 
             {/*<Route path="/bulk-export" component={BulkExport} />*/}
@@ -60,10 +70,7 @@ class App extends React.Component<AppProps> {
               path="/instances/:rid"
               component={InstanceView}
             />
-            <this.PrivateRoute
-              path="/report"
-              component={Report}
-            />
+            <this.PrivateRoute path="/report" component={Report} />
             {/* admin paths */}
             <this.PrivateRoute
               path="/register"
@@ -73,9 +80,7 @@ class App extends React.Component<AppProps> {
             />
             <this.PrivateRoute
               path="/bulk-upload"
-              component={
-                this.props.isAdmin ? BulkImport : Notfound
-              }
+              component={this.props.isAdmin ? BulkImport : Notfound}
             />
           </Switch>
         </div>
@@ -87,7 +92,8 @@ class App extends React.Component<AppProps> {
 const mapStateToProps = (state: any) => {
   return {
     isAuthenticated: state.token !== null,
-    isAdmin: state.admin
+    isAdmin: state.admin,
+    loading: state.loading
   };
 };
 
