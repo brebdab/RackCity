@@ -82,7 +82,7 @@ class InstanceForm extends React.Component<
 
     const { hostname, id, elevation, owner, comment } = instance;
     const model = instance.model ? instance.model.id : undefined;
-    const rack = instance.model ? instance.rack.id : undefined;
+    const rack = instance.rack ? instance.rack.id : undefined;
     let valuesToSend: InstanceInfoObject = {
       model,
       rack,
