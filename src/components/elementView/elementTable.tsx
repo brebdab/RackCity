@@ -401,8 +401,8 @@ class ElementTable extends React.Component<
     if (this.state.items && this.state.items.length > 0) {
       Object.keys(this.state.items[0]).forEach((col: string) => {
         if (col === "model") {
-          fields.push("model vendor");
-          fields.push("model number");
+          fields.push("model__vendor");
+          fields.push("model__model_number");
         } else if (col !== "id") {
           fields.push(col);
         }
@@ -542,7 +542,7 @@ class ElementTable extends React.Component<
                         <th className="header-cell">
                           <div className="header-text">
                             <span>model number</span>
-                            {this.getScrollIcon("model__number")}
+                            {this.getScrollIcon("model__model_number")}
                           </div>
                         </th>
                       ];
