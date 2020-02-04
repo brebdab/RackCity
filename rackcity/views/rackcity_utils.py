@@ -178,7 +178,8 @@ def get_filter_arguments(data):
 
             elif filter_type == 'numeric':
                 if (
-                    int(filter_dict['min']) is not None
+                    filter_dict['min'] is not None
+                    and isinstance(filter_dict['min'], int)
                     and (
                         filter_dict['max'] is None
                         or filter_dict['max'] == ""
@@ -190,7 +191,8 @@ def get_filter_arguments(data):
                         }
                     )
                 elif (
-                    int(filter_dict['max']) is not None
+                    filter_dict['max'] is not None
+                    and isinstance(filter_dict['max'], int)
                     and (
                         filter_dict['min'] is None
                         or filter_dict['min'] == ""
