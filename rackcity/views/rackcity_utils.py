@@ -177,15 +177,49 @@ def get_filter_arguments(data):
                     )
 
             elif filter_type == 'numeric':
-                range_value = (
-                    int(filter_dict['min']),
-                    int(filter_dict['max'])
-                )
-                filter_args.append(
-                    {
-                        '{0}__range'.format(filter_field): range_value  # noqa inclusive on both min, max
-                    }
-                )
+                if (
+                    filter_dict['min'] is not None
+                    and isinstance(filter_dict['min'], int)
+                    and (
+                        filter_dict['max'] is None
+                        or filter_dict['max'] == ""
+                    )
+                ):
+                    filter_args.append(
+                        {
+                            '{0}__gte'.format(filter_field): int(filter_dict['min'])  # noqa greater than or equal to min
+                        }
+                    )
+                elif (
+                    filter_dict['max'] is not None
+                    and isinstance(filter_dict['max'], int)
+                    and (
+                        filter_dict['min'] is None
+                        or filter_dict['min'] == ""
+                    )
+                ):
+                    filter_args.append(
+                        {
+                            '{0}__lte'.format(filter_field): int(filter_dict['max'])  # noqa less than or equal to max
+                        }
+                    )
+                elif (
+                    int(filter_dict['max']) is not None
+                    and int(filter_dict['min']) is not None
+                ):
+                    range_value = (
+                        int(filter_dict['min']),
+                        int(filter_dict['max'])
+                    )
+                    filter_args.append(
+                        {
+                            '{0}__range'.format(filter_field): range_value  # noqa inclusive on both min, max
+                        }
+                    )
+                else:
+                    raise Exception(
+                        "Numeric filters must contain integer min, integer max, or both."
+                    )
 
             elif filter_type == 'rack_range':
                 range_serializer = RackRangeSerializer(data=filter_dict)
