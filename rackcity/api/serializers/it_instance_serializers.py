@@ -33,10 +33,6 @@ class RecursiveITInstanceSerializer(serializers.ModelSerializer):
     Recursively serializes all fields on ITInstance model, where model and
     rack fields are defined recursively (by all of their respective fields).
     """
-    hostname = serializers.CharField(validators=[
-        UniqueValidator(
-            queryset=ITInstance.objects.all(), lookup='iexact'
-        )])
     model = ITModelSerializer()
     rack = RackSerializer()
 
@@ -58,10 +54,6 @@ class BulkITInstanceSerializer(serializers.ModelSerializer):
     Serializes all fields on ITInstance model according to the format required
     for bulk export.
     """
-    hostname = serializers.CharField(validators=[
-        UniqueValidator(
-            queryset=ITInstance.objects.all(), lookup='iexact'
-        )])
     vendor = serializers.SlugRelatedField(
         source='model',
         slug_field='vendor',
