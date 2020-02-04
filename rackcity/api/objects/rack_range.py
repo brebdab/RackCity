@@ -72,6 +72,10 @@ class RackRangeSerializer(serializers.Serializer):
                 )
             ]
 
+    def get_row_range_as_string(self):
+        row_range = self.get_row_range()
+        return row_range[0] + "-" + row_range[1]
+
     def get_number_range(self):
         """
         Returns int tuple specifying rack number range
@@ -100,3 +104,7 @@ class RackRangeSerializer(serializers.Serializer):
                     self.validated_data['num_end'] + 1,
                 )
             ]
+
+    def get_number_range_as_string(self):
+        number_range = self.get_number_range()
+        return str(number_range[0]) + "-" + str(number_range[1])
