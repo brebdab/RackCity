@@ -2,12 +2,18 @@ from rest_framework.parsers import JSONParser
 from django.http import HttpResponse, JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
 from rackcity.models import ITModel, ITInstance
-from rackcity.api.serializers import RecursiveITInstanceSerializer, ITModelSerializer
+from rackcity.api.serializers import (
+    RecursiveITInstanceSerializer,
+    ITModelSerializer,
+    BulkITModelSerializer
+)
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
 import math
+import csv
+from io import StringIO
 from rackcity.views.rackcity_utils import (
     validate_instance_location,
     records_are_identical,
@@ -392,6 +398,45 @@ def model_bulk_approve(request):
             setattr(existing_model, field, model_data[field])
         existing_model.save()
     return HttpResponse(status=HTTPStatus.OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def model_bulk_export(request):
+    """
+    List all models in csv form, in accordance with Bulk Spec.
+    """
+    models_query = ITModel.objects
+
+    try:
+        filter_args = get_filter_arguments(request.data)
+    except Exception as error:
+        return JsonResponse(
+            {"failure_message": "Filter error: " + str(error)},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    for filter_arg in filter_args:
+        models_query = models_query.filter(**filter_arg)
+
+    try:
+        sort_args = get_sort_arguments(request.data)
+    except Exception as error:
+        return JsonResponse(
+            {"failure_message": "Sort error: " + str(error)},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    models = models_query.order_by(*sort_args)
+
+    serializer = BulkITModelSerializer(models, many=True)
+    csv_string = StringIO()
+    fields = serializer.data[0].keys()
+    csv_writer = csv.DictWriter(csv_string, fields)
+    csv_writer.writeheader()
+    csv_writer.writerows(serializer.data)
+    return JsonResponse(
+        {"export_csv": csv_string.getvalue()},
+        status=HTTPStatus.OK,
+    )
 
 
 @api_view(['GET'])
