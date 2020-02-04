@@ -31,6 +31,7 @@ import {
 } from "./formUtils";
 import axios from "axios";
 import { API_ROOT } from "../api-config";
+import { PagingTypes } from "../components/elementView/elementTable";
 
 //TO DO : add validation of types!!!
 
@@ -148,11 +149,13 @@ class InstanceForm extends React.Component<
   render() {
     console.log(this.state.values);
     if (this.state.models.length === 0) {
-      getElementData("models", 1, 1000, {}, this.props.token).then(res => {
-        this.setState({
-          models: res as Array<ModelObject>
-        });
-      });
+      getElementData("models", 1, PagingTypes.ALL, {}, this.props.token).then(
+        res => {
+          this.setState({
+            models: res as Array<ModelObject>
+          });
+        }
+      );
     }
     if (this.state.racks.length === 0) {
       this.getRacks(this.props.token);
