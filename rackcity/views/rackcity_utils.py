@@ -214,3 +214,10 @@ def get_filter_arguments(data):
                 )
 
     return filter_args
+
+
+def strings_imatch(str1, str2):
+    """
+    Returns true if strings match with case insensitivity.
+    """
+    return str1.lower() == str2.lower()
