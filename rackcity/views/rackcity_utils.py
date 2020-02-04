@@ -75,6 +75,7 @@ def records_are_identical(existing_data, new_data):
         if (
             key not in new_keys
             and existing_data[key] is not None
+            and existing_data[key] != ""
             and key != 'id'
         ):
             return False
@@ -83,11 +84,30 @@ def records_are_identical(existing_data, new_data):
             and new_data[key] != existing_data[key]
         ):
             if not (
-                isinstance(existing_data[key], int)
-                and int(new_data[key]) == existing_data[key]
+                int_string_comparison(existing_data[key], new_data[key])
+                or empty_string_null_comparison(existing_data[key], new_data[key])
             ):
                 return False
     return True
+
+
+def int_string_comparison(existing_value, new_value):
+    return (
+        isinstance(existing_value, int)
+        and isinstance(new_value, str)
+        and int(new_value) == existing_value
+    )
+
+
+def empty_string_null_comparison(existing_value, new_value):
+    return (
+        (
+            isinstance(existing_value, str)
+            or isinstance(new_value, str)
+        )
+        and not new_value
+        and not existing_value
+    )
 
 
 def no_infile_location_conflicts(instance_datas):
