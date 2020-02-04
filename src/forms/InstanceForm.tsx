@@ -27,7 +27,11 @@ import {
   RackSuggest,
   renderRackItem,
   filterRack,
-  FormTypes
+  FormTypes,
+  StringSuggest,
+  renderCreateItemOption,
+  renderStringItem,
+  filterString
 } from "./formUtils";
 import axios from "axios";
 import { API_ROOT } from "../api-config";
@@ -46,6 +50,7 @@ interface InstanceFormState {
   racks: Array<RackObject>;
   models: Array<ModelObject>;
   errors: Array<string>;
+  users: Array<string>;
 }
 
 export const required = (
@@ -69,7 +74,8 @@ class InstanceForm extends React.Component<
     values: this.initialState,
     racks: [],
     models: [],
-    errors: []
+    errors: [],
+    users: []
   };
   headers = {
     headers: {
@@ -135,6 +141,19 @@ class InstanceForm extends React.Component<
       })
     });
   };
+  getUsers = (token: string) => {
+    const headers = getHeaders(token);
+    axios
+      .get(API_ROOT + "api/usernames", headers)
+      .then(res => {
+        this.setState({
+          users: res.data.usernames
+        });
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  };
   getRacks = (token: string) => {
     const headers = getHeaders(token);
     console.log(API_ROOT + "api/racks/summary");
@@ -163,6 +182,9 @@ class InstanceForm extends React.Component<
     }
     if (this.state.racks.length === 0) {
       this.getRacks(this.props.token);
+    }
+    if (this.state.users.length === 0) {
+      this.getUsers(this.props.token);
     }
     const { values } = this.state;
     return (
@@ -238,12 +260,31 @@ class InstanceForm extends React.Component<
           </FormGroup>
 
           <FormGroup label="Owner" inline={false}>
-            <Field
+            <StringSuggest
+              popoverProps={{
+                minimal: true,
+                popoverClassName: "dropdown",
+                usePortal: true
+              }}
+              defaultSelectedItem={this.state.values.owner}
+              inputValueRenderer={(vendor: string) => vendor}
+              items={this.state.users}
+              onItemSelect={(owner: string) =>
+                this.setState({
+                  values: updateObject(values, { owner: owner })
+                })
+              }
+              createNewItemRenderer={renderCreateItemOption}
+              itemRenderer={renderStringItem}
+              itemPredicate={filterString}
+              noResults={<MenuItem disabled={true} text="No results." />}
+            />
+            {/* <Field
               field="owner"
               placeholder="owner"
               value={values.owner}
               onChange={this.handleChange}
-            />
+            /> */}
           </FormGroup>
           <FormGroup label="Comment" inline={false}>
             <Field
