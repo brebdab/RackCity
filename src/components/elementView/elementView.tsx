@@ -12,7 +12,7 @@ import {
   InstanceInfoObject,
   ModelObject
 } from "../utils";
-import ElementTable from "./elementTable";
+import ElementTable, { PagingTypes } from "./elementTable";
 import "./elementView.scss";
 
 interface ElementViewState {
@@ -40,21 +40,24 @@ export function getPages(path: string, page_size: number, token: string) {
 export function getElementData(
   path: string,
   page: number,
-  page_size: number,
+  page_type: PagingTypes,
   body: any,
   token: string
 ): Promise<Array<ElementObjectType>> {
   console.log(API_ROOT + "api/" + path + "/get-many");
-
+  const params =
+    page_type === PagingTypes.ALL
+      ? {}
+      : {
+          page_size: page_type,
+          page
+        };
   const config = {
     headers: {
       Authorization: "Token " + token
     },
 
-    params: {
-      page_size,
-      page
-    }
+    params: params
   };
   return axios
     .post(API_ROOT + "api/" + path + "/get-many", body, config)
