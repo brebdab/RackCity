@@ -19,8 +19,8 @@ class ITModel(models.Model):
         default='#394B59',
         validators=[validate_display_color],
     )
-    num_ethernet_ports = models.PositiveIntegerField(null=True, blank=True)
-    num_power_ports = models.PositiveIntegerField(null=True, blank=True)
+    num_ethernet_ports = RCPositiveIntegerField(null=True, blank=True)
+    num_power_ports = RCPositiveIntegerField(null=True, blank=True)
     cpu = models.CharField(max_length=150, null=True, blank=True)
     memory_gb = RCPositiveIntegerField(null=True, blank=True)
     storage = models.CharField(max_length=150, null=True, blank=True)
