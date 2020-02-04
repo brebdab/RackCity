@@ -1,4 +1,4 @@
-import { Classes, AnchorButton, Alert, Dialog, Card, Elevation, Tag } from "@blueprintjs/core";
+import { Classes, AnchorButton, Alert, Dialog, Card, Elevation, Tag, Overlay, Spinner } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
@@ -23,7 +23,8 @@ interface AlertState {
   loadedModels?: Array<ModelObject>,
   loadedInstances?: Array<InstanceObject>,
   modifiedModels?: Array<any>,
-  modifiedInstances?: Array<any>
+  modifiedInstances?: Array<any>,
+  uploading: boolean
 }
 
 interface InstanceInfoObject {
@@ -44,12 +45,16 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
     uploadModelIsOpen: false,
     uploadInstanceIsOpen: false,
     modelAlterationsIsOpen: false,
-    instanceAlterationsIsOpen: false
+    instanceAlterationsIsOpen: false,
+    uploading: false
   };
 
   render() {
     return (
       <div className={Classes.DARK + " import"}>
+        <Overlay isOpen={this.state.uploading} className={"uploading-overlay"}>
+          <Spinner size={Spinner.SIZE_LARGE}/>
+        </Overlay>
         <div className={"row"}>
           <div className={"column-third-left-import"}>
             <p> </p>
@@ -125,7 +130,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
           </div>
         </div>
         <div>
-          <Dialog isOpen={this.state.modelAlterationsIsOpen} onClose={() => this.setState({modelAlterationsIsOpen: false})} className={"modify-table"}
+          <Dialog isOpen={this.state.modelAlterationsIsOpen} onClose={() => this.setState({modelAlterationsIsOpen: false, loadedModels: undefined, modifiedModels: undefined})} className={"modify-table"}
                   usePortal={true}>
             <Modifier {...this.props} models={this.state.modifiedModels}
               callback={() => {this.setState({modelAlterationsIsOpen: false, modifiedModels: undefined, loadedModels: undefined}); console.log(this.state)}}
@@ -134,7 +139,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
           </Dialog>
         </div>
         <div>
-          <Dialog isOpen={this.state.instanceAlterationsIsOpen} onClose={() => this.setState({instanceAlterationsIsOpen: false})} className={"modify-table"}
+          <Dialog isOpen={this.state.instanceAlterationsIsOpen} onClose={() => this.setState({instanceAlterationsIsOpen: false, loadedInstances: undefined, modifiedInstances: undefined})} className={"modify-table"}
                   usePortal={true}>
             <Modifier {...this.props} models={this.state.modifiedInstances}
               callback={() => {this.setState({instanceAlterationsIsOpen: false, modifiedInstances: undefined, loadedInstances: undefined})}}
@@ -228,6 +233,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
   private handleInstanceOpen = () => this.setState({ uploadInstanceIsOpen: true });
   private handleInstanceCancel = () => this.setState({ uploadInstanceIsOpen: false });
   private handleInstanceUpload = () => {
+    this.setState({loadedModels: undefined})
     if (this.state.selectedFile !== undefined) {
       parse(this.state.selectedFile).then((res) => {
         c2j({
@@ -273,6 +279,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
    */
   private handleModelUpload = () => {
     /* Serialize to JSON */
+    this.setState({loadedInstances: undefined})
     if (this.state.selectedFile !== undefined) {
       parse(this.state.selectedFile).then((res) => {
         c2j({
@@ -315,36 +322,44 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
 
   private handleUpload = () => {
     if (this.state.loadedModels !== undefined) {
+      this.setState({uploading: true})
       uploadBulk({models: this.state.loadedModels}, this.props.token, "models").then(res => {
         if (res.modifications.length !== 0) {
           this.setState({
             modelAlterationsIsOpen: true,
+            uploading: false,
             modifiedModels: res.modifications
           })
         } else {
           alert("Upload successful with no modifications")
-          this.setState({ loadedModels: undefined })
+          this.setState({ uploading: false, loadedModels: undefined })
         }
       }, err => {
+        this.setState({uploading: false})
         alert(err.response.data.failure_message)
       })
     } else if (this.state.loadedInstances !== undefined) {
+      this.setState({uploading: true})
       uploadBulk({instances: this.state.loadedInstances}, this.props.token, "instances").then(res => {
         if (res.modifications.length !== 0) {
           this.setState({
             instanceAlterationsIsOpen: true,
+            uploading: false,
             modifiedInstances: res.modifications
           })
         } else {
           alert("Upload successful with no modifications");
-          this.setState({ loadedModels: undefined })
+          this.setState({ uploading: false, loadedModels: undefined })
         }
       }, err => {
+        this.setState({uploading: false})
         alert(err.response.data.failure_message)
       })
     } else {
       alert("No data to upload")
     }
+    console.log("here, regardless of error or success")
+    this.setState({loadedModels: undefined, loadedInstances: undefined, modifiedModels: undefined, modifiedInstances: undefined})
   }
 
   /*
