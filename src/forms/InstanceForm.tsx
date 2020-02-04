@@ -31,6 +31,7 @@ import {
 } from "./formUtils";
 import axios from "axios";
 import { API_ROOT } from "../api-config";
+import { PagingTypes } from "../components/elementView/elementTable";
 
 //TO DO : add validation of types!!!
 
@@ -38,7 +39,7 @@ export interface InstanceFormProps {
   token: string;
   type: FormTypes;
   initialValues?: InstanceObject;
-  submitForm(Instance: InstanceInfoObject, headers: any): Promise<any>;
+  submitForm(Instance: InstanceInfoObject, headers: any): Promise<any> | void;
 }
 interface InstanceFormState {
   values: InstanceObject;
@@ -82,7 +83,7 @@ class InstanceForm extends React.Component<
 
     const { hostname, id, elevation, owner, comment } = instance;
     const model = instance.model ? instance.model.id : undefined;
-    const rack = instance.model ? instance.rack.id : undefined;
+    const rack = instance.rack ? instance.rack.id : undefined;
     let valuesToSend: InstanceInfoObject = {
       model,
       rack,
@@ -110,9 +111,12 @@ class InstanceForm extends React.Component<
         });
       }
 
-      this.props
-        .submitForm(this.mapInstanceObject(this.state.values), this.headers)
-        .catch(err => {
+      const resp = this.props.submitForm(
+        this.mapInstanceObject(this.state.values),
+        this.headers
+      );
+      if (resp) {
+        resp.catch(err => {
           console.log(err.response.data.failure_message);
           let errors: Array<string> = this.state.errors;
           errors.push(err.response.data.failure_message as string);
@@ -120,6 +124,7 @@ class InstanceForm extends React.Component<
             errors: errors
           });
         });
+      }
     }
   };
 
@@ -148,11 +153,13 @@ class InstanceForm extends React.Component<
   render() {
     console.log(this.state.values);
     if (this.state.models.length === 0) {
-      getElementData("models", 1, 1000, {}, this.props.token).then(res => {
-        this.setState({
-          models: res as Array<ModelObject>
-        });
-      });
+      getElementData("models", 1, PagingTypes.ALL, {}, this.props.token).then(
+        res => {
+          this.setState({
+            models: res as Array<ModelObject>
+          });
+        }
+      );
     }
     if (this.state.racks.length === 0) {
       this.getRacks(this.props.token);
@@ -169,7 +176,7 @@ class InstanceForm extends React.Component<
         >
           <h2>Add a New Instance</h2>
 
-          <FormGroup label="Hostname" inline={false}>
+          <FormGroup label="Hostname (required)" inline={false}>
             <Field
               placeholder="hostname"
               onChange={this.handleChange}
@@ -177,7 +184,7 @@ class InstanceForm extends React.Component<
               field="hostname"
             />
           </FormGroup>
-          <FormGroup label="Elevation" inline={false}>
+          <FormGroup label="Elevation (required)" inline={false}>
             <Field
               field="elevation"
               placeholder="elevation"
@@ -185,7 +192,7 @@ class InstanceForm extends React.Component<
               onChange={this.handleChange}
             />
           </FormGroup>
-          <FormGroup label="Model" inline={false}>
+          <FormGroup label="Model (required)" inline={false}>
             <ModelSuggest
               popoverProps={{
                 minimal: true,
@@ -207,7 +214,7 @@ class InstanceForm extends React.Component<
               noResults={<MenuItem disabled={true} text="No results." />}
             />
           </FormGroup>
-          <FormGroup label="Rack" inline={false}>
+          <FormGroup label="Rack (required)" inline={false}>
             <RackSuggest
               popoverProps={{
                 minimal: true,

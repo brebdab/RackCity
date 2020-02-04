@@ -71,8 +71,7 @@ export function getElementData(
       const items = res.data[path];
 
       return items;
-    })
-    .catch(err => console.log(err));
+    });
 }
 
 async function getExportData(path: string, filters: Array<any>, token: string, file: string) {
