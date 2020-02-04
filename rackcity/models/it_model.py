@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.db import models
+from rackcity.models.fields import RCPositiveIntegerField
 import re
 
 
@@ -21,7 +22,7 @@ class ITModel(models.Model):
     num_ethernet_ports = models.PositiveIntegerField(null=True, blank=True)
     num_power_ports = models.PositiveIntegerField(null=True, blank=True)
     cpu = models.CharField(max_length=150, null=True, blank=True)
-    memory_gb = models.PositiveIntegerField(null=True, blank=True)
+    memory_gb = RCPositiveIntegerField(null=True, blank=True)
     storage = models.CharField(max_length=150, null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
 

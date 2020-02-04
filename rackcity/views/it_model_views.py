@@ -294,13 +294,15 @@ def model_bulk_upload(request):
     models_in_import = set()
     for model_data in model_datas:
         model_serializer = ITModelSerializer(data=model_data)
+        print(model_serializer)
         if not model_serializer.is_valid():
             failure_message = str(model_serializer.errors)
-            failure_message = "At least one provided model was not valid. "+failure_message
+            failure_message = "At least one provided model was not valid! "+failure_message
             return JsonResponse(
                 {"failure_message": failure_message},
                 status=HTTPStatus.BAD_REQUEST
             )
+        # CHANGE ALL THE MODEL DATAS!
         if (model_data['vendor'], model_data['model_number']) in models_in_import:
             failure_message = "Vendor+model_number combination must be unique, but " + \
                 "vendor="+model_data['vendor'] + \
@@ -335,7 +337,7 @@ def model_bulk_upload(request):
                     status=HTTPStatus.NOT_ACCEPTABLE
                 )
             potential_modifications.append(
-                {"existing_model": existing_model, "new_data": model_data})
+                {"existing_model": existing_model, "new_data": model_serializer.validated_data})
     records_added = 0
     for model_to_add in models_to_add:
         records_added += 1

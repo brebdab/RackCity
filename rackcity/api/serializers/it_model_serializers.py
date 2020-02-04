@@ -1,8 +1,19 @@
 from rest_framework import serializers
 from rackcity.models import ITModel
+from rackcity.api.serializers.fields import RCIntegerField
 
 
 class ITModelSerializer(serializers.ModelSerializer):
+
+    # This is the field for the serializers
+    # It overrides appropriate methods to work with empty strings when you call validate
+    memory_gb = RCIntegerField(
+        allow_null=True,
+        max_value=2147483647,
+        min_value=0,
+        required=False
+    )
+
     class Meta:
         model = ITModel
         fields = (
