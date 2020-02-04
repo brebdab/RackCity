@@ -1,6 +1,6 @@
 import {
   AnchorButton,
-  Callout,
+  Card,
   Classes,
   Intent,
   IToastProps,
@@ -94,26 +94,6 @@ class LandingView extends React.Component<
           position={Position.TOP}
           ref={this.refHandlers.toaster}
         />
-        {this.props.isAdmin ? (
-          <div>
-            <AnchorButton
-              className="add"
-              text={"Add Rack(s)"}
-              icon="add"
-              minimal
-              intent={Intent.PRIMARY}
-              onClick={this.handleOpen}
-            />
-            <AnchorButton
-              className="add "
-              text={"Delete Rack(s)"}
-              icon="trash"
-              minimal
-              intent={Intent.DANGER}
-              onClick={this.handleDeleteOpen}
-            />
-          </div>
-        ) : null}
 
         <FormPopup
           type={FormTypes.CREATE}
@@ -129,9 +109,32 @@ class LandingView extends React.Component<
           isOpen={this.state.isDeleteOpen}
           handleClose={this.handleDeleteCancel}
         />
-        <Callout title="View Racks">
+
+        <Card>
+          {this.props.isAdmin ? (
+            <div>
+              <AnchorButton
+                className="add"
+                text={"Add Rack(s)"}
+                icon="add"
+                minimal
+                intent={Intent.PRIMARY}
+                onClick={this.handleOpen}
+              />
+              <AnchorButton
+                className="add "
+                text={"Delete Rack(s)"}
+                icon="trash"
+                minimal
+                intent={Intent.DANGER}
+                onClick={this.handleDeleteOpen}
+              />
+            </div>
+          ) : null}
+          <h4>View Rack(s)</h4>
+
           <RackSelectView submitForm={this.viewRackForm} />
-        </Callout>
+        </Card>
         <ElementTabView />
       </div>
     );

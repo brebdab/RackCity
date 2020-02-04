@@ -96,13 +96,13 @@ class ElementTable extends React.Component<
   previousPage = () => {
     if (this.state.curr_page > 1 && this.props.getData) {
       const next_page = this.state.curr_page - 1;
-      const { sort_by } = this.state;
+      const { sort_by, filters } = this.state;
       this.props
         .getData(
           this.props.type,
           next_page,
           this.state.page_type,
-          { sort_by },
+          { sort_by, filters },
           this.props.token
         )
         .then(res => {
@@ -160,10 +160,11 @@ class ElementTable extends React.Component<
         <span>
           <Icon
             className="icon"
-            icon={IconNames.FILTER_LIST}
+            icon={IconNames.DRAG_HANDLE_VERTICAL}
             iconSize={Icon.SIZE_STANDARD}
           />
         </span>
+
         <span>{`${item.field} ${display} 
       `}</span>
 
@@ -185,6 +186,13 @@ class ElementTable extends React.Component<
   renderSortItem = (item: ITableSort) => {
     return (
       <div className="drag-drop-text ">
+        <span>
+          <Icon
+            className="icon"
+            icon={IconNames.DRAG_HANDLE_VERTICAL}
+            iconSize={Icon.SIZE_STANDARD}
+          />
+        </span>
         <span>{`${item.field} by ${
           item.ascending ? "ascending" : "descending"
         }`}</span>
@@ -454,6 +462,7 @@ class ElementTable extends React.Component<
                 />
               </div>,
               <div className="table-options">
+                <p>Applied filters:</p>
                 <DragDropList
                   items={this.state.filters}
                   renderItem={this.renderFilterItem}
@@ -463,6 +472,7 @@ class ElementTable extends React.Component<
             ]}
         {this.props.disableSorting ? null : (
           <div className="table-options">
+            <p>Applied sorts:</p>
             <DragDropList
               items={this.state.sort_by}
               renderItem={this.renderSortItem}
