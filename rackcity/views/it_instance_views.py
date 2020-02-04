@@ -216,6 +216,20 @@ def instance_modify(request):
             value = ITModel.objects.get(id=data[field])
         elif field == 'rack':
             value = Rack.objects.get(id=data[field])
+        elif field == 'hostname':
+            instances_with_hostname = ITInstance.objects.filter(
+                hostname__iexact=data[field]
+            )
+            if (
+                len(instances_with_hostname) > 0
+                and instances_with_hostname[0].id != id
+            ):
+                return JsonResponse(
+                    {"failure_message": "Instance with hostname '" +
+                        data[field].lower() + "' already exists."},
+                    status=HTTPStatus.BAD_REQUEST,
+                )
+            value = data[field]
         else:
             value = data[field]
         setattr(existing_instance, field, value)
@@ -337,21 +351,44 @@ def instance_bulk_upload(request):
                     {"failure_message": failure_message},
                     status=HTTPStatus.BAD_REQUEST
                 )
-        # should this be whitespace/caps insenstive? Maybe later
-        if instance_data['hostname'] in hostnames_in_import:
+
+        # Check that all hostnames in file are case insensitive unique
+        instance_data_hostname_lower = instance_data['hostname'].lower()
+        if instance_data_hostname_lower in hostnames_in_import:
             failure_message = "Hostname must be unique, but '" + \
-                instance_data['hostname'] + \
+                instance_data_hostname_lower + \
                 "' appears more than once in import. "
             return JsonResponse(
                 {"failure_message": failure_message},
                 status=HTTPStatus.BAD_REQUEST
             )
         else:
-            hostnames_in_import.add(instance_data['hostname'])
-        try:
-            existing_instance = ITInstance.objects.get(
-                hostname=instance_data['hostname'])
-        except ObjectDoesNotExist:
+            hostnames_in_import.add(instance_data_hostname_lower)
+
+        existing_instance_filtered = ITInstance.objects.filter(
+            hostname__iexact=instance_data['hostname'])
+        if len(existing_instance_filtered) == 1:
+            # Instance with same (case insensitive) hostname already exists
+            existing_instance = existing_instance_filtered[0]
+            try:
+                validate_location_modification(
+                    instance_data, existing_instance)
+            except Exception:
+                failure_message = "Instance " + \
+                    instance_data['hostname'] + \
+                    " would conflict location with an existing instance. "
+                return JsonResponse(
+                    {"failure_message": failure_message},
+                    status=HTTPStatus.BAD_REQUEST
+                )
+            potential_modifications.append(
+                {
+                    "existing_instance": existing_instance,
+                    "new_data": instance_data
+                }
+            )
+        else:
+            # Instance with this hostname does not yet exist
             model = ITModel.objects.get(id=instance_data['model'])
             try:
                 validate_instance_location(
@@ -370,24 +407,6 @@ def instance_bulk_upload(request):
                 )
             else:
                 instances_to_add.append(instance_serializer)
-        else:
-            try:
-                validate_location_modification(
-                    instance_data, existing_instance)
-            except Exception:
-                failure_message = "Instance " + \
-                    instance_data['hostname'] + \
-                    " would conflict location with an existing instance. "
-                return JsonResponse(
-                    {"failure_message": failure_message},
-                    status=HTTPStatus.BAD_REQUEST
-                )
-            potential_modifications.append(
-                {
-                    "existing_instance": existing_instance,
-                    "new_data": instance_data
-                }
-            )
     try:
         no_infile_location_conflicts(instance_datas)
     except LocationException as error:

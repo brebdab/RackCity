@@ -165,7 +165,7 @@ def get_filter_arguments(data):
                 if filter_dict['match_type'] == 'exact':
                     filter_args.append(
                         {
-                            '{0}'.format(filter_field): filter_dict['value']
+                            '{0}__iexact'.format(filter_field): filter_dict['value']
                         }
                     )
                 elif filter_dict['match_type'] == 'contains':
