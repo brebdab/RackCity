@@ -1,4 +1,4 @@
-import { Icon, Spinner } from "@blueprintjs/core";
+import { Icon, Spinner, HTMLSelect } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { IconNames } from "@blueprintjs/icons";
 import "@blueprintjs/icons/lib/css/blueprint-icons.css";
@@ -23,14 +23,20 @@ interface IElementTableState {
   sorted_cols: Array<string>;
   curr_page: number;
   total_pages: number;
+  page_type: PagingTypes;
 }
 export interface ITableSort {
   field: string;
   ascending: boolean;
   id: string;
 }
-const PAGE_SIZE = 10;
+// const PAGE_SIZE = 10;
 
+export enum PagingTypes {
+  TEN = 10,
+  FIFTY = 50,
+  ALL = "View All"
+}
 export enum FilterTypes {
   TEXT = "text",
   NUMERIC = "numeric",
@@ -57,11 +63,15 @@ interface IElementTableProps {
   getData?(
     type: string,
     page_num: number,
-    page_size: number,
+    page_type: PagingTypes,
     body: any,
     token: string
   ): Promise<Array<ElementObjectType>>;
-  getPages?(type: string, page_size: number, token: string): Promise<number>;
+  getPages?(
+    type: string,
+    page_size: PagingTypes,
+    token: string
+  ): Promise<number>;
   data?: Array<ElementObjectType>;
 }
 
@@ -71,6 +81,7 @@ class ElementTable extends React.Component<
 > {
   public state: IElementTableState = {
     // sort_by_id: [],
+    page_type: 10,
     filters: [],
     sort_by: [],
     items: [],
@@ -85,13 +96,13 @@ class ElementTable extends React.Component<
   previousPage = () => {
     if (this.state.curr_page > 1 && this.props.getData) {
       const next_page = this.state.curr_page - 1;
-      const { sort_by } = this.state;
+      const { sort_by, filters } = this.state;
       this.props
         .getData(
           this.props.type,
           next_page,
-          PAGE_SIZE,
-          { sort_by },
+          this.state.page_type,
+          { sort_by, filters },
           this.props.token
         )
         .then(res => {
@@ -111,7 +122,7 @@ class ElementTable extends React.Component<
         .getData(
           this.props.type,
           next_page,
-          PAGE_SIZE,
+          this.state.page_type,
           { sort_by, filters },
           this.props.token
         )
@@ -149,10 +160,11 @@ class ElementTable extends React.Component<
         <span>
           <Icon
             className="icon"
-            icon={IconNames.FILTER_LIST}
+            icon={IconNames.DRAG_HANDLE_VERTICAL}
             iconSize={Icon.SIZE_STANDARD}
           />
         </span>
+
         <span>{`${item.field} ${display} 
       `}</span>
 
@@ -174,6 +186,13 @@ class ElementTable extends React.Component<
   renderSortItem = (item: ITableSort) => {
     return (
       <div className="drag-drop-text ">
+        <span>
+          <Icon
+            className="icon"
+            icon={IconNames.DRAG_HANDLE_VERTICAL}
+            iconSize={Icon.SIZE_STANDARD}
+          />
+        </span>
         <span>{`${item.field} by ${
           item.ascending ? "ascending" : "descending"
         }`}</span>
@@ -268,7 +287,7 @@ class ElementTable extends React.Component<
       this.props.getData!(
         this.props.type,
         this.state.curr_page,
-        PAGE_SIZE,
+        this.state.page_type,
         { sort_by: this.state.sort_by, filters: filter_body },
         this.props.token
       ).then(res => {
@@ -279,12 +298,35 @@ class ElementTable extends React.Component<
     }
     if (this.props.getPages) {
       this.props
-        .getPages(this.props.type, PAGE_SIZE, this.props.token)
+        .getPages(this.props.type, this.state.page_type, this.props.token)
         .then(res => {
           this.setState({
             total_pages: res
           });
         });
+    }
+  };
+
+  updateData = (page: PagingTypes) => {
+    if (this.props.getData) {
+      this.props.getData!(
+        this.props.type,
+        this.state.curr_page,
+        page,
+        { sort_by: this.state.sort_by, filters: this.state.filters },
+        this.props.token
+      ).then(res => {
+        this.setState({
+          items: res
+        });
+      });
+    }
+    if (this.props.getPages) {
+      this.props.getPages(this.props.type, page, this.props.token).then(res => {
+        this.setState({
+          total_pages: res
+        });
+      });
     }
   };
   updateSortData = (items: Array<ITableSort>) => {
@@ -297,7 +339,7 @@ class ElementTable extends React.Component<
       this.props.getData!(
         this.props.type,
         this.state.curr_page,
-        PAGE_SIZE,
+        this.state.page_type,
         { sort_by: sorts_body, filters: this.state.filters },
         this.props.token
       ).then(res => {
@@ -315,7 +357,7 @@ class ElementTable extends React.Component<
         .getData(
           this.props.type,
           this.state.curr_page,
-          PAGE_SIZE,
+          this.state.page_type,
           {},
           this.props.token
         )
@@ -332,7 +374,7 @@ class ElementTable extends React.Component<
     }
     if (this.props.getPages) {
       this.props
-        .getPages(this.props.type, PAGE_SIZE, this.props.token)
+        .getPages(this.props.type, this.state.page_type, this.props.token)
         .then(res => {
           this.setState({
             total_pages: res
@@ -388,6 +430,12 @@ class ElementTable extends React.Component<
     });
     this.updateFilterData(filters);
   };
+  handlePagingChange = (page: PagingTypes) => {
+    this.setState({
+      page_type: page
+    });
+    this.updateData(page);
+  };
   render() {
     console.log("TABLE DATA", this.props.data);
     // console.log(this.state.items);
@@ -414,6 +462,7 @@ class ElementTable extends React.Component<
                 />
               </div>,
               <div className="table-options">
+                <p>Applied filters:</p>
                 <DragDropList
                   items={this.state.filters}
                   renderItem={this.renderFilterItem}
@@ -423,6 +472,7 @@ class ElementTable extends React.Component<
             ]}
         {this.props.disableSorting ? null : (
           <div className="table-options">
+            <p>Applied sorts:</p>
             <DragDropList
               items={this.state.sort_by}
               renderItem={this.renderSortItem}
@@ -434,25 +484,37 @@ class ElementTable extends React.Component<
         <div>
           {this.props.getPages ? (
             <div className="table-control">
-              <span>
-                <Icon
-                  className="icon"
-                  icon={IconNames.CARET_LEFT}
-                  iconSize={Icon.SIZE_LARGE}
-                  onClick={() => this.previousPage()}
-                />
-              </span>
-              <span>
-                page {this.state.curr_page} of {this.state.total_pages}
-              </span>
-              <span>
-                <Icon
-                  className="icon"
-                  icon={IconNames.CARET_RIGHT}
-                  iconSize={Icon.SIZE_LARGE}
-                  onClick={() => this.nextPage()}
-                />
-              </span>
+              <HTMLSelect
+                onChange={(e: any) => this.handlePagingChange(e.target.value)}
+              >
+                {" "}
+                <option> {PagingTypes.TEN}</option>
+                <option>{PagingTypes.FIFTY}</option>
+                <option>{PagingTypes.ALL}</option>
+              </HTMLSelect>
+              {this.state.page_type !== PagingTypes.ALL
+                ? [
+                    <span>
+                      <Icon
+                        className="icon"
+                        icon={IconNames.CARET_LEFT}
+                        iconSize={Icon.SIZE_LARGE}
+                        onClick={() => this.previousPage()}
+                      />
+                    </span>,
+                    <span>
+                      page {this.state.curr_page} of {this.state.total_pages}
+                    </span>,
+                    <span>
+                      <Icon
+                        className="icon"
+                        icon={IconNames.CARET_RIGHT}
+                        iconSize={Icon.SIZE_LARGE}
+                        onClick={() => this.nextPage()}
+                      />
+                    </span>
+                  ]
+                : null}
             </div>
           ) : null}
           {!(this.state.items && this.state.items.length > 0) ? (

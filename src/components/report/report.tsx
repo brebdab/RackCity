@@ -79,20 +79,28 @@ export class Report extends React.PureComponent<ReportProps & RouteComponentProp
         <div className={Classes.DARK}>
           <Card elevation={Elevation.TWO}>
             <div className={"row"}>
-              <div className={"column-third"}>
+              <div className={"column-third-report"}>
                 <h4>Model Allocation:</h4>
+              </div>
+              <div className={"column-third-right-report"}>
+                <h4>Owner Allocation:</h4>
+              </div>
+              <div className={"column-third-right-report"}>
+                <h4>Vendor Allocation:</h4>
+              </div>
+            </div>
+            <div className={"row"}>
+              <div className={"column-third-report"}>
                 <Tabular data={this.state.model_allocation} fields={modelFields}/>
               </div>
-              <div className={"column-third-right"}>
-                <h4>Owner Allocation:</h4>
+              <div className={"column-third-right-report"}>
                 <Tabular data={this.state.owner_allocation} fields={ownerFields}/>
               </div>
-              <div className={"column-third-right"}>
-                <h4>Vendor Allocation:</h4>
+              <div className={"column-third-right-report"}>
                 <Tabular data={this.state.vendor_allocation} fields={vendorFields}/>
               </div>
             </div>
-            <h4 className={"column-third-left"}>Free Rack Space Pct: {this.state.freeRack * 100}%</h4>
+            <h4 className={"column-third-left-report"}>Free Rack Space Pct: {this.state.freeRack * 100}%</h4>
           </Card>
         </div>
       )
