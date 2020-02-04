@@ -15,6 +15,8 @@ from rest_framework.parsers import JSONParser
 from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
 import math
+import csv
+from io import StringIO
 from rackcity.views.rackcity_utils import (
     validate_instance_location,
     validate_location_modification,
@@ -476,9 +478,16 @@ def instance_bulk_export(request):
         )
     instances = instances_query.order_by(*sort_args)
 
-    serializer = BulkITInstanceSerializer(instances, many=True)
+    serializer = BulkITInstanceSerializer(
+        instances, many=True)  # NEED TO CHANGE THE SERIALIZER SO IT CONCATS THE RACK AND CHANGES FIELD NAMES
+    csv_string = StringIO()
+    fields = serializer.data[0].keys()
+    csv_writer = csv.DictWriter(csv_string, fields)
+    csv_writer.writeheader()
+    csv_writer.writerows(serializer.data)
+    # print(csv_string.getvalue())
     return JsonResponse(
-        {"instances": serializer.data},
+        {"export_csv": csv_string.getvalue()},
         status=HTTPStatus.OK,
     )
 
