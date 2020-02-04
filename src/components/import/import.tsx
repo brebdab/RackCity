@@ -1,4 +1,4 @@
-import { Classes, AnchorButton, Alert, Dialog, Card, Elevation } from "@blueprintjs/core";
+import { Classes, AnchorButton, Alert, Dialog, Card, Elevation, Tag } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
@@ -50,6 +50,98 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
   render() {
     return (
       <div className={Classes.DARK + " import"}>
+        <div className={"row"}>
+          <div className={"column-third-left-import"}>
+            <p> </p>
+            <AnchorButton
+              large={true}
+              intent="primary"
+              icon="import"
+              text="Select Instances File"
+              onClick={this.handleInstanceOpen}
+            />
+            <Alert
+              cancelButtonText="Cancel"
+              confirmButtonText="Choose File"
+              intent="primary"
+              isOpen={this.state.uploadInstanceIsOpen}
+              onCancel={this.handleInstanceCancel}
+              onConfirm={this.handleInstanceUpload}
+            >
+              <p>Choose a file</p>
+              <FileSelector {...this.props} callback={this.setFile}/>
+            </Alert>
+          </div>
+          <div className={"column-third-import"}>
+            <h1>OR</h1>
+          </div>
+          <div className={"column-third-right-import"}>
+            <p> </p>
+            <AnchorButton
+              large={true}
+              intent="primary"
+              icon="import"
+              text="Select Models File"
+              onClick={this.handleModelOpen}
+            />
+            <Alert
+              cancelButtonText="Cancel"
+              confirmButtonText="Choose File"
+              intent="primary"
+              isOpen={this.state.uploadModelIsOpen}
+              onCancel={this.handleModelCancel}
+              onConfirm={this.handleModelUpload}
+            >
+              <p>Choose a file</p>
+              <FileSelector {...this.props} callback={this.setFile}/>
+            </Alert>
+          </div>
+        </div>
+        <div className={"row"}>
+          <div className={"column-third-left-import"}>
+          </div>
+          <div className={"column-third-import"}>
+            <AnchorButton
+              large={true}
+              intent="success"
+              icon="upload"
+              text="Upload Data"
+              disabled={this.state.selectedFile === undefined}
+              onClick={this.handleUpload}
+            />
+          </div>
+          <div className={"column-third-right-import"}>
+          </div>
+        </div>
+        <div className={"row"}>
+          <div className={"column-third-left-import"}>
+          </div>
+          <div className={"column-third-import"}>
+            <Tag>
+              <p>Selected file: {this.state.selectedFile === undefined ? "none" : this.state.selectedFile.name}</p>
+            </Tag>
+          </div>
+          <div className={"column-third-right-import"}>
+          </div>
+        </div>
+        <div>
+          <Dialog isOpen={this.state.modelAlterationsIsOpen} onClose={() => this.setState({modelAlterationsIsOpen: false})} className={"modify-table"}
+                  usePortal={true}>
+            <Modifier {...this.props} models={this.state.modifiedModels}
+              callback={() => {this.setState({modelAlterationsIsOpen: false, modifiedModels: undefined, loadedModels: undefined}); console.log(this.state)}}
+              operation={"models"}
+            />
+          </Dialog>
+        </div>
+        <div>
+          <Dialog isOpen={this.state.instanceAlterationsIsOpen} onClose={() => this.setState({instanceAlterationsIsOpen: false})} className={"modify-table"}
+                  usePortal={true}>
+            <Modifier {...this.props} models={this.state.modifiedInstances}
+              callback={() => {this.setState({instanceAlterationsIsOpen: false, modifiedInstances: undefined, loadedInstances: undefined})}}
+              operation={"instances"}
+            />
+          </Dialog>
+        </div>
         <div className={"bp3-heading"}>
           <Card elevation={Elevation.ONE}>
             <div>
@@ -126,86 +218,6 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
               <li>Any field not included in an import will be considered "matching" (i.e. if the record exists, the empty field will not be overwritten)</li>
             </ol>
           </Card>
-        </div>
-        <div className={"row"}>
-          <div className={"column-third-left-import"}>
-            <p> </p>
-            <AnchorButton
-              large={true}
-              intent="primary"
-              icon="import"
-              text="Select Instances File"
-              onClick={this.handleInstanceOpen}
-            />
-            <Alert
-              cancelButtonText="Cancel"
-              confirmButtonText="Choose File"
-              intent="primary"
-              isOpen={this.state.uploadInstanceIsOpen}
-              onCancel={this.handleInstanceCancel}
-              onConfirm={this.handleInstanceUpload}
-            >
-              <p>Choose a file</p>
-              <FileSelector {...this.props} callback={this.setFile}/>
-            </Alert>
-          </div>
-          <div className={"column-third-import"}>
-            <h1>OR</h1>
-          </div>
-          <div className={"column-third-right-import"}>
-            <p> </p>
-            <AnchorButton
-              large={true}
-              intent="primary"
-              icon="import"
-              text="Select Models File"
-              onClick={this.handleModelOpen}
-            />
-            <Alert
-              cancelButtonText="Cancel"
-              confirmButtonText="Choose File"
-              intent="primary"
-              isOpen={this.state.uploadModelIsOpen}
-              onCancel={this.handleModelCancel}
-              onConfirm={this.handleModelUpload}
-            >
-              <p>Choose a file</p>
-              <FileSelector {...this.props} callback={this.setFile}/>
-            </Alert>
-          </div>
-        </div>
-        <div className={"row"}>
-          <div className={"column-import"}>
-            <AnchorButton
-              large={true}
-              intent="success"
-              icon="upload"
-              text="Upload Data"
-              disabled={this.state.selectedFile === undefined}
-              onClick={this.handleUpload}
-            />
-          </div>
-          <div className={"column-import"}>
-            <h2>Selected file: {this.state.selectedFile === undefined ? "none" : this.state.selectedFile.name}</h2>
-          </div>
-        </div>
-        <div>
-          <Dialog isOpen={this.state.modelAlterationsIsOpen} onClose={() => this.setState({modelAlterationsIsOpen: false})} className={"modify-table"}
-                  usePortal={true}>
-            <Modifier {...this.props} models={this.state.modifiedModels}
-              callback={() => {this.setState({modelAlterationsIsOpen: false, modifiedModels: undefined, loadedModels: undefined}); console.log(this.state)}}
-              operation={"models"}
-            />
-          </Dialog>
-        </div>
-        <div>
-          <Dialog isOpen={this.state.instanceAlterationsIsOpen} onClose={() => this.setState({instanceAlterationsIsOpen: false})} className={"modify-table"}
-                  usePortal={true}>
-            <Modifier {...this.props} models={this.state.modifiedInstances}
-              callback={() => {this.setState({instanceAlterationsIsOpen: false, modifiedInstances: undefined, loadedInstances: undefined})}}
-              operation={"instances"}
-            />
-          </Dialog>
         </div>
       </div>
     )
