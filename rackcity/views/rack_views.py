@@ -121,12 +121,12 @@ def rack_delete(request):
             else:
                 if ITInstance.objects.filter(rack=rack.id).count() > 0:
                     unempty_racks.append(row_letter + str(rack_num))
-    if len(nonexistent_racks) > 0:
-        failure_message += "The following racks within this" + \
-            " range do not exist: " + ", ".join(nonexistent_racks) + ". "
     if len(unempty_racks) > 0:
         failure_message += "The following racks within this" + \
             " range contain instances: " + ", ".join(unempty_racks) + ". "
+    if len(nonexistent_racks) > 0:
+        failure_message += "The following racks within this" + \
+            " range do not exist: " + ", ".join(nonexistent_racks) + ". "
     if failure_message != "":
         failure_message = "The range of racks " + \
             range_serializer.get_row_range_as_string() + " " + \
