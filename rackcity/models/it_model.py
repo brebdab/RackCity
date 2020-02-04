@@ -30,8 +30,7 @@ class ITModel(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['vendor', 'model_number'],
-                name='unique vendor model number'
-            ),
+                name='unique vendor model number'),
         ]
         verbose_name = 'model'
 
