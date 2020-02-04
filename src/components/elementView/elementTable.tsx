@@ -64,6 +64,7 @@ interface IDragAndDrop {
 }
 
 interface IElementTableProps {
+  callback?: Function;
   type: ElementType;
   token: string;
   disableSorting?: boolean;
@@ -173,7 +174,7 @@ class ElementTable extends React.Component<
           />
         </span>
 
-        <span>{`${item.field} ${display} 
+        <span>{`${item.field} ${display}
       `}</span>
 
         <span>
@@ -295,6 +296,9 @@ class ElementTable extends React.Component<
       sort_by: this.state.sort_by,
       filters: items
     });
+    console.log(items)
+    if (this.props.callback! !== undefined)
+      this.props.callback(items)
     const filter_body = items.map(item => {
       const { field, filter_type, filter } = item;
       return { field, filter_type, filter };
@@ -455,7 +459,7 @@ class ElementTable extends React.Component<
   addFilter = (filter: IFilter) => {
     const filters = this.state.filters;
     filters.push(filter);
-    // console.log(filters);
+    console.log(filters);
     this.setState({
       filters
     });
