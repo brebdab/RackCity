@@ -38,7 +38,7 @@ export interface InstanceFormProps {
   token: string;
   type: FormTypes;
   initialValues?: InstanceObject;
-  submitForm(Instance: InstanceInfoObject, headers: any): Promise<any>;
+  submitForm(Instance: InstanceInfoObject, headers: any): Promise<any> | void;
 }
 interface InstanceFormState {
   values: InstanceObject;
@@ -110,9 +110,12 @@ class InstanceForm extends React.Component<
         });
       }
 
-      this.props
-        .submitForm(this.mapInstanceObject(this.state.values), this.headers)
-        .catch(err => {
+      const resp = this.props.submitForm(
+        this.mapInstanceObject(this.state.values),
+        this.headers
+      );
+      if (resp) {
+        resp.catch(err => {
           console.log(err.response.data.failure_message);
           let errors: Array<string> = this.state.errors;
           errors.push(err.response.data.failure_message as string);
@@ -120,6 +123,7 @@ class InstanceForm extends React.Component<
             errors: errors
           });
         });
+      }
     }
   };
 

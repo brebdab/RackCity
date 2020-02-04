@@ -28,7 +28,7 @@ export interface ModelFormProps {
   token: string;
   type: FormTypes;
   initialValues?: ModelObject;
-  submitForm(model: ModelObject, headers: any): Promise<any>;
+  submitForm(model: ModelObject, headers: any): Promise<any> | void;
 }
 interface ModelFormState {
   values: ModelObject;
@@ -76,14 +76,18 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
           })
         });
       }
-      this.props.submitForm(this.state.values, this.headers).catch(err => {
-        console.log(err.response.data.failure_message);
-        let errors: Array<string> = this.state.errors;
-        errors.push(err.response.data.failure_message as string);
-        this.setState({
-          errors: errors
+
+      const resp = this.props.submitForm(this.state.values, this.headers);
+      if (resp) {
+        resp.catch(err => {
+          console.log(err.response.data.failure_message);
+          let errors: Array<string> = this.state.errors;
+          errors.push(err.response.data.failure_message as string);
+          this.setState({
+            errors: errors
+          });
         });
-      });
+      }
     }
   };
 
