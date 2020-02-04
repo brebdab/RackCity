@@ -28,7 +28,7 @@ export interface ModelFormProps {
   token: string;
   type: FormTypes;
   initialValues?: ModelObject;
-  submitForm(model: ModelObject, headers: any): Promise<any>;
+  submitForm(model: ModelObject, headers: any): Promise<any> | void;
 }
 interface ModelFormState {
   values: ModelObject;
@@ -76,14 +76,18 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
           })
         });
       }
-      this.props.submitForm(this.state.values, this.headers).catch(err => {
-        console.log(err.response.data.failure_message);
-        let errors: Array<string> = this.state.errors;
-        errors.push(err.response.data.failure_message as string);
-        this.setState({
-          errors: errors
+
+      const resp = this.props.submitForm(this.state.values, this.headers);
+      if (resp) {
+        resp.catch(err => {
+          console.log(err.response.data.failure_message);
+          let errors: Array<string> = this.state.errors;
+          errors.push(err.response.data.failure_message as string);
+          this.setState({
+            errors: errors
+          });
         });
-      });
+      }
     }
   };
 
@@ -126,7 +130,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
           className="create-form bp3-form-group"
         >
           <h2>Add a New Model</h2>
-          <FormGroup label="Vendor">
+          <FormGroup label="Vendor (required)">
             <StringSuggest
               popoverProps={{
                 minimal: true,
@@ -148,7 +152,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
               noResults={<MenuItem disabled={true} text="No results." />}
             />
           </FormGroup>
-          <FormGroup label="Model Number" inline={false}>
+          <FormGroup label="Model Number (required)" inline={false}>
             <Field
               placeholder="model_number"
               onChange={this.handleChange}
@@ -156,7 +160,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
               field="model_number"
             />
           </FormGroup>
-          <FormGroup label="Height" inline={false}>
+          <FormGroup label="Height (required)" inline={false}>
             <Field
               field="height"
               placeholder="height"
@@ -168,7 +172,9 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
             <Field
               field="display_color"
               type="color"
-              value={values.display_color}
+              value={
+                this.props.initialValues ? values.display_color : "#394B59"
+              }
               onChange={this.handleChange}
             />
           </FormGroup>
