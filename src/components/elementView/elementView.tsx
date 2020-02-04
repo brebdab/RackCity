@@ -65,8 +65,7 @@ export function getElementData(
       const items = res.data[path];
 
       return items;
-    })
-    .catch(err => console.log(err));
+    });
 }
 class ElementView extends React.Component<ElementViewProps, ElementViewState> {
   public state: ElementViewState = {

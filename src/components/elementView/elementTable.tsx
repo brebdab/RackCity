@@ -1,4 +1,12 @@
-import { Icon, Spinner, HTMLSelect } from "@blueprintjs/core";
+import {
+  Icon,
+  Spinner,
+  HTMLSelect,
+  Position,
+  IToastProps,
+  Toaster,
+  Intent
+} from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { IconNames } from "@blueprintjs/icons";
 import "@blueprintjs/icons/lib/css/blueprint-icons.css";
@@ -208,6 +216,14 @@ class ElementTable extends React.Component<
       </div>
     );
   };
+  private addToast(toast: IToastProps) {
+    toast.timeout = 5000;
+    this.toaster.show(toast);
+  }
+  private toaster: Toaster = {} as Toaster;
+  private refHandlers = {
+    toaster: (ref: Toaster) => (this.toaster = ref)
+  };
 
   removeSortItem = (field: string) => {
     let sorts = this.state.sort_by;
@@ -290,11 +306,19 @@ class ElementTable extends React.Component<
         this.state.page_type,
         { sort_by: this.state.sort_by, filters: filter_body },
         this.props.token
-      ).then(res => {
-        this.setState({
-          items: res
+      )
+        .then(res => {
+          this.setState({
+            items: res
+          });
+        })
+        .catch(err => {
+          console.log("ERROR", err.response.data);
+          this.addToast({
+            message: err.response.data.failure_message,
+            intent: Intent.DANGER
+          });
         });
-      });
     }
     if (this.props.getPages) {
       this.props
@@ -315,11 +339,18 @@ class ElementTable extends React.Component<
         page,
         { sort_by: this.state.sort_by, filters: this.state.filters },
         this.props.token
-      ).then(res => {
-        this.setState({
-          items: res
+      )
+        .then(res => {
+          this.setState({
+            items: res
+          });
+        })
+        .catch(err => {
+          this.addToast({
+            message: err.response.data.failure_message,
+            intent: Intent.DANGER
+          });
         });
-      });
     }
     if (this.props.getPages) {
       this.props.getPages(this.props.type, page, this.props.token).then(res => {
@@ -452,6 +483,13 @@ class ElementTable extends React.Component<
     }
     return (
       <div>
+        <Toaster
+          autoFocus={false}
+          canEscapeKeyClear={true}
+          position={Position.TOP}
+          ref={this.refHandlers.toaster}
+        />
+
         {this.props.disableFiltering
           ? null
           : [
