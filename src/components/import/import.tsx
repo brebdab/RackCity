@@ -128,7 +128,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
           </Card>
         </div>
         <div className={"row"}>
-          <div className={"column-third-left"}>
+          <div className={"column-third-left-import"}>
             <p> </p>
             <AnchorButton
               large={true}
@@ -149,10 +149,10 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
               <FileSelector {...this.props} callback={this.setFile}/>
             </Alert>
           </div>
-          <div className={"column-third"}>
+          <div className={"column-third-import"}>
             <h1>OR</h1>
           </div>
-          <div className={"column-third-right"}>
+          <div className={"column-third-right-import"}>
             <p> </p>
             <AnchorButton
               large={true}
@@ -175,7 +175,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
           </div>
         </div>
         <div className={"row"}>
-          <div className={"column"}>
+          <div className={"column-import"}>
             <AnchorButton
               large={true}
               intent="success"
@@ -185,7 +185,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
               onClick={this.handleUpload}
             />
           </div>
-          <div className={"column"}>
+          <div className={"column-import"}>
             <h2>Selected file: {this.state.selectedFile === undefined ? "none" : this.state.selectedFile.name}</h2>
           </div>
         </div>
@@ -240,7 +240,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
             loadedInstances: csvRow
           });
           /* Now make API request with JSON as header */
-          console.log(this.state.loadedInstances)
+          console.log(this.state.loadedInstances);
         })
       }, err => {
         alert(err.response.data.failure_message)

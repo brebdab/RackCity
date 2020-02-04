@@ -4,38 +4,40 @@
   display: flex;
 }
 
-.column {
+.column-import {
   text-align: center;
   flex: 50%;
   padding-top: 40px
 }
 
-.column-third {
+.column-third-import {
   display: flex;
   text-align: center;
   width: 20%;
   align-items: center;
 }
 
-.column-third-left {
+.column-third-left-import {
   display: flex;
   text-align: right;
   width: 40%;
+  align-items: center;
 }
 
-.column-third-right {
+.column-third-right-import {
   display: flex;
   text-align: left;
   width: 40%;
+  align-items: center;
 }
 
-.column-right {
+.column-right-import {
   text-align: center;
   flex: 50%;
   border-left: 1px solid white;
 }
 
-.upload-button {
+.upload-button-import {
   display: flex;
   align-items: center;
   justify-content: center;
