@@ -72,7 +72,6 @@ class BulkITInstanceSerializer(serializers.ModelSerializer):
             'rack_position',
             'vendor',
             'model_number',
-            'elevation',
             'owner',
             'comment'
         )
