@@ -29,6 +29,7 @@
     "csvtojson": "^2.0.10",
     "dom4": "^2.1.5",
     "jquery": "^3.4.1",
+    "js-file-download": "^0.4.9",
     "node-sass": "^4.13.1",
     "normalize.css": "^8.0.1",
     "package.json": "^2.0.1",

@@ -1,4 +1,4 @@
-import { AnchorButton, Intent } from "@blueprintjs/core";
+import { AnchorButton, Intent, Alert, InputGroup } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
@@ -15,9 +15,13 @@ import {
 import ElementTable, { PagingTypes } from "./elementTable";
 import "./elementView.scss";
 
+const fs = require("js-file-download")
+
 interface ElementViewState {
   isOpen: boolean;
-  filters: Array<any>
+  filters: Array<any>;
+  fileNameIsOpen: boolean;
+  fileName: string
 }
 interface ElementViewProps {
   element: ElementType;
@@ -71,7 +75,7 @@ export function getElementData(
     .catch(err => console.log(err));
 }
 
-async function getExportData(path: string, filters: Array<any>, token: string) {
+async function getExportData(path: string, filters: Array<any>, token: string, file: string) {
   const config = {
     headers: {
       Authorization: "Token " + token
@@ -83,6 +87,7 @@ async function getExportData(path: string, filters: Array<any>, token: string) {
   }
   return axios.post(API_ROOT + "api/" + path + "/bulk-export", params, config).then(res => {
     console.log(res.data)
+    fs(res.data.export_csv, file)
     return 0
   })
 }
@@ -90,7 +95,9 @@ async function getExportData(path: string, filters: Array<any>, token: string) {
 class ElementView extends React.Component<ElementViewProps, ElementViewState> {
   public state: ElementViewState = {
     isOpen: false,
-    filters: []
+    filters: [],
+    fileNameIsOpen: false,
+    fileName: ""
   };
 
   private handleOpen = () => {
@@ -129,12 +136,39 @@ class ElementView extends React.Component<ElementViewProps, ElementViewState> {
           className="add"
           text="Export Bulk"
           icon="import"
-          onClick={async () => {
+          onClick={() => {
             /* handle data based on state */
-            await getExportData(this.props.element.slice(0, -1) + "s", this.state.filters, this.props.token)
+            this.setState({fileNameIsOpen: true})
             console.log(this.state.filters)
           }}
         />
+        <Alert
+          cancelButtonText="Cancel"
+          confirmButtonText="Confirm file name"
+          isOpen={this.state.fileNameIsOpen}
+          onCancel={() => {this.setState({fileNameIsOpen: false})}}
+          onConfirm={() => {
+            if (this.state.fileName === "") {
+              alert("need file name")
+            } else if (this.state.fileName.split(".")[1] !== "csv") {
+              alert("ERROR: Must be csv file")
+            } else if (this.state.fileName.split(".")[0].length === 0) {
+              alert("ERROR: .csv file must have non-empty name")
+            } else {
+              getExportData(this.props.element.slice(0, -1) + "s", this.state.filters, this.props.token, this.state.fileName)
+              this.setState({fileNameIsOpen: false, fileName: ""})
+            }
+          }}
+        >
+          <p>Please enter a file name ending in ".csv" under which to export this data</p>
+          <InputGroup
+            onChange={(event: any) => {
+              this.setState({fileName: event.currentTarget.value})
+            }}
+            fill={true}
+            type="text"
+          />
+        </Alert>
         {this.props.isAdmin ? (
           <div>
             <AnchorButton
