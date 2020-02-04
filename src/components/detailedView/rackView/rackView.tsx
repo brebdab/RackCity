@@ -178,16 +178,17 @@ class RackView extends React.PureComponent<
         : [];
 
     return (
-      <div>
-        <div className={Classes.DARK}>
-          <Toaster
-            autoFocus={false}
-            canEscapeKeyClear={true}
-            position={Position.TOP}
-            ref={this.refHandlers.toaster}
-          />
+      <div className={Classes.DARK}>
+        <Toaster
+          autoFocus={false}
+          canEscapeKeyClear={true}
+          position={Position.TOP}
+          ref={this.refHandlers.toaster}
+        />
+        <div className="rack-view-select">
           <RackSelectView submitForm={this.viewRackForm} />
         </div>
+
         <div className="rack-container">
           {racks.map((rackResp: RackResponseObject) => {
             return (
