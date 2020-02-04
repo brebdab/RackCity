@@ -207,9 +207,7 @@ def model_many(request):
         )
     models = models_query.order_by(*sort_args)
 
-    if not should_paginate:
-        serializer = ITModelSerializer(models, many=True)
-    else:
+    if should_paginate:
         paginator = PageNumberPagination()
         paginator.page_size = request.query_params.get('page_size')
         try:
@@ -220,8 +218,11 @@ def model_many(request):
                 {"failure_message": failure_message},
                 status=HTTPStatus.BAD_REQUEST,
             )
-        serializer = ITModelSerializer(page_of_models, many=True)
+        models_to_serialize = page_of_models
+    else:
+        models_to_serialize = models
 
+    serializer = ITModelSerializer(models_to_serialize, many=True)
     return JsonResponse(
         {"models": serializer.data},
         status=HTTPStatus.OK,

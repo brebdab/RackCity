@@ -92,9 +92,7 @@ def instance_many(request):
         )
     instances = instances_query.order_by(*sort_args)
 
-    if not should_paginate:
-        serializer = RecursiveITInstanceSerializer(instances, many=True)
-    else:
+    if should_paginate:
         paginator = PageNumberPagination()
         paginator.page_size = request.query_params.get('page_size')
         try:
@@ -105,11 +103,14 @@ def instance_many(request):
                 {"failure_message": failure_message},
                 status=HTTPStatus.BAD_REQUEST,
             )
-        serializer = RecursiveITInstanceSerializer(
-            page_of_instances,
-            many=True,
-        )
+        instances_to_serialize = page_of_instances
+    else:
+        instances_to_serialize = instances
 
+    serializer = RecursiveITInstanceSerializer(
+        instances_to_serialize,
+        many=True,
+    )
     return JsonResponse(
         {"instances": serializer.data},
         status=HTTPStatus.OK,
