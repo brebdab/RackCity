@@ -15,7 +15,7 @@ class ITModel(models.Model):
     height = models.PositiveIntegerField()
     display_color = models.CharField(
         max_length=7,
-        default='#ffffff',
+        default='#394B59',
         validators=[validate_display_color],
     )
     num_ethernet_ports = models.PositiveIntegerField(null=True, blank=True)
