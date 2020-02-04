@@ -26,6 +26,13 @@ export const authFail = (error: string) => {
   };
 };
 
+export const registrationFail = (error: string) => {
+  return {
+    type: actionTypes.REGISTRATION_FAIL,
+    error: error
+  };
+};
+
 export const logout = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("expirationDate");
@@ -75,7 +82,7 @@ export const authLogin = (username: string, password: string) => {
         loginHelper(res, dispatch);
       })
       .catch(err => {
-        console.log("login failed");
+        console.log("login failed", err);
         dispatch(authFail(err));
       });
   };
@@ -101,29 +108,30 @@ export const checkAdmin = (token: string) => {
   };
 };
 
-export const authSignup = (
-  username: string,
-  email: string,
-  displayName: string,
-  password1: string,
-  password2: string
-) => {
-  return (dispatch: any) => {
-    dispatch(authStart());
-    axios
-      .post(API_ROOT + "rest-auth/registration/", {
-        username: username,
-        email: email,
-        displayName: displayName,
-        password1: password1,
-        password2: password2
-      })
-      .then(res => loginHelper(res, dispatch))
-      .catch(err => {
-        dispatch(authFail(err));
-      });
-  };
-};
+// export const authSignup = (
+//   username: string,
+//   email: string,
+//   displayName: string,
+//   password1: string,
+//   password2: string
+// ) => {
+//   return (dispatch: any) => {
+//     // dispatch(authStart());
+//     axios
+//       .post(API_ROOT + "rest-auth/registration/", {
+//         username: username,
+//         email: email,
+//         displayName: displayName,
+//         password1: password1,
+//         password2: password2
+//       })
+//       .then(res => console.log("Created user")) //loginHelper(res, dispatch))
+//       .catch(err => {
+//         console.log(err);
+//         dispatch(authFail(err));
+//       });
+//   };
+// };
 
 export const loginHelper = (res: any, dispatch: any) => {
   const token = res.data.key;

@@ -5,6 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from rackcity.api.serializers import (
     ITInstanceSerializer,
     RecursiveITInstanceSerializer,
+    BulkITInstanceSerializer,
     ITModelSerializer,
     RackSerializer
 )
@@ -15,7 +16,7 @@ from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
 import math
 from rackcity.views.rackcity_utils import (
-    is_location_full,
+    validate_instance_location,
     validate_location_modification,
     no_infile_location_conflicts,
     records_are_identical,
@@ -39,20 +40,30 @@ def instance_list(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def instance_page(request):
+def instance_many(request):
     """
-    List a page of instances. Page and page size must be specified as query
-    parameters.
+    List many instances. If page is not specified as a query parameter, all
+    instances are returned. If page is specified as a query parameter, page
+    size must also be specified, and a page of instances will be returned.
     """
 
     failure_message = ""
 
-    if not request.query_params.get('page'):
-        failure_message += "Must specify page. "
-    if not request.query_params.get('page_size'):
-        failure_message += "Must specify page_size. "
-    elif int(request.query_params.get('page_size')) <= 0:
-        failure_message += "The page_size must be an integer greater than 0. "
+    should_paginate = not(
+        request.query_params.get('page') is None
+        and request.query_params.get('page_size') is None
+    )
+
+    if should_paginate:
+        if not request.query_params.get('page'):
+            failure_message += "Must specify field 'page' on " + \
+                "paginated requests. "
+        elif not request.query_params.get('page_size'):
+            failure_message += "Must specify field 'page_size' on " + \
+                "paginated requests. "
+        elif int(request.query_params.get('page_size')) <= 0:
+            failure_message += "Field 'page_size' must be an integer " + \
+                "greater than 0. "
 
     if failure_message != "":
         return JsonResponse(
@@ -69,7 +80,8 @@ def instance_page(request):
             {"failure_message": "Filter error: " + str(error)},
             status=HTTPStatus.BAD_REQUEST
         )
-    instances_query = instances_query.filter(**filter_args)
+    for filter_arg in filter_args:
+        instances_query = instances_query.filter(**filter_arg)
 
     try:
         sort_args = get_sort_arguments(request.data)
@@ -80,19 +92,25 @@ def instance_page(request):
         )
     instances = instances_query.order_by(*sort_args)
 
-    paginator = PageNumberPagination()
-    paginator.page_size = request.query_params.get('page_size')
+    if should_paginate:
+        paginator = PageNumberPagination()
+        paginator.page_size = request.query_params.get('page_size')
+        try:
+            page_of_instances = paginator.paginate_queryset(instances, request)
+        except Exception as error:
+            failure_message += "Invalid page requested: " + str(error)
+            return JsonResponse(
+                {"failure_message": failure_message},
+                status=HTTPStatus.BAD_REQUEST,
+            )
+        instances_to_serialize = page_of_instances
+    else:
+        instances_to_serialize = instances
 
-    try:
-        page_of_instances = paginator.paginate_queryset(instances, request)
-    except Exception as error:
-        failure_message += "Invalid page requested: " + str(error)
-        return JsonResponse(
-            {"failure_message": failure_message},
-            status=HTTPStatus.BAD_REQUEST,
-        )
-
-    serializer = RecursiveITInstanceSerializer(page_of_instances, many=True)
+    serializer = RecursiveITInstanceSerializer(
+        instances_to_serialize,
+        many=True,
+    )
     return JsonResponse(
         {"instances": serializer.data},
         status=HTTPStatus.OK,
@@ -133,14 +151,18 @@ def instance_add(request):
     serializer = ITInstanceSerializer(data=data)
     if not serializer.is_valid(raise_exception=False):
         failure_message += str(serializer.errors)
-
-    rack_id = serializer.validated_data['rack'].id
-    elevation = serializer.validated_data['elevation']
-    height = serializer.validated_data['model'].height
-
-    if is_location_full(rack_id, elevation, height):
-        failure_message += "Instance does not fit in this location. "
-
+    if failure_message == "":
+        rack_id = serializer.validated_data['rack'].id
+        elevation = serializer.validated_data['elevation']
+        height = serializer.validated_data['model'].height
+        try:
+            validate_instance_location(rack_id, elevation, height)
+        except LocationException as error:
+            failure_message += str(error)
+            return JsonResponse(
+                {"failure_message": failure_message},
+                status=HTTPStatus.BAD_REQUEST,
+            )
     if failure_message == "":
         try:
             serializer.save()
@@ -299,7 +321,6 @@ def instance_bulk_upload(request):
         instance_data['rack'] = rack.id
         instance_serializer = ITInstanceSerializer(
             data=instance_data)  # non-recursive to validate
-        # ADD VALIDAITON FOR RACK LOCATION HERE
         if not instance_serializer.is_valid():
             errors = instance_serializer.errors
             if not (  # if the only error is the hostname uniqueness, that's fine - it's a modify
@@ -330,15 +351,17 @@ def instance_bulk_upload(request):
                 hostname=instance_data['hostname'])
         except ObjectDoesNotExist:
             model = ITModel.objects.get(id=instance_data['model'])
-            if is_location_full(
-                instance_data['rack'],
-                instance_data['elevation'],
-                model.height,
-                instance_id=None,
-            ):
+            try:
+                validate_instance_location(
+                    instance_serializer.validated_data['rack'].id,
+                    instance_serializer.validated_data['elevation'],
+                    model.height,
+                    instance_id=None,
+                )
+            except LocationException as error:
                 failure_message = "Instance " + \
                     instance_data['hostname'] + \
-                    " would conflict location with an existing instance. "
+                    " is invalid. " + str(error)
                 return JsonResponse(
                     {"failure_message": failure_message},
                     status=HTTPStatus.BAD_REQUEST
@@ -440,6 +463,40 @@ def instance_bulk_approve(request):
             setattr(existing_instance, field, value)
         existing_instance.save()
     return HttpResponse(status=HTTPStatus.OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def instance_bulk_export(request):
+    """
+    List all instances on bulk serializer.
+    """
+    instances_query = ITInstance.objects
+
+    try:
+        filter_args = get_filter_arguments(request.data)
+    except Exception as error:
+        return JsonResponse(
+            {"failure_message": "Filter error: " + str(error)},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    for filter_arg in filter_args:
+        instances_query = instances_query.filter(**filter_arg)
+
+    try:
+        sort_args = get_sort_arguments(request.data)
+    except Exception as error:
+        return JsonResponse(
+            {"failure_message": "Sort error: " + str(error)},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    instances = instances_query.order_by(*sort_args)
+
+    serializer = BulkITInstanceSerializer(instances, many=True)
+    return JsonResponse(
+        {"instances": serializer.data},
+        status=HTTPStatus.OK,
+    )
 
 
 @api_view(['GET'])

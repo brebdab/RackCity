@@ -19,13 +19,10 @@ import {
   filterString,
   renderCreateItemOption,
   renderStringItem,
-  StringSuggest
+  StringSuggest,
+  FormTypes
 } from "./formUtils";
 //TO DO : add validation of types!!!
-export enum FormTypes {
-  CREATE = "create",
-  MODIFY = "modify"
-}
 
 export interface ModelFormProps {
   token: string;
@@ -151,82 +148,73 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
               noResults={<MenuItem disabled={true} text="No results." />}
             />
           </FormGroup>
-          <FormGroup label="Model Number" inline={true}>
+          <FormGroup label="Model Number" inline={false}>
             <Field
-              className="field"
               placeholder="model_number"
               onChange={this.handleChange}
               value={values.model_number}
               field="model_number"
             />
           </FormGroup>
-          <FormGroup label="Height" inline={true}>
+          <FormGroup label="Height" inline={false}>
             <Field
               field="height"
-              className="field"
               placeholder="height"
               value={values.height}
               onChange={this.handleChange}
             />
           </FormGroup>
-          <FormGroup label="Display Color" inline={true}>
+          <FormGroup label="Display Color">
             <Field
               field="display_color"
-              className="field"
-              placeholder="display_color"
+              type="color"
               value={values.display_color}
               onChange={this.handleChange}
             />
           </FormGroup>
-          <FormGroup label="# Ethernet Ports" inline={true}>
+          <FormGroup label="# Ethernet Ports" inline={false}>
             <Field
               field="num_ethernet_ports"
-              className="field"
               placeholder="num_ethernet_ports"
               value={values.num_ethernet_ports}
               onChange={this.handleChange}
             />
           </FormGroup>
-          <FormGroup label="# Power Ports" inline={true}>
+          <FormGroup label="# Power Ports" inline={false}>
             <Field
               field="num_power_ports"
-              className="field"
               placeholder="num_power_ports"
               value={values.num_power_ports}
               onChange={this.handleChange}
             />
           </FormGroup>
-          <FormGroup label="CPU" inline={true}>
+          <FormGroup label="CPU" inline={false}>
             <Field
               field="cpu"
-              className="field"
               placeholder="cpu"
               value={values.cpu}
               onChange={this.handleChange}
             />
           </FormGroup>
-          <FormGroup label="Memory(GB)" inline={true}>
+          <FormGroup label="Memory(GB)" inline={false}>
             <Field
               field="memory_gb"
-              className="field"
               placeholder="memory_gb"
               value={values.memory_gb}
               onChange={this.handleChange}
             />
           </FormGroup>
-          <FormGroup label="Storage" inline={true}>
+          <FormGroup label="Storage" inline={false}>
             <Field
               field="storage"
-              className="field"
               placeholder="storage"
               value={values.storage}
               onChange={this.handleChange}
             />
           </FormGroup>
-          <FormGroup label="Comment" inline={true}>
+          <FormGroup label="Comment" inline={false}>
             <Field
               field="comment"
-              className="field"
               placeholder="comment"
               value={values.comment}
               onChange={this.handleChange}

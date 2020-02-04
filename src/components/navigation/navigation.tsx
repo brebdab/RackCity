@@ -39,6 +39,20 @@ export class Navigation extends React.Component<NavigationPropsAll> {
                     text="Home"
                     minimal
                   />
+                  {/*<AnchorButton
+                    onClick={() => this.props.history.push("/bulk-export")}
+                    className="nav-bar-button"
+                    icon="import"
+                    text="Export"
+                    minimal
+                  />*/}
+                  <AnchorButton
+                    onClick={() => this.props.history.push("/report")}
+                    className="nav-bar-button"
+                    icon="numbered-list"
+                    text="View Report"
+                    minimal
+                  />
                 </div>
               ) : (
                 <p></p>
@@ -57,15 +71,27 @@ export class Navigation extends React.Component<NavigationPropsAll> {
                 <p></p>
               )}
             </NavbarGroup>
+
             <NavbarGroup align={Alignment.RIGHT}>
               {this.props.isAuthenticated ? (
-                <AnchorButton
-                  onClick={this.props.logout}
-                  className="nav-bar-button"
-                  icon="user"
-                  text="Logout"
-                  minimal
-                />
+                <div>
+                  {this.props.isAdmin ? (
+                    <AnchorButton
+                      icon="user"
+                      onClick={() => this.props.history.push("/register")}
+                      text="Add new user"
+                      minimal
+                    />
+                  ) : null}
+
+                  <AnchorButton
+                    onClick={this.props.logout}
+                    className="nav-bar-button"
+                    icon="user"
+                    text="Logout"
+                    minimal
+                  />
+                </div>
               ) : (
                 <AnchorButton
                   onClick={() => this.props.history.push("/login")}

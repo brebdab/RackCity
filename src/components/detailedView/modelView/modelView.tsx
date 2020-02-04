@@ -1,4 +1,14 @@
-import { Alert, AnchorButton, Classes, Tab, Tabs } from "@blueprintjs/core";
+import {
+  Alert,
+  AnchorButton,
+  Classes,
+  Tab,
+  Tabs,
+  IToastProps,
+  Toaster,
+  Intent,
+  Position
+} from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
@@ -6,10 +16,16 @@ import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import { API_ROOT } from "../../../api-config";
 import FormPopup from "../../../forms/FormPopup";
-import { FormTypes } from "../../../forms/modelForm";
+
 import ElementTable from "../../elementView/elementTable";
-import { ElementType, InstanceObject, ModelObject } from "../../utils";
+import {
+  ElementType,
+  InstanceObject,
+  ModelObject,
+  getHeaders
+} from "../../utils";
 import PropertiesView from "../propertiesView";
+import { FormTypes } from "../../../forms/formUtils";
 
 export interface ModelViewProps {
   token: string;
@@ -96,20 +112,41 @@ export class ModelView extends React.PureComponent<
       isFormOpen: false
     });
   };
+  private addToast(toast: IToastProps) {
+    toast.timeout = 5000;
+    this.toaster.show(toast);
+  }
+  private toaster: Toaster = {} as Toaster;
+  private refHandlers = {
+    toaster: (ref: Toaster) => (this.toaster = ref)
+  };
 
   private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
   private handleFormClose = () => this.setState({ isFormOpen: false });
   private handleDelete = () => {
-    alert("Model was successfully deleted"); // TODO change to real deletion
-    this.setState({ isDeleteOpen: false });
+    const data = { id: this.state.model!.id };
+    axios
+      .post(API_ROOT + "api/models/delete", data, getHeaders(this.props.token))
+      .then(res => {
+        this.setState({ isDeleteOpen: false });
+        this.props.history.push("/");
+      })
+      .catch(err => {
+        console.log("ERROR", err);
+        this.addToast({
+          message: err.response.data.failure_message,
+          intent: Intent.DANGER
+        });
+      });
   };
+
   public render() {
     console.log(this.state.instances);
     let params: any;
     params = this.props.match.params;
     if (this.state.model === undefined) {
       getData(params.rid, this.props.token).then(result => {
-        console.log(result);
+        console.log("result", result);
         this.setState({
           model: result.model,
           instances: result.instances
@@ -120,6 +157,12 @@ export class ModelView extends React.PureComponent<
     var data = this.state.model;
     return (
       <div className={Classes.DARK + " model-view"}>
+        <Toaster
+          autoFocus={false}
+          canEscapeKeyClear={true}
+          position={Position.TOP}
+          ref={this.refHandlers.toaster}
+        />
         {this.props.isAdmin ? (
           <div className={"detail-buttons"}>
             <AnchorButton
@@ -174,6 +217,8 @@ export class ModelView extends React.PureComponent<
               <ElementTable
                 type={ElementType.INSTANCE}
                 data={this.state.instances}
+                disableFiltering={true}
+                disableSorting={true}
               />
             }
           />

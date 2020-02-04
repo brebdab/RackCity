@@ -2,17 +2,18 @@ from rest_framework.parsers import JSONParser
 from django.http import HttpResponse, JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
 from rackcity.models import ITModel, ITInstance
-from rackcity.api.serializers import ITModelSerializer, ITInstanceSerializer
+from rackcity.api.serializers import RecursiveITInstanceSerializer, ITModelSerializer
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
 import math
 from rackcity.views.rackcity_utils import (
-    is_location_full,
+    validate_instance_location,
     records_are_identical,
     get_sort_arguments,
     get_filter_arguments,
+    LocationException,
 )
 
 
@@ -73,8 +74,11 @@ def model_modify(request):
         except ObjectDoesNotExist:
             failure_message += "No existing model with id="+str(id)+". "
         else:
-            if not model_height_change_valid(data, existing_model):
-                failure_message = "Height change of model causes conflicts. "
+            try:
+                validate_model_height_change(data, existing_model)
+            except LocationException as error:
+                failure_message = "Height change of model causes conflicts. " + \
+                    str(error)
                 return JsonResponse(
                     {"failure_message": failure_message},
                     status=HTTPStatus.NOT_ACCEPTABLE
@@ -94,23 +98,25 @@ def model_modify(request):
     )
 
 
-def model_height_change_valid(new_model_data, existing_model):
+def validate_model_height_change(new_model_data, existing_model):
     if 'height' not in new_model_data:
-        return True
+        return
     new_model_height = int(new_model_data['height'])
     if new_model_height <= existing_model.height:
-        return True
+        return
     else:
         instances = ITInstance.objects.filter(model=existing_model.id)
         for instance in instances:
-            if is_location_full(
-                instance.rack.id,
-                instance.elevation,
-                new_model_height,
-                instance.id
-            ):
-                return False
-        return True
+            try:
+                validate_instance_location(
+                    instance.rack.id,
+                    instance.elevation,
+                    new_model_height,
+                    instance.id
+                )
+            except LocationException as error:
+                raise error
+        return
 
 
 @api_view(['POST'])
@@ -149,20 +155,30 @@ def model_delete(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def model_page(request):
+def model_many(request):
     """
-    List a page of models. Page and page size must be specified as query
-    parameters.
+    List many models. If page is not specified as a query parameter, all
+    models are returned. If page is specified as a query parameter, page
+    size must also be specified, and a page of models will be returned.
     """
 
     failure_message = ""
 
-    if not request.query_params.get('page'):
-        failure_message += "Must specify page. "
-    if not request.query_params.get('page_size'):
-        failure_message += "Must specify page_size. "
-    elif int(request.query_params.get('page_size')) <= 0:
-        failure_message += "The page_size must be an integer greater than 0. "
+    should_paginate = not(
+        request.query_params.get('page') is None
+        and request.query_params.get('page_size') is None
+    )
+
+    if should_paginate:
+        if not request.query_params.get('page'):
+            failure_message += "Must specify field 'page' on " + \
+                "paginated requests. "
+        elif not request.query_params.get('page_size'):
+            failure_message += "Must specify field 'page_size' on " + \
+                "paginated requests. "
+        elif int(request.query_params.get('page_size')) <= 0:
+            failure_message += "Field 'page_size' must be an integer " + \
+                "greater than 0. "
 
     if failure_message != "":
         return JsonResponse(
@@ -179,7 +195,8 @@ def model_page(request):
             {"failure_message": "Filter error: " + str(error)},
             status=HTTPStatus.BAD_REQUEST
         )
-    models_query = models_query.filter(**filter_args)
+    for filter_arg in filter_args:
+        models_query = models_query.filter(**filter_arg)
 
     try:
         sort_args = get_sort_arguments(request.data)
@@ -190,19 +207,22 @@ def model_page(request):
         )
     models = models_query.order_by(*sort_args)
 
-    paginator = PageNumberPagination()
-    paginator.page_size = request.query_params.get('page_size')
+    if should_paginate:
+        paginator = PageNumberPagination()
+        paginator.page_size = request.query_params.get('page_size')
+        try:
+            page_of_models = paginator.paginate_queryset(models, request)
+        except Exception:
+            failure_message += "Invalid page requested. "
+            return JsonResponse(
+                {"failure_message": failure_message},
+                status=HTTPStatus.BAD_REQUEST,
+            )
+        models_to_serialize = page_of_models
+    else:
+        models_to_serialize = models
 
-    try:
-        page_of_models = paginator.paginate_queryset(models, request)
-    except Exception:
-        failure_message += "Invalid page requested. "
-        return JsonResponse(
-            {"failure_message": failure_message},
-            status=HTTPStatus.BAD_REQUEST,
-        )
-
-    serializer = ITModelSerializer(page_of_models, many=True)
+    serializer = ITModelSerializer(models_to_serialize, many=True)
     return JsonResponse(
         {"models": serializer.data},
         status=HTTPStatus.OK,
@@ -219,7 +239,10 @@ def model_detail(request, id):
         model = ITModel.objects.get(id=id)
         model_serializer = ITModelSerializer(model)
         instances = ITInstance.objects.filter(model=id)
-        instances_serializer = ITInstanceSerializer(instances, many=True)
+        instances_serializer = RecursiveITInstanceSerializer(
+            instances,
+            many=True,
+        )
         model_detail = {
             "model": model_serializer.data,
             "instances": instances_serializer.data
@@ -227,7 +250,10 @@ def model_detail(request, id):
         return JsonResponse(model_detail, status=HTTPStatus.OK)
     except ITModel.DoesNotExist:
         failure_message = "No model exists with id="+str(id)
-        return JsonResponse({"failure_message": failure_message}, status=HTTPStatus.NOT_FOUND)
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.NOT_FOUND
+        )
 
 
 @api_view(['GET'])
@@ -236,11 +262,11 @@ def model_vendors(request):
     """
     Get all known vendors.
     """
-    vendors = ITModel.objects.values('vendor').distinct()
-    vendors_names = [vendor['vendor'] for vendor in vendors]
+    vendors_names = [name for name in ITModel.objects.values_list(
+        'vendor', flat=True).distinct('vendor')]
     return JsonResponse(
         {"vendors": vendors_names},
-        status=HTTPStatus.OK
+        status=HTTPStatus.OK,
     )
 
 
@@ -289,11 +315,15 @@ def model_bulk_upload(request):
         except ObjectDoesNotExist:
             models_to_add.append(model_serializer)
         else:
-            if not model_height_change_valid(model_data, existing_model):
+            try:
+                validate_model_height_change(model_data, existing_model)
+            except LocationException as error:
                 failure_message = \
                     "Height change of this model causes conflicts: " + \
                     "vendor="+model_data['vendor'] + \
-                    ", model_number="+model_data['model_number']
+                    ", model_number="+model_data['model_number'] + \
+                    ". " + \
+                    str(error)
                 return JsonResponse(
                     {"failure_message": failure_message},
                     status=HTTPStatus.NOT_ACCEPTABLE

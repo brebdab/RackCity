@@ -1,0 +1,22 @@
+.column-third-right-report {
+  text-align: left;
+  flex: 33%;
+  border-left: 1px solid white;
+  padding-left: 10px;
+}
+
+.column-third-report {
+  text-align: left;
+  flex: 33%;
+  padding-left: 10px;
+}
+
+.column-third-left-report {
+  padding-top: 30px;
+  text-align: left;
+  flex: 33%;
+}
+
+.row {
+  display: flex;
+}

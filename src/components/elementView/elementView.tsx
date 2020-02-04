@@ -1,25 +1,18 @@
-import {
-  Alignment,
-  AnchorButton,
-  Classes,
-  Navbar,
-  NavbarGroup,
-  NavbarHeading
-} from "@blueprintjs/core";
+import { AnchorButton, Intent } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
 import { connect } from "react-redux";
 import { API_ROOT } from "../../api-config";
 import FormPopup from "../../forms/FormPopup";
-import { FormTypes } from "../../forms/modelForm";
+import { FormTypes } from "../../forms/formUtils";
 import {
   ElementObjectType,
   ElementType,
   InstanceInfoObject,
   ModelObject
 } from "../utils";
-import ElementTable from "./elementTable";
+import ElementTable, { PagingTypes } from "./elementTable";
 import "./elementView.scss";
 
 interface ElementViewState {
@@ -47,21 +40,24 @@ export function getPages(path: string, page_size: number, token: string) {
 export function getElementData(
   path: string,
   page: number,
-  page_size: number,
+  page_type: PagingTypes,
   body: any,
   token: string
 ): Promise<Array<ElementObjectType>> {
   console.log(API_ROOT + "api/" + path + "/get-many");
-
+  const params =
+    page_type === PagingTypes.ALL
+      ? {}
+      : {
+          page_size: page_type,
+          page
+        };
   const config = {
     headers: {
       Authorization: "Token " + token
     },
 
-    params: {
-      page_size,
-      page
-    }
+    params: params
   };
   return axios
     .post(API_ROOT + "api/" + path + "/get-many", body, config)
@@ -109,33 +105,31 @@ class ElementView extends React.Component<ElementViewProps, ElementViewState> {
   public render() {
     return (
       <div>
-        <Navbar className={Classes.DARK}>
-          <NavbarGroup>
-            <NavbarHeading>{this.props.element}</NavbarHeading>
-          </NavbarGroup>
-          {this.props.isAdmin ? (
-            <NavbarGroup align={Alignment.RIGHT}>
-              <AnchorButton
-                className="add"
-                text={"Add " + this.props.element.slice(0, -1)}
-                icon="add"
-                onClick={this.handleOpen}
-              />
-              <FormPopup
-                type={FormTypes.CREATE}
-                elementName={this.props.element}
-                submitForm={
-                  this.props.element === ElementType.MODEL
-                    ? this.createModel
-                    : this.createInstance
-                }
-                isOpen={this.state.isOpen}
-                handleClose={this.handleClose}
-              />
-            </NavbarGroup>
-          ) : null}
-        </Navbar>
-        <div className="element-table">
+        {this.props.isAdmin ? (
+          <div>
+            <AnchorButton
+              className="add"
+              text={"Add " + this.props.element.slice(0, -1)}
+              icon="add"
+              minimal
+              intent={Intent.PRIMARY}
+              onClick={this.handleOpen}
+            />
+            <FormPopup
+              type={FormTypes.CREATE}
+              elementName={this.props.element}
+              submitForm={
+                this.props.element === ElementType.MODEL
+                  ? this.createModel
+                  : this.createInstance
+              }
+              isOpen={this.state.isOpen}
+              handleClose={this.handleClose}
+            />
+          </div>
+        ) : null}
+
+        <div>
           <ElementTable
             type={this.props.element}
             getData={getElementData}

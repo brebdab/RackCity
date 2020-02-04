@@ -1,4 +1,12 @@
-import { Classes, AnchorButton, Alert } from "@blueprintjs/core";
+import {
+  Classes,
+  AnchorButton,
+  Alert,
+  Toaster,
+  IToastProps,
+  Position,
+  Intent
+} from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
@@ -9,7 +17,7 @@ import "./instanceView.scss";
 import { connect } from "react-redux";
 import { InstanceObject, ElementType, getHeaders } from "../../utils";
 import FormPopup from "../../../forms/FormPopup";
-import { FormTypes } from "../../../forms/modelForm";
+import { FormTypes } from "../../../forms/formUtils";
 
 export interface InstanceViewProps {
   token: string;
@@ -38,6 +46,7 @@ interface InstanceViewState {
   fields: Array<string>;
   isFormOpen: boolean;
   isDeleteOpen: boolean;
+  isAlertOpen: boolean;
 }
 
 export class InstanceView extends React.PureComponent<
@@ -48,6 +57,7 @@ export class InstanceView extends React.PureComponent<
     instance: undefined,
     isFormOpen: false,
     isDeleteOpen: false,
+    isAlertOpen: false,
     columns: ["Hostname", "Model", "Rack", "Elevation", "Owner", "Comment"],
     fields: ["hostname", "model", "rack", "elevation", "owner", "comment"]
   };
@@ -63,6 +73,16 @@ export class InstanceView extends React.PureComponent<
         console.log(this.state.isFormOpen);
       });
   };
+
+  private addToast(toast: IToastProps) {
+    toast.timeout = 5000;
+    this.toaster.show(toast);
+  }
+  private toaster: Toaster = {} as Toaster;
+  private refHandlers = {
+    toaster: (ref: Toaster) => (this.toaster = ref)
+  };
+
   public render() {
     let params: any;
     params = this.props.match.params;
@@ -74,8 +94,15 @@ export class InstanceView extends React.PureComponent<
       });
       console.log(this.state.instance);
     }
+
     return (
       <div className={Classes.DARK + " instance-view"}>
+        <Toaster
+          autoFocus={false}
+          canEscapeKeyClear={true}
+          position={Position.TOP}
+          ref={this.refHandlers.toaster}
+        />
         {this.props.isAdmin ? (
           <div className={"detail-buttons"}>
             <AnchorButton
@@ -118,7 +145,7 @@ export class InstanceView extends React.PureComponent<
       </div>
     );
   }
-  private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
+
   private handleFormOpen = () => {
     this.setState({
       isFormOpen: true
@@ -129,11 +156,14 @@ export class InstanceView extends React.PureComponent<
       isFormOpen: false
     });
   };
-  private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
+
   private handleFormClose = () => this.setState({ isFormOpen: false });
+  private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
+  private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
   private handleDelete = () => {
     console.log(this.props.rid);
     const data = { id: this.state.instance!.id };
+
     axios
       .post(
         API_ROOT + "api/instances/delete",
@@ -141,9 +171,15 @@ export class InstanceView extends React.PureComponent<
         getHeaders(this.props.token)
       )
       .then(res => {
-        alert("Model was successfully deleted"); // TODO change to real deletion
         this.setState({ isDeleteOpen: false });
         this.props.history.push("/");
+      })
+      .catch(err => {
+        console.log("ERROR", err);
+        this.addToast({
+          message: err.response.data.failure_message,
+          intent: Intent.DANGER
+        });
       });
   };
 }
