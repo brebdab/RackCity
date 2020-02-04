@@ -60,28 +60,22 @@ class BulkITInstanceSerializer(serializers.ModelSerializer):
         many=False,
         read_only=True,
     )
-    row_letter = serializers.SlugRelatedField(
-        source='rack',
-        slug_field='row_letter',
-        many=False,
-        read_only=True,
-    )
-    rack_num = serializers.SlugRelatedField(
-        source='rack',
-        slug_field='rack_num',
-        many=False,
-        read_only=True,
-    )
+    # by default, calls get_<field> - in this case, get_rack
+    rack = serializers.SerializerMethodField()
+    rack_position = serializers.IntegerField(source='elevation')
 
     class Meta:
         model = ITInstance
         fields = (
             'hostname',
+            'rack',
+            'rack_position',
             'vendor',
             'model_number',
-            'row_letter',
-            'rack_num',
             'elevation',
             'owner',
             'comment'
         )
+
+    def get_rack(self, instance):
+        return '{}{}'.format(instance.rack.row_letter, instance.rack.rack_num)

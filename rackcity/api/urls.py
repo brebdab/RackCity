@@ -11,7 +11,7 @@ urlpatterns = [
     path('models/vendors', views.model_vendors),
     path('models/bulk-upload', views.model_bulk_upload),
     path('models/bulk-approve', views.model_bulk_approve),
-    #path('models/bulk-export', views.model_bulk_export),
+    path('models/bulk-export', views.model_bulk_export),
     path('models/pages', views.model_page_count),
     path('models/fields', views.model_fields),
     path('models/test-auth', views.model_auth),

@@ -455,7 +455,7 @@ def instance_bulk_approve(request):
 @permission_classes([IsAuthenticated])
 def instance_bulk_export(request):
     """
-    List all instances on bulk serializer.
+    List all instances in csv form, in accordance with Bulk Spec.
     """
     instances_query = ITInstance.objects
 
@@ -478,8 +478,7 @@ def instance_bulk_export(request):
         )
     instances = instances_query.order_by(*sort_args)
 
-    serializer = BulkITInstanceSerializer(
-        instances, many=True)  # NEED TO CHANGE THE SERIALIZER SO IT CONCATS THE RACK AND CHANGES FIELD NAMES
+    serializer = BulkITInstanceSerializer(instances, many=True)
     csv_string = StringIO()
     fields = serializer.data[0].keys()
     csv_writer = csv.DictWriter(csv_string, fields)

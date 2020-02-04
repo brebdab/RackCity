@@ -7,7 +7,7 @@ from .it_model_views import (
     model_vendors,
     model_bulk_upload,
     model_bulk_approve,
-    # model_bulk_export,
+    model_bulk_export,
     model_page_count,
     model_fields,
     i_am_admin,
