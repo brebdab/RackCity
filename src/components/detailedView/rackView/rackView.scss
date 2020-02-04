@@ -138,6 +138,9 @@ $row-height: 6px;
   @page {
     margin: 0.5cm;
   }
+  .body {
+    background-color: unset !important;
+  }
   .rack-table .cell {
     max-width: none !important;
     width: fit-content !important;
@@ -148,6 +151,12 @@ $row-height: 6px;
   .header,
   .unit {
     color: black !important;
+  }
+  .rackView {
+    background-color: unset !important;
+  }
+  .rack-view-select {
+    display: none;
   }
   .rack header,
   .rack tr,
