@@ -169,7 +169,7 @@ class InstanceForm extends React.Component<
         >
           <h2>Add a New Instance</h2>
 
-          <FormGroup label="Hostname" inline={false}>
+          <FormGroup label="Hostname (required)" inline={false}>
             <Field
               placeholder="hostname"
               onChange={this.handleChange}
@@ -177,7 +177,7 @@ class InstanceForm extends React.Component<
               field="hostname"
             />
           </FormGroup>
-          <FormGroup label="Elevation" inline={false}>
+          <FormGroup label="Elevation (required)" inline={false}>
             <Field
               field="elevation"
               placeholder="elevation"
@@ -185,7 +185,7 @@ class InstanceForm extends React.Component<
               onChange={this.handleChange}
             />
           </FormGroup>
-          <FormGroup label="Model" inline={false}>
+          <FormGroup label="Model (required)" inline={false}>
             <ModelSuggest
               popoverProps={{
                 minimal: true,
@@ -207,7 +207,7 @@ class InstanceForm extends React.Component<
               noResults={<MenuItem disabled={true} text="No results." />}
             />
           </FormGroup>
-          <FormGroup label="Rack" inline={false}>
+          <FormGroup label="Rack (required)" inline={false}>
             <RackSuggest
               popoverProps={{
                 minimal: true,
