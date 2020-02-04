@@ -242,6 +242,8 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
           /* Now make API request with JSON as header */
           console.log(this.state.loadedInstances)
         })
+      }, err => {
+        alert(err.response.data.failure_message)
       })
       // alert("Models have been loaded to browser, proceed to upload");
       this.setState({ uploadInstanceIsOpen: false });
@@ -289,6 +291,8 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
           /* Now make API request with JSON as header */
           console.log(this.state.loadedModels)
         })
+      }, err => {
+        alert(err.response.data.failure_message)
       })
       // alert("Models have been loaded to browser, proceed to upload");
       this.setState({ uploadModelIsOpen: false });
@@ -307,7 +311,10 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
           })
         } else {
           alert("Upload successful with no modifications")
+          this.setState({ loadedModels: undefined })
         }
+      }, err => {
+        alert(err.response.data.failure_message)
       })
     } else if (this.state.loadedInstances !== undefined) {
       uploadBulk({instances: this.state.loadedInstances}, this.props.token, "instances").then(res => {
@@ -318,7 +325,10 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
           })
         } else {
           alert("Upload successful with no modifications");
+          this.setState({ loadedModels: undefined })
         }
+      }, err => {
+        alert(err.response.data.failure_message)
       })
     } else {
       alert("No data to upload")

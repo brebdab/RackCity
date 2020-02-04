@@ -177,6 +177,8 @@ export class Modifier extends React.PureComponent<RouteComponentProps & Modifier
                       modifiedModels: []
                     })
                     this.props.callback()
+                  }, err => {
+                    alert(err.response.data.failure_message)
                   })
                 } else {
                   // TODO check this works and refactor
@@ -192,6 +194,8 @@ export class Modifier extends React.PureComponent<RouteComponentProps & Modifier
                       modifiedModels: []
                     })
                     this.props.callback()
+                  }, err => {
+                    alert(err.response.data.failure_message)
                   })
                 }
               }}
