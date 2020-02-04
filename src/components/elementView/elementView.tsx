@@ -83,6 +83,7 @@ async function getExportData(path: string, filters: Array<any>, token: string) {
   }
   return axios.post(API_ROOT + "api/" + path + "/bulk-export", params, config).then(res => {
     console.log(res.data)
+    return 0
   })
 }
 
