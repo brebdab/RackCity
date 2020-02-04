@@ -118,7 +118,7 @@ class Tabular extends React.PureComponent<TabProps> {
 
   render() {
     return (
-        <table className={"bp3-html-table"}>
+        <table className={"bp3-html-table bp3-interactive bp3-html-table-bordered bp3-html-table-striped"}>
           <thead>
             <tr>
               {Object.keys(this.props.data[0]).map((item: string) => {
