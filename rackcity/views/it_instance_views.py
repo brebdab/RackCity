@@ -215,12 +215,19 @@ def instance_modify(request):
         elif field == 'rack':
             value = Rack.objects.get(id=data[field])
         elif field == 'hostname':
-            if len(ITInstance.objects.filter(hostname__iexact=data[field])) != 0:
+            instances_with_hostname = ITInstance.objects.filter(
+                hostname__iexact=data[field]
+            )
+            if (
+                len(instances_with_hostname) > 0
+                and instances_with_hostname[0].id != id
+            ):
                 return JsonResponse(
                     {"failure_message": "Instance with hostname '" +
                         data[field].lower() + "' already exists."},
                     status=HTTPStatus.BAD_REQUEST,
                 )
+            value = data[field]
         else:
             value = data[field]
         setattr(existing_instance, field, value)
