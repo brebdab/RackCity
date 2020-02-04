@@ -20,7 +20,7 @@ from .it_instance_views import (
     instance_add,
     instance_modify,
     instance_delete,
-    instance_page,
+    instance_many,
     instance_bulk_upload,
     instance_bulk_approve,
     instance_bulk_export,

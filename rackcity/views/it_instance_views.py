@@ -40,20 +40,30 @@ def instance_list(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def instance_page(request):
+def instance_many(request):
     """
-    List a page of instances. Page and page size must be specified as query
-    parameters.
+    List many instances. If page is not specified as a query parameter, all
+    instances are returned. If page is specified as a query parameter, page
+    size must also be specified, and a page of instances will be returned.
     """
 
     failure_message = ""
 
-    if not request.query_params.get('page'):
-        failure_message += "Must specify page. "
-    if not request.query_params.get('page_size'):
-        failure_message += "Must specify page_size. "
-    elif int(request.query_params.get('page_size')) <= 0:
-        failure_message += "The page_size must be an integer greater than 0. "
+    should_paginate = not(
+        request.query_params.get('page') is None
+        and request.query_params.get('page_size') is None
+    )
+
+    if should_paginate:
+        if not request.query_params.get('page'):
+            failure_message += "Must specify field 'page' on " + \
+                "paginated requests. "
+        elif not request.query_params.get('page_size'):
+            failure_message += "Must specify field 'page_size' on " + \
+                "paginated requests. "
+        elif int(request.query_params.get('page_size')) <= 0:
+            failure_message += "Field 'page_size' must be an integer " + \
+                "greater than 0. "
 
     if failure_message != "":
         return JsonResponse(
@@ -82,19 +92,27 @@ def instance_page(request):
         )
     instances = instances_query.order_by(*sort_args)
 
-    paginator = PageNumberPagination()
-    paginator.page_size = request.query_params.get('page_size')
-
-    try:
-        page_of_instances = paginator.paginate_queryset(instances, request)
-    except Exception as error:
-        failure_message += "Invalid page requested: " + str(error)
-        return JsonResponse(
-            {"failure_message": failure_message},
-            status=HTTPStatus.BAD_REQUEST,
+    if should_paginate:
+        paginator = PageNumberPagination()
+        paginator.page_size = request.query_params.get('page_size')
+        try:
+            page_of_instances = paginator.paginate_queryset(instances, request)
+        except Exception as error:
+            failure_message += "Invalid page requested: " + str(error)
+            return JsonResponse(
+                {"failure_message": failure_message},
+                status=HTTPStatus.BAD_REQUEST,
+            )
+        serializer = RecursiveITInstanceSerializer(
+            page_of_instances,
+            many=True,
+        )
+    else:
+        serializer = RecursiveITInstanceSerializer(
+            instances,
+            many=True,
         )
 
-    serializer = RecursiveITInstanceSerializer(page_of_instances, many=True)
     return JsonResponse(
         {"instances": serializer.data},
         status=HTTPStatus.OK,
