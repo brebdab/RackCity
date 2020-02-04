@@ -65,10 +65,18 @@ export class InstanceView extends React.PureComponent<
     instance: InstanceObject,
     headers: any
   ): Promise<any> => {
+    let params: any;
+    params = this.props.match.params;
     return axios
       .post(API_ROOT + "api/instances/modify", instance, headers)
       .then(res => {
         console.log("success");
+        getData(params.rid, this.props.token).then(result => {
+          this.setState({
+            instance: result
+          });
+        });
+        console.log(this.state.instance);
         this.handleFormClose();
         console.log(this.state.isFormOpen);
       });
