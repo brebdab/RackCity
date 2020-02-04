@@ -146,7 +146,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
               onConfirm={this.handleInstanceUpload}
             >
               <p>Choose a file</p>
-              <FileSelector {...this.props} callback={this.setFile}/>
+              <FileSelector  {...this.props} callback={this.setFile}/>
             </Alert>
           </div>
           <div className={"column-third-import"}>
