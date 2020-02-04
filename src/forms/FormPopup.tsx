@@ -55,9 +55,10 @@ class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
                 : undefined
             }
           />
-        ) : (
+        ) : null}
+        {this.props.elementName === ElementType.RACK ? (
           <RackSelectView submitForm={this.props.submitForm} />
-        )}
+        ) : null}
       </Dialog>
     );
   }
