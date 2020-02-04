@@ -17,10 +17,12 @@ import "./elementView.scss";
 
 interface ElementViewState {
   isOpen: boolean;
+  filters: Array<any>
 }
 interface ElementViewProps {
   element: ElementType;
   isAdmin: boolean;
+  token: string
 }
 export function getPages(path: string, page_size: number, token: string) {
   const config = {
@@ -68,9 +70,26 @@ export function getElementData(
     })
     .catch(err => console.log(err));
 }
+
+async function getExportData(path: string, filters: Array<any>, token: string) {
+  const config = {
+    headers: {
+      Authorization: "Token " + token
+    }
+  }
+  const params = {
+    sort_by: [],
+    filters: filters
+  }
+  return axios.post(API_ROOT + "api/" + path + "/bulk-export", params, config).then(res => {
+    console.log(res.data)
+  })
+}
+
 class ElementView extends React.Component<ElementViewProps, ElementViewState> {
   public state: ElementViewState = {
-    isOpen: false
+    isOpen: false,
+    filters: []
   };
 
   private handleOpen = () => {
@@ -105,6 +124,16 @@ class ElementView extends React.Component<ElementViewProps, ElementViewState> {
   public render() {
     return (
       <div>
+        <AnchorButton
+          className="add"
+          text="Export Bulk"
+          icon="import"
+          onClick={async () => {
+            /* handle data based on state */
+            await getExportData(this.props.element.slice(0, -1) + "s", this.state.filters, this.props.token)
+            console.log(this.state.filters)
+          }}
+        />
         {this.props.isAdmin ? (
           <div>
             <AnchorButton
@@ -134,6 +163,7 @@ class ElementView extends React.Component<ElementViewProps, ElementViewState> {
             type={this.props.element}
             getData={getElementData}
             getPages={getPages}
+            callback={(data: Array<any>) => { this.setState( {filters: data} ) }}
           />
         </div>
       </div>
@@ -142,6 +172,7 @@ class ElementView extends React.Component<ElementViewProps, ElementViewState> {
 }
 const mapStateToProps = (state: any) => {
   return {
+    token: state.token,
     isAdmin: state.admin
   };
 };
