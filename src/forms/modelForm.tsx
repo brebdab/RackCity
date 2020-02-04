@@ -130,7 +130,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
           className="create-form bp3-form-group"
         >
           <h2>Add a New Model</h2>
-          <FormGroup label="Vendor">
+          <FormGroup label="Vendor (required)">
             <StringSuggest
               popoverProps={{
                 minimal: true,
@@ -152,7 +152,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
               noResults={<MenuItem disabled={true} text="No results." />}
             />
           </FormGroup>
-          <FormGroup label="Model Number" inline={false}>
+          <FormGroup label="Model Number (required)" inline={false}>
             <Field
               placeholder="model_number"
               onChange={this.handleChange}
@@ -160,7 +160,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
               field="model_number"
             />
           </FormGroup>
-          <FormGroup label="Height" inline={false}>
+          <FormGroup label="Height (required)" inline={false}>
             <Field
               field="height"
               placeholder="height"
