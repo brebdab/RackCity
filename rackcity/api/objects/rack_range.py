@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rackcity.models.rack import validate_row_letter
 
 
 class RackRangeSerializer(serializers.Serializer):
@@ -8,6 +9,18 @@ class RackRangeSerializer(serializers.Serializer):
     num_end = serializers.IntegerField(required=False)
 
     def validate(self, data):
+        if ('letter_start' in data):
+            data['letter_start'] = data['letter_start'].upper()
+            validate_row_letter(data['letter_start'])
+
+        if ('letter_end' in data):
+            data['letter_end'] = data['letter_end'].upper()
+            validate_row_letter(data['letter_end'])
+
+        if data['num_start'] <= 0:
+            message = "invalid rack number less than or equal to 0"
+            raise serializers.ValidationError(message)
+
         if ('num_end' in data) and (
             data['num_end'] < data['num_start']
         ):
@@ -72,6 +85,10 @@ class RackRangeSerializer(serializers.Serializer):
                 )
             ]
 
+    def get_row_range_as_string(self):
+        row_range = self.get_row_range()
+        return row_range[0] + "-" + row_range[1]
+
     def get_number_range(self):
         """
         Returns int tuple specifying rack number range
@@ -100,3 +117,7 @@ class RackRangeSerializer(serializers.Serializer):
                     self.validated_data['num_end'] + 1,
                 )
             ]
+
+    def get_number_range_as_string(self):
+        number_range = self.get_number_range()
+        return str(number_range[0]) + "-" + str(number_range[1])

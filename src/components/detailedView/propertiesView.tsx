@@ -8,6 +8,8 @@ import "./propertiesView.scss";
 export interface AlertState {
   isDeleteOpen: boolean;
 }
+var console: any = {};
+console.log = function() {};
 
 interface PropertiesViewProps {
   data: any;

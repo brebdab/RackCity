@@ -20,6 +20,8 @@ import * as actions from "./store/actions/auth";
 
 import Report from "./components/report/report";
 
+var console: any = {};
+console.log = function() {};
 export interface AppProps {
   isAuthenticated?: boolean;
   onTryAutoSignup: any;

@@ -1,11 +1,10 @@
 import {
   Alert,
-  AnchorButton,
   Classes,
+  Intent,
   IToastProps,
-  Toaster,
   Position,
-  Intent
+  Toaster
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -27,6 +26,9 @@ export interface RackViewProps {
 export interface RouteParams {
   rid: string;
 }
+var console: any = {};
+console.log = function() {};
+console.warn = function() {};
 
 export interface RackViewState {
   isDeleteOpen: boolean;
@@ -194,7 +196,7 @@ class RackView extends React.PureComponent<
             return (
               <span>
                 <div className="rack-parent">
-                  <div className="delete-rack">
+                  {/* <div className="delete-rack">
                     <AnchorButton
                       minimal
                       intent="danger"
@@ -202,7 +204,7 @@ class RackView extends React.PureComponent<
                       text="Delete"
                       onClick={this.handleDeleteOpen}
                     />
-                  </div>
+                  </div> */}
                   <Alert
                     cancelButtonText="Cancel"
                     confirmButtonText="Delete"
