@@ -14,6 +14,7 @@ import {
 } from "../utils";
 import ElementTable, { PagingTypes } from "./elementTable";
 import "./elementView.scss";
+import { IFilter } from "./filterSelectView";
 
 const fs = require("js-file-download");
 
@@ -29,7 +30,12 @@ interface ElementViewProps {
   isAdmin: boolean;
   token: string;
 }
-export function getPages(path: string, page_size: number, token: string) {
+export function getPages(
+  path: string,
+  page_size: number,
+  filters: Array<IFilter>,
+  token: string
+) {
   const config = {
     headers: {
       Authorization: "Token " + token
@@ -39,9 +45,11 @@ export function getPages(path: string, page_size: number, token: string) {
       page_size
     }
   };
-  return axios.get(API_ROOT + "api/" + path + "/pages", config).then(res => {
-    return res.data.page_count;
-  });
+  return axios
+    .post(API_ROOT + "api/" + path + "/pages", filters, config)
+    .then(res => {
+      return res.data.page_count;
+    });
 }
 
 async function getExportData(

@@ -79,6 +79,7 @@ interface IElementTableProps {
   getPages?(
     type: string,
     page_size: PagingTypes,
+    filters: Array<IFilter>,
     token: string
   ): Promise<number>;
   data?: Array<ElementObjectType>;
@@ -327,7 +328,12 @@ class ElementTable extends React.Component<
     }
     if (this.props.getPages) {
       this.props
-        .getPages(this.props.type, this.state.page_type, this.props.token)
+        .getPages(
+          this.props.type,
+          this.state.page_type,
+          this.state.filters,
+          this.props.token
+        )
         .then(res => {
           this.setState({
             total_pages: res
@@ -358,11 +364,13 @@ class ElementTable extends React.Component<
         });
     }
     if (this.props.getPages) {
-      this.props.getPages(this.props.type, page, this.props.token).then(res => {
-        this.setState({
-          total_pages: res
+      this.props
+        .getPages(this.props.type, page, this.state.filters, this.props.token)
+        .then(res => {
+          this.setState({
+            total_pages: res
+          });
         });
-      });
     }
   };
   updateSortData = (items: Array<ITableSort>) => {
@@ -395,13 +403,17 @@ class ElementTable extends React.Component<
   }
   updateTableData = () => {
     console.log(this.props.data);
+    const sorts_body = this.state.sort_by.map(item => {
+      const { field, ascending } = item;
+      return { field, ascending };
+    });
     if (this.props.getData) {
       this.props
         .getData(
           this.props.type,
           this.state.curr_page,
           this.state.page_type,
-          {},
+          { sort_by: sorts_body, filters: this.state.filters },
           this.props.token
         )
         .then(res => {
@@ -417,7 +429,12 @@ class ElementTable extends React.Component<
     }
     if (this.props.getPages) {
       this.props
-        .getPages(this.props.type, this.state.page_type, this.props.token)
+        .getPages(
+          this.props.type,
+          this.state.page_type,
+          this.state.filters,
+          this.props.token
+        )
         .then(res => {
           this.setState({
             total_pages: res
