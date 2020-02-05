@@ -334,7 +334,6 @@ def model_bulk_upload(request):
                     {"failure_message": failure_message},
                     status=HTTPStatus.NOT_ACCEPTABLE
                 )
-            print(model_serializer.validated_data)
             potential_modifications.append(
                 {
                     "existing_model": existing_model,
