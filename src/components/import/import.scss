@@ -1,5 +1,3 @@
-
-
 .row {
   display: flex;
 }
@@ -7,28 +5,28 @@
 .column-import {
   text-align: center;
   flex: 50%;
-  padding-top: 40px
+  padding-top: 40px;
 }
 
 .column-third-import {
-  display: flex;
   text-align: center;
   width: 20%;
   align-items: center;
 }
 
 .column-third-left-import {
-  display: flex;
   text-align: right;
   width: 40%;
   align-items: center;
 }
 
 .column-third-right-import {
-  display: flex;
   text-align: left;
   width: 40%;
   align-items: center;
+}
+.bp3-file-input {
+  width: 90%;
 }
 
 .column-right-import {
@@ -45,4 +43,9 @@
 
 .modify-table {
   width: 90%;
+}
+
+.uploading-overlay {
+  align-items: center;
+  text-align: center;
 }

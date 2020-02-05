@@ -20,6 +20,8 @@ interface RegistrationFormProps {
   error: string;
   token: string;
 }
+var console:any = {};
+console.log = function(){};
 
 interface RegistrationFormState {
   errors: Array<string>;
@@ -126,22 +128,29 @@ class RegistrationForm extends React.Component<
           className="login-form .bp3-form-group"
         >
           <h2>Add a new user</h2>
-          <FormItem label="username">
+          <FormItem label="Username (required) ">
             {getFieldDecorator("userName", {
               rules: [
                 { required: true, message: "Please input your username!" }
               ]
             })(<InputGroup placeholder="Username" />)}
           </FormItem>
-          <FormItem>
-            {getFieldDecorator("displayName", {
+          <FormItem label="First Name (required)">
+            {getFieldDecorator("firstName", {
               rules: [
-                { required: true, message: "Please input your display name!" }
+                { required: true, message: "Please input your first name!" }
               ]
-            })(<InputGroup placeholder="Display Name" />)}
+            })(<InputGroup placeholder="first name" />)}
+          </FormItem>
+          <FormItem label="Last Name (required)">
+            {getFieldDecorator("lastName", {
+              rules: [
+                { required: true, message: "Please input your last name!" }
+              ]
+            })(<InputGroup placeholder="last name" />)}
           </FormItem>
 
-          <FormItem>
+          <FormItem label="Email (required)">
             {getFieldDecorator("email", {
               rules: [
                 {
@@ -153,10 +162,10 @@ class RegistrationForm extends React.Component<
                   message: "Please input your E-mail!"
                 }
               ]
-            })(<InputGroup placeholder="Email" />)}
+            })(<InputGroup placeholder="email" />)}
           </FormItem>
 
-          <FormItem>
+          <FormItem label="Password (required) ">
             {getFieldDecorator("password", {
               rules: [
                 {
@@ -170,7 +179,7 @@ class RegistrationForm extends React.Component<
             })(<InputGroup type="password" placeholder="Password" />)}
           </FormItem>
 
-          <FormItem>
+          <FormItem label="Password Confirmation (required) ">
             {getFieldDecorator("confirm", {
               rules: [
                 {

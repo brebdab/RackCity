@@ -5,7 +5,8 @@ import {
   Intent,
   IToastProps,
   Position,
-  Toaster
+  Toaster,
+  Alert
 } from "@blueprintjs/core";
 import axios from "axios";
 import * as React from "react";
@@ -17,10 +18,14 @@ import { FormTypes } from "../../forms/formUtils";
 import ElementTabView from "../elementView/elementTabView";
 import RackSelectView, { RackRangeFields } from "../elementView/rackSelectView";
 import { ElementType } from "../utils";
-
+var console: any = {};
+console.log = function() {};
 interface LandingViewState {
   isOpen: boolean;
   isDeleteOpen: boolean;
+  deleteRackInfo: RackRangeFields;
+  headers: any;
+  isConfirmationOpen: boolean;
 }
 interface LandingViewProps {
   token: string;
@@ -32,7 +37,7 @@ class LandingView extends React.Component<
 > {
   viewRackForm = (rack: RackRangeFields, headers: any) => {
     return axios.post(API_ROOT + "api/racks/get", rack, headers).then(res => {
-      this.props.history.replace("/racks", res.data.racks);
+      // this.props.history.replace("/racks", res.data.racks);
       this.props.history.push({
         pathname: "/racks",
         state: res.data.racks
@@ -41,7 +46,10 @@ class LandingView extends React.Component<
   };
   state = {
     isOpen: false,
-    isDeleteOpen: false
+    isDeleteOpen: false,
+    deleteRackInfo: {} as RackRangeFields,
+    headers: {},
+    isConfirmationOpen: false
   };
   private handleOpen = () => {
     this.setState({
@@ -49,15 +57,35 @@ class LandingView extends React.Component<
     });
     console.log(this.state);
   };
+
   deleteRack = (rack: RackRangeFields, headers: any) => {
+    this.setState({
+      deleteRackInfo: rack,
+      headers
+    });
+    this.handleConfirmationOpen();
+  };
+  actuallyDelete = () => {
     return axios
-      .post(API_ROOT + "api/racks/delete", rack, headers)
+      .post(
+        API_ROOT + "api/racks/delete",
+        this.state.deleteRackInfo,
+        this.state.headers
+      )
       .then(res => {
         this.addToast({
           message: "Deleted rack(s) successfully",
           intent: Intent.PRIMARY
         });
-        this.setState({ isDeleteOpen: false });
+        this.setState({ isDeleteOpen: false, isConfirmationOpen: false });
+      })
+      .catch(err => {
+        console.log(err.response);
+        this.addToast({
+          message: err.response.data.failure_message,
+          intent: Intent.DANGER
+        });
+        this.setState({ isDeleteOpen: true, isConfirmationOpen: false });
       });
   };
 
@@ -85,6 +113,11 @@ class LandingView extends React.Component<
   private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
   private handleClose = () => this.setState({ isOpen: false });
 
+  private handleConfirmationCancel = () =>
+    this.setState({ isConfirmationOpen: false });
+  private handleConfirmationOpen = () =>
+    this.setState({ isConfirmationOpen: true });
+
   public render() {
     return (
       <div className={Classes.DARK}>
@@ -109,6 +142,16 @@ class LandingView extends React.Component<
           isOpen={this.state.isDeleteOpen}
           handleClose={this.handleDeleteCancel}
         />
+        <Alert
+          cancelButtonText="Cancel"
+          confirmButtonText="Delete"
+          intent="danger"
+          isOpen={this.state.isConfirmationOpen}
+          onCancel={this.handleConfirmationCancel}
+          onConfirm={this.actuallyDelete}
+        >
+          <p>Are you sure you want to delete?</p>
+        </Alert>
 
         <Card>
           {this.props.isAdmin ? (

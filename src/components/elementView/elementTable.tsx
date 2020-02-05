@@ -1,4 +1,12 @@
-import { Icon, Spinner, HTMLSelect } from "@blueprintjs/core";
+import {
+  Icon,
+  Spinner,
+  HTMLSelect,
+  Position,
+  IToastProps,
+  Toaster,
+  Intent
+} from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { IconNames } from "@blueprintjs/icons";
 import "@blueprintjs/icons/lib/css/blueprint-icons.css";
@@ -25,6 +33,8 @@ interface IElementTableState {
   total_pages: number;
   page_type: PagingTypes;
 }
+var console: any = {};
+console.log = function() {};
 export interface ITableSort {
   field: string;
   ascending: boolean;
@@ -56,6 +66,7 @@ interface IDragAndDrop {
 }
 
 interface IElementTableProps {
+  callback?: Function;
   type: ElementType;
   token: string;
   disableSorting?: boolean;
@@ -70,9 +81,11 @@ interface IElementTableProps {
   getPages?(
     type: string,
     page_size: PagingTypes,
+    filters: Array<IFilter>,
     token: string
   ): Promise<number>;
   data?: Array<ElementObjectType>;
+  shouldUpdateData?: boolean;
 }
 
 class ElementTable extends React.Component<
@@ -91,7 +104,8 @@ class ElementTable extends React.Component<
   };
   public defaultProps: Partial<IElementTableProps> = {
     disableSorting: false,
-    disableFiltering: false
+    disableFiltering: false,
+    shouldUpdateData: false
   };
   previousPage = () => {
     if (this.state.curr_page > 1 && this.props.getData) {
@@ -165,7 +179,7 @@ class ElementTable extends React.Component<
           />
         </span>
 
-        <span>{`${item.field} ${display} 
+        <span>{`${item.field} ${display}
       `}</span>
 
         <span>
@@ -207,6 +221,14 @@ class ElementTable extends React.Component<
         </span>
       </div>
     );
+  };
+  private addToast(toast: IToastProps) {
+    toast.timeout = 5000;
+    this.toaster.show(toast);
+  }
+  private toaster: Toaster = {} as Toaster;
+  private refHandlers = {
+    toaster: (ref: Toaster) => (this.toaster = ref)
   };
 
   removeSortItem = (field: string) => {
@@ -279,6 +301,8 @@ class ElementTable extends React.Component<
       sort_by: this.state.sort_by,
       filters: items
     });
+    console.log(items);
+    if (this.props.callback! !== undefined) this.props.callback(items);
     const filter_body = items.map(item => {
       const { field, filter_type, filter } = item;
       return { field, filter_type, filter };
@@ -290,15 +314,28 @@ class ElementTable extends React.Component<
         this.state.page_type,
         { sort_by: this.state.sort_by, filters: filter_body },
         this.props.token
-      ).then(res => {
-        this.setState({
-          items: res
+      )
+        .then(res => {
+          this.setState({
+            items: res
+          });
+        })
+        .catch(err => {
+          console.log("ERROR", err.response.data);
+          this.addToast({
+            message: err.response.data.failure_message,
+            intent: Intent.DANGER
+          });
         });
-      });
     }
     if (this.props.getPages) {
       this.props
-        .getPages(this.props.type, this.state.page_type, this.props.token)
+        .getPages(
+          this.props.type,
+          this.state.page_type,
+          this.state.filters,
+          this.props.token
+        )
         .then(res => {
           this.setState({
             total_pages: res
@@ -315,18 +352,27 @@ class ElementTable extends React.Component<
         page,
         { sort_by: this.state.sort_by, filters: this.state.filters },
         this.props.token
-      ).then(res => {
-        this.setState({
-          items: res
+      )
+        .then(res => {
+          this.setState({
+            items: res
+          });
+        })
+        .catch(err => {
+          this.addToast({
+            message: err.response.data.failure_message,
+            intent: Intent.DANGER
+          });
         });
-      });
     }
     if (this.props.getPages) {
-      this.props.getPages(this.props.type, page, this.props.token).then(res => {
-        this.setState({
-          total_pages: res
+      this.props
+        .getPages(this.props.type, page, this.state.filters, this.props.token)
+        .then(res => {
+          this.setState({
+            total_pages: res
+          });
         });
-      });
     }
   };
   updateSortData = (items: Array<ITableSort>) => {
@@ -349,16 +395,27 @@ class ElementTable extends React.Component<
       });
     }
   };
-
+  componentDidUpdate() {
+    if (this.props.shouldUpdateData) {
+      this.updateTableData();
+    }
+  }
   componentDidMount() {
+    this.updateTableData();
+  }
+  updateTableData = () => {
     console.log(this.props.data);
+    const sorts_body = this.state.sort_by.map(item => {
+      const { field, ascending } = item;
+      return { field, ascending };
+    });
     if (this.props.getData) {
       this.props
         .getData(
           this.props.type,
           this.state.curr_page,
           this.state.page_type,
-          {},
+          { sort_by: sorts_body, filters: this.state.filters },
           this.props.token
         )
         .then(res => {
@@ -374,14 +431,19 @@ class ElementTable extends React.Component<
     }
     if (this.props.getPages) {
       this.props
-        .getPages(this.props.type, this.state.page_type, this.props.token)
+        .getPages(
+          this.props.type,
+          this.state.page_type,
+          this.state.filters,
+          this.props.token
+        )
         .then(res => {
           this.setState({
             total_pages: res
           });
         });
     }
-  }
+  };
   updateSortOrder = (items: Array<ITableSort>) => {
     // console.log(items);
     this.setState({
@@ -401,8 +463,8 @@ class ElementTable extends React.Component<
     if (this.state.items && this.state.items.length > 0) {
       Object.keys(this.state.items[0]).forEach((col: string) => {
         if (col === "model") {
-          fields.push("model vendor");
-          fields.push("model number");
+          fields.push("model__vendor");
+          fields.push("model__model_number");
         } else if (col !== "id") {
           fields.push(col);
         }
@@ -424,7 +486,7 @@ class ElementTable extends React.Component<
   addFilter = (filter: IFilter) => {
     const filters = this.state.filters;
     filters.push(filter);
-    // console.log(filters);
+    console.log(filters);
     this.setState({
       filters
     });
@@ -450,8 +512,16 @@ class ElementTable extends React.Component<
         items: this.props.data
       });
     }
+
     return (
       <div>
+        <Toaster
+          autoFocus={false}
+          canEscapeKeyClear={true}
+          position={Position.TOP}
+          ref={this.refHandlers.toaster}
+        />
+
         {this.props.disableFiltering
           ? null
           : [
@@ -520,11 +590,12 @@ class ElementTable extends React.Component<
           {!(this.state.items && this.state.items.length > 0) ? (
             <div className="loading-container">
               <Spinner
+            
                 className="center"
                 intent="primary"
                 size={Spinner.SIZE_STANDARD}
               />
-              <h4>no {this.props.type}</h4>
+              <h4 className="center">no {this.props.type} found </h4>
             </div>
           ) : (
             <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered element-table">
@@ -542,7 +613,7 @@ class ElementTable extends React.Component<
                         <th className="header-cell">
                           <div className="header-text">
                             <span>model number</span>
-                            {this.getScrollIcon("model__number")}
+                            {this.getScrollIcon("model__model_number")}
                           </div>
                         </th>
                       ];

@@ -32,5 +32,6 @@ urlpatterns = [
     path('racks/delete', views.rack_delete),
     path('racks/summary', views.rack_summary),
     path('iamadmin', views.i_am_admin),
-    path('report', views.report_rack_usage)
+    path('report', views.report_rack_usage),
+    path('usernames', views.usernames),
 ]

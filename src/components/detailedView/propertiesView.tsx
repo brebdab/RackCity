@@ -8,6 +8,8 @@ import "./propertiesView.scss";
 export interface AlertState {
   isDeleteOpen: boolean;
 }
+var console: any = {};
+console.log = function() {};
 
 interface PropertiesViewProps {
   data: any;
@@ -49,11 +51,11 @@ class PropertiesView extends React.PureComponent<
                     this.props.history.push("/models/" + data[key].id)
                   }
                 >
-                  {data[key].vendor + "" + data[key].model_number}
+                  {data[key].vendor + " " + data[key].model_number}
                 </p>
               );
             } else if (key === "rack") {
-              dat = <p>{data[key].rack_num + "" + data[key].row_letter}</p>;
+              dat = <p>{data[key].row_letter + "" + data[key].rack_num}</p>;
             } else {
               dat = <p>{data[key]}</p>;
             }
@@ -89,7 +91,7 @@ class PropertiesView extends React.PureComponent<
                 state.data
               )}
             </div>
-            <div className={"column-right"}>
+            <div className={"column-props"}>
               {this.renderData(
                 state.columns.slice(mid, state.fields.length),
                 state.fields.slice(mid, state.fields.length),

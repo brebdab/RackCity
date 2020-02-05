@@ -1,4 +1,11 @@
-import { Alert, AnchorButton, Classes } from "@blueprintjs/core";
+import {
+  Alert,
+  Classes,
+  Intent,
+  IToastProps,
+  Position,
+  Toaster
+} from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
@@ -19,6 +26,9 @@ export interface RackViewProps {
 export interface RouteParams {
   rid: string;
 }
+var console: any = {};
+console.log = function() {};
+console.warn = function() {};
 
 export interface RackViewState {
   isDeleteOpen: boolean;
@@ -121,6 +131,14 @@ class RackView extends React.PureComponent<
     }
     return unitBarRows;
   }
+  private addToast(toast: IToastProps) {
+    toast.timeout = 5000;
+    this.toaster.show(toast);
+  }
+  private toaster: Toaster = {} as Toaster;
+  private refHandlers = {
+    toaster: (ref: Toaster) => (this.toaster = ref)
+  };
   private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
   private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
   private handleDelete = (letter: string, num: string) => {
@@ -136,7 +154,11 @@ class RackView extends React.PureComponent<
         this.setState({ isDeleteOpen: false });
       })
       .catch(err => {
-        console.log("ERROR", err);
+        this.handleDeleteCancel();
+        this.addToast({
+          message: err.response.data.failure_message,
+          intent: Intent.DANGER
+        });
       });
   };
   viewRackForm = (rack: RackRangeFields, headers: any) => {
@@ -158,16 +180,23 @@ class RackView extends React.PureComponent<
         : [];
 
     return (
-      <div>
-        <div className={Classes.DARK}>
+      <div className={Classes.DARK}>
+        <Toaster
+          autoFocus={false}
+          canEscapeKeyClear={true}
+          position={Position.TOP}
+          ref={this.refHandlers.toaster}
+        />
+        <div className="rack-view-select">
           <RackSelectView submitForm={this.viewRackForm} />
         </div>
+
         <div className="rack-container">
           {racks.map((rackResp: RackResponseObject) => {
             return (
               <span>
                 <div className="rack-parent">
-                  <div className="delete-rack">
+                  {/* <div className="delete-rack">
                     <AnchorButton
                       minimal
                       intent="danger"
@@ -175,7 +204,7 @@ class RackView extends React.PureComponent<
                       text="Delete"
                       onClick={this.handleDeleteOpen}
                     />
-                  </div>
+                  </div> */}
                   <Alert
                     cancelButtonText="Cancel"
                     confirmButtonText="Delete"

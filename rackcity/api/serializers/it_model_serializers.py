@@ -1,8 +1,29 @@
 from rest_framework import serializers
 from rackcity.models import ITModel
+from rackcity.api.serializers.fields import RCIntegerField
 
 
 class ITModelSerializer(serializers.ModelSerializer):
+
+    num_ethernet_ports = RCIntegerField(
+        allow_null=True,
+        max_value=2147483647,
+        min_value=0,
+        required=False
+    )
+    num_power_ports = RCIntegerField(
+        allow_null=True,
+        max_value=2147483647,
+        min_value=0,
+        required=False
+    )
+    memory_gb = RCIntegerField(
+        allow_null=True,
+        max_value=2147483647,
+        min_value=0,
+        required=False
+    )
+
     class Meta:
         model = ITModel
         fields = (
@@ -25,9 +46,27 @@ class BulkITModelSerializer(serializers.ModelSerializer):
     Serializes all fields on ITModel model according to the format required
     for bulk export.
     """
-    ethernet_ports = serializers.IntegerField(source='num_ethernet_ports')
-    power_ports = serializers.IntegerField(source='num_power_ports')
-    memory = serializers.IntegerField(source='memory_gb')
+    ethernet_ports = RCIntegerField(
+        source='num_ethernet_ports',
+        allow_null=True,
+        max_value=2147483647,
+        min_value=0,
+        required=False
+    )
+    power_ports = RCIntegerField(
+        source='num_power_ports',
+        allow_null=True,
+        max_value=2147483647,
+        min_value=0,
+        required=False
+    )
+    memory = RCIntegerField(
+        source='memory_gb',
+        allow_null=True,
+        max_value=2147483647,
+        min_value=0,
+        required=False
+    )
 
     class Meta:
         model = ITModel

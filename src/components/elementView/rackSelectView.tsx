@@ -14,6 +14,8 @@ interface rackSelectViewState {
   values: RackRangeFields;
   errors: Array<string>;
 }
+var console: any = {};
+console.log = function() {};
 export interface RackRangeFields {
   letter_start: string;
   letter_end: string;
@@ -22,7 +24,7 @@ export interface RackRangeFields {
 }
 interface rackSelectViewProps {
   token: string;
-  submitForm(model: RackRangeFields, headers: any): Promise<any>;
+  submitForm(model: RackRangeFields, headers: any): Promise<any> | void;
 }
 class RackSelectView extends React.Component<
   rackSelectViewProps & RouteComponentProps,
@@ -53,14 +55,18 @@ class RackSelectView extends React.Component<
     e.preventDefault();
 
     const headers = getHeaders(this.props.token);
-    this.props.submitForm(this.state.values, headers).catch(err => {
-      console.log(err.response.data.failure_message);
-      let errors: Array<string> = this.state.errors;
-      errors.push(err.response.data.failure_message as string);
-      this.setState({
-        errors: errors
+
+    const resp = this.props.submitForm(this.state.values, headers);
+    if (resp) {
+      resp.catch(err => {
+        console.log(err.response.data.failure_message);
+        let errors: Array<string> = this.state.errors;
+        errors.push(err.response.data.failure_message as string);
+        this.setState({
+          errors: errors
+        });
       });
-    });
+    }
 
     // this.props.history.push({
     //   pathname: "/racks",

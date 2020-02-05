@@ -33,6 +33,8 @@ export interface ModelViewProps {
   isAdmin: boolean;
 }
 
+var console: any = {};
+console.log = function() {};
 interface ModelViewState {
   instances: Array<InstanceObject> | undefined;
   model: ModelObject | undefined;
@@ -97,6 +99,15 @@ export class ModelView extends React.PureComponent<
       .post(API_ROOT + "api/models/modify", model, headers)
       .then(res => {
         console.log("success");
+        let params: any;
+        params = this.props.match.params;
+        getData(params.rid, this.props.token).then(result => {
+          console.log("result", result);
+          this.setState({
+            model: result.model,
+            instances: result.instances
+          });
+        });
         this.handleFormClose();
         console.log(this.state.isFormOpen);
       });

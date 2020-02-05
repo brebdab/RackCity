@@ -296,7 +296,7 @@ def model_bulk_upload(request):
         model_serializer = ITModelSerializer(data=model_data)
         if not model_serializer.is_valid():
             failure_message = str(model_serializer.errors)
-            failure_message = "At least one provided model was not valid. "+failure_message
+            failure_message = "At least one provided model was not valid! "+failure_message
             return JsonResponse(
                 {"failure_message": failure_message},
                 status=HTTPStatus.BAD_REQUEST
@@ -335,7 +335,11 @@ def model_bulk_upload(request):
                     status=HTTPStatus.NOT_ACCEPTABLE
                 )
             potential_modifications.append(
-                {"existing_model": existing_model, "new_data": model_data})
+                {
+                    "existing_model": existing_model,
+                    "new_data": model_serializer.validated_data
+                }
+            )
     records_added = 0
     for model_to_add in models_to_add:
         records_added += 1
@@ -439,7 +443,7 @@ def model_bulk_export(request):
     )
 
 
-@api_view(['GET'])
+@api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def model_page_count(request):
     """
@@ -452,7 +456,17 @@ def model_page_count(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     page_size = int(request.query_params.get('page_size'))
-    model_count = ITModel.objects.all().count()
+    models_query = ITModel.objects
+    try:
+        filter_args = get_filter_arguments(request.data)
+    except Exception as error:
+        return JsonResponse(
+            {"failure_message": "Filter error: " + str(error)},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    for filter_arg in filter_args:
+        models_query = models_query.filter(**filter_arg)
+    model_count = models_query.count()
     page_count = math.ceil(model_count / page_size)
     return JsonResponse({"page_count": page_count})
 
