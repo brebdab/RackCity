@@ -324,7 +324,7 @@ def instance_bulk_upload(request):
                 status=HTTPStatus.BAD_REQUEST
             )
         try:
-            row_letter = instance_data['rack'][:1]
+            row_letter = instance_data['rack'][:1].upper()
             rack_num = instance_data['rack'][1:]
             rack = Rack.objects.get(row_letter=row_letter, rack_num=rack_num)
         except ObjectDoesNotExist:
