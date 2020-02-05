@@ -237,7 +237,24 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
   private handleInstanceUpload = () => {
     this.setState({loadedModels: undefined})
     if (this.state.selectedFile !== undefined) {
-      parse(this.state.selectedFile).then((res) => {
+      parse(this.state.selectedFile).then((res: any) => {
+        const fields = ["hostname", "rack", "rack_position", "vendor", "model_number", "owner", "comment"]
+        var keys = res.split(/\r\n/)[0].split(",");
+        if (keys.length > fields.length) {
+          alert("ERROR: Too many columns in file")
+          return
+        } else if (keys.length < fields.length) {
+          alert("ERROR: Not enough columns in file")
+          return
+        } else {
+          for (var i = 0; i < keys.length; i++) {
+            if (!fields.includes(keys[i])) {
+              alert("ERROR: File contains badly formatted header: key: " + keys[i])
+              return
+            }
+          }
+        }
+
         c2j({
           noheader: false,
           output: "json"
@@ -283,7 +300,23 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
     /* Serialize to JSON */
     this.setState({loadedInstances: undefined})
     if (this.state.selectedFile !== undefined) {
-      parse(this.state.selectedFile).then((res) => {
+      parse(this.state.selectedFile).then((res: any) => {
+        const fields = ["vendor", "model_number", "height", "display_color", "ethernet_ports", "power_ports", "cpu", "memory", "storage", "comment"]
+        var keys = res.split(/\r\n/)[0].split(",");
+        if (keys.length > fields.length) {
+          alert("ERROR: Too many columns in file")
+          return
+        } else if (keys.length < fields.length) {
+          alert("ERROR: Not enough columns in file")
+          return
+        } else {
+          for (var i = 0; i < keys.length; i++) {
+            if (!fields.includes(keys[i])) {
+              alert("ERROR: File contains badly formatted header: key: " + keys[i])
+              return
+            }
+          }
+        }
         c2j({
           noheader: false,
           output: "json"
