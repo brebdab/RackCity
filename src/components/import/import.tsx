@@ -1,4 +1,4 @@
-import { Classes, AnchorButton, Alert, Dialog, Card, Elevation } from "@blueprintjs/core";
+import { Classes, AnchorButton, Alert, Dialog, Card, Elevation, Tag, Overlay, Spinner } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
@@ -25,7 +25,14 @@ interface AlertState {
   loadedModels?: Array<ModelObject>,
   loadedInstances?: Array<InstanceObject>,
   modifiedModels?: Array<any>,
-  modifiedInstances?: Array<any>
+  modifiedInstances?: Array<any>,
+  ignoredModels?: number,
+  ignoredInstances?: number,
+  addedModels?: number,
+  addedInstances?: number,
+  uploading: boolean,
+  uploadType: string,
+  notify: boolean
 }
 
 interface InstanceInfoObject {
@@ -46,12 +53,111 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
     uploadModelIsOpen: false,
     uploadInstanceIsOpen: false,
     modelAlterationsIsOpen: false,
-    instanceAlterationsIsOpen: false
+    instanceAlterationsIsOpen: false,
+    uploading: false,
+    uploadType: "",
+    notify: false
   };
 
   render() {
     return (
       <div className={Classes.DARK + " import"}>
+        <Overlay isOpen={this.state.uploading} className={"uploading-overlay"}>
+          <Spinner size={Spinner.SIZE_LARGE}/>
+        </Overlay>
+        <div className={"row"}>
+          <div className={"column-third-left-import"}>
+            <p> </p>
+            <AnchorButton
+              large={true}
+              intent="primary"
+              icon="import"
+              text="Select Instances File"
+              onClick={this.handleInstanceOpen}
+            />
+            <Alert
+              cancelButtonText="Cancel"
+              confirmButtonText="Choose File"
+              intent="primary"
+              isOpen={this.state.uploadInstanceIsOpen}
+              onCancel={this.handleInstanceCancel}
+              onConfirm={this.handleInstanceUpload}
+            >
+              <p>Choose a file</p>
+              <FileSelector {...this.props} callback={this.setFile}/>
+            </Alert>
+          </div>
+          <div className={"column-third-import"}>
+            <h1>OR</h1>
+          </div>
+          <div className={"column-third-right-import"}>
+            <p> </p>
+            <AnchorButton
+              large={true}
+              intent="primary"
+              icon="import"
+              text="Select Models File"
+              onClick={this.handleModelOpen}
+            />
+            <Alert
+              cancelButtonText="Cancel"
+              confirmButtonText="Choose File"
+              intent="primary"
+              isOpen={this.state.uploadModelIsOpen}
+              onCancel={this.handleModelCancel}
+              onConfirm={this.handleModelUpload}
+            >
+              <p>Choose a file</p>
+              <FileSelector {...this.props} callback={this.setFile}/>
+            </Alert>
+          </div>
+        </div>
+        <div className={"row"}>
+          <div className={"column-third-left-import"}>
+          </div>
+          <div className={"column-third-import"}>
+            <AnchorButton
+              large={true}
+              intent="success"
+              icon="upload"
+              text={"Upload " + this.state.uploadType}
+              disabled={this.state.selectedFile === undefined}
+              onClick={this.handleUpload}
+            />
+          </div>
+          <div className={"column-third-right-import"}>
+          </div>
+        </div>
+        <div className={"row"}>
+          <div className={"column-third-left-import"}>
+          </div>
+          <div className={"column-third-import"}>
+            <Tag>
+              <p>Selected file: {this.state.selectedFile === undefined ? "none" : this.state.selectedFile.name}</p>
+            </Tag>
+          </div>
+          <div className={"column-third-right-import"}>
+          </div>
+        </div>
+        <div>
+          <Dialog isOpen={this.state.modelAlterationsIsOpen} onClose={() => this.setState({modelAlterationsIsOpen: false, loadedModels: undefined, modifiedModels: undefined})} className={"modify-table"}
+                  usePortal={true} isCloseButtonShown={true} title={"Model Alterations Menu"}>
+            <Modifier {...this.props} modelsModified={this.state.modifiedModels} modelsAdded={this.state.addedModels} modelsIgnored={this.state.ignoredModels}
+              callback={() => {this.setState({modelAlterationsIsOpen: false, modifiedModels: undefined, loadedModels: undefined}); console.log(this.state)}}
+              operation={"models"}
+            />
+          </Dialog>
+          <Alert isOpen={this.state.notify} confirmButtonText="OK" onClose={() => this.setState({notify: false})}><p>Hello</p></Alert>
+        </div>
+        <div>
+          <Dialog isOpen={this.state.instanceAlterationsIsOpen} onClose={() => this.setState({instanceAlterationsIsOpen: false, loadedInstances: undefined, modifiedInstances: undefined})} className={"modify-table"}
+                  usePortal={true} isCloseButtonShown={true} title={"Instance Alterations Menu"}>
+            <Modifier {...this.props} modelsModified={this.state.modifiedInstances} modelsAdded={this.state.addedInstances} modelsIgnored={this.state.ignoredInstances}
+              callback={() => {this.setState({instanceAlterationsIsOpen: false, modifiedInstances: undefined, loadedInstances: undefined})}}
+              operation={"instances"}
+            />
+          </Dialog>
+        </div>
         <div className={"bp3-heading"}>
           <Card elevation={Elevation.ONE}>
             <div>
@@ -129,97 +235,35 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
             </ol>
           </Card>
         </div>
-        <div className={"row"}>
-          <div className={"column-third-left-import"}>
-            <p> </p>
-            <AnchorButton
-              large={true}
-              intent="primary"
-              icon="import"
-              text="Select Instances File"
-              onClick={this.handleInstanceOpen}
-            />
-            <Alert
-              cancelButtonText="Cancel"
-              confirmButtonText="Choose File"
-              intent="primary"
-              isOpen={this.state.uploadInstanceIsOpen}
-              onCancel={this.handleInstanceCancel}
-              onConfirm={this.handleInstanceUpload}
-            >
-              <p>Choose a file</p>
-              <FileSelector  {...this.props} callback={this.setFile}/>
-            </Alert>
-          </div>
-          <div className={"column-third-import"}>
-            <h1>OR</h1>
-          </div>
-          <div className={"column-third-right-import"}>
-            <p> </p>
-            <AnchorButton
-              large={true}
-              intent="primary"
-              icon="import"
-              text="Select Models File"
-              onClick={this.handleModelOpen}
-            />
-            <Alert
-              cancelButtonText="Cancel"
-              confirmButtonText="Choose File"
-              intent="primary"
-              isOpen={this.state.uploadModelIsOpen}
-              onCancel={this.handleModelCancel}
-              onConfirm={this.handleModelUpload}
-            >
-              <p>Choose a file</p>
-              <FileSelector {...this.props} callback={this.setFile}/>
-            </Alert>
-          </div>
-        </div>
-        <div className={"row"}>
-          <div className={"column-import"}>
-            <AnchorButton
-              large={true}
-              intent="success"
-              icon="upload"
-              text="Upload Data"
-              disabled={this.state.selectedFile === undefined}
-              onClick={this.handleUpload}
-            />
-          </div>
-          <div className={"column-import"}>
-            <h2>Selected file: {this.state.selectedFile === undefined ? "none" : this.state.selectedFile.name}</h2>
-          </div>
-        </div>
-        <div>
-          <Dialog isOpen={this.state.modelAlterationsIsOpen} onClose={() => this.setState({modelAlterationsIsOpen: false})} className={"modify-table"}
-                  usePortal={true}>
-            <Modifier {...this.props} models={this.state.modifiedModels}
-              callback={() => {this.setState({modelAlterationsIsOpen: false, modifiedModels: undefined, loadedModels: undefined}); console.log(this.state)}}
-              operation={"models"}
-            />
-          </Dialog>
-        </div>
-        <div>
-          <Dialog isOpen={this.state.instanceAlterationsIsOpen} onClose={() => this.setState({instanceAlterationsIsOpen: false})} className={"modify-table"}
-                  usePortal={true}>
-            <Modifier {...this.props} models={this.state.modifiedInstances}
-              callback={() => {this.setState({instanceAlterationsIsOpen: false, modifiedInstances: undefined, loadedInstances: undefined})}}
-              operation={"instances"}
-            />
-          </Dialog>
-        </div>
       </div>
     )
   }
 
   /*********** Functions ***********************/
 
-  private handleInstanceOpen = () => this.setState({ uploadInstanceIsOpen: true });
+  private handleInstanceOpen = () => this.setState({ uploadInstanceIsOpen: true, uploadType: "Instance" });
   private handleInstanceCancel = () => this.setState({ uploadInstanceIsOpen: false });
   private handleInstanceUpload = () => {
+    this.setState({loadedModels: undefined})
     if (this.state.selectedFile !== undefined) {
-      parse(this.state.selectedFile).then((res) => {
+      parse(this.state.selectedFile).then((res: any) => {
+        const fields = ["hostname", "rack", "rack_position", "vendor", "model_number", "owner", "comment"]
+        var keys = res.split(/\r\n/)[0].split(",");
+        if (keys.length > fields.length) {
+          alert("ERROR: Too many columns in file")
+          return
+        } else if (keys.length < fields.length) {
+          alert("ERROR: Not enough columns in file")
+          return
+        } else {
+          for (var i = 0; i < keys.length; i++) {
+            if (!fields.includes(keys[i])) {
+              alert("ERROR: File contains badly formatted header: key: " + keys[i])
+              return
+            }
+          }
+        }
+
         c2j({
           noheader: false,
           output: "json"
@@ -254,7 +298,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
     }
   };
 
-  private handleModelOpen = () => this.setState({ uploadModelIsOpen: true });
+  private handleModelOpen = () => this.setState({ uploadModelIsOpen: true, uploadType: "Model" });
   private handleModelCancel = () => this.setState({ uploadModelIsOpen: false });
 
   /*
@@ -263,8 +307,25 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
    */
   private handleModelUpload = () => {
     /* Serialize to JSON */
+    this.setState({loadedInstances: undefined});
     if (this.state.selectedFile !== undefined) {
-      parse(this.state.selectedFile).then((res) => {
+      parse(this.state.selectedFile).then((res: any) => {
+        const fields = ["vendor", "model_number", "height", "display_color", "ethernet_ports", "power_ports", "cpu", "memory", "storage", "comment"]
+        var keys = res.split(/\r\n/)[0].split(",");
+        if (keys.length > fields.length) {
+          alert("ERROR: Too many columns in file")
+          return
+        } else if (keys.length < fields.length) {
+          alert("ERROR: Not enough columns in file")
+          return
+        } else {
+          for (var i = 0; i < keys.length; i++) {
+            if (!fields.includes(keys[i])) {
+              alert("ERROR: File contains badly formatted header: key: " + keys[i])
+              return
+            }
+          }
+        }
         c2j({
           noheader: false,
           output: "json"
@@ -305,36 +366,48 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
 
   private handleUpload = () => {
     if (this.state.loadedModels !== undefined) {
+      this.setState({uploading: true})
       uploadBulk({models: this.state.loadedModels}, this.props.token, "models").then(res => {
         if (res.modifications.length !== 0) {
           this.setState({
             modelAlterationsIsOpen: true,
-            modifiedModels: res.modifications
+            uploading: false,
+            modifiedModels: res.modifications,
+            ignoredModels: res.ignored,
+            addedModels: res.added
           })
         } else {
-          alert("Upload successful with no modifications")
-          this.setState({ loadedModels: undefined })
+          alert("Success! Modified: 0; Added: " + res.added + "; Ignored: " + res.ignored);
+          this.setState({ uploading: false, loadedModels: undefined })
         }
       }, err => {
+        this.setState({uploading: false})
         alert(err.response.data.failure_message)
       })
     } else if (this.state.loadedInstances !== undefined) {
+      this.setState({uploading: true})
       uploadBulk({instances: this.state.loadedInstances}, this.props.token, "instances").then(res => {
         if (res.modifications.length !== 0) {
           this.setState({
             instanceAlterationsIsOpen: true,
-            modifiedInstances: res.modifications
+            uploading: false,
+            modifiedInstances: res.modifications,
+            ignoredInstances: res.ignored,
+            addedInstances: res.added
           })
         } else {
-          alert("Upload successful with no modifications");
-          this.setState({ loadedModels: undefined })
+          alert("Success! Modified: 0; Added: " + res.added + "; Ignored: " + res.ignored);
+          this.setState({ uploading: false, loadedModels: undefined })
         }
       }, err => {
+        this.setState({uploading: false})
         alert(err.response.data.failure_message)
       })
     } else {
       alert("No data to upload")
     }
+    console.log("here, regardless of error or success")
+    this.setState({loadedModels: undefined, loadedInstances: undefined, modifiedModels: undefined, modifiedInstances: undefined})
   }
 
   /*

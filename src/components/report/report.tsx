@@ -81,11 +81,9 @@ export class Report extends React.PureComponent<
       return (
         <div className={Classes.DARK}>
           <Card elevation={Elevation.TWO}>
-            <h2 className={"report-title"}>Allocation of used rack space:</h2>
-            <h4 className={"report-summary"}>
-              Percent of unused rack space:{" "}
-              {(this.state.freeRack * 100).toFixed(2)}%
-            </h4>
+            <h2 className={"report-title"}>Datacenter Report</h2>
+            <h4 className={"report-summary"}>Percent of unused rack space: {(this.state.freeRack * 100).toFixed(2)}%</h4>
+            <h4 className={"report-summary"}>Allocation of used rack space:</h4>
             <div className={"row"}>
               <div className={"column-third-report"}>
                 <h5>Used rack space by vendor:</h5>
