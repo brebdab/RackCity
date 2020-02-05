@@ -20,6 +20,8 @@ interface RegistrationFormProps {
   error: string;
   token: string;
 }
+var console:any = {};
+console.log = function(){};
 
 interface RegistrationFormState {
   errors: Array<string>;

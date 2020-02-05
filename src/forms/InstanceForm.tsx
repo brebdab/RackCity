@@ -53,6 +53,8 @@ interface InstanceFormState {
   errors: Array<string>;
   users: Array<string>;
 }
+var console: any = {};
+console.log = function() {};
 
 export const required = (
   values: InstanceObject,

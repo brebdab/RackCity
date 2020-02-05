@@ -10,6 +10,8 @@ import "./import.scss";
 import { FileSelector } from "../lib/fileSelect"
 import { Modifier } from "./viewModified"
 
+var console:any = {};
+console.log = function(){};
 interface ImportProps {
   token: string
 }
