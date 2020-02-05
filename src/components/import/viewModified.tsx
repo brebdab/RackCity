@@ -10,7 +10,9 @@ import { ModelObject, RackObject } from "../utils";
 
 interface ModifierProps {
   token: string,
-  models?: Array<any>,
+  modelsModified?: Array<any>,
+  modelsIgnored?: number,
+  modelsAdded?: number,
   callback: Function,
   operation: string
 }
@@ -57,10 +59,10 @@ export class Modifier extends React.PureComponent<RouteComponentProps & Modifier
   }
 
   render() {
-    if (this.props.models !== undefined) {
-      console.log(this.props.models[0]);
+    if (this.props.modelsModified !== undefined) {
+      console.log(this.props.modelsModified[0]);
       let model: any;
-      model = this.props.models[0].existing;
+      model = this.props.modelsModified[0].existing;
       let fields: any
       if (this.props.operation === "models")  {
         fields = {
@@ -89,7 +91,7 @@ export class Modifier extends React.PureComponent<RouteComponentProps & Modifier
       }
       return (
         <div>
-          {this.props.models.map((obj: any) => {
+          {this.props.modelsModified.map((obj: any) => {
               let checkObj: Check;
               checkObj = { model: obj.modified, checked: false }
               this.state.modifiedModels.push(checkObj)
@@ -172,10 +174,11 @@ export class Modifier extends React.PureComponent<RouteComponentProps & Modifier
                       modified.push(this.state.modifiedModels[i].model);
                   }
                   uploadModified(modified, this.props.token, this.props.operation).then(res => {
-                    alert("Modifications were successful")
+                    console.log(this.props)
+                    alert("Success! Modified: " + modified.length + "; Added: " + this.props.modelsAdded! + "; Ignored: " + (this.props.modelsIgnored! + this.props.modelsModified!.length - modified.length))
                     this.setState({
                       modifiedModels: []
-                    })
+                    });
                     this.props.callback()
                   }, err => {
                     alert(err.response.data.failure_message)
@@ -189,7 +192,8 @@ export class Modifier extends React.PureComponent<RouteComponentProps & Modifier
                       modified.push(this.state.modifiedModels[i].model);
                   }
                   uploadModified(modified, this.props.token, this.props.operation).then(res => {
-                    alert("Modifications were successful")
+                    alert("Success! Modified: " + modified.length + "; Added: " + this.props.modelsAdded! + "; Ignored: " + (this.props.modelsIgnored! + this.props.modelsModified!.length - modified.length))
+                    // alert("Modifications were successful")
                     this.setState({
                       modifiedModels: []
                     })

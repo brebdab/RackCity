@@ -24,8 +24,13 @@ interface AlertState {
   loadedInstances?: Array<InstanceObject>,
   modifiedModels?: Array<any>,
   modifiedInstances?: Array<any>,
+  ignoredModels?: number,
+  ignoredInstances?: number,
+  addedModels?: number,
+  addedInstances?: number,
   uploading: boolean,
-  uploadType: string
+  uploadType: string,
+  notify: boolean
 }
 
 interface InstanceInfoObject {
@@ -48,7 +53,8 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
     modelAlterationsIsOpen: false,
     instanceAlterationsIsOpen: false,
     uploading: false,
-    uploadType: ""
+    uploadType: "",
+    notify: false
   };
 
   render() {
@@ -134,16 +140,17 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
         <div>
           <Dialog isOpen={this.state.modelAlterationsIsOpen} onClose={() => this.setState({modelAlterationsIsOpen: false, loadedModels: undefined, modifiedModels: undefined})} className={"modify-table"}
                   usePortal={true} isCloseButtonShown={true} title={"Model Alterations Menu"}>
-            <Modifier {...this.props} models={this.state.modifiedModels}
+            <Modifier {...this.props} modelsModified={this.state.modifiedModels} modelsAdded={this.state.addedModels} modelsIgnored={this.state.ignoredModels}
               callback={() => {this.setState({modelAlterationsIsOpen: false, modifiedModels: undefined, loadedModels: undefined}); console.log(this.state)}}
               operation={"models"}
             />
           </Dialog>
+          <Alert isOpen={this.state.notify} confirmButtonText="OK" onClose={() => this.setState({notify: false})}><p>Hello</p></Alert>
         </div>
         <div>
           <Dialog isOpen={this.state.instanceAlterationsIsOpen} onClose={() => this.setState({instanceAlterationsIsOpen: false, loadedInstances: undefined, modifiedInstances: undefined})} className={"modify-table"}
                   usePortal={true} isCloseButtonShown={true} title={"Instance Alterations Menu"}>
-            <Modifier {...this.props} models={this.state.modifiedInstances}
+            <Modifier {...this.props} modelsModified={this.state.modifiedInstances} modelsAdded={this.state.addedInstances} modelsIgnored={this.state.ignoredInstances}
               callback={() => {this.setState({instanceAlterationsIsOpen: false, modifiedInstances: undefined, loadedInstances: undefined})}}
               operation={"instances"}
             />
@@ -298,7 +305,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
    */
   private handleModelUpload = () => {
     /* Serialize to JSON */
-    this.setState({loadedInstances: undefined})
+    this.setState({loadedInstances: undefined});
     if (this.state.selectedFile !== undefined) {
       parse(this.state.selectedFile).then((res: any) => {
         const fields = ["vendor", "model_number", "height", "display_color", "ethernet_ports", "power_ports", "cpu", "memory", "storage", "comment"]
@@ -363,10 +370,12 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
           this.setState({
             modelAlterationsIsOpen: true,
             uploading: false,
-            modifiedModels: res.modifications
+            modifiedModels: res.modifications,
+            ignoredModels: res.ignored,
+            addedModels: res.added
           })
         } else {
-          alert("Upload successful with no modifications")
+          alert("Success! Modified: 0; Added: " + res.added + "; Ignored: " + res.ignored);
           this.setState({ uploading: false, loadedModels: undefined })
         }
       }, err => {
@@ -380,10 +389,12 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
           this.setState({
             instanceAlterationsIsOpen: true,
             uploading: false,
-            modifiedInstances: res.modifications
+            modifiedInstances: res.modifications,
+            ignoredInstances: res.ignored,
+            addedInstances: res.added
           })
         } else {
-          alert("Upload successful with no modifications");
+          alert("Success! Modified: 0; Added: " + res.added + "; Ignored: " + res.ignored);
           this.setState({ uploading: false, loadedModels: undefined })
         }
       }, err => {
