@@ -46,7 +46,7 @@ export function getPages(
     }
   };
   return axios
-    .post(API_ROOT + "api/" + path + "/pages", filters, config)
+    .post(API_ROOT + "api/" + path + "/pages", { filters }, config)
     .then(res => {
       return res.data.page_count;
     });
