@@ -14,6 +14,8 @@ interface rackSelectViewState {
   values: RackRangeFields;
   errors: Array<string>;
 }
+var console: any = {};
+console.log = function() {};
 export interface RackRangeFields {
   letter_start: string;
   letter_end: string;

@@ -33,6 +33,8 @@ interface IElementTableState {
   total_pages: number;
   page_type: PagingTypes;
 }
+var console: any = {};
+console.log = function() {};
 export interface ITableSort {
   field: string;
   ascending: boolean;

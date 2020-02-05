@@ -18,7 +18,8 @@ import { FormTypes } from "../../forms/formUtils";
 import ElementTabView from "../elementView/elementTabView";
 import RackSelectView, { RackRangeFields } from "../elementView/rackSelectView";
 import { ElementType } from "../utils";
-
+var console: any = {};
+console.log = function() {};
 interface LandingViewState {
   isOpen: boolean;
   isDeleteOpen: boolean;

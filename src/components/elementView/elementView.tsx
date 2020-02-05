@@ -16,6 +16,8 @@ import ElementTable, { PagingTypes } from "./elementTable";
 import "./elementView.scss";
 import { IFilter } from "./filterSelectView";
 
+var console: any = {};
+console.log = function() {};
 const fs = require("js-file-download");
 
 interface ElementViewState {

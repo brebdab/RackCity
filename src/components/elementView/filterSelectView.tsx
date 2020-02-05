@@ -12,6 +12,8 @@ import "./elementView.scss";
 import RackRangeOptions from "./rackRangeOptions";
 import { RackRangeFields } from "./rackSelectView";
 
+var console: any = {};
+console.log = function() {};
 export enum TextFilterTypes {
   EXACT = "exact",
   CONTAINS = "contains"
