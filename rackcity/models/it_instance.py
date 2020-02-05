@@ -14,7 +14,10 @@ def validate_hostname(value):
 
 
 def validate_owner(value):
-    if value not in [obj.username for obj in User.objects.all()]:
+    if (
+        value != ""
+        and value not in [obj.username for obj in User.objects.all()]
+    ):
         raise ValidationError(
             "There is no existing user with the username " + value
         )
