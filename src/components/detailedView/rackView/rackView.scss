@@ -67,7 +67,7 @@ $row-height: 6px;
 .rack-table .cell {
   max-width: 200px;
   min-width: 200px;
-  display: block;
+  // display: block;
   overflow-x: auto !important;
   position: relative !important;
   white-space: nowrap !important;
@@ -93,13 +93,13 @@ $row-height: 6px;
 //       -1px 1px 0 #333,
 //       2px 2px 5px rgba(0,0,0,0.65);
 // }
-.rack tr {
-  border: 1px solid #202b33;
+tr {
+  outline: 1px solid #202b33;
 }
 
-.rack table {
-  border-collapse: collapse !important;
-}
+// .rack table {
+//   border-collapse: collapse !important;
+// }
 .empty {
   padding-top: $row-height !important;
   padding-bottom: $row-height !important;
@@ -151,25 +151,20 @@ $row-height: 6px;
   @page {
     margin: 3cm;
   }
-  .body {
-    background-color: white !important;
-  }
+  // .body {
+  //   background-color: white !important;
+  // }
   .rack-table .cell {
     max-width: none !important;
     width: fit-content !important;
+
     text-shadow: 1px 1px 0 #333, -1px -1px 0 #333, 1px -1px 0 #333,
-      -1px 1px 0 #333;
+      -1px 1px 0 #333 !important;
 
     -webkit-filter: drop-shadow(1px 1px 0 black) drop-shadow(-1px -1px 0 #333)
-      drop-shadow(1px -1px 0 #333) drop-shadow(-1px 1px 0 #333);
+      drop-shadow(1px -1px 0 #333) drop-shadow(-1px 1px 0 #333) !important;
   }
-  .rack-table .cell span {
-    //width: 80px;
-    white-space: nowrap;
-    margin: 0px !important;
-    float: left;
-    background-color: grey;
-  }
+
   .rack-row {
     -webkit-print-color-adjust: exact !important;
     color-adjust: exact !important;
@@ -178,19 +173,9 @@ $row-height: 6px;
   .unit {
     color: black !important;
   }
-  .rackView {
-    background-color: white !important;
-  }
+
   .rack-view-select {
     display: none;
-  }
-  .header {
-    border: none !important;
-    outline: none !important;
-  }
-  .rack header,
-  .rack tr {
-    border: 1px solid #394b59 !important;
   }
 
   .delete-rack {
