@@ -24,7 +24,8 @@ interface AlertState {
   loadedInstances?: Array<InstanceObject>,
   modifiedModels?: Array<any>,
   modifiedInstances?: Array<any>,
-  uploading: boolean
+  uploading: boolean,
+  uploadType: string
 }
 
 interface InstanceInfoObject {
@@ -46,7 +47,8 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
     uploadInstanceIsOpen: false,
     modelAlterationsIsOpen: false,
     instanceAlterationsIsOpen: false,
-    uploading: false
+    uploading: false,
+    uploadType: ""
   };
 
   render() {
@@ -110,7 +112,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
               large={true}
               intent="success"
               icon="upload"
-              text="Upload Data"
+              text={"Upload " + this.state.uploadType}
               disabled={this.state.selectedFile === undefined}
               onClick={this.handleUpload}
             />
@@ -131,7 +133,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
         </div>
         <div>
           <Dialog isOpen={this.state.modelAlterationsIsOpen} onClose={() => this.setState({modelAlterationsIsOpen: false, loadedModels: undefined, modifiedModels: undefined})} className={"modify-table"}
-                  usePortal={true}>
+                  usePortal={true} isCloseButtonShown={true} title={"Model Alterations Menu"}>
             <Modifier {...this.props} models={this.state.modifiedModels}
               callback={() => {this.setState({modelAlterationsIsOpen: false, modifiedModels: undefined, loadedModels: undefined}); console.log(this.state)}}
               operation={"models"}
@@ -140,7 +142,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
         </div>
         <div>
           <Dialog isOpen={this.state.instanceAlterationsIsOpen} onClose={() => this.setState({instanceAlterationsIsOpen: false, loadedInstances: undefined, modifiedInstances: undefined})} className={"modify-table"}
-                  usePortal={true}>
+                  usePortal={true} isCloseButtonShown={true} title={"Instance Alterations Menu"}>
             <Modifier {...this.props} models={this.state.modifiedInstances}
               callback={() => {this.setState({instanceAlterationsIsOpen: false, modifiedInstances: undefined, loadedInstances: undefined})}}
               operation={"instances"}
@@ -230,7 +232,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
 
   /*********** Functions ***********************/
 
-  private handleInstanceOpen = () => this.setState({ uploadInstanceIsOpen: true });
+  private handleInstanceOpen = () => this.setState({ uploadInstanceIsOpen: true, uploadType: "Instance" });
   private handleInstanceCancel = () => this.setState({ uploadInstanceIsOpen: false });
   private handleInstanceUpload = () => {
     this.setState({loadedModels: undefined})
@@ -270,7 +272,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
     }
   };
 
-  private handleModelOpen = () => this.setState({ uploadModelIsOpen: true });
+  private handleModelOpen = () => this.setState({ uploadModelIsOpen: true, uploadType: "Model" });
   private handleModelCancel = () => this.setState({ uploadModelIsOpen: false });
 
   /*
