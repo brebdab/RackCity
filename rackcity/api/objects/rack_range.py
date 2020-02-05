@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rackcity.models.rack import validate_row_letter
 
 
 class RackRangeSerializer(serializers.Serializer):
@@ -8,6 +9,14 @@ class RackRangeSerializer(serializers.Serializer):
     num_end = serializers.IntegerField(required=False)
 
     def validate(self, data):
+        if ('letter_start') in data:
+            data['letter_start'] = data['letter_start'].upper()
+            validate_row_letter(data['letter_start'])
+
+        if ('letter_end') in data:
+            data['letter_end'] = data['letter_end'].upper()
+            validate_row_letter(data['letter_end'])
+
         if ('num_end' in data) and (
             data['num_end'] < data['num_start']
         ):
