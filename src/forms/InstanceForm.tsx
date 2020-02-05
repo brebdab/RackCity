@@ -9,13 +9,14 @@ import {
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
 import { connect } from "react-redux";
-import { getElementData } from "../components/elementView/elementView";
+
 import {
   InstanceObject,
   ModelObject,
   InstanceInfoObject,
   getHeaders,
-  RackObject
+  RackObject,
+  ElementObjectType
 } from "../components/utils";
 import { updateObject } from "../store/utility";
 import Field from "./field";
@@ -82,6 +83,38 @@ class InstanceForm extends React.Component<
       Authorization: "Token " + this.props.token
     }
   };
+
+  private getElementData(
+    path: string,
+    page: number,
+    page_type: PagingTypes,
+    body: any,
+    token: string
+  ): Promise<Array<ElementObjectType>> {
+    console.log(API_ROOT + "api/" + path + "/get-many");
+
+    const params =
+      page_type === PagingTypes.ALL
+        ? {}
+        : {
+            page_size: page_type,
+            page
+          };
+    const config = {
+      headers: {
+        Authorization: "Token " + token
+      },
+
+      params: params
+    };
+    return axios
+      .post(API_ROOT + "api/" + path + "/get-many", body, config)
+      .then(res => {
+        const items = res.data[path];
+
+        return items;
+      });
+  }
   private mapInstanceObject = (
     instance: InstanceObject
   ): InstanceInfoObject => {
@@ -172,13 +205,17 @@ class InstanceForm extends React.Component<
   render() {
     console.log(this.state.values);
     if (this.state.models.length === 0) {
-      getElementData("models", 1, PagingTypes.ALL, {}, this.props.token).then(
-        res => {
-          this.setState({
-            models: res as Array<ModelObject>
-          });
-        }
-      );
+      this.getElementData(
+        "models",
+        1,
+        PagingTypes.ALL,
+        {},
+        this.props.token
+      ).then(res => {
+        this.setState({
+          models: res as Array<ModelObject>
+        });
+      });
     }
     if (this.state.racks.length === 0) {
       this.getRacks(this.props.token);

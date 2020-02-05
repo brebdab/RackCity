@@ -82,6 +82,7 @@ interface IElementTableProps {
     token: string
   ): Promise<number>;
   data?: Array<ElementObjectType>;
+  shouldUpdateData?: boolean;
 }
 
 class ElementTable extends React.Component<
@@ -100,7 +101,8 @@ class ElementTable extends React.Component<
   };
   public defaultProps: Partial<IElementTableProps> = {
     disableSorting: false,
-    disableFiltering: false
+    disableFiltering: false,
+    shouldUpdateData: false
   };
   previousPage = () => {
     if (this.state.curr_page > 1 && this.props.getData) {
@@ -296,9 +298,8 @@ class ElementTable extends React.Component<
       sort_by: this.state.sort_by,
       filters: items
     });
-    console.log(items)
-    if (this.props.callback! !== undefined)
-      this.props.callback(items)
+    console.log(items);
+    if (this.props.callback! !== undefined) this.props.callback(items);
     const filter_body = items.map(item => {
       const { field, filter_type, filter } = item;
       return { field, filter_type, filter };
@@ -384,8 +385,15 @@ class ElementTable extends React.Component<
       });
     }
   };
-
+  componentDidUpdate() {
+    if (this.props.shouldUpdateData) {
+      this.updateTableData();
+    }
+  }
   componentDidMount() {
+    this.updateTableData();
+  }
+  updateTableData = () => {
     console.log(this.props.data);
     if (this.props.getData) {
       this.props
@@ -416,7 +424,7 @@ class ElementTable extends React.Component<
           });
         });
     }
-  }
+  };
   updateSortOrder = (items: Array<ITableSort>) => {
     // console.log(items);
     this.setState({
@@ -485,6 +493,7 @@ class ElementTable extends React.Component<
         items: this.props.data
       });
     }
+
     return (
       <div>
         <Toaster
