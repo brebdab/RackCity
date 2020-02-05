@@ -194,7 +194,7 @@ class RackView extends React.PureComponent<
             return (
               <span>
                 <div className="rack-parent">
-                  <div className="delete-rack">
+                  {/* <div className="delete-rack">
                     <AnchorButton
                       minimal
                       intent="danger"
@@ -202,7 +202,7 @@ class RackView extends React.PureComponent<
                       text="Delete"
                       onClick={this.handleDeleteOpen}
                     />
-                  </div>
+                  </div> */}
                   <Alert
                     cancelButtonText="Cancel"
                     confirmButtonText="Delete"
