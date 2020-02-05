@@ -294,7 +294,6 @@ def model_bulk_upload(request):
     models_in_import = set()
     for model_data in model_datas:
         model_serializer = ITModelSerializer(data=model_data)
-        print(model_serializer)
         if not model_serializer.is_valid():
             failure_message = str(model_serializer.errors)
             failure_message = "At least one provided model was not valid! "+failure_message

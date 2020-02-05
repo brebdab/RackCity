@@ -35,10 +35,6 @@ class RecursiveITInstanceSerializer(serializers.ModelSerializer):
     """
     model = ITModelSerializer()
     rack = RackSerializer()
-    # elevation = RCIntegerField(
-    #     max_value=2147483647,
-    #     min_value=0,
-    # )
 
     class Meta:
         model = ITInstance
@@ -73,11 +69,6 @@ class BulkITInstanceSerializer(serializers.ModelSerializer):
     # by default, calls get_<field> - in this case, get_rack
     rack = serializers.SerializerMethodField()
     rack_position = serializers.IntegerField(source='elevation')
-    # rack_position = RCIntegerField(
-    #     source='elevation',
-    #     max_value=2147483647,
-    #     min_value=0,
-    # )
 
     class Meta:
         model = ITInstance
