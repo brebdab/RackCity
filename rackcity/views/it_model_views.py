@@ -443,7 +443,7 @@ def model_bulk_export(request):
     )
 
 
-@api_view(['GET'])
+@api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def model_page_count(request):
     """
@@ -456,7 +456,17 @@ def model_page_count(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     page_size = int(request.query_params.get('page_size'))
-    model_count = ITModel.objects.all().count()
+    models_query = ITModel.objects
+    try:
+        filter_args = get_filter_arguments(request.data)
+    except Exception as error:
+        return JsonResponse(
+            {"failure_message": "Filter error: " + str(error)},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    for filter_arg in filter_args:
+        models_query = models_query.filter(**filter_arg)
+    model_count = models_query.count()
     page_count = math.ceil(model_count / page_size)
     return JsonResponse({"page_count": page_count})
 
