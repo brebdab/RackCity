@@ -588,11 +588,12 @@ class ElementTable extends React.Component<
           {!(this.state.items && this.state.items.length > 0) ? (
             <div className="loading-container">
               <Spinner
+            
                 className="center"
                 intent="primary"
                 size={Spinner.SIZE_STANDARD}
               />
-              <h4>no {this.props.type}</h4>
+              <h4 className="center">no {this.props.type} found </h4>
             </div>
           ) : (
             <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered element-table">
