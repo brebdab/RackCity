@@ -5,7 +5,7 @@ $row-height: 6px;
   .rack-container {
     padding-left: 20px;
     display: inline-block;
-    overflow-x: scroll;
+    overflow-x: auto;
     white-space: nowrap;
     width: 100%;
   }

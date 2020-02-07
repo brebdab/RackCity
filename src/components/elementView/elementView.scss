@@ -20,7 +20,7 @@
   position: relative;
   // float: left;
   width: 100%;
-  overflow: scroll;
+  overflow: auto;
   display: inline-block;
 }
 .filter-select {
@@ -61,7 +61,7 @@
 }
 .header-text {
   white-space: nowrap !important;
-  overflow: scroll;
+  overflow: auto;
   width: max-content !important;
   display: inline-block;
 }
