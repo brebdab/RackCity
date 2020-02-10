@@ -1,7 +1,7 @@
 import { ItemPredicate, ItemRenderer, Suggest } from "@blueprintjs/select";
 import React from "react";
 import { MenuItem } from "@blueprintjs/core";
-import { ModelObject, RackObject } from "../components/utils";
+import { ModelObject, RackObject } from "../utils/utils";
 
 export enum FormTypes {
   CREATE = "create",

@@ -12,12 +12,14 @@ import axios from "axios";
 import * as React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
-import { API_ROOT } from "../../api-config";
-import FormPopup from "../../forms/FormPopup";
+import { API_ROOT } from "../../utils/api-config";
+
 import { FormTypes } from "../../forms/formUtils";
-import ElementTabView from "../elementView/elementTabView";
-import RackSelectView, { RackRangeFields } from "../elementView/rackSelectView";
-import { ElementType } from "../utils";
+import ElementTabContainer from "../elementView/elementTabContainer";
+import RackSelectView from "../elementView/rackSelectView";
+import { ElementType, RackRangeFields } from "../../utils/utils";
+import FormPopup from "../../forms/formPopup";
+
 var console: any = {};
 console.log = function() {};
 interface LandingViewState {
@@ -178,7 +180,7 @@ class LandingView extends React.Component<
 
           <RackSelectView submitForm={this.viewRackForm} />
         </Card>
-        <ElementTabView />
+        <ElementTabContainer />
       </div>
     );
   }

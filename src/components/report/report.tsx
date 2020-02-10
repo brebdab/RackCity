@@ -4,7 +4,7 @@ import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
-import { API_ROOT } from "../../api-config";
+import { API_ROOT } from "../../utils/api-config";
 import "./report.scss";
 
 interface ReportProps {
