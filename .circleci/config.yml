@@ -62,7 +62,7 @@ jobs:
             - ./node_modules
       - run: # run tests
           name: test
-          command: npm test
+          command: npm test --passWithNoTests
 #       - run: # run coverage report
 #           name: code-coverage
 #           command: './node_modules/.bin/nyc report --reporter=text-lcov'
