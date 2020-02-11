@@ -1,6 +1,5 @@
 import {
   Icon,
-  Spinner,
   HTMLSelect,
   Position,
   IToastProps,
@@ -18,8 +17,7 @@ import {
   ElementType,
   isModelObject,
   isRackObject,
-  RackRangeFields,
-  getHeaders
+  RackRangeFields
 } from "../../utils/utils";
 import DragDropList from "./dragDropList";
 import "./elementView.scss";
@@ -317,6 +315,11 @@ class ElementTable extends React.Component<
           this.setState({
             items: res
           });
+          if (res.length === 0) {
+            this.setState({
+              curr_page: 0
+            });
+          }
         })
         .catch(err => {
           console.log("ERROR", err.response.data);
@@ -454,7 +457,8 @@ class ElementTable extends React.Component<
 
   updateFilterOrder = (items: Array<IFilter>) => {
     this.setState({
-      filters: items
+      filters: items,
+      curr_page: 1
     });
     this.updateFilterData(items);
   };
@@ -668,11 +672,11 @@ class ElementTable extends React.Component<
                 </tbody>
               ) : (
                 <div className="loading-container">
-                  <Spinner
+                  {/* <Spinner
                     className="center"
                     intent="primary"
                     size={Spinner.SIZE_STANDARD}
-                  />
+                  /> */}
                   <h4 className="center">no {this.props.type} found </h4>
                 </div>
               )}
