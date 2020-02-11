@@ -11,8 +11,8 @@ import axios from "axios";
 import React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps } from "react-router-dom";
-import { API_ROOT } from "../../api-config";
-import { getHeaders } from "../utils";
+import { API_ROOT } from "../../utils/api-config";
+import { getHeaders } from "../../utils/utils";
 import "./login.scss";
 const FormItem = Form.Item;
 interface RegistrationFormProps {

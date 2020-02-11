@@ -1,15 +1,15 @@
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
 import { Tabs, Classes, Tab } from "@blueprintjs/core";
-import ElementView from "./elementView";
+import ElementTab from "./elementTab";
 import "./elementView.scss";
 import { connect } from "react-redux";
-import { ElementType } from "../utils";
+import { ElementType } from "../../utils/utils";
 
-interface ElementTabViewProps {
+interface ElementTabContainerProps {
   isAdmin: boolean;
 }
-class ElementTabView extends React.Component<ElementTabViewProps> {
+class ElementTabContainer extends React.Component<ElementTabContainerProps> {
   public render() {
     return (
       <Tabs
@@ -25,13 +25,13 @@ class ElementTabView extends React.Component<ElementTabViewProps> {
           className="tab"
           id="instance"
           title="Instances"
-          panel={<ElementView element={ElementType.INSTANCE} />}
+          panel={<ElementTab element={ElementType.INSTANCE} />}
         />
         <Tab
           className="tab"
           id="model"
           title="Models"
-          panel={<ElementView element={ElementType.MODEL} />}
+          panel={<ElementTab element={ElementType.MODEL} />}
         />
         {/* <Tab
           className="tab"
@@ -51,4 +51,4 @@ const mapStateToProps = (state: any) => {
   };
 };
 
-export default connect(mapStateToProps)(ElementTabView);
+export default connect(mapStateToProps)(ElementTabContainer);

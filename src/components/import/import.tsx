@@ -2,10 +2,10 @@ import { Classes, AnchorButton, Alert, Dialog, Card, Elevation, Tag, Overlay, Sp
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
-import { API_ROOT } from "../../api-config";
+import { API_ROOT } from "../../utils/api-config";
 import { RouteComponentProps, withRouter } from "react-router";
 import { connect } from "react-redux";
-import { InstanceObject, ModelObject } from "../utils";
+import { InstanceObject, ModelObject } from "../../utils/utils";
 import "./import.scss";
 import { FileSelector } from "../lib/fileSelect"
 import { Modifier } from "./viewModified"

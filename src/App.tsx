@@ -4,13 +4,13 @@ import "normalize.css/normalize.css";
 import React from "react";
 import { connect } from "react-redux";
 import { BrowserRouter, Redirect, Route, Switch } from "react-router-dom";
-import InstanceView from "./components/detailedView/instanceView/instanceView";
-import ModelView from "./components/detailedView/modelView/modelView";
-import RackView from "./components/detailedView/rackView/rackView";
+import InstanceView from "./components/elementView/detailedView/instanceView/instanceView";
+import ModelView from "./components/elementView/detailedView/modelView/modelView";
+import RackView from "./components/elementView/detailedView/rackView/rackView";
 import Notfound from "./components/fallback"; // 404 page
 import LandingView from "./components/landingView/landingView";
-import WrappedNormalLoginForm from "./components/login/login";
-import WrappedNormalRegistrationForm from "./components/login/register";
+import WrappedNormalLoginForm from "./forms/auth/login";
+import WrappedNormalRegistrationForm from "./forms/auth/register";
 import Navigation from "./components/navigation/navigation";
 import BulkImport from "./components/import/import";
 // import BulkExport from "./components/export/export";

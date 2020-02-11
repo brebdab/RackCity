@@ -6,9 +6,9 @@ import {
   isInstanceObject,
   isModelObject,
   FormObjectType
-} from "../components/utils";
+} from "../utils/utils";
 import RackSelectView from "../components/elementView/rackSelectView";
-import InstanceForm from "./InstanceForm";
+import InstanceForm from "./instanceForm";
 import ModelForm from "./modelForm";
 import { FormTypes } from "./formUtils";
 interface FormPopupState {}
