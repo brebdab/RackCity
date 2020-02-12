@@ -236,7 +236,6 @@ class InstanceForm extends React.Component<
           className="create-form bp3-form-group"
         >
           <h2>Add a New Instance</h2>
-
           <FormGroup label="Hostname (required)" inline={false}>
             <Field
               placeholder="hostname"
@@ -253,28 +252,40 @@ class InstanceForm extends React.Component<
               onChange={this.handleChange}
             />
           </FormGroup>
+
           <FormGroup label="Model (required)" inline={false}>
             <ModelSuggest
+              className="select"
               popoverProps={{
                 minimal: true,
                 popoverClassName: "dropdown",
                 usePortal: true
               }}
-              defaultSelectedItem={this.state.values.model}
-              inputValueRenderer={(model: ModelObject) =>
-                model.vendor + " " + model.model_number
-              }
+              // defaultSelectedItem={this.state.values.model}
+              // inputValueRenderer={(model: ModelObject) =>
+              //   model.vendor + " " + model.model_number
+              // }
               items={this.state.models}
               onItemSelect={(model: ModelObject) =>
                 this.setState({
                   values: updateObject(values, { model: model })
                 })
               }
-          
               itemRenderer={renderModelItem}
               itemPredicate={filterModel}
               noResults={<MenuItem disabled={true} text="No results." />}
-            />
+            >
+              <Button
+                rightIcon="caret-down"
+                text={
+                  this.state.values.model
+                    ? this.state.values.model.vendor +
+                      " " +
+                      this.state.values.model.model_number
+                    : "(No selection)"
+                }
+              />
+            </ModelSuggest>
           </FormGroup>
           <FormGroup label="Rack (required)" inline={false}>
             <RackSuggest
@@ -298,7 +309,6 @@ class InstanceForm extends React.Component<
               noResults={<MenuItem disabled={true} text="No results." />}
             />
           </FormGroup>
-
           <FormGroup label="Owner" inline={false}>
             <StringSuggest
               popoverProps={{
@@ -334,7 +344,6 @@ class InstanceForm extends React.Component<
               onChange={this.handleChange}
             />
           </FormGroup>
-
           <Button className="login-button" type="submit">
             Submit
           </Button>

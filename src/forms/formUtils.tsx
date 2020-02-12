@@ -1,4 +1,9 @@
-import { ItemPredicate, ItemRenderer, Suggest } from "@blueprintjs/select";
+import {
+  ItemPredicate,
+  ItemRenderer,
+  Suggest,
+  Select
+} from "@blueprintjs/select";
 import React from "react";
 import { MenuItem } from "@blueprintjs/core";
 import { ModelObject, RackObject } from "../utils/utils";
@@ -161,5 +166,5 @@ export const renderCreateItemOption = (
 );
 
 export const StringSuggest = Suggest.ofType<string>();
-export const ModelSuggest = Suggest.ofType<ModelObject>();
+export const ModelSuggest = Select.ofType<ModelObject>();
 export const RackSuggest = Suggest.ofType<RackObject>();
