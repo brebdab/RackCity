@@ -5,7 +5,7 @@ import * as React from "react";
 import { API_ROOT } from "../../utils/api-config";
 import { RouteComponentProps, withRouter } from "react-router";
 import { connect } from "react-redux";
-import { InstanceObject, ModelObject } from "../../utils/utils";
+import { InstanceObject, ModelObjectOld } from "../../utils/utils";
 import "./import.scss";
 import { FileSelector } from "../lib/fileSelect"
 import { Modifier } from "./viewModified"
@@ -22,7 +22,7 @@ interface AlertState {
   modelAlterationsIsOpen: boolean,
   instanceAlterationsIsOpen: boolean,
   selectedFile?: File,
-  loadedModels?: Array<ModelObject>,
+  loadedModels?: Array<ModelObjectOld>,
   loadedInstances?: Array<InstanceObject>,
   modifiedModels?: Array<any>,
   modifiedInstances?: Array<any>,
@@ -332,7 +332,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
         }).fromString(res).then((csvRow: Array<any>) => {
           for (var i = 0; i < csvRow.length; i++) {
             /* This next block is just to fix field names from the csv format to our backend format */
-            const model: ModelObject = {
+            const model: ModelObjectOld = {
               vendor: csvRow[i].vendor,
               model_number: csvRow[i].model_number,
               height: csvRow[i].height,

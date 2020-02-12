@@ -4,7 +4,8 @@ import {
   Classes,
   FormGroup,
   Intent,
-  MenuItem
+  MenuItem,
+  InputGroup
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -22,6 +23,7 @@ import {
   StringSuggest,
   FormTypes
 } from "./formUtils";
+
 //TO DO : add validation of types!!!
 
 export interface ModelFormProps {
@@ -34,6 +36,8 @@ interface ModelFormState {
   values: ModelObject;
   vendors: Array<string>;
   errors: Array<string>;
+  numNetworkPorts: number;
+  network_ports: Array<string>;
 }
 
 export const required = (
@@ -53,7 +57,9 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
   public state = {
     values: this.initialState,
     vendors: [],
-    errors: []
+    errors: [],
+    numNetworkPorts: 0,
+    network_ports: []
   };
   headers = {
     headers: {
@@ -107,15 +113,35 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
   }
 
   handleChange = (field: { [key: string]: any }) => {
+    // console.log(field, Object.keys(field), field["num_power_ports"]);
+    const names: Array<string> = this.state.network_ports;
+    if (field["num_network_ports"]) {
+      const num_network_ports = field["num_network_ports"];
+
+      while (names.length < num_network_ports) {
+        names.push("");
+      }
+      while (names.length > num_network_ports) {
+        names.pop();
+      }
+    }
     this.setState({
+      network_ports: names,
       values: updateObject(this.state.values, {
         ...field
       })
     });
   };
 
+  handleNetworkPortNameChange = (index: number, name: string) => {
+    const names: Array<string> = this.state.network_ports;
+    names[index] = name;
+    this.setState({
+      network_ports: names
+    });
+  };
+
   render() {
-    console.log(this.state.values);
     if (this.state.vendors.length === 0) {
       this.getVendors();
     }
@@ -178,13 +204,51 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
               onChange={this.handleChange}
             />
           </FormGroup>
-          <FormGroup label="# Ethernet Ports" inline={false}>
+          <FormGroup label="Network Ports " inline={false}>
             <Field
+              field="num_network_ports"
+              type="string"
+              value={values.num_network_ports}
+              onChange={this.handleChange}
+            />
+
+            {this.state.network_ports.length === 0 ? null : (
+              <table className="port-table">
+                <thead>
+                  <th></th>
+                  <th>Port Name(s) </th>
+                </thead>
+                <tbody>
+                  {this.state.network_ports.map((port, index) => {
+                    return (
+                      <tr>
+                        <td>{index + 1}</td>
+                        <td>
+                          <InputGroup
+                            type="string"
+                            className="network-name"
+                            onChange={(e: any) =>
+                              this.handleNetworkPortNameChange(
+                                index,
+                                e.currentTarget.value
+                              )
+                            }
+                          />
+                          {port}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+
+            {/* <Field
               field="num_ethernet_ports"
               placeholder="num_ethernet_ports"
               value={values.num_ethernet_ports}
               onChange={this.handleChange}
-            />
+            /> */}
           </FormGroup>
           <FormGroup label="# Power Ports" inline={false}>
             <Field

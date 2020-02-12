@@ -10,7 +10,7 @@ import {
   ElementObjectType,
   ElementType,
   InstanceInfoObject,
-  ModelObject
+  ModelObjectOld
 } from "../../utils/utils";
 import ElementTable, { PagingTypes } from "./elementTable";
 import "./elementView.scss";
@@ -131,7 +131,7 @@ class ElementTab extends React.Component<ElementViewProps, ElementViewState> {
   };
   private handleClose = () => this.setState({ isOpen: false });
 
-  private createModel = (model: ModelObject, headers: any): Promise<any> => {
+  private createModel = (model: ModelObjectOld, headers: any): Promise<any> => {
     return axios.post(API_ROOT + "api/models/add", model, headers).then(res => {
       console.log("success");
       this.handleDataUpdate(true);

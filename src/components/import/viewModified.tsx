@@ -6,7 +6,7 @@ import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import { API_ROOT } from "../../utils/api-config";
 import "./import.scss";
-import { ModelObject, RackObject } from "../../utils/utils";
+import { ModelObjectOld, RackObject } from "../../utils/utils";
 
 interface ModifierProps {
   token: string,
@@ -23,7 +23,7 @@ export interface InstanceObject {
   [key: string]: any;
   hostname: string;
   elevation: string;
-  model: ModelObject;
+  model: ModelObjectOld;
   rack: RackObject;
   owner?: string;
   comment?: string;

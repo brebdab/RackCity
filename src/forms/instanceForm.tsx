@@ -12,7 +12,7 @@ import { connect } from "react-redux";
 
 import {
   InstanceObject,
-  ModelObject,
+  ModelObjectOld,
   InstanceInfoObject,
   getHeaders,
   RackObject,
@@ -49,7 +49,7 @@ export interface InstanceFormProps {
 interface InstanceFormState {
   values: InstanceObject;
   racks: Array<RackObject>;
-  models: Array<ModelObject>;
+  models: Array<ModelObjectOld>;
   errors: Array<string>;
   users: Array<string>;
 }
@@ -215,7 +215,7 @@ class InstanceForm extends React.Component<
         this.props.token
       ).then(res => {
         this.setState({
-          models: res as Array<ModelObject>
+          models: res as Array<ModelObjectOld>
         });
       });
     }
@@ -261,11 +261,11 @@ class InstanceForm extends React.Component<
                 usePortal: true
               }}
               defaultSelectedItem={this.state.values.model}
-              inputValueRenderer={(model: ModelObject) =>
+              inputValueRenderer={(model: ModelObjectOld) =>
                 model.vendor + " " + model.model_number
               }
               items={this.state.models}
-              onItemSelect={(model: ModelObject) =>
+              onItemSelect={(model: ModelObjectOld) =>
                 this.setState({
                   values: updateObject(values, { model: model })
                 })
