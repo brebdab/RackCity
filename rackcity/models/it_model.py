@@ -21,7 +21,12 @@ class ITModel(models.Model):
         validators=[validate_display_color],
     )
 
-    network_ports = ArrayField(models.CharField(max_length=150, blank=True),null=True,blank =True)
+    network_ports = ArrayField(
+        models.CharField(max_length=150, blank=True),
+        null=True,
+        blank=True,
+    )
+
     num_power_ports = RCPositiveIntegerField(null=True, blank=True)
     cpu = models.CharField(max_length=150, null=True, blank=True)
     memory_gb = RCPositiveIntegerField(null=True, blank=True)
