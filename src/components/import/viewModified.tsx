@@ -4,9 +4,9 @@ import axios from "axios";
 import * as React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
-import { API_ROOT } from "../../api-config";
+import { API_ROOT } from "../../utils/api-config";
 import "./import.scss";
-import { ModelObject, RackObject } from "../utils";
+import { ModelObject, RackObject } from "../../utils/utils";
 
 interface ModifierProps {
   token: string,

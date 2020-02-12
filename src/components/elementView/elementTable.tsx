@@ -17,13 +17,14 @@ import {
   ElementObjectType,
   ElementType,
   isModelObject,
-  isRackObject
-} from "../utils";
+  isRackObject,
+  RackRangeFields
+} from "../../utils/utils";
 import DragDropList from "./dragDropList";
 import "./elementView.scss";
-import FilterSelectView, { IFilter } from "./filterSelectView";
-import { RackRangeFields } from "./rackSelectView";
-interface IElementTableState {
+import FilterSelectView, { IFilter } from "./filterSelect";
+
+interface ElementTableState {
   items: Array<ElementObjectType>;
   sort_by: Array<ITableSort>;
   // sort_by_id: Array<ITableSort & IDragAndDrop>;
@@ -61,11 +62,7 @@ export interface TextFilter {
   match_type: string;
 }
 
-interface IDragAndDrop {
-  id: string;
-}
-
-interface IElementTableProps {
+interface ElementTableProps {
   callback?: Function;
   type: ElementType;
   token: string;
@@ -89,10 +86,10 @@ interface IElementTableProps {
 }
 
 class ElementTable extends React.Component<
-  IElementTableProps & RouteComponentProps,
-  IElementTableState
+  ElementTableProps & RouteComponentProps,
+  ElementTableState
 > {
-  public state: IElementTableState = {
+  public state: ElementTableState = {
     // sort_by_id: [],
     page_type: 10,
     filters: [],
@@ -102,7 +99,7 @@ class ElementTable extends React.Component<
     curr_page: 1,
     total_pages: 0
   };
-  public defaultProps: Partial<IElementTableProps> = {
+  public defaultProps: Partial<ElementTableProps> = {
     disableSorting: false,
     disableFiltering: false,
     shouldUpdateData: false
@@ -590,7 +587,6 @@ class ElementTable extends React.Component<
           {!(this.state.items && this.state.items.length > 0) ? (
             <div className="loading-container">
               <Spinner
-            
                 className="center"
                 intent="primary"
                 size={Spinner.SIZE_STANDARD}

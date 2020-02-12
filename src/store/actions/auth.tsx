@@ -1,5 +1,5 @@
 import axios from "axios";
-import { API_ROOT } from "../../api-config";
+import { API_ROOT } from "../../utils/api-config";
 import * as actionTypes from "./actionTypes";
 export const authStart = () => {
   return {
