@@ -270,6 +270,7 @@ class InstanceForm extends React.Component<
                   values: updateObject(values, { model: model })
                 })
               }
+          
               itemRenderer={renderModelItem}
               itemPredicate={filterModel}
               noResults={<MenuItem disabled={true} text="No results." />}

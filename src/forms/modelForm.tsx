@@ -23,6 +23,8 @@ import {
   FormTypes
 } from "./formUtils";
 //TO DO : add validation of types!!!
+// var console: any = {};
+// console.log = function() {};
 
 export interface ModelFormProps {
   token: string;
@@ -115,7 +117,6 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
   };
 
   render() {
-    console.log(this.state.values);
     if (this.state.vendors.length === 0) {
       this.getVendors();
     }
@@ -145,6 +146,11 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
                   values: updateObject(values, { vendor: vendor })
                 })
               }
+              onQueryChange={(vendor: string) => {
+                this.setState({
+                  values: updateObject(values, { vendor: vendor })
+                });
+              }}
               createNewItemRenderer={renderCreateItemOption}
               createNewItemFromQuery={(vendor: string) => vendor}
               itemRenderer={renderStringItem}
