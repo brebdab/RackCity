@@ -164,7 +164,7 @@ export const renderCreateItemOption = (
     shouldDismissPopover={false}
   />
 );
-
+export const StringSelect = Select.ofType<string>();
 export const StringSuggest = Suggest.ofType<string>();
-export const ModelSuggest = Select.ofType<ModelObject>();
-export const RackSuggest = Suggest.ofType<RackObject>();
+export const ModelSelect = Select.ofType<ModelObject>();
+export const RackSelect = Select.ofType<RackObject>();
