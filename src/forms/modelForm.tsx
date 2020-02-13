@@ -57,8 +57,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
     values: this.initialState,
     vendors: [],
     errors: [],
-    numNetworkPorts: 0,
-    network_ports: []
+    numNetworkPorts: 0
   };
   headers = {
     headers: {
@@ -113,12 +112,15 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
 
   handleChange = (field: { [key: string]: any }) => {
     // console.log(field, Object.keys(field), field["num_power_ports"]);
-    const network_ports: Array<string> = this.state.network_ports;
+    const network_ports: Array<string> = this.state.values.network_ports
+      ? this.state.values.network_ports
+      : [];
     if (field["num_network_ports"]) {
       const num_network_ports = field["num_network_ports"];
       let index = network_ports.length;
       while (network_ports.length < num_network_ports) {
         index++;
+        console.log(network_ports, index);
         network_ports.push((index as unknown) as string);
       }
       while (network_ports.length > num_network_ports) {
@@ -134,7 +136,9 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
   };
 
   handleNetworkPortNameChange = (index: number, name: string) => {
-    const network_ports: Array<string> = this.state.network_ports;
+    const network_ports: Array<string> = this.state.values.network_ports
+      ? this.state.values.network_ports
+      : [];
     network_ports[index] = name;
     this.setState({
       values: updateObject(this.state.values, {
@@ -145,6 +149,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
   selectText = (event: any) => event.target.select();
 
   render() {
+    console.log(this.state.values);
     if (this.state.vendors.length === 0) {
       this.getVendors();
     }
@@ -210,40 +215,39 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
             <Field
               field="num_network_ports"
               type="string"
-              value={values.num_network_ports}
+              value={values.network_ports ? values.network_ports.length : 0}
               onChange={this.handleChange}
             />
 
-            {this.state.network_ports.length === 0 ? null : (
+            {values.network_ports &&
+            values.network_ports.length === 0 ? null : (
               <table className="port-table">
                 <thead>
                   <th>Port Name(s) </th>
                 </thead>
                 <tbody>
-                  {this.state.network_ports.map((port, index) => {
-                    return (
-                      <tr>
-                        <td>
-                          <InputGroup
-                            onClick={this.selectText}
-                            value={
-                              values.network_ports
-                                ? values.network_ports[index]
-                                : (((index + 1) as unknown) as string)
-                            }
-                            type="string"
-                            className="network-name"
-                            onChange={(e: any) =>
-                              this.handleNetworkPortNameChange(
-                                index,
-                                e.currentTarget.value
-                              )
-                            }
-                          />
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {values.network_ports
+                    ? values.network_ports.map((port, index) => {
+                        return (
+                          <tr>
+                            <td>
+                              <InputGroup
+                                onClick={this.selectText}
+                                value={port}
+                                type="string"
+                                className="network-name"
+                                onChange={(e: any) =>
+                                  this.handleNetworkPortNameChange(
+                                    index,
+                                    e.currentTarget.value
+                                  )
+                                }
+                              />
+                            </td>
+                          </tr>
+                        );
+                      })
+                    : null}
                 </tbody>
               </table>
             )}

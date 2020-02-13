@@ -65,7 +65,6 @@ export interface ModelObject extends ElementObject {
   model_number: string;
   height: string;
   display_color?: string;
-  num_network_ports?: string;
   network_ports?: Array<string>; //
   num_power_ports?: string; //
   cpu?: string;
