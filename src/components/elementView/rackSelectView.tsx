@@ -6,7 +6,7 @@ import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import "../../forms/forms.scss";
 import { updateObject } from "../../store/utility";
-import { RackRangeFields } from "../../utils/utils";
+import { getHeaders, RackRangeFields } from "../../utils/utils";
 import "./elementView.scss";
 import RackRangeForm from "../../forms/rackRangeForm";
 interface RackSelectViewState {
@@ -56,6 +56,10 @@ class RackSelectView extends React.Component<
     });
 
     e.preventDefault();
+
+    const headers = getHeaders(this.props.token);
+
+    this.props.submitForm(this.state.values, headers);
   };
   renderRackOptions(range: boolean) {}
   componentDidMount() {}
