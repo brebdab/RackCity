@@ -1,3 +1,5 @@
+import axios from "axios";
+import { API_ROOT } from "./api-config";
 interface ElementObject {
   id: string;
 }
@@ -90,3 +92,12 @@ export const getHeaders = (token: string) => {
     }
   };
 };
+
+export function getFields(type: string, headers: any) {
+  return axios
+    .post(API_ROOT + "api/" + type + "/get-many", headers)
+    .then(res => {
+      const items = res.data.fields;
+      return items;
+    });
+}
