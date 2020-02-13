@@ -7,6 +7,8 @@ from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from http import HTTPStatus
 from rackcity.views.rackcity_utils import get_rack_detailed_response
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def rack_get_all(request):
