@@ -165,6 +165,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
           className="add"
           text="Export Table Data"
           icon="import"
+          minimal
           onClick={() => {
             /* handle data based on state */
             this.setState({ fileNameIsOpen: true });
@@ -177,7 +178,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               onClick={() => this.props.history.push("/bulk-upload")}
               className="add"
               icon="export"
-              text="Upload from CSV file"
+              text="Add from CSV file"
+              minimal
             />
           </div>
         ) : (
