@@ -140,6 +140,10 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
       network_ports: names
     });
   };
+  private input: InputGroup = {} as InputGroup;
+  private refHandlers = {
+    input: (ref: InputGroup) => (this.input = ref)
+  };
 
   render() {
     if (this.state.vendors.length === 0) {
@@ -225,6 +229,8 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
                         <td>{index + 1}</td>
                         <td>
                           <InputGroup
+                            ref={this.refHandlers.input}
+                            onClick={this.refHandlers.input.current}
                             type="string"
                             className="network-name"
                             onChange={(e: any) =>
@@ -234,7 +240,6 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
                               )
                             }
                           />
-                          {port}
                         </td>
                       </tr>
                     );
