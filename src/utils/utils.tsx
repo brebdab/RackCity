@@ -1,5 +1,3 @@
-import { RackRangeFields } from "./elementView/rackSelectView";
-
 interface ElementObject {
   id: string;
 }
@@ -16,13 +14,12 @@ export interface InstanceObject extends ElementObject {
   owner?: string;
   comment?: string;
 }
-export const getHeaders = (token: string) => {
-  return {
-    headers: {
-      Authorization: "Token " + token
-    }
-  };
-};
+export interface RackRangeFields {
+  letter_start: string;
+  letter_end: string;
+  num_start: number;
+  num_end: number;
+}
 
 export interface InstanceInfoObject extends ElementObject {
   hostname: string;
@@ -86,3 +83,10 @@ export function isRackObject(obj: any): obj is RackObject {
 export function isInstanceObject(obj: any): obj is InstanceObject {
   return obj && obj.hostname;
 }
+export const getHeaders = (token: string) => {
+  return {
+    headers: {
+      Authorization: "Token " + token
+    }
+  };
+};

@@ -3,19 +3,21 @@ import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
 import { connect } from "react-redux";
-import { API_ROOT } from "../../api-config";
-import FormPopup from "../../forms/FormPopup";
+import { API_ROOT } from "../../utils/api-config";
+import FormPopup from "../../forms/formPopup";
 import { FormTypes } from "../../forms/formUtils";
 import {
   ElementObjectType,
   ElementType,
   InstanceInfoObject,
   ModelObject
-} from "../utils";
+} from "../../utils/utils";
 import ElementTable, { PagingTypes } from "./elementTable";
 import "./elementView.scss";
-import { IFilter } from "./filterSelectView";
+import { IFilter } from "./filterSelect";
 
+var console: any = {};
+console.log = function() {};
 const fs = require("js-file-download");
 
 interface ElementViewState {
@@ -76,7 +78,7 @@ async function getExportData(
     });
 }
 
-class ElementView extends React.Component<ElementViewProps, ElementViewState> {
+class ElementTab extends React.Component<ElementViewProps, ElementViewState> {
   public state: ElementViewState = {
     isOpen: false,
     filters: [],
@@ -249,4 +251,4 @@ const mapStateToProps = (state: any) => {
     isAdmin: state.admin
   };
 };
-export default connect(mapStateToProps)(ElementView);
+export default connect(mapStateToProps)(ElementTab);

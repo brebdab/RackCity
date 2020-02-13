@@ -17,7 +17,7 @@ import {
   getHeaders,
   RackObject,
   ElementObjectType
-} from "../components/utils";
+} from "../utils/utils";
 import { updateObject } from "../store/utility";
 import Field from "./field";
 import "./forms.scss";
@@ -35,7 +35,7 @@ import {
   filterString
 } from "./formUtils";
 import axios from "axios";
-import { API_ROOT } from "../api-config";
+import { API_ROOT } from "../utils/api-config";
 import { PagingTypes } from "../components/elementView/elementTable";
 
 //TO DO : add validation of types!!!
@@ -53,6 +53,8 @@ interface InstanceFormState {
   errors: Array<string>;
   users: Array<string>;
 }
+var console: any = {};
+console.log = function() {};
 
 export const required = (
   values: InstanceObject,

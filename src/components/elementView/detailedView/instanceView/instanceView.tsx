@@ -10,14 +10,18 @@ import {
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
-import { API_ROOT } from "../../../api-config";
+import { API_ROOT } from "../../../../utils/api-config";
 import PropertiesView from "../propertiesView";
 import { RouteComponentProps, withRouter } from "react-router";
 import "./instanceView.scss";
 import { connect } from "react-redux";
-import { InstanceObject, ElementType, getHeaders } from "../../utils";
-import FormPopup from "../../../forms/FormPopup";
-import { FormTypes } from "../../../forms/formUtils";
+import {
+  InstanceObject,
+  ElementType,
+  getHeaders
+} from "../../../../utils/utils";
+import FormPopup from "../../../../forms/formPopup";
+import { FormTypes } from "../../../../forms/formUtils";
 
 export interface InstanceViewProps {
   token: string;
@@ -26,6 +30,8 @@ export interface InstanceViewProps {
 }
 // Given an rid, will perform a GET request of that rid and display info about that instnace
 
+var console: any = {};
+console.log = function() {};
 async function getData(instancekey: string, token: string) {
   const headers = {
     headers: {

@@ -11,11 +11,14 @@ import axios from "axios";
 import * as React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
-import { API_ROOT } from "../../../api-config";
-import RackSelectView, {
+import { API_ROOT } from "../../../../utils/api-config";
+import RackSelectView from "../../rackSelectView";
+import {
+  getHeaders,
+  InstanceObject,
+  RackResponseObject,
   RackRangeFields
-} from "../../elementView/rackSelectView";
-import { getHeaders, InstanceObject, RackResponseObject } from "../../utils";
+} from "../../../../utils/utils";
 import "./rackView.scss";
 //export interface ElementViewProps {}
 
@@ -26,6 +29,9 @@ export interface RackViewProps {
 export interface RouteParams {
   rid: string;
 }
+var console: any = {};
+console.log = function() {};
+console.warn = function() {};
 
 export interface RackViewState {
   isDeleteOpen: boolean;

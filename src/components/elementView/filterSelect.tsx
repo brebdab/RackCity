@@ -9,9 +9,11 @@ import "../../forms/forms.scss";
 import { filterString, renderStringItem } from "../../forms/formUtils";
 import { updateObject } from "../../store/utility";
 import "./elementView.scss";
-import RackRangeOptions from "./rackRangeOptions";
-import { RackRangeFields } from "./rackSelectView";
+import RackRangeForm from "../../forms/rackRangeForm";
+import { RackRangeFields } from "../../utils/utils";
 
+var console: any = {};
+console.log = function() {};
 export enum TextFilterTypes {
   EXACT = "exact",
   CONTAINS = "contains"
@@ -35,9 +37,8 @@ export interface IFilter {
   filter_type?: FilterTypes;
   filter?: TextFilter | NumericFilter | RackRangeFields;
 }
-interface FilterSelectViewState extends IFilter {}
 
-interface FilterSelectViewProps {
+interface FilterSelectProps {
   token: string;
   fields: Array<string>;
   handleAddFilter(filter: IFilter): void;
@@ -61,8 +62,8 @@ function getFilterType(field: string | undefined) {
   }
 }
 
-class FilterSelectView extends React.Component<
-  FilterSelectViewProps & RouteComponentProps,
+class FilterSelect extends React.Component<
+  FilterSelectProps & RouteComponentProps,
   IFilter
 > {
   state = {
@@ -90,7 +91,7 @@ class FilterSelectView extends React.Component<
   getRackFilterOptions() {
     return (
       <div className="field">
-        <RackRangeOptions
+        <RackRangeForm
           className="field"
           handleChange={this.handleChange}
           range={true}
@@ -247,4 +248,4 @@ const mapStateToProps = (state: any) => {
   };
 };
 
-export default connect(mapStateToProps)(withRouter(FilterSelectView));
+export default connect(mapStateToProps)(withRouter(FilterSelect));

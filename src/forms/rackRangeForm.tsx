@@ -1,12 +1,12 @@
 import { FormGroup } from "@blueprintjs/core";
 import * as React from "react";
-import Field from "../../forms/field";
-interface RackRangeProps {
+import Field from "./field";
+interface RackRangeFormProps {
   handleChange(field: { [key: string]: any }): void;
   range: boolean;
   className?: string;
 }
-class RackRangeOptions extends React.Component<RackRangeProps> {
+class RackRangeForm extends React.Component<RackRangeFormProps> {
   render() {
     return (
       <div className={this.props.className}>
@@ -47,4 +47,4 @@ class RackRangeOptions extends React.Component<RackRangeProps> {
     );
   }
 }
-export default RackRangeOptions;
+export default RackRangeForm;

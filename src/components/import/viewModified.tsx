@@ -4,30 +4,34 @@ import axios from "axios";
 import * as React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
-import { API_ROOT } from "../../api-config";
+import { API_ROOT } from "../../utils/api-config";
 import "./import.scss";
-import { ModelObject, RackObject } from "../utils";
+import { ModelObject, RackObject } from "../../utils/utils";
 
 interface ModifierProps {
   token: string,
-  models?: Array<any>,
+  modelsModified?: Array<any>,
+  modelsIgnored?: number,
+  modelsAdded?: number,
   callback: Function,
   operation: string
 }
+var console: any = {};
+console.log = function() {};
 
 export interface InstanceObject {
-  [key: string]: any
+  [key: string]: any;
   hostname: string;
   elevation: string;
   model: ModelObject;
   rack: RackObject;
   owner?: string;
   comment?: string;
-  id: string
+  id: string;
 }
 
 export interface ModelObjectMod {
-  [key: string]: any
+  [key: string]: any;
   vendor: string;
   model_number: string;
   height: string;
@@ -38,31 +42,33 @@ export interface ModelObjectMod {
   memory_gb?: string; //
   storage?: string;
   comment?: string;
-  id: string
+  id: string;
 }
 
 interface Check {
-  model: any,
-  checked: boolean
+  model: any;
+  checked: boolean;
 }
 
 interface ModifierState {
-  modifiedModels: Array<Check>
+  modifiedModels: Array<Check>;
 }
 
-export class Modifier extends React.PureComponent<RouteComponentProps & ModifierProps, ModifierState> {
-
+export class Modifier extends React.PureComponent<
+  RouteComponentProps & ModifierProps,
+  ModifierState
+> {
   public state: ModifierState = {
     modifiedModels: []
-  }
+  };
 
   render() {
-    if (this.props.models !== undefined) {
-      console.log(this.props.models[0]);
+    if (this.props.modelsModified !== undefined) {
+      console.log(this.props.modelsModified[0]);
       let model: any;
-      model = this.props.models[0].existing;
-      let fields: any
-      if (this.props.operation === "models")  {
+      model = this.props.modelsModified[0].existing;
+      let fields: any;
+      if (this.props.operation === "models") {
         fields = {
           vendor: "Vendor",
           model_number: "Model #",
@@ -75,7 +81,7 @@ export class Modifier extends React.PureComponent<RouteComponentProps & Modifier
           storage: "Storage",
           comment: "Comments",
           id: ""
-        }
+        };
       } else {
         fields = {
           hostname: "Hostname",
@@ -85,11 +91,11 @@ export class Modifier extends React.PureComponent<RouteComponentProps & Modifier
           owner: "Owner",
           comment: "Comments",
           id: ""
-        }
+        };
       }
       return (
         <div>
-          {this.props.models.map((obj: any) => {
+          {this.props.modelsModified.map((obj: any) => {
               let checkObj: Check;
               checkObj = { model: obj.modified, checked: false }
               this.state.modifiedModels.push(checkObj)
@@ -172,10 +178,11 @@ export class Modifier extends React.PureComponent<RouteComponentProps & Modifier
                       modified.push(this.state.modifiedModels[i].model);
                   }
                   uploadModified(modified, this.props.token, this.props.operation).then(res => {
-                    alert("Modifications were successful")
+                    console.log(this.props)
+                    alert("Success! Modified: " + modified.length + "; Added: " + this.props.modelsAdded! + "; Ignored: " + (this.props.modelsIgnored! + this.props.modelsModified!.length - modified.length))
                     this.setState({
                       modifiedModels: []
-                    })
+                    });
                     this.props.callback()
                   }, err => {
                     alert(err.response.data.failure_message)
@@ -189,54 +196,63 @@ export class Modifier extends React.PureComponent<RouteComponentProps & Modifier
                       modified.push(this.state.modifiedModels[i].model);
                   }
                   uploadModified(modified, this.props.token, this.props.operation).then(res => {
-                    alert("Modifications were successful")
+                    alert("Success! Modified: " + modified.length + "; Added: " + this.props.modelsAdded! + "; Ignored: " + (this.props.modelsIgnored! + this.props.modelsModified!.length - modified.length))
+                    // alert("Modifications were successful")
                     this.setState({
                       modifiedModels: []
-                    })
-                    this.props.callback()
-                  }, err => {
-                    alert(err.response.data.failure_message)
-                  })
-                }
-              }}
-            />
+                    });
+                    this.props.callback();
+                  },
+                  err => {
+                    alert(err.response.data.failure_message);
+                  }
+                );
+              }
+            }}
+          />
         </div>
-      )
+      );
     } else {
-      return <p>No data</p>
+      return <p>No data</p>;
     }
   }
-
 }
 // TODO make Array<ModelObjectMod any, assuming the POST header format is the same
-async function uploadModified(modelList: Array<any>, token: string, operation: string) {
+async function uploadModified(
+  modelList: Array<any>,
+  token: string,
+  operation: string
+) {
   console.log(API_ROOT + "api/" + operation + "/bulk-approve");
-  console.log(token)
-  console.log(modelList)
+  console.log(token);
+  console.log(modelList);
   const headers = {
     headers: {
       Authorization: "Token " + token
     }
   };
   return await axios
-    .post(API_ROOT + "api/" + operation + "/bulk-approve", {approved_modifications: modelList}, headers)
+    .post(
+      API_ROOT + "api/" + operation + "/bulk-approve",
+      { approved_modifications: modelList },
+      headers
+    )
     .then(res => {
-      console.log(res.data)
+      console.log(res.data);
       const data = res.data;
       return data;
     });
 }
 
 interface CheckboxProps {
-  linkedModel: any,
-  callback: Function
+  linkedModel: any;
+  callback: Function;
 }
 
 class Checks extends React.PureComponent<RouteComponentProps & CheckboxProps> {
-
   constructor(props: any) {
-    super(props)
-    this.handleChange = this.handleChange.bind(this)
+    super(props);
+    this.handleChange = this.handleChange.bind(this);
   }
 
   render() {
@@ -246,18 +262,17 @@ class Checks extends React.PureComponent<RouteComponentProps & CheckboxProps> {
         <span className={"bp3-control-indicator"}></span>
         Replace existing with modified?
       </label>
-    )
+    );
   }
 
   private handleChange() {
     this.props.callback(this.props.linkedModel);
   }
-
 }
 
 const mapStatetoProps = (state: any) => {
   return {
-    token: state.token,
+    token: state.token
   };
 };
 

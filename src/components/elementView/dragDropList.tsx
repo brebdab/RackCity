@@ -39,12 +39,12 @@ const getListStyle = (isDraggingOver: boolean) => ({
   overflow: "auto"
 });
 
-export interface FilterListProps {
+export interface DragDropListProps {
   items: Array<any>;
   renderItem(item: any): any;
   onChange?(items: Array<any>): void;
 }
-class DragDropList extends React.Component<FilterListProps> {
+class DragDropList extends React.Component<DragDropListProps> {
   //   constructor(props) {
   //     super(props);
   //     this.state = {

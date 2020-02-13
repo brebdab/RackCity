@@ -6,27 +6,24 @@ import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import "../../forms/forms.scss";
 import { updateObject } from "../../store/utility";
-import { getHeaders } from "../utils";
+import { getHeaders, RackRangeFields } from "../../utils/utils";
 import "./elementView.scss";
-import RackRangeOptions from "./rackRangeOptions";
-interface rackSelectViewState {
+import RackRangeForm from "../../forms/rackRangeForm";
+interface RackSelectViewState {
   viewRange: boolean;
   values: RackRangeFields;
   errors: Array<string>;
 }
-export interface RackRangeFields {
-  letter_start: string;
-  letter_end: string;
-  num_start: number;
-  num_end: number;
-}
-interface rackSelectViewProps {
+var console: any = {};
+console.log = function() {};
+
+interface RackSelectViewProps {
   token: string;
   submitForm(model: RackRangeFields, headers: any): Promise<any> | void;
 }
 class RackSelectView extends React.Component<
-  rackSelectViewProps & RouteComponentProps,
-  rackSelectViewState
+  RackSelectViewProps & RouteComponentProps,
+  RackSelectViewState
 > {
   public state = {
     viewRange: false,
@@ -91,7 +88,7 @@ class RackSelectView extends React.Component<
               label="Rack Range"
             />
             <div className="rack-select">
-              <RackRangeOptions
+              <RackRangeForm
                 className="rack-field"
                 handleChange={this.handleChange}
                 range={this.state.viewRange}
