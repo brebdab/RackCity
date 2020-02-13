@@ -6,7 +6,7 @@ import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import "../../forms/forms.scss";
 import { updateObject } from "../../store/utility";
-import { getHeaders, RackRangeFields } from "../../utils/utils";
+import { RackRangeFields } from "../../utils/utils";
 import "./elementView.scss";
 import RackRangeForm from "../../forms/rackRangeForm";
 interface RackSelectViewState {
@@ -30,9 +30,17 @@ class RackSelectView extends React.Component<
     values: {} as RackRangeFields,
     errors: []
   };
-  private handleSwitchChange = handleBooleanChange(viewRange =>
-    this.setState({ viewRange: viewRange })
-  );
+  private handleSwitchChange = handleBooleanChange(viewRange => {
+    this.setState({ viewRange: viewRange });
+    if (!viewRange) {
+      this.setState({
+        values: updateObject(this.state.values, {
+          letter_end: undefined,
+          num_end: undefined
+        })
+      });
+    }
+  });
 
   handleChange = (field: { [key: string]: any }) => {
     this.setState({
@@ -48,25 +56,6 @@ class RackSelectView extends React.Component<
     });
 
     e.preventDefault();
-
-    const headers = getHeaders(this.props.token);
-
-    const resp = this.props.submitForm(this.state.values, headers);
-    if (resp) {
-      resp.catch(err => {
-        console.log(err.response.data.failure_message);
-        let errors: Array<string> = this.state.errors;
-        errors.push(err.response.data.failure_message as string);
-        this.setState({
-          errors: errors
-        });
-      });
-    }
-
-    // this.props.history.push({
-    //   pathname: "/racks",
-    //   search: queryString.stringify(this.state.values)
-    // });
   };
   renderRackOptions(range: boolean) {}
   componentDidMount() {}

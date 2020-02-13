@@ -27,6 +27,7 @@ interface RackTabState {
   headers: any;
   isConfirmationOpen: boolean;
   racks: Array<RackResponseObject>;
+  loading: boolean;
 }
 interface RackTabProps {
   token: string;
@@ -39,7 +40,8 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
     deleteRackInfo: {} as RackRangeFields,
     headers: {},
     isConfirmationOpen: false,
-    racks: []
+    racks: [],
+    loading: false
   };
 
   private addToast(toast: IToastProps) {
@@ -60,11 +62,28 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
   private handleConfirmationOpen = () =>
     this.setState({ isConfirmationOpen: true });
   viewRackForm = (rack: RackRangeFields, headers: any) => {
-    return axios.post(API_ROOT + "api/racks/get", rack, headers).then(res => {
-      this.setState({
-        racks: res.data.racks
-      });
+    this.setState({
+      loading: true
     });
+    return axios
+      .post(API_ROOT + "api/racks/get", rack, headers)
+      .then(res => {
+        this.setState({
+          racks: res.data.racks,
+          loading: false
+        });
+      })
+      .catch(err => {
+        this.setState({
+          loading: false,
+          racks: []
+        });
+
+        this.addToast({
+          message: err.response.data.failure_message,
+          intent: Intent.DANGER
+        });
+      });
   };
   private handleOpen = () => {
     this.setState({
@@ -172,7 +191,7 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
         ) : null}
 
         <RackSelectView submitForm={this.viewRackForm} />
-        <RackView racks={this.state.racks} />
+        <RackView racks={this.state.racks} loading={this.state.loading} />
       </div>
     );
   }
