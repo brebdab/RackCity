@@ -5,7 +5,7 @@ from http import HTTPStatus
 from django.http import JsonResponse
 
 
-def get_rack_response(racks):
+def get_rack_detailed_response(racks):
     if racks.count() == 0:
         return JsonResponse(
             {"failure_message": "There are no existing racks within this range. "},

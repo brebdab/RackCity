@@ -6,15 +6,15 @@ from rackcity.api.objects import RackRangeSerializer
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from http import HTTPStatus
-from rackcity.views.rackcity_utils import get_rack_response
+from rackcity.views.rackcity_utils import get_rack_detailed_response
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def rack_get_all(request):
     """
     List all racks
     """
-    racks = Rack.objects
-    return get_rack_response(racks)
+    racks = Rack.objects.all()
+    return get_rack_detailed_response(racks)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -35,7 +35,7 @@ def rack_get(request):
         row_letter__range=range_serializer.get_row_range(),
     )
 
-    return get_rack_response(racks)
+    return get_rack_detailed_response(racks)
 
 
 @api_view(['POST'])
