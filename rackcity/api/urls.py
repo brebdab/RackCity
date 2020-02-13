@@ -34,5 +34,5 @@ urlpatterns = [
     path('iamadmin', views.i_am_admin),
     path('report', views.report_rack_usage),
     path('usernames', views.usernames),
-    path('users/whoami', views.who_am_i),
+    path('users/who-am-i', views.who_am_i),
 ]
