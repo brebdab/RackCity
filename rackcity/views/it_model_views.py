@@ -482,7 +482,7 @@ def model_fields(request):
             'model_number',
             'height',
             'display_color',
-            'num_ethernet_ports',
+            'network_ports',
             'num_power_ports',
             'cpu',
             'memory_gb',

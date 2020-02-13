@@ -5,12 +5,6 @@ from rackcity.api.serializers.fields import RCIntegerField
 
 class ITModelSerializer(serializers.ModelSerializer):
 
-    num_ethernet_ports = RCIntegerField(
-        allow_null=True,
-        max_value=2147483647,
-        min_value=0,
-        required=False
-    )
     num_power_ports = RCIntegerField(
         allow_null=True,
         max_value=2147483647,
@@ -32,7 +26,7 @@ class ITModelSerializer(serializers.ModelSerializer):
             'model_number',
             'height',
             'display_color',
-            'num_ethernet_ports',
+            'network_ports',
             'num_power_ports',
             'cpu',
             'memory_gb',
@@ -46,6 +40,7 @@ class BulkITModelSerializer(serializers.ModelSerializer):
     Serializes all fields on ITModel model according to the format required
     for bulk export.
     """
+ 
     ethernet_ports = RCIntegerField(
         source='num_ethernet_ports',
         allow_null=True,
