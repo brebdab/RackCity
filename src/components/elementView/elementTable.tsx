@@ -223,6 +223,7 @@ class ElementTable extends React.Component<
     toast.timeout = 5000;
     this.toaster.show(toast);
   }
+
   private toaster: Toaster = {} as Toaster;
   private refHandlers = {
     toaster: (ref: Toaster) => (this.toaster = ref)

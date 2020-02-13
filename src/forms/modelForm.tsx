@@ -37,7 +37,6 @@ interface ModelFormState {
   vendors: Array<string>;
   errors: Array<string>;
   numNetworkPorts: number;
-  network_ports: Array<string>;
 }
 
 export const required = (
@@ -114,36 +113,36 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
 
   handleChange = (field: { [key: string]: any }) => {
     // console.log(field, Object.keys(field), field["num_power_ports"]);
-    const names: Array<string> = this.state.network_ports;
+    const network_ports: Array<string> = this.state.network_ports;
     if (field["num_network_ports"]) {
       const num_network_ports = field["num_network_ports"];
-
-      while (names.length < num_network_ports) {
-        names.push("");
+      let index = network_ports.length;
+      while (network_ports.length < num_network_ports) {
+        index++;
+        network_ports.push((index as unknown) as string);
       }
-      while (names.length > num_network_ports) {
-        names.pop();
+      while (network_ports.length > num_network_ports) {
+        network_ports.pop();
       }
     }
     this.setState({
-      network_ports: names,
       values: updateObject(this.state.values, {
-        ...field
+        ...field,
+        network_ports
       })
     });
   };
 
   handleNetworkPortNameChange = (index: number, name: string) => {
-    const names: Array<string> = this.state.network_ports;
-    names[index] = name;
+    const network_ports: Array<string> = this.state.network_ports;
+    network_ports[index] = name;
     this.setState({
-      network_ports: names
+      values: updateObject(this.state.values, {
+        network_ports
+      })
     });
   };
-  private input: InputGroup = {} as InputGroup;
-  private refHandlers = {
-    input: (ref: InputGroup) => (this.input = ref)
-  };
+  selectText = (event: any) => event.target.select();
 
   render() {
     if (this.state.vendors.length === 0) {
@@ -219,18 +218,20 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
             {this.state.network_ports.length === 0 ? null : (
               <table className="port-table">
                 <thead>
-                  <th></th>
                   <th>Port Name(s) </th>
                 </thead>
                 <tbody>
                   {this.state.network_ports.map((port, index) => {
                     return (
                       <tr>
-                        <td>{index + 1}</td>
                         <td>
                           <InputGroup
-                            ref={this.refHandlers.input}
-                            onClick={this.refHandlers.input.current}
+                            onClick={this.selectText}
+                            value={
+                              values.network_ports
+                                ? values.network_ports[index]
+                                : (((index + 1) as unknown) as string)
+                            }
                             type="string"
                             className="network-name"
                             onChange={(e: any) =>
