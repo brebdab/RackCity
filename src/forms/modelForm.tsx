@@ -111,21 +111,22 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
   }
 
   handleChange = (field: { [key: string]: any }) => {
-    // console.log(field, Object.keys(field), field["num_power_ports"]);
-    const network_ports: Array<string> = this.state.values.network_ports
+    let network_ports: Array<string> = this.state.values.network_ports
       ? this.state.values.network_ports
       : [];
     if (field["num_network_ports"]) {
-      const num_network_ports = field["num_network_ports"];
+      let num_network_ports = field["num_network_ports"];
+
       let index = network_ports.length;
       while (network_ports.length < num_network_ports) {
         index++;
-        console.log(network_ports, index);
         network_ports.push((index as unknown) as string);
       }
       while (network_ports.length > num_network_ports) {
         network_ports.pop();
       }
+    } else if (field["num_network_ports"] === "") {
+      network_ports = [];
     }
     this.setState({
       values: updateObject(this.state.values, {
@@ -149,7 +150,6 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
   selectText = (event: any) => event.target.select();
 
   render() {
-    console.log(this.state.values);
     if (this.state.vendors.length === 0) {
       this.getVendors();
     }
