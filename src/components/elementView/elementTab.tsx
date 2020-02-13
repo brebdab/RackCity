@@ -2,6 +2,7 @@ import { AnchorButton, Intent, Alert, InputGroup } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
+import { RouteComponentProps } from "react-router";
 import { connect } from "react-redux";
 import { API_ROOT } from "../../utils/api-config";
 import FormPopup from "../../forms/formPopup";
@@ -17,7 +18,7 @@ import "./elementView.scss";
 import { IFilter } from "./filterSelect";
 
 var console: any = {};
-console.log = function() {};
+console.log = function () { };
 const fs = require("js-file-download");
 
 interface ElementViewState {
@@ -78,7 +79,8 @@ async function getExportData(
     });
 }
 
-class ElementTab extends React.Component<ElementViewProps, ElementViewState> {
+type ElementTabProps = ElementViewProps & RouteComponentProps
+class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
   public state: ElementViewState = {
     isOpen: false,
     filters: [],
@@ -100,9 +102,9 @@ class ElementTab extends React.Component<ElementViewProps, ElementViewState> {
       page_type === PagingTypes.ALL
         ? {}
         : {
-            page_size: page_type,
-            page
-          };
+          page_size: page_type,
+          page
+        };
     const config = {
       headers: {
         Authorization: "Token " + token
@@ -161,14 +163,28 @@ class ElementTab extends React.Component<ElementViewProps, ElementViewState> {
       <div>
         <AnchorButton
           className="add"
-          text="Export Bulk"
+          text="Export Table Data"
           icon="import"
+          minimal
           onClick={() => {
             /* handle data based on state */
             this.setState({ fileNameIsOpen: true });
-            console.log(this.state.filters);
+            console.log(this.state.filters)
           }}
         />
+        {this.props.isAdmin ? (
+          <div>
+            <AnchorButton
+              onClick={() => this.props.history.push("/bulk-upload")}
+              className="add"
+              icon="export"
+              text="Add from CSV file"
+              minimal
+            />
+          </div>
+        ) : (
+            <p></p>
+          )}
         <Alert
           cancelButtonText="Cancel"
           confirmButtonText="Confirm file name"
