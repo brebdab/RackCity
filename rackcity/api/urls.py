@@ -34,4 +34,5 @@ urlpatterns = [
     path('iamadmin', views.i_am_admin),
     path('report', views.report_rack_usage),
     path('usernames', views.usernames),
+    path('users/add', views.RegisterNameView.as_view()),
 ]
