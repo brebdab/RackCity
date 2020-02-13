@@ -22,7 +22,7 @@ class ITModel(models.Model):
     )
 
     network_ports = ArrayField(
-        models.CharField(max_length=150, blank=True),
+        models.CharField(max_length=150),
         null=True,
         blank=True,
     )
