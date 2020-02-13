@@ -53,7 +53,7 @@
 }
 .header-text {
   white-space: nowrap !important;
-  overflow: scroll;
+  overflow: auto;
   width: max-content !important;
   display: inline-block;
 }
