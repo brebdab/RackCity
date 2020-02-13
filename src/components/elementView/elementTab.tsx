@@ -17,7 +17,7 @@ import "./elementView.scss";
 import { IFilter } from "./filterSelect";
 
 var console: any = {};
-console.log = function() {};
+console.log = function () { };
 const fs = require("js-file-download");
 
 interface ElementViewState {
@@ -100,9 +100,9 @@ class ElementTab extends React.Component<ElementViewProps, ElementViewState> {
       page_type === PagingTypes.ALL
         ? {}
         : {
-            page_size: page_type,
-            page
-          };
+          page_size: page_type,
+          page
+        };
     const config = {
       headers: {
         Authorization: "Token " + token
