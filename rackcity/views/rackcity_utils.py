@@ -1,5 +1,37 @@
 from rackcity.models import ITInstance, ITModel, Rack
 from rackcity.api.objects import RackRangeSerializer
+from rackcity.api.serializers import RecursiveITInstanceSerializer, RackSerializer
+from http import HTTPStatus
+from django.http import JsonResponse
+
+
+def get_rack_response(racks):
+    if racks.count() == 0:
+        return JsonResponse(
+            {"failure_message": "There are no existing racks within this range. "},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+
+    racks_with_instances = []
+    for rack in racks:
+        rack_serializer = RackSerializer(rack)
+        instances = ITInstance.objects \
+            .filter(rack=rack.id) \
+            .order_by("elevation")
+        instances_serializer = RecursiveITInstanceSerializer(
+            instances,
+            many=True
+        )
+        rack_detail = {
+            "rack": rack_serializer.data,
+            "instances": instances_serializer.data,
+        }
+        racks_with_instances.append(rack_detail)
+
+    return JsonResponse(
+        {"racks": racks_with_instances},
+        status=HTTPStatus.OK
+    )
 
 
 def validate_instance_location(
