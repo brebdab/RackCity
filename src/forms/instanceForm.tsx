@@ -235,8 +235,6 @@ class InstanceForm extends React.Component<
           onSubmit={this.handleSubmit}
           className="create-form bp3-form-group"
         >
-          <h2>Add a New Instance</h2>
-
           <FormGroup label="Hostname (required)" inline={false}>
             <Field
               placeholder="hostname"

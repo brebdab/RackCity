@@ -158,7 +158,6 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
           onSubmit={this.handleSubmit}
           className="create-form bp3-form-group"
         >
-          <h2>Add a New Model</h2>
           <FormGroup label="Vendor (required)">
             <StringSuggest
               popoverProps={{
