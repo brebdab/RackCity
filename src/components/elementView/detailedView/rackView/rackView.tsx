@@ -25,6 +25,7 @@ import "./rackView.scss";
 export interface RackViewProps {
   token: string;
   isAdmin: string;
+  racks: Array<RackResponseObject>;
 }
 export interface RouteParams {
   rid: string;
@@ -164,24 +165,16 @@ class RackView extends React.PureComponent<
         });
       });
   };
-  viewRackForm = (rack: RackRangeFields, headers: any) => {
-    return axios.post(API_ROOT + "api/racks/get", rack, headers).then(res => {
-      this.props.history.replace("/racks", res.data.racks);
-      this.props.history.push({
-        pathname: "/racks",
-        state: res.data.racks
-      });
-    });
-  };
+
   public render() {
     // if (this.props.location.state.length === 0) {
     //   this.getRackRange(this.props.token);
     // }
-    const racks: Array<RackResponseObject> =
-      this.props.location && this.props.location.state
-        ? (this.props.location.state as Array<RackResponseObject>)
-        : [];
-
+    // const racks: Array<RackResponseObject> =
+    //   this.props.location && this.props.location.state
+    //     ? (this.props.location.state as Array<RackResponseObject>)
+    //     : [];
+    const racks = this.props.racks;
     return (
       <div className={Classes.DARK}>
         <Toaster
@@ -190,9 +183,6 @@ class RackView extends React.PureComponent<
           position={Position.TOP}
           ref={this.refHandlers.toaster}
         />
-        <div className="rack-view-select">
-          <RackSelectView submitForm={this.viewRackForm} />
-        </div>
 
         <div className="rack-container">
           {racks.map((rackResp: RackResponseObject) => {

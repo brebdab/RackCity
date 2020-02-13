@@ -1,5 +1,9 @@
 import * as React from "react";
-import { RackRangeFields, ElementType } from "../../utils/utils";
+import {
+  RackRangeFields,
+  ElementType,
+  RackResponseObject
+} from "../../utils/utils";
 import { API_ROOT } from "../../utils/api-config";
 import {
   Intent,
@@ -14,6 +18,7 @@ import axios from "axios";
 import FormPopup from "../../forms/formPopup";
 import { FormTypes } from "../../forms/formUtils";
 import RackSelectView from "./rackSelectView";
+import RackView from "./detailedView/rackView/rackView";
 import { connect } from "react-redux";
 interface RackTabState {
   isOpen: boolean;
@@ -21,6 +26,7 @@ interface RackTabState {
   deleteRackInfo: RackRangeFields;
   headers: any;
   isConfirmationOpen: boolean;
+  racks: Array<RackResponseObject>;
 }
 interface RackTabProps {
   token: string;
@@ -32,7 +38,8 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
     isDeleteOpen: false,
     deleteRackInfo: {} as RackRangeFields,
     headers: {},
-    isConfirmationOpen: false
+    isConfirmationOpen: false,
+    racks: []
   };
 
   private addToast(toast: IToastProps) {
@@ -54,11 +61,9 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
     this.setState({ isConfirmationOpen: true });
   viewRackForm = (rack: RackRangeFields, headers: any) => {
     return axios.post(API_ROOT + "api/racks/get", rack, headers).then(res => {
-      // this.props.history.replace("/racks", res.data.racks);
-      //   this.props.history.push({
-      //     pathname: "/racks",
-      //     state: res.data.racks
-      //   });
+      this.setState({
+        racks: res.data.racks
+      });
     });
   };
   private handleOpen = () => {
@@ -167,6 +172,7 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
         ) : null}
 
         <RackSelectView submitForm={this.viewRackForm} />
+        <RackView racks={this.state.racks} />
       </div>
     );
   }
