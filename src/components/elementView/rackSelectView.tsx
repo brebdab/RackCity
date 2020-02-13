@@ -30,9 +30,17 @@ class RackSelectView extends React.Component<
     values: {} as RackRangeFields,
     errors: []
   };
-  private handleSwitchChange = handleBooleanChange(viewRange =>
-    this.setState({ viewRange: viewRange })
-  );
+  private handleSwitchChange = handleBooleanChange(viewRange => {
+    this.setState({ viewRange: viewRange });
+    if (!viewRange) {
+      this.setState({
+        values: updateObject(this.state.values, {
+          letter_end: undefined,
+          num_end: undefined
+        })
+      });
+    }
+  });
 
   handleChange = (field: { [key: string]: any }) => {
     this.setState({
@@ -51,22 +59,7 @@ class RackSelectView extends React.Component<
 
     const headers = getHeaders(this.props.token);
 
-    const resp = this.props.submitForm(this.state.values, headers);
-    if (resp) {
-      resp.catch(err => {
-        console.log(err.response.data.failure_message);
-        let errors: Array<string> = this.state.errors;
-        errors.push(err.response.data.failure_message as string);
-        this.setState({
-          errors: errors
-        });
-      });
-    }
-
-    // this.props.history.push({
-    //   pathname: "/racks",
-    //   search: queryString.stringify(this.state.values)
-    // });
+    this.props.submitForm(this.state.values, headers);
   };
   renderRackOptions(range: boolean) {}
   componentDidMount() {}

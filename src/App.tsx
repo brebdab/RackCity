@@ -6,7 +6,6 @@ import { connect } from "react-redux";
 import { BrowserRouter, Redirect, Route, Switch } from "react-router-dom";
 import InstanceView from "./components/elementView/detailedView/instanceView/instanceView";
 import ModelView from "./components/elementView/detailedView/modelView/modelView";
-import RackView from "./components/elementView/detailedView/rackView/rackView";
 import Notfound from "./components/fallback"; // 404 page
 import LandingView from "./components/landingView/landingView";
 import WrappedNormalLoginForm from "./forms/auth/login";
@@ -63,10 +62,6 @@ class App extends React.Component<AppProps> {
             <this.RedirectRoute exact path="/" component={LandingView} />
             <Route path="/login" component={WrappedNormalLoginForm} />
 
-            {/*<Route path="/bulk-export" component={BulkExport} />*/}
-
-            <this.PrivateRoute path="/racks" component={RackView} />
-            {/* <Route path="/models/:rid" component={ModelView} /> */}
             <this.PrivateRoute path="/models/:rid" component={ModelView} />
             <this.PrivateRoute
               path="/instances/:rid"

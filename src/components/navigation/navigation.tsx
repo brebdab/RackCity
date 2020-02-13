@@ -55,21 +55,8 @@ export class Navigation extends React.Component<NavigationPropsAll> {
                   />
                 </div>
               ) : (
-                <p></p>
-              )}
-              {this.props.isAdmin ? (
-                <div>
-                  <AnchorButton
-                    onClick={() => this.props.history.push("/bulk-upload")}
-                    className="nav-bar-button"
-                    icon="export"
-                    text="Upload File"
-                    minimal
-                  />
-                </div>
-              ) : (
-                <p></p>
-              )}
+                  <p></p>
+                )}
             </NavbarGroup>
 
             <NavbarGroup align={Alignment.RIGHT}>
@@ -93,14 +80,14 @@ export class Navigation extends React.Component<NavigationPropsAll> {
                   />
                 </div>
               ) : (
-                <AnchorButton
-                  onClick={() => this.props.history.push("/login")}
-                  className="nav-bar-button"
-                  icon="user"
-                  text="Login"
-                  minimal
-                />
-              )}
+                  <AnchorButton
+                    onClick={() => this.props.history.push("/login")}
+                    className="nav-bar-button"
+                    icon="user"
+                    text="Login"
+                    minimal
+                  />
+                )}
             </NavbarGroup>
           </Navbar>
         </div>

@@ -2,6 +2,11 @@
   display: flex;
   flex-direction: row;
 }
+
+.tab {
+  width: 100%;
+  padding: 10pt;
+}
 .tab:focus {
   outline: none;
 }
@@ -19,11 +24,12 @@
 }
 .element-table {
   position: relative;
-  // float: left;
-  width: 100%;
-  overflow: scroll;
+
+  min-width: 100%;
+  overflow: auto;
   display: inline-block;
 }
+
 .filter-select {
   margin: 0 !important;
 }
@@ -43,17 +49,7 @@
 .add {
   float: right;
 }
-// .table {
-//   margin-top: 0px;
-//   // display: inline-block;
-//   overflow: scroll;
-//   max-height: 500px;
-//   float: left;
-// }
 
-// .table-control span {
-//   float: left;
-// }
 .header-cell {
   // cursor: pointer !important;
   white-space: nowrap !important;
@@ -62,20 +58,17 @@
 }
 .header-text {
   white-space: nowrap !important;
-  overflow: scroll;
+  overflow: auto;
   width: max-content !important;
   display: inline-block;
 }
-// .header-text span ~ span {
-//   padding-left: 30px !important;
-//   display: inline-block;
-// }
+
 .drag-drop-text span ~ span {
   padding-left: 5px !important;
 }
 .header-text span {
-  padding-right: 20px !important;
-  margin-right: 20px !important;
+  padding-right: 0px !important;
+  margin-right: 10px !important;
 }
 .modelname-text {
   margin-right: 10px;

@@ -1,6 +1,5 @@
 import {
   Icon,
-  Spinner,
   HTMLSelect,
   Position,
   IToastProps,
@@ -33,9 +32,10 @@ interface ElementTableState {
   curr_page: number;
   total_pages: number;
   page_type: PagingTypes;
+  fields: Array<string>;
 }
-var console: any = {};
-console.log = function() {};
+// var console: any = {};
+// console.log = function() {};
 export interface ITableSort {
   field: string;
   ascending: boolean;
@@ -75,6 +75,8 @@ interface ElementTableProps {
     body: any,
     token: string
   ): Promise<Array<ElementObjectType>>;
+
+  getFieldNames?(type: string, headers: any): Promise<Array<string>>;
   getPages?(
     type: string,
     page_size: PagingTypes,
@@ -97,13 +99,10 @@ class ElementTable extends React.Component<
     items: [],
     sorted_cols: [],
     curr_page: 1,
-    total_pages: 0
+    total_pages: 0,
+    fields: []
   };
-  public defaultProps: Partial<ElementTableProps> = {
-    disableSorting: false,
-    disableFiltering: false,
-    shouldUpdateData: false
-  };
+
   previousPage = () => {
     if (this.state.curr_page > 1 && this.props.getData) {
       const next_page = this.state.curr_page - 1;
@@ -316,6 +315,11 @@ class ElementTable extends React.Component<
           this.setState({
             items: res
           });
+          if (res.length === 0) {
+            this.setState({
+              curr_page: 0
+            });
+          }
         })
         .catch(err => {
           console.log("ERROR", err.response.data);
@@ -354,6 +358,7 @@ class ElementTable extends React.Component<
           this.setState({
             items: res
           });
+          console.log("DATA", res);
         })
         .catch(err => {
           this.addToast({
@@ -394,14 +399,15 @@ class ElementTable extends React.Component<
   };
   componentDidUpdate() {
     if (this.props.shouldUpdateData) {
+      console.log("table updated");
       this.updateTableData();
     }
   }
   componentDidMount() {
+    console.log("table mounted ");
     this.updateTableData();
   }
   updateTableData = () => {
-    console.log(this.props.data);
     const sorts_body = this.state.sort_by.map(item => {
       const { field, ascending } = item;
       return { field, ascending };
@@ -419,12 +425,12 @@ class ElementTable extends React.Component<
           this.setState({
             items: res
           });
+          console.log("DATA", res);
+          this.setFieldNames();
         })
         .catch(err => {
           console.log(err);
         });
-
-      console.log("table mounted");
     }
     if (this.props.getPages) {
       this.props
@@ -451,12 +457,14 @@ class ElementTable extends React.Component<
 
   updateFilterOrder = (items: Array<IFilter>) => {
     this.setState({
-      filters: items
+      filters: items,
+      curr_page: 1
     });
     this.updateFilterData(items);
   };
-  getFieldNames = () => {
+  setFieldNames = () => {
     let fields: Array<string> = [];
+
     if (this.state.items && this.state.items.length > 0) {
       Object.keys(this.state.items[0]).forEach((col: string) => {
         if (col === "model") {
@@ -466,8 +474,12 @@ class ElementTable extends React.Component<
           fields.push(col);
         }
       });
+      this.setState({
+        fields: fields
+      });
     }
-    return fields;
+
+    console.log("COLUMN NAMES", fields);
   };
 
   getScrollIcon = (field: string) => {
@@ -496,7 +508,6 @@ class ElementTable extends React.Component<
     this.updateData(page);
   };
   render() {
-    console.log("TABLE DATA", this.props.data);
     // console.log(this.state.items);
     // console.log(!(this.state.items && this.state.items.length > 0));
     //
@@ -525,7 +536,7 @@ class ElementTable extends React.Component<
               <div className="filter-select">
                 <FilterSelectView
                   handleAddFilter={this.addFilter}
-                  fields={this.getFieldNames()}
+                  fields={this.state.fields}
                 />
               </div>,
               <div className="table-options">
@@ -584,20 +595,11 @@ class ElementTable extends React.Component<
                 : null}
             </div>
           ) : null}
-          {!(this.state.items && this.state.items.length > 0) ? (
-            <div className="loading-container">
-              <Spinner
-                className="center"
-                intent="primary"
-                size={Spinner.SIZE_STANDARD}
-              />
-              <h4 className="center">no {this.props.type} found </h4>
-            </div>
-          ) : (
+          {this.state.fields.length === 0 ? null : (
             <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered element-table">
               <thead>
                 <tr>
-                  {Object.keys(this.state.items[0]).map((col: string) => {
+                  {this.state.fields.map((col: string) => {
                     if (col === "model") {
                       return [
                         <th className="header-cell">
@@ -628,45 +630,56 @@ class ElementTable extends React.Component<
                   })}
                 </tr>
               </thead>
-              <tbody>
-                {this.state.items.map((item: ElementObjectType) => {
-                  return (
-                    <tr
-                      onClick={() =>
-                        this.props.history.push(
-                          "/" + this.props.type + "/" + item.id
-                        )
-                      }
-                    >
-                      {Object.entries(item).map(([col, value]) => {
-                        if (isModelObject(value)) {
-                          return [
-                            <td>{value.vendor}</td>,
-                            <td>{value.model_number}</td>
-                          ];
-                        } else if (isRackObject(value)) {
-                          return (
-                            <td>{value.row_letter + " " + value.rack_num}</td>
-                          );
-                        } else if (col === "display_color") {
-                          console.log(value);
-                          return (
-                            <td
-                              style={{
-                                backgroundColor: value
-                              }}
-                            ></td>
-                          );
-                        } else if (col !== "id") {
-                          return <td>{value}</td>;
+              {this.state.items && this.state.items.length > 0 ? (
+                <tbody>
+                  {this.state.items.map((item: ElementObjectType) => {
+                    return (
+                      <tr
+                        onClick={() =>
+                          this.props.history.push(
+                            "/" + this.props.type + "/" + item.id
+                          )
                         }
+                      >
+                        {Object.entries(item).map(([col, value]) => {
+                          if (isModelObject(value)) {
+                            return [
+                              <td>{value.vendor}</td>,
+                              <td>{value.model_number}</td>
+                            ];
+                          } else if (isRackObject(value)) {
+                            return (
+                              <td>{value.row_letter + " " + value.rack_num}</td>
+                            );
+                          } else if (col === "display_color") {
+                            console.log(value);
+                            return (
+                              <td
+                                style={{
+                                  backgroundColor: value
+                                }}
+                              ></td>
+                            );
+                          } else if (col !== "id") {
+                            return <td>{value}</td>;
+                          }
 
-                        return null;
-                      })}
-                    </tr>
-                  );
-                })}
-              </tbody>
+                          return null;
+                        })}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              ) : (
+                <div className="loading-container">
+                  {/* <Spinner
+                    className="center"
+                    intent="primary"
+                    size={Spinner.SIZE_STANDARD}
+                  /> */}
+                  <h4 className="center">no {this.props.type} found </h4>
+                </div>
+              )}
             </table>
           )}
         </div>

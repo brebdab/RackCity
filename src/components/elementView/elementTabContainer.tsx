@@ -2,14 +2,18 @@ import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
 import { Tabs, Classes, Tab } from "@blueprintjs/core";
 import ElementTab from "./elementTab";
+import { RouteComponentProps } from "react-router";
 import "./elementView.scss";
 import { connect } from "react-redux";
 import { ElementType } from "../../utils/utils";
+import RackTab from "./rackTab";
 
 interface ElementTabContainerProps {
   isAdmin: boolean;
 }
-class ElementTabContainer extends React.Component<ElementTabContainerProps> {
+class ElementTabContainer extends React.Component<
+  ElementTabContainerProps & RouteComponentProps
+> {
   public render() {
     return (
       <Tabs
@@ -18,27 +22,23 @@ class ElementTabContainer extends React.Component<ElementTabContainerProps> {
         id="ElementViewer"
         key={"vertical"}
         renderActiveTabPanelOnly={false}
-        vertical={false}
+        vertical={true}
         large
       >
         <Tab
           className="tab"
           id="instance"
           title="Instances"
-          panel={<ElementTab element={ElementType.INSTANCE} />}
+          panel={<ElementTab {...this.props} element={ElementType.INSTANCE} />}
         />
         <Tab
           className="tab"
           id="model"
           title="Models"
-          panel={<ElementTab element={ElementType.MODEL} />}
+          panel={<ElementTab {...this.props} element={ElementType.MODEL} />}
         />
-        {/* <Tab
-          className="tab"
-          id="rack"
-          title="Racks"
-          panel={<ElementView element="racks" />}
-        /> */}
+        <Tab className="tab" id="rack" title="Racks" panel={<RackTab />} />
+        <Tab className="tab" id="datacenter" title="Datacenters" />
         <Tabs.Expander />
       </Tabs>
     );
