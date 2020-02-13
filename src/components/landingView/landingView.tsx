@@ -21,7 +21,7 @@ import { ElementType, RackRangeFields } from "../../utils/utils";
 import FormPopup from "../../forms/formPopup";
 
 var console: any = {};
-console.log = function() {};
+console.log = function () { };
 interface LandingViewState {
   isOpen: boolean;
   isDeleteOpen: boolean;
@@ -36,7 +36,7 @@ interface LandingViewProps {
 class LandingView extends React.Component<
   RouteComponentProps & LandingViewProps,
   LandingViewState
-> {
+  > {
   viewRackForm = (rack: RackRangeFields, headers: any) => {
     return axios.post(API_ROOT + "api/racks/get", rack, headers).then(res => {
       // this.props.history.replace("/racks", res.data.racks);
@@ -180,7 +180,7 @@ class LandingView extends React.Component<
 
           <RackSelectView submitForm={this.viewRackForm} />
         </Card>
-        <ElementTabContainer />
+        <ElementTabContainer {...this.props} />
       </div>
     );
   }

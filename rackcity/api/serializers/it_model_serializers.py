@@ -41,6 +41,13 @@ class BulkITModelSerializer(serializers.ModelSerializer):
     for bulk export.
     """
  
+    ethernet_ports = RCIntegerField(
+        source='num_ethernet_ports',
+        allow_null=True,
+        max_value=2147483647,
+        min_value=0,
+        required=False
+    )
     power_ports = RCIntegerField(
         source='num_power_ports',
         allow_null=True,
@@ -63,7 +70,7 @@ class BulkITModelSerializer(serializers.ModelSerializer):
             'model_number',
             'height',
             'display_color',
-            'network_ports',
+            'ethernet_ports',
             'power_ports',
             'cpu',
             'memory',
