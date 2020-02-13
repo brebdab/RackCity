@@ -7,6 +7,6 @@ class Datacenter(models.Model):
         unique=True
     )
     name = models.CharField(
-        max_length=None,
+        max_length=150,
         unique=True,
     )
