@@ -151,6 +151,7 @@ def instance_add(request):
         failure_message += "Don't include id when adding an instance. "
 
     serializer = ITInstanceSerializer(data=data)
+    print(serializer)
     if not serializer.is_valid(raise_exception=False):
         failure_message += str(serializer.errors)
     if failure_message == "":
