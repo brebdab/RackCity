@@ -65,8 +65,8 @@ $row-height: 6px;
 .rack-table .cell {
   max-width: 200px;
   min-width: 200px;
-  // display: block;
-  overflow-x: auto !important;
+  display: block;
+  overflow: auto;
   position: relative !important;
   white-space: nowrap !important;
   padding-left: 0px !important;
@@ -91,8 +91,10 @@ $row-height: 6px;
 //       -1px 1px 0 #333,
 //       2px 2px 5px rgba(0,0,0,0.65);
 // }
+
 tr {
   outline: 1px solid #202b33;
+  // overflow: auto !important;
 }
 
 // .rack table {
