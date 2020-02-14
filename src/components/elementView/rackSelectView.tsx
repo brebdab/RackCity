@@ -91,7 +91,7 @@ class RackSelectView extends React.Component<
   getDatacenterName = (datacenterId: string) => {
     for (let i in this.state.datacenters) {
       let datacenter: DatacenterObject = this.state.datacenters[i]
-      if (datacenter.id == datacenterId) {
+      if (datacenter.id === datacenterId) {
         return datacenter.name;
       }
     }
