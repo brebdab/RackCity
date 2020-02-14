@@ -2,7 +2,14 @@ from django.contrib.auth.models import User
 from django.http import JsonResponse
 from http import HTTPStatus
 from rest_framework.decorators import permission_classes, api_view
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_auth.registration.views import RegisterView
+from rackcity.api.serializers import RegisterNameSerializer
+
+
+class RegisterNameView(RegisterView):
+    serializer_class = RegisterNameSerializer
+    permission_classes = [IsAdminUser]
 
 
 @api_view(['GET'])
