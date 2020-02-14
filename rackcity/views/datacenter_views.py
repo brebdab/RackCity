@@ -1,6 +1,5 @@
 from django.http import JsonResponse
 from rackcity.models import Datacenter
-from django.core.exceptions import ObjectDoesNotExist
 from rackcity.api.serializers import DatacenterSerializer
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
