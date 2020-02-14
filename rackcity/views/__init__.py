@@ -36,3 +36,6 @@ from .rack_views import (
 )
 from .report_views import report_rack_usage
 from .user_views import usernames
+from .datacenter_views import (
+    datacenter_all
+)

@@ -34,4 +34,5 @@ urlpatterns = [
     path('iamadmin', views.i_am_admin),
     path('report', views.report_rack_usage),
     path('usernames', views.usernames),
+    path('datacenters/get-all', views.datacenter_all)
 ]
