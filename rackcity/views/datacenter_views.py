@@ -1,14 +1,10 @@
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from rackcity.models import Datacenter
 from django.core.exceptions import ObjectDoesNotExist
 from rackcity.api.serializers import DatacenterSerializer
 from rest_framework.decorators import permission_classes, api_view
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_framework.parsers import JSONParser
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
 from http import HTTPStatus
-import math
-from io import StringIO
 
 
 @api_view(['GET'])
@@ -24,7 +20,7 @@ def datacenter_all(request):
             {"datacenters": serializer.data},
             status=HTTPStatus.OK
         )
-    except Datacenter.Error:
+    except Datacenter.ObjectDoesNotExist:
         failure_message = "No datacenters"
         return JsonResponse(
             {"failure_message": failure_message},
