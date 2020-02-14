@@ -23,16 +23,15 @@ import Field from "./field";
 import "./forms.scss";
 import {
   filterModel,
-  ModelSuggest,
+  ModelSelect,
   renderModelItem,
-  RackSuggest,
+  RackSelect,
   renderRackItem,
   filterRack,
   FormTypes,
-  StringSuggest,
-  renderCreateItemOption,
   renderStringItem,
-  filterString
+  filterString,
+  StringSelect
 } from "./formUtils";
 import axios from "axios";
 import { API_ROOT } from "../utils/api-config";
@@ -251,17 +250,15 @@ class InstanceForm extends React.Component<
               onChange={this.handleChange}
             />
           </FormGroup>
+
           <FormGroup label="Model (required)" inline={false}>
-            <ModelSuggest
+            <ModelSelect
+              className="select"
               popoverProps={{
                 minimal: true,
                 popoverClassName: "dropdown",
                 usePortal: true
               }}
-              defaultSelectedItem={this.state.values.model}
-              inputValueRenderer={(model: ModelObjectOld) =>
-                model.vendor + " " + model.model_number
-              }
               items={this.state.models}
               onItemSelect={(model: ModelObjectOld) =>
                 this.setState({
@@ -271,19 +268,26 @@ class InstanceForm extends React.Component<
               itemRenderer={renderModelItem}
               itemPredicate={filterModel}
               noResults={<MenuItem disabled={true} text="No results." />}
-            />
+            >
+              <Button
+                rightIcon="caret-down"
+                text={
+                  this.state.values.model
+                    ? this.state.values.model.vendor +
+                      " " +
+                      this.state.values.model.model_number
+                    : "Select a model"
+                }
+              />
+            </ModelSelect>
           </FormGroup>
           <FormGroup label="Rack (required)" inline={false}>
-            <RackSuggest
+            <RackSelect
               popoverProps={{
                 minimal: true,
                 popoverClassName: "dropdown",
                 usePortal: true
               }}
-              defaultSelectedItem={this.state.values.rack}
-              inputValueRenderer={(rack: RackObject) =>
-                rack.row_letter + rack.rack_num
-              }
               items={this.state.racks}
               onItemSelect={(rack: RackObject) =>
                 this.setState({
@@ -293,29 +297,48 @@ class InstanceForm extends React.Component<
               itemRenderer={renderRackItem}
               itemPredicate={filterRack}
               noResults={<MenuItem disabled={true} text="No results." />}
-            />
+            >
+              <Button
+                rightIcon="caret-down"
+                text={
+                  this.state.values.rack
+                    ? this.state.values.rack.row_letter +
+                      " " +
+                      this.state.values.rack.rack_num
+                    : "Select a rack"
+                }
+              />
+            </RackSelect>
           </FormGroup>
-
           <FormGroup label="Owner" inline={false}>
-            <StringSuggest
+            <StringSelect
               popoverProps={{
                 minimal: true,
                 popoverClassName: "dropdown",
                 usePortal: true
               }}
-              defaultSelectedItem={this.state.values.owner}
-              inputValueRenderer={(vendor: string) => vendor}
+              // defaultSelectedItem={this.state.values.owner}
+              // inputValueRenderer={(vendor: string) => vendor}
               items={this.state.users}
               onItemSelect={(owner: string) =>
                 this.setState({
                   values: updateObject(values, { owner: owner })
                 })
               }
-              createNewItemRenderer={renderCreateItemOption}
+              // createNewItemRenderer={renderCreateItemOption}
               itemRenderer={renderStringItem}
               itemPredicate={filterString}
               noResults={<MenuItem disabled={true} text="No results." />}
-            />
+            >
+              <Button
+                rightIcon="caret-down"
+                text={
+                  this.state.values.owner
+                    ? this.state.values.owner
+                    : "Select an owner"
+                }
+              />
+            </StringSelect>
             {/* <Field
               field="owner"
               placeholder="owner"
@@ -331,7 +354,6 @@ class InstanceForm extends React.Component<
               onChange={this.handleChange}
             />
           </FormGroup>
-
           <Button className="login-button" type="submit">
             Submit
           </Button>

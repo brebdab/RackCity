@@ -1,6 +1,6 @@
 .dropdown {
   max-height: 200pt;
-  overflow: scroll;
+  overflow: auto;
 }
 .login-button:focus {
   outline: none;
@@ -39,5 +39,5 @@
 }
 .model-options {
   height: 200pt;
-  overflow: scroll;
+  overflow: auto;
 }

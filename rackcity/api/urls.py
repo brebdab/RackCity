@@ -28,10 +28,13 @@ urlpatterns = [
     path('instances/pages', views.instance_page_count),
     path('instances/fields', views.instance_fields),
     path('racks/get', views.rack_get),
+    path('racks/get-all',views.rack_get_all),
     path('racks/create', views.rack_create),
     path('racks/delete', views.rack_delete),
     path('racks/summary', views.rack_summary),
     path('iamadmin', views.i_am_admin),
     path('report', views.report_rack_usage),
     path('usernames', views.usernames),
+    path('users/add', views.RegisterNameView.as_view()),
+    path('users/netid-login', views.netid_login),
 ]

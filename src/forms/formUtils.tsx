@@ -1,7 +1,12 @@
-import { ItemPredicate, ItemRenderer, Suggest } from "@blueprintjs/select";
+import {
+  ItemPredicate,
+  ItemRenderer,
+  Suggest,
+  Select
+} from "@blueprintjs/select";
 import React from "react";
 import { MenuItem } from "@blueprintjs/core";
-import { ModelObjectOld, RackObject } from "../utils/utils";
+import { ModelObject, RackObject } from "../utils/utils";
 
 export enum FormTypes {
   CREATE = "create",
@@ -43,7 +48,7 @@ export const filterRack: ItemPredicate<RackObject> = (
     return (rowLetter + rackNum).indexOf(normalizedQuery) >= 0;
   }
 };
-export const filterModel: ItemPredicate<ModelObjectOld> = (
+export const filterModel: ItemPredicate<ModelObject> = (
   query,
   model,
   _index,
@@ -129,8 +134,8 @@ export const renderRackItem: ItemRenderer<RackObject> = (
   );
 };
 
-export const renderModelItem: ItemRenderer<ModelObjectOld> = (
-  model: ModelObjectOld,
+export const renderModelItem: ItemRenderer<ModelObject> = (
+  model: ModelObject,
   { handleClick, modifiers, query }
 ) => {
   if (!modifiers.matchesPredicate) {
@@ -159,7 +164,7 @@ export const renderCreateItemOption = (
     shouldDismissPopover={false}
   />
 );
-
+export const StringSelect = Select.ofType<string>();
 export const StringSuggest = Suggest.ofType<string>();
-export const ModelSuggest = Suggest.ofType<ModelObjectOld>();
-export const RackSuggest = Suggest.ofType<RackObject>();
+export const ModelSelect = Select.ofType<ModelObject>();
+export const RackSelect = Select.ofType<RackObject>();

@@ -4,7 +4,8 @@ import {
   Intent,
   IToastProps,
   Position,
-  Toaster
+  Toaster,
+  Spinner
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -12,12 +13,10 @@ import * as React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import { API_ROOT } from "../../../../utils/api-config";
-import RackSelectView from "../../rackSelectView";
 import {
   getHeaders,
   InstanceObject,
-  RackResponseObject,
-  RackRangeFields
+  RackResponseObject
 } from "../../../../utils/utils";
 import "./rackView.scss";
 //export interface ElementViewProps {}
@@ -25,13 +24,15 @@ import "./rackView.scss";
 export interface RackViewProps {
   token: string;
   isAdmin: string;
+  racks: Array<RackResponseObject>;
+  loading: boolean;
 }
 export interface RouteParams {
   rid: string;
 }
-var console: any = {};
-console.log = function() {};
-console.warn = function() {};
+// var console: any = {};
+// console.log = function() {};
+// console.warn = function() {};
 
 export interface RackViewState {
   isDeleteOpen: boolean;
@@ -116,7 +117,6 @@ class RackView extends React.PureComponent<
         );
       }
     }
-    console.log(rows);
 
     return rows;
   }
@@ -164,23 +164,16 @@ class RackView extends React.PureComponent<
         });
       });
   };
-  viewRackForm = (rack: RackRangeFields, headers: any) => {
-    return axios.post(API_ROOT + "api/racks/get", rack, headers).then(res => {
-      this.props.history.replace("/racks", res.data.racks);
-      this.props.history.push({
-        pathname: "/racks",
-        state: res.data.racks
-      });
-    });
-  };
+
   public render() {
     // if (this.props.location.state.length === 0) {
     //   this.getRackRange(this.props.token);
     // }
-    const racks: Array<RackResponseObject> =
-      this.props.location && this.props.location.state
-        ? (this.props.location.state as Array<RackResponseObject>)
-        : [];
+    // const racks: Array<RackResponseObject> =
+    //   this.props.location && this.props.location.state
+    //     ? (this.props.location.state as Array<RackResponseObject>)
+    //     : [];
+    const racks = this.props.racks;
 
     return (
       <div className={Classes.DARK}>
@@ -190,16 +183,19 @@ class RackView extends React.PureComponent<
           position={Position.TOP}
           ref={this.refHandlers.toaster}
         />
-        <div className="rack-view-select">
-          <RackSelectView submitForm={this.viewRackForm} />
-        </div>
-
-        <div className="rack-container">
-          {racks.map((rackResp: RackResponseObject) => {
-            return (
-              <span>
-                <div className="rack-parent">
-                  {/* <div className="delete-rack">
+        {this.props.loading ? (
+          <Spinner
+            className="center"
+            intent="primary"
+            size={Spinner.SIZE_STANDARD}
+          />
+        ) : (
+          <div className="rack-container">
+            {racks.map((rackResp: RackResponseObject) => {
+              return (
+                <span>
+                  <div className="rack-parent">
+                    {/* <div className="delete-rack">
                     <AnchorButton
                       minimal
                       intent="danger"
@@ -208,48 +204,49 @@ class RackView extends React.PureComponent<
                       onClick={this.handleDeleteOpen}
                     />
                   </div> */}
-                  <Alert
-                    cancelButtonText="Cancel"
-                    confirmButtonText="Delete"
-                    intent="danger"
-                    isOpen={this.state.isDeleteOpen}
-                    onCancel={this.handleDeleteCancel}
-                    onConfirm={() =>
-                      this.handleDelete(
-                        rackResp.rack.row_letter,
-                        rackResp.rack.rack_num
-                      )
-                    }
-                  >
-                    {" "}
-                    <p>Are you sure you want to delete?</p>
-                  </Alert>
-                  <div className={Classes.DARK + " rack"}>
-                    <table className=" bp3-html-table bp3-interactive rack-table">
-                      <thead>
-                        <tr>
-                          <th className=" cell header">
-                            Rack {rackResp.rack.row_letter}
-                            {rackResp.rack.rack_num}
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>{this.getRows(rackResp)}</tbody>
-                    </table>
-                    <table className="bp3-html-table loc-table">
-                      <thead>
-                        <tr>
-                          <th className=" cell header"> (U)</th>
-                        </tr>
-                      </thead>
-                      <tbody>{this.getUnitRows(rackResp)}</tbody>
-                    </table>
+                    <Alert
+                      cancelButtonText="Cancel"
+                      confirmButtonText="Delete"
+                      intent="danger"
+                      isOpen={this.state.isDeleteOpen}
+                      onCancel={this.handleDeleteCancel}
+                      onConfirm={() =>
+                        this.handleDelete(
+                          rackResp.rack.row_letter,
+                          rackResp.rack.rack_num
+                        )
+                      }
+                    >
+                      {" "}
+                      <p>Are you sure you want to delete?</p>
+                    </Alert>
+                    <div className={Classes.DARK + " rack"}>
+                      <table className=" bp3-html-table bp3-interactive rack-table">
+                        <thead>
+                          <tr>
+                            <th className=" cell header">
+                              Rack {rackResp.rack.row_letter}
+                              {rackResp.rack.rack_num}
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>{this.getRows(rackResp)}</tbody>
+                      </table>
+                      <table className="bp3-html-table loc-table">
+                        <thead>
+                          <tr>
+                            <th className=" cell header"> (U)</th>
+                          </tr>
+                        </thead>
+                        <tbody>{this.getUnitRows(rackResp)}</tbody>
+                      </table>
+                    </div>
                   </div>
-                </div>
-              </span>
-            );
-          })}
-        </div>
+                </span>
+              );
+            })}
+          </div>
+        )}
       </div>
     );
   }
