@@ -8,7 +8,7 @@ export const authStart = () => {
 };
 
 var console: any = {};
-console.log = function() {};
+console.log = function () { };
 export const authSuccess = (token: string) => {
   return {
     type: actionTypes.AUTH_SUCCESS,

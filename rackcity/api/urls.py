@@ -35,4 +35,6 @@ urlpatterns = [
     path('report', views.report_rack_usage),
     path('usernames', views.usernames),
     path('users/who-am-i', views.who_am_i),
+    path('users/add', views.RegisterNameView.as_view()),
+    path('users/netid-login', views.netid_login),
 ]
