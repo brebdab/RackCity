@@ -9,4 +9,4 @@ from .it_model_serializers import (
     BulkITModelSerializer,
 )
 from .rack_serializers import RackSerializer
-from .user_serializers import RegisterNameSerializer
+from .user_serializers import RegisterNameSerializer, UserSerializer

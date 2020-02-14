@@ -35,8 +35,4 @@ from .rack_views import (
     rack_summary,
 )
 from .report_views import report_rack_usage
-<<<<<<< HEAD
-from .user_views import usernames, who_am_i
-=======
-from .user_views import usernames, RegisterNameView, netid_login
->>>>>>> a2acfaf7fd0db324d4c6c8a84b56839b00a53d37
+from .user_views import usernames, who_am_i, RegisterNameView, netid_login
