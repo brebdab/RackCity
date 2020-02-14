@@ -40,4 +40,5 @@ from .user_views import usernames, who_am_i, RegisterNameView, netid_login
 from .datacenter_views import (
     datacenter_all,
     datacenter_create,
+    datacenter_delete,
 )

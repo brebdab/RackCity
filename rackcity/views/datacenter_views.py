@@ -4,6 +4,7 @@ from rackcity.api.serializers import DatacenterSerializer
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from http import HTTPStatus
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.parsers import JSONParser
 
 
@@ -27,7 +28,6 @@ def datacenter_create(request):
     """
     Add a datacenter.
     """
-    print(request)
     data = JSONParser().parse(request)
     failure_message = ""
     if 'id' in data:
@@ -44,6 +44,38 @@ def datacenter_create(request):
             failure_message += str(error)
 
     failure_message = "Request was invalid. " + failure_message
+    return JsonResponse(
+        {"failure_message": failure_message},
+        status=HTTPStatus.BAD_REQUEST,
+    )
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def datacenter_delete(request):
+    """
+    Delete a single datacenter
+    """
+    data = JSONParser().parse(request)
+    failure_message = ""
+    if 'id' not in data:
+        failure_message += "Must include id when deleting a datacenter. "
+    else:
+        id = data['id']
+        try:
+            existing_dc = Datacenter.objects.get(id=id)
+        except ObjectDoesNotExist:
+            failure_message += "No existing instance with id = " + str(id) + ". "
+
+    if failure_message == "":
+        try:
+            existing_dc.delete()
+            return HttpResponse(status=HTTPStatus.OK)
+        except Exception as error:
+            failure_message = failure_message + str(error)
+
+    failure_message = "Request was invalid: " + failure_message
+
     return JsonResponse(
         {"failure_message": failure_message},
         status=HTTPStatus.BAD_REQUEST,
