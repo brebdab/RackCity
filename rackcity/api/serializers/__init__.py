@@ -1,3 +1,4 @@
+from .datacenter_serializers import DatacenterSerializer
 from .it_instance_serializers import (
     ITInstanceSerializer,
     RecursiveITInstanceSerializer,
