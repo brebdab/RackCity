@@ -17,6 +17,7 @@ export interface InstanceObject extends ElementObject {
   comment?: string;
 }
 export interface RackRangeFields {
+  datacenter: string;
   letter_start: string;
   letter_end: string;
   num_start: number;
@@ -42,6 +43,12 @@ export interface RackResponseObject {
   rack: RackObject;
   instances: Array<InstanceObject>;
 }
+
+export interface DatacenterObject extends ElementObject {
+  name: string;
+  abbreviation: string;
+}
+
 export interface ModificationsObject {
   existing: Array<ModelObject>;
   modified: Array<ModelObject>;

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from rackcity.models.rack import validate_row_letter
 from rackcity.models import Datacenter
+from rackcity.api.serializers import DatacenterSerializer
 
 
 class RackRangeSerializer(serializers.Serializer):
