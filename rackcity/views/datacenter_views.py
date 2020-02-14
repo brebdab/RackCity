@@ -13,16 +13,9 @@ def datacenter_all(request):
     """
         Return List of all datacenters.
     """
-    try:
-        datacenters = Datacenter.objects.all()
-        serializer = DatacenterSerializer(datacenters, many=True)
-        return JsonResponse(
-            {"datacenters": serializer.data},
-            status=HTTPStatus.OK
-        )
-    except Datacenter.ObjectDoesNotExist:
-        failure_message = "No datacenters found"
-        return JsonResponse(
-            {"failure_message": failure_message},
-            status=HTTPStatus.OK,
-        )
+    datacenters = Datacenter.objects.all()
+    serializer = DatacenterSerializer(datacenters, many=True)
+    return JsonResponse(
+        {"datacenters": serializer.data},
+        status=HTTPStatus.OK
+    )
