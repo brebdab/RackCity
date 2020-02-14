@@ -151,7 +151,6 @@ def instance_add(request):
         failure_message += "Don't include id when adding an instance. "
 
     serializer = ITInstanceSerializer(data=data)
-    print(serializer)
     if not serializer.is_valid(raise_exception=False):
         failure_message += str(serializer.errors)
     if failure_message == "":
@@ -520,7 +519,6 @@ def instance_bulk_export(request):
     csv_writer = csv.DictWriter(csv_string, fields)
     csv_writer.writeheader()
     csv_writer.writerows(serializer.data)
-    # print(csv_string.getvalue())
     return JsonResponse(
         {"export_csv": csv_string.getvalue()},
         status=HTTPStatus.OK,
