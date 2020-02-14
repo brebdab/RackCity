@@ -55,7 +55,7 @@ export const filterDatacenter: ItemPredicate<DatacenterObject> = (
   exactMatch
 ) => {
   const name = datacenter.name.toLowerCase();
-  const abbreviation = datacenter.abbreviation;
+  const abbreviation = datacenter.abbreviation.toLowerCase();
   const normalizedQuery = query.toLowerCase();
 
   if (exactMatch) {
