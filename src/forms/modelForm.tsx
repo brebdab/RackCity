@@ -4,7 +4,8 @@ import {
   Classes,
   FormGroup,
   Intent,
-  MenuItem
+  MenuItem,
+  InputGroup
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -22,6 +23,7 @@ import {
   StringSuggest,
   FormTypes
 } from "./formUtils";
+
 //TO DO : add validation of types!!!
 // var console: any = {};
 // console.log = function() {};
@@ -36,6 +38,7 @@ interface ModelFormState {
   values: ModelObject;
   vendors: Array<string>;
   errors: Array<string>;
+  numNetworkPorts: number;
 }
 
 export const required = (
@@ -55,7 +58,8 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
   public state = {
     values: this.initialState,
     vendors: [],
-    errors: []
+    errors: [],
+    numNetworkPorts: 0
   };
   headers = {
     headers: {
@@ -109,12 +113,43 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
   }
 
   handleChange = (field: { [key: string]: any }) => {
+    let network_ports: Array<string> = this.state.values.network_ports
+      ? this.state.values.network_ports
+      : [];
+    if (field["num_network_ports"]) {
+      let num_network_ports = field["num_network_ports"];
+
+      let index = network_ports.length;
+      while (network_ports.length < num_network_ports) {
+        index++;
+        network_ports.push((index as unknown) as string);
+      }
+      while (network_ports.length > num_network_ports) {
+        network_ports.pop();
+      }
+    } else if (field["num_network_ports"] === "") {
+      network_ports = [];
+    }
     this.setState({
       values: updateObject(this.state.values, {
-        ...field
+        ...field,
+        network_ports
       })
     });
   };
+
+  handleNetworkPortNameChange = (index: number, name: string) => {
+    const network_ports: Array<string> = this.state.values.network_ports
+      ? this.state.values.network_ports
+      : [];
+    network_ports[index] = name;
+    this.setState({
+      values: updateObject(this.state.values, {
+        network_ports
+      })
+    });
+  };
+  selectText = (event: any) => event.target.select();
 
   render() {
     if (this.state.vendors.length === 0) {
@@ -130,7 +165,6 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
           onSubmit={this.handleSubmit}
           className="create-form bp3-form-group"
         >
-          <h2>Add a New Model</h2>
           <FormGroup label="Vendor (required)">
             <StringSuggest
               popoverProps={{
@@ -184,13 +218,53 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
               onChange={this.handleChange}
             />
           </FormGroup>
-          <FormGroup label="# Ethernet Ports" inline={false}>
+          <FormGroup label="Network Ports " inline={false}>
             <Field
+              field="num_network_ports"
+              type="string"
+              value={values.network_ports ? values.network_ports.length : 0}
+              onChange={this.handleChange}
+            />
+
+            {values.network_ports &&
+            values.network_ports.length === 0 ? null : (
+              <table className="port-table">
+                <thead>
+                  <th>Port Name(s) </th>
+                </thead>
+                <tbody>
+                  {values.network_ports
+                    ? values.network_ports.map((port, index) => {
+                        return (
+                          <tr>
+                            <td>
+                              <InputGroup
+                                onClick={this.selectText}
+                                value={port}
+                                type="string"
+                                className="network-name"
+                                onChange={(e: any) =>
+                                  this.handleNetworkPortNameChange(
+                                    index,
+                                    e.currentTarget.value
+                                  )
+                                }
+                              />
+                            </td>
+                          </tr>
+                        );
+                      })
+                    : null}
+                </tbody>
+              </table>
+            )}
+
+            {/* <Field
               field="num_ethernet_ports"
               placeholder="num_ethernet_ports"
               value={values.num_ethernet_ports}
               onChange={this.handleChange}
-            />
+            /> */}
           </FormGroup>
           <FormGroup label="# Power Ports" inline={false}>
             <Field

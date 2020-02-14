@@ -12,7 +12,7 @@ import { connect } from "react-redux";
 
 import {
   InstanceObject,
-  ModelObject,
+  ModelObjectOld,
   InstanceInfoObject,
   getHeaders,
   RackObject,
@@ -48,7 +48,7 @@ export interface InstanceFormProps {
 interface InstanceFormState {
   values: InstanceObject;
   racks: Array<RackObject>;
-  models: Array<ModelObject>;
+  models: Array<ModelObjectOld>;
   errors: Array<string>;
   users: Array<string>;
 }
@@ -214,7 +214,7 @@ class InstanceForm extends React.Component<
         this.props.token
       ).then(res => {
         this.setState({
-          models: res as Array<ModelObject>
+          models: res as Array<ModelObjectOld>
         });
       });
     }
@@ -234,7 +234,6 @@ class InstanceForm extends React.Component<
           onSubmit={this.handleSubmit}
           className="create-form bp3-form-group"
         >
-          <h2>Add a New Instance</h2>
           <FormGroup label="Hostname (required)" inline={false}>
             <Field
               placeholder="hostname"
@@ -260,12 +259,8 @@ class InstanceForm extends React.Component<
                 popoverClassName: "dropdown",
                 usePortal: true
               }}
-              // defaultSelectedItem={this.state.values.model}
-              // inputValueRenderer={(model: ModelObject) =>
-              //   model.vendor + " " + model.model_number
-              // }
               items={this.state.models}
-              onItemSelect={(model: ModelObject) =>
+              onItemSelect={(model: ModelObjectOld) =>
                 this.setState({
                   values: updateObject(values, { model: model })
                 })
@@ -293,10 +288,6 @@ class InstanceForm extends React.Component<
                 popoverClassName: "dropdown",
                 usePortal: true
               }}
-              // defaultSelectedItem={this.state.values.rack}
-              // inputValueRenderer={(rack: RackObject) =>
-              //   rack.row_letter + rack.rack_num
-              // }
               items={this.state.racks}
               onItemSelect={(rack: RackObject) =>
                 this.setState({

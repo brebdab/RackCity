@@ -21,7 +21,7 @@ import ElementTable from "../../elementTable";
 import {
   ElementType,
   InstanceObject,
-  ModelObject,
+  ModelObjectOld,
   getHeaders
 } from "../../../../utils/utils";
 import PropertiesView from "../propertiesView";
@@ -37,7 +37,7 @@ var console: any = {};
 console.log = function() {};
 interface ModelViewState {
   instances: Array<InstanceObject> | undefined;
-  model: ModelObject | undefined;
+  model: ModelObjectOld | undefined;
   columns: Array<string>;
   fields: Array<string>;
   isFormOpen: boolean;
@@ -94,7 +94,7 @@ export class ModelView extends React.PureComponent<
     ]
   };
 
-  private updateModel = (model: ModelObject, headers: any): Promise<any> => {
+  private updateModel = (model: ModelObjectOld, headers: any): Promise<any> => {
     return axios
       .post(API_ROOT + "api/models/modify", model, headers)
       .then(res => {

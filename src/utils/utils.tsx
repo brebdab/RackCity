@@ -11,7 +11,7 @@ export enum ElementType {
 export interface InstanceObject extends ElementObject {
   hostname: string;
   elevation: string;
-  model: ModelObject;
+  model: ModelObjectOld;
   rack: RackObject;
   owner?: string;
   comment?: string;
@@ -43,11 +43,11 @@ export interface RackResponseObject {
   instances: Array<InstanceObject>;
 }
 export interface ModificationsObject {
-  existing: Array<ModelObject>;
-  modified: Array<ModelObject>;
+  existing: Array<ModelObjectOld>;
+  modified: Array<ModelObjectOld>;
 }
 
-export interface ModelObject extends ElementObject {
+export interface ModelObjectOld extends ElementObject {
   vendor: string;
   model_number: string;
   height: string;
@@ -60,23 +60,36 @@ export interface ModelObject extends ElementObject {
   comment?: string;
 }
 
+export interface ModelObject extends ElementObject {
+  vendor: string;
+  model_number: string;
+  height: string;
+  display_color?: string;
+  network_ports?: Array<string>; //
+  num_power_ports?: string; //
+  cpu?: string;
+  memory_gb?: string; //
+  storage?: string;
+  comment?: string;
+}
 export interface ModelDetailObject {
-  model: ModelObject;
+  model: ModelObjectOld;
   instances: Array<InstanceObject>;
 }
 export type ElementObjectType =
+  | ModelObjectOld
   | ModelObject
   | RackObject
   | InstanceObject
   | InstanceInfoObject;
 
 export type FormObjectType =
-  | ModelObject
+  | ModelObjectOld
   | RackObject
   | InstanceObject
   | RackRangeFields
   | InstanceInfoObject;
-export function isModelObject(obj: any): obj is ModelObject {
+export function isModelObject(obj: any): obj is ModelObjectOld {
   return obj && obj.model_number;
 }
 export function isRackObject(obj: any): obj is RackObject {
