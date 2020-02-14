@@ -1,4 +1,3 @@
-# from rest_framework.parsers import JSONParser
 from django.http import HttpResponse, JsonResponse
 from rackcity.models import ITInstance, ITModel, Rack
 from django.core.exceptions import ObjectDoesNotExist

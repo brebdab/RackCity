@@ -38,5 +38,6 @@ urlpatterns = [
     path('datacenters/get-all', views.datacenter_all),
     path('users/who-am-i', views.who_am_i),
     path('users/add', views.RegisterNameView.as_view()),
+    path('users/delete', views.user_delete),
     path('users/netid-login', views.netid_login),
 ]

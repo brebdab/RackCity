@@ -6,6 +6,7 @@ from rackcity.api.serializers import RegisterNameSerializer, UserSerializer
 import requests
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import permission_classes, api_view
+from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_auth.registration.views import RegisterView
 
@@ -13,30 +14,6 @@ from rest_auth.registration.views import RegisterView
 class RegisterNameView(RegisterView):
     serializer_class = RegisterNameSerializer
     permission_classes = [IsAdminUser]
-
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def usernames(request):
-    """
-    Get all existing usernames.
-    """
-    usernames = [obj.username for obj in User.objects.all()]
-    return JsonResponse(
-        {"usernames": usernames},
-        status=HTTPStatus.OK,
-    )
-
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def who_am_i(request):
-    """
-    Get all information about the logged in user.
-    """
-    user = request.user
-    serializer = UserSerializer(user)
-    return JsonResponse(serializer.data, status=HTTPStatus.OK)
 
 
 @api_view(['POST'])
@@ -82,5 +59,77 @@ def netid_login(request):
     token, _ = Token.objects.get_or_create(user=user)
     return JsonResponse(
         {"token": token.key},
+        status=HTTPStatus.OK,
+    )
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def user_delete(request):
+    """
+    Delete an existing user. Any assets owned by this user will be updated to
+    have no owner.
+    """
+    delete_error_message = \
+        "User cannot be deleted because an error has occurred."
+    data = JSONParser().parse(request)
+    if 'id' not in data:
+        return JsonResponse(
+            {
+                "failure_message": delete_error_message,
+                "errors": "Must include user id when deleting a user.",
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    try:
+        existing_user = User.objects.get(id=data['id'])
+    except ObjectDoesNotExist:
+        return JsonResponse(
+            {
+                "failure_message": "User does not exist.",
+                "errors": "No existing user with id="+str(data['id'])+".",
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    username = existing_user.username
+    try:
+        existing_user.delete()
+    except Exception as error:
+        return JsonResponse(
+            {
+                "failure_message": delete_error_message,
+                "errors": str(error),
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    else:
+        return JsonResponse(
+            {
+                "success_message": "User " + username + " successfully deleted."
+            },
+            status=HTTPStatus.OK,
+        )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def who_am_i(request):
+    """
+    Get all information about the logged in user.
+    """
+    user = request.user
+    serializer = UserSerializer(user)
+    return JsonResponse(serializer.data, status=HTTPStatus.OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def usernames(request):
+    """
+    Get all existing usernames.
+    """
+    usernames = [obj.username for obj in User.objects.all()]
+    return JsonResponse(
+        {"usernames": usernames},
         status=HTTPStatus.OK,
     )
