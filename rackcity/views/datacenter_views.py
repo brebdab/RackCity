@@ -21,8 +21,8 @@ def datacenter_all(request):
             status=HTTPStatus.OK
         )
     except Datacenter.ObjectDoesNotExist:
-        failure_message = "No datacenters"
+        failure_message = "No datacenters found"
         return JsonResponse(
             {"failure_message": failure_message},
-            status=HTTPStatus.BAD_REQUEST,
+            status=HTTPStatus.OK,
         )
