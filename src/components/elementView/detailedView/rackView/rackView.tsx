@@ -117,7 +117,6 @@ class RackView extends React.PureComponent<
         );
       }
     }
-    console.log(rows);
 
     return rows;
   }
@@ -175,7 +174,7 @@ class RackView extends React.PureComponent<
     //     ? (this.props.location.state as Array<RackResponseObject>)
     //     : [];
     const racks = this.props.racks;
-    console.log(racks);
+
     return (
       <div className={Classes.DARK}>
         <Toaster

@@ -1,12 +1,22 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, JsonResponse
 from rackcity.models import Rack, ITInstance
-from rackcity.api.serializers import RackSerializer, ITInstanceSerializer, RecursiveITInstanceSerializer
+from rackcity.api.serializers import RackSerializer, ITInstanceSerializer
 from rackcity.api.objects import RackRangeSerializer
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from http import HTTPStatus
+from rackcity.views.rackcity_utils import get_rack_detailed_response
 
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def rack_get_all(request):
+    """
+    List all racks
+    """
+    racks = Rack.objects.all()
+    return get_rack_detailed_response(racks)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -27,32 +37,7 @@ def rack_get(request):
         row_letter__range=range_serializer.get_row_range(),
     )
 
-    if racks.count() == 0:
-        return JsonResponse(
-            {"failure_message": "There are no existing racks within this range. "},
-            status=HTTPStatus.BAD_REQUEST,
-        )
-
-    racks_with_instances = []
-    for rack in racks:
-        rack_serializer = RackSerializer(rack)
-        instances = ITInstance.objects \
-            .filter(rack=rack.id) \
-            .order_by("elevation")
-        instances_serializer = RecursiveITInstanceSerializer(
-            instances,
-            many=True
-        )
-        rack_detail = {
-            "rack": rack_serializer.data,
-            "instances": instances_serializer.data,
-        }
-        racks_with_instances.append(rack_detail)
-
-    return JsonResponse(
-        {"racks": racks_with_instances},
-        status=HTTPStatus.OK
-    )
+    return get_rack_detailed_response(racks)
 
 
 @api_view(['POST'])

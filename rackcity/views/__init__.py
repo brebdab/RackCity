@@ -30,6 +30,7 @@ from .it_instance_views import (
 )
 from .rack_views import (
     rack_get,
+    rack_get_all,
     rack_create,
     rack_delete,
     rack_summary,
