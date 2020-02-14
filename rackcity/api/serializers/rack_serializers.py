@@ -7,6 +7,7 @@ class RackSerializer(serializers.ModelSerializer):
         model = Rack
         fields = (
             'id',
+            'datacenter',
             'row_letter',
             'rack_num',
             'height'

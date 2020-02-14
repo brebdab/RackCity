@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.db import models
+from .datacenter import Datacenter
 import re
 
 
@@ -10,6 +11,11 @@ def validate_row_letter(value):
 
 
 class Rack(models.Model):
+    datacenter = models.ForeignKey(
+        Datacenter,
+        on_delete=models.CASCADE,
+        verbose_name="datacenter",
+    )
     row_letter = models.CharField(
         max_length=1,
         validators=[validate_row_letter],
@@ -18,11 +24,11 @@ class Rack(models.Model):
     height = models.PositiveIntegerField(default=42)
 
     class Meta:
-        ordering = ['row_letter', 'rack_num']
+        ordering = ['datacenter', 'row_letter', 'rack_num']
         constraints = [
             models.UniqueConstraint(
-                fields=['row_letter', 'rack_num'],
-                name='unique rack letter and number'),
+                fields=['datacenter', 'row_letter', 'rack_num'],
+                name='unique rack letter and number per datacenter'),
         ]
 
     def save(self, *args, **kwargs):
