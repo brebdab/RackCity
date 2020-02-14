@@ -38,5 +38,6 @@ from .rack_views import (
 from .report_views import report_rack_usage
 from .user_views import usernames, who_am_i, RegisterNameView, netid_login
 from .datacenter_views import (
-    datacenter_all
+    datacenter_all,
+    get_datacenter
 )

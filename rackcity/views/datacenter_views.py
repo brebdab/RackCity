@@ -18,3 +18,15 @@ def datacenter_all(request):
         {"datacenters": serializer.data},
         status=HTTPStatus.OK
     )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_datacenter(request, id):
+    """
+        Return single datacenter specified by id
+    """
+    return JsonResponse(
+        {"datacenter": "datacenter"},
+        status=HTTPStatus.OK
+    )
