@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from http import HTTPStatus
-from rackcity.api.serializers import RegisterNameSerializer
+from rackcity.api.serializers import RegisterNameSerializer, UserSerializer
 import requests
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import permission_classes, api_view
@@ -28,13 +28,24 @@ def usernames(request):
     )
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def who_am_i(request):
+    """
+    Get all information about the logged in user.
+    """
+    user = request.user
+    serializer = UserSerializer(user)
+    return JsonResponse(serializer.data, status=HTTPStatus.OK)
+
+
 @api_view(['POST'])
 def netid_login(request):
     """
     Validate user's OAuth2 access token and return API user token.
     """
-    failure_message = "The Duke NetID login credentials you have " + \
-        "provided are invalid."
+    failure_message = "The Duke NetID login credentials you have provided " + \
+        "are invalid."
     if 'access_token' not in request.data:
         return JsonResponse(
             {"failure_message": failure_message},

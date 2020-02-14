@@ -1,7 +1,11 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, JsonResponse
 from rackcity.models import Rack, ITInstance
-from rackcity.api.serializers import RackSerializer, ITInstanceSerializer
+from rackcity.api.serializers import (
+    RackSerializer,
+    ITInstanceSerializer,
+    RecursiveITInstanceSerializer,
+)
 from rackcity.api.objects import RackRangeSerializer
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
