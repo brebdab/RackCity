@@ -33,6 +33,13 @@ def netid_login(request):
     """
     Validate user's OAuth2 access token and return API user token.
     """
+    failure_message = "The Duke NetID login credentials you have " + \
+        "provided are invalid."
+    if 'access_token' not in request.data:
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST,
+        )
     access_token = request.data['access_token']
     url = 'https://api.colab.duke.edu/identity/v1/'
     client_id = 'hyposoft-rack-city'
@@ -42,8 +49,6 @@ def netid_login(request):
     }
     response = requests.get(url, headers=headers)
     if response.status_code != 200:
-        failure_message = "The Duke NetID login credentials you have " + \
-            "provided are invalid."
         return JsonResponse(
             {"failure_message": failure_message},
             status=HTTPStatus.BAD_REQUEST,
