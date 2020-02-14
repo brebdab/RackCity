@@ -22,6 +22,7 @@ def rack_get_all(request):
     racks = Rack.objects.all()
     return get_rack_detailed_response(racks)
 
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def rack_get(request):
@@ -36,7 +37,8 @@ def rack_get(request):
             status=HTTPStatus.BAD_REQUEST,
         )
 
-    racks = Rack.objects.filter(  # WILL NEED TO FILTER BY DATACENTER TOO
+    racks = Rack.objects.filter(
+        datacenter=range_serializer.get_datacenter(),
         rack_num__range=range_serializer.get_number_range(),  # inclusive range
         row_letter__range=range_serializer.get_row_range(),
     )
@@ -56,7 +58,8 @@ def rack_create(request):
             {"failure_message": str(range_serializer.errors)},
             status=HTTPStatus.BAD_REQUEST,
         )
-    racks = Rack.objects.filter(  # WILL NEED TO FILTER ON DATACENTER
+    racks = Rack.objects.filter(
+        datacenter=range_serializer.get_datacenter(),
         rack_num__range=range_serializer.get_number_range(),  # inclusive range
         row_letter__range=range_serializer.get_row_range(),
     )
@@ -65,7 +68,9 @@ def rack_create(request):
             range_serializer.get_row_range_as_string() + " " + \
             range_serializer.get_number_range_as_string() + \
             " cannot be created because the following racks" + \
-            " within this range already exist: "  # ADD DATACENTER TO THIS MESSAGE
+            " within this range already exist in datacenter '" + \
+            range_serializer.get_datacenter().abbreviation + \
+            "': "
         failure_message += ", ".join(
             [str(rack.row_letter) + str(rack.rack_num) for rack in racks]
         )
@@ -78,8 +83,11 @@ def rack_create(request):
         rack_num_list = range_serializer.get_number_list()
         for row in rack_row_list:
             for num in rack_num_list:
-                # ADD DATACENTER HERE
-                rack = Rack(row_letter=row, rack_num=num)
+                rack = Rack(
+                    datacenter=range_serializer.get_datacenter(),
+                    row_letter=row,
+                    rack_num=num
+                )
                 rack.save()
         return HttpResponse(status=HTTPStatus.OK)
 
@@ -102,7 +110,8 @@ def rack_delete(request):
     for row_letter in range_serializer.get_row_list():
         for rack_num in range_serializer.get_number_list():
             try:
-                rack = Rack.objects.get(  # ADD DATACENTER
+                rack = Rack.objects.get(
+                    datacenter=range_serializer.get_datacenter(),
                     row_letter=row_letter,
                     rack_num=rack_num,
                 )
@@ -121,12 +130,15 @@ def rack_delete(request):
         failure_message = "The range of racks " + \
             range_serializer.get_row_range_as_string() + " " + \
             range_serializer.get_number_range_as_string() + \
-            " cannot be deleted. " + failure_message
+            " in datacenter '" + \
+            range_serializer.get_datacenter().abbreviation + \
+            "' cannot be deleted. " + failure_message
         return JsonResponse(
             {"failure_message": failure_message},
             status=HTTPStatus.BAD_REQUEST,
         )
-    racks = Rack.objects.filter(  # DATACENTER
+    racks = Rack.objects.filter(
+        datacenter=range_serializer.get_datacenter(),
         rack_num__range=range_serializer.get_number_range(),  # inclusive range
         row_letter__range=range_serializer.get_row_range(),
     )

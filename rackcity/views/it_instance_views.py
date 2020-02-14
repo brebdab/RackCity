@@ -519,7 +519,6 @@ def instance_bulk_export(request):
     csv_writer = csv.DictWriter(csv_string, fields)
     csv_writer.writeheader()
     csv_writer.writerows(serializer.data)
-    # print(csv_string.getvalue())
     return JsonResponse(
         {"export_csv": csv_string.getvalue()},
         status=HTTPStatus.OK,
