@@ -2,7 +2,8 @@ import * as React from "react";
 import {
   RackRangeFields,
   ElementType,
-  RackResponseObject
+  RackResponseObject,
+  getHeaders
 } from "../../utils/utils";
 import { API_ROOT } from "../../utils/api-config";
 import {
@@ -11,7 +12,8 @@ import {
   IToastProps,
   Toaster,
   Position,
-  Alert
+  Alert,
+  Button
 } from "@blueprintjs/core";
 
 import axios from "axios";
@@ -134,6 +136,32 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
         });
       });
   };
+
+  getAllRacks = () => {
+    this.setState({
+      loading: true
+    });
+    axios
+      .get(API_ROOT + "api/racks/get-all", getHeaders(this.props.token))
+      .then(res => {
+        this.setState({
+          racks: res.data.racks,
+          loading: false
+        });
+      })
+      .catch(err => {
+        this.setState({
+          loading: false,
+          racks: []
+        });
+
+        this.addToast({
+          message: err.response.data.failure_message,
+          intent: Intent.DANGER
+        });
+      });
+  };
+
   render() {
     return (
       <div className="rack-tab">
@@ -189,6 +217,10 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
             />
           </div>
         ) : null}
+        <Button
+          text="View All Rack(s)"
+          onClick={(e: any) => this.getAllRacks()}
+        />
 
         <RackSelectView submitForm={this.viewRackForm} />
         <RackView racks={this.state.racks} loading={this.state.loading} />

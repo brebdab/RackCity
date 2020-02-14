@@ -20,8 +20,8 @@ interface RegistrationFormProps {
   error: string;
   token: string;
 }
-var console:any = {};
-console.log = function(){};
+var console: any = {};
+console.log = function () { };
 
 interface RegistrationFormState {
   errors: Array<string>;
@@ -31,7 +31,7 @@ interface RegistrationFormState {
 class RegistrationForm extends React.Component<
   RegistrationFormProps & FormComponentProps & RouteComponentProps,
   RegistrationFormState
-> {
+  > {
   public state = {
     confirmDirty: false,
     errors: []
@@ -39,7 +39,8 @@ class RegistrationForm extends React.Component<
   authSignup = (
     username: string,
     email: string,
-    displayName: string,
+    firstName: string,
+    lastName: string,
     password1: string,
     password2: string,
     token: string
@@ -47,11 +48,12 @@ class RegistrationForm extends React.Component<
     const headers = getHeaders(token);
     return axios
       .post(
-        API_ROOT + "rest-auth/registration/",
+        API_ROOT + "api/users/add",
         {
           username: username,
           email: email,
-          displayName: displayName,
+          first_name: firstName,
+          last_name: lastName,
           password1: password1,
           password2: password2
         },
@@ -80,7 +82,8 @@ class RegistrationForm extends React.Component<
         this.authSignup(
           values.userName,
           values.email,
-          values.displayName,
+          values.firstName,
+          values.lastName,
           values.password,
           values.confirm,
           this.props.token

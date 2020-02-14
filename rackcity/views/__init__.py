@@ -30,12 +30,13 @@ from .it_instance_views import (
 )
 from .rack_views import (
     rack_get,
+    rack_get_all,
     rack_create,
     rack_delete,
     rack_summary,
 )
 from .report_views import report_rack_usage
-from .user_views import usernames
+from .user_views import usernames, who_am_i, RegisterNameView, netid_login
 from .datacenter_views import (
     datacenter_all
 )

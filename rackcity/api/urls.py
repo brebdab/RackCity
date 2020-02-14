@@ -28,6 +28,7 @@ urlpatterns = [
     path('instances/pages', views.instance_page_count),
     path('instances/fields', views.instance_fields),
     path('racks/get', views.rack_get),
+    path('racks/get-all',views.rack_get_all),
     path('racks/create', views.rack_create),
     path('racks/delete', views.rack_delete),
     path('racks/summary', views.rack_summary),
@@ -35,4 +36,7 @@ urlpatterns = [
     path('report', views.report_rack_usage),
     path('usernames', views.usernames),
     path('datacenters/get-all', views.datacenter_all)
+    path('users/who-am-i', views.who_am_i),
+    path('users/add', views.RegisterNameView.as_view()),
+    path('users/netid-login', views.netid_login),
 ]

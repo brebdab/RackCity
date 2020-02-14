@@ -8,7 +8,7 @@ export const authStart = () => {
 };
 
 var console: any = {};
-console.log = function() {};
+console.log = function () { };
 export const authSuccess = (token: string) => {
   return {
     type: actionTypes.AUTH_SUCCESS,
@@ -42,13 +42,13 @@ export const logout = () => {
     type: actionTypes.AUTH_LOGOUT
   };
 };
-export const checkAuthTimeout = (expirationTime: number) => {
-  return (dispatch: any) => {
-    setTimeout(() => {
-      dispatch(logout());
-    }, expirationTime * 1000);
-  };
-};
+// export const checkAuthTimeout = (expirationTime: number) => {
+//   return (dispatch: any) => {
+//     setTimeout(() => {
+//       dispatch(logout());
+//     }, expirationTime * 1000);
+//   };
+// };
 // function getCookie(name: string) {
 //   var cookieValue = null;
 //   if (document.cookie && document.cookie !== "") {
@@ -143,7 +143,7 @@ export const loginHelper = (res: any, dispatch: any) => {
 
   dispatch(authSuccess(token));
   dispatch(checkAdmin(token));
-  dispatch(checkAuthTimeout(3600));
+  // dispatch(checkAuthTimeout(3600));
 };
 
 export const authCheckState = () => {
@@ -158,11 +158,11 @@ export const authCheckState = () => {
       } else {
         dispatch(authSuccess(token!));
         dispatch(checkAdmin(token!));
-        dispatch(
-          checkAuthTimeout(
-            (expirationDate.getTime() - new Date().getTime()) / 1000
-          )
-        );
+        // dispatch(
+        //   checkAuthTimeout(
+        //     (expirationDate.getTime() - new Date().getTime()) / 1000
+        //   )
+        // );
       }
     }
   };

@@ -1,12 +1,26 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, JsonResponse
 from rackcity.models import Rack, ITInstance
-from rackcity.api.serializers import RackSerializer, ITInstanceSerializer, RecursiveITInstanceSerializer
+from rackcity.api.serializers import (
+    RackSerializer,
+    ITInstanceSerializer,
+    RecursiveITInstanceSerializer,
+)
 from rackcity.api.objects import RackRangeSerializer
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from http import HTTPStatus
+from rackcity.views.rackcity_utils import get_rack_detailed_response
 
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def rack_get_all(request):
+    """
+    List all racks
+    """
+    racks = Rack.objects.all()
+    return get_rack_detailed_response(racks)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -22,37 +36,12 @@ def rack_get(request):
             status=HTTPStatus.BAD_REQUEST,
         )
 
-    racks = Rack.objects.filter(
+    racks = Rack.objects.filter(  # WILL NEED TO FILTER BY DATACENTER TOO
         rack_num__range=range_serializer.get_number_range(),  # inclusive range
         row_letter__range=range_serializer.get_row_range(),
     )
 
-    if racks.count() == 0:
-        return JsonResponse(
-            {"failure_message": "There are no existing racks within this range. "},
-            status=HTTPStatus.BAD_REQUEST,
-        )
-
-    racks_with_instances = []
-    for rack in racks:
-        rack_serializer = RackSerializer(rack)
-        instances = ITInstance.objects \
-            .filter(rack=rack.id) \
-            .order_by("elevation")
-        instances_serializer = RecursiveITInstanceSerializer(
-            instances,
-            many=True
-        )
-        rack_detail = {
-            "rack": rack_serializer.data,
-            "instances": instances_serializer.data,
-        }
-        racks_with_instances.append(rack_detail)
-
-    return JsonResponse(
-        {"racks": racks_with_instances},
-        status=HTTPStatus.OK
-    )
+    return get_rack_detailed_response(racks)
 
 
 @api_view(['POST'])
@@ -67,7 +56,7 @@ def rack_create(request):
             {"failure_message": str(range_serializer.errors)},
             status=HTTPStatus.BAD_REQUEST,
         )
-    racks = Rack.objects.filter(
+    racks = Rack.objects.filter(  # WILL NEED TO FILTER ON DATACENTER
         rack_num__range=range_serializer.get_number_range(),  # inclusive range
         row_letter__range=range_serializer.get_row_range(),
     )
@@ -76,7 +65,7 @@ def rack_create(request):
             range_serializer.get_row_range_as_string() + " " + \
             range_serializer.get_number_range_as_string() + \
             " cannot be created because the following racks" + \
-            " within this range already exist: "
+            " within this range already exist: "  # ADD DATACENTER TO THIS MESSAGE
         failure_message += ", ".join(
             [str(rack.row_letter) + str(rack.rack_num) for rack in racks]
         )
@@ -89,6 +78,7 @@ def rack_create(request):
         rack_num_list = range_serializer.get_number_list()
         for row in rack_row_list:
             for num in rack_num_list:
+                # ADD DATACENTER HERE
                 rack = Rack(row_letter=row, rack_num=num)
                 rack.save()
         return HttpResponse(status=HTTPStatus.OK)
@@ -112,7 +102,7 @@ def rack_delete(request):
     for row_letter in range_serializer.get_row_list():
         for rack_num in range_serializer.get_number_list():
             try:
-                rack = Rack.objects.get(
+                rack = Rack.objects.get(  # ADD DATACENTER
                     row_letter=row_letter,
                     rack_num=rack_num,
                 )
@@ -136,7 +126,7 @@ def rack_delete(request):
             {"failure_message": failure_message},
             status=HTTPStatus.BAD_REQUEST,
         )
-    racks = Rack.objects.filter(
+    racks = Rack.objects.filter(  # DATACENTER
         rack_num__range=range_serializer.get_number_range(),  # inclusive range
         row_letter__range=range_serializer.get_row_range(),
     )
