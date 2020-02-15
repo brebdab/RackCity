@@ -9,7 +9,7 @@ export interface AlertState {
   isDeleteOpen: boolean;
 }
 var console: any = {};
-console.log = function() {};
+console.log = function () { };
 
 interface PropertiesViewProps {
   data: any;
@@ -18,7 +18,7 @@ interface PropertiesViewProps {
 class PropertiesView extends React.PureComponent<
   RouteComponentProps & PropertiesViewProps,
   AlertState
-> {
+  > {
   public state: AlertState = {
     isDeleteOpen: false
   };
@@ -60,7 +60,7 @@ class PropertiesView extends React.PureComponent<
               dat = <p>{data[key]}</p>;
             }
             return (
-              <div className={"row-props"}>
+              <div className={"row-props"} key={item}>
                 <div className={"column-props"}>
                   <p key={item}>{item}:</p>
                 </div>

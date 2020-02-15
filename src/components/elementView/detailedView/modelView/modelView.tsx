@@ -22,7 +22,8 @@ import {
   ElementType,
   InstanceObject,
   ModelObjectOld,
-  getHeaders
+  getHeaders,
+  getFields
 } from "../../../../utils/utils";
 import PropertiesView from "../propertiesView";
 import { FormTypes } from "../../../../forms/formUtils";
@@ -34,7 +35,7 @@ export interface ModelViewProps {
 }
 
 var console: any = {};
-console.log = function() {};
+console.log = function () { };
 interface ModelViewState {
   instances: Array<InstanceObject> | undefined;
   model: ModelObjectOld | undefined;
@@ -62,7 +63,7 @@ async function getData(modelkey: string, token: string) {
 export class ModelView extends React.PureComponent<
   RouteComponentProps & ModelViewProps,
   ModelViewState
-> {
+  > {
   public state: ModelViewState = {
     instances: undefined,
     model: undefined,
@@ -150,6 +151,23 @@ export class ModelView extends React.PureComponent<
         });
       });
   };
+
+  componentDidMount() {
+    const auth = getHeaders(this.props.token)
+    const headers = {
+      headers: auth.headers,
+      params: {
+        page: 1,
+        page_size: 20
+      }
+    }
+    getFields("models", headers).then((res: any) => {
+      this.setState({
+        fields: res,
+        columns: res
+      })
+    })
+  }
 
   public render() {
     console.log(this.state.instances);

@@ -108,9 +108,15 @@ export const getHeaders = (token: string) => {
 
 export function getFields(type: string, headers: any) {
   return axios
-    .post(API_ROOT + "api/" + type + "/get-many", headers)
+    .post(API_ROOT + "api/" + type + "/get-many", { sort_by: [], filters: [] }, headers)
     .then(res => {
-      const items = res.data.fields;
-      return items;
+      const items = Object.keys(res.data.models[0]);
+      var keys = []
+      for (var i = 0; i < items.length; i++) {
+        if (items[i] !== "id") {
+          keys.push(items[i])
+        }
+      }
+      return keys;
     });
 }
