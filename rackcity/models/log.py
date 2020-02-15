@@ -1,7 +1,7 @@
 from .it_model import ITModel
 from django.contrib.auth.models import User
 from django.db import models
-pyfrom .asset import Asset
+from .asset import Asset
 
 
 class Log(models.Model):
