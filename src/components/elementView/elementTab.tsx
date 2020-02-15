@@ -10,7 +10,7 @@ import { FormTypes } from "../../forms/formUtils";
 import {
   ElementObjectType,
   ElementType,
-  ModelObject,
+  ModelObjectOld,
   UserInfoObject,
   AssetInfoObject
 } from "../../utils/utils";
@@ -258,7 +258,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               submitForm={
                 this.props.element === ElementType.MODEL
                   ? this.createModel
-                  : this.props.element === ElementType.INSTANCE
+                  : this.props.element === ElementType.ASSET
                     ? this.createAsset
                     : this.createUser
               }
