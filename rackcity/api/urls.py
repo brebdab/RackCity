@@ -2,6 +2,7 @@ from django.urls import path
 from rackcity import views
 
 urlpatterns = [
+    path('logs/get-many', views.log_many),
     path('models', views.model_list),
     path('models/add', views.model_add),
     path('models/modify', views.model_modify),
