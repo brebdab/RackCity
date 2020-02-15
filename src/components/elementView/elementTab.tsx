@@ -1,4 +1,12 @@
-import { AnchorButton, Intent, Alert, InputGroup } from "@blueprintjs/core";
+import {
+  AnchorButton,
+  Intent,
+  Alert,
+  InputGroup,
+  IToastProps,
+  Toaster,
+  Position
+} from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
@@ -140,7 +148,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       console.log("success");
       this.handleDataUpdate(true);
       this.handleClose();
-
+      this.addSuccessToast("Successfully created model!");
       console.log(this.state.isOpen);
     });
   };
@@ -151,9 +159,10 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
   ): Promise<any> => {
     console.log("api/assets/add");
     return axios.post(API_ROOT + "api/assets/add", asset, headers).then(res => {
-      console.log("success");
       this.handleDataUpdate(true);
       this.handleClose();
+      this.addSuccessToast("Successfully created asset!");
+
       console.log(this.state.isOpen);
     });
   };
@@ -162,15 +171,37 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     console.log("api/users/add");
     return axios.post(API_ROOT + "api/users/add", user, headers).then(res => {
       console.log("success");
+
       this.handleDataUpdate(true);
       this.handleClose();
+      this.addSuccessToast("Successfully created user!");
       console.log(this.state.isOpen);
     });
+  };
+  private addSuccessToast(message: string) {
+    this.addToast({ message: message, intent: Intent.PRIMARY });
+  }
+  private addErrorToast(message: string) {
+    this.addToast({ message: message, intent: Intent.DANGER });
+  }
+  private addToast(toast: IToastProps) {
+    toast.timeout = 5000;
+    this.toaster.show(toast);
+  }
+  private toaster: Toaster = {} as Toaster;
+  private refHandlers = {
+    toaster: (ref: Toaster) => (this.toaster = ref)
   };
 
   public render() {
     return (
       <div>
+        <Toaster
+          autoFocus={false}
+          canEscapeKeyClear={true}
+          position={Position.TOP}
+          ref={this.refHandlers.toaster}
+        />
         {this.props.element != ElementType.USER ? (
           <AnchorButton
             className="add"
