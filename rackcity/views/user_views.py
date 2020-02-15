@@ -65,6 +65,66 @@ def netid_login(request):
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
+def user_list(request):
+    """
+    List many users. If page is not specified as a query parameter, all
+    instances are returned. If page is specified as a query parameter, page
+    size must also be specified, and a page of users will be returned.
+    """
+
+    failure_message = ""
+
+    should_paginate = not(
+        request.query_params.get('page') is None
+        and request.query_params.get('page_size') is None
+    )
+
+    if should_paginate:
+        if not request.query_params.get('page'):
+            failure_message += "Must specify field 'page' on " + \
+                "paginated requests. "
+        elif not request.query_params.get('page_size'):
+            failure_message += "Must specify field 'page_size' on " + \
+                "paginated requests. "
+        elif int(request.query_params.get('page_size')) <= 0:
+            failure_message += "Field 'page_size' must be an integer " + \
+                "greater than 0. "
+
+    if failure_message != "":
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+
+    users = User.objects.all()
+
+    if should_paginate:
+        paginator = PageNumberPagination()
+        paginator.page_size = request.query_params.get('page_size')
+        try:
+            page_of_users = paginator.paginate_queryset(users, request)
+        except Exception as error:
+            failure_message += "Invalid page requested: " + str(error)
+            return JsonResponse(
+                {"failure_message": failure_message},
+                status=HTTPStatus.BAD_REQUEST,
+            )
+        users_to_serialize = page_of_users
+    else:
+        users_to_serialize = users
+
+    serializer = UserSerializer(
+        users_to_serialize,
+        many=True,
+    )
+    return JsonResponse(
+        {"users": serializer.data},
+        status=HTTPStatus.OK,
+    )
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
 def user_delete(request):
     """
     Delete an existing user. Any assets owned by this user will be updated to
@@ -92,6 +152,13 @@ def user_delete(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     username = existing_user.username
+    if username == 'admin':
+        return JsonResponse(
+            {
+                "failure_message": "User admin cannot be deleted.",
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
     try:
         existing_user.delete()
     except Exception as error:
@@ -105,7 +172,8 @@ def user_delete(request):
     else:
         return JsonResponse(
             {
-                "success_message": "User " + username + " successfully deleted."
+                "success_message":
+                "User " + username + " successfully deleted."
             },
             status=HTTPStatus.OK,
         )

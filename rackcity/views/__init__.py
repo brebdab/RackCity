@@ -40,8 +40,10 @@ from .user_views import (
     netid_login,
     RegisterNameView,
     user_delete,
+    user_list,
     usernames,
     who_am_i,
+)
 from .datacenter_views import (
     datacenter_all
 )
