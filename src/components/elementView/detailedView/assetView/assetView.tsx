@@ -18,7 +18,8 @@ import { connect } from "react-redux";
 import {
   AssetObject,
   ElementType,
-  getHeaders
+  getHeaders,
+  getFields
 } from "../../../../utils/utils";
 import FormPopup from "../../../../forms/formPopup";
 import { FormTypes } from "../../../../forms/formUtils";
@@ -96,6 +97,23 @@ export class AssetView extends React.PureComponent<
   private refHandlers = {
     toaster: (ref: Toaster) => (this.toaster = ref)
   };
+
+  public componentDidMount() {
+    const auth = getHeaders(this.props.token)
+    const headers = {
+      headers: auth.headers,
+      params: {
+        page: 1,
+        page_size: 20
+      }
+    }
+    getFields("instances", headers).then((res: any) => {
+      this.setState({
+        fields: res,
+        columns: res
+      })
+    })
+  }
 
   public render() {
     let params: any;

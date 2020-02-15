@@ -22,7 +22,8 @@ import {
   ElementType,
   AssetObject,
   ModelObjectOld,
-  getHeaders
+  getHeaders,
+  getFields
 } from "../../../../utils/utils";
 import PropertiesView from "../propertiesView";
 import { FormTypes } from "../../../../forms/formUtils";
@@ -150,6 +151,23 @@ export class ModelView extends React.PureComponent<
         });
       });
   };
+
+  componentDidMount() {
+    const auth = getHeaders(this.props.token)
+    const headers = {
+      headers: auth.headers,
+      params: {
+        page: 1,
+        page_size: 20
+      }
+    }
+    getFields("models", headers).then((res: any) => {
+      this.setState({
+        fields: res,
+        columns: res
+      })
+    })
+  }
 
   public render() {
     console.log(this.state.assets);
