@@ -5,10 +5,10 @@ interface ElementObject {
 }
 export enum ElementType {
   RACK = "racks",
-  INSTANCE = "instances",
+  ASSET = "assets",
   MODEL = "models"
 }
-export interface InstanceObject extends ElementObject {
+export interface AssetObject extends ElementObject {
   hostname: string;
   elevation: string;
   model: ModelObjectOld;
@@ -24,7 +24,7 @@ export interface RackRangeFields {
   num_end: number;
 }
 
-export interface InstanceInfoObject extends ElementObject {
+export interface AssetInfoObject extends ElementObject {
   hostname: string;
   elevation: string;
   model?: string;
@@ -41,7 +41,7 @@ export interface RackObject extends ElementObject {
 
 export interface RackResponseObject {
   rack: RackObject;
-  instances: Array<InstanceObject>;
+  assets: Array<AssetObject>;
 }
 
 export interface DatacenterObject extends ElementObject {
@@ -81,28 +81,28 @@ export interface ModelObject extends ElementObject {
 }
 export interface ModelDetailObject {
   model: ModelObjectOld;
-  instances: Array<InstanceObject>;
+  assets: Array<AssetObject>;
 }
 export type ElementObjectType =
   | ModelObjectOld
   | ModelObject
   | RackObject
-  | InstanceObject
-  | InstanceInfoObject;
+  | AssetObject
+  | AssetInfoObject;
 
 export type FormObjectType =
   | ModelObjectOld
   | RackObject
-  | InstanceObject
+  | AssetObject
   | RackRangeFields
-  | InstanceInfoObject;
+  | AssetInfoObject;
 export function isModelObject(obj: any): obj is ModelObjectOld {
   return obj && obj.model_number;
 }
 export function isRackObject(obj: any): obj is RackObject {
   return obj && obj.rack_num;
 }
-export function isInstanceObject(obj: any): obj is InstanceObject {
+export function isAssetObject(obj: any): obj is AssetObject {
   return obj && obj.hostname;
 }
 export const getHeaders = (token: string) => {

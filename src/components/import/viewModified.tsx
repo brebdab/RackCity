@@ -17,9 +17,9 @@ interface ModifierProps {
   operation: string
 }
 var console: any = {};
-console.log = function() {};
+console.log = function () { };
 
-export interface InstanceObject {
+export interface AssetObject {
   [key: string]: any;
   hostname: string;
   elevation: string;
@@ -57,7 +57,7 @@ interface ModifierState {
 export class Modifier extends React.PureComponent<
   RouteComponentProps & ModifierProps,
   ModifierState
-> {
+  > {
   public state: ModifierState = {
     modifiedModels: []
   };
@@ -96,113 +96,113 @@ export class Modifier extends React.PureComponent<
       return (
         <div>
           {this.props.modelsModified.map((obj: any) => {
-              let checkObj: Check;
-              checkObj = { model: obj.modified, checked: false }
-              this.state.modifiedModels.push(checkObj)
-              return (
-                <div>
-                  <table className={"bp3-html-table"}>
-                    <thead>
-                      <tr>
-                        <th>Modified or Original?</th>
-                        {Object.keys(model).map((item: string) => {
-                          if (item !== "id")
-                            return <th>{fields[item]}</th> // TODO might need to make separate fields arrays based on this.props.operation
-                          else
-                            return <th> </th>
-                        })}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td>Existing</td>
-                        {Object.keys(model).map((key: string) => {
-                          if (key === "rack")
-                            return <td>{obj.existing.rack.rack_num + "" + obj.existing.rack.row_letter}</td>
-                          else if (key === "model")
-                            return <td>{obj.existing.model.vendor + " " + obj.existing.model.model_number}</td>
-                          else if (key !== "id")
-                            return <td>{obj.existing[key]}</td>
-                          else
-                            return <td> </td>
-                        })}
-                      </tr>
-                      <tr>
-                        <td>Modified</td>
-                        {Object.keys(model).map((key: string) => {
-                          if (key === "rack")
-                            return <td>{obj.modified.rack.rack_num + "" + obj.modified.rack.row_letter}</td>
-                          else if (key === "model")
-                            return <td>{obj.modified.model.vendor + " " + obj.modified.model.model_number}</td>
-                          else if (key !== "id")
-                            return <td>{obj.modified[key]}</td>
-                          else
-                            return <td> </td>
-                        })}
-                      </tr>
-                    </tbody>
-                  </table>
-                  <div className={"upload-button"}>
-                    <Checks {...this.props}
-                      linkedModel={obj.modified}
-                      callback={(model: any) => {
-                        var index = this.state.modifiedModels.findIndex((element: Check) => {
-                          return element.model === model // TODO might need to make Check type have model: any
-                        })
-                        let check: Array<Check>
-                        check = this.state.modifiedModels;
-                        check[index].checked = !check[index].checked
-                        this.setState({
-                          modifiedModels: check
-                        })
-                        // this.state.modifiedModels[index].checked = !this.state.modifiedModels[index].checked
-                      }}
-                    />
-                  </div>
+            let checkObj: Check;
+            checkObj = { model: obj.modified, checked: false }
+            this.state.modifiedModels.push(checkObj)
+            return (
+              <div>
+                <table className={"bp3-html-table"}>
+                  <thead>
+                    <tr>
+                      <th>Modified or Original?</th>
+                      {Object.keys(model).map((item: string) => {
+                        if (item !== "id")
+                          return <th>{fields[item]}</th> // TODO might need to make separate fields arrays based on this.props.operation
+                        else
+                          return <th> </th>
+                      })}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Existing</td>
+                      {Object.keys(model).map((key: string) => {
+                        if (key === "rack")
+                          return <td>{obj.existing.rack.rack_num + "" + obj.existing.rack.row_letter}</td>
+                        else if (key === "model")
+                          return <td>{obj.existing.model.vendor + " " + obj.existing.model.model_number}</td>
+                        else if (key !== "id")
+                          return <td>{obj.existing[key]}</td>
+                        else
+                          return <td> </td>
+                      })}
+                    </tr>
+                    <tr>
+                      <td>Modified</td>
+                      {Object.keys(model).map((key: string) => {
+                        if (key === "rack")
+                          return <td>{obj.modified.rack.rack_num + "" + obj.modified.rack.row_letter}</td>
+                        else if (key === "model")
+                          return <td>{obj.modified.model.vendor + " " + obj.modified.model.model_number}</td>
+                        else if (key !== "id")
+                          return <td>{obj.modified[key]}</td>
+                        else
+                          return <td> </td>
+                      })}
+                    </tr>
+                  </tbody>
+                </table>
+                <div className={"upload-button"}>
+                  <Checks {...this.props}
+                    linkedModel={obj.modified}
+                    callback={(model: any) => {
+                      var index = this.state.modifiedModels.findIndex((element: Check) => {
+                        return element.model === model // TODO might need to make Check type have model: any
+                      })
+                      let check: Array<Check>
+                      check = this.state.modifiedModels;
+                      check[index].checked = !check[index].checked
+                      this.setState({
+                        modifiedModels: check
+                      })
+                      // this.state.modifiedModels[index].checked = !this.state.modifiedModels[index].checked
+                    }}
+                  />
                 </div>
-              )
-            })}
-            <h1> </h1>
-            <AnchorButton
-              className={"upload-button"}
-              large={true}
-              intent="success"
-              icon="import"
-              text="Confirm Changes"
-              onClick={() => {
-                if (this.state.modifiedModels.length !== 0 && this.props.operation === "models") {
-                  let modified: Array<ModelObjectMod>
-                  modified = []
-                  for (var i = 0; i < this.state.modifiedModels.length; i++) {
-                    if (this.state.modifiedModels[i].checked)
-                      modified.push(this.state.modifiedModels[i].model);
-                  }
-                  uploadModified(modified, this.props.token, this.props.operation).then(res => {
-                    console.log(this.props)
-                    alert("Success! Modified: " + modified.length + "; Added: " + this.props.modelsAdded! + "; Ignored: " + (this.props.modelsIgnored! + this.props.modelsModified!.length - modified.length))
-                    this.setState({
-                      modifiedModels: []
-                    });
-                    this.props.callback()
-                  }, err => {
-                    alert(err.response.data.failure_message)
-                  })
-                } else {
-                  // TODO check this works and refactor
-                  let modified: Array<InstanceObject>;
-                  modified = []
-                  for (i = 0; i < this.state.modifiedModels.length; i++) {
-                    if (this.state.modifiedModels[i].checked)
-                      modified.push(this.state.modifiedModels[i].model);
-                  }
-                  uploadModified(modified, this.props.token, this.props.operation).then(res => {
-                    alert("Success! Modified: " + modified.length + "; Added: " + this.props.modelsAdded! + "; Ignored: " + (this.props.modelsIgnored! + this.props.modelsModified!.length - modified.length))
-                    // alert("Modifications were successful")
-                    this.setState({
-                      modifiedModels: []
-                    });
-                    this.props.callback();
-                  },
+              </div>
+            )
+          })}
+          <h1> </h1>
+          <AnchorButton
+            className={"upload-button"}
+            large={true}
+            intent="success"
+            icon="import"
+            text="Confirm Changes"
+            onClick={() => {
+              if (this.state.modifiedModels.length !== 0 && this.props.operation === "models") {
+                let modified: Array<ModelObjectMod>
+                modified = []
+                for (var i = 0; i < this.state.modifiedModels.length; i++) {
+                  if (this.state.modifiedModels[i].checked)
+                    modified.push(this.state.modifiedModels[i].model);
+                }
+                uploadModified(modified, this.props.token, this.props.operation).then(res => {
+                  console.log(this.props)
+                  alert("Success! Modified: " + modified.length + "; Added: " + this.props.modelsAdded! + "; Ignored: " + (this.props.modelsIgnored! + this.props.modelsModified!.length - modified.length))
+                  this.setState({
+                    modifiedModels: []
+                  });
+                  this.props.callback()
+                }, err => {
+                  alert(err.response.data.failure_message)
+                })
+              } else {
+                // TODO check this works and refactor
+                let modified: Array<AssetObject>;
+                modified = []
+                for (i = 0; i < this.state.modifiedModels.length; i++) {
+                  if (this.state.modifiedModels[i].checked)
+                    modified.push(this.state.modifiedModels[i].model);
+                }
+                uploadModified(modified, this.props.token, this.props.operation).then(res => {
+                  alert("Success! Modified: " + modified.length + "; Added: " + this.props.modelsAdded! + "; Ignored: " + (this.props.modelsIgnored! + this.props.modelsModified!.length - modified.length))
+                  // alert("Modifications were successful")
+                  this.setState({
+                    modifiedModels: []
+                  });
+                  this.props.callback();
+                },
                   err => {
                     alert(err.response.data.failure_message);
                   }

@@ -1,10 +1,10 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse, JsonResponse
-from rackcity.models import Rack, ITInstance
+from rackcity.models import Rack, Asset
 from rackcity.api.serializers import (
     RackSerializer,
-    ITInstanceSerializer,
-    RecursiveITInstanceSerializer,
+    AssetSerializer,
+    RecursiveAssetSerializer,
 )
 from rackcity.api.objects import RackRangeSerializer
 from rest_framework.decorators import permission_classes, api_view
@@ -118,11 +118,11 @@ def rack_delete(request):
             except ObjectDoesNotExist:
                 nonexistent_racks.append(row_letter + str(rack_num))
             else:
-                if ITInstance.objects.filter(rack=rack.id).count() > 0:
+                if Asset.objects.filter(rack=rack.id).count() > 0:
                     unempty_racks.append(row_letter + str(rack_num))
     if len(unempty_racks) > 0:
         failure_message += "The following racks within this" + \
-            " range contain instances: " + ", ".join(unempty_racks) + ". "
+            " range contain assets: " + ", ".join(unempty_racks) + ". "
     if len(nonexistent_racks) > 0:
         failure_message += "The following racks within this" + \
             " range do not exist: " + ", ".join(nonexistent_racks) + ". "
