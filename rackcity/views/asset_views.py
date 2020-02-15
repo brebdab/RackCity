@@ -1,4 +1,3 @@
-# from rest_framework.parsers import JSONParser
 from django.http import HttpResponse, JsonResponse
 from rackcity.models import Asset, ITModel, Rack
 from django.core.exceptions import ObjectDoesNotExist
@@ -532,7 +531,10 @@ def asset_page_count(request):
     Return total number of pages according to page size, which must be
     specified as query parameter.
     """
-    if not request.query_params.get('page_size') or int(request.query_params.get('page_size')) <= 0:
+    if (
+        not request.query_params.get('page_size')
+        or int(request.query_params.get('page_size')) <= 0
+    ):
         return JsonResponse(
             {"failure_message": "Must specify positive integer page_size."},
             status=HTTPStatus.BAD_REQUEST,
