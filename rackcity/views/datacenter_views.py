@@ -65,7 +65,7 @@ def datacenter_delete(request):
         try:
             existing_dc = Datacenter.objects.get(id=id)
         except ObjectDoesNotExist:
-            failure_message += "No existing instance with id = " + str(id) + ". "
+            failure_message += "No existing datacenter with id = " + str(id) + ". "
 
     if failure_message == "":
         try:
