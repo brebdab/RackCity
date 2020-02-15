@@ -15,18 +15,18 @@ from .it_model_views import (
     model_auth,
     model_admin,
 )
-from .it_instance_views import (
-    instance_detail,
-    instance_list,
-    instance_add,
-    instance_modify,
-    instance_delete,
-    instance_many,
-    instance_bulk_upload,
-    instance_bulk_approve,
-    instance_bulk_export,
-    instance_page_count,
-    instance_fields,
+from .asset_views import (
+    asset_detail,
+    asset_list,
+    asset_add,
+    asset_modify,
+    asset_delete,
+    asset_many,
+    asset_bulk_upload,
+    asset_bulk_approve,
+    asset_bulk_export,
+    asset_page_count,
+    asset_fields,
 )
 from .rack_views import (
     rack_get,

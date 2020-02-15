@@ -1,9 +1,9 @@
 from rest_framework.parsers import JSONParser
 from django.http import HttpResponse, JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
-from rackcity.models import ITModel, ITInstance
+from rackcity.models import ITModel, Asset
 from rackcity.api.serializers import (
-    RecursiveITInstanceSerializer,
+    RecursiveAssetSerializer,
     ITModelSerializer,
     BulkITModelSerializer
 )
@@ -15,7 +15,7 @@ import math
 import csv
 from io import StringIO
 from rackcity.views.rackcity_utils import (
-    validate_instance_location,
+    validate_asset_location,
     records_are_identical,
     get_sort_arguments,
     get_filter_arguments,
@@ -111,14 +111,14 @@ def validate_model_height_change(new_model_data, existing_model):
     if new_model_height <= existing_model.height:
         return
     else:
-        instances = ITInstance.objects.filter(model=existing_model.id)
-        for instance in instances:
+        assets = Asset.objects.filter(model=existing_model.id)
+        for asset in assets:
             try:
-                validate_instance_location(
-                    instance.rack.id,
-                    instance.elevation,
+                validate_asset_location(
+                    asset.rack.id,
+                    asset.rack_position,
                     new_model_height,
-                    instance.id
+                    asset.id
                 )
             except LocationException as error:
                 raise error
@@ -142,9 +142,9 @@ def model_delete(request):
         except ObjectDoesNotExist:
             failure_message += "No existing model with id="+str(id)+". "
         else:
-            instances = ITInstance.objects.filter(model=id)
-            if instances:
-                failure_message += "Cannot delete this model because instances of it exist. "
+            assets = Asset.objects.filter(model=id)
+            if assets:
+                failure_message += "Cannot delete this model because assets of it exist. "
             if failure_message == "":
                 try:
                     existing_model.delete()
@@ -244,14 +244,14 @@ def model_detail(request, id):
     try:
         model = ITModel.objects.get(id=id)
         model_serializer = ITModelSerializer(model)
-        instances = ITInstance.objects.filter(model=id)
-        instances_serializer = RecursiveITInstanceSerializer(
-            instances,
+        assets = Asset.objects.filter(model=id)
+        assets_serializer = RecursiveAssetSerializer(
+            assets,
             many=True,
         )
         model_detail = {
             "model": model_serializer.data,
-            "instances": instances_serializer.data
+            "assets": assets_serializer.data
         }
         return JsonResponse(model_detail, status=HTTPStatus.OK)
     except ITModel.DoesNotExist:

@@ -5,13 +5,13 @@ interface ElementObject {
 }
 export enum ElementType {
   RACK = "racks",
-  INSTANCE = "instances",
+  ASSET = "assets",
   MODEL = "models",
   USER = "users"
 }
-export interface InstanceObject extends ElementObject {
+export interface AssetObject extends ElementObject {
   hostname: string;
-  elevation: string;
+  rack_position: string;
   model: ModelObjectOld;
   rack: RackObject;
   owner?: string;
@@ -25,9 +25,9 @@ export interface RackRangeFields {
   num_end: number;
 }
 
-export interface InstanceInfoObject extends ElementObject {
+export interface AssetInfoObject extends ElementObject {
   hostname: string;
-  elevation: string;
+  rack_position: string;
   model?: string;
   rack?: string;
   owner?: string;
@@ -49,7 +49,7 @@ export interface RackObject extends ElementObject {
 
 export interface RackResponseObject {
   rack: RackObject;
-  instances: Array<InstanceObject>;
+  assets: Array<AssetObject>;
 }
 
 export interface DatacenterObject extends ElementObject {
@@ -89,22 +89,22 @@ export interface ModelObject extends ElementObject {
 }
 export interface ModelDetailObject {
   model: ModelObjectOld;
-  instances: Array<InstanceObject>;
+  assets: Array<AssetObject>;
 }
 export type ElementObjectType =
   | ModelObjectOld
   | ModelObject
   | RackObject
-  | InstanceObject
-  | InstanceInfoObject
+  | AssetObject
+  | AssetInfoObject
   | UserInfoObject;
 
 export type FormObjectType =
   | ModelObjectOld
   | RackObject
-  | InstanceObject
+  | AssetObject
   | RackRangeFields
-  | InstanceInfoObject
+  | AssetInfoObject
   | UserInfoObject;
 export function isModelObject(obj: any): obj is ModelObjectOld {
   return obj && obj.model_number;
@@ -112,7 +112,7 @@ export function isModelObject(obj: any): obj is ModelObjectOld {
 export function isRackObject(obj: any): obj is RackObject {
   return obj && obj.rack_num;
 }
-export function isInstanceObject(obj: any): obj is InstanceObject {
+export function isAssetObject(obj: any): obj is AssetObject {
   return obj && obj.hostname;
 }
 export const getHeaders = (token: string) => {
@@ -125,9 +125,20 @@ export const getHeaders = (token: string) => {
 
 export function getFields(type: string, headers: any) {
   return axios
-    .post(API_ROOT + "api/" + type + "/get-many", headers)
+    .post(API_ROOT + "api/" + type + "/get-many", { sort_by: [], filters: [] }, headers)
     .then(res => {
-      const items = res.data.fields;
-      return items;
+      let items: Array<string>
+      if (type === "models") {
+        items = Object.keys(res.data.models[0]);
+      } else {
+        items = Object.keys(res.data.instances[0]);
+      }
+      var keys = []
+      for (var i = 0; i < items.length; i++) {
+        if (items[i] !== "id") {
+          keys.push(items[i])
+        }
+      }
+      return keys;
     });
 }

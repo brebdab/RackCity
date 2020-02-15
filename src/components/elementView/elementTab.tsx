@@ -10,9 +10,9 @@ import { FormTypes } from "../../forms/formUtils";
 import {
   ElementObjectType,
   ElementType,
-  InstanceInfoObject,
-  ModelObjectOld,
-  UserInfoObject
+  ModelObject,
+  UserInfoObject,
+  AssetInfoObject
 } from "../../utils/utils";
 import ElementTable, { PagingTypes } from "./elementTable";
 import "./elementView.scss";
@@ -144,13 +144,13 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     });
   };
 
-  private createInstance = (
-    instance: InstanceInfoObject,
+  private createAsset = (
+    asset: AssetInfoObject,
     headers: any
   ): Promise<any> => {
-    console.log("api/instances/add");
+    console.log("api/assets/add");
     return axios
-      .post(API_ROOT + "api/instances/add", instance, headers)
+      .post(API_ROOT + "api/assets/add", asset, headers)
       .then(res => {
         console.log("success");
         this.handleDataUpdate(true);
@@ -259,7 +259,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                 this.props.element === ElementType.MODEL
                   ? this.createModel
                   : this.props.element === ElementType.INSTANCE
-                    ? this.createInstance
+                    ? this.createAsset
                     : this.createUser
               }
               isOpen={this.state.isOpen}

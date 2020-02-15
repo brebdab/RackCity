@@ -5,40 +5,40 @@ import * as React from "react";
 import { API_ROOT } from "../../utils/api-config";
 import { RouteComponentProps, withRouter } from "react-router";
 import { connect } from "react-redux";
-import { InstanceObject, ModelObjectOld } from "../../utils/utils";
+import { AssetObject, ModelObjectOld } from "../../utils/utils";
 import "./import.scss";
 import { FileSelector } from "../lib/fileSelect"
 import { Modifier } from "./viewModified"
 import Instructions from "./importInstructions"
 
-var console:any = {};
-console.log = function(){};
+var console: any = {};
+console.log = function () { };
 interface ImportProps {
   token: string
 }
 
 interface AlertState {
   uploadModelIsOpen: boolean,
-  uploadInstanceIsOpen: boolean,
+  uploadAssetIsOpen: boolean,
   modelAlterationsIsOpen: boolean,
-  instanceAlterationsIsOpen: boolean,
+  assetAlterationsIsOpen: boolean,
   selectedFile?: File,
   loadedModels?: Array<ModelObjectOld>,
-  loadedInstances?: Array<InstanceObject>,
+  loadedAssets?: Array<AssetObject>,
   modifiedModels?: Array<any>,
-  modifiedInstances?: Array<any>,
+  modifiedAssets?: Array<any>,
   ignoredModels?: number,
-  ignoredInstances?: number,
+  ignoredAssets?: number,
   addedModels?: number,
-  addedInstances?: number,
+  addedAssets?: number,
   uploading: boolean,
   uploadType: string,
   notify: boolean
 }
 
-interface InstanceInfoObject {
+interface AssetInfoObject {
   hostname: string,
-  elevation: string,
+  rack_position: string,
   vendor: string,
   model_number: string,
   rack: string,
@@ -52,9 +52,9 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
 
   public state: AlertState = {
     uploadModelIsOpen: false,
-    uploadInstanceIsOpen: false,
+    uploadAssetIsOpen: false,
     modelAlterationsIsOpen: false,
-    instanceAlterationsIsOpen: false,
+    assetAlterationsIsOpen: false,
     uploading: false,
     uploadType: "",
     notify: false
@@ -64,7 +64,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
     return (
       <div className={Classes.DARK + " import"}>
         <Overlay isOpen={this.state.uploading} className={"uploading-overlay"}>
-          <Spinner size={Spinner.SIZE_LARGE}/>
+          <Spinner size={Spinner.SIZE_LARGE} />
         </Overlay>
         <div className={"row"}>
           <div className={"column-third-left-import"}>
@@ -73,19 +73,19 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
               large={true}
               intent="primary"
               icon="import"
-              text="Select Instances File"
-              onClick={this.handleInstanceOpen}
+              text="Select Assets File"
+              onClick={this.handleAssetOpen}
             />
             <Alert
               cancelButtonText="Cancel"
               confirmButtonText="Choose File"
               intent="primary"
-              isOpen={this.state.uploadInstanceIsOpen}
-              onCancel={this.handleInstanceCancel}
-              onConfirm={this.handleInstanceUpload}
+              isOpen={this.state.uploadAssetIsOpen}
+              onCancel={this.handleAssetCancel}
+              onConfirm={this.handleAssetUpload}
             >
               <p>Choose a file</p>
-              <FileSelector {...this.props} callback={this.setFile}/>
+              <FileSelector {...this.props} callback={this.setFile} />
             </Alert>
           </div>
           <div className={"column-third-import"}>
@@ -109,7 +109,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
               onConfirm={this.handleModelUpload}
             >
               <p>Choose a file</p>
-              <FileSelector {...this.props} callback={this.setFile}/>
+              <FileSelector {...this.props} callback={this.setFile} />
             </Alert>
           </div>
         </div>
@@ -141,21 +141,21 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
           </div>
         </div>
         <div>
-          <Dialog isOpen={this.state.modelAlterationsIsOpen} onClose={() => this.setState({modelAlterationsIsOpen: false, loadedModels: undefined, modifiedModels: undefined})} className={"modify-table"}
-                  usePortal={true} isCloseButtonShown={true} title={"Model Alterations Menu"}>
+          <Dialog isOpen={this.state.modelAlterationsIsOpen} onClose={() => this.setState({ modelAlterationsIsOpen: false, loadedModels: undefined, modifiedModels: undefined })} className={"modify-table"}
+            usePortal={true} isCloseButtonShown={true} title={"Model Alterations Menu"}>
             <Modifier {...this.props} modelsModified={this.state.modifiedModels} modelsAdded={this.state.addedModels} modelsIgnored={this.state.ignoredModels}
-              callback={() => {this.setState({modelAlterationsIsOpen: false, modifiedModels: undefined, loadedModels: undefined}); console.log(this.state)}}
+              callback={() => { this.setState({ modelAlterationsIsOpen: false, modifiedModels: undefined, loadedModels: undefined }); console.log(this.state) }}
               operation={"models"}
             />
           </Dialog>
-          <Alert isOpen={this.state.notify} confirmButtonText="OK" onClose={() => this.setState({notify: false})}><p>Hello</p></Alert>
+          <Alert isOpen={this.state.notify} confirmButtonText="OK" onClose={() => this.setState({ notify: false })}><p>Hello</p></Alert>
         </div>
         <div>
-          <Dialog isOpen={this.state.instanceAlterationsIsOpen} onClose={() => this.setState({instanceAlterationsIsOpen: false, loadedInstances: undefined, modifiedInstances: undefined})} className={"modify-table"}
-                  usePortal={true} isCloseButtonShown={true} title={"Instance Alterations Menu"}>
-            <Modifier {...this.props} modelsModified={this.state.modifiedInstances} modelsAdded={this.state.addedInstances} modelsIgnored={this.state.ignoredInstances}
-              callback={() => {this.setState({instanceAlterationsIsOpen: false, modifiedInstances: undefined, loadedInstances: undefined})}}
-              operation={"instances"}
+          <Dialog isOpen={this.state.assetAlterationsIsOpen} onClose={() => this.setState({ assetAlterationsIsOpen: false, loadedAssets: undefined, modifiedAssets: undefined })} className={"modify-table"}
+            usePortal={true} isCloseButtonShown={true} title={"Asset Alterations Menu"}>
+            <Modifier {...this.props} modelsModified={this.state.modifiedAssets} modelsAdded={this.state.addedAssets} modelsIgnored={this.state.ignoredAssets}
+              callback={() => { this.setState({ assetAlterationsIsOpen: false, modifiedAssets: undefined, loadedAssets: undefined }) }}
+              operation={"assets"}
             />
           </Dialog>
         </div>
@@ -166,10 +166,10 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
 
   /*********** Functions ***********************/
 
-  private handleInstanceOpen = () => this.setState({ uploadInstanceIsOpen: true, uploadType: "Instance" });
-  private handleInstanceCancel = () => this.setState({ uploadInstanceIsOpen: false });
-  private handleInstanceUpload = () => {
-    this.setState({loadedModels: undefined})
+  private handleAssetOpen = () => this.setState({ uploadAssetIsOpen: true, uploadType: "Asset" });
+  private handleAssetCancel = () => this.setState({ uploadAssetIsOpen: false });
+  private handleAssetUpload = () => {
+    this.setState({ loadedModels: undefined })
     if (this.state.selectedFile !== undefined) {
       parse(this.state.selectedFile).then((res: any) => {
         const fields = ["hostname", "rack", "rack_position", "vendor", "model_number", "owner", "comment"]
@@ -195,29 +195,29 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
         }).fromString(res).then((csvRow: Array<any>) => {
           for (var i = 0; i < csvRow.length; i++) {
             /* This next block is just to fix field names from the csv format to our backend format */
-            const instance: InstanceInfoObject = {
+            const asset: AssetInfoObject = {
               hostname: csvRow[i].hostname,
-              elevation: csvRow[i].rack_position,
+              rack_position: csvRow[i].rack_position,
               vendor: csvRow[i].vendor,
               model_number: csvRow[i].model_number,
               rack: csvRow[i].rack,
               owner: csvRow[i].owner,
               comment: csvRow[i].comment
             };
-            csvRow[i] = instance;
+            csvRow[i] = asset;
           }
           /* set state variable to JSON array with proper field names */
           this.setState({
-            loadedInstances: csvRow
+            loadedAssets: csvRow
           });
           /* Now make API request with JSON as header */
-          console.log(this.state.loadedInstances);
+          console.log(this.state.loadedAssets);
         })
       }, err => {
         alert(err.response.data.failure_message)
       })
       // alert("Models have been loaded to browser, proceed to upload");
-      this.setState({ uploadInstanceIsOpen: false });
+      this.setState({ uploadAssetIsOpen: false });
     } else {
       alert("No file selected")
     }
@@ -232,7 +232,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
    */
   private handleModelUpload = () => {
     /* Serialize to JSON */
-    this.setState({loadedInstances: undefined});
+    this.setState({ loadedAssets: undefined });
     if (this.state.selectedFile !== undefined) {
       parse(this.state.selectedFile).then((res: any) => {
         const fields = ["vendor", "model_number", "height", "display_color", "ethernet_ports", "power_ports", "cpu", "memory", "storage", "comment"]
@@ -291,8 +291,8 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
 
   private handleUpload = () => {
     if (this.state.loadedModels !== undefined) {
-      this.setState({uploading: true})
-      uploadBulk({models: this.state.loadedModels}, this.props.token, "models").then(res => {
+      this.setState({ uploading: true })
+      uploadBulk({ models: this.state.loadedModels }, this.props.token, "models").then(res => {
         if (res.modifications.length !== 0) {
           this.setState({
             modelAlterationsIsOpen: true,
@@ -306,33 +306,33 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
           this.setState({ uploading: false, loadedModels: undefined })
         }
       }, err => {
-        this.setState({uploading: false})
+        this.setState({ uploading: false })
         alert(err.response.data.failure_message)
       })
-    } else if (this.state.loadedInstances !== undefined) {
-      this.setState({uploading: true})
-      uploadBulk({instances: this.state.loadedInstances}, this.props.token, "instances").then(res => {
+    } else if (this.state.loadedAssets !== undefined) {
+      this.setState({ uploading: true })
+      uploadBulk({ assets: this.state.loadedAssets }, this.props.token, "assets").then(res => {
         if (res.modifications.length !== 0) {
           this.setState({
-            instanceAlterationsIsOpen: true,
+            assetAlterationsIsOpen: true,
             uploading: false,
-            modifiedInstances: res.modifications,
-            ignoredInstances: res.ignored,
-            addedInstances: res.added
+            modifiedAssets: res.modifications,
+            ignoredAssets: res.ignored,
+            addedAssets: res.added
           })
         } else {
           alert("Success! Modified: 0; Added: " + res.added + "; Ignored: " + res.ignored);
           this.setState({ uploading: false, loadedModels: undefined })
         }
       }, err => {
-        this.setState({uploading: false})
+        this.setState({ uploading: false })
         alert(err.response.data.failure_message)
       })
     } else {
       alert("No data to upload")
     }
     console.log("here, regardless of error or success")
-    this.setState({loadedModels: undefined, loadedInstances: undefined, modifiedModels: undefined, modifiedInstances: undefined})
+    this.setState({ loadedModels: undefined, loadedAssets: undefined, modifiedModels: undefined, modifiedAssets: undefined })
   }
 
   /*
@@ -373,12 +373,12 @@ async function parse(file: File) {
   return new Promise((resolve, reject) => {
     let content = '';
     const reader = new FileReader();
-    reader.onloadend = function(e: any) {
+    reader.onloadend = function (e: any) {
       content = e.target.result;
       const result = content//.split(/\r\n|\n/);
       resolve(result);
     };
-    reader.onerror = function(e: any) {
+    reader.onerror = function (e: any) {
       reject(e);
     };
     reader.readAsText(file)
