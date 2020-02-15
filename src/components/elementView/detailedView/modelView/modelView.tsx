@@ -20,7 +20,7 @@ import FormPopup from "../../../../forms/formPopup";
 import ElementTable from "../../elementTable";
 import {
   ElementType,
-  InstanceObject,
+  AssetObject,
   ModelObjectOld,
   getHeaders
 } from "../../../../utils/utils";
@@ -34,9 +34,9 @@ export interface ModelViewProps {
 }
 
 var console: any = {};
-console.log = function() {};
+console.log = function () { };
 interface ModelViewState {
-  instances: Array<InstanceObject> | undefined;
+  assets: Array<AssetObject> | undefined;
   model: ModelObjectOld | undefined;
   columns: Array<string>;
   fields: Array<string>;
@@ -62,9 +62,9 @@ async function getData(modelkey: string, token: string) {
 export class ModelView extends React.PureComponent<
   RouteComponentProps & ModelViewProps,
   ModelViewState
-> {
+  > {
   public state: ModelViewState = {
-    instances: undefined,
+    assets: undefined,
     model: undefined,
     isFormOpen: false,
     isDeleteOpen: false,
@@ -105,7 +105,7 @@ export class ModelView extends React.PureComponent<
           console.log("result", result);
           this.setState({
             model: result.model,
-            instances: result.instances
+            assets: result.assets
           });
         });
         this.handleFormClose();
@@ -152,7 +152,7 @@ export class ModelView extends React.PureComponent<
   };
 
   public render() {
-    console.log(this.state.instances);
+    console.log(this.state.assets);
     let params: any;
     params = this.props.match.params;
     if (this.state.model === undefined) {
@@ -160,7 +160,7 @@ export class ModelView extends React.PureComponent<
         console.log("result", result);
         this.setState({
           model: result.model,
-          instances: result.instances
+          assets: result.assets
         });
       });
     }
@@ -222,12 +222,12 @@ export class ModelView extends React.PureComponent<
             panel={<PropertiesView data={data} {...this.state} />}
           />
           <Tab
-            id="Instances"
-            title="Instances"
+            id="Assets"
+            title="Assets"
             panel={
               <ElementTable
-                type={ElementType.INSTANCE}
-                data={this.state.instances}
+                type={ElementType.ASSET}
+                data={this.state.assets}
                 disableFiltering={true}
                 disableSorting={true}
               />
