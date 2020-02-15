@@ -301,6 +301,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               this.setState({ filters: data });
             }}
             shouldUpdateData={this.state.updateTable}
+            disableSorting={this.props.element === ElementType.USER}
+            disableFiltering={this.props.element === ElementType.USER}
           />
         </div>
       </div>
