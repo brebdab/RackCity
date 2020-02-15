@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from http import HTTPStatus
+import math
 from rackcity.api.serializers import RegisterNameSerializer, UserSerializer
 import requests
 from rest_framework.authtoken.models import Token
@@ -187,7 +188,10 @@ def user_page_count(request):
     Return total number of pages according to page size, which must be
     specified as query parameter.
     """
-    if not request.query_params.get('page_size') or int(request.query_params.get('page_size')) <= 0:
+    if (
+        not request.query_params.get('page_size')
+        or int(request.query_params.get('page_size')) <= 0
+    ):
         return JsonResponse(
             {"failure_message": "Must specify positive integer page_size."},
             status=HTTPStatus.BAD_REQUEST,
