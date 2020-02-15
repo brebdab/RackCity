@@ -65,8 +65,8 @@ export class AssetView extends React.PureComponent<
     isFormOpen: false,
     isDeleteOpen: false,
     isAlertOpen: false,
-    columns: ["Hostname", "Model", "Rack", "Elevation", "Owner", "Comment"],
-    fields: ["hostname", "model", "rack", "elevation", "owner", "comment"]
+    columns: ["Hostname", "Model", "Rack", "Rack position", "Owner", "Comment"],
+    fields: ["hostname", "model", "rack", "Rack position", "owner", "comment"]
   };
   private updateAsset = (
     asset: AssetObject,

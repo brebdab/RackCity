@@ -10,7 +10,7 @@ export enum ElementType {
 }
 export interface AssetObject extends ElementObject {
   hostname: string;
-  elevation: string;
+  rack_position: string;
   model: ModelObjectOld;
   rack: RackObject;
   owner?: string;
@@ -26,7 +26,7 @@ export interface RackRangeFields {
 
 export interface AssetInfoObject extends ElementObject {
   hostname: string;
-  elevation: string;
+  rack_position: string;
   model?: string;
   rack?: string;
   owner?: string;

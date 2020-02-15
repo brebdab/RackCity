@@ -22,7 +22,7 @@ console.log = function () { };
 export interface AssetObject {
   [key: string]: any;
   hostname: string;
-  elevation: string;
+  rack_position: string;
   model: ModelObjectOld;
   rack: RackObject;
   owner?: string;
@@ -85,7 +85,7 @@ export class Modifier extends React.PureComponent<
       } else {
         fields = {
           hostname: "Hostname",
-          elevation: "Elevation (U)",
+          rack_position: "Rack position (U)",
           model: "Model",
           rack: "Rack",
           owner: "Owner",
