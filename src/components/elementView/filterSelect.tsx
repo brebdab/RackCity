@@ -13,7 +13,7 @@ import RackRangeForm from "../../forms/rackRangeForm";
 import { RackRangeFields } from "../../utils/utils";
 
 var console: any = {};
-console.log = function() {};
+console.log = function () { };
 export enum TextFilterTypes {
   EXACT = "exact",
   CONTAINS = "contains"
@@ -44,7 +44,7 @@ interface FilterSelectProps {
   handleAddFilter(filter: IFilter): void;
 }
 const numberFields = [
-  "elevation",
+  "rack_position",
   "height",
   "num_ethernet_ports",
   "num_power_ports",
@@ -65,7 +65,7 @@ function getFilterType(field: string | undefined) {
 class FilterSelect extends React.Component<
   FilterSelectProps & RouteComponentProps,
   IFilter
-> {
+  > {
   state = {
     id: "",
     field: "",

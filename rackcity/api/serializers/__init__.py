@@ -1,8 +1,8 @@
 from .datacenter_serializers import DatacenterSerializer
-from .it_instance_serializers import (
-    ITInstanceSerializer,
-    RecursiveITInstanceSerializer,
-    BulkITInstanceSerializer,
+from .asset_serializers import (
+    AssetSerializer,
+    RecursiveAssetSerializer,
+    BulkAssetSerializer,
 )
 from .it_model_serializers import (
     ITModelSerializer,

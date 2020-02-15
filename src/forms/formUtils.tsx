@@ -6,7 +6,7 @@ import {
 } from "@blueprintjs/select";
 import React from "react";
 import { MenuItem } from "@blueprintjs/core";
-import { ModelObject, RackObject } from "../utils/utils";
+import { ModelObject, RackObject, DatacenterObject } from "../utils/utils";
 
 export enum FormTypes {
   CREATE = "create",
@@ -46,6 +46,22 @@ export const filterRack: ItemPredicate<RackObject> = (
     return rackNum === normalizedQuery || rowLetter === normalizedQuery;
   } else {
     return (rowLetter + rackNum).indexOf(normalizedQuery) >= 0;
+  }
+};
+export const filterDatacenter: ItemPredicate<DatacenterObject> = (
+  query,
+  datacenter,
+  _index,
+  exactMatch
+) => {
+  const name = datacenter.name.toLowerCase();
+  const abbreviation = datacenter.abbreviation.toLowerCase();
+  const normalizedQuery = query.toLowerCase();
+
+  if (exactMatch) {
+    return name === normalizedQuery || abbreviation === normalizedQuery;
+  } else {
+    return (abbreviation + name).indexOf(normalizedQuery) >= 0;
   }
 };
 export const filterModel: ItemPredicate<ModelObject> = (
@@ -134,6 +150,24 @@ export const renderRackItem: ItemRenderer<RackObject> = (
   );
 };
 
+export const renderDatacenterItem: ItemRenderer<DatacenterObject> = (
+  datacenter: DatacenterObject,
+  { handleClick, modifiers, query }
+) => {
+  if (!modifiers.matchesPredicate) {
+    return null;
+  }
+  const text = datacenter.name;
+  return (
+    <MenuItem
+      active={modifiers.active}
+      label={datacenter.abbreviation}
+      text={highlightText(text, query)}
+      onClick={handleClick}
+    />
+  );
+};
+
 export const renderModelItem: ItemRenderer<ModelObject> = (
   model: ModelObject,
   { handleClick, modifiers, query }
@@ -156,15 +190,16 @@ export const renderCreateItemOption = (
   active: boolean,
   handleClick: React.MouseEventHandler<HTMLElement>
 ) => (
-  <MenuItem
-    icon="add"
-    text={`Use"${query}"`}
-    active={active}
-    onClick={handleClick}
-    shouldDismissPopover={false}
-  />
-);
+    <MenuItem
+      icon="add"
+      text={`Use"${query}"`}
+      active={active}
+      onClick={handleClick}
+      shouldDismissPopover={false}
+    />
+  );
 export const StringSelect = Select.ofType<string>();
 export const StringSuggest = Suggest.ofType<string>();
 export const ModelSelect = Select.ofType<ModelObject>();
 export const RackSelect = Select.ofType<RackObject>();
+export const DatacenterSelect = Select.ofType<DatacenterObject>();

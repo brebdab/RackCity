@@ -9,7 +9,7 @@ export interface AlertState {
   isDeleteOpen: boolean;
 }
 var console: any = {};
-console.log = function() {};
+console.log = function () { };
 
 interface PropertiesViewProps {
   data: any;
@@ -18,55 +18,54 @@ interface PropertiesViewProps {
 class PropertiesView extends React.PureComponent<
   RouteComponentProps & PropertiesViewProps,
   AlertState
-> {
+  > {
   public state: AlertState = {
     isDeleteOpen: false
   };
 
   renderData(columns: Array<any>, fields: Array<any>, data: any) {
     try {
-      var i = -1;
       return (
         <div>
-          {columns.map((item: string) => {
-            i++;
-            var key = fields[i];
-            var dat;
-            if (key === "display_color") {
+          {fields.map((item: string) => {
+            if (item === "display_color") {
+              var dat;
               dat = (
                 <p
                   className="color"
                   style={{
-                    backgroundColor: data[key]
+                    backgroundColor: data[item]
                   }}
                 >
-                  {data[key]}
+                  {data[item]}
                 </p>
               );
-            } else if (key === "model") {
+            }
+            else if (item === "model") {
               dat = (
                 <p
                   className="model-link"
                   onClick={() =>
-                    this.props.history.push("/models/" + data[key].id)
+                    this.props.history.push("/models/" + data[item].id)
                   }
                 >
-                  {data[key].vendor + " " + data[key].model_number}
+                  {data[item].vendor + " " + data[item].model_number}
                 </p>
               );
-            } else if (key === "rack") {
-              dat = <p>{data[key].row_letter + "" + data[key].rack_num}</p>;
+            }
+            else if (item === "rack") {
+              dat = <p>{data[item].row_letter + "" + data[item].rack_num}</p>;
             } else {
-              dat = <p>{data[key]}</p>;
+              dat = <p>{data[item]}</p>;
             }
             return (
-              <div className={"row-props"}>
+              <div className={"row-props"} key={item}>
                 <div className={"column-props"}>
                   <p key={item}>{item}:</p>
                 </div>
                 <div className={"column-props"}>{dat}</div>
               </div>
-            );
+            )
           })}
         </div>
       );
