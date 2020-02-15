@@ -71,6 +71,15 @@ export class Navigation extends React.Component<NavigationPropsAll> {
                     />
                   ) : null}
 
+                  {this.props.isAdmin ? (
+                    <AnchorButton
+                      icon="user"
+                      onClick={() => this.props.history.push("/users")}
+                      text="Manage users"
+                      minimal
+                    />
+                  ) : null}
+
                   <AnchorButton
                     onClick={this.props.logout}
                     className="nav-bar-button"
