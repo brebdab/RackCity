@@ -41,4 +41,5 @@ urlpatterns = [
     path('users/add', views.RegisterNameView.as_view()),
     path('users/delete', views.user_delete),
     path('users/netid-login', views.netid_login),
+    path('users/pages', views.user_page_count),
 ]

@@ -41,6 +41,7 @@ from .user_views import (
     RegisterNameView,
     user_delete,
     user_list,
+    user_page_count,
     usernames,
     who_am_i,
 )
