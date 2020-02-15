@@ -7,13 +7,12 @@ import {
 } from "@blueprintjs/core";
 import { Form } from "antd";
 import { FormComponentProps } from "antd/lib/form";
-import axios from "axios";
 import React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router-dom";
-import { API_ROOT } from "../../utils/api-config";
-import { getHeaders, CreateUserObject } from "../../utils/utils";
+import { CreateUserObject, getHeaders } from "../../utils/utils";
 import "./login.scss";
+
 const FormItem = Form.Item;
 interface RegistrationFormProps {
   loading: boolean;
@@ -43,45 +42,6 @@ class RegistrationForm extends React.Component<
     confirmDirty: false,
     errors: []
   };
-  // authSignup = (
-  //   username: string,
-  //   email: string,
-  //   firstName: string,
-  //   lastName: string,
-  //   password1: string,
-  //   password2: string,
-  //   token: string
-  // ) => {
-  //   const headers = getHeaders(token);
-  //   console.log("authSignup");
-  //   return axios
-  //     .post(
-  //       API_ROOT + "api/users/add",
-  //       {
-  //         username: username,
-  //         email: email,
-  //         first_name: firstName,
-  //         last_name: lastName,
-  //         password1: password1,
-  //         password2: password2
-  //       },
-  //       headers
-  //     )
-  //     .then(res => {
-  //       console.log("Created user");
-  //       this.props.history.push("/users");
-  //     }) //loginHelper(res, dispatch))
-  //     .catch(err => {
-  //       console.log(err);
-  //       let errors: Array<string> = this.state.errors;
-  //       errors.push(JSON.stringify(err.response.data));
-  //       this.setState({
-  //         errors: errors
-  //       });
-  //       console.log(errors);
-  //       // dispatch(authFail(err));
-  //     });
-  // };
 
   handleSubmit = (e: any) => {
     e.preventDefault();

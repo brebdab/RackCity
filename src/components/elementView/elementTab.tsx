@@ -1,27 +1,26 @@
 import {
-  AnchorButton,
-  Intent,
   Alert,
+  AnchorButton,
   InputGroup,
+  Intent,
   IToastProps,
-  Toaster,
-  Position
+  Position,
+  Toaster
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
-import { RouteComponentProps } from "react-router";
 import { connect } from "react-redux";
-import { API_ROOT } from "../../utils/api-config";
+import { RouteComponentProps } from "react-router";
 import FormPopup from "../../forms/formPopup";
 import { FormTypes } from "../../forms/formUtils";
+import { API_ROOT } from "../../utils/api-config";
 import {
+  AssetInfoObject,
+  CreateUserObject,
   ElementObjectType,
   ElementType,
-  ModelObjectOld,
-  UserInfoObject,
-  AssetInfoObject,
-  CreateUserObject
+  ModelObjectOld
 } from "../../utils/utils";
 import ElementTable, { PagingTypes } from "./elementTable";
 import "./elementView.scss";
@@ -202,7 +201,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
           position={Position.TOP}
           ref={this.refHandlers.toaster}
         />
-        {this.props.element != ElementType.USER ? (
+        {this.props.element !== ElementType.USER ? (
           <AnchorButton
             className="add"
             text="Export Table Data"
@@ -217,7 +216,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
         ) : (
           <p></p>
         )}
-        {this.props.isAdmin && this.props.element != ElementType.USER ? (
+        {this.props.isAdmin && this.props.element !== ElementType.USER ? (
           <div>
             <AnchorButton
               onClick={() => this.props.history.push("/bulk-upload")}
