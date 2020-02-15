@@ -165,64 +165,66 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
   render() {
     return (
       <div className="rack-tab">
-        <Toaster
-          autoFocus={false}
-          canEscapeKeyClear={true}
-          position={Position.TOP}
-          ref={this.refHandlers.toaster}
-        />
+        <div className="do-not-print">
+          <Toaster
+            autoFocus={false}
+            canEscapeKeyClear={true}
+            position={Position.TOP}
+            ref={this.refHandlers.toaster}
+          />
 
-        <FormPopup
-          type={FormTypes.CREATE}
-          elementName={ElementType.RACK}
-          submitForm={this.createRack}
-          isOpen={this.state.isOpen}
-          handleClose={this.handleClose}
-        />
-        <FormPopup
-          type={FormTypes.DELETE}
-          elementName={ElementType.RACK}
-          submitForm={this.deleteRack}
-          isOpen={this.state.isDeleteOpen}
-          handleClose={this.handleDeleteCancel}
-        />
-        <Alert
-          cancelButtonText="Cancel"
-          confirmButtonText="Delete"
-          intent="danger"
-          isOpen={this.state.isConfirmationOpen}
-          onCancel={this.handleConfirmationCancel}
-          onConfirm={this.actuallyDelete}
-        >
-          <p>Are you sure you want to delete?</p>
-        </Alert>
+          <FormPopup
+            type={FormTypes.CREATE}
+            elementName={ElementType.RACK}
+            submitForm={this.createRack}
+            isOpen={this.state.isOpen}
+            handleClose={this.handleClose}
+          />
+          <FormPopup
+            type={FormTypes.DELETE}
+            elementName={ElementType.RACK}
+            submitForm={this.deleteRack}
+            isOpen={this.state.isDeleteOpen}
+            handleClose={this.handleDeleteCancel}
+          />
+          <Alert
+            cancelButtonText="Cancel"
+            confirmButtonText="Delete"
+            intent="danger"
+            isOpen={this.state.isConfirmationOpen}
+            onCancel={this.handleConfirmationCancel}
+            onConfirm={this.actuallyDelete}
+          >
+            <p>Are you sure you want to delete?</p>
+          </Alert>
 
-        {this.props.isAdmin ? (
-          <div>
-            <AnchorButton
-              className="add"
-              text={"Add Rack(s)"}
-              icon="add"
-              minimal
-              intent={Intent.PRIMARY}
-              onClick={this.handleOpen}
-            />
-            <AnchorButton
-              className="add "
-              text={"Delete Rack(s)"}
-              icon="trash"
-              minimal
-              intent={Intent.DANGER}
-              onClick={this.handleDeleteOpen}
-            />
-          </div>
-        ) : null}
-        <Button
-          text="View All Rack(s)"
-          onClick={(e: any) => this.getAllRacks()}
-        />
+          {this.props.isAdmin ? (
+            <div>
+              <AnchorButton
+                className="add"
+                text={"Add Rack(s)"}
+                icon="add"
+                minimal
+                intent={Intent.PRIMARY}
+                onClick={this.handleOpen}
+              />
+              <AnchorButton
+                className="add "
+                text={"Delete Rack(s)"}
+                icon="trash"
+                minimal
+                intent={Intent.DANGER}
+                onClick={this.handleDeleteOpen}
+              />
+            </div>
+          ) : null}
+          <Button
+            text="View All Rack(s)"
+            onClick={(e: any) => this.getAllRacks()}
+          />
 
-        <RackSelectView submitForm={this.viewRackForm} />
+          <RackSelectView submitForm={this.viewRackForm} />
+        </div>
         <RackView racks={this.state.racks} loading={this.state.loading} />
       </div>
     );
