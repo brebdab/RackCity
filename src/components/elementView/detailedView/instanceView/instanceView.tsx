@@ -14,6 +14,7 @@ import { API_ROOT } from "../../../../utils/api-config";
 import PropertiesView from "../propertiesView";
 import { RouteComponentProps, withRouter } from "react-router";
 import "./instanceView.scss";
+import NetworkGraph from "./graph";
 import { connect } from "react-redux";
 import {
   InstanceObject,
@@ -156,6 +157,7 @@ export class InstanceView extends React.PureComponent<
           </div>
         ) : null}
         <PropertiesView data={this.state.instance} {...this.state} />
+        <NetworkGraph />
       </div>
     );
   }
