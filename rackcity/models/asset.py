@@ -38,7 +38,7 @@ class Asset(models.Model):
         unique=True,
         validators=[validate_hostname]
     )
-    elevation = models.PositiveIntegerField()
+    rack_position = models.PositiveIntegerField()
     model = models.ForeignKey(
         ITModel,
         on_delete=models.CASCADE,

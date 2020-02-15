@@ -22,7 +22,7 @@ class AssetSerializer(serializers.ModelSerializer):
             'hostname',
             'model',
             'rack',
-            'elevation',
+            'rack_position',
             'owner',
             'comment',
         )
@@ -43,7 +43,7 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
             'hostname',
             'model',
             'rack',
-            'elevation',
+            'rack_position',
             'owner',
             'comment',
         )
@@ -68,7 +68,7 @@ class BulkAssetSerializer(serializers.ModelSerializer):
     )
     # by default, calls get_<field> - in this case, get_rack
     rack = serializers.SerializerMethodField()
-    rack_position = serializers.IntegerField(source='elevation')
+    rack_position = serializers.IntegerField(source='rack_position')
 
     class Meta:
         model = Asset

@@ -121,7 +121,7 @@ class AssetForm extends React.Component<
   ): AssetInfoObject => {
     console.log(asset);
 
-    const { hostname, id, elevation, owner, comment } = asset;
+    const { hostname, id, rack_position, owner, comment } = asset;
     const model = asset.model ? asset.model.id : undefined;
     const rack = asset.rack ? asset.rack.id : undefined;
     let valuesToSend: AssetInfoObject = {
@@ -129,7 +129,7 @@ class AssetForm extends React.Component<
       rack,
       hostname,
       id,
-      elevation,
+      rack_position,
       owner,
       comment
     };
@@ -242,11 +242,11 @@ class AssetForm extends React.Component<
               field="hostname"
             />
           </FormGroup>
-          <FormGroup label="Elevation (required)" inline={false}>
+          <FormGroup label="Rack position (required)" inline={false}>
             <Field
-              field="elevation"
-              placeholder="elevation"
-              value={values.elevation}
+              field="rack_position"
+              placeholder="rack_position"
+              value={values.rack_position}
               onChange={this.handleChange}
             />
           </FormGroup>

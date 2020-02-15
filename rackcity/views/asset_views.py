@@ -155,10 +155,10 @@ def asset_add(request):
         failure_message += str(serializer.errors)
     if failure_message == "":
         rack_id = serializer.validated_data['rack'].id
-        elevation = serializer.validated_data['elevation']
+        rack_position = serializer.validated_data['rack_position']
         height = serializer.validated_data['model'].height
         try:
-            validate_asset_location(rack_id, elevation, height)
+            validate_asset_location(rack_id, rack_position, height)
         except LocationException as error:
             failure_message += str(error)
             return JsonResponse(
@@ -393,7 +393,7 @@ def asset_bulk_upload(request):
             try:
                 validate_asset_location(
                     asset_serializer.validated_data['rack'].id,
-                    asset_serializer.validated_data['elevation'],
+                    asset_serializer.validated_data['rack_position'],
                     model.height,
                     asset_id=None,
                 )
@@ -563,7 +563,7 @@ def asset_fields(request):
             'hostname',
             'model',
             'rack',
-            'elevation',
+            'rack_position',
             'owner',
             'comment',
         ]},

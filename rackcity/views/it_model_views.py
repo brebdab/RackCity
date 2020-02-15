@@ -116,7 +116,7 @@ def validate_model_height_change(new_model_data, existing_model):
             try:
                 validate_asset_location(
                     asset.rack.id,
-                    asset.elevation,
+                    asset.rack_position,
                     new_model_height,
                     asset.id
                 )
