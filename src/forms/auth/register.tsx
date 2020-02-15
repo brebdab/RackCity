@@ -10,9 +10,9 @@ import { FormComponentProps } from "antd/lib/form";
 import axios from "axios";
 import React from "react";
 import { connect } from "react-redux";
-import { RouteComponentProps } from "react-router-dom";
+import { RouteComponentProps, withRouter } from "react-router-dom";
 import { API_ROOT } from "../../utils/api-config";
-import { getHeaders } from "../../utils/utils";
+import { getHeaders, CreateUserObject } from "../../utils/utils";
 import "./login.scss";
 const FormItem = Form.Item;
 interface RegistrationFormProps {
@@ -20,8 +20,12 @@ interface RegistrationFormProps {
   error: string;
   token: string;
 }
-var console: any = {};
-console.log = function () { };
+
+interface RegistrationFormSubmitProps {
+  authSignup(user: CreateUserObject, headers: any): Promise<any> | void;
+}
+// var console: any = {};
+// console.log = function() {};
 
 interface RegistrationFormState {
   errors: Array<string>;
@@ -29,65 +33,82 @@ interface RegistrationFormState {
 }
 
 class RegistrationForm extends React.Component<
-  RegistrationFormProps & FormComponentProps & RouteComponentProps,
+  RegistrationFormProps &
+    FormComponentProps &
+    RegistrationFormSubmitProps &
+    RouteComponentProps,
   RegistrationFormState
-  > {
+> {
   public state = {
     confirmDirty: false,
     errors: []
   };
-  authSignup = (
-    username: string,
-    email: string,
-    firstName: string,
-    lastName: string,
-    password1: string,
-    password2: string,
-    token: string
-  ) => {
-    const headers = getHeaders(token);
-    return axios
-      .post(
-        API_ROOT + "api/users/add",
-        {
-          username: username,
-          email: email,
-          first_name: firstName,
-          last_name: lastName,
-          password1: password1,
-          password2: password2
-        },
-        headers
-      )
-      .then(res => {
-        console.log("Created user");
-        this.props.history.push("/");
-      }) //loginHelper(res, dispatch))
-      .catch(err => {
-        let errors: Array<string> = this.state.errors;
-
-        errors.push(JSON.stringify(err.response.data));
-        this.setState({
-          errors: errors
-        });
-        console.log(errors);
-        // dispatch(authFail(err));
-      });
-  };
+  // authSignup = (
+  //   username: string,
+  //   email: string,
+  //   firstName: string,
+  //   lastName: string,
+  //   password1: string,
+  //   password2: string,
+  //   token: string
+  // ) => {
+  //   const headers = getHeaders(token);
+  //   console.log("authSignup");
+  //   return axios
+  //     .post(
+  //       API_ROOT + "api/users/add",
+  //       {
+  //         username: username,
+  //         email: email,
+  //         first_name: firstName,
+  //         last_name: lastName,
+  //         password1: password1,
+  //         password2: password2
+  //       },
+  //       headers
+  //     )
+  //     .then(res => {
+  //       console.log("Created user");
+  //       this.props.history.push("/users");
+  //     }) //loginHelper(res, dispatch))
+  //     .catch(err => {
+  //       console.log(err);
+  //       let errors: Array<string> = this.state.errors;
+  //       errors.push(JSON.stringify(err.response.data));
+  //       this.setState({
+  //         errors: errors
+  //       });
+  //       console.log(errors);
+  //       // dispatch(authFail(err));
+  //     });
+  // };
 
   handleSubmit = (e: any) => {
     e.preventDefault();
     this.props.form.validateFieldsAndScroll((err, values) => {
+      console.log("calling authSignup");
+      const user: CreateUserObject = {
+        username: values.userName,
+        email: values.email,
+        first_name: values.firstName,
+        last_name: values.lastName,
+        password1: values.password,
+        password2: values.confirm
+      };
       if (!err) {
-        this.authSignup(
-          values.userName,
-          values.email,
-          values.firstName,
-          values.lastName,
-          values.password,
-          values.confirm,
-          this.props.token
-        );
+        const resp = this.props.authSignup(user, getHeaders(this.props.token));
+        if (resp) {
+          resp.catch(err => {
+            console.log(err);
+            let errors: Array<string> = this.state.errors;
+            errors.push(JSON.stringify(err.response.data));
+            this.setState({
+              errors: errors
+            });
+            console.log(errors);
+            // dispatch(authFail(err));
+          });
+        }
       }
     });
   };
@@ -213,8 +234,15 @@ class RegistrationForm extends React.Component<
   }
 }
 
-const WrappedRegistrationForm = Form.create()(RegistrationForm);
+const WrappedRegistrationForm = Form.create()(withRouter(RegistrationForm));
 
+function addProps(RegForm: any) {
+  return class extends React.Component<RegistrationFormSubmitProps> {
+    render() {
+      return <RegForm {...this.props} />;
+    }
+  };
+}
 const mapStateToProps = (state: any) => {
   return {
     loading: state.loading,
@@ -223,19 +251,4 @@ const mapStateToProps = (state: any) => {
   };
 };
 
-// const mapDispatchToProps = (dispatch: any) => {
-//   return {
-//     onAuth: (
-//       username: string,
-//       email: string,
-//       displayName: string,
-//       password1: string,
-//       password2: string
-//     ) =>
-//       dispatch(
-//         actions.authSignup(username, email, displayName, password1, password2)
-//       )
-//   };
-// };
-
-export default connect(mapStateToProps)(WrappedRegistrationForm);
+export default addProps(connect(mapStateToProps)(WrappedRegistrationForm));

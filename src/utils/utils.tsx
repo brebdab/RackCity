@@ -37,8 +37,17 @@ export interface AssetInfoObject extends ElementObject {
 export interface UserInfoObject extends ElementObject {
   username: string;
   email?: string;
-  firstName?: string;
-  lastName?: string;
+  first_name?: string;
+  last_name?: string;
+}
+
+export interface CreateUserObject {
+  password1: string;
+  password2: string;
+  username: string;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
 }
 
 export interface RackObject extends ElementObject {
@@ -105,7 +114,8 @@ export type FormObjectType =
   | AssetObject
   | RackRangeFields
   | AssetInfoObject
-  | UserInfoObject;
+  | UserInfoObject
+  | CreateUserObject;
 export function isModelObject(obj: any): obj is ModelObjectOld {
   return obj && obj.model_number;
 }
@@ -125,18 +135,22 @@ export const getHeaders = (token: string) => {
 
 export function getFields(type: string, headers: any) {
   return axios
-    .post(API_ROOT + "api/" + type + "/get-many", { sort_by: [], filters: [] }, headers)
+    .post(
+      API_ROOT + "api/" + type + "/get-many",
+      { sort_by: [], filters: [] },
+      headers
+    )
     .then(res => {
-      let items: Array<string>
+      let items: Array<string>;
       if (type === "models") {
         items = Object.keys(res.data.models[0]);
       } else {
         items = Object.keys(res.data.instances[0]);
       }
-      var keys = []
+      var keys = [];
       for (var i = 0; i < items.length; i++) {
         if (items[i] !== "id") {
-          keys.push(items[i])
+          keys.push(items[i]);
         }
       }
       return keys;

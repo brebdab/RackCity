@@ -10,7 +10,7 @@ import Notfound from "./components/fallback"; // 404 page
 import LandingView from "./components/landingView/landingView";
 import User from "./components/user/user";
 import WrappedNormalLoginForm from "./forms/auth/login";
-import WrappedNormalRegistrationForm from "./forms/auth/register";
+import WrappedRegistrationForm from "./forms/auth/register";
 import Navigation from "./components/navigation/navigation";
 import BulkImport from "./components/import/import";
 // import BulkExport from "./components/export/export";
@@ -21,7 +21,7 @@ import * as actions from "./store/actions/auth";
 import Report from "./components/report/report";
 
 var console: any = {};
-console.log = function () { };
+console.log = function() {};
 export interface AppProps {
   isAuthenticated?: boolean;
   onTryAutoSignup: any;
@@ -39,10 +39,10 @@ class App extends React.Component<AppProps> {
     return this.props.isAuthenticated ? (
       <Route {...rest} />
     ) : (
-        <Route {...rest}>
-          <Redirect to="/login" />
-        </Route>
-      );
+      <Route {...rest}>
+        <Redirect to="/login" />
+      </Route>
+    );
   };
 
   PrivateRoute = ({ path, component, ...rest }: any) => {
@@ -64,24 +64,14 @@ class App extends React.Component<AppProps> {
             <Route path="/login" component={WrappedNormalLoginForm} />
 
             <this.PrivateRoute path="/models/:rid" component={ModelView} />
-            <this.PrivateRoute
-              path="/assets/:rid"
-              component={AssetView}
-            />
+            <this.PrivateRoute path="/assets/:rid" component={AssetView} />
             <this.PrivateRoute path="/report" component={Report} />
             {/* admin paths */}
             <this.PrivateRoute
               path="/users"
-              component={
-                this.props.isAdmin ? User : Notfound
-              }
+              component={this.props.isAdmin ? User : Notfound}
             />
-            <this.PrivateRoute
-              path="/register"
-              component={
-                this.props.isAdmin ? WrappedNormalRegistrationForm : Notfound
-              }
-            />
+
             <this.PrivateRoute
               path="/bulk-upload"
               component={this.props.isAdmin ? BulkImport : Notfound}

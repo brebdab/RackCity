@@ -12,14 +12,15 @@ import {
   ElementType,
   ModelObjectOld,
   UserInfoObject,
-  AssetInfoObject
+  AssetInfoObject,
+  CreateUserObject
 } from "../../utils/utils";
 import ElementTable, { PagingTypes } from "./elementTable";
 import "./elementView.scss";
 import { IFilter } from "./filterSelect";
 
 var console: any = {};
-console.log = function () { };
+console.log = function() {};
 const fs = require("js-file-download");
 
 interface ElementViewState {
@@ -80,7 +81,7 @@ async function getExportData(
     });
 }
 
-type ElementTabProps = ElementViewProps & RouteComponentProps
+type ElementTabProps = ElementViewProps & RouteComponentProps;
 class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
   public state: ElementViewState = {
     isOpen: false,
@@ -103,9 +104,9 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       page_type === PagingTypes.ALL
         ? {}
         : {
-          page_size: page_type,
-          page
-        };
+            page_size: page_type,
+            page
+          };
     const config = {
       headers: {
         Authorization: "Token " + token
@@ -149,29 +150,22 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     headers: any
   ): Promise<any> => {
     console.log("api/assets/add");
-    return axios
-      .post(API_ROOT + "api/assets/add", asset, headers)
-      .then(res => {
-        console.log("success");
-        this.handleDataUpdate(true);
-        this.handleClose();
-        console.log(this.state.isOpen);
-      });
+    return axios.post(API_ROOT + "api/assets/add", asset, headers).then(res => {
+      console.log("success");
+      this.handleDataUpdate(true);
+      this.handleClose();
+      console.log(this.state.isOpen);
+    });
   };
 
-  private createUser = (
-    user: UserInfoObject,
-    headers: any
-  ): Promise<any> => {
+  private createUser = (user: CreateUserObject, headers: any): Promise<any> => {
     console.log("api/users/add");
-    return axios
-      .post(API_ROOT + "api/users/add", user, headers)
-      .then(res => {
-        console.log("success");
-        this.handleDataUpdate(true);
-        this.handleClose();
-        console.log(this.state.isOpen);
-      });
+    return axios.post(API_ROOT + "api/users/add", user, headers).then(res => {
+      console.log("success");
+      this.handleDataUpdate(true);
+      this.handleClose();
+      console.log(this.state.isOpen);
+    });
   };
 
   public render() {
@@ -186,13 +180,13 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             onClick={() => {
               /* handle data based on state */
               this.setState({ fileNameIsOpen: true });
-              console.log(this.state.filters)
+              console.log(this.state.filters);
             }}
           />
         ) : (
-            <p></p>
-          )}
-        {(this.props.isAdmin && this.props.element != ElementType.USER) ? (
+          <p></p>
+        )}
+        {this.props.isAdmin && this.props.element != ElementType.USER ? (
           <div>
             <AnchorButton
               onClick={() => this.props.history.push("/bulk-upload")}
@@ -203,8 +197,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             />
           </div>
         ) : (
-            <p></p>
-          )}
+          <p></p>
+        )}
         <Alert
           cancelButtonText="Cancel"
           confirmButtonText="Confirm file name"
@@ -259,8 +253,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                 this.props.element === ElementType.MODEL
                   ? this.createModel
                   : this.props.element === ElementType.ASSET
-                    ? this.createAsset
-                    : this.createUser
+                  ? this.createAsset
+                  : this.createUser
               }
               isOpen={this.state.isOpen}
               handleClose={this.handleClose}
