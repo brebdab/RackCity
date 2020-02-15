@@ -35,7 +35,7 @@ export interface AssetViewProps {
 // Given an rid, will perform a GET request of that rid and display info about that instnace
 
 var console: any = {};
-console.log = function () { };
+console.log = function() {};
 async function getData(assetkey: string, token: string) {
   const headers = {
     headers: {
@@ -62,7 +62,7 @@ interface AssetViewState {
 export class AssetView extends React.PureComponent<
   RouteComponentProps & AssetViewProps,
   AssetViewState
-  > {
+> {
   public state: AssetViewState = {
     asset: undefined,
     isFormOpen: false,
@@ -71,10 +71,7 @@ export class AssetView extends React.PureComponent<
     columns: ["Hostname", "Model", "Rack", "Elevation", "Owner", "Comment"],
     fields: ["hostname", "model", "rack", "elevation", "owner", "comment"]
   };
-  private updateAsset = (
-    asset: AssetObject,
-    headers: any
-  ): Promise<any> => {
+  private updateAsset = (asset: AssetObject, headers: any): Promise<any> => {
     let params: any;
     params = this.props.match.params;
     return axios
@@ -102,20 +99,20 @@ export class AssetView extends React.PureComponent<
   };
 
   public componentDidMount() {
-    const auth = getHeaders(this.props.token)
+    const auth = getHeaders(this.props.token);
     const headers = {
       headers: auth.headers,
       params: {
         page: 1,
         page_size: 20
       }
-    }
+    };
     getFields("instances", headers).then((res: any) => {
       this.setState({
         fields: res,
         columns: res
-      })
-    })
+      });
+    });
   }
 
   public render() {
@@ -176,12 +173,8 @@ export class AssetView extends React.PureComponent<
             </Alert>
           </div>
         ) : null}
-<<<<<<< HEAD:src/components/elementView/detailedView/instanceView/instanceView.tsx
-        <PropertiesView data={this.state.instance} {...this.state} />
-        <NetworkGraph />
-=======
         <PropertiesView data={this.state.asset} {...this.state} />
->>>>>>> f847ae74c4b4bfece76af4133f0e128ad842e79c:src/components/elementView/detailedView/assetView/assetView.tsx
+        <NetworkGraph />
       </div>
     );
   }
@@ -205,11 +198,7 @@ export class AssetView extends React.PureComponent<
     const data = { id: this.state.asset!.id };
 
     axios
-      .post(
-        API_ROOT + "api/assets/delete",
-        data,
-        getHeaders(this.props.token)
-      )
+      .post(API_ROOT + "api/assets/delete", data, getHeaders(this.props.token))
       .then(res => {
         this.setState({ isDeleteOpen: false });
         this.props.history.push("/");
