@@ -18,7 +18,8 @@ import { connect } from "react-redux";
 import {
   InstanceObject,
   ElementType,
-  getHeaders
+  getHeaders,
+  getFields
 } from "../../../../utils/utils";
 import FormPopup from "../../../../forms/formPopup";
 import { FormTypes } from "../../../../forms/formUtils";
@@ -31,7 +32,7 @@ export interface InstanceViewProps {
 // Given an rid, will perform a GET request of that rid and display info about that instnace
 
 var console: any = {};
-console.log = function() {};
+console.log = function () { };
 async function getData(instancekey: string, token: string) {
   const headers = {
     headers: {
@@ -58,7 +59,7 @@ interface InstanceViewState {
 export class InstanceView extends React.PureComponent<
   RouteComponentProps & InstanceViewProps,
   InstanceViewState
-> {
+  > {
   public state: InstanceViewState = {
     instance: undefined,
     isFormOpen: false,
@@ -96,6 +97,23 @@ export class InstanceView extends React.PureComponent<
   private refHandlers = {
     toaster: (ref: Toaster) => (this.toaster = ref)
   };
+
+  public componentDidMount() {
+    const auth = getHeaders(this.props.token)
+    const headers = {
+      headers: auth.headers,
+      params: {
+        page: 1,
+        page_size: 20
+      }
+    }
+    getFields("instances", headers).then((res: any) => {
+      this.setState({
+        fields: res,
+        columns: res
+      })
+    })
+  }
 
   public render() {
     let params: any;
