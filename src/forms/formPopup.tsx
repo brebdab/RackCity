@@ -10,8 +10,9 @@ import {
 import RackSelectView from "../components/elementView/rackSelectView";
 import InstanceForm from "./instanceForm";
 import ModelForm from "./modelForm";
+import RegistrationForm from "./auth/register";
 import { FormTypes } from "./formUtils";
-interface FormPopupState {}
+interface FormPopupState { }
 interface FormPopupProps {
   isOpen: boolean;
   type: FormTypes;
@@ -58,6 +59,9 @@ class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
         ) : null}
         {this.props.elementName === ElementType.RACK ? (
           <RackSelectView submitForm={this.props.submitForm} />
+        ) : null}
+        {this.props.elementName === ElementType.USER ? (
+          <RegistrationForm />
         ) : null}
       </Dialog>
     );
