@@ -23,7 +23,7 @@ def validate_owner(value):
         )
 
 
-class ITInstance(models.Model):
+class Asset(models.Model):
     hostname = models.CharField(
         max_length=150,
         unique=True,
@@ -50,7 +50,7 @@ class ITInstance(models.Model):
 
     class Meta:
         ordering = ['hostname']
-        verbose_name = 'instance'
+        verbose_name = 'asset'
 
     def save(self, *args, **kwargs):
         try:
@@ -60,4 +60,4 @@ class ITInstance(models.Model):
         except ValidationError as valid_error:
             raise valid_error
         else:
-            super(ITInstance, self).save(*args, **kwargs)
+            super(Asset, self).save(*args, **kwargs)

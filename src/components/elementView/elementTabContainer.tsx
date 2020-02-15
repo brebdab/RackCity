@@ -13,7 +13,7 @@ interface ElementTabContainerProps {
 }
 class ElementTabContainer extends React.Component<
   ElementTabContainerProps & RouteComponentProps
-> {
+  > {
   public render() {
     return (
       <Tabs
@@ -27,9 +27,9 @@ class ElementTabContainer extends React.Component<
       >
         <Tab
           className="tab"
-          id="instance"
-          title="Instances"
-          panel={<ElementTab {...this.props} element={ElementType.INSTANCE} />}
+          id="asset"
+          title="Assets"
+          panel={<ElementTab {...this.props} element={ElementType.ASSET} />}
         />
         <Tab
           className="tab"

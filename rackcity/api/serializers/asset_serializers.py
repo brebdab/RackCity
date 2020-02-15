@@ -1,22 +1,22 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from rackcity.models import ITInstance
+from rackcity.models import Asset
 from .it_model_serializers import ITModelSerializer
 from .rack_serializers import RackSerializer
 
 
-class ITInstanceSerializer(serializers.ModelSerializer):
+class AssetSerializer(serializers.ModelSerializer):
     """
-    Serializes all fields on ITInstance model, where model and rack fields are
+    Serializes all fields on Asset model, where model and rack fields are
     defined by their pk only.
     """
     hostname = serializers.CharField(validators=[
         UniqueValidator(
-            queryset=ITInstance.objects.all(), lookup='iexact'
+            queryset=Asset.objects.all(), lookup='iexact'
         )])
 
     class Meta:
-        model = ITInstance
+        model = Asset
         fields = (
             'id',
             'hostname',
@@ -28,16 +28,16 @@ class ITInstanceSerializer(serializers.ModelSerializer):
         )
 
 
-class RecursiveITInstanceSerializer(serializers.ModelSerializer):
+class RecursiveAssetSerializer(serializers.ModelSerializer):
     """
-    Recursively serializes all fields on ITInstance model, where model and
+    Recursively serializes all fields on Asset model, where model and
     rack fields are defined recursively (by all of their respective fields).
     """
     model = ITModelSerializer()
     rack = RackSerializer()
 
     class Meta:
-        model = ITInstance
+        model = Asset
         fields = (
             'id',
             'hostname',
@@ -49,9 +49,9 @@ class RecursiveITInstanceSerializer(serializers.ModelSerializer):
         )
 
 
-class BulkITInstanceSerializer(serializers.ModelSerializer):
+class BulkAssetSerializer(serializers.ModelSerializer):
     """
-    Serializes all fields on ITInstance model according to the format required
+    Serializes all fields on Asset model according to the format required
     for bulk export.
     """
     vendor = serializers.SlugRelatedField(
@@ -71,7 +71,7 @@ class BulkITInstanceSerializer(serializers.ModelSerializer):
     rack_position = serializers.IntegerField(source='elevation')
 
     class Meta:
-        model = ITInstance
+        model = Asset
         fields = (
             'hostname',
             'rack',
@@ -82,5 +82,5 @@ class BulkITInstanceSerializer(serializers.ModelSerializer):
             'comment'
         )
 
-    def get_rack(self, instance):
-        return instance.rack.row_letter + str(instance.rack.rack_num)
+    def get_rack(self, asset):
+        return asset.rack.row_letter + str(asset.rack.rack_num)
