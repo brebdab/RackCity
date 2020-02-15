@@ -1,6 +1,7 @@
 import re
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from .it_model import ITModel
 from .rack import Rack
@@ -24,6 +25,14 @@ def validate_owner(value):
 
 
 class Asset(models.Model):
+    asset_number = models.IntegerField(
+        unique=True,
+        validators=[
+            MinValueValidator(100000),
+            MaxValueValidator(999999)
+        ],
+        blank=True
+    )
     hostname = models.CharField(
         max_length=150,
         unique=True,
@@ -60,4 +69,11 @@ class Asset(models.Model):
         except ValidationError as valid_error:
             raise valid_error
         else:
+            if self.asset_number is None:
+                for asset_number in range(100000, 999999):
+                    try:
+                        Asset.objects.get(asset_number=asset_number)
+                    except ObjectDoesNotExist:
+                        self.asset_number = asset_number
+                        break
             super(Asset, self).save(*args, **kwargs)
