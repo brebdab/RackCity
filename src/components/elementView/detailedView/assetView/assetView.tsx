@@ -115,16 +115,20 @@ export class AssetView extends React.PureComponent<
     });
   }
 
-  public render() {
+  public updateAssetData() {
     let params: any;
     params = this.props.match.params;
-    if (this.state.asset === undefined) {
-      getData(params.rid, this.props.token).then(result => {
-        this.setState({
-          asset: result
-        });
+    getData(params.rid, this.props.token).then(result => {
+      this.setState({
+        asset: result
       });
-      console.log(this.state.asset);
+    });
+    console.log(this.state.asset);
+  }
+
+  public render() {
+    if (this.state.asset === undefined) {
+      this.updateAssetData();
     }
 
     return (
@@ -174,11 +178,14 @@ export class AssetView extends React.PureComponent<
           </div>
         ) : null}
         <PropertiesView data={this.state.asset} {...this.state} />
-        <NetworkGraph />
+        <NetworkGraph onClickNode={this.redirectToAsset} />
       </div>
     );
   }
-
+  private redirectToAsset = (id: string) => {
+    this.props.history.push("/assets/" + id);
+    this.updateAssetData();
+  };
   private handleFormOpen = () => {
     this.setState({
       isFormOpen: true

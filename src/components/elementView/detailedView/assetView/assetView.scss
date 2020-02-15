@@ -18,3 +18,9 @@
 .button-add {
   float: left;
 }
+
+.graph-id-graph-wrapper svg {
+  overflow: visible;
+  width: 100% !important;
+  height: 100% !important;
+}

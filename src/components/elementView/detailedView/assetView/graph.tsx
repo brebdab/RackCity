@@ -1,12 +1,17 @@
 import React from "react";
 import { Graph } from "react-d3-graph";
 import { Classes } from "@blueprintjs/core";
+import { RouteComponentProps, withRouter } from "react-router";
 
-interface NetworkGraphProps {}
+interface NetworkGraphProps {
+  onClickNode(id: string): any;
+}
 
-class NetworkGraph extends React.Component<NetworkGraphProps> {
+class NetworkGraph extends React.Component<
+  NetworkGraphProps & RouteComponentProps
+> {
   asset_id: any = {
-    Harry: "1",
+    Harry: "117",
     Sally: "1",
     Alice: "1"
   };
@@ -29,6 +34,7 @@ class NetworkGraph extends React.Component<NetworkGraphProps> {
       size: 400,
       highlightStrokeColor: "blue"
     },
+
     link: {
       highlightColor: "lightblue"
     }
@@ -39,9 +45,10 @@ class NetworkGraph extends React.Component<NetworkGraphProps> {
     window.alert(`Clicked the graph background`);
   };
 
-  onClickNode = (nodeId: any) => {
-    window.alert(`Clicked node ${this.asset_id[nodeId]}`);
-  };
+  // onClickNode = (nodeId: any) => {
+  //   // window.alert(`Clicked node ${this.asset_id[nodeId]}`);
+  //   this.props.history.push("/assets/" + this.asset_id[nodeId]);
+  // };
 
   onDoubleClickNode = function(nodeId: any) {
     window.alert(`Double clicked node ${nodeId}`);
@@ -88,7 +95,9 @@ class NetworkGraph extends React.Component<NetworkGraphProps> {
         id="graph-id" // id is mandatory, if no id is defined rd3g will throw an error
         data={this.data}
         config={this.myConfig}
-        onClickNode={this.onClickNode}
+        onClickNode={(nodeID: any) => {
+          this.props.onClickNode(this.asset_id[nodeID]);
+        }}
         onRightClickNode={this.onRightClickNode}
         onClickGraph={this.onClickGraph}
         onClickLink={this.onClickLink}
@@ -103,4 +112,4 @@ class NetworkGraph extends React.Component<NetworkGraphProps> {
   }
 }
 
-export default NetworkGraph;
+export default withRouter(NetworkGraph);
