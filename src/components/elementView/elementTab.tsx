@@ -11,7 +11,8 @@ import {
   ElementObjectType,
   ElementType,
   InstanceInfoObject,
-  ModelObjectOld
+  ModelObjectOld,
+  UserInfoObject
 } from "../../utils/utils";
 import ElementTable, { PagingTypes } from "./elementTable";
 import "./elementView.scss";
@@ -158,21 +159,40 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       });
   };
 
+  private createUser = (
+    user: UserInfoObject,
+    headers: any
+  ): Promise<any> => {
+    console.log("api/users/add");
+    return axios
+      .post(API_ROOT + "api/users/add", user, headers)
+      .then(res => {
+        console.log("success");
+        this.handleDataUpdate(true);
+        this.handleClose();
+        console.log(this.state.isOpen);
+      });
+  };
+
   public render() {
     return (
       <div>
-        <AnchorButton
-          className="add"
-          text="Export Table Data"
-          icon="import"
-          minimal
-          onClick={() => {
-            /* handle data based on state */
-            this.setState({ fileNameIsOpen: true });
-            console.log(this.state.filters)
-          }}
-        />
-        {this.props.isAdmin ? (
+        {this.props.element != ElementType.USER ? (
+          <AnchorButton
+            className="add"
+            text="Export Table Data"
+            icon="import"
+            minimal
+            onClick={() => {
+              /* handle data based on state */
+              this.setState({ fileNameIsOpen: true });
+              console.log(this.state.filters)
+            }}
+          />
+        ) : (
+            <p></p>
+          )}
+        {(this.props.isAdmin && this.props.element != ElementType.USER) ? (
           <div>
             <AnchorButton
               onClick={() => this.props.history.push("/bulk-upload")}
@@ -238,7 +258,9 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               submitForm={
                 this.props.element === ElementType.MODEL
                   ? this.createModel
-                  : this.createInstance
+                  : this.props.element === ElementType.INSTANCE
+                    ? this.createInstance
+                    : this.createUser
               }
               isOpen={this.state.isOpen}
               handleClose={this.handleClose}
