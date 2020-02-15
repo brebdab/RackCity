@@ -11,9 +11,9 @@ import * as React from "react";
 import { connect } from "react-redux";
 
 import {
-  InstanceObject,
+  AssetObject,
   ModelObjectOld,
-  InstanceInfoObject,
+  AssetInfoObject,
   getHeaders,
   RackObject,
   ElementObjectType
@@ -39,39 +39,39 @@ import { PagingTypes } from "../components/elementView/elementTable";
 
 //TO DO : add validation of types!!!
 
-export interface InstanceFormProps {
+export interface AssetFormProps {
   token: string;
   type: FormTypes;
-  initialValues?: InstanceObject;
-  submitForm(Instance: InstanceInfoObject, headers: any): Promise<any> | void;
+  initialValues?: AssetObject;
+  submitForm(Asset: AssetInfoObject, headers: any): Promise<any> | void;
 }
-interface InstanceFormState {
-  values: InstanceObject;
+interface AssetFormState {
+  values: AssetObject;
   racks: Array<RackObject>;
   models: Array<ModelObjectOld>;
   errors: Array<string>;
   users: Array<string>;
 }
 var console: any = {};
-console.log = function() {};
+console.log = function () { };
 
 export const required = (
-  values: InstanceObject,
-  fieldName: keyof InstanceObject
+  values: AssetObject,
+  fieldName: keyof AssetObject
 ): string =>
   values[fieldName] === undefined ||
-  values[fieldName] === null ||
-  values[fieldName] === ""
+    values[fieldName] === null ||
+    values[fieldName] === ""
     ? "This must be populated"
     : "";
 
-class InstanceForm extends React.Component<
-  InstanceFormProps,
-  InstanceFormState
-> {
-  initialState: InstanceObject = this.props.initialValues
+class AssetForm extends React.Component<
+  AssetFormProps,
+  AssetFormState
+  > {
+  initialState: AssetObject = this.props.initialValues
     ? this.props.initialValues
-    : ({} as InstanceObject);
+    : ({} as AssetObject);
   public state = {
     values: this.initialState,
     racks: [],
@@ -98,9 +98,9 @@ class InstanceForm extends React.Component<
       page_type === PagingTypes.ALL
         ? {}
         : {
-            page_size: page_type,
-            page
-          };
+          page_size: page_type,
+          page
+        };
     const config = {
       headers: {
         Authorization: "Token " + token
@@ -116,15 +116,15 @@ class InstanceForm extends React.Component<
         return items;
       });
   }
-  private mapInstanceObject = (
-    instance: InstanceObject
-  ): InstanceInfoObject => {
-    console.log(instance);
+  private mapAssetObject = (
+    asset: AssetObject
+  ): AssetInfoObject => {
+    console.log(asset);
 
-    const { hostname, id, elevation, owner, comment } = instance;
-    const model = instance.model ? instance.model.id : undefined;
-    const rack = instance.rack ? instance.rack.id : undefined;
-    let valuesToSend: InstanceInfoObject = {
+    const { hostname, id, elevation, owner, comment } = asset;
+    const model = asset.model ? asset.model.id : undefined;
+    const rack = asset.rack ? asset.rack.id : undefined;
+    let valuesToSend: AssetInfoObject = {
       model,
       rack,
       hostname,
@@ -152,7 +152,7 @@ class InstanceForm extends React.Component<
       }
 
       const resp = this.props.submitForm(
-        this.mapInstanceObject(this.state.values),
+        this.mapAssetObject(this.state.values),
         this.headers
       );
       if (resp) {
@@ -274,8 +274,8 @@ class InstanceForm extends React.Component<
                 text={
                   this.state.values.model
                     ? this.state.values.model.vendor +
-                      " " +
-                      this.state.values.model.model_number
+                    " " +
+                    this.state.values.model.model_number
                     : "Select a model"
                 }
               />
@@ -303,8 +303,8 @@ class InstanceForm extends React.Component<
                 text={
                   this.state.values.rack
                     ? this.state.values.rack.row_letter +
-                      " " +
-                      this.state.values.rack.rack_num
+                    " " +
+                    this.state.values.rack.rack_num
                     : "Select a rack"
                 }
               />
@@ -368,7 +368,7 @@ const mapStateToProps = (state: any) => {
     token: state.token
   };
 };
-export default connect(mapStateToProps)(InstanceForm);
-// const WrappedCreateInstanceForm = Form.create()(CreateInstanceForm);
+export default connect(mapStateToProps)(AssetForm);
+// const WrappedCreateAssetForm = Form.create()(CreateAssetForm);
 
-// export default connect(mapStateToProps)(WrappedCreateInstanceForm);
+// export default connect(mapStateToProps)(WrappedCreateAssetForm);

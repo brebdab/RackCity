@@ -1,6 +1,6 @@
-from rackcity.models import ITInstance, ITModel, Rack
+from rackcity.models import Asset, ITModel, Rack
 from rackcity.api.objects import RackRangeSerializer
-from rackcity.api.serializers import RecursiveITInstanceSerializer, RackSerializer
+from rackcity.api.serializers import RecursiveAssetSerializer, RackSerializer
 from http import HTTPStatus
 from django.http import JsonResponse
 
@@ -12,72 +12,72 @@ def get_rack_detailed_response(racks):
             status=HTTPStatus.BAD_REQUEST,
         )
 
-    racks_with_instances = []
+    racks_with_assets = []
     for rack in racks:
         rack_serializer = RackSerializer(rack)
-        instances = ITInstance.objects \
+        assets = Asset.objects \
             .filter(rack=rack.id) \
             .order_by("elevation")
-        instances_serializer = RecursiveITInstanceSerializer(
-            instances,
+        assets_serializer = RecursiveAssetSerializer(
+            assets,
             many=True
         )
         rack_detail = {
             "rack": rack_serializer.data,
-            "instances": instances_serializer.data,
+            "assets": assets_serializer.data,
         }
-        racks_with_instances.append(rack_detail)
+        racks_with_assets.append(rack_detail)
 
     return JsonResponse(
-        {"racks": racks_with_instances},
+        {"racks": racks_with_assets},
         status=HTTPStatus.OK
     )
 
 
-def validate_instance_location(
+def validate_asset_location(
     rack_id,
-    instance_elevation,
-    instance_height,
-    instance_id=None,
+    asset_elevation,
+    asset_height,
+    asset_id=None,
 ):
-    new_instance_location_range = [
-        instance_elevation + i for i in range(instance_height)
+    new_asset_location_range = [
+        asset_elevation + i for i in range(asset_height)
     ]
     rack_height = Rack.objects.get(id=rack_id).height
-    for location in new_instance_location_range:
+    for location in new_asset_location_range:
         if location <= 0 or location > rack_height:
-            raise LocationException("Cannot place instance outside of rack. ")
-    instances_in_rack = ITInstance.objects.filter(rack=rack_id)
-    for instance_in_rack in instances_in_rack:
-        # Ignore if instance being modified conflicts with its old location
-        if (instance_id is None or instance_in_rack.id != instance_id):
+            raise LocationException("Cannot place asset outside of rack. ")
+    assets_in_rack = Asset.objects.filter(rack=rack_id)
+    for asset_in_rack in assets_in_rack:
+        # Ignore if asset being modified conflicts with its old location
+        if (asset_id is None or asset_in_rack.id != asset_id):
             for occupied_location in [
-                instance_in_rack.elevation + i for i
-                    in range(instance_in_rack.model.height)
+                asset_in_rack.elevation + i for i
+                    in range(asset_in_rack.model.height)
             ]:
-                if occupied_location in new_instance_location_range:
+                if occupied_location in new_asset_location_range:
                     raise LocationException(
-                        "Instance location conflicts with another instance: '" +
-                        instance_in_rack.hostname +
+                        "Asset location conflicts with another asset: '" +
+                        asset_in_rack.hostname +
                         "'. "
                     )
 
 
-def validate_location_modification(data, existing_instance):
-    instance_id = existing_instance.id
-    rack_id = existing_instance.rack.id
-    instance_elevation = existing_instance.elevation
-    instance_height = existing_instance.model.height
+def validate_location_modification(data, existing_asset):
+    asset_id = existing_asset.id
+    rack_id = existing_asset.rack.id
+    asset_elevation = existing_asset.elevation
+    asset_height = existing_asset.model.height
 
     if 'elevation' in data:
         try:
-            instance_elevation = int(data['elevation'])
+            asset_elevation = int(data['elevation'])
         except ValueError:
             raise Exception("Field 'elevation' must be of type int.")
 
     if 'model' in data:
         try:
-            instance_height = ITModel.objects.get(id=data['model']).height
+            asset_height = ITModel.objects.get(id=data['model']).height
         except Exception:
             raise Exception("No existing model with id=" +
                             str(data['model']) + ".")
@@ -90,11 +90,11 @@ def validate_location_modification(data, existing_instance):
                             str(data['rack']) + ".")
 
     try:
-        validate_instance_location(
+        validate_asset_location(
             rack_id,
-            instance_elevation,
-            instance_height,
-            instance_id=instance_id,
+            asset_elevation,
+            asset_height,
+            asset_id=asset_id,
         )
     except LocationException as error:
         raise error
@@ -142,27 +142,27 @@ def empty_string_null_comparison(existing_value, new_value):
     )
 
 
-def no_infile_location_conflicts(instance_datas):
+def no_infile_location_conflicts(asset_datas):
     location_occupied_by = {}
-    for instance_data in instance_datas:
-        rack = instance_data['rack']
-        height = ITModel.objects.get(id=instance_data['model']).height
-        elevation = int(instance_data['elevation'])
-        instance_location_range = [  # THIS IS REPEATED! FACTOR OUT.
+    for asset_data in asset_datas:
+        rack = asset_data['rack']
+        height = ITModel.objects.get(id=asset_data['model']).height
+        elevation = int(asset_data['elevation'])
+        asset_location_range = [  # THIS IS REPEATED! FACTOR OUT.
             elevation + i for i in range(height)
         ]
         if rack not in location_occupied_by:
             location_occupied_by[rack] = {}
-        for location in instance_location_range:
+        for location in asset_location_range:
             if location in location_occupied_by[rack]:
                 raise LocationException(
-                    "Instance '" +
-                    instance_data['hostname'] +
-                    "' conflicts with instance '" +
+                    "Asset '" +
+                    asset_data['hostname'] +
+                    "' conflicts with asset '" +
                     location_occupied_by[rack][location] +
                     "'. ")
             else:
-                location_occupied_by[rack][location] = instance_data['hostname']
+                location_occupied_by[rack][location] = asset_data['hostname']
     return
 
 

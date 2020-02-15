@@ -1,11 +1,11 @@
 # from rest_framework.parsers import JSONParser
 from django.http import HttpResponse, JsonResponse
-from rackcity.models import ITInstance, ITModel, Rack
+from rackcity.models import Asset, ITModel, Rack
 from django.core.exceptions import ObjectDoesNotExist
 from rackcity.api.serializers import (
-    ITInstanceSerializer,
-    RecursiveITInstanceSerializer,
-    BulkITInstanceSerializer,
+    AssetSerializer,
+    RecursiveAssetSerializer,
+    BulkAssetSerializer,
     ITModelSerializer,
     RackSerializer
 )
@@ -18,7 +18,7 @@ import math
 import csv
 from io import StringIO
 from rackcity.views.rackcity_utils import (
-    validate_instance_location,
+    validate_asset_location,
     validate_location_modification,
     no_infile_location_conflicts,
     records_are_identical,
@@ -30,23 +30,23 @@ from rackcity.views.rackcity_utils import (
 
 @api_view(['GET'])  # DEPRECATED !
 @permission_classes([IsAuthenticated])
-def instance_list(request):
+def asset_list(request):
     """
-    List all instances.
+    List all assets.
     """
     if request.method == 'GET':
-        instances = ITInstance.objects.all()
-        serializer = RecursiveITInstanceSerializer(instances, many=True)
-        return JsonResponse({"instances": serializer.data})
+        assets = Asset.objects.all()
+        serializer = RecursiveAssetSerializer(assets, many=True)
+        return JsonResponse({"assets": serializer.data})
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def instance_many(request):
+def asset_many(request):
     """
-    List many instances. If page is not specified as a query parameter, all
-    instances are returned. If page is specified as a query parameter, page
-    size must also be specified, and a page of instances will be returned.
+    List many assets. If page is not specified as a query parameter, all
+    assets are returned. If page is specified as a query parameter, page
+    size must also be specified, and a page of assets will be returned.
     """
 
     failure_message = ""
@@ -73,7 +73,7 @@ def instance_many(request):
             status=HTTPStatus.BAD_REQUEST,
         )
 
-    instances_query = ITInstance.objects
+    assets_query = Asset.objects
 
     try:
         filter_args = get_filter_arguments(request.data)
@@ -83,7 +83,7 @@ def instance_many(request):
             status=HTTPStatus.BAD_REQUEST
         )
     for filter_arg in filter_args:
-        instances_query = instances_query.filter(**filter_arg)
+        assets_query = assets_query.filter(**filter_arg)
 
     try:
         sort_args = get_sort_arguments(request.data)
@@ -92,65 +92,65 @@ def instance_many(request):
             {"failure_message": "Sort error: " + str(error)},
             status=HTTPStatus.BAD_REQUEST
         )
-    instances = instances_query.order_by(*sort_args)
+    assets = assets_query.order_by(*sort_args)
 
     if should_paginate:
         paginator = PageNumberPagination()
         paginator.page_size = request.query_params.get('page_size')
         try:
-            page_of_instances = paginator.paginate_queryset(instances, request)
+            page_of_assets = paginator.paginate_queryset(assets, request)
         except Exception as error:
             failure_message += "Invalid page requested: " + str(error)
             return JsonResponse(
                 {"failure_message": failure_message},
                 status=HTTPStatus.BAD_REQUEST,
             )
-        instances_to_serialize = page_of_instances
+        assets_to_serialize = page_of_assets
     else:
-        instances_to_serialize = instances
+        assets_to_serialize = assets
 
-    serializer = RecursiveITInstanceSerializer(
-        instances_to_serialize,
+    serializer = RecursiveAssetSerializer(
+        assets_to_serialize,
         many=True,
     )
     return JsonResponse(
-        {"instances": serializer.data},
+        {"assets": serializer.data},
         status=HTTPStatus.OK,
     )
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def instance_detail(request, id):
+def asset_detail(request, id):
     """
-    Retrieve a single instance.
+    Retrieve a single asset.
     """
 
     try:
-        instance = ITInstance.objects.get(id=id)
-    except ITInstance.DoesNotExist:
+        asset = Asset.objects.get(id=id)
+    except Asset.DoesNotExist:
         failure_message = "No model exists with id=" + str(id)
         return JsonResponse(
             {"failure_message": failure_message},
             status=HTTPStatus.BAD_REQUEST,
         )
 
-    serializer = RecursiveITInstanceSerializer(instance)
+    serializer = RecursiveAssetSerializer(asset)
     return JsonResponse(serializer.data, status=HTTPStatus.OK)
 
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
-def instance_add(request):
+def asset_add(request):
     """
-    Add a new instance.
+    Add a new asset.
     """
     data = JSONParser().parse(request)
     failure_message = ""
     if 'id' in data:
-        failure_message += "Don't include id when adding an instance. "
+        failure_message += "Don't include id when adding an asset. "
 
-    serializer = ITInstanceSerializer(data=data)
+    serializer = AssetSerializer(data=data)
     if not serializer.is_valid(raise_exception=False):
         failure_message += str(serializer.errors)
     if failure_message == "":
@@ -158,7 +158,7 @@ def instance_add(request):
         elevation = serializer.validated_data['elevation']
         height = serializer.validated_data['model'].height
         try:
-            validate_instance_location(rack_id, elevation, height)
+            validate_asset_location(rack_id, elevation, height)
         except LocationException as error:
             failure_message += str(error)
             return JsonResponse(
@@ -181,30 +181,30 @@ def instance_add(request):
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
-def instance_modify(request):
+def asset_modify(request):
     """
-    Modify a single existing instance
+    Modify a single existing asset
     """
     data = JSONParser().parse(request)
     if 'id' not in data:
         return JsonResponse(
             {"failure_message": "Must include 'id' when modifying an " +
-             "instance. "},
+             "asset. "},
             status=HTTPStatus.BAD_REQUEST,
         )
 
     id = data['id']
     try:
-        existing_instance = ITInstance.objects.get(id=id)
+        existing_asset = Asset.objects.get(id=id)
     except ObjectDoesNotExist:
         return JsonResponse(
-            {"failure_message": "No existing instance with id=" +
+            {"failure_message": "No existing asset with id=" +
                 str(id) + ". "},
             status=HTTPStatus.BAD_REQUEST,
         )
 
     try:
-        validate_location_modification(data, existing_instance)
+        validate_location_modification(data, existing_asset)
     except Exception as error:
         return JsonResponse(
             {"failure_message": "Invalid location change: " + str(error)},
@@ -217,25 +217,25 @@ def instance_modify(request):
         elif field == 'rack':
             value = Rack.objects.get(id=data[field])
         elif field == 'hostname':
-            instances_with_hostname = ITInstance.objects.filter(
+            assets_with_hostname = Asset.objects.filter(
                 hostname__iexact=data[field]
             )
             if (
-                len(instances_with_hostname) > 0
-                and instances_with_hostname[0].id != id
+                len(assets_with_hostname) > 0
+                and assets_with_hostname[0].id != id
             ):
                 return JsonResponse(
-                    {"failure_message": "Instance with hostname '" +
+                    {"failure_message": "Asset with hostname '" +
                         data[field].lower() + "' already exists."},
                     status=HTTPStatus.BAD_REQUEST,
                 )
             value = data[field]
         else:
             value = data[field]
-        setattr(existing_instance, field, value)
+        setattr(existing_asset, field, value)
 
     try:
-        existing_instance.save()
+        existing_asset.save()
     except Exception as error:
         return JsonResponse(
             {"failure_message": "Invalid updates: " + str(error)},
@@ -247,24 +247,24 @@ def instance_modify(request):
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
-def instance_delete(request):
+def asset_delete(request):
     """
-    Delete a single existing instance
+    Delete a single existing asset
     """
     data = JSONParser().parse(request)
     failure_message = ""
     if 'id' not in data:
-        failure_message += "Must include id when deleting an instance. "
+        failure_message += "Must include id when deleting an asset. "
     else:
         id = data['id']
         try:
-            existing_instance = ITInstance.objects.get(id=id)
+            existing_asset = Asset.objects.get(id=id)
         except ObjectDoesNotExist:
-            failure_message += "No existing instance with id="+str(id)+". "
+            failure_message += "No existing asset with id="+str(id)+". "
 
     if failure_message == "":
         try:
-            existing_instance.delete()
+            existing_asset.delete()
             return HttpResponse(status=HTTPStatus.OK)
         except Exception as error:
             failure_message = failure_message + str(error)
@@ -279,147 +279,147 @@ def instance_delete(request):
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
-def instance_bulk_upload(request):
+def asset_bulk_upload(request):
     """
-    Bulk upload many instances to add or modify
+    Bulk upload many assets to add or modify
     """
     data = JSONParser().parse(request)
-    if 'instances' not in data:
+    if 'assets' not in data:
         return JsonResponse(
-            {"failure_message": "Bulk upload request should have a parameter 'instances'"},
+            {"failure_message": "Bulk upload request should have a parameter 'assets'"},
             status=HTTPStatus.BAD_REQUEST
         )
-    instance_datas = data['instances']
-    instances_to_add = []
+    asset_datas = data['assets']
+    assets_to_add = []
     potential_modifications = []
     hostnames_in_import = set()
-    for instance_data in instance_datas:
+    for asset_data in asset_datas:
         if (
-            'vendor' not in instance_data
-            or 'model_number' not in instance_data
+            'vendor' not in asset_data
+            or 'model_number' not in asset_data
         ):
             return JsonResponse(
-                {"failure_message": "Instance records must include 'vendor' and 'model_number'. "},
+                {"failure_message": "Asset records must include 'vendor' and 'model_number'. "},
                 status=HTTPStatus.BAD_REQUEST
             )
         try:
             model = ITModel.objects.get(
-                vendor=instance_data['vendor'],
-                model_number=instance_data['model_number']
+                vendor=asset_data['vendor'],
+                model_number=asset_data['model_number']
             )
         except ObjectDoesNotExist:
             failure_message = "Model does not exist: " + \
-                "vendor="+instance_data['vendor'] + \
-                ", model_number="+instance_data['model_number']
+                "vendor="+asset_data['vendor'] + \
+                ", model_number="+asset_data['model_number']
             return JsonResponse(
                 {"failure_message": failure_message},
                 status=HTTPStatus.BAD_REQUEST
             )
-        instance_data['model'] = model.id
-        del instance_data['vendor']
-        del instance_data['model_number']
-        if 'rack' not in instance_data:
+        asset_data['model'] = model.id
+        del asset_data['vendor']
+        del asset_data['model_number']
+        if 'rack' not in asset_data:
             return JsonResponse(
-                {"failure_message": "Instance records must include 'rack'"},
+                {"failure_message": "Asset records must include 'rack'"},
                 status=HTTPStatus.BAD_REQUEST
             )
         try:
-            row_letter = instance_data['rack'][:1].upper()
-            rack_num = instance_data['rack'][1:]
+            row_letter = asset_data['rack'][:1].upper()
+            rack_num = asset_data['rack'][1:]
             rack = Rack.objects.get(row_letter=row_letter, rack_num=rack_num)
         except ObjectDoesNotExist:
             failure_message = "Provided rack doesn't exist: " + \
-                instance_data['rack']
+                asset_data['rack']
             return JsonResponse(
                 {"failure_message": failure_message},
                 status=HTTPStatus.BAD_REQUEST
             )
-        instance_data['rack'] = rack.id
-        instance_serializer = ITInstanceSerializer(
-            data=instance_data)  # non-recursive to validate
-        if not instance_serializer.is_valid():
-            errors = instance_serializer.errors
+        asset_data['rack'] = rack.id
+        asset_serializer = AssetSerializer(
+            data=asset_data)  # non-recursive to validate
+        if not asset_serializer.is_valid():
+            errors = asset_serializer.errors
             if not (  # if the only error is the hostname uniqueness, that's fine - it's a modify
                 len(errors.keys()) == 1
                 and 'hostname' in errors
                 and len(errors['hostname']) == 1
                 and errors['hostname'][0].code == 'unique'
             ):
-                failure_message = str(instance_serializer.errors)
-                failure_message = "At least one provided instance was not valid. "+failure_message
+                failure_message = str(asset_serializer.errors)
+                failure_message = "At least one provided asset was not valid. "+failure_message
                 return JsonResponse(
                     {"failure_message": failure_message},
                     status=HTTPStatus.BAD_REQUEST
                 )
 
         # Check that all hostnames in file are case insensitive unique
-        instance_data_hostname_lower = instance_data['hostname'].lower()
-        if instance_data_hostname_lower in hostnames_in_import:
+        asset_data_hostname_lower = asset_data['hostname'].lower()
+        if asset_data_hostname_lower in hostnames_in_import:
             failure_message = "Hostname must be unique, but '" + \
-                instance_data_hostname_lower + \
+                asset_data_hostname_lower + \
                 "' appears more than once in import. "
             return JsonResponse(
                 {"failure_message": failure_message},
                 status=HTTPStatus.BAD_REQUEST
             )
         else:
-            hostnames_in_import.add(instance_data_hostname_lower)
+            hostnames_in_import.add(asset_data_hostname_lower)
 
-        existing_instance_filtered = ITInstance.objects.filter(
-            hostname__iexact=instance_data['hostname'])
-        if len(existing_instance_filtered) == 1:
-            # Instance with same (case insensitive) hostname already exists
-            existing_instance = existing_instance_filtered[0]
+        existing_asset_filtered = Asset.objects.filter(
+            hostname__iexact=asset_data['hostname'])
+        if len(existing_asset_filtered) == 1:
+            # asset with same (case insensitive) hostname already exists
+            existing_asset = existing_asset_filtered[0]
             try:
                 validate_location_modification(
-                    instance_data, existing_instance)
+                    asset_data, existing_asset)
             except Exception:
-                failure_message = "Instance " + \
-                    instance_data['hostname'] + \
-                    " would conflict location with an existing instance. "
+                failure_message = "Asset " + \
+                    asset_data['hostname'] + \
+                    " would conflict location with an existing asset. "
                 return JsonResponse(
                     {"failure_message": failure_message},
                     status=HTTPStatus.BAD_REQUEST
                 )
             potential_modifications.append(
                 {
-                    "existing_instance": existing_instance,
-                    "new_data": instance_data
+                    "existing_asset": existing_asset,
+                    "new_data": asset_data
                 }
             )
         else:
-            # Instance with this hostname does not yet exist
-            model = ITModel.objects.get(id=instance_data['model'])
+            # asset with this hostname does not yet exist
+            model = ITModel.objects.get(id=asset_data['model'])
             try:
-                validate_instance_location(
-                    instance_serializer.validated_data['rack'].id,
-                    instance_serializer.validated_data['elevation'],
+                validate_asset_location(
+                    asset_serializer.validated_data['rack'].id,
+                    asset_serializer.validated_data['elevation'],
                     model.height,
-                    instance_id=None,
+                    asset_id=None,
                 )
             except LocationException as error:
-                failure_message = "Instance " + \
-                    instance_data['hostname'] + \
+                failure_message = "Asset " + \
+                    asset_data['hostname'] + \
                     " is invalid. " + str(error)
                 return JsonResponse(
                     {"failure_message": failure_message},
                     status=HTTPStatus.BAD_REQUEST
                 )
             else:
-                instances_to_add.append(instance_serializer)
+                assets_to_add.append(asset_serializer)
     try:
-        no_infile_location_conflicts(instance_datas)
+        no_infile_location_conflicts(asset_datas)
     except LocationException as error:
-        failure_message = "Location conflicts among instances in import file. " + \
+        failure_message = "Location conflicts among assets in import file. " + \
             str(error)
         return JsonResponse(
             {"failure_message": failure_message},
             status=HTTPStatus.BAD_REQUEST
         )
     records_added = 0
-    for instance_to_add in instances_to_add:
+    for asset_to_add in assets_to_add:
         records_added += 1
-        instance_to_add.save()
+        asset_to_add.save()
     records_ignored = 0
     modifications_to_approve = []
     for potential_modification in potential_modifications:
@@ -430,8 +430,8 @@ def instance_bulk_upload(request):
         new_data['rack'] = RackSerializer(
             Rack.objects.get(id=new_data['rack'])
         ).data
-        existing_data = RecursiveITInstanceSerializer(
-            potential_modification['existing_instance']
+        existing_data = RecursiveAssetSerializer(
+            potential_modification['existing_asset']
         ).data
         if records_are_identical(existing_data, new_data):
             records_ignored += 1
@@ -458,9 +458,9 @@ def instance_bulk_upload(request):
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
-def instance_bulk_approve(request):
+def asset_bulk_approve(request):
     """
-    Bulk approve many instances to modify
+    Bulk approve many assets to modify
     """
     data = JSONParser().parse(request)
     if 'approved_modifications' not in data:
@@ -468,31 +468,31 @@ def instance_bulk_approve(request):
             {"failure_message": "Bulk approve request should have a parameter 'approved_modifications'"},
             status=HTTPStatus.BAD_REQUEST
         )
-    instance_datas = data['approved_modifications']
-    # Don't do any validation here because we know we sent valid instances to the frontend,
+    asset_datas = data['approved_modifications']
+    # Don't do any validation here because we know we sent valid assets to the frontend,
     # and they should send the same ones back
-    for instance_data in instance_datas:
-        existing_instance = ITInstance.objects.get(
-            id=instance_data['id'])
-        for field in instance_data.keys():  # This is assumed to have all fields, and with null values for blank ones. That's how it's returned in bulk-upload
+    for asset_data in asset_datas:
+        existing_asset = Asset.objects.get(
+            id=asset_data['id'])
+        for field in asset_data.keys():  # This is assumed to have all fields, and with null values for blank ones. That's how it's returned in bulk-upload
             if field == 'model':
-                value = ITModel.objects.get(id=instance_data[field]['id'])
+                value = ITModel.objects.get(id=asset_data[field]['id'])
             elif field == 'rack':
-                value = Rack.objects.get(id=instance_data[field]['id'])
+                value = Rack.objects.get(id=asset_data[field]['id'])
             else:
-                value = instance_data[field]
-            setattr(existing_instance, field, value)
-        existing_instance.save()
+                value = asset_data[field]
+            setattr(existing_asset, field, value)
+        existing_asset.save()
     return HttpResponse(status=HTTPStatus.OK)
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def instance_bulk_export(request):
+def asset_bulk_export(request):
     """
-    List all instances in csv form, in accordance with Bulk Spec.
+    List all assets in csv form, in accordance with Bulk Spec.
     """
-    instances_query = ITInstance.objects
+    assets_query = Asset.objects
 
     try:
         filter_args = get_filter_arguments(request.data)
@@ -502,7 +502,7 @@ def instance_bulk_export(request):
             status=HTTPStatus.BAD_REQUEST
         )
     for filter_arg in filter_args:
-        instances_query = instances_query.filter(**filter_arg)
+        assets_query = assets_query.filter(**filter_arg)
 
     try:
         sort_args = get_sort_arguments(request.data)
@@ -511,15 +511,14 @@ def instance_bulk_export(request):
             {"failure_message": "Sort error: " + str(error)},
             status=HTTPStatus.BAD_REQUEST
         )
-    instances = instances_query.order_by(*sort_args)
+    assets = assets_query.order_by(*sort_args)
 
-    serializer = BulkITInstanceSerializer(instances, many=True)
+    serializer = BulkAssetSerializer(assets, many=True)
     csv_string = StringIO()
     fields = serializer.data[0].keys()
     csv_writer = csv.DictWriter(csv_string, fields)
     csv_writer.writeheader()
     csv_writer.writerows(serializer.data)
-    # print(csv_string.getvalue())
     return JsonResponse(
         {"export_csv": csv_string.getvalue()},
         status=HTTPStatus.OK,
@@ -528,7 +527,7 @@ def instance_bulk_export(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def instance_page_count(request):
+def asset_page_count(request):
     """
     Return total number of pages according to page size, which must be
     specified as query parameter.
@@ -539,7 +538,7 @@ def instance_page_count(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     page_size = int(request.query_params.get('page_size'))
-    instances_query = ITInstance.objects
+    assets_query = Asset.objects
     try:
         filter_args = get_filter_arguments(request.data)
     except Exception as error:
@@ -548,16 +547,16 @@ def instance_page_count(request):
             status=HTTPStatus.BAD_REQUEST
         )
     for filter_arg in filter_args:
-        instances_query = instances_query.filter(**filter_arg)
-    instance_count = instances_query.count()
-    page_count = math.ceil(instance_count / page_size)
+        assets_query = assets_query.filter(**filter_arg)
+    asset_count = assets_query.count()
+    page_count = math.ceil(asset_count / page_size)
     return JsonResponse({"page_count": page_count})
 
 
 @api_view(['GET'])
-def instance_fields(request):
+def asset_fields(request):
     """
-    Return all fields on the ITInstanceSerializer. 
+    Return all fields on the AssetSerializer. 
     """
     return JsonResponse(
         {"fields": [

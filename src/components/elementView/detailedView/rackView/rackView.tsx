@@ -15,7 +15,7 @@ import { RouteComponentProps, withRouter } from "react-router";
 import { API_ROOT } from "../../../../utils/api-config";
 import {
   getHeaders,
-  InstanceObject,
+  AssetObject,
   RackResponseObject
 } from "../../../../utils/utils";
 import "./rackView.scss";
@@ -40,7 +40,7 @@ export interface RackViewState {
 class RackView extends React.PureComponent<
   RouteComponentProps & RackViewProps,
   RackViewState
-> {
+  > {
   state = { isDeleteOpen: false };
   private getRows(rackResp: RackResponseObject) {
     let rows = [];
@@ -48,32 +48,32 @@ class RackView extends React.PureComponent<
     let unit = 1;
     let currHeight = 0;
     const { height } = rackResp.rack;
-    let instances: Array<InstanceObject> = Object.assign(
+    let assets: Array<AssetObject> = Object.assign(
       [],
-      rackResp.instances
+      rackResp.assets
     );
     // console.log(row_letter, rack_num, height);
     // console.log("rackResp", rackResp);
-    // console.log("initial", instances, rackResp.instances);
+    // console.log("initial", assets, rackResp.assets);
 
     let maxHeight: number = +height;
 
     while (currHeight < maxHeight) {
-      //temporary fix to ignore the second conflicting instance
-      if (instances.length > 0 && currHeight > +instances[0].elevation) {
-        const inst = instances.shift();
-        console.warn("CONFLICTING INSTANCES ", inst);
+      //temporary fix to ignore the second conflicting asset
+      if (assets.length > 0 && currHeight > +assets[0].elevation) {
+        const inst = assets.shift();
+        console.warn("CONFLICTING ASSETS ", inst);
       }
       if (
-        instances.length > 0 &&
-        instances[0] &&
-        currHeight === +instances[0].elevation - 1
+        assets.length > 0 &&
+        assets[0] &&
+        currHeight === +assets[0].elevation - 1
       ) {
-        const width = +instances[0].model.height;
-        const id: number = +instances[0].id;
+        const width = +assets[0].model.height;
+        const id: number = +assets[0].id;
 
         if (width + currHeight > maxHeight) {
-          console.warn("INSTANCE OUT OF RANGE ", instances[0]);
+          console.warn("ASSET OUT OF RANGE ", assets[0]);
 
           currHeight++;
 
@@ -89,23 +89,23 @@ class RackView extends React.PureComponent<
               className="rack-row"
               style={{
                 lineHeight: unit * width,
-                backgroundColor: instances[0].model.display_color
+                backgroundColor: assets[0].model.display_color
               }}
             >
               <td
                 className="cell"
-                onClick={() => this.props.history.push("/instances/" + id)}
+                onClick={() => this.props.history.push("/assets/" + id)}
               >
-                {instances[0].model.vendor +
+                {assets[0].model.vendor +
                   " " +
-                  instances[0].model.model_number +
+                  assets[0].model.model_number +
                   " | " +
-                  instances[0].hostname}
+                  assets[0].hostname}
               </td>
             </tr>
           );
 
-          instances.shift();
+          assets.shift();
         }
       } else {
         currHeight++;
@@ -190,12 +190,12 @@ class RackView extends React.PureComponent<
             size={Spinner.SIZE_STANDARD}
           />
         ) : (
-          <div className="rack-container">
-            {racks.map((rackResp: RackResponseObject) => {
-              return (
-                <span>
-                  <div className="rack-parent">
-                    {/* <div className="delete-rack">
+            <div className="rack-container">
+              {racks.map((rackResp: RackResponseObject) => {
+                return (
+                  <span>
+                    <div className="rack-parent">
+                      {/* <div className="delete-rack">
                     <AnchorButton
                       minimal
                       intent="danger"
@@ -204,49 +204,49 @@ class RackView extends React.PureComponent<
                       onClick={this.handleDeleteOpen}
                     />
                   </div> */}
-                    <Alert
-                      cancelButtonText="Cancel"
-                      confirmButtonText="Delete"
-                      intent="danger"
-                      isOpen={this.state.isDeleteOpen}
-                      onCancel={this.handleDeleteCancel}
-                      onConfirm={() =>
-                        this.handleDelete(
-                          rackResp.rack.row_letter,
-                          rackResp.rack.rack_num
-                        )
-                      }
-                    >
-                      {" "}
-                      <p>Are you sure you want to delete?</p>
-                    </Alert>
-                    <div className={Classes.DARK + " rack"}>
-                      <table className=" bp3-html-table bp3-interactive rack-table">
-                        <thead>
-                          <tr>
-                            <th className=" cell header">
-                              Rack {rackResp.rack.row_letter}
-                              {rackResp.rack.rack_num}
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>{this.getRows(rackResp)}</tbody>
-                      </table>
-                      <table className="bp3-html-table loc-table">
-                        <thead>
-                          <tr>
-                            <th className=" cell header"> (U)</th>
-                          </tr>
-                        </thead>
-                        <tbody>{this.getUnitRows(rackResp)}</tbody>
-                      </table>
+                      <Alert
+                        cancelButtonText="Cancel"
+                        confirmButtonText="Delete"
+                        intent="danger"
+                        isOpen={this.state.isDeleteOpen}
+                        onCancel={this.handleDeleteCancel}
+                        onConfirm={() =>
+                          this.handleDelete(
+                            rackResp.rack.row_letter,
+                            rackResp.rack.rack_num
+                          )
+                        }
+                      >
+                        {" "}
+                        <p>Are you sure you want to delete?</p>
+                      </Alert>
+                      <div className={Classes.DARK + " rack"}>
+                        <table className=" bp3-html-table bp3-interactive rack-table">
+                          <thead>
+                            <tr>
+                              <th className=" cell header">
+                                Rack {rackResp.rack.row_letter}
+                                {rackResp.rack.rack_num}
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>{this.getRows(rackResp)}</tbody>
+                        </table>
+                        <table className="bp3-html-table loc-table">
+                          <thead>
+                            <tr>
+                              <th className=" cell header"> (U)</th>
+                            </tr>
+                          </thead>
+                          <tbody>{this.getUnitRows(rackResp)}</tbody>
+                        </table>
+                      </div>
                     </div>
-                  </div>
-                </span>
-              );
-            })}
-          </div>
-        )}
+                  </span>
+                );
+              })}
+            </div>
+          )}
       </div>
     );
   }

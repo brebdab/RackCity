@@ -4,7 +4,7 @@ import "normalize.css/normalize.css";
 import React from "react";
 import { connect } from "react-redux";
 import { BrowserRouter, Redirect, Route, Switch } from "react-router-dom";
-import InstanceView from "./components/elementView/detailedView/instanceView/instanceView";
+import AssetView from "./components/elementView/detailedView/assetView/assetView";
 import ModelView from "./components/elementView/detailedView/modelView/modelView";
 import Notfound from "./components/fallback"; // 404 page
 import LandingView from "./components/landingView/landingView";
@@ -20,7 +20,7 @@ import * as actions from "./store/actions/auth";
 import Report from "./components/report/report";
 
 var console: any = {};
-console.log = function() {};
+console.log = function () { };
 export interface AppProps {
   isAuthenticated?: boolean;
   onTryAutoSignup: any;
@@ -38,10 +38,10 @@ class App extends React.Component<AppProps> {
     return this.props.isAuthenticated ? (
       <Route {...rest} />
     ) : (
-      <Route {...rest}>
-        <Redirect to="/login" />
-      </Route>
-    );
+        <Route {...rest}>
+          <Redirect to="/login" />
+        </Route>
+      );
   };
 
   PrivateRoute = ({ path, component, ...rest }: any) => {
@@ -64,8 +64,8 @@ class App extends React.Component<AppProps> {
 
             <this.PrivateRoute path="/models/:rid" component={ModelView} />
             <this.PrivateRoute
-              path="/instances/:rid"
-              component={InstanceView}
+              path="/assets/:rid"
+              component={AssetView}
             />
             <this.PrivateRoute path="/report" component={Report} />
             {/* admin paths */}

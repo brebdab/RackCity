@@ -13,18 +13,21 @@ import * as React from "react";
 import { API_ROOT } from "../../../../utils/api-config";
 import PropertiesView from "../propertiesView";
 import { RouteComponentProps, withRouter } from "react-router";
-import "./instanceView.scss";
+
 import NetworkGraph from "./graph";
+import "./assetView.scss";
+
 import { connect } from "react-redux";
 import {
-  InstanceObject,
+  AssetObject,
   ElementType,
-  getHeaders
+  getHeaders,
+  getFields
 } from "../../../../utils/utils";
 import FormPopup from "../../../../forms/formPopup";
 import { FormTypes } from "../../../../forms/formUtils";
 
-export interface InstanceViewProps {
+export interface AssetViewProps {
   token: string;
   rid: any;
   isAdmin: boolean;
@@ -32,23 +35,23 @@ export interface InstanceViewProps {
 // Given an rid, will perform a GET request of that rid and display info about that instnace
 
 var console: any = {};
-console.log = function() {};
-async function getData(instancekey: string, token: string) {
+console.log = function () { };
+async function getData(assetkey: string, token: string) {
   const headers = {
     headers: {
       Authorization: "Token " + token
     }
   };
   return await axios
-    .get(API_ROOT + "api/instances/" + instancekey, headers)
+    .get(API_ROOT + "api/assets/" + assetkey, headers)
     .then(res => {
       const data = res.data;
       return data;
     });
 }
 
-interface InstanceViewState {
-  instance: InstanceObject | undefined;
+interface AssetViewState {
+  asset: AssetObject | undefined;
   columns: Array<string>;
   fields: Array<string>;
   isFormOpen: boolean;
@@ -56,34 +59,34 @@ interface InstanceViewState {
   isAlertOpen: boolean;
 }
 
-export class InstanceView extends React.PureComponent<
-  RouteComponentProps & InstanceViewProps,
-  InstanceViewState
-> {
-  public state: InstanceViewState = {
-    instance: undefined,
+export class AssetView extends React.PureComponent<
+  RouteComponentProps & AssetViewProps,
+  AssetViewState
+  > {
+  public state: AssetViewState = {
+    asset: undefined,
     isFormOpen: false,
     isDeleteOpen: false,
     isAlertOpen: false,
     columns: ["Hostname", "Model", "Rack", "Elevation", "Owner", "Comment"],
     fields: ["hostname", "model", "rack", "elevation", "owner", "comment"]
   };
-  private updateInstance = (
-    instance: InstanceObject,
+  private updateAsset = (
+    asset: AssetObject,
     headers: any
   ): Promise<any> => {
     let params: any;
     params = this.props.match.params;
     return axios
-      .post(API_ROOT + "api/instances/modify", instance, headers)
+      .post(API_ROOT + "api/assets/modify", asset, headers)
       .then(res => {
         console.log("success");
         getData(params.rid, this.props.token).then(result => {
           this.setState({
-            instance: result
+            asset: result
           });
         });
-        console.log(this.state.instance);
+        console.log(this.state.asset);
         this.handleFormClose();
         console.log(this.state.isFormOpen);
       });
@@ -98,20 +101,37 @@ export class InstanceView extends React.PureComponent<
     toaster: (ref: Toaster) => (this.toaster = ref)
   };
 
+  public componentDidMount() {
+    const auth = getHeaders(this.props.token)
+    const headers = {
+      headers: auth.headers,
+      params: {
+        page: 1,
+        page_size: 20
+      }
+    }
+    getFields("instances", headers).then((res: any) => {
+      this.setState({
+        fields: res,
+        columns: res
+      })
+    })
+  }
+
   public render() {
     let params: any;
     params = this.props.match.params;
-    if (this.state.instance === undefined) {
+    if (this.state.asset === undefined) {
       getData(params.rid, this.props.token).then(result => {
         this.setState({
-          instance: result
+          asset: result
         });
       });
-      console.log(this.state.instance);
+      console.log(this.state.asset);
     }
 
     return (
-      <div className={Classes.DARK + " instance-view"}>
+      <div className={Classes.DARK + " asset-view"}>
         <Toaster
           autoFocus={false}
           canEscapeKeyClear={true}
@@ -130,11 +150,11 @@ export class InstanceView extends React.PureComponent<
             />
             <FormPopup
               isOpen={this.state.isFormOpen}
-              initialValues={this.state.instance}
+              initialValues={this.state.asset}
               type={FormTypes.MODIFY}
-              elementName={ElementType.INSTANCE}
+              elementName={ElementType.ASSET}
               handleClose={this.handleFormClose}
-              submitForm={this.updateInstance}
+              submitForm={this.updateAsset}
             />
             <AnchorButton
               minimal
@@ -156,8 +176,12 @@ export class InstanceView extends React.PureComponent<
             </Alert>
           </div>
         ) : null}
+<<<<<<< HEAD:src/components/elementView/detailedView/instanceView/instanceView.tsx
         <PropertiesView data={this.state.instance} {...this.state} />
         <NetworkGraph />
+=======
+        <PropertiesView data={this.state.asset} {...this.state} />
+>>>>>>> f847ae74c4b4bfece76af4133f0e128ad842e79c:src/components/elementView/detailedView/assetView/assetView.tsx
       </div>
     );
   }
@@ -178,11 +202,11 @@ export class InstanceView extends React.PureComponent<
   private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
   private handleDelete = () => {
     console.log(this.props.rid);
-    const data = { id: this.state.instance!.id };
+    const data = { id: this.state.asset!.id };
 
     axios
       .post(
-        API_ROOT + "api/instances/delete",
+        API_ROOT + "api/assets/delete",
         data,
         getHeaders(this.props.token)
       )
@@ -207,4 +231,4 @@ const mapStatetoProps = (state: any) => {
   };
 };
 
-export default withRouter(connect(mapStatetoProps)(InstanceView));
+export default withRouter(connect(mapStatetoProps)(AssetView));

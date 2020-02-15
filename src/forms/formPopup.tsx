@@ -3,15 +3,15 @@ import * as React from "react";
 import {
   ElementObjectType,
   ElementType,
-  isInstanceObject,
+  isAssetObject,
   isModelObject,
   FormObjectType
 } from "../utils/utils";
 import RackSelectView from "../components/elementView/rackSelectView";
-import InstanceForm from "./instanceForm";
+import AssetForm from "./assetForm";
 import ModelForm from "./modelForm";
 import { FormTypes } from "./formUtils";
-interface FormPopupState {}
+interface FormPopupState { }
 interface FormPopupProps {
   isOpen: boolean;
   type: FormTypes;
@@ -45,12 +45,12 @@ class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
             }
           />
         ) : null}
-        {this.props.elementName === ElementType.INSTANCE ? (
-          <InstanceForm
+        {this.props.elementName === ElementType.ASSET ? (
+          <AssetForm
             type={FormTypes.CREATE}
             submitForm={this.props.submitForm}
             initialValues={
-              isInstanceObject(this.props.initialValues)
+              isAssetObject(this.props.initialValues)
                 ? this.props.initialValues
                 : undefined
             }

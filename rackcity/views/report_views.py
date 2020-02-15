@@ -1,6 +1,6 @@
 from django.http import JsonResponse
 from http import HTTPStatus
-from rackcity.models import Rack, ITInstance
+from rackcity.models import Rack, Asset
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
 
@@ -27,12 +27,12 @@ def report_rack_usage(request):
     vendor_allocation = {}
     owner_allocation = {}
     num_full_rack_slots = 0
-    instances = ITInstance.objects.all()
-    for instance in instances:
-        vendor = instance.model.vendor
-        model = instance.model
-        height = instance.model.height
-        owner = instance.owner
+    assets = Asset.objects.all()
+    for asset in assets:
+        vendor = asset.model.vendor
+        model = asset.model
+        height = asset.model.height
+        owner = asset.owner
         num_full_rack_slots += height
         if vendor not in vendor_allocation:
             vendor_allocation[vendor] = 0
