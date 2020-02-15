@@ -16,22 +16,9 @@ class User extends React.Component<
     > {
     public render() {
         return (
-            <Tabs
-                className={Classes.DARK + " element-view"}
-                animate={true}
-                id="ElementViewer"
-                key={"vertical"}
-                renderActiveTabPanelOnly={false}
-                vertical={true}
-                large
-            >
-                <Tab
-                    className="tab"
-                    id="user"
-                    title="Users"
-                    panel={<ElementTab {...this.props} element={ElementType.USER} />}
-                />
-            </Tabs>
+            <div className={Classes.DARK}>
+                <ElementTab {...this.props} element={ElementType.USER} />
+            </div>
         );
     }
 }
