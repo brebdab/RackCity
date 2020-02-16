@@ -194,7 +194,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
 
   public render() {
     return (
-      <div>
+      <div className="element-tab">
         <Toaster
           autoFocus={false}
           canEscapeKeyClear={true}
@@ -289,19 +289,17 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
           />
         </div>
 
-        <div>
-          <ElementTable
-            type={this.props.element}
-            getData={this.getElementData}
-            getPages={getPages}
-            callback={(data: Array<any>) => {
-              this.setState({ filters: data });
-            }}
-            shouldUpdateData={this.state.updateTable}
-            disableSorting={this.props.element === ElementType.USER}
-            disableFiltering={this.props.element === ElementType.USER}
-          />
-        </div>
+        <ElementTable
+          type={this.props.element}
+          getData={this.getElementData}
+          getPages={getPages}
+          callback={(data: Array<any>) => {
+            this.setState({ filters: data });
+          }}
+          shouldUpdateData={this.state.updateTable}
+          disableSorting={this.props.element === ElementType.USER}
+          disableFiltering={this.props.element === ElementType.USER}
+        />
       </div>
     );
   }

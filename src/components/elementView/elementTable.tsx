@@ -23,7 +23,8 @@ import {
   isAssetObject,
   isModelObject,
   isRackObject,
-  RackRangeFields
+  RackRangeFields,
+  UserInfoObject
 } from "../../utils/utils";
 import DragDropList from "./dragDropList";
 import "./elementView.scss";
@@ -44,6 +45,7 @@ import {
   modifyModel,
   modifyAsset
 } from "./elementUtils";
+import { UserInfo } from "os";
 
 interface ElementTableState {
   items: Array<ElementObjectType>;
@@ -611,6 +613,10 @@ class ElementTable extends React.Component<
     this.handleDeleteOpen();
   };
 
+  //ADMIN BUTTON LOGIC
+
+  getAdminText(item: UserInfoObject) {}
+
   render() {
     console.log(this.state.items);
     // console.log(!(this.state.items && this.state.items.length > 0));
@@ -646,36 +652,35 @@ class ElementTable extends React.Component<
           position={Position.TOP}
           ref={this.refHandlers.toaster}
         />
+        <div className="filter-sort-panel">
+          {this.props.disableFiltering
+            ? null
+            : [
+                <div className="filter-select">
+                  <FilterSelect
+                    handleAddFilter={this.addFilter}
+                    fields={this.state.fields}
+                  />
+                </div>,
+                <div className="table-options">
+                  <p>Applied filters:</p>
+                  <DragDropList
+                    items={this.state.filters}
+                    renderItem={this.renderFilterItem}
+                  />
+                </div>
+              ]}
+          {this.props.disableSorting ? null : (
+            <div className="table-options">
+              <p>Applied sorts:</p>
+              <DragDropList
+                items={this.state.sort_by}
+                renderItem={this.renderSortItem}
+                onChange={this.updateSortOrder}
+              />
+            </div>
+          )}
 
-        {this.props.disableFiltering
-          ? null
-          : [
-              <div className="filter-select">
-                <FilterSelect
-                  handleAddFilter={this.addFilter}
-                  fields={this.state.fields}
-                />
-              </div>,
-              <div className="table-options">
-                <p>Applied filters:</p>
-                <DragDropList
-                  items={this.state.filters}
-                  renderItem={this.renderFilterItem}
-                />
-              </div>
-            ]}
-        {this.props.disableSorting ? null : (
-          <div className="table-options">
-            <p>Applied sorts:</p>
-            <DragDropList
-              items={this.state.sort_by}
-              renderItem={this.renderSortItem}
-              onChange={this.updateSortOrder}
-            />
-          </div>
-        )}
-
-        <div>
           {this.props.getPages ? (
             <div className="table-control">
               <HTMLSelect
@@ -711,6 +716,8 @@ class ElementTable extends React.Component<
                 : null}
             </div>
           ) : null}
+        </div>
+        <div>
           {this.state.fields.length === 0 ? null : (
             <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered element-table">
               <thead>

@@ -1,7 +1,8 @@
-// .tab {
-//   width: 100%;
-//   padding: 5pt;
-// }
+.tab {
+  width: 100%;
+  padding: 5pt;
+  display: inline-block;
+}
 .tab:focus {
   outline: none;
 }
@@ -21,6 +22,9 @@
 .tab-panel {
   width: 100%;
 }
+.element-tab {
+  display: block;
+}
 .element-table {
   position: relative;
   // float: left;
@@ -35,6 +39,12 @@
 }
 .filter-select {
   margin: 0 !important;
+  // float: left;
+}
+.filter-sort-panel {
+  float: left;
+  display: block;
+  width: 100%;
 }
 .field {
   float: left !important;
@@ -79,13 +89,14 @@
 .element-tab-buttons {
   float: right;
 }
+
 .hostname-text {
   margin-left: 10px !important;
   padding-right: 100px !important;
 }
 .table-options {
   margin: none !important;
-  float: none !important;
+  padding: none !important;
 }
 .badge {
   background-color: #9ae6b4;
@@ -107,6 +118,9 @@
 // .table-options {
 //   margin-top: 120px;
 // }
+table {
+  width: 100%;
+}
 .rack-field .button {
   float: left;
   margin-top: 20px;
@@ -133,5 +147,5 @@ input {
   float: left;
 }
 .table-control {
-  float: right;
+  float: right !important;
 }
