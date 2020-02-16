@@ -1,6 +1,6 @@
 import axios from "axios";
 import { API_ROOT } from "./api-config";
-interface ElementObject {
+export interface ElementObject {
   id: string;
 }
 export enum ElementType {
@@ -116,7 +116,7 @@ export type FormObjectType =
   | AssetInfoObject
   | UserInfoObject
   | CreateUserObject;
-export function isModelObject(obj: any): obj is ModelObjectOld {
+export function isModelObject(obj: any): obj is ModelObject {
   return obj && obj.model_number;
 }
 export function isRackObject(obj: any): obj is RackObject {

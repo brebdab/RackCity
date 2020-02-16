@@ -30,9 +30,13 @@ export interface AssetViewProps {
   isAdmin: boolean;
 }
 // Given an rid, will perform a GET request of that rid and display info about that instnace
-
-var console: any = {};
-console.log = function() {};
+export const deleteAsset = (asset: AssetObject, headers: any) => {
+  console.log("Deleting asset");
+  const data = { id: asset.id };
+  return axios.post(API_ROOT + "api/assets/delete", data, headers);
+};
+// var console: any = {};
+// console.log = function() {};
 async function getData(assetkey: string, token: string) {
   const headers = {
     headers: {
@@ -55,6 +59,9 @@ interface AssetViewState {
   isDeleteOpen: boolean;
   isAlertOpen: boolean;
 }
+export const modifyAsset = (asset: AssetObject, headers: any): Promise<any> => {
+  return axios.post(API_ROOT + "api/assets/modify", asset, headers);
+};
 
 export class AssetView extends React.PureComponent<
   RouteComponentProps & AssetViewProps,
@@ -71,19 +78,17 @@ export class AssetView extends React.PureComponent<
   private updateAsset = (asset: AssetObject, headers: any): Promise<any> => {
     let params: any;
     params = this.props.match.params;
-    return axios
-      .post(API_ROOT + "api/assets/modify", asset, headers)
-      .then(res => {
-        console.log("success");
-        getData(params.rid, this.props.token).then(result => {
-          this.setState({
-            asset: result
-          });
+    return modifyAsset(asset, headers).then(res => {
+      console.log("success");
+      getData(params.rid, this.props.token).then(result => {
+        this.setState({
+          asset: result
         });
-        console.log(this.state.asset);
-        this.handleFormClose();
-        console.log(this.state.isFormOpen);
       });
+      console.log(this.state.asset);
+      this.handleFormClose();
+      console.log(this.state.isFormOpen);
+    });
   };
 
   private addToast(toast: IToastProps) {
@@ -191,10 +196,8 @@ export class AssetView extends React.PureComponent<
   private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
   private handleDelete = () => {
     console.log(this.props.rid);
-    const data = { id: this.state.asset!.id };
 
-    axios
-      .post(API_ROOT + "api/assets/delete", data, getHeaders(this.props.token))
+    deleteAsset(this.state.asset!, getHeaders(this.props.token))
       .then(res => {
         this.setState({ isDeleteOpen: false });
         this.props.history.push("/");

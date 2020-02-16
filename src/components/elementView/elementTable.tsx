@@ -1,10 +1,12 @@
 import {
-  Icon,
+  Alert,
+  AnchorButton,
   HTMLSelect,
-  Position,
+  Icon,
+  Intent,
   IToastProps,
-  Toaster,
-  Intent
+  Position,
+  Toaster
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { IconNames } from "@blueprintjs/icons";
@@ -12,13 +14,19 @@ import "@blueprintjs/icons/lib/css/blueprint-icons.css";
 import React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
+import FormPopup from "../../forms/formPopup";
+import { FormTypes } from "../../forms/formUtils";
 import {
   ElementObjectType,
   ElementType,
+  getHeaders,
+  isAssetObject,
   isModelObject,
   isRackObject,
   RackRangeFields
 } from "../../utils/utils";
+import { deleteAsset, modifyAsset } from "./detailedView/assetView/assetView";
+import { deleteModel, modifyModel } from "./detailedView/modelView/modelView";
 import DragDropList from "./dragDropList";
 import "./elementView.scss";
 import FilterSelectView, { IFilter } from "./filterSelect";
@@ -33,6 +41,9 @@ interface ElementTableState {
   total_pages: number;
   page_type: PagingTypes;
   fields: Array<string>;
+  isEditFormOpen: boolean;
+  editFormValues: ElementObjectType;
+  isDeleteOpen: boolean;
 }
 // var console: any = {};
 // console.log = function() {};
@@ -85,6 +96,7 @@ interface ElementTableProps {
   ): Promise<number>;
   data?: Array<ElementObjectType>;
   shouldUpdateData?: boolean;
+  isAdmin: boolean;
 }
 
 class ElementTable extends React.Component<
@@ -100,7 +112,10 @@ class ElementTable extends React.Component<
     sorted_cols: [],
     curr_page: 1,
     total_pages: 0,
-    fields: []
+    fields: [],
+    isEditFormOpen: false,
+    editFormValues: {} as ElementObjectType,
+    isDeleteOpen: false
   };
 
   previousPage = () => {
@@ -218,12 +233,12 @@ class ElementTable extends React.Component<
       </div>
     );
   };
-  private addToast(toast: IToastProps) {
+  private toaster: Toaster = {} as Toaster;
+  private addToast = (toast: IToastProps) => {
     toast.timeout = 5000;
     this.toaster.show(toast);
-  }
+  };
 
-  private toaster: Toaster = {} as Toaster;
   private refHandlers = {
     toaster: (ref: Toaster) => (this.toaster = ref)
   };
@@ -304,10 +319,11 @@ class ElementTable extends React.Component<
       const { field, filter_type, filter } = item;
       return { field, filter_type, filter };
     });
+    this.resetPage();
     if (this.props.getData) {
       this.props.getData!(
         this.props.type,
-        this.state.curr_page,
+        1,
         this.state.page_type,
         { sort_by: this.state.sort_by, filters: filter_body },
         this.props.token
@@ -335,7 +351,7 @@ class ElementTable extends React.Component<
         .getPages(
           this.props.type,
           this.state.page_type,
-          this.state.filters,
+          items,
           this.props.token
         )
         .then(res => {
@@ -466,10 +482,16 @@ class ElementTable extends React.Component<
     this.updateSortData(items);
   };
 
+  resetPage = () => {
+    console.log("setting currpage to 1");
+    this.setState({
+      curr_page: 1
+    });
+  };
+
   updateFilterOrder = (items: Array<IFilter>) => {
     this.setState({
-      filters: items,
-      curr_page: 1
+      filters: items
     });
     this.updateFilterData(items);
   };
@@ -522,10 +544,108 @@ class ElementTable extends React.Component<
     });
     this.updateData(page);
   };
+
+  private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
+  private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
+
+  private handleDelete = () => {
+    console.log("DELETE");
+    if (isModelObject(this.state.editFormValues)) {
+      deleteModel(this.state.editFormValues, getHeaders(this.props.token))
+        .then(res => {
+          this.addErrorToast("Sucessfully deleted");
+          this.handleDeleteCancel();
+        })
+        .catch(err => {
+          this.addErrorToast(err.response.data.failure_message);
+          this.handleDeleteCancel();
+        });
+    } else if (isAssetObject(this.state.editFormValues)) {
+      deleteAsset(this.state.editFormValues, getHeaders(this.props.token)).then(
+        res => {
+          this.addErrorToast("Sucessfully deleted");
+          this.handleDeleteCancel();
+        }
+      );
+    }
+  };
+  private handleEditFormClose = () => this.setState({ isEditFormOpen: false });
+  getForm = () => {
+    return (
+      <FormPopup
+        isOpen={this.state.isEditFormOpen}
+        initialValues={this.state.editFormValues}
+        type={FormTypes.MODIFY}
+        elementName={this.props.type}
+        handleClose={this.handleEditFormClose}
+        submitForm={this.getSubmitFormFunction(FormTypes.MODIFY)}
+      />
+    );
+  };
+
+  successfulModification() {
+    this.updateTableData();
+    this.handleEditFormClose();
+    this.addSuccessToast("Successfuly modified");
+  }
+
+  handleEditFormSubmit = (values: ElementObjectType, headers: any) => {
+    if (isModelObject(values)) {
+      modifyModel(values, headers).then(res => {
+        this.successfulModification();
+      });
+    } else if (isAssetObject(values)) {
+      modifyAsset(values, headers).then(res => {
+        this.successfulModification();
+      });
+    }
+  };
+
+  private handleEditFormOpen = () => {
+    this.setState({
+      isEditFormOpen: true
+    });
+  };
+
+  getSubmitFormFunction = (type: FormTypes) => {
+    let submitForm;
+    // if (type === FormTypes.MODIFY) {
+    submitForm = this.handleEditFormSubmit;
+    return submitForm;
+  };
+
+  handleEditButtonClick = (data: ElementObjectType) => {
+    this.handleInlineButtonClick(data);
+    this.handleEditFormOpen();
+  };
+
+  handleDeleteButtonClick = (data: ElementObjectType) => {
+    this.handleInlineButtonClick(data);
+    this.handleDeleteOpen();
+  };
+  handleInlineButtonClick = (data: ElementObjectType) => {
+    // const headers = getHeaders(this.props.token);
+    if (isAssetObject(data)) {
+      this.setState({
+        editFormValues: data
+      });
+    }
+    if (isModelObject(data)) {
+      this.setState({
+        editFormValues: data
+      });
+    }
+  };
+  private addSuccessToast = (message: string) => {
+    this.addToast({ message: message, intent: Intent.PRIMARY });
+  };
+  private addErrorToast = (message: string) => {
+    this.addToast({ message: message, intent: Intent.DANGER });
+  };
   render() {
     console.log(this.state.items);
     // console.log(!(this.state.items && this.state.items.length > 0));
-    //
+
     if (
       this.props.data &&
       this.props.data.length !== 0 &&
@@ -539,7 +659,18 @@ class ElementTable extends React.Component<
     }
 
     return (
-      <div>
+      <div className="tab-panel">
+        {this.getForm()}
+        <Alert
+          cancelButtonText="Cancel"
+          confirmButtonText="Delete"
+          intent="danger"
+          isOpen={this.state.isDeleteOpen}
+          onCancel={this.handleDeleteCancel}
+          onConfirm={this.handleDelete}
+        >
+          <p>Are you sure you want to delete?</p>
+        </Alert>
         <Toaster
           autoFocus={false}
           canEscapeKeyClear={true}
@@ -645,6 +776,7 @@ class ElementTable extends React.Component<
 
                     return null;
                   })}
+                  <th></th>
                 </tr>
               </thead>
               {this.state.items && this.state.items.length > 0 ? (
@@ -652,11 +784,12 @@ class ElementTable extends React.Component<
                   {this.state.items.map((item: ElementObjectType) => {
                     return (
                       <tr
-                        onClick={() =>
+                        onClick={() => {
+                          console.log("redirecting", item.id);
                           this.props.history.push(
                             "/" + this.props.type + "/" + item.id
-                          )
-                        }
+                          );
+                        }}
                       >
                         {Object.entries(item).map(([col, value]) => {
                           if (isModelObject(value)) {
@@ -683,19 +816,38 @@ class ElementTable extends React.Component<
 
                           return null;
                         })}
+                        <td>
+                          {this.props.isAdmin ? (
+                            <div className="inline-buttons">
+                              <AnchorButton
+                                className="button-table"
+                                intent="primary"
+                                icon="edit"
+                                minimal
+                                onClick={(event: any) => {
+                                  this.handleEditButtonClick(item);
+                                  event.stopPropagation();
+                                }}
+                              />
+                              <AnchorButton
+                                className="button-table"
+                                intent="danger"
+                                minimal
+                                icon="trash"
+                                onClick={(event: any) => {
+                                  this.handleDeleteButtonClick(item);
+                                  event.stopPropagation();
+                                }}
+                              />
+                            </div>
+                          ) : null}
+                        </td>
                       </tr>
                     );
                   })}
                 </tbody>
               ) : (
-                <div className="loading-container">
-                  {/* <Spinner
-                    className="center"
-                    intent="primary"
-                    size={Spinner.SIZE_STANDARD}
-                  /> */}
-                  <h4 className="center">no {this.props.type} found </h4>
-                </div>
+                <h4 className="no-data-text">no {this.props.type} found </h4>
               )}
             </table>
           )}
@@ -706,7 +858,8 @@ class ElementTable extends React.Component<
 }
 const mapStateToProps = (state: any) => {
   return {
-    token: state.token
+    token: state.token,
+    isAdmin: state.admin
   };
 };
 export default connect(mapStateToProps)(withRouter(ElementTable));

@@ -199,7 +199,7 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
           </Alert>
 
           {this.props.isAdmin ? (
-            <div>
+            <div className=" element-tab-buttons">
               <AnchorButton
                 className="add"
                 text={"Add Rack(s)"}

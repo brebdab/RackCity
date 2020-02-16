@@ -19,7 +19,7 @@ interface FormPopupProps {
   initialValues?: ElementObjectType;
   elementName: ElementType;
   handleClose(): void;
-  submitForm(model: FormObjectType, headers: any): Promise<any> | void;
+  submitForm(element: FormObjectType, headers: any): Promise<any> | void;
 }
 
 class FormPopup extends React.Component<FormPopupProps, FormPopupState> {

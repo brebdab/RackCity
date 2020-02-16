@@ -21,7 +21,7 @@ import ElementTable from "../../elementTable";
 import {
   ElementType,
   AssetObject,
-  ModelObjectOld,
+  ModelObject,
   getHeaders,
   getFields
 } from "../../../../utils/utils";
@@ -38,13 +38,19 @@ export interface ModelViewProps {
 // console.log = function () { };
 interface ModelViewState {
   assets: Array<AssetObject> | undefined;
-  model: ModelObjectOld | undefined;
+  model: ModelObject | undefined;
   columns: Array<string>;
   fields: Array<string>;
   isFormOpen: boolean;
   isDeleteOpen: boolean;
 }
-
+export const modifyModel = (model: ModelObject, headers: any) => {
+  return axios.post(API_ROOT + "api/models/modify", model, headers);
+};
+export const deleteModel = (model: ModelObject, headers: any) => {
+  const data = { id: model!.id };
+  return axios.post(API_ROOT + "api/models/delete", data, headers);
+};
 async function getData(modelkey: string, token: string) {
   console.log(API_ROOT + "api/models/" + modelkey);
   const headers = {
@@ -95,25 +101,24 @@ export class ModelView extends React.PureComponent<
     ]
   };
 
-  private updateModel = (model: ModelObjectOld, headers: any): Promise<any> => {
-    return axios
-      .post(API_ROOT + "api/models/modify", model, headers)
-      .then(res => {
-        console.log("success");
-        let params: any;
-        params = this.props.match.params;
-        getData(params.rid, this.props.token).then(result => {
-          console.log("result", result);
-          this.setState({
-            model: result.model,
-            assets: result.assets
-          });
+  private updateModel = (model: ModelObject, headers: any): Promise<any> => {
+    return modifyModel(model, headers).then(res => {
+      console.log("success");
+      let params: any;
+      params = this.props.match.params;
+      getData(params.rid, this.props.token).then(result => {
+        console.log("result", result);
+        this.setState({
+          model: result.model,
+          assets: result.assets
         });
-        this.handleFormClose();
-        console.log(this.state.isFormOpen);
       });
+      this.handleFormClose();
+      console.log(this.state.isFormOpen);
+    });
   };
   private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
+  private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
   private handleFormOpen = () => {
     this.setState({
       isFormOpen: true
@@ -133,12 +138,9 @@ export class ModelView extends React.PureComponent<
     toaster: (ref: Toaster) => (this.toaster = ref)
   };
 
-  private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
   private handleFormClose = () => this.setState({ isFormOpen: false });
   private handleDelete = () => {
-    const data = { id: this.state.model!.id };
-    axios
-      .post(API_ROOT + "api/models/delete", data, getHeaders(this.props.token))
+    deleteModel(this.state.model!, getHeaders(this.props.token))
       .then(res => {
         this.setState({ isDeleteOpen: false });
         this.props.history.push("/");
@@ -149,6 +151,7 @@ export class ModelView extends React.PureComponent<
           message: err.response.data.failure_message,
           intent: Intent.DANGER
         });
+        this.handleDeleteCancel();
       });
   };
 
@@ -199,6 +202,7 @@ export class ModelView extends React.PureComponent<
               intent="primary"
               icon="edit"
               text="Edit"
+              minimal
               onClick={() => this.handleFormOpen()}
             />
             <FormPopup
@@ -214,6 +218,7 @@ export class ModelView extends React.PureComponent<
               intent="danger"
               icon="trash"
               text="Delete"
+              minimal
               onClick={this.handleDeleteOpen}
             />
             <Alert
