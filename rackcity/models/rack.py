@@ -38,3 +38,16 @@ class Rack(models.Model):
             raise valid_error
         else:
             super(Rack, self).save(*args, **kwargs)
+            self.add_pdu_ports()
+
+    def add_pdu_ports(self):
+        from rackcity.models import PDUPort
+        if len(PDUPort.objects.filter(rack=self.id)) == 0:
+            for left_right in ["L", "R"]:
+                for port_number in range(1, 25):  # 1 through 24 inclusive
+                    pdu_port = PDUPort(
+                        rack=self,
+                        left_right=left_right,
+                        port_number=port_number,
+                    )
+                    pdu_port.save()
