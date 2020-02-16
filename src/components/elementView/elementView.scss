@@ -32,12 +32,16 @@
 }
 .element-table {
   position: relative;
-
-  min-width: 100%;
-  overflow: auto;
+  // float: left;
+  width: 100% !important;
+  overflow-x: scroll;
   display: inline-block;
 }
-
+.element-view {
+  margin: 10pt;
+  overflow: clip;
+  width: calc(100% - 110pt) !important;
+}
 .filter-select {
   margin: 0 !important;
 }
@@ -134,4 +138,7 @@ input {
 }
 .table-control {
   float: right;
+}
+.bp3-tab-panel {
+  width: 100% !important;
 }
