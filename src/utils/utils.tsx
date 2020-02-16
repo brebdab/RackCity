@@ -133,6 +133,21 @@ export const getHeaders = (token: string) => {
   };
 };
 
+export const isAdmin = (headers: any) => {
+  let isAdmin = false;
+  axios
+    .get(API_ROOT + "api/iamadmin", headers)
+    .then(res => {
+      if (res.data.is_admin) {
+        isAdmin = true;
+      }
+    })
+    .catch(err => {
+      console.log(err);
+    });
+  return isAdmin;
+};
+
 export function getFields(type: string, headers: any) {
   return axios
     .post(

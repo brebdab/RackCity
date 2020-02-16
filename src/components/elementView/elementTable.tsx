@@ -785,7 +785,8 @@ class ElementTable extends React.Component<
                           return null;
                         })}
                         <td>
-                          {this.props.isAdmin ? (
+                          {this.props.isAdmin &&
+                          this.props.type !== ElementType.USER ? (
                             <div className="inline-buttons">
                               <AnchorButton
                                 className="button-table"
@@ -806,6 +807,22 @@ class ElementTable extends React.Component<
                                   this.handleDeleteButtonClick(item);
                                   event.stopPropagation();
                                 }}
+                              />
+                            </div>
+                          ) : null}
+                          {this.props.isAdmin &&
+                          this.props.type === ElementType.USER ? (
+                            <div className="inline-buttons">
+                              <AnchorButton
+                                className="button-table"
+                                intent="primary"
+                                icon="user"
+                                minimal
+                                text="Make Admin"
+                                // onClick={(event: any) => {
+                                //   this.handleEditButtonClick(item);
+                                //   event.stopPropagation();
+                                // }}
                               />
                             </div>
                           ) : null}
