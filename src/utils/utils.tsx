@@ -6,7 +6,8 @@ interface ElementObject {
 export enum ElementType {
   RACK = "racks",
   ASSET = "assets",
-  MODEL = "models"
+  MODEL = "models",
+  USER = "users"
 }
 export interface AssetObject extends ElementObject {
   hostname: string;
@@ -31,6 +32,22 @@ export interface AssetInfoObject extends ElementObject {
   rack?: string;
   owner?: string;
   comment?: string;
+}
+
+export interface UserInfoObject extends ElementObject {
+  username: string;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+}
+
+export interface CreateUserObject {
+  password1: string;
+  password2: string;
+  username: string;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
 }
 
 export interface RackObject extends ElementObject {
@@ -88,14 +105,17 @@ export type ElementObjectType =
   | ModelObject
   | RackObject
   | AssetObject
-  | AssetInfoObject;
+  | AssetInfoObject
+  | UserInfoObject;
 
 export type FormObjectType =
   | ModelObjectOld
   | RackObject
   | AssetObject
   | RackRangeFields
-  | AssetInfoObject;
+  | AssetInfoObject
+  | UserInfoObject
+  | CreateUserObject;
 export function isModelObject(obj: any): obj is ModelObjectOld {
   return obj && obj.model_number;
 }

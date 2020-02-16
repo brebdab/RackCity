@@ -1,16 +1,25 @@
-import { AnchorButton, Intent, Alert, InputGroup } from "@blueprintjs/core";
+import {
+  Alert,
+  AnchorButton,
+  InputGroup,
+  Intent,
+  IToastProps,
+  Position,
+  Toaster
+} from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
-import { RouteComponentProps } from "react-router";
 import { connect } from "react-redux";
-import { API_ROOT } from "../../utils/api-config";
+import { RouteComponentProps } from "react-router";
 import FormPopup from "../../forms/formPopup";
 import { FormTypes } from "../../forms/formUtils";
+import { API_ROOT } from "../../utils/api-config";
 import {
+  AssetInfoObject,
+  CreateUserObject,
   ElementObjectType,
   ElementType,
-  AssetInfoObject,
   ModelObjectOld
 } from "../../utils/utils";
 import ElementTable, { PagingTypes } from "./elementTable";
@@ -18,7 +27,7 @@ import "./elementView.scss";
 import { IFilter } from "./filterSelect";
 
 var console: any = {};
-console.log = function () { };
+console.log = function() {};
 const fs = require("js-file-download");
 
 interface ElementViewState {
@@ -79,7 +88,7 @@ async function getExportData(
     });
 }
 
-type ElementTabProps = ElementViewProps & RouteComponentProps
+type ElementTabProps = ElementViewProps & RouteComponentProps;
 class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
   public state: ElementViewState = {
     isOpen: false,
@@ -102,9 +111,9 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       page_type === PagingTypes.ALL
         ? {}
         : {
-          page_size: page_type,
-          page
-        };
+            page_size: page_type,
+            page
+          };
     const config = {
       headers: {
         Authorization: "Token " + token
@@ -138,7 +147,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       console.log("success");
       this.handleDataUpdate(true);
       this.handleClose();
-
+      this.addSuccessToast("Successfully created model!");
       console.log(this.state.isOpen);
     });
   };
@@ -148,31 +157,66 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     headers: any
   ): Promise<any> => {
     console.log("api/assets/add");
-    return axios
-      .post(API_ROOT + "api/assets/add", asset, headers)
-      .then(res => {
-        console.log("success");
-        this.handleDataUpdate(true);
-        this.handleClose();
-        console.log(this.state.isOpen);
-      });
+    return axios.post(API_ROOT + "api/assets/add", asset, headers).then(res => {
+      this.handleDataUpdate(true);
+      this.handleClose();
+      this.addSuccessToast("Successfully created asset!");
+
+      console.log(this.state.isOpen);
+    });
+  };
+
+  private createUser = (user: CreateUserObject, headers: any): Promise<any> => {
+    console.log("api/users/add");
+    return axios.post(API_ROOT + "api/users/add", user, headers).then(res => {
+      console.log("success");
+
+      this.handleDataUpdate(true);
+      this.handleClose();
+      this.addSuccessToast("Successfully created user!");
+      console.log(this.state.isOpen);
+    });
+  };
+  private addSuccessToast(message: string) {
+    this.addToast({ message: message, intent: Intent.PRIMARY });
+  }
+  private addErrorToast(message: string) {
+    this.addToast({ message: message, intent: Intent.DANGER });
+  }
+  private addToast(toast: IToastProps) {
+    toast.timeout = 5000;
+    this.toaster.show(toast);
+  }
+  private toaster: Toaster = {} as Toaster;
+  private refHandlers = {
+    toaster: (ref: Toaster) => (this.toaster = ref)
   };
 
   public render() {
     return (
       <div>
-        <AnchorButton
-          className="add"
-          text="Export Table Data"
-          icon="import"
-          minimal
-          onClick={() => {
-            /* handle data based on state */
-            this.setState({ fileNameIsOpen: true });
-            console.log(this.state.filters)
-          }}
+        <Toaster
+          autoFocus={false}
+          canEscapeKeyClear={true}
+          position={Position.TOP}
+          ref={this.refHandlers.toaster}
         />
-        {this.props.isAdmin ? (
+        {this.props.element !== ElementType.USER ? (
+          <AnchorButton
+            className="add"
+            text="Export Table Data"
+            icon="import"
+            minimal
+            onClick={() => {
+              /* handle data based on state */
+              this.setState({ fileNameIsOpen: true });
+              console.log(this.state.filters);
+            }}
+          />
+        ) : (
+          <p></p>
+        )}
+        {this.props.isAdmin && this.props.element !== ElementType.USER ? (
           <div>
             <AnchorButton
               onClick={() => this.props.history.push("/bulk-upload")}
@@ -183,8 +227,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             />
           </div>
         ) : (
-            <p></p>
-          )}
+          <p></p>
+        )}
         <Alert
           cancelButtonText="Cancel"
           confirmButtonText="Confirm file name"
@@ -238,7 +282,9 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               submitForm={
                 this.props.element === ElementType.MODEL
                   ? this.createModel
-                  : this.createAsset
+                  : this.props.element === ElementType.ASSET
+                  ? this.createAsset
+                  : this.createUser
               }
               isOpen={this.state.isOpen}
               handleClose={this.handleClose}
@@ -255,6 +301,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               this.setState({ filters: data });
             }}
             shouldUpdateData={this.state.updateTable}
+            disableSorting={this.props.element === ElementType.USER}
+            disableFiltering={this.props.element === ElementType.USER}
           />
         </div>
       </div>
