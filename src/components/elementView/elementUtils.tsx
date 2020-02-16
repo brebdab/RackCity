@@ -6,7 +6,12 @@ export interface ITableSort {
   ascending: boolean;
   id: string;
 }
-// const PAGE_SIZE = 10;
+
+export enum FilterTypes {
+  TEXT = "text",
+  NUMERIC = "numeric",
+  RACKRANGE = "rack_range"
+}
 
 export enum PagingTypes {
   TEN = 10,
@@ -43,11 +48,6 @@ export function getFilterType(field: string | undefined) {
   }
 }
 
-export enum FilterTypes {
-  TEXT = "text",
-  NUMERIC = "numeric",
-  RACKRANGE = "rack_range"
-}
 export interface NumericFilter {
   min?: number;
   max?: number;

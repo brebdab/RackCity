@@ -27,6 +27,7 @@ import {
 } from "../../../../utils/utils";
 import PropertiesView from "../propertiesView";
 import { FormTypes } from "../../../../forms/formUtils";
+import { modifyModel, deleteModel } from "../../elementUtils";
 
 export interface ModelViewProps {
   token: string;
@@ -44,13 +45,7 @@ interface ModelViewState {
   isFormOpen: boolean;
   isDeleteOpen: boolean;
 }
-export const modifyModel = (model: ModelObject, headers: any) => {
-  return axios.post(API_ROOT + "api/models/modify", model, headers);
-};
-export const deleteModel = (model: ModelObject, headers: any) => {
-  const data = { id: model!.id };
-  return axios.post(API_ROOT + "api/models/delete", data, headers);
-};
+
 async function getData(modelkey: string, token: string) {
   console.log(API_ROOT + "api/models/" + modelkey);
   const headers = {

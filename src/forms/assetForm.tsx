@@ -35,7 +35,7 @@ import {
 } from "./formUtils";
 import axios from "axios";
 import { API_ROOT } from "../utils/api-config";
-import { PagingTypes } from "../components/elementView/elementTable";
+import { PagingTypes } from "../components/elementView/elementUtils";
 
 //TO DO : add validation of types!!!
 
