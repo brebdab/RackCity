@@ -156,6 +156,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
       this.getVendors();
     }
     const { values } = this.state;
+    console.log("NETWORK PORTS", this.state.values.network_ports);
     return (
       <div className={Classes.DARK + " login-container"}>
         {this.state.errors.map((err: string) => {
@@ -222,39 +223,42 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
             <Field
               field="num_network_ports"
               type="string"
-              value={values.network_ports ? values.network_ports.length : 0}
+              value={
+                values.network_ports && values.network_ports.length !== 0
+                  ? values.network_ports.length
+                  : undefined
+              }
               onChange={this.handleChange}
             />
 
-            {values.network_ports &&
-            values.network_ports.length === 0 ? null : (
+            {!(
+              values.network_ports && values.network_ports.length !== 0
+            ) ? null : (
               <table className="port-table">
                 <thead>
                   <th>Port Name(s) </th>
                 </thead>
                 <tbody>
-                  {values.network_ports
-                    ? values.network_ports.map((port, index) => {
-                        return (
-                          <tr>
-                            <td>
-                              <InputGroup
-                                onClick={this.selectText}
-                                value={port}
-                                type="string"
-                                className="network-name"
-                                onChange={(e: any) =>
-                                  this.handleNetworkPortNameChange(
-                                    index,
-                                    e.currentTarget.value
-                                  )
-                                }
-                              />
-                            </td>
-                          </tr>
-                        );
-                      })
-                    : null}
+                  {values.network_ports.map((port, index) => {
+                    return (
+                      <tr>
+                        <td>
+                          <InputGroup
+                            onClick={this.selectText}
+                            value={port}
+                            type="string"
+                            className="network-name"
+                            onChange={(e: any) =>
+                              this.handleNetworkPortNameChange(
+                                index,
+                                e.currentTarget.value
+                              )
+                            }
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             )}
