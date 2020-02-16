@@ -22,7 +22,7 @@ class Rack(models.Model):
     )
     rack_num = models.PositiveIntegerField()
     height = models.PositiveIntegerField(default=42)
-    is_powered = models.BooleanField(default=False)
+    is_network_controlled = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['datacenter', 'row_letter', 'rack_num']
@@ -42,7 +42,7 @@ class Rack(models.Model):
         correct_dc = my_dc.abbreviation == "rtp1"
         correct_row = self.row_letter.lower() in self.char_range('a', 'e')
         correct_rack_num = int(self.rack_num) > 0 and int(self.rack_num) < 20
-        self.is_powered = correct_dc and correct_row and correct_rack_num
+        self.is_network_controlled = correct_dc and correct_row and correct_rack_num
         try:
             validate_row_letter(self.row_letter)
         except ValidationError as valid_error:

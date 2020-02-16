@@ -11,5 +11,5 @@ class RackSerializer(serializers.ModelSerializer):
             'row_letter',
             'rack_num',
             'height',
-            'is_powered'
+            'is_network_controlled'
         )
