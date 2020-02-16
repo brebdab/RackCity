@@ -615,7 +615,7 @@ class ElementTable extends React.Component<
     }
 
     return (
-      <div>
+      <div className="tab-panel">
         {this.getForm()}
         <Toaster
           autoFocus={false}
@@ -762,7 +762,7 @@ class ElementTable extends React.Component<
                           return null;
                         })}
                         <td>
-                          <div className="table-buttons">
+                          <div className="inline-buttons">
                             <AnchorButton
                               className="button-table"
                               intent="primary"
@@ -796,14 +796,7 @@ class ElementTable extends React.Component<
                   })}
                 </tbody>
               ) : (
-                <div className="loading-container">
-                  {/* <Spinner
-                    className="center"
-                    intent="primary"
-                    size={Spinner.SIZE_STANDARD}
-                  /> */}
-                  <h4 className="center">no {this.props.type} found </h4>
-                </div>
+                <h4 className="no-data-text">no {this.props.type} found </h4>
               )}
             </table>
           )}
