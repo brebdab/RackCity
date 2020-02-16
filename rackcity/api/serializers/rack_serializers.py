@@ -10,5 +10,6 @@ class RackSerializer(serializers.ModelSerializer):
             'datacenter',
             'row_letter',
             'rack_num',
-            'height'
+            'height',
+            'is_powered'
         )
