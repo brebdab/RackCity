@@ -624,10 +624,6 @@ class ElementTable extends React.Component<
           icon="user"
           minimal
           text="Add Admin"
-          // onClick={(event: any) => {
-          //   this.handleEditButtonClick(item);
-          //   event.stopPropagation();
-          // }}
         />
       );
     } else {
@@ -639,10 +635,6 @@ class ElementTable extends React.Component<
           icon="user"
           minimal
           text="Remove Admin "
-          // onClick={(event: any) => {
-          //   this.handleEditButtonClick(item);
-          //   event.stopPropagation();
-          // }}
         />
       );
     }
