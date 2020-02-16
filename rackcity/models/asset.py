@@ -5,6 +5,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from .it_model import ITModel
 from .rack import Rack
+#from .network_port import NetworkPort
 
 
 def validate_hostname(value):
@@ -77,3 +78,12 @@ class Asset(models.Model):
                         self.asset_number = asset_number
                         break
             super(Asset, self).save(*args, **kwargs)
+            from rackcity.models import NetworkPort
+            if len(NetworkPort.objects.filter(asset=self.id)) == 0:  # only add ports for new assets
+                model = self.model
+                for network_port_name in model.network_ports:
+                    network_port = NetworkPort(
+                        asset=self,
+                        port_name=network_port_name,
+                    )
+                    network_port.save()
