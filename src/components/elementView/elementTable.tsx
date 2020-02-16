@@ -21,12 +21,16 @@ import {
   isRackObject,
   RackRangeFields,
   isAssetObject,
-  getHeaders
+  getHeaders,
+  AssetObject
 } from "../../utils/utils";
 import DragDropList from "./dragDropList";
 import "./elementView.scss";
 import FilterSelectView, { IFilter } from "./filterSelect";
 import { modifyAsset } from "./detailedView/assetView/assetView";
+import FormPopup from "../../forms/formPopup";
+import { FormTypes } from "../../forms/formUtils";
+import { modifyModel } from "./detailedView/modelView/modelView";
 
 interface ElementTableState {
   items: Array<ElementObjectType>;
@@ -38,6 +42,9 @@ interface ElementTableState {
   total_pages: number;
   page_type: PagingTypes;
   fields: Array<string>;
+  elementType: ElementType;
+  isEditFormOpen: boolean;
+  editFormValues: ElementObjectType;
 }
 // var console: any = {};
 // console.log = function() {};
@@ -105,7 +112,10 @@ class ElementTable extends React.Component<
     sorted_cols: [],
     curr_page: 1,
     total_pages: 0,
-    fields: []
+    fields: [],
+    elementType: ElementType.MODEL,
+    isEditFormOpen: false,
+    editFormValues: {} as ElementObjectType
   };
 
   previousPage = () => {
@@ -513,13 +523,83 @@ class ElementTable extends React.Component<
     });
     this.updateData(page);
   };
+  private handleEditFormClose = () => this.setState({ isEditFormOpen: false });
+  getForm = () => {
+    return (
+      <FormPopup
+        isOpen={this.state.isEditFormOpen}
+        initialValues={this.state.editFormValues}
+        type={FormTypes.MODIFY}
+        elementName={this.state.elementType}
+        handleClose={this.handleEditFormClose}
+        submitForm={this.getSubmitFormFunction(FormTypes.MODIFY)}
+      />
+    );
+  };
 
-  handleEditButtonClick = (data: ElementObjectType) => {
-    const headers = getHeaders(this.props.token);
-    if (isAssetObject(data)) {
-      modifyAsset(data, get).then();
+  successfulModification() {
+    this.updateTableData();
+    this.handleEditFormClose();
+    this.addSuccessToast("Successfuly modified");
+  }
+  // getEditFunction = () => {
+  //   if (this.state.elementType === ElementType.ASSET) {
+  //     return modifyAsset;
+  //   } else if (this.state.elementType === ElementType.MODEL) {
+  //     return modifyModel;
+  //   }
+  // };
+
+  handleEditFormSubmit = (values: ElementObjectType, headers: any) => {
+    if (isModelObject(values)) {
+      modifyModel(values, headers).then(res => {
+        this.successfulModification();
+      });
+    } else if (isAssetObject(values)) {
+      modifyAsset(values, headers).then(res => {
+        this.successfulModification();
+      });
     }
   };
+
+  private handleEditFormOpen = () => {
+    this.setState({
+      isEditFormOpen: true
+    });
+  };
+
+  getSubmitFormFunction = (type: FormTypes) => {
+    let submitForm;
+    // if (type === FormTypes.MODIFY) {
+    submitForm = this.handleEditFormSubmit;
+    return submitForm;
+  };
+
+  handleEditButtonClick = (data: ElementObjectType) => {
+    // const headers = getHeaders(this.props.token);
+    if (isAssetObject(data)) {
+      console.log(ElementType.ASSET);
+      this.setState({
+        elementType: ElementType.ASSET,
+        editFormValues: data
+      });
+      this.handleEditFormOpen();
+    }
+    if (isModelObject(data)) {
+      console.log(ElementType.MODEL);
+      this.setState({
+        elementType: ElementType.MODEL,
+        editFormValues: data
+      });
+      this.handleEditFormOpen();
+    }
+  };
+  private addSuccessToast(message: string) {
+    this.addToast({ message: message, intent: Intent.PRIMARY });
+  }
+  private addErrorToast(message: string) {
+    this.addToast({ message: message, intent: Intent.DANGER });
+  }
   render() {
     // console.log(this.state.items);
     // console.log(!(this.state.items && this.state.items.length > 0));
@@ -536,6 +616,7 @@ class ElementTable extends React.Component<
 
     return (
       <div>
+        {this.getForm()}
         <Toaster
           autoFocus={false}
           canEscapeKeyClear={true}
@@ -688,7 +769,7 @@ class ElementTable extends React.Component<
                               icon="edit"
                               minimal
                               onClick={(event: any) => {
-                                console.log("CLICK", item);
+                                this.handleEditButtonClick(item);
                                 event.stopPropagation();
                               }}
                             />

@@ -21,7 +21,7 @@ import ElementTable from "../../elementTable";
 import {
   ElementType,
   AssetObject,
-  ModelObjectOld,
+  ModelObject,
   getHeaders,
   getFields
 } from "../../../../utils/utils";
@@ -38,13 +38,15 @@ var console: any = {};
 console.log = function() {};
 interface ModelViewState {
   assets: Array<AssetObject> | undefined;
-  model: ModelObjectOld | undefined;
+  model: ModelObject | undefined;
   columns: Array<string>;
   fields: Array<string>;
   isFormOpen: boolean;
   isDeleteOpen: boolean;
 }
-
+export const modifyModel = (model: ModelObject, headers: any) => {
+  return axios.post(API_ROOT + "api/models/modify", model, headers);
+};
 async function getData(modelkey: string, token: string) {
   console.log(API_ROOT + "api/models/" + modelkey);
   const headers = {
@@ -95,23 +97,21 @@ export class ModelView extends React.PureComponent<
     ]
   };
 
-  private updateModel = (model: ModelObjectOld, headers: any): Promise<any> => {
-    return axios
-      .post(API_ROOT + "api/models/modify", model, headers)
-      .then(res => {
-        console.log("success");
-        let params: any;
-        params = this.props.match.params;
-        getData(params.rid, this.props.token).then(result => {
-          console.log("result", result);
-          this.setState({
-            model: result.model,
-            assets: result.assets
-          });
+  private updateModel = (model: ModelObject, headers: any): Promise<any> => {
+    return modifyModel(model, headers).then(res => {
+      console.log("success");
+      let params: any;
+      params = this.props.match.params;
+      getData(params.rid, this.props.token).then(result => {
+        console.log("result", result);
+        this.setState({
+          model: result.model,
+          assets: result.assets
         });
-        this.handleFormClose();
-        console.log(this.state.isFormOpen);
       });
+      this.handleFormClose();
+      console.log(this.state.isFormOpen);
+    });
   };
   private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
   private handleFormOpen = () => {
