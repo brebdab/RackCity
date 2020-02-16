@@ -49,4 +49,5 @@ from .datacenter_views import (
     datacenter_all,
     datacenter_create,
     datacenter_delete,
+    datacenter_page_count,
 )

@@ -142,7 +142,7 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
       loading: true
     });
     axios
-      .get(API_ROOT + "api/racks/get-all", getHeaders(this.props.token))
+      .post(API_ROOT + "api/racks/get-many", { sort_by: [], filters: [] }, getHeaders(this.props.token))
       .then(res => {
         this.setState({
           racks: res.data.racks,

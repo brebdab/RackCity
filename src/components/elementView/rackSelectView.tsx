@@ -74,9 +74,9 @@ class RackSelectView extends React.Component<
 
   getDatacenters = (token: string) => {
     const headers = getHeaders(token);
-    console.log(API_ROOT + "api/datacenters/get-all");
+    console.log(API_ROOT + "api/datacenters/get-many");
     axios
-      .get(API_ROOT + "api/datacenters/get-all", headers)
+      .post(API_ROOT + "api/datacenters/get-many", { sort_by: [], filters: [] }, headers)
       .then(res => {
         console.log(res.data.datacenters);
         this.setState({

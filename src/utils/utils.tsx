@@ -7,7 +7,8 @@ export enum ElementType {
   RACK = "racks",
   ASSET = "assets",
   MODEL = "models",
-  USER = "users"
+  USER = "users",
+  DATACENTER = "datacenters"
 }
 export interface AssetObject extends ElementObject {
   hostname: string;
