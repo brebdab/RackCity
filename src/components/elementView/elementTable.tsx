@@ -620,10 +620,10 @@ class ElementTable extends React.Component<
       return (
         <AnchorButton
           className="button-table"
-          intent="primary"
+          intent="danger"
           icon="user"
           minimal
-          text="Add Admin"
+          text="Remove Admin"
         />
       );
     } else {
@@ -634,7 +634,7 @@ class ElementTable extends React.Component<
           intent="primary"
           icon="user"
           minimal
-          text="Remove Admin "
+          text="Add Admin "
         />
       );
     }
