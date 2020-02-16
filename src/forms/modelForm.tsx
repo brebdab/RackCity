@@ -222,7 +222,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
           <FormGroup label="Network Ports " inline={false}>
             <Field
               field="num_network_ports"
-              type="string"
+              type="number"
               value={
                 values.network_ports && values.network_ports.length !== 0
                   ? values.network_ports.length
