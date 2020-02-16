@@ -471,6 +471,9 @@ class ElementTable extends React.Component<
         if (col === "model") {
           fields.push("model__vendor");
           fields.push("model__model_number");
+        }
+        if (col === "network_ports") {
+          fields.push("num_network_ports");
         } else if (col !== "id") {
           fields.push(col);
         }
@@ -652,6 +655,8 @@ class ElementTable extends React.Component<
                             return (
                               <td>{value.row_letter + " " + value.rack_num}</td>
                             );
+                          } else if (col == "network_ports") {
+                            return <td>{value ? value.length : ""}</td>;
                           } else if (col === "display_color") {
                             console.log(value);
                             return (

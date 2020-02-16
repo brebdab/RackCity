@@ -9,7 +9,7 @@ export interface AlertState {
   isDeleteOpen: boolean;
 }
 var console: any = {};
-console.log = function () { };
+console.log = function() {};
 
 interface PropertiesViewProps {
   data: any;
@@ -18,7 +18,7 @@ interface PropertiesViewProps {
 class PropertiesView extends React.PureComponent<
   RouteComponentProps & PropertiesViewProps,
   AlertState
-  > {
+> {
   public state: AlertState = {
     isDeleteOpen: false
   };
@@ -40,8 +40,10 @@ class PropertiesView extends React.PureComponent<
                   {data[item]}
                 </p>
               );
-            }
-            else if (item === "model") {
+            } else if (item === "network ports") {
+              const ports: Array<string> = data[item];
+              dat = <p>{ports.length}</p>;
+            } else if (item === "model") {
               dat = (
                 <p
                   className="model-link"
@@ -52,8 +54,7 @@ class PropertiesView extends React.PureComponent<
                   {data[item].vendor + " " + data[item].model_number}
                 </p>
               );
-            }
-            else if (item === "rack") {
+            } else if (item === "rack") {
               dat = <p>{data[item].row_letter + "" + data[item].rack_num}</p>;
             } else {
               dat = <p>{data[item]}</p>;
@@ -65,7 +66,7 @@ class PropertiesView extends React.PureComponent<
                 </div>
                 <div className={"column-props"}>{dat}</div>
               </div>
-            )
+            );
           })}
         </div>
       );
