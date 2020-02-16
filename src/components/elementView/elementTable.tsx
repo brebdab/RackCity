@@ -93,7 +93,6 @@ class ElementTable extends React.Component<
   ElementTableState
 > {
   public state: ElementTableState = {
-    // sort_by_id: [],
     page_type: 10,
     filters: [],
     sort_by: [],
@@ -108,6 +107,12 @@ class ElementTable extends React.Component<
   };
 
   //PAGING LOGIC
+  resetPage = () => {
+    console.log("setting currpage to 1");
+    this.setState({
+      curr_page: 1
+    });
+  };
   previousPage = () => {
     if (this.state.curr_page > 1 && this.props.getData) {
       const next_page = this.state.curr_page - 1;
@@ -150,7 +155,24 @@ class ElementTable extends React.Component<
     }
   };
 
+  handlePagingChange = (page: PagingTypes) => {
+    this.setState({
+      page_type: page
+    });
+    this.updateData(page);
+  };
   // FILTERING AND SORTING DISPLAY
+
+  getScrollIcon = (field: string) => {
+    return this.props.disableSorting ? null : (
+      <Icon
+        className="icon"
+        icon={IconNames.DOUBLE_CARET_VERTICAL}
+        iconSize={Icon.SIZE_STANDARD}
+        onClick={() => this.handleSort(field)}
+      />
+    );
+  };
   renderFilterItem = (item: IFilter) => {
     let display;
     if (item.filter_type === FilterTypes.TEXT) {
@@ -212,6 +234,13 @@ class ElementTable extends React.Component<
   };
 
   // SORTING AND FILTERING LOGIC
+  updateSortOrder = (items: Array<ITableSort>) => {
+    this.setState({
+      sort_by: items
+    });
+    this.updateSortData(items);
+  };
+
   removeSortItem = (field: string) => {
     let sorts = this.state.sort_by;
     let sorted_cols = this.state.sorted_cols;
@@ -271,6 +300,16 @@ class ElementTable extends React.Component<
     });
     this.updateSortData(sorts);
   }
+
+  addFilter = (filter: IFilter) => {
+    const filters = this.state.filters;
+    filters.push(filter);
+    console.log(filters);
+    this.setState({
+      filters
+    });
+    this.updateFilterData(filters);
+  };
 
   updateFilterData = (items: Array<IFilter>) => {
     console.log(items);
@@ -381,6 +420,12 @@ class ElementTable extends React.Component<
     toast.timeout = 5000;
     this.toaster.show(toast);
   };
+  private addSuccessToast = (message: string) => {
+    this.addToast({ message: message, intent: Intent.PRIMARY });
+  };
+  private addErrorToast = (message: string) => {
+    this.addToast({ message: message, intent: Intent.DANGER });
+  };
 
   private refHandlers = {
     toaster: (ref: Toaster) => (this.toaster = ref)
@@ -446,19 +491,6 @@ class ElementTable extends React.Component<
         });
     }
   };
-  updateSortOrder = (items: Array<ITableSort>) => {
-    this.setState({
-      sort_by: items
-    });
-    this.updateSortData(items);
-  };
-
-  resetPage = () => {
-    console.log("setting currpage to 1");
-    this.setState({
-      curr_page: 1
-    });
-  };
 
   setFieldNamesFromData = (items: Array<ElementObjectType>) => {
     let fields: Array<string> = [];
@@ -483,58 +515,23 @@ class ElementTable extends React.Component<
     }
   };
 
-  getScrollIcon = (field: string) => {
-    return this.props.disableSorting ? null : (
-      <Icon
-        className="icon"
-        icon={IconNames.DOUBLE_CARET_VERTICAL}
-        iconSize={Icon.SIZE_STANDARD}
-        onClick={() => this.handleSort(field)}
-      />
-    );
-  };
-  addFilter = (filter: IFilter) => {
-    const filters = this.state.filters;
-    filters.push(filter);
-    console.log(filters);
-    this.setState({
-      filters
-    });
-    this.updateFilterData(filters);
-  };
-  handlePagingChange = (page: PagingTypes) => {
-    this.setState({
-      page_type: page
-    });
-    this.updateData(page);
-  };
-
-  private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
-  private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
-
-  private handleDelete = () => {
-    console.log("DELETE");
-    if (isModelObject(this.state.editFormValues)) {
-      deleteModel(this.state.editFormValues, getHeaders(this.props.token))
-        .then(res => {
-          this.addErrorToast("Sucessfully deleted");
-          this.handleDeleteCancel();
-        })
-        .catch(err => {
-          this.addErrorToast(err.response.data.failure_message);
-          this.handleDeleteCancel();
-        });
-    } else if (isAssetObject(this.state.editFormValues)) {
-      deleteAsset(this.state.editFormValues, getHeaders(this.props.token)).then(
-        res => {
-          this.addErrorToast("Sucessfully deleted");
-          this.handleDeleteCancel();
-        }
-      );
+  //EDIT AND DELETE LOGIC
+  handleInlineButtonClick = (data: ElementObjectType) => {
+    // const headers = getHeaders(this.props.token);
+    if (isAssetObject(data)) {
+      this.setState({
+        editFormValues: data
+      });
+    }
+    if (isModelObject(data)) {
+      this.setState({
+        editFormValues: data
+      });
     }
   };
-  private handleEditFormClose = () => this.setState({ isEditFormOpen: false });
-  getForm = () => {
+  //EDIT LOGIC
+  handleEditFormClose = () => this.setState({ isEditFormOpen: false });
+  getEditForm = () => {
     return (
       <FormPopup
         isOpen={this.state.isEditFormOpen}
@@ -565,7 +562,7 @@ class ElementTable extends React.Component<
     }
   };
 
-  private handleEditFormOpen = () => {
+  handleEditFormOpen = () => {
     this.setState({
       isEditFormOpen: true
     });
@@ -577,35 +574,43 @@ class ElementTable extends React.Component<
     submitForm = this.handleEditFormSubmit;
     return submitForm;
   };
-
   handleEditButtonClick = (data: ElementObjectType) => {
     this.handleInlineButtonClick(data);
     this.handleEditFormOpen();
+  };
+
+  //DELETE LOGIC
+
+  private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
+  private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
+
+  private handleDelete = () => {
+    console.log("DELETE");
+    if (isModelObject(this.state.editFormValues)) {
+      deleteModel(this.state.editFormValues, getHeaders(this.props.token))
+        .then(res => {
+          this.addErrorToast("Sucessfully deleted");
+          this.handleDeleteCancel();
+        })
+        .catch(err => {
+          this.addErrorToast(err.response.data.failure_message);
+          this.handleDeleteCancel();
+        });
+    } else if (isAssetObject(this.state.editFormValues)) {
+      deleteAsset(this.state.editFormValues, getHeaders(this.props.token)).then(
+        res => {
+          this.addErrorToast("Sucessfully deleted");
+          this.handleDeleteCancel();
+        }
+      );
+    }
   };
 
   handleDeleteButtonClick = (data: ElementObjectType) => {
     this.handleInlineButtonClick(data);
     this.handleDeleteOpen();
   };
-  handleInlineButtonClick = (data: ElementObjectType) => {
-    // const headers = getHeaders(this.props.token);
-    if (isAssetObject(data)) {
-      this.setState({
-        editFormValues: data
-      });
-    }
-    if (isModelObject(data)) {
-      this.setState({
-        editFormValues: data
-      });
-    }
-  };
-  private addSuccessToast = (message: string) => {
-    this.addToast({ message: message, intent: Intent.PRIMARY });
-  };
-  private addErrorToast = (message: string) => {
-    this.addToast({ message: message, intent: Intent.DANGER });
-  };
+
   render() {
     console.log(this.state.items);
     // console.log(!(this.state.items && this.state.items.length > 0));
@@ -624,7 +629,7 @@ class ElementTable extends React.Component<
 
     return (
       <div className="tab-panel">
-        {this.getForm()}
+        {this.getEditForm()}
         <Alert
           cancelButtonText="Cancel"
           confirmButtonText="Delete"
