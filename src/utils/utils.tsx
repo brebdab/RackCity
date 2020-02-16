@@ -39,6 +39,7 @@ export interface UserInfoObject extends ElementObject {
   email?: string;
   first_name?: string;
   last_name?: string;
+  is_staff?: string;
 }
 
 export interface CreateUserObject {
@@ -124,6 +125,10 @@ export function isRackObject(obj: any): obj is RackObject {
 }
 export function isAssetObject(obj: any): obj is AssetObject {
   return obj && obj.hostname;
+}
+
+export function isUserObject(obj: any): obj is UserInfoObject {
+  return obj && obj.username;
 }
 export const getHeaders = (token: string) => {
   return {

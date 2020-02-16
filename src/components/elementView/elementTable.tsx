@@ -24,7 +24,8 @@ import {
   isModelObject,
   isRackObject,
   RackRangeFields,
-  UserInfoObject
+  UserInfoObject,
+  isUserObject
 } from "../../utils/utils";
 import DragDropList from "./dragDropList";
 import "./elementView.scss";
@@ -45,7 +46,6 @@ import {
   modifyModel,
   modifyAsset
 } from "./elementUtils";
-import { UserInfo } from "os";
 
 interface ElementTableState {
   items: Array<ElementObjectType>;
@@ -614,8 +614,39 @@ class ElementTable extends React.Component<
   };
 
   //ADMIN BUTTON LOGIC
-
-  getAdminText(item: UserInfoObject) {}
+  renderAdminButton = (item: UserInfoObject) => {
+    console.log(item.is_staff);
+    if (item.is_staff) {
+      return (
+        <AnchorButton
+          className="button-table"
+          intent="primary"
+          icon="user"
+          minimal
+          text="Add Admin"
+          // onClick={(event: any) => {
+          //   this.handleEditButtonClick(item);
+          //   event.stopPropagation();
+          // }}
+        />
+      );
+    } else {
+      console.log("NOT AN ADMIN");
+      return (
+        <AnchorButton
+          className="button-table"
+          intent="primary"
+          icon="user"
+          minimal
+          text="Remove Admin "
+          // onClick={(event: any) => {
+          //   this.handleEditButtonClick(item);
+          //   event.stopPropagation();
+          // }}
+        />
+      );
+    }
+  };
 
   render() {
     console.log(this.state.items);
@@ -817,20 +848,9 @@ class ElementTable extends React.Component<
                               />
                             </div>
                           ) : null}
-                          {this.props.isAdmin &&
-                          this.props.type === ElementType.USER ? (
+                          {this.props.isAdmin && isUserObject(item) ? (
                             <div className="inline-buttons">
-                              <AnchorButton
-                                className="button-table"
-                                intent="primary"
-                                icon="user"
-                                minimal
-                                text="Make Admin"
-                                // onClick={(event: any) => {
-                                //   this.handleEditButtonClick(item);
-                                //   event.stopPropagation();
-                                // }}
-                              />
+                              {this.renderAdminButton(item)}
                             </div>
                           ) : null}
                         </td>
