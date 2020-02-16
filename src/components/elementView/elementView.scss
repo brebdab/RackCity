@@ -14,7 +14,15 @@
 .table-nav-bar {
   padding-top: 20pt;
 }
-.loading-container {
+.table-buttons {
+  display: inline-block;
+  white-space: nowrap;
+  overflow: auto;
+}
+// .table-buttons a {
+//   float: left !important;
+// }
+.loading-conainer {
   text-align: center;
   display: block;
 }

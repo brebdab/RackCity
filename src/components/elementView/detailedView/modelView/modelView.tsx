@@ -35,7 +35,7 @@ export interface ModelViewProps {
 }
 
 var console: any = {};
-console.log = function () { };
+console.log = function() {};
 interface ModelViewState {
   assets: Array<AssetObject> | undefined;
   model: ModelObjectOld | undefined;
@@ -63,7 +63,7 @@ async function getData(modelkey: string, token: string) {
 export class ModelView extends React.PureComponent<
   RouteComponentProps & ModelViewProps,
   ModelViewState
-  > {
+> {
   public state: ModelViewState = {
     assets: undefined,
     model: undefined,
@@ -153,20 +153,20 @@ export class ModelView extends React.PureComponent<
   };
 
   componentDidMount() {
-    const auth = getHeaders(this.props.token)
+    const auth = getHeaders(this.props.token);
     const headers = {
       headers: auth.headers,
       params: {
         page: 1,
         page_size: 20
       }
-    }
+    };
     getFields("models", headers).then((res: any) => {
       this.setState({
         fields: res,
         columns: res
-      })
-    })
+      });
+    });
   }
 
   public render() {
@@ -199,6 +199,7 @@ export class ModelView extends React.PureComponent<
               intent="primary"
               icon="edit"
               text="Edit"
+              minimal
               onClick={() => this.handleFormOpen()}
             />
             <FormPopup
@@ -214,6 +215,7 @@ export class ModelView extends React.PureComponent<
               intent="danger"
               icon="trash"
               text="Delete"
+              minimal
               onClick={this.handleDeleteOpen}
             />
             <Alert

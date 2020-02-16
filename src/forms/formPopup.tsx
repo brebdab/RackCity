@@ -11,7 +11,7 @@ import RackSelectView from "../components/elementView/rackSelectView";
 import AssetForm from "./assetForm";
 import ModelForm from "./modelForm";
 import { FormTypes } from "./formUtils";
-interface FormPopupState { }
+interface FormPopupState {}
 interface FormPopupProps {
   isOpen: boolean;
   type: FormTypes;

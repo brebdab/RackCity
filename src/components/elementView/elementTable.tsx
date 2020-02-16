@@ -4,9 +4,11 @@ import {
   Position,
   IToastProps,
   Toaster,
-  Intent
+  Intent,
+  AnchorButton
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
+import $, { get } from "jquery";
 import { IconNames } from "@blueprintjs/icons";
 import "@blueprintjs/icons/lib/css/blueprint-icons.css";
 import React from "react";
@@ -17,11 +19,14 @@ import {
   ElementType,
   isModelObject,
   isRackObject,
-  RackRangeFields
+  RackRangeFields,
+  isAssetObject,
+  getHeaders
 } from "../../utils/utils";
 import DragDropList from "./dragDropList";
 import "./elementView.scss";
 import FilterSelectView, { IFilter } from "./filterSelect";
+import { modifyAsset } from "./detailedView/assetView/assetView";
 
 interface ElementTableState {
   items: Array<ElementObjectType>;
@@ -508,10 +513,17 @@ class ElementTable extends React.Component<
     });
     this.updateData(page);
   };
+
+  handleEditButtonClick = (data: ElementObjectType) => {
+    const headers = getHeaders(this.props.token);
+    if (isAssetObject(data)) {
+      modifyAsset(data, get).then();
+    }
+  };
   render() {
     // console.log(this.state.items);
     // console.log(!(this.state.items && this.state.items.length > 0));
-    //
+
     if (
       this.props.data &&
       this.props.data.length !== 0 &&
@@ -629,6 +641,7 @@ class ElementTable extends React.Component<
 
                     return null;
                   })}
+                  <th></th>
                 </tr>
               </thead>
               {this.state.items && this.state.items.length > 0 ? (
@@ -667,6 +680,36 @@ class ElementTable extends React.Component<
 
                           return null;
                         })}
+                        <td>
+                          <div className="table-buttons">
+                            <AnchorButton
+                              className="button-table"
+                              intent="primary"
+                              icon="edit"
+                              minimal
+                              onClick={(event: any) => {
+                                console.log("CLICK", item);
+                                event.stopPropagation();
+                              }}
+                            />
+                            {/* <FormPopup
+                            isOpen={this.state.isFormOpen}
+                            initialValues={this.state.model}
+                            type={FormTypes.MODIFY}
+                            elementName={ElementType.MODEL}
+                            handleClose={this.handleFormClose}
+                            submitForm={this.updateModel}
+                          /> */}
+                            <AnchorButton
+                              className="button-table"
+                              intent="danger"
+                              minimal
+                              icon="trash"
+
+                              // onClick={this.handleDeleteOpen}
+                            />
+                          </div>
+                        </td>
                       </tr>
                     );
                   })}
