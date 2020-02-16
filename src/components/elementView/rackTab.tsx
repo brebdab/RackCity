@@ -3,7 +3,8 @@ import {
   RackRangeFields,
   ElementType,
   RackResponseObject,
-  getHeaders
+  getHeaders,
+  DatacenterObject
 } from "../../utils/utils";
 import { API_ROOT } from "../../utils/api-config";
 import {
@@ -13,15 +14,23 @@ import {
   Toaster,
   Position,
   Alert,
-  Button
+  Button,
+  FormGroup,
+  MenuItem
 } from "@blueprintjs/core";
 
 import axios from "axios";
 import FormPopup from "../../forms/formPopup";
-import { FormTypes } from "../../forms/formUtils";
+import {
+  FormTypes,
+  DatacenterSelect,
+  renderDatacenterItem,
+  filterDatacenter
+} from "../../forms/formUtils";
 import RackSelectView from "./rackSelectView";
 import RackView from "./detailedView/rackView/rackView";
 import { connect } from "react-redux";
+import { updateObject } from "../../store/utility";
 interface RackTabState {
   isOpen: boolean;
   isDeleteOpen: boolean;
@@ -34,6 +43,9 @@ interface RackTabState {
 interface RackTabProps {
   token: string;
   isAdmin: boolean;
+  datacenters: Array<DatacenterObject>;
+  currDatacenter: DatacenterObject;
+  onDatacenterSelect(datacenter: DatacenterObject): void;
 }
 class RackTab extends React.Component<RackTabProps, RackTabState> {
   state = {
@@ -67,8 +79,12 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
     this.setState({
       loading: true
     });
+    let rack_datacenter = updateObject(rack, {
+      datacenter: this.props.currDatacenter.id
+    });
+
     return axios
-      .post(API_ROOT + "api/racks/get", rack, headers)
+      .post(API_ROOT + "api/racks/get", rack_datacenter, headers)
       .then(res => {
         this.setState({
           racks: res.data.racks,
@@ -172,6 +188,33 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
             position={Position.TOP}
             ref={this.refHandlers.toaster}
           />
+          <div>
+            <FormGroup label="Datacenter" inline={false}>
+              <DatacenterSelect
+                popoverProps={{
+                  minimal: true,
+                  popoverClassName: "dropdown",
+                  usePortal: true
+                }}
+                items={this.props.datacenters!}
+                onItemSelect={(datacenter: DatacenterObject) => {
+                  this.props.onDatacenterSelect!(datacenter);
+                }}
+                itemRenderer={renderDatacenterItem}
+                itemPredicate={filterDatacenter}
+                noResults={<MenuItem disabled={true} text="No results." />}
+              >
+                <Button
+                  rightIcon="caret-down"
+                  text={
+                    this.props.currDatacenter && this.props.currDatacenter.name
+                      ? this.props.currDatacenter.name
+                      : "All datacenters"
+                  }
+                />
+              </DatacenterSelect>
+            </FormGroup>
+          </div>
 
           <FormPopup
             type={FormTypes.CREATE}
@@ -198,34 +241,40 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
             <p>Are you sure you want to delete?</p>
           </Alert>
 
-          {this.props.isAdmin ? (
-            <div className=" element-tab-buttons">
-              <AnchorButton
-                className="add"
-                text={"Add Rack(s)"}
-                icon="add"
-                minimal
-                intent={Intent.PRIMARY}
-                onClick={this.handleOpen}
+          {this.props.currDatacenter && this.props.currDatacenter.name ? (
+            <div>
+              {this.props.isAdmin ? (
+                <div className=" element-tab-buttons">
+                  <AnchorButton
+                    className="add"
+                    text={"Add Rack(s)"}
+                    icon="add"
+                    minimal
+                    intent={Intent.PRIMARY}
+                    onClick={this.handleOpen}
+                  />
+                  <AnchorButton
+                    className="add "
+                    text={"Delete Rack(s)"}
+                    icon="trash"
+                    minimal
+                    intent={Intent.DANGER}
+                    onClick={this.handleDeleteOpen}
+                  />
+                </div>
+              ) : null}
+              <Button
+                text="View All Rack(s)"
+                onClick={(e: any) => this.getAllRacks()}
               />
-              <AnchorButton
-                className="add "
-                text={"Delete Rack(s)"}
-                icon="trash"
-                minimal
-                intent={Intent.DANGER}
-                onClick={this.handleDeleteOpen}
-              />
-            </div>
-          ) : null}
-          <Button
-            text="View All Rack(s)"
-            onClick={(e: any) => this.getAllRacks()}
-          />
 
-          <RackSelectView submitForm={this.viewRackForm} />
+              <RackSelectView submitForm={this.viewRackForm} />
+            </div>
+          ) : (
+            <h5>Please select a datacenter to view rack information</h5>
+          )}
+          <RackView racks={this.state.racks} loading={this.state.loading} />
         </div>
-        <RackView racks={this.state.racks} loading={this.state.loading} />
       </div>
     );
   }

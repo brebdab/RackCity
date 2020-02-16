@@ -5,7 +5,8 @@ import {
   ElementType,
   isAssetObject,
   isModelObject,
-  FormObjectType
+  FormObjectType,
+  DatacenterObject
 } from "../utils/utils";
 import RackSelectView from "../components/elementView/rackSelectView";
 import AssetForm from "./assetForm";

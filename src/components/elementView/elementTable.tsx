@@ -23,7 +23,8 @@ import {
   isAssetObject,
   isModelObject,
   isRackObject,
-  RackRangeFields
+  RackRangeFields,
+  DatacenterObject
 } from "../../utils/utils";
 import DragDropList from "./dragDropList";
 import "./elementView.scss";
@@ -68,6 +69,7 @@ interface ElementTableProps {
   token: string;
   disableSorting?: boolean;
   disableFiltering?: boolean;
+  currDatacenter?: DatacenterObject;
   getData?(
     type: string,
     page_num: number,
