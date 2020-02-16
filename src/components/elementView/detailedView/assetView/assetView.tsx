@@ -23,6 +23,7 @@ import {
 } from "../../../../utils/utils";
 import FormPopup from "../../../../forms/formPopup";
 import { FormTypes } from "../../../../forms/formUtils";
+import { modifyAsset, deleteAsset } from "../../elementUtils";
 
 export interface AssetViewProps {
   token: string;
@@ -30,11 +31,7 @@ export interface AssetViewProps {
   isAdmin: boolean;
 }
 // Given an rid, will perform a GET request of that rid and display info about that instnace
-export const deleteAsset = (asset: AssetObject, headers: any) => {
-  console.log("Deleting asset");
-  const data = { id: asset.id };
-  return axios.post(API_ROOT + "api/assets/delete", data, headers);
-};
+
 // var console: any = {};
 // console.log = function() {};
 async function getData(assetkey: string, token: string) {
@@ -59,9 +56,6 @@ interface AssetViewState {
   isDeleteOpen: boolean;
   isAlertOpen: boolean;
 }
-export const modifyAsset = (asset: AssetObject, headers: any): Promise<any> => {
-  return axios.post(API_ROOT + "api/assets/modify", asset, headers);
-};
 
 export class AssetView extends React.PureComponent<
   RouteComponentProps & AssetViewProps,

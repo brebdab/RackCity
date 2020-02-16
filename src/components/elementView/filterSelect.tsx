@@ -11,61 +11,28 @@ import { updateObject } from "../../store/utility";
 import "./elementView.scss";
 import RackRangeForm from "../../forms/rackRangeForm";
 import { RackRangeFields } from "../../utils/utils";
+import {
+  IFilter,
+  FilterTypes,
+  TextFilterTypes,
+  TextFilter,
+  NumericFilter,
+  getFilterType
+} from "./elementUtils";
 
 var console: any = {};
-console.log = function () { };
-export enum TextFilterTypes {
-  EXACT = "exact",
-  CONTAINS = "contains"
-}
-export enum FilterTypes {
-  TEXT = "text",
-  NUMERIC = "numeric",
-  RACKRANGE = "rack_range"
-}
-export interface NumericFilter {
-  min?: number;
-  max?: number;
-}
-export interface TextFilter {
-  value?: string;
-  match_type: TextFilterTypes;
-}
-export interface IFilter {
-  id: string;
-  field: string;
-  filter_type?: FilterTypes;
-  filter?: TextFilter | NumericFilter | RackRangeFields;
-}
+console.log = function() {};
 
 interface FilterSelectProps {
   token: string;
   fields: Array<string>;
   handleAddFilter(filter: IFilter): void;
 }
-const numberFields = [
-  "rack_position",
-  "height",
-  "num_ethernet_ports",
-  "num_power_ports",
-  "memory_gb"
-];
-
-function getFilterType(field: string | undefined) {
-  if (field) {
-    if (field === "rack") {
-      return FilterTypes.RACKRANGE;
-    } else if (numberFields.includes(field)) {
-      return FilterTypes.NUMERIC;
-    }
-    return FilterTypes.TEXT;
-  }
-}
 
 class FilterSelect extends React.Component<
   FilterSelectProps & RouteComponentProps,
   IFilter
-  > {
+> {
   state = {
     id: "",
     field: "",

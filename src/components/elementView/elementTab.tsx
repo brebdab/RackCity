@@ -22,9 +22,9 @@ import {
   ElementType,
   ModelObject
 } from "../../utils/utils";
-import ElementTable, { PagingTypes } from "./elementTable";
+import ElementTable from "./elementTable";
 import "./elementView.scss";
-import { IFilter } from "./filterSelect";
+import { IFilter, PagingTypes } from "./elementUtils";
 
 var console: any = {};
 console.log = function() {};

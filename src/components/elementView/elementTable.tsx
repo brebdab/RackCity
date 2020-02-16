@@ -25,11 +25,25 @@ import {
   isRackObject,
   RackRangeFields
 } from "../../utils/utils";
-import { deleteAsset, modifyAsset } from "./detailedView/assetView/assetView";
-import { deleteModel, modifyModel } from "./detailedView/modelView/modelView";
 import DragDropList from "./dragDropList";
 import "./elementView.scss";
-import FilterSelectView, { IFilter } from "./filterSelect";
+import FilterSelect from "./filterSelect";
+
+import {
+  ITableSort,
+  PagingTypes,
+  renderTextFilterItem,
+  renderNumericFilterItem,
+  renderRackRangeFilterItem,
+  IFilter,
+  FilterTypes,
+  TextFilter,
+  NumericFilter,
+  deleteModel,
+  deleteAsset,
+  modifyModel,
+  modifyAsset
+} from "./elementUtils";
 
 interface ElementTableState {
   items: Array<ElementObjectType>;
@@ -47,31 +61,6 @@ interface ElementTableState {
 }
 // var console: any = {};
 // console.log = function() {};
-export interface ITableSort {
-  field: string;
-  ascending: boolean;
-  id: string;
-}
-// const PAGE_SIZE = 10;
-
-export enum PagingTypes {
-  TEN = 10,
-  FIFTY = 50,
-  ALL = "View All"
-}
-export enum FilterTypes {
-  TEXT = "text",
-  NUMERIC = "numeric",
-  RACKRANGE = "rack_range"
-}
-export interface NumericFilter {
-  min: number;
-  max: number;
-}
-export interface TextFilter {
-  value: string;
-  match_type: string;
-}
 
 interface ElementTableProps {
   callback?: Function;
@@ -104,7 +93,6 @@ class ElementTable extends React.Component<
   ElementTableState
 > {
   public state: ElementTableState = {
-    // sort_by_id: [],
     page_type: 10,
     filters: [],
     sort_by: [],
@@ -118,6 +106,13 @@ class ElementTable extends React.Component<
     isDeleteOpen: false
   };
 
+  //PAGING LOGIC
+  resetPage = () => {
+    console.log("setting currpage to 1");
+    this.setState({
+      curr_page: 1
+    });
+  };
   previousPage = () => {
     if (this.state.curr_page > 1 && this.props.getData) {
       const next_page = this.state.curr_page - 1;
@@ -160,25 +155,32 @@ class ElementTable extends React.Component<
     }
   };
 
-  renderTextFilterItem = (item: TextFilter) => {
-    return `${item.match_type} ${item.value}`;
+  handlePagingChange = (page: PagingTypes) => {
+    this.setState({
+      page_type: page
+    });
+    this.updateData(page);
   };
+  // FILTERING AND SORTING DISPLAY
 
-  renderNumericFilterItem = (item: NumericFilter) => {
-    return `between ${item.min} - ${item.max}`;
+  getScrollIcon = (field: string) => {
+    return this.props.disableSorting ? null : (
+      <Icon
+        className="icon"
+        icon={IconNames.DOUBLE_CARET_VERTICAL}
+        iconSize={Icon.SIZE_STANDARD}
+        onClick={() => this.handleSort(field)}
+      />
+    );
   };
-  renderRackRangeFilterItem = (item: RackRangeFields) => {
-    return `rows  ${item.letter_start} - ${item.letter_end} & racks ${item.num_start} - ${item.num_end}`;
-  };
-
   renderFilterItem = (item: IFilter) => {
     let display;
     if (item.filter_type === FilterTypes.TEXT) {
-      display = this.renderTextFilterItem(item.filter! as TextFilter);
+      display = renderTextFilterItem(item.filter! as TextFilter);
     } else if (item.filter_type === FilterTypes.NUMERIC) {
-      display = this.renderNumericFilterItem(item.filter! as NumericFilter);
+      display = renderNumericFilterItem(item.filter! as NumericFilter);
     } else if (item.filter_type === FilterTypes.RACKRANGE) {
-      display = this.renderRackRangeFilterItem(item.filter as RackRangeFields);
+      display = renderRackRangeFilterItem(item.filter as RackRangeFields);
     }
     return (
       <div className="drag-drop-text">
@@ -203,9 +205,6 @@ class ElementTable extends React.Component<
         </span>
       </div>
     );
-    // field: string;
-    // filter_type: FilterTypes;
-    // filter: TextFilter | NumericFilter | RackRangeFields;
   };
 
   renderSortItem = (item: ITableSort) => {
@@ -233,14 +232,13 @@ class ElementTable extends React.Component<
       </div>
     );
   };
-  private toaster: Toaster = {} as Toaster;
-  private addToast = (toast: IToastProps) => {
-    toast.timeout = 5000;
-    this.toaster.show(toast);
-  };
 
-  private refHandlers = {
-    toaster: (ref: Toaster) => (this.toaster = ref)
+  // SORTING AND FILTERING LOGIC
+  updateSortOrder = (items: Array<ITableSort>) => {
+    this.setState({
+      sort_by: items
+    });
+    this.updateSortData(items);
   };
 
   removeSortItem = (field: string) => {
@@ -256,7 +254,6 @@ class ElementTable extends React.Component<
     this.setState({
       sort_by: sorts,
       sorted_cols
-      // sort_by_id: sorts_id
     });
     this.updateSortData(sorts);
   };
@@ -291,7 +288,6 @@ class ElementTable extends React.Component<
       ascending = true;
       sorted_cols.push(field);
     }
-    // if (!this.state.sorted_cols.includes(field)) {
 
     sorts.push({
       field,
@@ -301,18 +297,21 @@ class ElementTable extends React.Component<
     this.setState({
       sort_by: sorts,
       sorted_cols
-      // sort_by_id: sorts_id
     });
     this.updateSortData(sorts);
-    // } else {
-    // }
   }
 
-  updateFilterData = (items: Array<IFilter>) => {
-    console.log("detected new filters", {
-      sort_by: this.state.sort_by,
-      filters: items
+  addFilter = (filter: IFilter) => {
+    const filters = this.state.filters;
+    filters.push(filter);
+    console.log(filters);
+    this.setState({
+      filters
     });
+    this.updateFilterData(filters);
+  };
+
+  updateFilterData = (items: Array<IFilter>) => {
     console.log(items);
     if (this.props.callback! !== undefined) this.props.callback(items);
     const filter_body = items.map(item => {
@@ -414,6 +413,24 @@ class ElementTable extends React.Component<
       });
     }
   };
+
+  //TOASTS
+  private toaster: Toaster = {} as Toaster;
+  private addToast = (toast: IToastProps) => {
+    toast.timeout = 5000;
+    this.toaster.show(toast);
+  };
+  private addSuccessToast = (message: string) => {
+    this.addToast({ message: message, intent: Intent.PRIMARY });
+  };
+  private addErrorToast = (message: string) => {
+    this.addToast({ message: message, intent: Intent.DANGER });
+  };
+
+  private refHandlers = {
+    toaster: (ref: Toaster) => (this.toaster = ref)
+  };
+
   componentDidUpdate() {
     if (this.props.shouldUpdateData && !this.props.data) {
       console.log("table updated");
@@ -474,27 +491,6 @@ class ElementTable extends React.Component<
         });
     }
   };
-  updateSortOrder = (items: Array<ITableSort>) => {
-    // console.log(items);
-    this.setState({
-      sort_by: items
-    });
-    this.updateSortData(items);
-  };
-
-  resetPage = () => {
-    console.log("setting currpage to 1");
-    this.setState({
-      curr_page: 1
-    });
-  };
-
-  updateFilterOrder = (items: Array<IFilter>) => {
-    this.setState({
-      filters: items
-    });
-    this.updateFilterData(items);
-  };
 
   setFieldNamesFromData = (items: Array<ElementObjectType>) => {
     let fields: Array<string> = [];
@@ -519,58 +515,23 @@ class ElementTable extends React.Component<
     }
   };
 
-  getScrollIcon = (field: string) => {
-    return this.props.disableSorting ? null : (
-      <Icon
-        className="icon"
-        icon={IconNames.DOUBLE_CARET_VERTICAL}
-        iconSize={Icon.SIZE_STANDARD}
-        onClick={() => this.handleSort(field)}
-      />
-    );
-  };
-  addFilter = (filter: IFilter) => {
-    const filters = this.state.filters;
-    filters.push(filter);
-    console.log(filters);
-    this.setState({
-      filters
-    });
-    this.updateFilterData(filters);
-  };
-  handlePagingChange = (page: PagingTypes) => {
-    this.setState({
-      page_type: page
-    });
-    this.updateData(page);
-  };
-
-  private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
-  private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
-
-  private handleDelete = () => {
-    console.log("DELETE");
-    if (isModelObject(this.state.editFormValues)) {
-      deleteModel(this.state.editFormValues, getHeaders(this.props.token))
-        .then(res => {
-          this.addErrorToast("Sucessfully deleted");
-          this.handleDeleteCancel();
-        })
-        .catch(err => {
-          this.addErrorToast(err.response.data.failure_message);
-          this.handleDeleteCancel();
-        });
-    } else if (isAssetObject(this.state.editFormValues)) {
-      deleteAsset(this.state.editFormValues, getHeaders(this.props.token)).then(
-        res => {
-          this.addErrorToast("Sucessfully deleted");
-          this.handleDeleteCancel();
-        }
-      );
+  //EDIT AND DELETE LOGIC
+  handleInlineButtonClick = (data: ElementObjectType) => {
+    // const headers = getHeaders(this.props.token);
+    if (isAssetObject(data)) {
+      this.setState({
+        editFormValues: data
+      });
+    }
+    if (isModelObject(data)) {
+      this.setState({
+        editFormValues: data
+      });
     }
   };
-  private handleEditFormClose = () => this.setState({ isEditFormOpen: false });
-  getForm = () => {
+  //EDIT LOGIC
+  handleEditFormClose = () => this.setState({ isEditFormOpen: false });
+  getEditForm = () => {
     return (
       <FormPopup
         isOpen={this.state.isEditFormOpen}
@@ -601,7 +562,7 @@ class ElementTable extends React.Component<
     }
   };
 
-  private handleEditFormOpen = () => {
+  handleEditFormOpen = () => {
     this.setState({
       isEditFormOpen: true
     });
@@ -613,35 +574,43 @@ class ElementTable extends React.Component<
     submitForm = this.handleEditFormSubmit;
     return submitForm;
   };
-
   handleEditButtonClick = (data: ElementObjectType) => {
     this.handleInlineButtonClick(data);
     this.handleEditFormOpen();
+  };
+
+  //DELETE LOGIC
+
+  private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
+  private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
+
+  private handleDelete = () => {
+    console.log("DELETE");
+    if (isModelObject(this.state.editFormValues)) {
+      deleteModel(this.state.editFormValues, getHeaders(this.props.token))
+        .then(res => {
+          this.addErrorToast("Sucessfully deleted");
+          this.handleDeleteCancel();
+        })
+        .catch(err => {
+          this.addErrorToast(err.response.data.failure_message);
+          this.handleDeleteCancel();
+        });
+    } else if (isAssetObject(this.state.editFormValues)) {
+      deleteAsset(this.state.editFormValues, getHeaders(this.props.token)).then(
+        res => {
+          this.addErrorToast("Sucessfully deleted");
+          this.handleDeleteCancel();
+        }
+      );
+    }
   };
 
   handleDeleteButtonClick = (data: ElementObjectType) => {
     this.handleInlineButtonClick(data);
     this.handleDeleteOpen();
   };
-  handleInlineButtonClick = (data: ElementObjectType) => {
-    // const headers = getHeaders(this.props.token);
-    if (isAssetObject(data)) {
-      this.setState({
-        editFormValues: data
-      });
-    }
-    if (isModelObject(data)) {
-      this.setState({
-        editFormValues: data
-      });
-    }
-  };
-  private addSuccessToast = (message: string) => {
-    this.addToast({ message: message, intent: Intent.PRIMARY });
-  };
-  private addErrorToast = (message: string) => {
-    this.addToast({ message: message, intent: Intent.DANGER });
-  };
+
   render() {
     console.log(this.state.items);
     // console.log(!(this.state.items && this.state.items.length > 0));
@@ -660,7 +629,7 @@ class ElementTable extends React.Component<
 
     return (
       <div className="tab-panel">
-        {this.getForm()}
+        {this.getEditForm()}
         <Alert
           cancelButtonText="Cancel"
           confirmButtonText="Delete"
@@ -682,7 +651,7 @@ class ElementTable extends React.Component<
           ? null
           : [
               <div className="filter-select">
-                <FilterSelectView
+                <FilterSelect
                   handleAddFilter={this.addFilter}
                   fields={this.state.fields}
                 />
@@ -692,7 +661,6 @@ class ElementTable extends React.Component<
                 <DragDropList
                   items={this.state.filters}
                   renderItem={this.renderFilterItem}
-                  onChange={this.updateFilterOrder}
                 />
               </div>
             ]}
