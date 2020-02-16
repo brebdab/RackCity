@@ -20,14 +20,15 @@ import {
   CreateUserObject,
   ElementObjectType,
   ElementType,
-  ModelObject
+  ModelObject,
+  DatacenterObject
 } from "../../utils/utils";
 import ElementTable from "./elementTable";
 import "./elementView.scss";
 import { IFilter, PagingTypes } from "./elementUtils";
 
 var console: any = {};
-console.log = function() {};
+console.log = function () { };
 const fs = require("js-file-download");
 
 interface ElementViewState {
@@ -111,9 +112,9 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       page_type === PagingTypes.ALL
         ? {}
         : {
-            page_size: page_type,
-            page
-          };
+          page_size: page_type,
+          page
+        };
     const config = {
       headers: {
         Authorization: "Token " + token
@@ -166,6 +167,16 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     });
   };
 
+  private createDatacenter = (dc: DatacenterObject, headers: any): Promise<any> => {
+    console.log("api/dataceneters/add");
+    return axios.post(API_ROOT + "api/datacenters/add", dc, headers).then(res => {
+      this.handleDataUpdate(true)
+      this.handleClose();
+      this.addSuccessToast("Successfully created datacenter!");
+      console.log(this.state.isOpen)
+    });
+  };
+
   private createUser = (user: CreateUserObject, headers: any): Promise<any> => {
     console.log("api/users/add");
     return axios.post(API_ROOT + "api/users/add", user, headers).then(res => {
@@ -215,8 +226,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               }}
             />
           ) : (
-            <p></p>
-          )}
+              <p></p>
+            )}
           {this.props.isAdmin && this.props.element !== ElementType.USER ? (
             <AnchorButton
               onClick={() => this.props.history.push("/bulk-upload")}
@@ -281,8 +292,10 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               this.props.element === ElementType.MODEL
                 ? this.createModel
                 : this.props.element === ElementType.ASSET
-                ? this.createAsset
-                : this.createUser
+                  ? this.createAsset
+                  : this.props.element === ElementType.DATACENTER
+                    ? this.createDatacenter
+                    : this.createUser
             }
             isOpen={this.state.isOpen}
             handleClose={this.handleClose}

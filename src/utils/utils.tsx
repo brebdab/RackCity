@@ -113,12 +113,16 @@ export type FormObjectType =
   | ModelObjectOld
   | RackObject
   | AssetObject
+  | DatacenterObject
   | RackRangeFields
   | AssetInfoObject
   | UserInfoObject
   | CreateUserObject;
 export function isModelObject(obj: any): obj is ModelObject {
   return obj && obj.model_number;
+}
+export function isDatacenterObject(obj: any): obj is DatacenterObject {
+  return obj && obj.abbreviation;
 }
 export function isRackObject(obj: any): obj is RackObject {
   return obj && obj.rack_num;
