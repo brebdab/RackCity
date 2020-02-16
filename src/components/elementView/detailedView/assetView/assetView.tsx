@@ -30,7 +30,10 @@ export interface AssetViewProps {
   isAdmin: boolean;
 }
 // Given an rid, will perform a GET request of that rid and display info about that instnace
-
+export const deleteAsset = (asset: AssetObject, headers: any) => {
+  const data = { id: asset.id };
+  return axios.post(API_ROOT + "api/assets/delete", data, headers);
+};
 var console: any = {};
 console.log = function() {};
 async function getData(assetkey: string, token: string) {
@@ -192,10 +195,8 @@ export class AssetView extends React.PureComponent<
   private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
   private handleDelete = () => {
     console.log(this.props.rid);
-    const data = { id: this.state.asset!.id };
 
-    axios
-      .post(API_ROOT + "api/assets/delete", data, getHeaders(this.props.token))
+    deleteAsset(this.state.asset!, getHeaders(this.props.token))
       .then(res => {
         this.setState({ isDeleteOpen: false });
         this.props.history.push("/");

@@ -1,6 +1,6 @@
 import axios from "axios";
 import { API_ROOT } from "./api-config";
-interface ElementObject {
+export interface ElementObject {
   id: string;
 }
 export enum ElementType {

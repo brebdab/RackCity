@@ -47,6 +47,10 @@ interface ModelViewState {
 export const modifyModel = (model: ModelObject, headers: any) => {
   return axios.post(API_ROOT + "api/models/modify", model, headers);
 };
+export const deleteModel = (model: ModelObject, headers: any) => {
+  const data = { id: model!.id };
+  return axios.post(API_ROOT + "api/models/delete", data, headers);
+};
 async function getData(modelkey: string, token: string) {
   console.log(API_ROOT + "api/models/" + modelkey);
   const headers = {
@@ -114,6 +118,7 @@ export class ModelView extends React.PureComponent<
     });
   };
   private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
+  private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
   private handleFormOpen = () => {
     this.setState({
       isFormOpen: true
@@ -133,12 +138,9 @@ export class ModelView extends React.PureComponent<
     toaster: (ref: Toaster) => (this.toaster = ref)
   };
 
-  private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
   private handleFormClose = () => this.setState({ isFormOpen: false });
   private handleDelete = () => {
-    const data = { id: this.state.model!.id };
-    axios
-      .post(API_ROOT + "api/models/delete", data, getHeaders(this.props.token))
+    deleteModel(this.state.model!, getHeaders(this.props.token))
       .then(res => {
         this.setState({ isDeleteOpen: false });
         this.props.history.push("/");

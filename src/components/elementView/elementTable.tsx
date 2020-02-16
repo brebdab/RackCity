@@ -5,7 +5,8 @@ import {
   IToastProps,
   Toaster,
   Intent,
-  AnchorButton
+  AnchorButton,
+  Alert
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import $, { get } from "jquery";
@@ -27,10 +28,10 @@ import {
 import DragDropList from "./dragDropList";
 import "./elementView.scss";
 import FilterSelectView, { IFilter } from "./filterSelect";
-import { modifyAsset } from "./detailedView/assetView/assetView";
+import { modifyAsset, deleteAsset } from "./detailedView/assetView/assetView";
 import FormPopup from "../../forms/formPopup";
 import { FormTypes } from "../../forms/formUtils";
-import { modifyModel } from "./detailedView/modelView/modelView";
+import { modifyModel, deleteModel } from "./detailedView/modelView/modelView";
 
 interface ElementTableState {
   items: Array<ElementObjectType>;
@@ -42,9 +43,9 @@ interface ElementTableState {
   total_pages: number;
   page_type: PagingTypes;
   fields: Array<string>;
-  elementType: ElementType;
   isEditFormOpen: boolean;
   editFormValues: ElementObjectType;
+  isDeleteOpen: boolean;
 }
 // var console: any = {};
 // console.log = function() {};
@@ -113,9 +114,9 @@ class ElementTable extends React.Component<
     curr_page: 1,
     total_pages: 0,
     fields: [],
-    elementType: ElementType.MODEL,
     isEditFormOpen: false,
-    editFormValues: {} as ElementObjectType
+    editFormValues: {} as ElementObjectType,
+    isDeleteOpen: false
   };
 
   previousPage = () => {
@@ -523,6 +524,26 @@ class ElementTable extends React.Component<
     });
     this.updateData(page);
   };
+
+  private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
+  private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
+
+  private handleDelete = () => {
+    console.log("DELETE");
+    if (isModelObject(this.state.editFormValues)) {
+      deleteModel(this.state.editFormValues, getHeaders(this.props.token)).then(
+        res => {
+          this.addErrorToast("Sucessfully deleted");
+        }
+      );
+    } else if (isAssetObject(this.state.editFormValues)) {
+      deleteAsset(this.state.editFormValues, getHeaders(this.props.token)).then(
+        res => {
+          this.addErrorToast("Sucessfully deleted");
+        }
+      );
+    }
+  };
   private handleEditFormClose = () => this.setState({ isEditFormOpen: false });
   getForm = () => {
     return (
@@ -530,7 +551,7 @@ class ElementTable extends React.Component<
         isOpen={this.state.isEditFormOpen}
         initialValues={this.state.editFormValues}
         type={FormTypes.MODIFY}
-        elementName={this.state.elementType}
+        elementName={this.props.type}
         handleClose={this.handleEditFormClose}
         submitForm={this.getSubmitFormFunction(FormTypes.MODIFY)}
       />
@@ -542,13 +563,6 @@ class ElementTable extends React.Component<
     this.handleEditFormClose();
     this.addSuccessToast("Successfuly modified");
   }
-  // getEditFunction = () => {
-  //   if (this.state.elementType === ElementType.ASSET) {
-  //     return modifyAsset;
-  //   } else if (this.state.elementType === ElementType.MODEL) {
-  //     return modifyModel;
-  //   }
-  // };
 
   handleEditFormSubmit = (values: ElementObjectType, headers: any) => {
     if (isModelObject(values)) {
@@ -578,21 +592,16 @@ class ElementTable extends React.Component<
   handleEditButtonClick = (data: ElementObjectType) => {
     // const headers = getHeaders(this.props.token);
     if (isAssetObject(data)) {
-      console.log(ElementType.ASSET);
       this.setState({
-        elementType: ElementType.ASSET,
         editFormValues: data
       });
-      this.handleEditFormOpen();
     }
     if (isModelObject(data)) {
-      console.log(ElementType.MODEL);
       this.setState({
-        elementType: ElementType.MODEL,
         editFormValues: data
       });
-      this.handleEditFormOpen();
     }
+    this.handleEditFormOpen();
   };
   private addSuccessToast(message: string) {
     this.addToast({ message: message, intent: Intent.PRIMARY });
@@ -773,21 +782,26 @@ class ElementTable extends React.Component<
                                 event.stopPropagation();
                               }}
                             />
-                            {/* <FormPopup
-                            isOpen={this.state.isFormOpen}
-                            initialValues={this.state.model}
-                            type={FormTypes.MODIFY}
-                            elementName={ElementType.MODEL}
-                            handleClose={this.handleFormClose}
-                            submitForm={this.updateModel}
-                          /> */}
+                            <Alert
+                              cancelButtonText="Cancel"
+                              confirmButtonText="Delete"
+                              intent="danger"
+                              isOpen={this.state.isDeleteOpen}
+                              onCancel={this.handleDeleteCancel}
+                              onConfirm={this.handleDelete}
+                            >
+                              <p>Are you sure you want to delete?</p>
+                            </Alert>
+
                             <AnchorButton
                               className="button-table"
                               intent="danger"
                               minimal
                               icon="trash"
-
-                              // onClick={this.handleDeleteOpen}
+                              onClick={(event: any) => {
+                                this.handleDeleteOpen();
+                                event.stopPropagation();
+                              }}
                             />
                           </div>
                         </td>
