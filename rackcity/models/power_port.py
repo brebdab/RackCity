@@ -1,8 +1,9 @@
 from django.db import models
 from .asset import Asset
+from .pdu_port import PDUPort
 
 
-class NetworkPort(models.Model):
+class PowerPort(models.Model):
     asset = models.ForeignKey(
         Asset,
         on_delete=models.CASCADE,
@@ -12,15 +13,8 @@ class NetworkPort(models.Model):
         max_length=150
         # electing not to validate this as it is not user entered
     )
-    mac_address = models.CharField(
-        max_length=17,
-        unique=True,
-        null=True,
-        blank=True,
-        # force this to lowercase and make delimeters :
-    )
-    network_connection = models.OneToOneField(
-        'self',
+    power_connection = models.OneToOneField(
+        PDUPort,
         on_delete=models.CASCADE,
         null=True,
         blank=True,
@@ -30,5 +24,5 @@ class NetworkPort(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['asset', 'port_name'],
-                name='unique network port names on assets'),
+                name='unique power port names on assets'),
         ]

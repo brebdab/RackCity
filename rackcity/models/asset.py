@@ -78,12 +78,28 @@ class Asset(models.Model):
                         self.asset_number = asset_number
                         break
             super(Asset, self).save(*args, **kwargs)
-            from rackcity.models import NetworkPort
-            if len(NetworkPort.objects.filter(asset=self.id)) == 0:  # only add ports for new assets
-                model = self.model
-                for network_port_name in model.network_ports:
-                    network_port = NetworkPort(
-                        asset=self,
-                        port_name=network_port_name,
-                    )
-                    network_port.save()
+            self.add_network_ports()
+            self.add_power_ports()
+
+    def add_network_ports(self):
+        from rackcity.models import NetworkPort
+        if len(NetworkPort.objects.filter(asset=self.id)) == 0:  # only add ports for new assets
+            model = self.model
+            for network_port_name in model.network_ports:
+                network_port = NetworkPort(
+                    asset=self,
+                    port_name=network_port_name,
+                )
+                network_port.save()
+
+    def add_power_ports(self):
+        from rackcity.models import PowerPort
+        if len(PowerPort.objects.filter(asset=self.id)) == 0:
+            model = self.model
+            for port_index in range(model.num_power_ports):
+                port_name = str(port_index+1)
+                power_port = PowerPort(
+                    asset=self,
+                    port_name=port_name,
+                )
+                power_port.save()
