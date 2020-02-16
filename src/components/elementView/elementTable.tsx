@@ -25,11 +25,25 @@ import {
   isRackObject,
   RackRangeFields
 } from "../../utils/utils";
-import { deleteAsset, modifyAsset } from "./detailedView/assetView/assetView";
-import { deleteModel, modifyModel } from "./detailedView/modelView/modelView";
 import DragDropList from "./dragDropList";
 import "./elementView.scss";
-import FilterSelectView, { IFilter } from "./filterSelect";
+import FilterSelect from "./filterSelect";
+
+import {
+  ITableSort,
+  PagingTypes,
+  renderTextFilterItem,
+  renderNumericFilterItem,
+  renderRackRangeFilterItem,
+  IFilter,
+  FilterTypes,
+  TextFilter,
+  NumericFilter,
+  deleteModel,
+  deleteAsset,
+  modifyModel,
+  modifyAsset
+} from "./elementUtils";
 
 interface ElementTableState {
   items: Array<ElementObjectType>;
@@ -47,31 +61,6 @@ interface ElementTableState {
 }
 // var console: any = {};
 // console.log = function() {};
-export interface ITableSort {
-  field: string;
-  ascending: boolean;
-  id: string;
-}
-// const PAGE_SIZE = 10;
-
-export enum PagingTypes {
-  TEN = 10,
-  FIFTY = 50,
-  ALL = "View All"
-}
-export enum FilterTypes {
-  TEXT = "text",
-  NUMERIC = "numeric",
-  RACKRANGE = "rack_range"
-}
-export interface NumericFilter {
-  min: number;
-  max: number;
-}
-export interface TextFilter {
-  value: string;
-  match_type: string;
-}
 
 interface ElementTableProps {
   callback?: Function;
@@ -118,6 +107,7 @@ class ElementTable extends React.Component<
     isDeleteOpen: false
   };
 
+  //PAGING LOGIC
   previousPage = () => {
     if (this.state.curr_page > 1 && this.props.getData) {
       const next_page = this.state.curr_page - 1;
@@ -160,25 +150,15 @@ class ElementTable extends React.Component<
     }
   };
 
-  renderTextFilterItem = (item: TextFilter) => {
-    return `${item.match_type} ${item.value}`;
-  };
-
-  renderNumericFilterItem = (item: NumericFilter) => {
-    return `between ${item.min} - ${item.max}`;
-  };
-  renderRackRangeFilterItem = (item: RackRangeFields) => {
-    return `rows  ${item.letter_start} - ${item.letter_end} & racks ${item.num_start} - ${item.num_end}`;
-  };
-
+  // FILTERING AND SORTING DISPLAY
   renderFilterItem = (item: IFilter) => {
     let display;
     if (item.filter_type === FilterTypes.TEXT) {
-      display = this.renderTextFilterItem(item.filter! as TextFilter);
+      display = renderTextFilterItem(item.filter! as TextFilter);
     } else if (item.filter_type === FilterTypes.NUMERIC) {
-      display = this.renderNumericFilterItem(item.filter! as NumericFilter);
+      display = renderNumericFilterItem(item.filter! as NumericFilter);
     } else if (item.filter_type === FilterTypes.RACKRANGE) {
-      display = this.renderRackRangeFilterItem(item.filter as RackRangeFields);
+      display = renderRackRangeFilterItem(item.filter as RackRangeFields);
     }
     return (
       <div className="drag-drop-text">
@@ -203,9 +183,6 @@ class ElementTable extends React.Component<
         </span>
       </div>
     );
-    // field: string;
-    // filter_type: FilterTypes;
-    // filter: TextFilter | NumericFilter | RackRangeFields;
   };
 
   renderSortItem = (item: ITableSort) => {
@@ -233,16 +210,8 @@ class ElementTable extends React.Component<
       </div>
     );
   };
-  private toaster: Toaster = {} as Toaster;
-  private addToast = (toast: IToastProps) => {
-    toast.timeout = 5000;
-    this.toaster.show(toast);
-  };
 
-  private refHandlers = {
-    toaster: (ref: Toaster) => (this.toaster = ref)
-  };
-
+  // SORTING AND FILTERING LOGIC
   removeSortItem = (field: string) => {
     let sorts = this.state.sort_by;
     let sorted_cols = this.state.sorted_cols;
@@ -256,7 +225,6 @@ class ElementTable extends React.Component<
     this.setState({
       sort_by: sorts,
       sorted_cols
-      // sort_by_id: sorts_id
     });
     this.updateSortData(sorts);
   };
@@ -291,7 +259,6 @@ class ElementTable extends React.Component<
       ascending = true;
       sorted_cols.push(field);
     }
-    // if (!this.state.sorted_cols.includes(field)) {
 
     sorts.push({
       field,
@@ -301,18 +268,11 @@ class ElementTable extends React.Component<
     this.setState({
       sort_by: sorts,
       sorted_cols
-      // sort_by_id: sorts_id
     });
     this.updateSortData(sorts);
-    // } else {
-    // }
   }
 
   updateFilterData = (items: Array<IFilter>) => {
-    console.log("detected new filters", {
-      sort_by: this.state.sort_by,
-      filters: items
-    });
     console.log(items);
     if (this.props.callback! !== undefined) this.props.callback(items);
     const filter_body = items.map(item => {
@@ -414,6 +374,18 @@ class ElementTable extends React.Component<
       });
     }
   };
+
+  //TOASTS
+  private toaster: Toaster = {} as Toaster;
+  private addToast = (toast: IToastProps) => {
+    toast.timeout = 5000;
+    this.toaster.show(toast);
+  };
+
+  private refHandlers = {
+    toaster: (ref: Toaster) => (this.toaster = ref)
+  };
+
   componentDidUpdate() {
     if (this.props.shouldUpdateData && !this.props.data) {
       console.log("table updated");
@@ -475,7 +447,6 @@ class ElementTable extends React.Component<
     }
   };
   updateSortOrder = (items: Array<ITableSort>) => {
-    // console.log(items);
     this.setState({
       sort_by: items
     });
@@ -487,13 +458,6 @@ class ElementTable extends React.Component<
     this.setState({
       curr_page: 1
     });
-  };
-
-  updateFilterOrder = (items: Array<IFilter>) => {
-    this.setState({
-      filters: items
-    });
-    this.updateFilterData(items);
   };
 
   setFieldNamesFromData = (items: Array<ElementObjectType>) => {
@@ -682,7 +646,7 @@ class ElementTable extends React.Component<
           ? null
           : [
               <div className="filter-select">
-                <FilterSelectView
+                <FilterSelect
                   handleAddFilter={this.addFilter}
                   fields={this.state.fields}
                 />
@@ -692,7 +656,6 @@ class ElementTable extends React.Component<
                 <DragDropList
                   items={this.state.filters}
                   renderItem={this.renderFilterItem}
-                  onChange={this.updateFilterOrder}
                 />
               </div>
             ]}
