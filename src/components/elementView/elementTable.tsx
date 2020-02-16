@@ -1,37 +1,35 @@
 import {
-  Icon,
-  HTMLSelect,
-  Position,
-  IToastProps,
-  Toaster,
-  Intent,
+  Alert,
   AnchorButton,
-  Alert
+  HTMLSelect,
+  Icon,
+  Intent,
+  IToastProps,
+  Position,
+  Toaster
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
-import $, { get } from "jquery";
 import { IconNames } from "@blueprintjs/icons";
 import "@blueprintjs/icons/lib/css/blueprint-icons.css";
 import React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
+import FormPopup from "../../forms/formPopup";
+import { FormTypes } from "../../forms/formUtils";
 import {
   ElementObjectType,
   ElementType,
+  getHeaders,
+  isAssetObject,
   isModelObject,
   isRackObject,
-  RackRangeFields,
-  isAssetObject,
-  getHeaders,
-  AssetObject
+  RackRangeFields
 } from "../../utils/utils";
+import { deleteAsset, modifyAsset } from "./detailedView/assetView/assetView";
+import { deleteModel, modifyModel } from "./detailedView/modelView/modelView";
 import DragDropList from "./dragDropList";
 import "./elementView.scss";
 import FilterSelectView, { IFilter } from "./filterSelect";
-import { modifyAsset, deleteAsset } from "./detailedView/assetView/assetView";
-import FormPopup from "../../forms/formPopup";
-import { FormTypes } from "../../forms/formUtils";
-import { modifyModel, deleteModel } from "./detailedView/modelView/modelView";
 
 interface ElementTableState {
   items: Array<ElementObjectType>;
@@ -98,6 +96,7 @@ interface ElementTableProps {
   ): Promise<number>;
   data?: Array<ElementObjectType>;
   shouldUpdateData?: boolean;
+  isAdmin: boolean;
 }
 
 class ElementTable extends React.Component<
@@ -818,28 +817,30 @@ class ElementTable extends React.Component<
                           return null;
                         })}
                         <td>
-                          <div className="inline-buttons">
-                            <AnchorButton
-                              className="button-table"
-                              intent="primary"
-                              icon="edit"
-                              minimal
-                              onClick={(event: any) => {
-                                this.handleEditButtonClick(item);
-                                event.stopPropagation();
-                              }}
-                            />
-                            <AnchorButton
-                              className="button-table"
-                              intent="danger"
-                              minimal
-                              icon="trash"
-                              onClick={(event: any) => {
-                                this.handleDeleteButtonClick(item);
-                                event.stopPropagation();
-                              }}
-                            />
-                          </div>
+                          {this.props.isAdmin ? (
+                            <div className="inline-buttons">
+                              <AnchorButton
+                                className="button-table"
+                                intent="primary"
+                                icon="edit"
+                                minimal
+                                onClick={(event: any) => {
+                                  this.handleEditButtonClick(item);
+                                  event.stopPropagation();
+                                }}
+                              />
+                              <AnchorButton
+                                className="button-table"
+                                intent="danger"
+                                minimal
+                                icon="trash"
+                                onClick={(event: any) => {
+                                  this.handleDeleteButtonClick(item);
+                                  event.stopPropagation();
+                                }}
+                              />
+                            </div>
+                          ) : null}
                         </td>
                       </tr>
                     );
@@ -857,7 +858,8 @@ class ElementTable extends React.Component<
 }
 const mapStateToProps = (state: any) => {
   return {
-    token: state.token
+    token: state.token,
+    isAdmin: state.admin
   };
 };
 export default connect(mapStateToProps)(withRouter(ElementTable));
