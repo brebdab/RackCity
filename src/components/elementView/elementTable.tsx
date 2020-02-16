@@ -399,14 +399,24 @@ class ElementTable extends React.Component<
     }
   };
   componentDidUpdate() {
-    if (this.props.shouldUpdateData) {
+    if (this.props.shouldUpdateData && !this.props.data) {
       console.log("table updated");
       this.updateTableData();
     }
   }
   componentDidMount() {
     console.log("table mounted ");
-    this.updateTableData();
+    console.log(this.props.data);
+
+    if (this.props.data) {
+      console.log(this.props.data);
+      this.setState({
+        items: this.props.data
+      });
+      this.setFieldNames();
+    } else {
+      this.updateTableData();
+    }
   }
   updateTableData = () => {
     const sorts_body = this.state.sort_by.map(item => {
@@ -463,24 +473,28 @@ class ElementTable extends React.Component<
     });
     this.updateFilterData(items);
   };
-  setFieldNames = () => {
+
+  setFieldNamesFromData = (items: Array<ElementObjectType>) => {
     let fields: Array<string> = [];
+    Object.keys(items[0]).forEach((col: string) => {
+      if (col === "model") {
+        fields.push("model__vendor");
+        fields.push("model__model_number");
+      } else if (col !== "id") {
+        fields.push(col);
+      }
+    });
+    this.setState({
+      fields: fields
+    });
+    console.log("COLUMN NAMES", fields);
+  };
+  setFieldNames = () => {
+    console.log("FIELD NAMES", this.state.items);
 
     if (this.state.items && this.state.items.length > 0) {
-      Object.keys(this.state.items[0]).forEach((col: string) => {
-        if (col === "model") {
-          fields.push("model__vendor");
-          fields.push("model__model_number");
-        } else if (col !== "id") {
-          fields.push(col);
-        }
-      });
-      this.setState({
-        fields: fields
-      });
+      this.setFieldNamesFromData(this.state.items);
     }
-
-    console.log("COLUMN NAMES", fields);
   };
 
   getScrollIcon = (field: string) => {
@@ -509,7 +523,7 @@ class ElementTable extends React.Component<
     this.updateData(page);
   };
   render() {
-    // console.log(this.state.items);
+    console.log(this.state.items);
     // console.log(!(this.state.items && this.state.items.length > 0));
     //
     if (
@@ -517,9 +531,11 @@ class ElementTable extends React.Component<
       this.props.data.length !== 0 &&
       this.state.items.length === 0
     ) {
+      console.log("Setting items", this.props.data);
       this.setState({
         items: this.props.data
       });
+      this.setFieldNamesFromData(this.props.data);
     }
 
     return (
