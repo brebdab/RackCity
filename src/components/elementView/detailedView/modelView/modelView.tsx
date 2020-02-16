@@ -34,8 +34,8 @@ export interface ModelViewProps {
   isAdmin: boolean;
 }
 
-var console: any = {};
-console.log = function() {};
+// var console: any = {};
+// console.log = function () { };
 interface ModelViewState {
   assets: Array<AssetObject> | undefined;
   model: ModelObject | undefined;

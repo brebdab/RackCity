@@ -108,7 +108,7 @@ export class AssetView extends React.PureComponent<
         page_size: 20
       }
     };
-    getFields("instances", headers).then((res: any) => {
+    getFields(ElementType.ASSET, headers).then((res: any) => {
       this.setState({
         fields: res,
         columns: res
