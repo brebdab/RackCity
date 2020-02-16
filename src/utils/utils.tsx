@@ -142,10 +142,10 @@ export function getFields(type: string, headers: any) {
     )
     .then(res => {
       let items: Array<string>;
-      if (type === "models") {
+      if (type === ElementType.MODEL) {
         items = Object.keys(res.data.models[0]);
       } else {
-        items = Object.keys(res.data.instances[0]);
+        items = Object.keys(res.data.assets[0]);
       }
       var keys = [];
       for (var i = 0; i < items.length; i++) {
