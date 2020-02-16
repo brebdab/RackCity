@@ -717,7 +717,7 @@ class ElementTable extends React.Component<
             </div>
           ) : null}
         </div>
-        <div>
+        <div className="table-wrapper">
           {this.state.fields.length === 0 ? null : (
             <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered element-table">
               <thead>

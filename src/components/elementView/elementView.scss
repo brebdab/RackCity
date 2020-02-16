@@ -29,9 +29,16 @@
   position: relative;
   // float: left;
   width: 100% !important;
-  overflow-x: scroll;
-  display: inline-block;
+  // overflow-x: scroll;
+  // display: inline-block;
+  table-layout: auto;
 }
+.table-wrapper {
+  width: 100%;
+  overflow-x: scroll;
+  // display: inline-block;
+}
+
 .element-view {
   margin: 10pt;
   overflow: clip;
