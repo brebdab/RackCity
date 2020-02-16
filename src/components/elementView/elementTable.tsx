@@ -234,12 +234,12 @@ class ElementTable extends React.Component<
       </div>
     );
   };
-  private addToast(toast: IToastProps) {
+  private toaster: Toaster = {} as Toaster;
+  private addToast = (toast: IToastProps) => {
     toast.timeout = 5000;
     this.toaster.show(toast);
-  }
+  };
 
-  private toaster: Toaster = {} as Toaster;
   private refHandlers = {
     toaster: (ref: Toaster) => (this.toaster = ref)
   };
@@ -320,10 +320,11 @@ class ElementTable extends React.Component<
       const { field, filter_type, filter } = item;
       return { field, filter_type, filter };
     });
+    this.resetPage();
     if (this.props.getData) {
       this.props.getData!(
         this.props.type,
-        this.state.curr_page,
+        1,
         this.state.page_type,
         { sort_by: this.state.sort_by, filters: filter_body },
         this.props.token
@@ -351,7 +352,7 @@ class ElementTable extends React.Component<
         .getPages(
           this.props.type,
           this.state.page_type,
-          this.state.filters,
+          items,
           this.props.token
         )
         .then(res => {
@@ -482,10 +483,16 @@ class ElementTable extends React.Component<
     this.updateSortData(items);
   };
 
+  resetPage = () => {
+    console.log("setting currpage to 1");
+    this.setState({
+      curr_page: 1
+    });
+  };
+
   updateFilterOrder = (items: Array<IFilter>) => {
     this.setState({
-      filters: items,
-      curr_page: 1
+      filters: items
     });
     this.updateFilterData(items);
   };
@@ -545,15 +552,20 @@ class ElementTable extends React.Component<
   private handleDelete = () => {
     console.log("DELETE");
     if (isModelObject(this.state.editFormValues)) {
-      deleteModel(this.state.editFormValues, getHeaders(this.props.token)).then(
-        res => {
+      deleteModel(this.state.editFormValues, getHeaders(this.props.token))
+        .then(res => {
           this.addErrorToast("Sucessfully deleted");
-        }
-      );
+          this.handleDeleteCancel();
+        })
+        .catch(err => {
+          this.addErrorToast(err.response.data.failure_message);
+          this.handleDeleteCancel();
+        });
     } else if (isAssetObject(this.state.editFormValues)) {
       deleteAsset(this.state.editFormValues, getHeaders(this.props.token)).then(
         res => {
           this.addErrorToast("Sucessfully deleted");
+          this.handleDeleteCancel();
         }
       );
     }
@@ -604,6 +616,15 @@ class ElementTable extends React.Component<
   };
 
   handleEditButtonClick = (data: ElementObjectType) => {
+    this.handleInlineButtonClick(data);
+    this.handleEditFormOpen();
+  };
+
+  handleDeleteButtonClick = (data: ElementObjectType) => {
+    this.handleInlineButtonClick(data);
+    this.handleDeleteOpen();
+  };
+  handleInlineButtonClick = (data: ElementObjectType) => {
     // const headers = getHeaders(this.props.token);
     if (isAssetObject(data)) {
       this.setState({
@@ -615,14 +636,13 @@ class ElementTable extends React.Component<
         editFormValues: data
       });
     }
-    this.handleEditFormOpen();
   };
-  private addSuccessToast(message: string) {
+  private addSuccessToast = (message: string) => {
     this.addToast({ message: message, intent: Intent.PRIMARY });
-  }
-  private addErrorToast(message: string) {
+  };
+  private addErrorToast = (message: string) => {
     this.addToast({ message: message, intent: Intent.DANGER });
-  }
+  };
   render() {
     console.log(this.state.items);
     // console.log(!(this.state.items && this.state.items.length > 0));
@@ -642,6 +662,16 @@ class ElementTable extends React.Component<
     return (
       <div className="tab-panel">
         {this.getForm()}
+        <Alert
+          cancelButtonText="Cancel"
+          confirmButtonText="Delete"
+          intent="danger"
+          isOpen={this.state.isDeleteOpen}
+          onCancel={this.handleDeleteCancel}
+          onConfirm={this.handleDelete}
+        >
+          <p>Are you sure you want to delete?</p>
+        </Alert>
         <Toaster
           autoFocus={false}
           canEscapeKeyClear={true}
@@ -755,11 +785,12 @@ class ElementTable extends React.Component<
                   {this.state.items.map((item: ElementObjectType) => {
                     return (
                       <tr
-                        onClick={() =>
+                        onClick={() => {
+                          console.log("redirecting", item.id);
                           this.props.history.push(
                             "/" + this.props.type + "/" + item.id
-                          )
-                        }
+                          );
+                        }}
                       >
                         {Object.entries(item).map(([col, value]) => {
                           if (isModelObject(value)) {
@@ -798,24 +829,13 @@ class ElementTable extends React.Component<
                                 event.stopPropagation();
                               }}
                             />
-                            <Alert
-                              cancelButtonText="Cancel"
-                              confirmButtonText="Delete"
-                              intent="danger"
-                              isOpen={this.state.isDeleteOpen}
-                              onCancel={this.handleDeleteCancel}
-                              onConfirm={this.handleDelete}
-                            >
-                              <p>Are you sure you want to delete?</p>
-                            </Alert>
-
                             <AnchorButton
                               className="button-table"
                               intent="danger"
                               minimal
                               icon="trash"
                               onClick={(event: any) => {
-                                this.handleDeleteOpen();
+                                this.handleDeleteButtonClick(item);
                                 event.stopPropagation();
                               }}
                             />

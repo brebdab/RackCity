@@ -31,11 +31,12 @@ export interface AssetViewProps {
 }
 // Given an rid, will perform a GET request of that rid and display info about that instnace
 export const deleteAsset = (asset: AssetObject, headers: any) => {
+  console.log("Deleting asset");
   const data = { id: asset.id };
   return axios.post(API_ROOT + "api/assets/delete", data, headers);
 };
-var console: any = {};
-console.log = function() {};
+// var console: any = {};
+// console.log = function() {};
 async function getData(assetkey: string, token: string) {
   const headers = {
     headers: {

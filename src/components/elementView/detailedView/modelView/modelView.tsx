@@ -151,6 +151,7 @@ export class ModelView extends React.PureComponent<
           message: err.response.data.failure_message,
           intent: Intent.DANGER
         });
+        this.handleDeleteCancel();
       });
   };
 
