@@ -41,12 +41,12 @@ class PropertiesView extends React.PureComponent<
                 </p>
               );
             } else if (item === "network_ports") {
-              // console.log(item, data[item].toString());
+              console.log(item, data[item]);
               if (data[item]) {
                 const network_ports: Array<string> = data[item];
-                dat = <p> {network_ports.toString()}</p>;
+                console.log(network_ports.toString());
+                dat = <p>{network_ports.toString()}</p>;
               }
-              dat = <p></p>
             } else if (item === "model") {
               dat = (
                 <p
