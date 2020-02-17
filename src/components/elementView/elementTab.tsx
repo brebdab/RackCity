@@ -1,24 +1,43 @@
-import { AnchorButton, Intent, Alert, InputGroup } from "@blueprintjs/core";
+import {
+  Alert,
+  AnchorButton,
+  InputGroup,
+  Intent,
+  IToastProps,
+  Position,
+  Toaster,
+  FormGroup,
+  MenuItem,
+  Button,
+  Callout
+} from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
-import { RouteComponentProps } from "react-router";
 import { connect } from "react-redux";
-import { API_ROOT } from "../../utils/api-config";
+import { RouteComponentProps } from "react-router";
 import FormPopup from "../../forms/formPopup";
-import { FormTypes } from "../../forms/formUtils";
 import {
+  FormTypes,
+  DatacenterSelect,
+  renderDatacenterItem,
+  filterDatacenter
+} from "../../forms/formUtils";
+import { API_ROOT } from "../../utils/api-config";
+import {
+  AssetInfoObject,
+  CreateUserObject,
   ElementObjectType,
   ElementType,
-  AssetInfoObject,
-  ModelObjectOld
+  ModelObject,
+  DatacenterObject
 } from "../../utils/utils";
-import ElementTable, { PagingTypes } from "./elementTable";
+import ElementTable from "./elementTable";
 import "./elementView.scss";
-import { IFilter } from "./filterSelect";
+import { IFilter, PagingTypes } from "./elementUtils";
 
 var console: any = {};
-console.log = function () { };
+console.log = function() {};
 const fs = require("js-file-download");
 
 interface ElementViewState {
@@ -32,6 +51,9 @@ interface ElementViewProps {
   element: ElementType;
   isAdmin: boolean;
   token: string;
+  datacenters?: Array<DatacenterObject>;
+  currDatacenter?: DatacenterObject;
+  onDatacenterSelect?(datacenter: DatacenterObject): void;
 }
 export function getPages(
   path: string,
@@ -79,7 +101,7 @@ async function getExportData(
     });
 }
 
-type ElementTabProps = ElementViewProps & RouteComponentProps
+type ElementTabProps = ElementViewProps & RouteComponentProps;
 class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
   public state: ElementViewState = {
     isOpen: false,
@@ -102,9 +124,9 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       page_type === PagingTypes.ALL
         ? {}
         : {
-          page_size: page_type,
-          page
-        };
+            page_size: page_type,
+            page
+          };
     const config = {
       headers: {
         Authorization: "Token " + token
@@ -133,12 +155,12 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
   };
   private handleClose = () => this.setState({ isOpen: false });
 
-  private createModel = (model: ModelObjectOld, headers: any): Promise<any> => {
+  private createModel = (model: ModelObject, headers: any): Promise<any> => {
     return axios.post(API_ROOT + "api/models/add", model, headers).then(res => {
       console.log("success");
       this.handleDataUpdate(true);
       this.handleClose();
-
+      this.addSuccessToast("Successfully created model!");
       console.log(this.state.isOpen);
     });
   };
@@ -148,32 +170,100 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     headers: any
   ): Promise<any> => {
     console.log("api/assets/add");
-    return axios
-      .post(API_ROOT + "api/assets/add", asset, headers)
-      .then(res => {
-        console.log("success");
-        this.handleDataUpdate(true);
-        this.handleClose();
-        console.log(this.state.isOpen);
-      });
+    return axios.post(API_ROOT + "api/assets/add", asset, headers).then(res => {
+      this.handleDataUpdate(true);
+      this.handleClose();
+      this.addSuccessToast("Successfully created asset!");
+
+      console.log(this.state.isOpen);
+    });
+  };
+
+  private createUser = (user: CreateUserObject, headers: any): Promise<any> => {
+    console.log("api/users/add");
+    return axios.post(API_ROOT + "api/users/add", user, headers).then(res => {
+      console.log("success");
+
+      this.handleDataUpdate(true);
+      this.handleClose();
+      this.addSuccessToast("Successfully created user!");
+      console.log(this.state.isOpen);
+    });
+  };
+  private addSuccessToast(message: string) {
+    this.addToast({ message: message, intent: Intent.PRIMARY });
+  }
+  private addErrorToast(message: string) {
+    this.addToast({ message: message, intent: Intent.DANGER });
+  }
+  private addToast(toast: IToastProps) {
+    toast.timeout = 5000;
+    this.toaster.show(toast);
+  }
+  private toaster: Toaster = {} as Toaster;
+  private refHandlers = {
+    toaster: (ref: Toaster) => (this.toaster = ref)
   };
 
   public render() {
     return (
       <div>
-        <AnchorButton
-          className="add"
-          text="Export Table Data"
-          icon="import"
-          minimal
-          onClick={() => {
-            /* handle data based on state */
-            this.setState({ fileNameIsOpen: true });
-            console.log(this.state.filters)
-          }}
+        <Toaster
+          autoFocus={false}
+          canEscapeKeyClear={true}
+          position={Position.TOP}
+          ref={this.refHandlers.toaster}
         />
-        {this.props.isAdmin ? (
-          <div>
+        <div>
+          {this.props.datacenters && this.props.onDatacenterSelect ? (
+            <Callout>
+              <FormGroup label="Datacenter" inline={true}>
+                <DatacenterSelect
+                  popoverProps={{
+                    minimal: true,
+                    popoverClassName: "dropdown",
+                    usePortal: true
+                  }}
+                  items={this.props.datacenters!}
+                  onItemSelect={(datacenter: DatacenterObject) => {
+                    this.props.onDatacenterSelect!(datacenter);
+                  }}
+                  itemRenderer={renderDatacenterItem}
+                  itemPredicate={filterDatacenter}
+                  noResults={<MenuItem disabled={true} text="No results." />}
+                >
+                  <Button
+                    rightIcon="caret-down"
+                    text={
+                      this.props.currDatacenter &&
+                      this.props.currDatacenter.name
+                        ? this.props.currDatacenter.name
+                        : "All datacenters"
+                    }
+                  />
+                </DatacenterSelect>
+              </FormGroup>
+            </Callout>
+          ) : null}
+        </div>
+
+        <div className="element-tab-buttons">
+          {this.props.element !== ElementType.USER ? (
+            <AnchorButton
+              className="add"
+              text="Export Table Data"
+              icon="import"
+              minimal
+              onClick={() => {
+                /* handle data based on state */
+                this.setState({ fileNameIsOpen: true });
+                console.log(this.state.filters);
+              }}
+            />
+          ) : (
+            <p></p>
+          )}
+          {this.props.isAdmin && this.props.element !== ElementType.USER ? (
             <AnchorButton
               onClick={() => this.props.history.push("/bulk-upload")}
               className="add"
@@ -181,49 +271,46 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               text="Add from CSV file"
               minimal
             />
-          </div>
-        ) : (
-            <p></p>
-          )}
-        <Alert
-          cancelButtonText="Cancel"
-          confirmButtonText="Confirm file name"
-          isOpen={this.state.fileNameIsOpen}
-          onCancel={() => {
-            this.setState({ fileNameIsOpen: false });
-          }}
-          onConfirm={() => {
-            if (this.state.fileName === "") {
-              alert("need file name");
-            } else if (this.state.fileName.split(".")[1] !== "csv") {
-              alert("ERROR: Must be csv file");
-            } else if (this.state.fileName.split(".")[0].length === 0) {
-              alert("ERROR: .csv file must have non-empty name");
-            } else {
-              getExportData(
-                this.props.element.slice(0, -1) + "s",
-                this.state.filters,
-                this.props.token,
-                this.state.fileName
-              );
-              this.setState({ fileNameIsOpen: false, fileName: "" });
-            }
-          }}
-        >
-          <p>
-            Please enter a file name ending in ".csv" under which to export this
-            data
-          </p>
-          <InputGroup
-            onChange={(event: any) => {
-              this.setState({ fileName: event.currentTarget.value });
+          ) : null}
+
+          <Alert
+            cancelButtonText="Cancel"
+            confirmButtonText="Confirm file name"
+            isOpen={this.state.fileNameIsOpen}
+            onCancel={() => {
+              this.setState({ fileNameIsOpen: false });
             }}
-            fill={true}
-            type="text"
-          />
-        </Alert>
-        {this.props.isAdmin ? (
-          <div>
+            onConfirm={() => {
+              if (this.state.fileName === "") {
+                alert("need file name");
+              } else if (this.state.fileName.split(".")[1] !== "csv") {
+                alert("ERROR: Must be csv file");
+              } else if (this.state.fileName.split(".")[0].length === 0) {
+                alert("ERROR: .csv file must have non-empty name");
+              } else {
+                getExportData(
+                  this.props.element.slice(0, -1) + "s",
+                  this.state.filters,
+                  this.props.token,
+                  this.state.fileName
+                );
+                this.setState({ fileNameIsOpen: false, fileName: "" });
+              }
+            }}
+          >
+            <p>
+              Please enter a file name ending in ".csv" under which to export
+              this data
+            </p>
+            <InputGroup
+              onChange={(event: any) => {
+                this.setState({ fileName: event.currentTarget.value });
+              }}
+              fill={true}
+              type="text"
+            />
+          </Alert>
+          {this.props.isAdmin ? (
             <AnchorButton
               className="add"
               text={"Add " + this.props.element.slice(0, -1)}
@@ -232,19 +319,21 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               intent={Intent.PRIMARY}
               onClick={this.handleOpen}
             />
-            <FormPopup
-              type={FormTypes.CREATE}
-              elementName={this.props.element}
-              submitForm={
-                this.props.element === ElementType.MODEL
-                  ? this.createModel
-                  : this.createAsset
-              }
-              isOpen={this.state.isOpen}
-              handleClose={this.handleClose}
-            />
-          </div>
-        ) : null}
+          ) : null}
+          <FormPopup
+            type={FormTypes.CREATE}
+            elementName={this.props.element}
+            submitForm={
+              this.props.element === ElementType.MODEL
+                ? this.createModel
+                : this.props.element === ElementType.ASSET
+                ? this.createAsset
+                : this.createUser
+            }
+            isOpen={this.state.isOpen}
+            handleClose={this.handleClose}
+          />
+        </div>
 
         <div>
           <ElementTable
@@ -255,6 +344,9 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               this.setState({ filters: data });
             }}
             shouldUpdateData={this.state.updateTable}
+            disableSorting={this.props.element === ElementType.USER}
+            disableFiltering={this.props.element === ElementType.USER}
+            currDatacenter={this.props.currDatacenter}
           />
         </div>
       </div>

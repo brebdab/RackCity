@@ -23,6 +23,7 @@ import {
 } from "../../../../utils/utils";
 import FormPopup from "../../../../forms/formPopup";
 import { FormTypes } from "../../../../forms/formUtils";
+import { modifyAsset, deleteAsset } from "../../elementUtils";
 
 export interface AssetViewProps {
   token: string;
@@ -31,8 +32,8 @@ export interface AssetViewProps {
 }
 // Given an rid, will perform a GET request of that rid and display info about that instnace
 
-var console: any = {};
-console.log = function () { };
+// var console: any = {};
+// console.log = function() {};
 async function getData(assetkey: string, token: string) {
   const headers = {
     headers: {
@@ -59,7 +60,7 @@ interface AssetViewState {
 export class AssetView extends React.PureComponent<
   RouteComponentProps & AssetViewProps,
   AssetViewState
-  > {
+> {
   public state: AssetViewState = {
     asset: undefined,
     isFormOpen: false,
@@ -68,25 +69,20 @@ export class AssetView extends React.PureComponent<
     columns: ["Hostname", "Model", "Rack", "Rack position", "Owner", "Comment"],
     fields: ["hostname", "model", "rack", "Rack position", "owner", "comment"]
   };
-  private updateAsset = (
-    asset: AssetObject,
-    headers: any
-  ): Promise<any> => {
+  private updateAsset = (asset: AssetObject, headers: any): Promise<any> => {
     let params: any;
     params = this.props.match.params;
-    return axios
-      .post(API_ROOT + "api/assets/modify", asset, headers)
-      .then(res => {
-        console.log("success");
-        getData(params.rid, this.props.token).then(result => {
-          this.setState({
-            asset: result
-          });
+    return modifyAsset(asset, headers).then(res => {
+      console.log("success");
+      getData(params.rid, this.props.token).then(result => {
+        this.setState({
+          asset: result
         });
-        console.log(this.state.asset);
-        this.handleFormClose();
-        console.log(this.state.isFormOpen);
       });
+      console.log(this.state.asset);
+      this.handleFormClose();
+      console.log(this.state.isFormOpen);
+    });
   };
 
   private addToast(toast: IToastProps) {
@@ -99,20 +95,20 @@ export class AssetView extends React.PureComponent<
   };
 
   public componentDidMount() {
-    const auth = getHeaders(this.props.token)
+    const auth = getHeaders(this.props.token);
     const headers = {
       headers: auth.headers,
       params: {
         page: 1,
         page_size: 20
       }
-    }
-    getFields("instances", headers).then((res: any) => {
+    };
+    getFields(ElementType.ASSET, headers).then((res: any) => {
       this.setState({
         fields: res,
         columns: res
-      })
-    })
+      });
+    });
   }
 
   public render() {
@@ -194,14 +190,8 @@ export class AssetView extends React.PureComponent<
   private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
   private handleDelete = () => {
     console.log(this.props.rid);
-    const data = { id: this.state.asset!.id };
 
-    axios
-      .post(
-        API_ROOT + "api/assets/delete",
-        data,
-        getHeaders(this.props.token)
-      )
+    deleteAsset(this.state.asset!, getHeaders(this.props.token))
       .then(res => {
         this.setState({ isDeleteOpen: false });
         this.props.history.push("/");

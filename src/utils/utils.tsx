@@ -1,12 +1,13 @@
 import axios from "axios";
 import { API_ROOT } from "./api-config";
-interface ElementObject {
+export interface ElementObject {
   id: string;
 }
 export enum ElementType {
   RACK = "racks",
   ASSET = "assets",
-  MODEL = "models"
+  MODEL = "models",
+  USER = "users"
 }
 export interface AssetObject extends ElementObject {
   hostname: string;
@@ -31,6 +32,22 @@ export interface AssetInfoObject extends ElementObject {
   rack?: string;
   owner?: string;
   comment?: string;
+}
+
+export interface UserInfoObject extends ElementObject {
+  username: string;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+}
+
+export interface CreateUserObject {
+  password1: string;
+  password2: string;
+  username: string;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
 }
 
 export interface RackObject extends ElementObject {
@@ -88,15 +105,18 @@ export type ElementObjectType =
   | ModelObject
   | RackObject
   | AssetObject
-  | AssetInfoObject;
+  | AssetInfoObject
+  | UserInfoObject;
 
 export type FormObjectType =
   | ModelObjectOld
   | RackObject
   | AssetObject
   | RackRangeFields
-  | AssetInfoObject;
-export function isModelObject(obj: any): obj is ModelObjectOld {
+  | AssetInfoObject
+  | UserInfoObject
+  | CreateUserObject;
+export function isModelObject(obj: any): obj is ModelObject {
   return obj && obj.model_number;
 }
 export function isRackObject(obj: any): obj is RackObject {
@@ -115,18 +135,22 @@ export const getHeaders = (token: string) => {
 
 export function getFields(type: string, headers: any) {
   return axios
-    .post(API_ROOT + "api/" + type + "/get-many", { sort_by: [], filters: [] }, headers)
+    .post(
+      API_ROOT + "api/" + type + "/get-many",
+      { sort_by: [], filters: [] },
+      headers
+    )
     .then(res => {
-      let items: Array<string>
-      if (type === "models") {
+      let items: Array<string>;
+      if (type === ElementType.MODEL) {
         items = Object.keys(res.data.models[0]);
       } else {
-        items = Object.keys(res.data.instances[0]);
+        items = Object.keys(res.data.assets[0]);
       }
-      var keys = []
+      var keys = [];
       for (var i = 0; i < items.length; i++) {
         if (items[i] !== "id") {
-          keys.push(items[i])
+          keys.push(items[i]);
         }
       }
       return keys;
