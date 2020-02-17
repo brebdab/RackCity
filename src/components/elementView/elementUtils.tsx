@@ -1,4 +1,9 @@
-import { RackRangeFields, ModelObject, AssetObject, DatacenterObject } from "../../utils/utils";
+import {
+  RackRangeFields,
+  ModelObject,
+  AssetObject,
+  DatacenterObject
+} from "../../utils/utils";
 import { API_ROOT } from "../../utils/api-config";
 import axios from "axios";
 export interface ITableSort {
@@ -34,7 +39,8 @@ const numberFields = [
   "height",
   "num_ethernet_ports",
   "num_power_ports",
-  "memory_gb"
+  "memory_gb",
+  "num_network_ports"
 ];
 
 export function getFilterType(field: string | undefined) {
@@ -84,11 +90,17 @@ export const modifyAsset = (asset: AssetObject, headers: any): Promise<any> => {
   return axios.post(API_ROOT + "api/assets/modify", asset, headers);
 };
 
-export const deleteDatacenter = (dc: DatacenterObject, headers: any): Promise<any> => {
+export const deleteDatacenter = (
+  dc: DatacenterObject,
+  headers: any
+): Promise<any> => {
   const data = { id: dc.id };
   return axios.post(API_ROOT + "api/datacenters/delete", data, headers);
-}
+};
 
-export const modifyDatacenter = (dc: DatacenterObject, headers: any): Promise<any> => {
+export const modifyDatacenter = (
+  dc: DatacenterObject,
+  headers: any
+): Promise<any> => {
   return axios.post(API_ROOT + "api/datacenters/modify", dc, headers);
-}
+};
