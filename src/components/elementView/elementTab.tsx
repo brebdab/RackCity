@@ -179,6 +179,21 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     });
   };
 
+  private createDatacenter = (
+    dc: DatacenterObject,
+    headers: any
+  ): Promise<any> => {
+    console.log("api/dataceneters/add");
+    return axios
+      .post(API_ROOT + "api/datacenters/add", dc, headers)
+      .then(res => {
+        this.handleDataUpdate(true);
+        this.handleClose();
+        this.addSuccessToast("Successfully created datacenter!");
+        console.log(this.state.isOpen);
+      });
+  };
+
   private createUser = (user: CreateUserObject, headers: any): Promise<any> => {
     console.log("api/users/add");
     return axios.post(API_ROOT + "api/users/add", user, headers).then(res => {
@@ -248,7 +263,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
         </div>
 
         <div className="element-tab-buttons">
-          {this.props.element !== ElementType.USER ? (
+          {this.props.element !== ElementType.USER &&
+          this.props.element !== ElementType.DATACENTER ? (
             <AnchorButton
               className="add"
               text="Export Table Data"
@@ -263,7 +279,9 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
           ) : (
             <p></p>
           )}
-          {this.props.isAdmin && this.props.element !== ElementType.USER ? (
+          {this.props.isAdmin &&
+          this.props.element !== ElementType.USER &&
+          this.props.element !== ElementType.DATACENTER ? (
             <AnchorButton
               onClick={() => this.props.history.push("/bulk-upload")}
               className="add"
@@ -328,6 +346,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                 ? this.createModel
                 : this.props.element === ElementType.ASSET
                 ? this.createAsset
+                : this.props.element === ElementType.DATACENTER
+                ? this.createDatacenter
                 : this.createUser
             }
             isOpen={this.state.isOpen}
@@ -344,8 +364,14 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               this.setState({ filters: data });
             }}
             shouldUpdateData={this.state.updateTable}
-            disableSorting={this.props.element === ElementType.USER}
-            disableFiltering={this.props.element === ElementType.USER}
+            disableSorting={
+              this.props.element === ElementType.USER ||
+              this.props.element === ElementType.DATACENTER
+            }
+            disableFiltering={
+              this.props.element === ElementType.USER ||
+              this.props.element === ElementType.DATACENTER
+            }
             currDatacenter={this.props.currDatacenter}
           />
         </div>

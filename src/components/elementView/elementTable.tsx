@@ -24,6 +24,7 @@ import {
   isModelObject,
   isRackObject,
   RackRangeFields,
+  isDatacenterObject,
   DatacenterObject
 } from "../../utils/utils";
 import DragDropList from "./dragDropList";
@@ -42,8 +43,10 @@ import {
   NumericFilter,
   deleteModel,
   deleteAsset,
+  deleteDatacenter,
   modifyModel,
-  modifyAsset
+  modifyAsset,
+  modifyDatacenter
 } from "./elementUtils";
 
 interface ElementTableState {
@@ -530,6 +533,11 @@ class ElementTable extends React.Component<
         editFormValues: data
       });
     }
+    if (isDatacenterObject(data)) {
+      this.setState({
+        editFormValues: data
+      });
+    }
   };
   //EDIT LOGIC
   handleEditFormClose = () => this.setState({ isEditFormOpen: false });
@@ -559,6 +567,10 @@ class ElementTable extends React.Component<
       });
     } else if (isAssetObject(values)) {
       modifyAsset(values, headers).then(res => {
+        this.successfulModification();
+      });
+    } else if (isDatacenterObject(values)) {
+      modifyDatacenter(values, headers).then(res => {
         this.successfulModification();
       });
     }
@@ -605,6 +617,14 @@ class ElementTable extends React.Component<
           this.handleDeleteCancel();
         }
       );
+    } else if (isDatacenterObject(this.state.editFormValues)) {
+      deleteDatacenter(
+        this.state.editFormValues,
+        getHeaders(this.props.token)
+      ).then(res => {
+        this.addErrorToast("Successfully deleted");
+        this.handleDeleteCancel();
+      });
     }
   };
 

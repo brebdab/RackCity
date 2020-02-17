@@ -103,7 +103,17 @@ class ElementTabContainer extends React.Component<
           panel={<ElementTab {...this.props} element={ElementType.MODEL} />}
         />
 
-        <Tab className="tab" id="datacenter" title="Datacenters" />
+        {this.props.isAdmin ? (
+          <Tab
+            className="tab"
+            id="datacenter"
+            title="Datacenters"
+            panel={
+              <ElementTab {...this.props} element={ElementType.DATACENTER} />
+            }
+          />
+        ) : null}
+
         <Tabs.Expander />
       </Tabs>
     );
