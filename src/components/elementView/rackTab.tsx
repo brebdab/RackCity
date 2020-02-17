@@ -1,39 +1,38 @@
-import * as React from "react";
 import {
-  RackRangeFields,
-  ElementType,
-  RackResponseObject,
-  getHeaders,
-  DatacenterObject
-} from "../../utils/utils";
-import { API_ROOT } from "../../utils/api-config";
-import {
-  Intent,
-  AnchorButton,
-  IToastProps,
-  Toaster,
-  Position,
   Alert,
+  AnchorButton,
   Button,
-  FormGroup,
-  MenuItem,
   Callout,
-  Card
+  FormGroup,
+  Intent,
+  IToastProps,
+  MenuItem,
+  Position,
+  Toaster
 } from "@blueprintjs/core";
-
 import axios from "axios";
+import * as React from "react";
+import { connect } from "react-redux";
 import FormPopup from "../../forms/formPopup";
 import {
-  FormTypes,
   DatacenterSelect,
-  renderDatacenterItem,
-  filterDatacenter
+  filterDatacenter,
+  FormTypes,
+  renderDatacenterItem
 } from "../../forms/formUtils";
-import RackSelectView from "./rackSelectView";
-import RackView from "./detailedView/rackView/rackView";
-import { connect } from "react-redux";
 import { updateObject } from "../../store/utility";
+import { API_ROOT } from "../../utils/api-config";
+import {
+  DatacenterObject,
+  ElementType,
+  getHeaders,
+  RackRangeFields,
+  RackResponseObject
+} from "../../utils/utils";
+import RackView from "./detailedView/rackView/rackView";
 import { ALL_DATACENTERS } from "./elementTabContainer";
+import RackSelectView from "./rackSelectView";
+
 interface RackTabState {
   isOpen: boolean;
   isDeleteOpen: boolean;
