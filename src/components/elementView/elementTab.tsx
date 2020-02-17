@@ -5,7 +5,11 @@ import {
   Intent,
   IToastProps,
   Position,
-  Toaster
+  Toaster,
+  FormGroup,
+  MenuItem,
+  Button,
+  Callout
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -13,14 +17,20 @@ import * as React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps } from "react-router";
 import FormPopup from "../../forms/formPopup";
-import { FormTypes } from "../../forms/formUtils";
+import {
+  FormTypes,
+  DatacenterSelect,
+  renderDatacenterItem,
+  filterDatacenter
+} from "../../forms/formUtils";
 import { API_ROOT } from "../../utils/api-config";
 import {
   AssetInfoObject,
   CreateUserObject,
   ElementObjectType,
   ElementType,
-  ModelObject
+  ModelObject,
+  DatacenterObject
 } from "../../utils/utils";
 import ElementTable from "./elementTable";
 import "./elementView.scss";
@@ -41,6 +51,9 @@ interface ElementViewProps {
   element: ElementType;
   isAdmin: boolean;
   token: string;
+  datacenters?: Array<DatacenterObject>;
+  currDatacenter?: DatacenterObject;
+  onDatacenterSelect?(datacenter: DatacenterObject): void;
 }
 export function getPages(
   path: string,
@@ -201,6 +214,39 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
           position={Position.TOP}
           ref={this.refHandlers.toaster}
         />
+        <div>
+          {this.props.datacenters && this.props.onDatacenterSelect ? (
+            <Callout>
+              <FormGroup label="Datacenter" inline={true}>
+                <DatacenterSelect
+                  popoverProps={{
+                    minimal: true,
+                    popoverClassName: "dropdown",
+                    usePortal: true
+                  }}
+                  items={this.props.datacenters!}
+                  onItemSelect={(datacenter: DatacenterObject) => {
+                    this.props.onDatacenterSelect!(datacenter);
+                  }}
+                  itemRenderer={renderDatacenterItem}
+                  itemPredicate={filterDatacenter}
+                  noResults={<MenuItem disabled={true} text="No results." />}
+                >
+                  <Button
+                    rightIcon="caret-down"
+                    text={
+                      this.props.currDatacenter &&
+                      this.props.currDatacenter.name
+                        ? this.props.currDatacenter.name
+                        : "All datacenters"
+                    }
+                  />
+                </DatacenterSelect>
+              </FormGroup>
+            </Callout>
+          ) : null}
+        </div>
+
         <div className="element-tab-buttons">
           {this.props.element !== ElementType.USER ? (
             <AnchorButton
@@ -300,6 +346,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             shouldUpdateData={this.state.updateTable}
             disableSorting={this.props.element === ElementType.USER}
             disableFiltering={this.props.element === ElementType.USER}
+            currDatacenter={this.props.currDatacenter}
           />
         </div>
       </div>
