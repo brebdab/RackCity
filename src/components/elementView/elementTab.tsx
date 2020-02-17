@@ -5,7 +5,11 @@ import {
   Intent,
   IToastProps,
   Position,
-  Toaster
+  Toaster,
+  FormGroup,
+  MenuItem,
+  Button,
+  Callout
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -13,14 +17,20 @@ import * as React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps } from "react-router";
 import FormPopup from "../../forms/formPopup";
-import { FormTypes } from "../../forms/formUtils";
+import {
+  FormTypes,
+  DatacenterSelect,
+  renderDatacenterItem,
+  filterDatacenter
+} from "../../forms/formUtils";
 import { API_ROOT } from "../../utils/api-config";
 import {
   AssetInfoObject,
   CreateUserObject,
   ElementObjectType,
   ElementType,
-  ModelObject
+  ModelObject,
+  DatacenterObject
 } from "../../utils/utils";
 import ElementTable from "./elementTable";
 import "./elementView.scss";
@@ -41,6 +51,9 @@ interface ElementViewProps {
   element: ElementType;
   isAdmin: boolean;
   token: string;
+  datacenters?: Array<DatacenterObject>;
+  currDatacenter?: DatacenterObject;
+  onDatacenterSelect?(datacenter: DatacenterObject): void;
 }
 export function getPages(
   path: string,
@@ -166,6 +179,21 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     });
   };
 
+  private createDatacenter = (
+    dc: DatacenterObject,
+    headers: any
+  ): Promise<any> => {
+    console.log("api/dataceneters/add");
+    return axios
+      .post(API_ROOT + "api/datacenters/add", dc, headers)
+      .then(res => {
+        this.handleDataUpdate(true);
+        this.handleClose();
+        this.addSuccessToast("Successfully created datacenter!");
+        console.log(this.state.isOpen);
+      });
+  };
+
   private createUser = (user: CreateUserObject, headers: any): Promise<any> => {
     console.log("api/users/add");
     return axios.post(API_ROOT + "api/users/add", user, headers).then(res => {
@@ -201,8 +229,42 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
           position={Position.TOP}
           ref={this.refHandlers.toaster}
         />
+        <div>
+          {this.props.datacenters && this.props.onDatacenterSelect ? (
+            <Callout>
+              <FormGroup label="Datacenter" inline={true}>
+                <DatacenterSelect
+                  popoverProps={{
+                    minimal: true,
+                    popoverClassName: "dropdown",
+                    usePortal: true
+                  }}
+                  items={this.props.datacenters!}
+                  onItemSelect={(datacenter: DatacenterObject) => {
+                    this.props.onDatacenterSelect!(datacenter);
+                  }}
+                  itemRenderer={renderDatacenterItem}
+                  itemPredicate={filterDatacenter}
+                  noResults={<MenuItem disabled={true} text="No results." />}
+                >
+                  <Button
+                    rightIcon="caret-down"
+                    text={
+                      this.props.currDatacenter &&
+                      this.props.currDatacenter.name
+                        ? this.props.currDatacenter.name
+                        : "All datacenters"
+                    }
+                  />
+                </DatacenterSelect>
+              </FormGroup>
+            </Callout>
+          ) : null}
+        </div>
+
         <div className="element-tab-buttons">
-          {this.props.element !== ElementType.USER ? (
+          {this.props.element !== ElementType.USER &&
+          this.props.element !== ElementType.DATACENTER ? (
             <AnchorButton
               className="add"
               text="Export Table Data"
@@ -217,7 +279,9 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
           ) : (
             <p></p>
           )}
-          {this.props.isAdmin && this.props.element !== ElementType.USER ? (
+          {this.props.isAdmin &&
+          this.props.element !== ElementType.USER &&
+          this.props.element !== ElementType.DATACENTER ? (
             <AnchorButton
               onClick={() => this.props.history.push("/bulk-upload")}
               className="add"
@@ -282,6 +346,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                 ? this.createModel
                 : this.props.element === ElementType.ASSET
                 ? this.createAsset
+                : this.props.element === ElementType.DATACENTER
+                ? this.createDatacenter
                 : this.createUser
             }
             isOpen={this.state.isOpen}
@@ -289,17 +355,26 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
           />
         </div>
 
-        <ElementTable
-          type={this.props.element}
-          getData={this.getElementData}
-          getPages={getPages}
-          callback={(data: Array<any>) => {
-            this.setState({ filters: data });
-          }}
-          shouldUpdateData={this.state.updateTable}
-          disableSorting={this.props.element === ElementType.USER}
-          disableFiltering={this.props.element === ElementType.USER}
-        />
+        <div>
+          <ElementTable
+            type={this.props.element}
+            getData={this.getElementData}
+            getPages={getPages}
+            callback={(data: Array<any>) => {
+              this.setState({ filters: data });
+            }}
+            shouldUpdateData={this.state.updateTable}
+            disableSorting={
+              this.props.element === ElementType.USER ||
+              this.props.element === ElementType.DATACENTER
+            }
+            disableFiltering={
+              this.props.element === ElementType.USER ||
+              this.props.element === ElementType.DATACENTER
+            }
+            currDatacenter={this.props.currDatacenter}
+          />
+        </div>
       </div>
     );
   }

@@ -140,7 +140,7 @@ def asset_detail(request, id):
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
-def asset_add(request):
+def asset_add(request):  # need to make network and power connections here
     """
     Add a new asset.
     """
@@ -180,6 +180,7 @@ def asset_add(request):
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
+# need to make network and power connections here
 def asset_modify(request):
     """
     Modify a single existing asset
@@ -246,7 +247,7 @@ def asset_modify(request):
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
-def asset_delete(request):
+def asset_delete(request):  # need to delete network and power connections here
     """
     Delete a single existing asset
     """
@@ -278,7 +279,7 @@ def asset_delete(request):
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
-def asset_bulk_upload(request):
+def asset_bulk_upload(request):  # need to make network and power connections here
     """
     Bulk upload many assets to add or modify
     """
@@ -457,7 +458,7 @@ def asset_bulk_upload(request):
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
-def asset_bulk_approve(request):
+def asset_bulk_approve(request):  # need to make network and power connections here
     """
     Bulk approve many assets to modify
     """

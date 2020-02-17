@@ -25,7 +25,9 @@ import {
   isRackObject,
   RackRangeFields,
   UserInfoObject,
-  isUserObject
+  isUserObject,
+  isDatacenterObject,
+  DatacenterObject
 } from "../../utils/utils";
 import DragDropList from "./dragDropList";
 import "./elementView.scss";
@@ -43,8 +45,10 @@ import {
   NumericFilter,
   deleteModel,
   deleteAsset,
+  deleteDatacenter,
   modifyModel,
-  modifyAsset
+  modifyAsset,
+  modifyDatacenter
 } from "./elementUtils";
 
 interface ElementTableState {
@@ -70,6 +74,7 @@ interface ElementTableProps {
   token: string;
   disableSorting?: boolean;
   disableFiltering?: boolean;
+  currDatacenter?: DatacenterObject;
   getData?(
     type: string,
     page_num: number,
@@ -500,7 +505,7 @@ class ElementTable extends React.Component<
       if (col === "model") {
         fields.push("model__vendor");
         fields.push("model__model_number");
-      } else if (col !== "id") {
+      } else if (col !== "id" && col !== "network_ports" && col !== "comment") {
         fields.push(col);
       }
     });
@@ -526,6 +531,11 @@ class ElementTable extends React.Component<
       });
     }
     if (isModelObject(data)) {
+      this.setState({
+        editFormValues: data
+      });
+    }
+    if (isDatacenterObject(data)) {
       this.setState({
         editFormValues: data
       });
@@ -559,6 +569,10 @@ class ElementTable extends React.Component<
       });
     } else if (isAssetObject(values)) {
       modifyAsset(values, headers).then(res => {
+        this.successfulModification();
+      });
+    } else if (isDatacenterObject(values)) {
+      modifyDatacenter(values, headers).then(res => {
         this.successfulModification();
       });
     }
@@ -605,6 +619,14 @@ class ElementTable extends React.Component<
           this.handleDeleteCancel();
         }
       );
+    } else if (isDatacenterObject(this.state.editFormValues)) {
+      deleteDatacenter(
+        this.state.editFormValues,
+        getHeaders(this.props.token)
+      ).then(res => {
+        this.addErrorToast("Successfully deleted");
+        this.handleDeleteCancel();
+      });
     }
   };
 
@@ -761,7 +783,7 @@ class ElementTable extends React.Component<
                           </div>
                         </th>
                       ];
-                    } else if (col !== "id") {
+                    } else {
                       return (
                         <th className="header-cell">
                           <div className="header-text">
@@ -771,8 +793,6 @@ class ElementTable extends React.Component<
                         </th>
                       );
                     }
-
-                    return null;
                   })}
                   <th></th>
                 </tr>
@@ -808,7 +828,11 @@ class ElementTable extends React.Component<
                                 }}
                               ></td>
                             );
-                          } else if (col !== "id") {
+                          } else if (
+                            col !== "id" &&
+                            col !== "network_ports" &&
+                            col !== "comment"
+                          ) {
                             return <td>{value}</td>;
                           }
 

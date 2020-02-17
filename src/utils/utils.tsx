@@ -7,7 +7,8 @@ export enum ElementType {
   RACK = "racks",
   ASSET = "assets",
   MODEL = "models",
-  USER = "users"
+  USER = "users",
+  DATACENTER = "datacenters"
 }
 export interface AssetObject extends ElementObject {
   hostname: string;
@@ -90,6 +91,7 @@ export interface ModelObject extends ElementObject {
   model_number: string;
   height: string;
   display_color?: string;
+  num_network_ports?: string;
   network_ports?: Array<string>; //
   num_power_ports?: string; //
   cpu?: string;
@@ -107,18 +109,23 @@ export type ElementObjectType =
   | RackObject
   | AssetObject
   | AssetInfoObject
-  | UserInfoObject;
+  | UserInfoObject
+  | DatacenterObject;
 
 export type FormObjectType =
   | ModelObjectOld
   | RackObject
   | AssetObject
+  | DatacenterObject
   | RackRangeFields
   | AssetInfoObject
   | UserInfoObject
   | CreateUserObject;
 export function isModelObject(obj: any): obj is ModelObject {
   return obj && obj.model_number;
+}
+export function isDatacenterObject(obj: any): obj is DatacenterObject {
+  return obj && obj.abbreviation;
 }
 export function isRackObject(obj: any): obj is RackObject {
   return obj && obj.rack_num;
