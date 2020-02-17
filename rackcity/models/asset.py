@@ -36,7 +36,9 @@ class Asset(models.Model):
     hostname = models.CharField(
         max_length=150,
         unique=True,
-        validators=[validate_hostname]
+        validators=[validate_hostname],
+        null=True,
+        blank=True,
     )
     rack_position = models.PositiveIntegerField()
     model = models.ForeignKey(
@@ -58,7 +60,7 @@ class Asset(models.Model):
     comment = models.TextField(null=True, blank=True)
 
     class Meta:
-        ordering = ['hostname']
+        ordering = ['asset_number']
         verbose_name = 'asset'
 
     def save(self, *args, **kwargs):

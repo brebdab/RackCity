@@ -152,6 +152,7 @@ def asset_add(request):  # need to make network and power connections here
     serializer = AssetSerializer(data=data)
     if not serializer.is_valid(raise_exception=False):
         failure_message += str(serializer.errors)
+        print("1: "+failure_message)
     if failure_message == "":
         rack_id = serializer.validated_data['rack'].id
         rack_position = serializer.validated_data['rack_position']
@@ -160,6 +161,7 @@ def asset_add(request):  # need to make network and power connections here
             validate_asset_location(rack_id, rack_position, height)
         except LocationException as error:
             failure_message += str(error)
+            print("2: "+failure_message)
             return JsonResponse(
                 {"failure_message": failure_message},
                 status=HTTPStatus.BAD_REQUEST,
@@ -170,6 +172,7 @@ def asset_add(request):  # need to make network and power connections here
             return HttpResponse(status=HTTPStatus.CREATED)
         except Exception as error:
             failure_message += str(error)
+            print("3: "+failure_message)
 
     failure_message = "Request was invalid. " + failure_message
     return JsonResponse(
@@ -375,7 +378,7 @@ def asset_bulk_upload(request):  # need to make network and power connections he
                     asset_data, existing_asset)
             except Exception:
                 failure_message = "Asset " + \
-                    asset_data['hostname'] + \
+                    asset_data['asset_number'] + \
                     " would conflict location with an existing asset. "
                 return JsonResponse(
                     {"failure_message": failure_message},
@@ -399,7 +402,7 @@ def asset_bulk_upload(request):  # need to make network and power connections he
                 )
             except LocationException as error:
                 failure_message = "Asset " + \
-                    asset_data['hostname'] + \
+                    asset_data['asset_number'] + \
                     " is invalid. " + str(error)
                 return JsonResponse(
                     {"failure_message": failure_message},
@@ -563,6 +566,7 @@ def asset_fields(request):
     """
     return JsonResponse(
         {"fields": [
+            'asset_number',
             'hostname',
             'model',
             'rack',
