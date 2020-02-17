@@ -377,8 +377,9 @@ def asset_bulk_upload(request):  # need to make network and power connections he
                 validate_location_modification(
                     asset_data, existing_asset)
             except Exception:
+                # this could be problematic if neither hostame or asset number isn't there
                 failure_message = "Asset " + \
-                    asset_data['asset_number'] + \
+                    str(asset_data['asset_number']) + \
                     " would conflict location with an existing asset. "
                 return JsonResponse(
                     {"failure_message": failure_message},
@@ -401,8 +402,9 @@ def asset_bulk_upload(request):  # need to make network and power connections he
                     asset_id=None,
                 )
             except LocationException as error:
+                # this could be problematic if neither hostame or asset number isn't there
                 failure_message = "Asset " + \
-                    asset_data['asset_number'] + \
+                    str(asset_data['asset_number']) + \
                     " is invalid. " + str(error)
                 return JsonResponse(
                     {"failure_message": failure_message},

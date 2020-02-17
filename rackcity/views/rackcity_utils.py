@@ -58,7 +58,7 @@ def validate_asset_location(
                 if occupied_location in new_asset_location_range:
                     raise LocationException(
                         "Asset location conflicts with another asset: '" +
-                        asset_in_rack.asset_number +
+                        str(asset_in_rack.asset_number) +
                         "'. "
                     )
 
@@ -157,11 +157,12 @@ def no_infile_location_conflicts(asset_datas):
             if location in location_occupied_by[rack]:
                 raise LocationException(
                     "Asset '" +
-                    asset_data['asset_number'] +
+                    str(asset_data['asset_number']) +
                     "' conflicts with asset '" +
                     location_occupied_by[rack][location] +
                     "'. ")
             else:
+                # this is going to be a problem if neither hostname or asset number exists on the record
                 location_occupied_by[rack][location] = asset_data['asset_number']
     return
 
