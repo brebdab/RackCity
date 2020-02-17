@@ -44,7 +44,8 @@ import {
   deleteAsset,
   deleteDatacenter,
   modifyModel,
-  modifyAsset
+  modifyAsset,
+  modifyDatacenter
 } from "./elementUtils";
 
 interface ElementTableState {
@@ -566,6 +567,10 @@ class ElementTable extends React.Component<
       modifyAsset(values, headers).then(res => {
         this.successfulModification();
       });
+    } else if (isDatacenterObject(values)) {
+      modifyDatacenter(values, headers).then(res => {
+        this.successfulModification();
+      })
     }
   };
 

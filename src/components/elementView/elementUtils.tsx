@@ -88,3 +88,7 @@ export const deleteDatacenter = (dc: DatacenterObject, headers: any): Promise<an
   const data = { id: dc.id };
   return axios.post(API_ROOT + "api/datacenters/delete", data, headers);
 }
+
+export const modifyDatacenter = (dc: DatacenterObject, headers: any): Promise<any> => {
+  return axios.post(API_ROOT + "api/datacenters/modify", dc, headers);
+}

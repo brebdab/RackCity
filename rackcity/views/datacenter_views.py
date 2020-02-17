@@ -113,3 +113,53 @@ def datacenter_page_count(request):
     dc_count = dc_query.count()
     page_count = math.ceil(dc_count / page_size)
     return JsonResponse({"page_count": page_count})
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def datacenter_modify(request):
+    """
+    Modify an existing model
+    """
+    data = JSONParser().parse(request)
+    failure_message = ""
+    if 'id' not in data:
+        failure_message += "Must include id when modifying a datacenter. "
+    else:
+        id = data['id']
+        try:
+            existing_dc = Datacenter.objects.get(id=id)
+        except ObjectDoesNotExist:
+            failure_message += "No existing datacenter with id="+str(id)+". "
+        else:
+            for field in data.keys():
+                if field != "id":
+                    if field == "name":
+                        dc_with_name = Datacenter.objects.filter(
+                            name__iexact=data[field]
+                        )
+                    else:
+                        dc_with_name = Datacenter.objects.filter(
+                            abbreviation__iexact=data[field]
+                        )
+                    if (
+                        len(dc_with_name) > 0
+                        and dc_with_name[0].id != id
+                    ):
+                        return JsonResponse(
+                            {"failure_message": "Datacenter with name '" +
+                                data[field].lower() + "' already exists."},
+                            status=HTTPStatus.BAD_REQUEST,
+                        )
+                    setattr(existing_dc, field, data[field])
+            try:
+                existing_dc.save()
+                return HttpResponse(status=HTTPStatus.OK)
+            except Exception as error:
+                failure_message = failure_message + str(error)
+    failure_message = "Request was invalid. " + failure_message
+    return JsonResponse({
+        "failure_message": failure_message
+    },
+        status=HTTPStatus.NOT_ACCEPTABLE
+    )
