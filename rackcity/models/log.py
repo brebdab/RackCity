@@ -19,7 +19,6 @@ class Log(models.Model):
     related_assets = models.ManyToManyField(
         Asset,
         verbose_name="related assets",
-        null=True,
         blank=True,
     )
     related_model = models.ForeignKey(
