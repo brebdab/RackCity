@@ -213,7 +213,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
           ref={this.refHandlers.toaster}
         />
         <div className="element-tab-buttons">
-          {this.props.element !== ElementType.USER ? (
+          {this.props.element !== ElementType.USER && this.props.element !== ElementType.DATACENTER ? (
             <AnchorButton
               className="add"
               text="Export Table Data"
@@ -228,7 +228,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
           ) : (
               <p></p>
             )}
-          {this.props.isAdmin && this.props.element !== ElementType.USER ? (
+          {this.props.isAdmin && this.props.element !== ElementType.USER && this.props.element !== ElementType.DATACENTER ? (
             <AnchorButton
               onClick={() => this.props.history.push("/bulk-upload")}
               className="add"
@@ -311,8 +311,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               this.setState({ filters: data });
             }}
             shouldUpdateData={this.state.updateTable}
-            disableSorting={this.props.element === ElementType.USER}
-            disableFiltering={this.props.element === ElementType.USER}
+            disableSorting={this.props.element === ElementType.USER || this.props.element === ElementType.DATACENTER}
+            disableFiltering={this.props.element === ElementType.USER || this.props.element === ElementType.DATACENTER}
           />
         </div>
       </div>

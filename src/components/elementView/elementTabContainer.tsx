@@ -40,12 +40,12 @@ class ElementTabContainer extends React.Component<
         />
 
         <Tab className="tab" id="rack" title="Racks" panel={<RackTab />} />
-        <Tab
+        {this.props.isAdmin ? <Tab
           className="tab"
           id="datacenter"
           title="Datacenters"
           panel={<ElementTab {...this.props} element={ElementType.DATACENTER} />}
-        />
+        /> : null}
         <Tabs.Expander />
       </Tabs>
     );
