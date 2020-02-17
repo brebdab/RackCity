@@ -8,8 +8,8 @@ import "./propertiesView.scss";
 export interface AlertState {
   isDeleteOpen: boolean;
 }
-var console: any = {};
-console.log = function() {};
+// var console: any = {};
+// console.log = function() {};
 
 interface PropertiesViewProps {
   data: any;
@@ -40,9 +40,10 @@ class PropertiesView extends React.PureComponent<
                   {data[item]}
                 </p>
               );
-            } else if (item === "network ports") {
-              const ports: Array<string> = data[item];
-              dat = <p>{ports.length}</p>;
+            } else if (item == "network_ports") {
+              console.log(item, data[item].toString());
+              const network_ports: Array<string> = data[item];
+              dat = <p> {network_ports.toString()}</p>;
             } else if (item === "model") {
               dat = (
                 <p
