@@ -172,6 +172,11 @@ class LocationException(Exception):
         Exception.__init__(self, *args, **kwargs)
 
 
+class MacAddressException(Exception):
+    def __init__(self, *args, **kwargs):
+        Exception.__init__(self, *args, **kwargs)
+
+
 def get_sort_arguments(data):
     sort_args = []
     if 'sort_by' in data:

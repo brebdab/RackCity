@@ -1,5 +1,5 @@
 from django.http import HttpResponse, JsonResponse
-from rackcity.models import Asset, ITModel, Rack
+from rackcity.models import Asset, ITModel, Rack, NetworkPort
 from django.core.exceptions import ObjectDoesNotExist
 from rackcity.api.serializers import (
     AssetSerializer,
@@ -22,6 +22,7 @@ from rackcity.views.rackcity_utils import (
     no_infile_location_conflicts,
     records_are_identical,
     LocationException,
+    MacAddressException,
     get_sort_arguments,
     get_filter_arguments,
 )
@@ -135,7 +136,22 @@ def asset_detail(request, id):
         )
 
     serializer = RecursiveAssetSerializer(asset)
-    return JsonResponse(serializer.data, status=HTTPStatus.OK)
+    # slap the mac addresses and all the connections on here
+    data = serializer.data
+    data['mac_addresses'] = get_mac_addresses(asset_id=id)
+    return JsonResponse(data, status=HTTPStatus.OK)
+
+
+def get_mac_addresses(asset_id):
+    try:
+        ports = NetworkPort.objects.filter(asset=asset_id)
+    except ObjectDoesNotExist:
+        return
+    mac_addresses = {}
+    for port in ports:
+        if port.mac_address:
+            mac_addresses[port.port_name] = port.mac_address
+    return mac_addresses
 
 
 @api_view(['POST'])
@@ -152,7 +168,6 @@ def asset_add(request):  # need to make network and power connections here
     serializer = AssetSerializer(data=data)
     if not serializer.is_valid(raise_exception=False):
         failure_message += str(serializer.errors)
-        print("1: "+failure_message)
     if failure_message == "":
         rack_id = serializer.validated_data['rack'].id
         rack_position = serializer.validated_data['rack_position']
@@ -161,24 +176,63 @@ def asset_add(request):  # need to make network and power connections here
             validate_asset_location(rack_id, rack_position, height)
         except LocationException as error:
             failure_message += str(error)
-            print("2: "+failure_message)
             return JsonResponse(
                 {"failure_message": failure_message},
                 status=HTTPStatus.BAD_REQUEST,
             )
     if failure_message == "":
         try:
-            serializer.save()
-            return HttpResponse(status=HTTPStatus.CREATED)
+            asset = serializer.save()
         except Exception as error:
             failure_message += str(error)
-            print("3: "+failure_message)
-
+        else:
+            try:
+                save_mac_addresses(
+                    asset_data=data,
+                    asset_id=asset.id
+                )
+            except MacAddressException as error:
+                failure_message = "Mac addresses were invalid. " + str(error)
+                return JsonResponse(
+                    {"failure_message": failure_message},
+                    status=HTTPStatus.BAD_REQUEST,
+                )
+            else:
+                return HttpResponse(status=HTTPStatus.CREATED)
     failure_message = "Request was invalid. " + failure_message
     return JsonResponse(
         {"failure_message": failure_message},
         status=HTTPStatus.BAD_REQUEST,
     )
+
+
+def save_mac_addresses(asset_data, asset_id):
+    if 'mac_addresses' not in asset_data:
+        return
+    mac_address_assignments = asset_data['mac_addresses']
+    for port_name in mac_address_assignments.keys():
+        try:
+            network_port = NetworkPort.objects.get(
+                asset=asset_id,
+                port_name=port_name
+            )
+        except ObjectDoesNotExist:
+            raise MacAddressException(
+                "Port name '"+port_name+"' is not valid. "
+            )
+        else:
+            mac_address = mac_address_assignments[port_name]
+            network_port.mac_address = mac_address
+            try:
+                network_port.save()
+            except Exception as error:
+                raise MacAddressException(
+                    "Mac address '" +
+                    mac_address +
+                    "' is not valid. " +
+                    str(error)
+                )
+                # note the fact that this might fail in unexpected ways. E.g. if the first mac address is invalid, none will save. If the last is invalid, all the rest will save.
 
 
 @api_view(['POST'])
@@ -239,6 +293,7 @@ def asset_modify(request):
 
     try:
         existing_asset.save()
+        # will need to save mac addresses and connections here
     except Exception as error:
         return JsonResponse(
             {"failure_message": "Invalid updates: " + str(error)},
@@ -425,6 +480,7 @@ def asset_bulk_upload(request):  # need to make network and power connections he
     for asset_to_add in assets_to_add:
         records_added += 1
         asset_to_add.save()
+        # will need to save mac addresses and connections here
     records_ignored = 0
     modifications_to_approve = []
     for potential_modification in potential_modifications:
@@ -488,6 +544,7 @@ def asset_bulk_approve(request):  # need to make network and power connections h
                 value = asset_data[field]
             setattr(existing_asset, field, value)
         existing_asset.save()
+        # will need to save mac addresses and connections here
     return HttpResponse(status=HTTPStatus.OK)
 
 
