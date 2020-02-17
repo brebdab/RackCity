@@ -16,6 +16,13 @@ class PowerAction(Enum):
     CYCLE = "cycled"
 
 
+class ElementType(Enum):
+    ASSET = "asset"
+    DATACENTER = "datacenter"
+    MODEL = "model"
+    USER = "user"
+
+
 def get_date_as_string():
     return str(datetime.now()) + ":"
 
@@ -28,20 +35,24 @@ def log_action(user, element, action):
     related_model = None
     related_asset = None
     if isinstance(element, Asset):
+        element_type = ElementType.ASSET.value
         element_name = element.hostname
         related_asset = element
     elif isinstance(element, ITModel):
+        element_type = ElementType.MODEL.value
         element_name = element.vendor + " " + element.model_number
         related_model = element
     elif isinstance(element, User):
+        element_type = ElementType.USER.value
         element_name = element.username
     elif isinstance(element, Datacenter):
+        element_type = ElementType.DATACENTER.value
         element_name = element.name
     log_content = " ".join([
         str(date) + ":",
         user.username,
-        action,
-        element,
+        action.value,
+        element_type,
         element_name
     ])
     log = Log(
@@ -65,7 +76,7 @@ def log_rack_action(user, action, related_racks):
     log_content = " ".join([
         str(date) + ":",
         user.username,
-        action,
+        action.value,
         "the following racks:",
         ",".join(related_racks),
     ])
@@ -85,7 +96,7 @@ def log_power_action(user, power_action, related_asset):
     log_content = " ".join([
         str(date) + ":",
         user.username,
-        power_action,
+        power_action.value,
         "for asset",
         related_asset.asset_number,
     ])
@@ -107,7 +118,7 @@ def log_network_action(user, action, related_assets):
     log_content = " ".join([
         str(date) + ":",
         user.username,
-        action,
+        action.value,
         "a network connection between assets:",
         ",".join(related_assets),
     ])

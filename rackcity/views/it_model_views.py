@@ -7,6 +7,7 @@ from rackcity.api.serializers import (
     ITModelSerializer,
     BulkITModelSerializer
 )
+from rackcity.utils.log_utils import log_action, Action
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.pagination import PageNumberPagination
@@ -50,7 +51,8 @@ def model_add(request):
         failure_message = failure_message + str(serializer.errors)
     if failure_message == "":
         try:
-            serializer.save()
+            obj = serializer.save()
+            log_action(request.user, obj, Action.CREATE)
             return HttpResponse(status=HTTPStatus.CREATED)
         except Exception as error:
             failure_message = failure_message + str(error)
