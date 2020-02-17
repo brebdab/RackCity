@@ -5,21 +5,23 @@ import {
   ElementType,
   isAssetObject,
   isModelObject,
-  FormObjectType
+  FormObjectType,
+  isDatacenterObject
 } from "../utils/utils";
 import RackSelectView from "../components/elementView/rackSelectView";
 import AssetForm from "./assetForm";
 import ModelForm from "./modelForm";
+import DatacenterForm from "./datacenterForm";
 import WrappedRegistrationForm from "./auth/register";
 import { FormTypes } from "./formUtils";
-interface FormPopupState {}
+interface FormPopupState { }
 interface FormPopupProps {
   isOpen: boolean;
   type: FormTypes;
   initialValues?: ElementObjectType;
   elementName: ElementType;
   handleClose(): void;
-  submitForm(model: FormObjectType, headers: any): Promise<any> | void;
+  submitForm(element: FormObjectType, headers: any): Promise<any> | void;
 }
 
 class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
@@ -62,6 +64,17 @@ class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
         ) : null}
         {this.props.elementName === ElementType.USER ? (
           <WrappedRegistrationForm authSignup={this.props.submitForm} />
+        ) : null}
+        {this.props.elementName === ElementType.DATACENTER ? (
+          <DatacenterForm
+            type={FormTypes.CREATE}
+            submitForm={this.props.submitForm}
+            initialValues={
+              isDatacenterObject(this.props.initialValues)
+                ? this.props.initialValues
+                : undefined
+            }
+          />
         ) : null}
       </Dialog>
     );

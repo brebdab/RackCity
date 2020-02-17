@@ -1,3 +1,4 @@
+from .log_views import log_many
 from .it_model_views import (
     model_add,
     model_modify,
@@ -49,4 +50,6 @@ from .datacenter_views import (
     datacenter_all,
     datacenter_create,
     datacenter_delete,
+    datacenter_page_count,
+    datacenter_modify
 )

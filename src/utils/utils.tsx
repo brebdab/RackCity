@@ -1,13 +1,14 @@
 import axios from "axios";
 import { API_ROOT } from "./api-config";
-interface ElementObject {
+export interface ElementObject {
   id: string;
 }
 export enum ElementType {
   RACK = "racks",
   ASSET = "assets",
   MODEL = "models",
-  USER = "users"
+  USER = "users",
+  DATACENTER = "datacenters"
 }
 export interface AssetObject extends ElementObject {
   hostname: string;
@@ -39,6 +40,7 @@ export interface UserInfoObject extends ElementObject {
   email?: string;
   first_name?: string;
   last_name?: string;
+  is_staff?: string;
 }
 
 export interface CreateUserObject {
@@ -89,6 +91,7 @@ export interface ModelObject extends ElementObject {
   model_number: string;
   height: string;
   display_color?: string;
+  num_network_ports?: string;
   network_ports?: Array<string>; //
   num_power_ports?: string; //
   cpu?: string;
@@ -106,18 +109,23 @@ export type ElementObjectType =
   | RackObject
   | AssetObject
   | AssetInfoObject
-  | UserInfoObject;
+  | UserInfoObject
+  | DatacenterObject;
 
 export type FormObjectType =
   | ModelObjectOld
   | RackObject
   | AssetObject
+  | DatacenterObject
   | RackRangeFields
   | AssetInfoObject
   | UserInfoObject
   | CreateUserObject;
-export function isModelObject(obj: any): obj is ModelObjectOld {
+export function isModelObject(obj: any): obj is ModelObject {
   return obj && obj.model_number;
+}
+export function isDatacenterObject(obj: any): obj is DatacenterObject {
+  return obj && obj.abbreviation;
 }
 export function isRackObject(obj: any): obj is RackObject {
   return obj && obj.rack_num;
@@ -125,12 +133,31 @@ export function isRackObject(obj: any): obj is RackObject {
 export function isAssetObject(obj: any): obj is AssetObject {
   return obj && obj.hostname;
 }
+
+export function isUserObject(obj: any): obj is UserInfoObject {
+  return obj && obj.username;
+}
 export const getHeaders = (token: string) => {
   return {
     headers: {
       Authorization: "Token " + token
     }
   };
+};
+
+export const isAdmin = (headers: any) => {
+  let isAdmin = false;
+  axios
+    .get(API_ROOT + "api/iamadmin", headers)
+    .then(res => {
+      if (res.data.is_admin) {
+        isAdmin = true;
+      }
+    })
+    .catch(err => {
+      console.log(err);
+    });
+  return isAdmin;
 };
 
 export function getFields(type: string, headers: any) {
@@ -142,10 +169,10 @@ export function getFields(type: string, headers: any) {
     )
     .then(res => {
       let items: Array<string>;
-      if (type === "models") {
+      if (type === ElementType.MODEL) {
         items = Object.keys(res.data.models[0]);
       } else {
-        items = Object.keys(res.data.instances[0]);
+        items = Object.keys(res.data.assets[0]);
       }
       var keys = [];
       for (var i = 0; i < items.length; i++) {
