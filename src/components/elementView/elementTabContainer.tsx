@@ -18,13 +18,19 @@ interface ElementTabContainerState {
   datacenters: Array<DatacenterObject>;
   currDatacenter: DatacenterObject;
 }
+export const ALL_DATACENTERS: DatacenterObject = {
+  id: "",
+  name: "All datacenters",
+  abbreviation: "ALL"
+};
+
 class ElementTabContainer extends React.Component<
   ElementTabContainerProps & RouteComponentProps,
   ElementTabContainerState
 > {
   state = {
     datacenters: [],
-    currDatacenter: {} as DatacenterObject
+    currDatacenter: ALL_DATACENTERS
   };
 
   onDatacenterSelect = (datacenter: DatacenterObject) => {
@@ -39,8 +45,10 @@ class ElementTabContainer extends React.Component<
       .get(API_ROOT + "api/datacenters/get-all", headers)
       .then(res => {
         console.log(res.data.datacenters);
+        const datacenters = res.data.datacenters as Array<DatacenterObject>;
+        datacenters.push(ALL_DATACENTERS);
         this.setState({
-          datacenters: res.data.datacenters as Array<DatacenterObject>
+          datacenters
         });
       })
       .catch(err => {

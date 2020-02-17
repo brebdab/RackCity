@@ -1,32 +1,14 @@
-import {
-  Button,
-  Callout,
-  Intent,
-  Switch,
-  FormGroup,
-  MenuItem
-} from "@blueprintjs/core";
+import { Button, Callout, Intent, Switch } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { handleBooleanChange } from "@blueprintjs/docs-theme";
 import * as React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import "../../forms/forms.scss";
-import { updateObject } from "../../store/utility";
-import {
-  getHeaders,
-  RackRangeFields,
-  DatacenterObject
-} from "../../utils/utils";
-import axios from "axios";
-import { API_ROOT } from "../../utils/api-config";
-import "./elementView.scss";
 import RackRangeForm from "../../forms/rackRangeForm";
-import {
-  DatacenterSelect,
-  renderDatacenterItem,
-  filterDatacenter
-} from "../../forms/formUtils";
+import { updateObject } from "../../store/utility";
+import { getHeaders, RackRangeFields } from "../../utils/utils";
+import "./elementView.scss";
 interface RackSelectViewState {
   viewRange: boolean;
   values: RackRangeFields;
@@ -85,7 +67,6 @@ class RackSelectView extends React.Component<
   componentDidMount() {}
 
   render() {
-    const { values } = this.state;
     return (
       <div>
         <div>

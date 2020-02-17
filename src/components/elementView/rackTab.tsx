@@ -16,7 +16,9 @@ import {
   Alert,
   Button,
   FormGroup,
-  MenuItem
+  MenuItem,
+  Callout,
+  Card
 } from "@blueprintjs/core";
 
 import axios from "axios";
@@ -31,6 +33,7 @@ import RackSelectView from "./rackSelectView";
 import RackView from "./detailedView/rackView/rackView";
 import { connect } from "react-redux";
 import { updateObject } from "../../store/utility";
+import { ALL_DATACENTERS } from "./elementTabContainer";
 interface RackTabState {
   isOpen: boolean;
   isDeleteOpen: boolean;
@@ -189,31 +192,34 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
             ref={this.refHandlers.toaster}
           />
           <div>
-            <FormGroup label="Datacenter" inline={false}>
-              <DatacenterSelect
-                popoverProps={{
-                  minimal: true,
-                  popoverClassName: "dropdown",
-                  usePortal: true
-                }}
-                items={this.props.datacenters!}
-                onItemSelect={(datacenter: DatacenterObject) => {
-                  this.props.onDatacenterSelect!(datacenter);
-                }}
-                itemRenderer={renderDatacenterItem}
-                itemPredicate={filterDatacenter}
-                noResults={<MenuItem disabled={true} text="No results." />}
-              >
-                <Button
-                  rightIcon="caret-down"
-                  text={
-                    this.props.currDatacenter && this.props.currDatacenter.name
-                      ? this.props.currDatacenter.name
-                      : "All datacenters"
-                  }
-                />
-              </DatacenterSelect>
-            </FormGroup>
+            <Callout>
+              <FormGroup label="Datacenter" inline={true}>
+                <DatacenterSelect
+                  popoverProps={{
+                    minimal: true,
+                    popoverClassName: "dropdown",
+                    usePortal: true
+                  }}
+                  items={this.props.datacenters!}
+                  onItemSelect={(datacenter: DatacenterObject) => {
+                    this.props.onDatacenterSelect!(datacenter);
+                  }}
+                  itemRenderer={renderDatacenterItem}
+                  itemPredicate={filterDatacenter}
+                  noResults={<MenuItem disabled={true} text="No results." />}
+                >
+                  <Button
+                    rightIcon="caret-down"
+                    text={
+                      this.props.currDatacenter &&
+                      this.props.currDatacenter.name
+                        ? this.props.currDatacenter.name
+                        : "All datacenters"
+                    }
+                  />
+                </DatacenterSelect>
+              </FormGroup>
+            </Callout>
           </div>
 
           <FormPopup
@@ -241,7 +247,8 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
             <p>Are you sure you want to delete?</p>
           </Alert>
 
-          {this.props.currDatacenter && this.props.currDatacenter.name ? (
+          {this.props.currDatacenter &&
+          this.props.currDatacenter.name !== ALL_DATACENTERS.name ? (
             <div>
               {this.props.isAdmin ? (
                 <div className=" element-tab-buttons">
@@ -271,7 +278,9 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
               <RackSelectView submitForm={this.viewRackForm} />
             </div>
           ) : (
-            <h5>Please select a datacenter to view rack information</h5>
+            <Callout intent={Intent.PRIMARY}>
+              <h5>Please select a datacenter to view rack information</h5>
+            </Callout>
           )}
           <RackView racks={this.state.racks} loading={this.state.loading} />
         </div>

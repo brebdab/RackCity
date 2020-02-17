@@ -8,7 +8,8 @@ import {
   Toaster,
   FormGroup,
   MenuItem,
-  Button
+  Button,
+  Callout
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -215,31 +216,34 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
         />
         <div>
           {this.props.datacenters && this.props.onDatacenterSelect ? (
-            <FormGroup label="Datacenter" inline={false}>
-              <DatacenterSelect
-                popoverProps={{
-                  minimal: true,
-                  popoverClassName: "dropdown",
-                  usePortal: true
-                }}
-                items={this.props.datacenters!}
-                onItemSelect={(datacenter: DatacenterObject) => {
-                  this.props.onDatacenterSelect!(datacenter);
-                }}
-                itemRenderer={renderDatacenterItem}
-                itemPredicate={filterDatacenter}
-                noResults={<MenuItem disabled={true} text="No results." />}
-              >
-                <Button
-                  rightIcon="caret-down"
-                  text={
-                    this.props.currDatacenter && this.props.currDatacenter.name
-                      ? this.props.currDatacenter.name
-                      : "All datacenters"
-                  }
-                />
-              </DatacenterSelect>
-            </FormGroup>
+            <Callout>
+              <FormGroup label="Datacenter" inline={true}>
+                <DatacenterSelect
+                  popoverProps={{
+                    minimal: true,
+                    popoverClassName: "dropdown",
+                    usePortal: true
+                  }}
+                  items={this.props.datacenters!}
+                  onItemSelect={(datacenter: DatacenterObject) => {
+                    this.props.onDatacenterSelect!(datacenter);
+                  }}
+                  itemRenderer={renderDatacenterItem}
+                  itemPredicate={filterDatacenter}
+                  noResults={<MenuItem disabled={true} text="No results." />}
+                >
+                  <Button
+                    rightIcon="caret-down"
+                    text={
+                      this.props.currDatacenter &&
+                      this.props.currDatacenter.name
+                        ? this.props.currDatacenter.name
+                        : "All datacenters"
+                    }
+                  />
+                </DatacenterSelect>
+              </FormGroup>
+            </Callout>
           ) : null}
         </div>
 
