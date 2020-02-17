@@ -24,7 +24,8 @@ import {
   isModelObject,
   isRackObject,
   RackRangeFields,
-  isDatacenterObject
+  isDatacenterObject,
+  DatacenterObject
 } from "../../utils/utils";
 import DragDropList from "./dragDropList";
 import "./elementView.scss";
@@ -71,6 +72,7 @@ interface ElementTableProps {
   token: string;
   disableSorting?: boolean;
   disableFiltering?: boolean;
+  currDatacenter?: DatacenterObject;
   getData?(
     type: string,
     page_num: number,
@@ -94,7 +96,7 @@ interface ElementTableProps {
 class ElementTable extends React.Component<
   ElementTableProps & RouteComponentProps,
   ElementTableState
-  > {
+> {
   public state: ElementTableState = {
     page_type: 10,
     filters: [],
@@ -222,7 +224,7 @@ class ElementTable extends React.Component<
         </span>
         <span>{`${item.field} by ${
           item.ascending ? "ascending" : "descending"
-          }`}</span>
+        }`}</span>
 
         <span>
           <Icon
@@ -534,7 +536,7 @@ class ElementTable extends React.Component<
     if (isDatacenterObject(data)) {
       this.setState({
         editFormValues: data
-      })
+      });
     }
   };
   //EDIT LOGIC
@@ -570,7 +572,7 @@ class ElementTable extends React.Component<
     } else if (isDatacenterObject(values)) {
       modifyDatacenter(values, headers).then(res => {
         this.successfulModification();
-      })
+      });
     }
   };
 
@@ -616,12 +618,13 @@ class ElementTable extends React.Component<
         }
       );
     } else if (isDatacenterObject(this.state.editFormValues)) {
-      deleteDatacenter(this.state.editFormValues, getHeaders(this.props.token)).then(
-        res => {
-          this.addErrorToast("Successfully deleted");
-          this.handleDeleteCancel();
-        }
-      )
+      deleteDatacenter(
+        this.state.editFormValues,
+        getHeaders(this.props.token)
+      ).then(res => {
+        this.addErrorToast("Successfully deleted");
+        this.handleDeleteCancel();
+      });
     }
   };
 
@@ -669,20 +672,20 @@ class ElementTable extends React.Component<
         {this.props.disableFiltering
           ? null
           : [
-            <div className="filter-select">
-              <FilterSelect
-                handleAddFilter={this.addFilter}
-                fields={this.state.fields}
-              />
-            </div>,
-            <div className="table-options">
-              <p>Applied filters:</p>
-              <DragDropList
-                items={this.state.filters}
-                renderItem={this.renderFilterItem}
-              />
-            </div>
-          ]}
+              <div className="filter-select">
+                <FilterSelect
+                  handleAddFilter={this.addFilter}
+                  fields={this.state.fields}
+                />
+              </div>,
+              <div className="table-options">
+                <p>Applied filters:</p>
+                <DragDropList
+                  items={this.state.filters}
+                  renderItem={this.renderFilterItem}
+                />
+              </div>
+            ]}
         {this.props.disableSorting ? null : (
           <div className="table-options">
             <p>Applied sorts:</p>
@@ -707,26 +710,26 @@ class ElementTable extends React.Component<
               </HTMLSelect>
               {this.state.page_type !== PagingTypes.ALL
                 ? [
-                  <span>
-                    <Icon
-                      className="icon"
-                      icon={IconNames.CARET_LEFT}
-                      iconSize={Icon.SIZE_LARGE}
-                      onClick={() => this.previousPage()}
-                    />
-                  </span>,
-                  <span>
-                    page {this.state.curr_page} of {this.state.total_pages}
-                  </span>,
-                  <span>
-                    <Icon
-                      className="icon"
-                      icon={IconNames.CARET_RIGHT}
-                      iconSize={Icon.SIZE_LARGE}
-                      onClick={() => this.nextPage()}
-                    />
-                  </span>
-                ]
+                    <span>
+                      <Icon
+                        className="icon"
+                        icon={IconNames.CARET_LEFT}
+                        iconSize={Icon.SIZE_LARGE}
+                        onClick={() => this.previousPage()}
+                      />
+                    </span>,
+                    <span>
+                      page {this.state.curr_page} of {this.state.total_pages}
+                    </span>,
+                    <span>
+                      <Icon
+                        className="icon"
+                        icon={IconNames.CARET_RIGHT}
+                        iconSize={Icon.SIZE_LARGE}
+                        onClick={() => this.nextPage()}
+                      />
+                    </span>
+                  ]
                 : null}
             </div>
           ) : null}
@@ -834,8 +837,8 @@ class ElementTable extends React.Component<
                   })}
                 </tbody>
               ) : (
-                  <h4 className="no-data-text">no {this.props.type} found </h4>
-                )}
+                <h4 className="no-data-text">no {this.props.type} found </h4>
+              )}
             </table>
           )}
         </div>

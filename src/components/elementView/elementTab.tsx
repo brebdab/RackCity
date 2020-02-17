@@ -5,7 +5,11 @@ import {
   Intent,
   IToastProps,
   Position,
-  Toaster
+  Toaster,
+  FormGroup,
+  MenuItem,
+  Button,
+  Callout
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -13,7 +17,12 @@ import * as React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps } from "react-router";
 import FormPopup from "../../forms/formPopup";
-import { FormTypes } from "../../forms/formUtils";
+import {
+  FormTypes,
+  DatacenterSelect,
+  renderDatacenterItem,
+  filterDatacenter
+} from "../../forms/formUtils";
 import { API_ROOT } from "../../utils/api-config";
 import {
   AssetInfoObject,
@@ -28,7 +37,7 @@ import "./elementView.scss";
 import { IFilter, PagingTypes } from "./elementUtils";
 
 var console: any = {};
-console.log = function () { };
+console.log = function() {};
 const fs = require("js-file-download");
 
 interface ElementViewState {
@@ -42,6 +51,9 @@ interface ElementViewProps {
   element: ElementType;
   isAdmin: boolean;
   token: string;
+  datacenters?: Array<DatacenterObject>;
+  currDatacenter?: DatacenterObject;
+  onDatacenterSelect?(datacenter: DatacenterObject): void;
 }
 export function getPages(
   path: string,
@@ -112,9 +124,9 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       page_type === PagingTypes.ALL
         ? {}
         : {
-          page_size: page_type,
-          page
-        };
+            page_size: page_type,
+            page
+          };
     const config = {
       headers: {
         Authorization: "Token " + token
@@ -167,14 +179,19 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     });
   };
 
-  private createDatacenter = (dc: DatacenterObject, headers: any): Promise<any> => {
+  private createDatacenter = (
+    dc: DatacenterObject,
+    headers: any
+  ): Promise<any> => {
     console.log("api/dataceneters/add");
-    return axios.post(API_ROOT + "api/datacenters/add", dc, headers).then(res => {
-      this.handleDataUpdate(true)
-      this.handleClose();
-      this.addSuccessToast("Successfully created datacenter!");
-      console.log(this.state.isOpen)
-    });
+    return axios
+      .post(API_ROOT + "api/datacenters/add", dc, headers)
+      .then(res => {
+        this.handleDataUpdate(true);
+        this.handleClose();
+        this.addSuccessToast("Successfully created datacenter!");
+        console.log(this.state.isOpen);
+      });
   };
 
   private createUser = (user: CreateUserObject, headers: any): Promise<any> => {
@@ -212,8 +229,42 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
           position={Position.TOP}
           ref={this.refHandlers.toaster}
         />
+        <div>
+          {this.props.datacenters && this.props.onDatacenterSelect ? (
+            <Callout>
+              <FormGroup label="Datacenter" inline={true}>
+                <DatacenterSelect
+                  popoverProps={{
+                    minimal: true,
+                    popoverClassName: "dropdown",
+                    usePortal: true
+                  }}
+                  items={this.props.datacenters!}
+                  onItemSelect={(datacenter: DatacenterObject) => {
+                    this.props.onDatacenterSelect!(datacenter);
+                  }}
+                  itemRenderer={renderDatacenterItem}
+                  itemPredicate={filterDatacenter}
+                  noResults={<MenuItem disabled={true} text="No results." />}
+                >
+                  <Button
+                    rightIcon="caret-down"
+                    text={
+                      this.props.currDatacenter &&
+                      this.props.currDatacenter.name
+                        ? this.props.currDatacenter.name
+                        : "All datacenters"
+                    }
+                  />
+                </DatacenterSelect>
+              </FormGroup>
+            </Callout>
+          ) : null}
+        </div>
+
         <div className="element-tab-buttons">
-          {this.props.element !== ElementType.USER && this.props.element !== ElementType.DATACENTER ? (
+          {this.props.element !== ElementType.USER &&
+          this.props.element !== ElementType.DATACENTER ? (
             <AnchorButton
               className="add"
               text="Export Table Data"
@@ -226,9 +277,11 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               }}
             />
           ) : (
-              <p></p>
-            )}
-          {this.props.isAdmin && this.props.element !== ElementType.USER && this.props.element !== ElementType.DATACENTER ? (
+            <p></p>
+          )}
+          {this.props.isAdmin &&
+          this.props.element !== ElementType.USER &&
+          this.props.element !== ElementType.DATACENTER ? (
             <AnchorButton
               onClick={() => this.props.history.push("/bulk-upload")}
               className="add"
@@ -292,10 +345,10 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               this.props.element === ElementType.MODEL
                 ? this.createModel
                 : this.props.element === ElementType.ASSET
-                  ? this.createAsset
-                  : this.props.element === ElementType.DATACENTER
-                    ? this.createDatacenter
-                    : this.createUser
+                ? this.createAsset
+                : this.props.element === ElementType.DATACENTER
+                ? this.createDatacenter
+                : this.createUser
             }
             isOpen={this.state.isOpen}
             handleClose={this.handleClose}
@@ -311,8 +364,15 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               this.setState({ filters: data });
             }}
             shouldUpdateData={this.state.updateTable}
-            disableSorting={this.props.element === ElementType.USER || this.props.element === ElementType.DATACENTER}
-            disableFiltering={this.props.element === ElementType.USER || this.props.element === ElementType.DATACENTER}
+            disableSorting={
+              this.props.element === ElementType.USER ||
+              this.props.element === ElementType.DATACENTER
+            }
+            disableFiltering={
+              this.props.element === ElementType.USER ||
+              this.props.element === ElementType.DATACENTER
+            }
+            currDatacenter={this.props.currDatacenter}
           />
         </div>
       </div>
