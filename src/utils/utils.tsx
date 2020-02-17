@@ -107,7 +107,8 @@ export type ElementObjectType =
   | RackObject
   | AssetObject
   | AssetInfoObject
-  | UserInfoObject;
+  | UserInfoObject
+  | DatacenterObject;
 
 export type FormObjectType =
   | ModelObjectOld

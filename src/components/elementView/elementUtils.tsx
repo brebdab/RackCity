@@ -1,4 +1,4 @@
-import { RackRangeFields, ModelObject, AssetObject } from "../../utils/utils";
+import { RackRangeFields, ModelObject, AssetObject, DatacenterObject } from "../../utils/utils";
 import { API_ROOT } from "../../utils/api-config";
 import axios from "axios";
 export interface ITableSort {
@@ -83,3 +83,8 @@ export const deleteAsset = (asset: AssetObject, headers: any) => {
 export const modifyAsset = (asset: AssetObject, headers: any): Promise<any> => {
   return axios.post(API_ROOT + "api/assets/modify", asset, headers);
 };
+
+export const deleteDatacenter = (dc: DatacenterObject, headers: any): Promise<any> => {
+  const data = { id: dc.id };
+  return axios.post(API_ROOT + "api/datacenters/delete", data, headers);
+}
