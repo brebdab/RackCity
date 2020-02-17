@@ -1,10 +1,12 @@
 import {
-  Icon,
+  Alert,
+  AnchorButton,
   HTMLSelect,
-  Position,
+  Icon,
+  Intent,
   IToastProps,
-  Toaster,
-  Intent
+  Position,
+  Toaster
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { IconNames } from "@blueprintjs/icons";
@@ -12,16 +14,40 @@ import "@blueprintjs/icons/lib/css/blueprint-icons.css";
 import React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
+import FormPopup from "../../forms/formPopup";
+import { FormTypes } from "../../forms/formUtils";
 import {
   ElementObjectType,
   ElementType,
+  getHeaders,
+  isAssetObject,
   isModelObject,
   isRackObject,
-  RackRangeFields
+  RackRangeFields,
+  isDatacenterObject,
+  DatacenterObject
 } from "../../utils/utils";
 import DragDropList from "./dragDropList";
 import "./elementView.scss";
-import FilterSelectView, { IFilter } from "./filterSelect";
+import FilterSelect from "./filterSelect";
+
+import {
+  ITableSort,
+  PagingTypes,
+  renderTextFilterItem,
+  renderNumericFilterItem,
+  renderRackRangeFilterItem,
+  IFilter,
+  FilterTypes,
+  TextFilter,
+  NumericFilter,
+  deleteModel,
+  deleteAsset,
+  deleteDatacenter,
+  modifyModel,
+  modifyAsset,
+  modifyDatacenter
+} from "./elementUtils";
 
 interface ElementTableState {
   items: Array<ElementObjectType>;
@@ -33,34 +59,12 @@ interface ElementTableState {
   total_pages: number;
   page_type: PagingTypes;
   fields: Array<string>;
+  isEditFormOpen: boolean;
+  editFormValues: ElementObjectType;
+  isDeleteOpen: boolean;
 }
 // var console: any = {};
 // console.log = function() {};
-export interface ITableSort {
-  field: string;
-  ascending: boolean;
-  id: string;
-}
-// const PAGE_SIZE = 10;
-
-export enum PagingTypes {
-  TEN = 10,
-  FIFTY = 50,
-  ALL = "View All"
-}
-export enum FilterTypes {
-  TEXT = "text",
-  NUMERIC = "numeric",
-  RACKRANGE = "rack_range"
-}
-export interface NumericFilter {
-  min: number;
-  max: number;
-}
-export interface TextFilter {
-  value: string;
-  match_type: string;
-}
 
 interface ElementTableProps {
   callback?: Function;
@@ -68,6 +72,7 @@ interface ElementTableProps {
   token: string;
   disableSorting?: boolean;
   disableFiltering?: boolean;
+  currDatacenter?: DatacenterObject;
   getData?(
     type: string,
     page_num: number,
@@ -85,6 +90,7 @@ interface ElementTableProps {
   ): Promise<number>;
   data?: Array<ElementObjectType>;
   shouldUpdateData?: boolean;
+  isAdmin: boolean;
 }
 
 class ElementTable extends React.Component<
@@ -92,7 +98,6 @@ class ElementTable extends React.Component<
   ElementTableState
 > {
   public state: ElementTableState = {
-    // sort_by_id: [],
     page_type: 10,
     filters: [],
     sort_by: [],
@@ -100,9 +105,19 @@ class ElementTable extends React.Component<
     sorted_cols: [],
     curr_page: 1,
     total_pages: 0,
-    fields: []
+    fields: [],
+    isEditFormOpen: false,
+    editFormValues: {} as ElementObjectType,
+    isDeleteOpen: false
   };
 
+  //PAGING LOGIC
+  resetPage = () => {
+    console.log("setting currpage to 1");
+    this.setState({
+      curr_page: 1
+    });
+  };
   previousPage = () => {
     if (this.state.curr_page > 1 && this.props.getData) {
       const next_page = this.state.curr_page - 1;
@@ -145,25 +160,32 @@ class ElementTable extends React.Component<
     }
   };
 
-  renderTextFilterItem = (item: TextFilter) => {
-    return `${item.match_type} ${item.value}`;
+  handlePagingChange = (page: PagingTypes) => {
+    this.setState({
+      page_type: page
+    });
+    this.updateData(page);
   };
+  // FILTERING AND SORTING DISPLAY
 
-  renderNumericFilterItem = (item: NumericFilter) => {
-    return `between ${item.min} - ${item.max}`;
+  getScrollIcon = (field: string) => {
+    return this.props.disableSorting ? null : (
+      <Icon
+        className="icon"
+        icon={IconNames.DOUBLE_CARET_VERTICAL}
+        iconSize={Icon.SIZE_STANDARD}
+        onClick={() => this.handleSort(field)}
+      />
+    );
   };
-  renderRackRangeFilterItem = (item: RackRangeFields) => {
-    return `rows  ${item.letter_start} - ${item.letter_end} & racks ${item.num_start} - ${item.num_end}`;
-  };
-
   renderFilterItem = (item: IFilter) => {
     let display;
     if (item.filter_type === FilterTypes.TEXT) {
-      display = this.renderTextFilterItem(item.filter! as TextFilter);
+      display = renderTextFilterItem(item.filter! as TextFilter);
     } else if (item.filter_type === FilterTypes.NUMERIC) {
-      display = this.renderNumericFilterItem(item.filter! as NumericFilter);
+      display = renderNumericFilterItem(item.filter! as NumericFilter);
     } else if (item.filter_type === FilterTypes.RACKRANGE) {
-      display = this.renderRackRangeFilterItem(item.filter as RackRangeFields);
+      display = renderRackRangeFilterItem(item.filter as RackRangeFields);
     }
     return (
       <div className="drag-drop-text">
@@ -188,9 +210,6 @@ class ElementTable extends React.Component<
         </span>
       </div>
     );
-    // field: string;
-    // filter_type: FilterTypes;
-    // filter: TextFilter | NumericFilter | RackRangeFields;
   };
 
   renderSortItem = (item: ITableSort) => {
@@ -218,14 +237,13 @@ class ElementTable extends React.Component<
       </div>
     );
   };
-  private addToast(toast: IToastProps) {
-    toast.timeout = 5000;
-    this.toaster.show(toast);
-  }
 
-  private toaster: Toaster = {} as Toaster;
-  private refHandlers = {
-    toaster: (ref: Toaster) => (this.toaster = ref)
+  // SORTING AND FILTERING LOGIC
+  updateSortOrder = (items: Array<ITableSort>) => {
+    this.setState({
+      sort_by: items
+    });
+    this.updateSortData(items);
   };
 
   removeSortItem = (field: string) => {
@@ -241,7 +259,6 @@ class ElementTable extends React.Component<
     this.setState({
       sort_by: sorts,
       sorted_cols
-      // sort_by_id: sorts_id
     });
     this.updateSortData(sorts);
   };
@@ -276,7 +293,6 @@ class ElementTable extends React.Component<
       ascending = true;
       sorted_cols.push(field);
     }
-    // if (!this.state.sorted_cols.includes(field)) {
 
     sorts.push({
       field,
@@ -286,28 +302,32 @@ class ElementTable extends React.Component<
     this.setState({
       sort_by: sorts,
       sorted_cols
-      // sort_by_id: sorts_id
     });
     this.updateSortData(sorts);
-    // } else {
-    // }
   }
 
-  updateFilterData = (items: Array<IFilter>) => {
-    console.log("detected new filters", {
-      sort_by: this.state.sort_by,
-      filters: items
+  addFilter = (filter: IFilter) => {
+    const filters = this.state.filters;
+    filters.push(filter);
+    console.log(filters);
+    this.setState({
+      filters
     });
+    this.updateFilterData(filters);
+  };
+
+  updateFilterData = (items: Array<IFilter>) => {
     console.log(items);
     if (this.props.callback! !== undefined) this.props.callback(items);
     const filter_body = items.map(item => {
       const { field, filter_type, filter } = item;
       return { field, filter_type, filter };
     });
+    this.resetPage();
     if (this.props.getData) {
       this.props.getData!(
         this.props.type,
-        this.state.curr_page,
+        1,
         this.state.page_type,
         { sort_by: this.state.sort_by, filters: filter_body },
         this.props.token
@@ -335,7 +355,7 @@ class ElementTable extends React.Component<
         .getPages(
           this.props.type,
           this.state.page_type,
-          this.state.filters,
+          items,
           this.props.token
         )
         .then(res => {
@@ -398,15 +418,43 @@ class ElementTable extends React.Component<
       });
     }
   };
+
+  //TOASTS
+  private toaster: Toaster = {} as Toaster;
+  private addToast = (toast: IToastProps) => {
+    toast.timeout = 5000;
+    this.toaster.show(toast);
+  };
+  private addSuccessToast = (message: string) => {
+    this.addToast({ message: message, intent: Intent.PRIMARY });
+  };
+  private addErrorToast = (message: string) => {
+    this.addToast({ message: message, intent: Intent.DANGER });
+  };
+
+  private refHandlers = {
+    toaster: (ref: Toaster) => (this.toaster = ref)
+  };
+
   componentDidUpdate() {
-    if (this.props.shouldUpdateData) {
+    if (this.props.shouldUpdateData && !this.props.data) {
       console.log("table updated");
       this.updateTableData();
     }
   }
   componentDidMount() {
     console.log("table mounted ");
-    this.updateTableData();
+    console.log(this.props.data);
+
+    if (this.props.data) {
+      console.log(this.props.data);
+      this.setState({
+        items: this.props.data
+      });
+      this.setFieldNames();
+    } else {
+      this.updateTableData();
+    }
   }
   updateTableData = () => {
     const sorts_body = this.state.sort_by.map(item => {
@@ -448,85 +496,175 @@ class ElementTable extends React.Component<
         });
     }
   };
-  updateSortOrder = (items: Array<ITableSort>) => {
-    // console.log(items);
-    this.setState({
-      sort_by: items
-    });
-    this.updateSortData(items);
-  };
 
-  updateFilterOrder = (items: Array<IFilter>) => {
-    this.setState({
-      filters: items,
-      curr_page: 1
-    });
-    this.updateFilterData(items);
-  };
-  setFieldNames = () => {
+  setFieldNamesFromData = (items: Array<ElementObjectType>) => {
     let fields: Array<string> = [];
-
-    if (this.state.items && this.state.items.length > 0) {
-      Object.keys(this.state.items[0]).forEach((col: string) => {
-        if (col === "model") {
-          fields.push("model__vendor");
-          fields.push("model__model_number");
-        }
-        if (col === "network_ports") {
-          fields.push("num_network_ports");
-        } else if (col !== "id") {
-          fields.push(col);
-        }
-      });
-      this.setState({
-        fields: fields
-      });
-    }
-
+    Object.keys(items[0]).forEach((col: string) => {
+      if (col === "model") {
+        fields.push("model__vendor");
+        fields.push("model__model_number");
+      }
+      if (col === "network_ports") {
+        fields.push("num_network_ports");
+      } else if (col !== "id") {
+        fields.push(col);
+      }
+    });
+    this.setState({
+      fields: fields
+    });
     console.log("COLUMN NAMES", fields);
   };
+  setFieldNames = () => {
+    console.log("FIELD NAMES", this.state.items);
 
-  getScrollIcon = (field: string) => {
-    return this.props.disableSorting ? null : (
-      <Icon
-        className="icon"
-        icon={IconNames.DOUBLE_CARET_VERTICAL}
-        iconSize={Icon.SIZE_STANDARD}
-        onClick={() => this.handleSort(field)}
+    if (this.state.items && this.state.items.length > 0) {
+      this.setFieldNamesFromData(this.state.items);
+    }
+  };
+
+  //EDIT AND DELETE LOGIC
+  handleInlineButtonClick = (data: ElementObjectType) => {
+    // const headers = getHeaders(this.props.token);
+    if (isAssetObject(data)) {
+      this.setState({
+        editFormValues: data
+      });
+    }
+    if (isModelObject(data)) {
+      this.setState({
+        editFormValues: data
+      });
+    }
+    if (isDatacenterObject(data)) {
+      this.setState({
+        editFormValues: data
+      });
+    }
+  };
+  //EDIT LOGIC
+  handleEditFormClose = () => this.setState({ isEditFormOpen: false });
+  getEditForm = () => {
+    return (
+      <FormPopup
+        isOpen={this.state.isEditFormOpen}
+        initialValues={this.state.editFormValues}
+        type={FormTypes.MODIFY}
+        elementName={this.props.type}
+        handleClose={this.handleEditFormClose}
+        submitForm={this.getSubmitFormFunction(FormTypes.MODIFY)}
       />
     );
   };
-  addFilter = (filter: IFilter) => {
-    const filters = this.state.filters;
-    filters.push(filter);
-    console.log(filters);
-    this.setState({
-      filters
-    });
-    this.updateFilterData(filters);
+
+  successfulModification() {
+    this.updateTableData();
+    this.handleEditFormClose();
+    this.addSuccessToast("Successfuly modified");
+  }
+
+  handleEditFormSubmit = (values: ElementObjectType, headers: any) => {
+    if (isModelObject(values)) {
+      modifyModel(values, headers).then(res => {
+        this.successfulModification();
+      });
+    } else if (isAssetObject(values)) {
+      modifyAsset(values, headers).then(res => {
+        this.successfulModification();
+      });
+    } else if (isDatacenterObject(values)) {
+      modifyDatacenter(values, headers).then(res => {
+        this.successfulModification();
+      });
+    }
   };
-  handlePagingChange = (page: PagingTypes) => {
+
+  handleEditFormOpen = () => {
     this.setState({
-      page_type: page
+      isEditFormOpen: true
     });
-    this.updateData(page);
   };
+
+  getSubmitFormFunction = (type: FormTypes) => {
+    let submitForm;
+    // if (type === FormTypes.MODIFY) {
+    submitForm = this.handleEditFormSubmit;
+    return submitForm;
+  };
+  handleEditButtonClick = (data: ElementObjectType) => {
+    this.handleInlineButtonClick(data);
+    this.handleEditFormOpen();
+  };
+
+  //DELETE LOGIC
+
+  private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
+  private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
+
+  private handleDelete = () => {
+    console.log("DELETE");
+    if (isModelObject(this.state.editFormValues)) {
+      deleteModel(this.state.editFormValues, getHeaders(this.props.token))
+        .then(res => {
+          this.addErrorToast("Sucessfully deleted");
+          this.handleDeleteCancel();
+        })
+        .catch(err => {
+          this.addErrorToast(err.response.data.failure_message);
+          this.handleDeleteCancel();
+        });
+    } else if (isAssetObject(this.state.editFormValues)) {
+      deleteAsset(this.state.editFormValues, getHeaders(this.props.token)).then(
+        res => {
+          this.addErrorToast("Sucessfully deleted");
+          this.handleDeleteCancel();
+        }
+      );
+    } else if (isDatacenterObject(this.state.editFormValues)) {
+      deleteDatacenter(
+        this.state.editFormValues,
+        getHeaders(this.props.token)
+      ).then(res => {
+        this.addErrorToast("Successfully deleted");
+        this.handleDeleteCancel();
+      });
+    }
+  };
+
+  handleDeleteButtonClick = (data: ElementObjectType) => {
+    this.handleInlineButtonClick(data);
+    this.handleDeleteOpen();
+  };
+
   render() {
-    // console.log(this.state.items);
+    console.log(this.state.items);
     // console.log(!(this.state.items && this.state.items.length > 0));
-    //
+
     if (
       this.props.data &&
       this.props.data.length !== 0 &&
       this.state.items.length === 0
     ) {
+      console.log("Setting items", this.props.data);
       this.setState({
         items: this.props.data
       });
+      this.setFieldNamesFromData(this.props.data);
     }
 
     return (
-      <div>
+      <div className="tab-panel">
+        {this.getEditForm()}
+        <Alert
+          cancelButtonText="Cancel"
+          confirmButtonText="Delete"
+          intent="danger"
+          isOpen={this.state.isDeleteOpen}
+          onCancel={this.handleDeleteCancel}
+          onConfirm={this.handleDelete}
+        >
+          <p>Are you sure you want to delete?</p>
+        </Alert>
         <Toaster
           autoFocus={false}
           canEscapeKeyClear={true}
@@ -538,7 +676,7 @@ class ElementTable extends React.Component<
           ? null
           : [
               <div className="filter-select">
-                <FilterSelectView
+                <FilterSelect
                   handleAddFilter={this.addFilter}
                   fields={this.state.fields}
                 />
@@ -548,7 +686,6 @@ class ElementTable extends React.Component<
                 <DragDropList
                   items={this.state.filters}
                   renderItem={this.renderFilterItem}
-                  onChange={this.updateFilterOrder}
                 />
               </div>
             ]}
@@ -632,6 +769,7 @@ class ElementTable extends React.Component<
 
                     return null;
                   })}
+                  <th></th>
                 </tr>
               </thead>
               {this.state.items && this.state.items.length > 0 ? (
@@ -639,11 +777,12 @@ class ElementTable extends React.Component<
                   {this.state.items.map((item: ElementObjectType) => {
                     return (
                       <tr
-                        onClick={() =>
+                        onClick={() => {
+                          console.log("redirecting", item.id);
                           this.props.history.push(
                             "/" + this.props.type + "/" + item.id
-                          )
-                        }
+                          );
+                        }}
                       >
                         {Object.entries(item).map(([col, value]) => {
                           if (isModelObject(value)) {
@@ -672,19 +811,38 @@ class ElementTable extends React.Component<
 
                           return null;
                         })}
+                        <td>
+                          {this.props.isAdmin ? (
+                            <div className="inline-buttons">
+                              <AnchorButton
+                                className="button-table"
+                                intent="primary"
+                                icon="edit"
+                                minimal
+                                onClick={(event: any) => {
+                                  this.handleEditButtonClick(item);
+                                  event.stopPropagation();
+                                }}
+                              />
+                              <AnchorButton
+                                className="button-table"
+                                intent="danger"
+                                minimal
+                                icon="trash"
+                                onClick={(event: any) => {
+                                  this.handleDeleteButtonClick(item);
+                                  event.stopPropagation();
+                                }}
+                              />
+                            </div>
+                          ) : null}
+                        </td>
                       </tr>
                     );
                   })}
                 </tbody>
               ) : (
-                <div className="loading-container">
-                  {/* <Spinner
-                    className="center"
-                    intent="primary"
-                    size={Spinner.SIZE_STANDARD}
-                  /> */}
-                  <h4 className="center">no {this.props.type} found </h4>
-                </div>
+                <h4 className="no-data-text">no {this.props.type} found </h4>
               )}
             </table>
           )}
@@ -695,7 +853,8 @@ class ElementTable extends React.Component<
 }
 const mapStateToProps = (state: any) => {
   return {
-    token: state.token
+    token: state.token,
+    isAdmin: state.admin
   };
 };
 export default connect(mapStateToProps)(withRouter(ElementTable));

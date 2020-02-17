@@ -12,7 +12,7 @@ import { connect } from "react-redux";
 
 import {
   AssetObject,
-  ModelObjectOld,
+  ModelObject,
   AssetInfoObject,
   getHeaders,
   RackObject,
@@ -35,7 +35,7 @@ import {
 } from "./formUtils";
 import axios from "axios";
 import { API_ROOT } from "../utils/api-config";
-import { PagingTypes } from "../components/elementView/elementTable";
+import { PagingTypes } from "../components/elementView/elementUtils";
 
 //TO DO : add validation of types!!!
 
@@ -48,27 +48,24 @@ export interface AssetFormProps {
 interface AssetFormState {
   values: AssetObject;
   racks: Array<RackObject>;
-  models: Array<ModelObjectOld>;
+  models: Array<ModelObject>;
   errors: Array<string>;
   users: Array<string>;
 }
 var console: any = {};
-console.log = function () { };
+console.log = function() {};
 
 export const required = (
   values: AssetObject,
   fieldName: keyof AssetObject
 ): string =>
   values[fieldName] === undefined ||
-    values[fieldName] === null ||
-    values[fieldName] === ""
+  values[fieldName] === null ||
+  values[fieldName] === ""
     ? "This must be populated"
     : "";
 
-class AssetForm extends React.Component<
-  AssetFormProps,
-  AssetFormState
-  > {
+class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   initialState: AssetObject = this.props.initialValues
     ? this.props.initialValues
     : ({} as AssetObject);
@@ -98,9 +95,9 @@ class AssetForm extends React.Component<
       page_type === PagingTypes.ALL
         ? {}
         : {
-          page_size: page_type,
-          page
-        };
+            page_size: page_type,
+            page
+          };
     const config = {
       headers: {
         Authorization: "Token " + token
@@ -116,9 +113,7 @@ class AssetForm extends React.Component<
         return items;
       });
   }
-  private mapAssetObject = (
-    asset: AssetObject
-  ): AssetInfoObject => {
+  private mapAssetObject = (asset: AssetObject): AssetInfoObject => {
     console.log(asset);
 
     const { hostname, id, rack_position, owner, comment } = asset;
@@ -214,7 +209,7 @@ class AssetForm extends React.Component<
         this.props.token
       ).then(res => {
         this.setState({
-          models: res as Array<ModelObjectOld>
+          models: res as Array<ModelObject>
         });
       });
     }
@@ -260,7 +255,7 @@ class AssetForm extends React.Component<
                 usePortal: true
               }}
               items={this.state.models}
-              onItemSelect={(model: ModelObjectOld) =>
+              onItemSelect={(model: ModelObject) =>
                 this.setState({
                   values: updateObject(values, { model: model })
                 })
@@ -274,8 +269,8 @@ class AssetForm extends React.Component<
                 text={
                   this.state.values.model
                     ? this.state.values.model.vendor +
-                    " " +
-                    this.state.values.model.model_number
+                      " " +
+                      this.state.values.model.model_number
                     : "Select a model"
                 }
               />
@@ -303,8 +298,8 @@ class AssetForm extends React.Component<
                 text={
                   this.state.values.rack
                     ? this.state.values.rack.row_letter +
-                    " " +
-                    this.state.values.rack.rack_num
+                      " " +
+                      this.state.values.rack.rack_num
                     : "Select a rack"
                 }
               />

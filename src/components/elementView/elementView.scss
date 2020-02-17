@@ -1,35 +1,42 @@
-.rowC {
-  display: flex;
-  flex-direction: row;
-}
-
-.tab {
-  width: 100%;
-  padding: 10pt;
-}
+// .tab {
+//   width: 100%;
+//   padding: 5pt;
+// }
 .tab:focus {
   outline: none;
 }
 
-.table-nav-bar {
-  padding-top: 20pt;
-}
-.loading-container {
-  text-align: center;
-  display: block;
-}
-.center {
+// .table-nav-bar {
+//   padding-top: 20pt;
+// }
+.inline-buttons {
   display: inline-block;
-  padding: 10px;
+  white-space: nowrap;
+  overflow: auto;
+}
+
+.no-data-text {
+  padding: 30px;
+}
+.tab-panel {
+  width: 100%;
 }
 .element-table {
   position: relative;
-
-  min-width: 100%;
-  overflow: auto;
+  // float: left;
+  width: 100% !important;
+  overflow-x: scroll;
   display: inline-block;
 }
-
+.bp3-callout {
+  margin-bottom: 5pt;
+  padding-bottom: 2pt;
+}
+.element-view {
+  margin: 10pt;
+  overflow: clip;
+  width: calc(100% - 110pt) !important;
+}
 .filter-select {
   margin: 0 !important;
 }
@@ -50,12 +57,12 @@
   float: right;
 }
 
-.header-cell {
-  // cursor: pointer !important;
-  white-space: nowrap !important;
-  overflow: visible;
-  width: max-content !important;
-}
+// .header-cell {
+//   // cursor: pointer !important;
+//   white-space: nowrap !important;
+//   overflow: visible;
+//   width: max-content !important;
+// }
 .header-text {
   white-space: nowrap !important;
   overflow: auto;
@@ -66,14 +73,16 @@
 .drag-drop-text span ~ span {
   padding-left: 5px !important;
 }
-.header-text span {
+.header-text span ~ span {
   padding-right: 0px !important;
-  margin-right: 10px !important;
+  margin-left: 5px !important;
 }
 .modelname-text {
   margin-right: 10px;
 }
-
+.element-tab-buttons {
+  float: right;
+}
 .hostname-text {
   margin-left: 10px !important;
   padding-right: 100px !important;
@@ -96,6 +105,9 @@
   float: left;
 }
 
+.tab {
+  width: 100%;
+}
 // .table-options {
 //   margin-top: 120px;
 // }
