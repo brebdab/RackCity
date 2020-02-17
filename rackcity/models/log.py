@@ -13,8 +13,9 @@ class Log(models.Model):
     log_content = models.TextField()
     user = models.ForeignKey(
         User,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         verbose_name="related user",
+        null=True,
     )
     related_assets = models.ManyToManyField(
         Asset,
@@ -23,7 +24,7 @@ class Log(models.Model):
     )
     related_model = models.ForeignKey(
         ITModel,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         verbose_name="related model",
         null=True,
         blank=True,
