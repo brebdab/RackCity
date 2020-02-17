@@ -5,7 +5,6 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from .it_model import ITModel
 from .rack import Rack
-#from .network_port import NetworkPort
 
 
 def validate_hostname(value):
