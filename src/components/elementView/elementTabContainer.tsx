@@ -40,9 +40,9 @@ class ElementTabContainer extends React.Component<
   };
   getDatacenters = (token: string) => {
     const headers = getHeaders(token);
-    console.log(API_ROOT + "api/datacenters/get-all");
+    // console.log(API_ROOT + "api/datacenters/get-all");
     axios
-      .get(API_ROOT + "api/datacenters/get-all", headers)
+      .post(API_ROOT + "api/datacenters/get-many", {}, headers)
       .then(res => {
         console.log(res.data.datacenters);
         const datacenters = res.data.datacenters as Array<DatacenterObject>;
@@ -103,7 +103,17 @@ class ElementTabContainer extends React.Component<
           panel={<ElementTab {...this.props} element={ElementType.MODEL} />}
         />
 
-        <Tab className="tab" id="datacenter" title="Datacenters" />
+        {this.props.isAdmin ? (
+          <Tab
+            className="tab"
+            id="datacenter"
+            title="Datacenters"
+            panel={
+              <ElementTab {...this.props} element={ElementType.DATACENTER} />
+            }
+          />
+        ) : null}
+
         <Tabs.Expander />
       </Tabs>
     );

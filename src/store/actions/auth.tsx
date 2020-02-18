@@ -1,6 +1,9 @@
 import axios from "axios";
 import { API_ROOT } from "../../utils/api-config";
 import * as actionTypes from "./actionTypes";
+
+export const DUKE_OAUTH_URI = "https://oauth.oit.duke.edu/oauth/authorize.php?client_id=hyposoft-rack-city&response_type=token&state=1129&scope=basic&redirect_uri="
+
 export const authStart = () => {
   return {
     type: actionTypes.AUTH_START
@@ -78,6 +81,25 @@ export const authLogin = (username: string, password: string) => {
       .post(API_ROOT + "rest-auth/login/", {
         username: username,
         password: password
+      })
+      .then(res => {
+        console.log(res);
+        loginHelper(res, dispatch);
+      })
+      .catch(err => {
+        console.log("login failed", err);
+        dispatch(authFail(err));
+      });
+  };
+};
+
+export const netidAuthLogin = (access_token: string) => {
+  return (dispatch: any) => {
+    dispatch(authStart());
+    console.log(API_ROOT + "api/users/netid-login");
+    axios
+      .post(API_ROOT + "api/users/netid-login", {
+        access_token: access_token
       })
       .then(res => {
         console.log(res);

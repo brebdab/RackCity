@@ -4,6 +4,7 @@ from .asset_serializers import (
     RecursiveAssetSerializer,
     BulkAssetSerializer,
 )
+from .log_serializers import LogSerializer
 from .it_model_serializers import (
     ITModelSerializer,
     BulkITModelSerializer,

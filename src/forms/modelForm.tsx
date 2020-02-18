@@ -16,6 +16,7 @@ import { ModelObject } from "../utils/utils";
 import { updateObject } from "../store/utility";
 import Field from "./field";
 import "./forms.scss";
+import $ from "jquery";
 import {
   filterString,
   renderCreateItemOption,
@@ -38,7 +39,7 @@ interface ModelFormState {
   values: ModelObject;
   vendors: Array<string>;
   errors: Array<string>;
-  numNetworkPorts: number;
+  networkPortsTemp: Array<string>;
 }
 
 export const required = (
@@ -53,13 +54,16 @@ export const required = (
 
 class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
   initialState: ModelObject = this.props.initialValues
-    ? this.props.initialValues
+    ? JSON.parse(JSON.stringify(this.props.initialValues))
     : ({} as ModelObject);
+
   public state = {
     values: this.initialState,
     vendors: [],
     errors: [],
-    numNetworkPorts: 0
+    networkPortsTemp: this.initialState.network_ports
+      ? this.initialState.network_ports
+      : []
   };
   headers = {
     headers: {
@@ -116,18 +120,28 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
     let network_ports: Array<string> = this.state.values.network_ports
       ? this.state.values.network_ports
       : [];
+
     if (field["num_network_ports"]) {
       let num_network_ports = field["num_network_ports"];
-
+      console.log(num_network_ports, network_ports);
       let index = network_ports.length;
       while (network_ports.length < num_network_ports) {
+        console.log(index, this.state.networkPortsTemp.length);
+        if (index < this.state.networkPortsTemp.length) {
+          network_ports.push(this.state.networkPortsTemp[index]);
+        } else {
+          network_ports.push(((index + 1) as unknown) as string);
+        }
         index++;
-        network_ports.push((index as unknown) as string);
       }
       while (network_ports.length > num_network_ports) {
         network_ports.pop();
       }
     } else if (field["num_network_ports"] === "") {
+      console.log(network_ports);
+      this.setState({
+        networkPortsTemp: network_ports
+      });
       network_ports = [];
     }
     this.setState({
@@ -136,6 +150,8 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
         network_ports
       })
     });
+    console.log(this.props.initialValues);
+    console.log(this.state.values);
   };
 
   handleNetworkPortNameChange = (index: number, name: string) => {
@@ -145,17 +161,26 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
     network_ports[index] = name;
     this.setState({
       values: updateObject(this.state.values, {
-        network_ports
+        ...network_ports
       })
     });
   };
   selectText = (event: any) => event.target.select();
+  componentDidMount = () => {
+    $(".suggest").keydown(function(event) {
+      if (event.keyCode === 13) {
+        event.preventDefault();
+        return false;
+      }
+    });
+  };
 
   render() {
     if (this.state.vendors.length === 0) {
       this.getVendors();
     }
     const { values } = this.state;
+    console.log("vendor", this.state.values.vendor);
     return (
       <div className={Classes.DARK + " login-container"}>
         {this.state.errors.map((err: string) => {
@@ -165,7 +190,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
           onSubmit={this.handleSubmit}
           className="create-form bp3-form-group"
         >
-          <FormGroup label="Vendor (required)">
+          <FormGroup className="suggest" label="Vendor (required)">
             <StringSuggest
               popoverProps={{
                 minimal: true,
@@ -173,18 +198,20 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
                 usePortal: true
               }}
               defaultSelectedItem={this.state.values.vendor}
-              inputValueRenderer={(vendor: string) => vendor}
+              inputValueRenderer={(vendor: string) => this.state.values.vendor}
               items={this.state.vendors}
-              onItemSelect={(vendor: string) =>
-                this.setState({
-                  values: updateObject(values, { vendor: vendor })
-                })
-              }
-              onQueryChange={(vendor: string) => {
+              onItemSelect={(vendor: string) => {
+                console.log("item selected ");
                 this.setState({
                   values: updateObject(values, { vendor: vendor })
                 });
               }}
+              // onQueryChange={(vendor: string) => {
+              //   console.log("CHANGE", vendor);
+              //   this.setState({
+              //     values: updateObject(values, { vendor: vendor })
+              //   });
+              // }}
               createNewItemRenderer={renderCreateItemOption}
               createNewItemFromQuery={(vendor: string) => vendor}
               itemRenderer={renderStringItem}
@@ -192,6 +219,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
               noResults={<MenuItem disabled={true} text="No results." />}
             />
           </FormGroup>
+
           <FormGroup label="Model Number (required)" inline={false}>
             <Field
               placeholder="model_number"
@@ -218,43 +246,42 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
               onChange={this.handleChange}
             />
           </FormGroup>
-          <FormGroup label="Network Ports " inline={false}>
+          <FormGroup label="Number of Network Ports " inline={false}>
             <Field
               field="num_network_ports"
               type="string"
-              value={values.network_ports ? values.network_ports.length : 0}
+              value={values.num_network_ports}
               onChange={this.handleChange}
             />
 
-            {values.network_ports &&
-            values.network_ports.length === 0 ? null : (
+            {!(
+              values.network_ports && values.network_ports.length !== 0
+            ) ? null : (
               <table className="port-table">
                 <thead>
                   <th>Port Name(s) </th>
                 </thead>
                 <tbody>
-                  {values.network_ports
-                    ? values.network_ports.map((port, index) => {
-                        return (
-                          <tr>
-                            <td>
-                              <InputGroup
-                                onClick={this.selectText}
-                                value={port}
-                                type="string"
-                                className="network-name"
-                                onChange={(e: any) =>
-                                  this.handleNetworkPortNameChange(
-                                    index,
-                                    e.currentTarget.value
-                                  )
-                                }
-                              />
-                            </td>
-                          </tr>
-                        );
-                      })
-                    : null}
+                  {values.network_ports.map((port, index) => {
+                    return (
+                      <tr>
+                        <td>
+                          <InputGroup
+                            onClick={this.selectText}
+                            value={port}
+                            type="string"
+                            className="network-name"
+                            onChange={(e: any) =>
+                              this.handleNetworkPortNameChange(
+                                index,
+                                e.currentTarget.value
+                              )
+                            }
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             )}
@@ -299,12 +326,13 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
             />
           </FormGroup>
           <FormGroup label="Comment" inline={false}>
-            <Field
-              field="comment"
+            <textarea
+              className={Classes.INPUT}
               placeholder="comment"
-              value={values.comment}
-              onChange={this.handleChange}
-            />
+              onChange={(e: any) =>
+                this.handleChange({ comment: e.currentTarget.value })
+              }
+            ></textarea>
           </FormGroup>
 
           <Button className="login-button" type="submit">
