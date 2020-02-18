@@ -405,7 +405,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                   <Checkbox
                     className="checkbox"
                     checked={this.state.power_ports_enabled[i]}
-                    label="Use Default Values "
+                    label="Use Suggested Values "
                     onChange={(event: any) => {
                       console.log(
                         "setting staus to ",
@@ -442,7 +442,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                     const power_connections = this.state.values
                       .power_connections;
                     power_connections[i] = updateObject(power_connections[i], {
-                      left_right: PowerSide.LEFT
+                      left_right: PowerSide.LEFT,
+                      port_number: undefined
                     });
                     this.changeCheckBoxState(i, false);
                     this.setState({
@@ -461,7 +462,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                     const power_connections = this.state.values
                       .power_connections;
                     power_connections[i] = updateObject(power_connections[i], {
-                      left_right: PowerSide.RIGHT
+                      left_right: PowerSide.RIGHT,
+                      port_number: undefined
                     });
                     this.changeCheckBoxState(i, false);
                     this.setState({
@@ -549,7 +551,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
               field="hostname"
             />
           </FormGroup>
-          <FormGroup label="Datacenter" inline={false}>
+          <FormGroup label="Datacenter (required)" inline={false}>
             <DatacenterSelect
               popoverProps={{
                 minimal: true,
@@ -576,37 +578,37 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
               />
             </DatacenterSelect>
           </FormGroup>
-
-          <FormGroup label="Rack (required)" inline={false}>
-            <RackSelect
-              popoverProps={{
-                minimal: true,
-                popoverClassName: "dropdown",
-                usePortal: true
-              }}
-              disabled={isNullOrUndefined(this.state.currDatacenter)}
-              items={this.state.racks}
-              onItemSelect={(rack: RackObject) =>
-                this.setState({
-                  values: updateObject(values, { rack: rack })
-                })
-              }
-              itemRenderer={renderRackItem}
-              itemPredicate={filterRack}
-              noResults={<MenuItem disabled={true} text="No results." />}
-            >
-              <Button
-                rightIcon="caret-down"
-                text={
-                  this.state.values.rack
-                    ? this.state.values.rack.row_letter +
-                      " " +
-                      this.state.values.rack.rack_num
-                    : "Select a rack"
+          <Collapse isOpen={!isNullOrUndefined(this.state.currDatacenter)}>
+            <FormGroup label="Rack (required)" inline={false}>
+              <RackSelect
+                popoverProps={{
+                  minimal: true,
+                  popoverClassName: "dropdown",
+                  usePortal: true
+                }}
+                items={this.state.racks}
+                onItemSelect={(rack: RackObject) =>
+                  this.setState({
+                    values: updateObject(values, { rack: rack })
+                  })
                 }
-              />
-            </RackSelect>
-          </FormGroup>
+                itemRenderer={renderRackItem}
+                itemPredicate={filterRack}
+                noResults={<MenuItem disabled={true} text="No results." />}
+              >
+                <Button
+                  rightIcon="caret-down"
+                  text={
+                    this.state.values.rack
+                      ? this.state.values.rack.row_letter +
+                        " " +
+                        this.state.values.rack.rack_num
+                      : "Select a rack"
+                  }
+                />
+              </RackSelect>
+            </FormGroup>
+          </Collapse>
           <FormGroup label="Rack position (required)" inline={false}>
             <Field
               field="rack_position"
