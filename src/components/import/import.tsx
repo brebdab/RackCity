@@ -5,7 +5,7 @@ import * as React from "react";
 import { API_ROOT } from "../../utils/api-config";
 import { RouteComponentProps, withRouter } from "react-router";
 import { connect } from "react-redux";
-import { AssetObject, ModelObjectOld } from "../../utils/utils";
+import { AssetObjectOld, ModelObjectOld } from "../../utils/utils";
 import "./import.scss";
 import { FileSelector } from "../lib/fileSelect"
 import { Modifier } from "./viewModified"
@@ -24,7 +24,7 @@ interface AlertState {
   assetAlterationsIsOpen: boolean,
   selectedFile?: File,
   loadedModels?: Array<ModelObjectOld>,
-  loadedAssets?: Array<AssetObject>,
+  loadedAssets?: Array<AssetObjectOld>,
   modifiedModels?: Array<any>,
   modifiedAssets?: Array<any>,
   ignoredModels?: number,

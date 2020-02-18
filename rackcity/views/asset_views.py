@@ -15,6 +15,13 @@ from rackcity.api.serializers import (
     ITModelSerializer,
     RackSerializer
 )
+from rackcity.utils.log_utils import (
+    log_action,
+    log_bulk_import,
+    log_delete,
+    Action,
+    ElementType,
+)
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.parsers import JSONParser
@@ -224,6 +231,7 @@ def asset_add(request):  # need to make network and power connections here
             status=HTTPStatus.OK,
         )
     else:
+        log_action(request.user, asset, Action.CREATE)
         return JsonResponse(
             {"success_message": "Asset created succesfully."},
             status=HTTPStatus.OK,
@@ -495,6 +503,7 @@ def asset_modify(request):
                 status=HTTPStatus.OK,
             )
         else:
+            log_action(request.user, existing_asset, Action.MODIFY)
             return JsonResponse(
                 {"success_message": "Asset succesfully modified"},
                 status=HTTPStatus.OK,
@@ -521,7 +530,9 @@ def asset_delete(request):  # need to delete network and power connections here
 
     if failure_message == "":
         try:
+            asset_name = existing_asset.asset_number
             existing_asset.delete()
+            log_delete(request.user, ElementType.ASSET, asset_name)
             return HttpResponse(status=HTTPStatus.OK)
         except Exception as error:
             failure_message = failure_message + str(error)
@@ -745,7 +756,8 @@ def asset_bulk_approve(request):  # need to make network and power connections h
                 value = asset_data[field]
             setattr(existing_asset, field, value)
         existing_asset.save()
-        # will need to save mac addresses and connections here
+    log_bulk_import(request.user, ElementType.ASSET)
+    # will need to save mac addresses and connections here
     return HttpResponse(status=HTTPStatus.OK)
 
 
@@ -825,7 +837,7 @@ def asset_page_count(request):
 @api_view(['GET'])
 def asset_fields(request):
     """
-    Return all fields on the AssetSerializer. 
+    Return all fields on the AssetSerializer.
     """
     return JsonResponse(
         {"fields": [
