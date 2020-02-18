@@ -181,7 +181,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
       this.getVendors();
     }
     const { values } = this.state;
-    console.log("NETWORK PORTS", this.state.values.network_ports);
+    console.log("vendor", this.state.values.vendor);
     return (
       <div className={Classes.DARK + " login-container"}>
         {this.state.errors.map((err: string) => {
@@ -199,21 +199,22 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
                 usePortal: true
               }}
               defaultSelectedItem={this.state.values.vendor}
-              inputValueRenderer={(vendor: string) => vendor}
+              inputValueRenderer={(vendor: string) => this.state.values.vendor}
               items={this.state.vendors}
-              onItemSelect={(vendor: string) =>
-                this.setState({
-                  values: updateObject(values, { vendor: vendor })
-                })
-              }
-              onQueryChange={(vendor: string) => {
-                console.log("CHANGE", vendor);
+              onItemSelect={(vendor: string) => {
+                console.log("item selected ");
                 this.setState({
                   values: updateObject(values, { vendor: vendor })
                 });
               }}
-              // createNewItemRenderer={renderCreateItemOption}
-              // createNewItemFromQuery={(vendor: string) => vendor}
+              // onQueryChange={(vendor: string) => {
+              //   console.log("CHANGE", vendor);
+              //   this.setState({
+              //     values: updateObject(values, { vendor: vendor })
+              //   });
+              // }}
+              createNewItemRenderer={renderCreateItemOption}
+              createNewItemFromQuery={(vendor: string) => vendor}
               itemRenderer={renderStringItem}
               itemPredicate={filterString}
               noResults={<MenuItem disabled={true} text="No results." />}
