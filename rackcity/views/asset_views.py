@@ -136,22 +136,7 @@ def asset_detail(request, id):
         )
 
     serializer = RecursiveAssetSerializer(asset)
-    # slap the mac addresses and all the connections on here
-    data = serializer.data
-    data['mac_addresses'] = get_mac_addresses(asset_id=id)
-    return JsonResponse(data, status=HTTPStatus.OK)
-
-
-def get_mac_addresses(asset_id):
-    try:
-        ports = NetworkPort.objects.filter(asset=asset_id)
-    except ObjectDoesNotExist:
-        return
-    mac_addresses = {}
-    for port in ports:
-        if port.mac_address:
-            mac_addresses[port.port_name] = port.mac_address
-    return mac_addresses
+    return JsonResponse(serializer.data, status=HTTPStatus.OK)
 
 
 @api_view(['POST'])

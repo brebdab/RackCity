@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from django.core.exceptions import ObjectDoesNotExist
-from rackcity.models import Asset, PowerPort
+from rackcity.models import Asset, PowerPort, NetworkPort
 from .it_model_serializers import ITModelSerializer
 from .rack_serializers import RackSerializer
 
@@ -39,6 +39,7 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
     """
     model = ITModelSerializer()
     rack = RackSerializer()
+    mac_addresses = serializers.SerializerMethodField()
     power_connections = serializers.SerializerMethodField()
 
     class Meta:
@@ -52,8 +53,20 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
             'rack_position',
             'owner',
             'comment',
+            'mac_addresses',
             'power_connections',
         )
+
+    def get_mac_addresses(self, asset):
+        try:
+            ports = NetworkPort.objects.filter(asset=asset.id)
+        except ObjectDoesNotExist:
+            return
+        mac_addresses = {}
+        for port in ports:
+            if port.mac_address:
+                mac_addresses[port.port_name] = port.mac_address
+        return mac_addresses
 
     def get_power_connections(self, asset):
         try:
