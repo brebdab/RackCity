@@ -1,5 +1,12 @@
 from django.http import HttpResponse, JsonResponse
-from rackcity.models import Asset, ITModel, Rack, NetworkPort
+from rackcity.models import (
+    Asset,
+    ITModel,
+    Rack,
+    NetworkPort,
+    PowerPort,
+    PDUPort
+)
 from django.core.exceptions import ObjectDoesNotExist
 from rackcity.api.serializers import (
     AssetSerializer,
@@ -28,10 +35,11 @@ from rackcity.views.rackcity_utils import (
     validate_location_modification,
     no_infile_location_conflicts,
     records_are_identical,
-    LocationException,
-    MacAddressException,
     get_sort_arguments,
     get_filter_arguments,
+    LocationException,
+    MacAddressException,
+    PowerConnectionException,
 )
 
 
@@ -143,22 +151,7 @@ def asset_detail(request, id):
         )
 
     serializer = RecursiveAssetSerializer(asset)
-    # slap the mac addresses and all the connections on here
-    data = serializer.data
-    data['mac_addresses'] = get_mac_addresses(asset_id=id)
-    return JsonResponse(data, status=HTTPStatus.OK)
-
-
-def get_mac_addresses(asset_id):
-    try:
-        ports = NetworkPort.objects.filter(asset=asset_id)
-    except ObjectDoesNotExist:
-        return
-    mac_addresses = {}
-    for port in ports:
-        if port.mac_address:
-            mac_addresses[port.port_name] = port.mac_address
-    return mac_addresses
+    return JsonResponse(serializer.data, status=HTTPStatus.OK)
 
 
 @api_view(['POST'])
@@ -201,22 +194,32 @@ def asset_add(request):  # need to make network and power connections here
             except MacAddressException as error:
                 failure_message += "Some mac addresses couldn't be saved. " + \
                     str(error)
-                return JsonResponse(
-                    {"failure_message": failure_message},
-                    status=HTTPStatus.BAD_REQUEST,
+            try:
+                save_power_connections(
+                    asset_data=data,
+                    asset_id=asset.id
                 )
-            else:
-                log_action(request.user, asset, Action.CREATE)
-                return HttpResponse(status=HTTPStatus.CREATED)
-    failure_message = "Request was invalid. " + failure_message
-    return JsonResponse(
-        {"failure_message": failure_message},
-        status=HTTPStatus.BAD_REQUEST,
-    )
+            except PowerConnectionException as error:
+                failure_message += "Some power connections couldn't be saved. " + \
+                    str(error)
+    if failure_message:
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    else:
+        log_action(request.user, asset, Action.CREATE)
+        return JsonResponse(
+            {"success_message": "Asset created succesfully."},
+            status=HTTPStatus.OK,
+        )
 
 
 def save_mac_addresses(asset_data, asset_id):
-    if 'mac_addresses' not in asset_data:
+    if (
+        'mac_addresses' not in asset_data
+        or not asset_data['mac_addresses']
+    ):
         return
     mac_address_assignments = asset_data['mac_addresses']
     failure_message = ""
@@ -240,6 +243,54 @@ def save_mac_addresses(asset_data, asset_id):
                     "' is not valid. "
     if failure_message:
         raise MacAddressException(failure_message)
+
+
+def save_power_connections(asset_data, asset_id):
+    if (
+        'power_connections' not in asset_data
+        or not asset_data['power_connections']
+    ):
+        return
+    power_connection_assignments = asset_data['power_connections']
+    failure_message = ""
+    for port_name in power_connection_assignments.keys():
+        try:
+            power_port = PowerPort.objects.get(
+                asset=asset_id,
+                port_name=port_name
+            )
+        except ObjectDoesNotExist:
+            failure_message += "Power port '"+port_name+"' does not exist on this asset. "
+        else:
+            power_connection_data = power_connection_assignments[port_name]
+            asset = Asset.objects.get(id=asset_id)
+            if not power_connection_data:
+                power_port.power_connection = None
+                power_port.save()
+                continue
+            try:
+                pdu_port = PDUPort.objects.get(
+                    rack=asset.rack,
+                    left_right=power_connection_data['left_right'],
+                    port_number=power_connection_data['port_number']
+                )
+            except ObjectDoesNotExist:
+                failure_message += \
+                    "PDU port '" + \
+                    power_connection_data['left_right'] + \
+                    str(power_connection_data['port_number']) + \
+                    "' does not exist. "
+            else:
+                power_port.power_connection = pdu_port
+                try:
+                    power_port.save()
+                except Exception as error:
+                    failure_message += \
+                        "Power connection on port '" + \
+                        port_name + \
+                        "' was not valid. "
+    if failure_message:
+        raise PowerConnectionException(failure_message)
 
 
 @api_view(['POST'])
@@ -321,6 +372,7 @@ def asset_modify(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     else:
+        failure_message = ""
         try:
             save_mac_addresses(
                 asset_data=data,
@@ -329,13 +381,25 @@ def asset_modify(request):
         except MacAddressException as error:
             failure_message = "Some mac addresses couldn't be saved. " + \
                 str(error)
+        try:
+            save_power_connections(
+                asset_data=data,
+                asset_id=existing_asset.id
+            )
+        except PowerConnectionException as error:
+            failure_message += "Some power connections couldn't be saved. " + \
+                str(error)
+        if failure_message:
             return JsonResponse(
                 {"failure_message": failure_message},
                 status=HTTPStatus.BAD_REQUEST,
             )
         else:
             log_action(request.user, existing_asset, Action.MODIFY)
-            return HttpResponse(status=HTTPStatus.OK)
+            return JsonResponse(
+                {"success_message": "Asset succesfully modified"},
+                status=HTTPStatus.OK,
+            )
 
 
 @api_view(['POST'])
