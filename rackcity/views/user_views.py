@@ -214,6 +214,131 @@ def who_am_i(request):
 
 
 @api_view(['GET'])
+def i_am_admin(request):
+    """
+    Returns whether logged in user is an admin user.
+    """
+    return JsonResponse(
+        {"is_admin": request.user.is_staff},
+        status=HTTPStatus.OK
+    )
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def user_grant_admin(request):
+    """
+    Grants admin permission to the specified user.
+    """
+    failure_message = "Grant admin permission failed: "
+    data = JSONParser().parse(request)
+    if 'id' not in data:
+        return JsonResponse(
+            {
+                "failure_message":
+                failure_message + "Internal error",
+                "errors": "Must specify user id on grant admin permission"
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    try:
+        user = User.objects.get(id=data['id'])
+    except ObjectDoesNotExist:
+        return JsonResponse(
+            {
+                "failure_message":
+                failure_message + "User does not exist",
+                "errors": "No existing user with id=" + data['id']
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    if user.is_staff:
+        return JsonResponse(
+            {
+                "failure_message":
+                failure_message +
+                "User " +
+                user.username +
+                " already has admin permission"
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    else:
+        user.is_staff = True
+        user.save()
+        return JsonResponse(
+            {
+                "success_message":
+                "Admin permission has been granted to user " +
+                user.username
+            },
+            status=HTTPStatus.OK,
+        )
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def user_revoke_admin(request):
+    """
+    Revokes admin permission from the specified user.
+    """
+    failure_message = "Revoke admin permission failed: "
+    data = JSONParser().parse(request)
+    if 'id' not in data:
+        return JsonResponse(
+            {
+                "failure_message":
+                failure_message + "Internal error",
+                "errors": "Must specify user id on admin permission revoke"
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    try:
+        user = User.objects.get(id=data['id'])
+    except ObjectDoesNotExist:
+        return JsonResponse(
+            {
+                "failure_message":
+                failure_message + "User does not exist",
+                "errors": "No existing user with id=" + data['id']
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    if (user.is_superuser) or (user.username == 'admin'):
+        return JsonResponse(
+            {
+                "failure_message":
+                failure_message +
+                "Admin permission cannot be revoked from superuser " +
+                user.username
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    elif (not user.is_staff) and (not user.is_superuser):
+        return JsonResponse(
+            {
+                "failure_message":
+                failure_message +
+                "User " +
+                user.username +
+                " does not have admin permission to revoke"
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    else:
+        user.is_staff = False
+        user.save()
+        return JsonResponse(
+            {
+                "success_message":
+                "Admin permission has been revoked from user " +
+                user.username
+            },
+            status=HTTPStatus.OK,
+        )
+
+
+@api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def usernames(request):
     """

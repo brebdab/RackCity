@@ -514,15 +514,6 @@ def model_fields(request):
 
 
 @api_view(['GET'])
-def i_am_admin(request):
-    print("yeah")
-    if(request.user.is_staff):
-        return JsonResponse({"is_admin": True})
-    else:
-        return JsonResponse({"is_admin": False})
-
-
-@api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def model_auth(request):  # DEPRECATED!
     """

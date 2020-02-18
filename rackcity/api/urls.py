@@ -47,4 +47,6 @@ urlpatterns = [
     path('users/delete', views.user_delete),
     path('users/netid-login', views.netid_login),
     path('users/pages', views.user_page_count),
+    path('users/grant-admin', views.user_grant_admin),
+    path('users/revoke-admin', views.user_revoke_admin)
 ]
