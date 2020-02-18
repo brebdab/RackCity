@@ -7,6 +7,13 @@ from rackcity.api.serializers import (
     ITModelSerializer,
     BulkITModelSerializer
 )
+from rackcity.utils.log_utils import (
+    log_action,
+    log_bulk_import,
+    log_delete,
+    Action,
+    ElementType,
+)
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.pagination import PageNumberPagination
@@ -50,7 +57,8 @@ def model_add(request):
         failure_message = failure_message + str(serializer.errors)
     if failure_message == "":
         try:
-            serializer.save()
+            new_model = serializer.save()
+            log_action(request.user, new_model, Action.CREATE)
             return HttpResponse(status=HTTPStatus.CREATED)
         except Exception as error:
             failure_message = failure_message + str(error)
@@ -93,6 +101,7 @@ def model_modify(request):
                 setattr(existing_model, field, data[field])
             try:
                 existing_model.save()
+                log_action(request.user, existing_model, Action.MODIFY)
                 return HttpResponse(status=HTTPStatus.OK)
             except Exception as error:
                 failure_message = failure_message + str(error)
@@ -144,10 +153,16 @@ def model_delete(request):
         else:
             assets = Asset.objects.filter(model=id)
             if assets:
-                failure_message += "Cannot delete this model because assets of it exist. "
+                failure_message += \
+                    "Cannot delete this model because assets of it exist. "
             if failure_message == "":
                 try:
+                    model_name = " ".join([
+                        existing_model.vendor,
+                        existing_model.model_number
+                    ])
                     existing_model.delete()
+                    log_delete(request.user, ElementType.MODEL, model_name)
                     return HttpResponse(status=HTTPStatus.OK)
                 except Exception as error:
                     failure_message = failure_message + str(error)
@@ -401,6 +416,7 @@ def model_bulk_approve(request):
         for field in model_data.keys():  # This is assumed to have all fields, and with null values for blank ones. That's how it's returned in bulk-upload
             setattr(existing_model, field, model_data[field])
         existing_model.save()
+    log_bulk_import(request.user, ElementType.MODEL)
     return HttpResponse(status=HTTPStatus.OK)
 
 
@@ -495,15 +511,6 @@ def model_fields(request):
         ]},
         status=HTTPStatus.OK,
     )
-
-
-@api_view(['GET'])
-def i_am_admin(request):
-    print("yeah")
-    if(request.user.is_staff):
-        return JsonResponse({"is_admin": True})
-    else:
-        return JsonResponse({"is_admin": False})
 
 
 @api_view(['GET'])
