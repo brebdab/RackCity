@@ -809,7 +809,7 @@ class ElementTable extends React.Component<
                     }
                     return (
                       <tr
-                        onClick={() => {
+                        onClick={this.props.type === "datacenters" ? () => { } : () => {
                           console.log("redirecting", item.id);
                           this.props.history.push(
                             "/" + this.props.type + "/" + item.id
