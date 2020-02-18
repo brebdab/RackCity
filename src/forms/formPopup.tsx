@@ -14,7 +14,7 @@ import ModelForm from "./modelForm";
 import DatacenterForm from "./datacenterForm";
 import WrappedRegistrationForm from "./auth/register";
 import { FormTypes } from "./formUtils";
-interface FormPopupState { }
+interface FormPopupState {}
 interface FormPopupProps {
   isOpen: boolean;
   type: FormTypes;
