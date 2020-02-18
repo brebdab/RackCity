@@ -10,14 +10,58 @@ export enum ElementType {
   USER = "users",
   DATACENTER = "datacenters"
 }
-export interface AssetObject extends ElementObject {
+export enum PowerSide {
+  LEFT = "L",
+  RIGHT = "R"
+}
+//DEPRACATED
+export interface AssetObjectOld extends ElementObject {
   hostname: string;
   rack_position: string;
   model: ModelObject;
-  macAddresses: { [port: string]: string };
   rack: RackObject;
+  network_connections: {};
   owner?: string;
   comment?: string;
+}
+
+export interface AssetObject extends ParentAssetObject {
+  model: ModelObject;
+  rack: RackObject;
+}
+
+interface ParentAssetObject extends ElementObject {
+  hostname: string;
+  rack_position: string;
+  mac_addresses: { [port: string]: string };
+  network_connections: Array<NetworkConnection>;
+  power_connections: { [port: string]: PowerConnection };
+  owner?: string;
+  comment?: string;
+}
+export interface ShallowAssetObject extends ParentAssetObject {
+  model?: string;
+  rack?: string;
+}
+export interface NetworkConnection {
+  source_port: string;
+  destination_hostname: string;
+  destination_port: string;
+}
+export interface NetworkGraph {
+  nodes: { [hostname: string]: string };
+  links: Array<{ [source: string]: string }>;
+}
+export interface PowerConnection {
+  left_right: PowerSide;
+  port_number: string;
+}
+
+export interface PowerPortAvailability {
+  left_suggest: string;
+  left_available: Array<string>;
+  right_suggest: string;
+  right_available: Array<string>;
 }
 export interface RackRangeFields {
   datacenter: string;
@@ -25,15 +69,6 @@ export interface RackRangeFields {
   letter_end: string;
   num_start: number;
   num_end: number;
-}
-
-export interface AssetInfoObject extends ElementObject {
-  hostname: string;
-  rack_position: string;
-  model?: string;
-  rack?: string;
-  owner?: string;
-  comment?: string;
 }
 
 export interface UserInfoObject extends ElementObject {
@@ -61,7 +96,7 @@ export interface RackObject extends ElementObject {
 
 export interface RackResponseObject {
   rack: RackObject;
-  assets: Array<AssetObject>;
+  assets: Array<AssetObjectOld>;
 }
 
 export interface DatacenterObject extends ElementObject {
@@ -102,24 +137,24 @@ export interface ModelObject extends ElementObject {
 }
 export interface ModelDetailObject {
   model: ModelObjectOld;
-  assets: Array<AssetObject>;
+  assets: Array<AssetObjectOld>;
 }
 export type ElementObjectType =
   | ModelObjectOld
   | ModelObject
   | RackObject
-  | AssetObject
-  | AssetInfoObject
+  | AssetObjectOld
+  | ShallowAssetObject
   | UserInfoObject
   | DatacenterObject;
 
 export type FormObjectType =
   | ModelObjectOld
   | RackObject
-  | AssetObject
+  | AssetObjectOld
   | DatacenterObject
   | RackRangeFields
-  | AssetInfoObject
+  | ShallowAssetObject
   | UserInfoObject
   | CreateUserObject;
 export function isModelObject(obj: any): obj is ModelObject {

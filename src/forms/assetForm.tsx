@@ -5,7 +5,10 @@ import {
   FormGroup,
   Intent,
   MenuItem,
-  InputGroup
+  InputGroup,
+  ButtonGroup,
+  Checkbox,
+  Collapse
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
@@ -14,10 +17,12 @@ import { connect } from "react-redux";
 import {
   AssetObject,
   ModelObject,
-  AssetInfoObject,
+  ShallowAssetObject,
   getHeaders,
   RackObject,
-  ElementObjectType
+  ElementObjectType,
+  PowerPortAvailability,
+  PowerSide
 } from "../utils/utils";
 import { updateObject } from "../store/utility";
 import Field from "./field";
@@ -44,7 +49,7 @@ export interface AssetFormProps {
   token: string;
   type: FormTypes;
   initialValues?: AssetObject;
-  submitForm(Asset: AssetInfoObject, headers: any): Promise<any> | void;
+  submitForm(Asset: ShallowAssetObject, headers: any): Promise<any> | void;
 }
 interface AssetFormState {
   values: AssetObject;
@@ -52,10 +57,11 @@ interface AssetFormState {
   models: Array<ModelObject>;
   errors: Array<string>;
   users: Array<string>;
-  currModel: ModelObject;
+  power_ports: PowerPortAvailability;
+  power_ports_enabled: { [port: string]: boolean };
 }
-var console: any = {};
-console.log = function() {};
+// var console: any = {};
+// console.log = function() {};
 
 export const required = (
   values: AssetObject,
@@ -71,13 +77,31 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   initialState: AssetObject = this.props.initialValues
     ? this.props.initialValues
     : ({} as AssetObject);
+  private setPowerPortInputState = () => {
+    const power_ports_enabled: { [port: string]: boolean } = {};
+    if (this.state.values && this.state.values.power_connections) {
+      Object.keys(this.state.values.power_connections).forEach(port => {
+        power_ports_enabled[port] = true;
+      });
+    }
+    return power_ports_enabled;
+  };
+
   public state = {
     values: this.initialState,
     racks: [],
     models: [],
     errors: [],
     users: [],
-    currModel: {} as ModelObject
+    currModel: {} as ModelObject,
+    //TODO, call endpoint, don't hard code
+    power_ports: {
+      left_suggest: "12",
+      left_available: ["1", "2", "12"],
+      right_suggest: "12",
+      right_available: ["1", "2", "12", "13"]
+    },
+    power_ports_enabled: {} as { [port: string]: boolean }
   };
   headers = {
     headers: {
@@ -116,20 +140,35 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         return items;
       });
   }
-  private mapAssetObject = (asset: AssetObject): AssetInfoObject => {
+  componentDidMount() {
+    this.setPowerPortInputState();
+  }
+  private mapAssetObject = (asset: AssetObject): ShallowAssetObject => {
     console.log(asset);
 
-    const { hostname, id, rack_position, owner, comment } = asset;
+    const {
+      hostname,
+      id,
+      rack_position,
+      owner,
+      mac_addresses,
+      network_connections,
+      power_connections,
+      comment
+    } = asset;
     const model = asset.model ? asset.model.id : undefined;
     const rack = asset.rack ? asset.rack.id : undefined;
-    let valuesToSend: AssetInfoObject = {
+    let valuesToSend: ShallowAssetObject = {
       model,
       rack,
       hostname,
       id,
       rack_position,
       owner,
-      comment
+      comment,
+      mac_addresses,
+      network_connections,
+      power_connections
     };
     console.log(valuesToSend);
 
@@ -201,8 +240,158 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         console.log(err);
       });
   };
+  getPowerButtonStatus = (side: PowerSide, port: number) => {
+    //if side has already been selected or this is a modify form
+    if (
+      this.state.values.power_connections &&
+      this.state.values.power_connections[port]
+    ) {
+      const portString = (port as unknown) as string;
+      return (
+        side === this.state.values.power_connections[portString].left_right
+      );
+    } else if (port === 1) {
+      return side === PowerSide.LEFT;
+    } else if (port === 2) {
+      return side === PowerSide.RIGHT;
+    } else {
+      return false;
+    }
+  };
+
+  shouldDisablePowerPort = (port: number) => {
+    //if side has already been selected or this is a modify form
+    let side;
+    if (
+      this.state.values.power_connections &&
+      this.state.values.power_connections[port]
+    ) {
+      return false;
+    } else if (port === 1 || port === 2) {
+      return false;
+    } else {
+      return true;
+    }
+  };
+  getPortsForSide = (port: number) => {
+    //if side has already been selected or this is a modify form
+    let side;
+    if (
+      this.state.values.power_connections &&
+      this.state.values.power_connections[port]
+    ) {
+      const portString = (port as unknown) as string;
+      side = this.state.values.power_connections[portString].left_right;
+    } else if (port === 1) {
+      side = PowerSide.LEFT;
+    } else if (port === 2) {
+      side = PowerSide.RIGHT;
+    }
+    if (side === PowerSide.LEFT) {
+      return this.state.power_ports.left_available;
+    } else {
+      return this.state.power_ports.right_available;
+    }
+  };
+
+  getPowerPortFields = () => {
+    console.log("powerpowerfields", this.state.values.model);
+    if (this.state.values.model && this.state.values.model.num_power_ports) {
+      console.log(
+        "POWERPORTFIELDS",
+        this.state.values.model.num_power_ports,
+        parseInt(this.state.values.model.num_power_ports!, 10)
+      );
+    }
+
+    if (
+      this.state.values.model &&
+      this.state.values.model.num_power_ports &&
+      parseInt(this.state.values.model.num_power_ports, 10) > 0
+    ) {
+      const num_power_ports = parseInt(
+        this.state.values.model.num_power_ports,
+        10
+      );
+      const port_fields = [];
+      for (let i = 1; i <= num_power_ports; i++) {
+        console.log(this.state.power_ports_enabled[i]);
+        port_fields.push(
+          <div className="wide-field">
+            <ButtonGroup
+              className="power-form-element"
+              fill={false}
+              style={{ marginTop: 5 }}
+            >
+              <h5>{i}</h5>
+              <Checkbox
+                checked={this.state.power_ports_enabled[i]}
+                label="Select PDU Port "
+                onChange={(event: any) => {
+                  console.log(
+                    "setting staus to ",
+                    !this.state.power_ports_enabled[i]
+                  );
+                  const power_ports_enabled = {
+                    ...this.state.power_ports_enabled
+                  };
+                  power_ports_enabled[i] = !this.state.power_ports_enabled[i];
+                  this.setState({
+                    power_ports_enabled
+                  });
+                }}
+              />
+            </ButtonGroup>{" "}
+            <Collapse
+              className="power-form-element"
+              isOpen={this.state.power_ports_enabled[i]}
+            >
+              <ButtonGroup fill={false} style={{ marginTop: 5 }}>
+                <Button
+                  active={this.getPowerButtonStatus(PowerSide.LEFT, i)}
+                  text="Left"
+                  // onClick={this.handleAlignLeft}
+                />
+
+                <Button
+                  active={this.getPowerButtonStatus(PowerSide.RIGHT, i)}
+                  text="Right"
+                  // onClick={this.handleAlignRight}
+                />
+
+                <StringSelect
+                  className="power-form-element"
+                  popoverProps={{
+                    minimal: true,
+                    popoverClassName: "dropdown",
+                    usePortal: true
+                  }}
+                  disabled={this.shouldDisablePowerPort(i)}
+                  // defaultSelectedItem={this.state.values.owner}
+                  // inputValueRenderer={(vendor: string) => vendor}
+                  items={this.getPortsForSide(i)}
+                  onItemSelect={
+                    (port: string) => console.log(port)
+                    // this.setState({
+                    //   values: updateObject(values, { owner: owner })
+                    // })
+                  }
+                  itemRenderer={renderStringItem}
+                  itemPredicate={filterString}
+                  noResults={<MenuItem disabled={true} text="No results." />}
+                >
+                  <Button rightIcon="caret-down" text={"PDU Port"} />
+                </StringSelect>
+              </ButtonGroup>
+            </Collapse>
+          </div>
+        );
+      }
+      return port_fields;
+    }
+  };
   render() {
-    console.log(this.state.values);
+    console.log("CURR_STATE", this.state.values);
     if (this.state.models.length === 0) {
       this.getElementData(
         "models",
@@ -228,10 +417,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         {this.state.errors.map((err: string) => {
           return <Callout intent={Intent.DANGER}>{err}</Callout>;
         })}
-        <form
-          onSubmit={this.handleSubmit}
-          className="create-form bp3-form-group"
-        >
+        <form onSubmit={this.handleSubmit} className="create-form ">
           <FormGroup label="Hostname (required)" inline={false}>
             <Field
               placeholder="hostname"
@@ -285,35 +471,46 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
             values.model.network_ports &&
             values.model.network_ports.length !== 0
           ) ? null : (
-            <table className="port-table">
-              <thead>
-                <th>Port Name</th>
-                <th>Mac Address</th>
-              </thead>
-              <tbody>
-                {values.model.network_ports.map((port, index) => {
-                  return (
-                    <tr>
-                      <td>{port}</td>
-                      <td>
-                        <InputGroup
-                          // value={port}
-                          type="string"
-                          className="network-name"
-                          // onChange={(e: any) =>
-                          //   // this.handleNetworkPortNameChange(
-                          //   //   index,
-                          //   //   e.currentTarget.value
-                          //   // )
-                          // }
-                        />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <FormGroup label="Mac Addresses" inline={false}>
+              <table className="port-table">
+                <thead>
+                  <th>Port</th>
+                  <th>Mac Address</th>
+                </thead>
+                <tbody>
+                  {values.model.network_ports.map((port, index) => {
+                    return (
+                      <tr>
+                        <td>{port}</td>
+                        <td>
+                          <InputGroup
+                            // value={port}
+                            type="string"
+                            className="network-name"
+                            // onChange={(e: any) =>
+                            //   // this.handleNetworkPortNameChange(
+                            //   //   index,
+                            //   //   e.currentTarget.value
+                            //   // )
+                            // }
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </FormGroup>
           )}
+
+          <div>
+            {" "}
+            {this.state.values.model ? (
+              <FormGroup label="Power Connections " inline={false}>
+                {this.getPowerPortFields()}
+              </FormGroup>
+            ) : null}
+          </div>
 
           <FormGroup label="Rack (required)" inline={false}>
             <RackSelect
