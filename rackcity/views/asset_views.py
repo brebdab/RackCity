@@ -272,7 +272,7 @@ def asset_modify(request):
             value = ITModel.objects.get(id=data[field])
         elif field == 'rack':
             value = Rack.objects.get(id=data[field])
-        elif field == 'hostname':
+        elif field == 'hostname' and data['hostname']:
             assets_with_hostname = Asset.objects.filter(
                 hostname__iexact=data[field]
             )
@@ -299,7 +299,20 @@ def asset_modify(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     else:
-        return HttpResponse(status=HTTPStatus.OK)
+        try:
+            save_mac_addresses(
+                asset_data=data,
+                asset_id=existing_asset.id
+            )
+        except MacAddressException as error:
+            failure_message += "Some mac addresses couldn't be saved. " + \
+                str(error)
+            return JsonResponse(
+                {"failure_message": failure_message},
+                status=HTTPStatus.BAD_REQUEST,
+            )
+        else:
+            return HttpResponse(status=HTTPStatus.OK)
 
 
 @api_view(['POST'])
