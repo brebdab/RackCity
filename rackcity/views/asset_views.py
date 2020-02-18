@@ -327,7 +327,7 @@ def asset_modify(request):
                 asset_id=existing_asset.id
             )
         except MacAddressException as error:
-            failure_message += "Some mac addresses couldn't be saved. " + \
+            failure_message = "Some mac addresses couldn't be saved. " + \
                 str(error)
             return JsonResponse(
                 {"failure_message": failure_message},
