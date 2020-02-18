@@ -222,7 +222,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
 
   public render() {
     return (
-      <div>
+      <div className="element-tab">
         <Toaster
           autoFocus={false}
           canEscapeKeyClear={true}

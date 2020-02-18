@@ -24,6 +24,8 @@ import {
   isModelObject,
   isRackObject,
   RackRangeFields,
+  UserInfoObject,
+  isUserObject,
   isDatacenterObject,
   DatacenterObject
 } from "../../utils/utils";
@@ -503,7 +505,7 @@ class ElementTable extends React.Component<
       if (col === "model") {
         fields.push("model__vendor");
         fields.push("model__model_number");
-      } else if (col !== "id") {
+      } else if (col !== "id" && col !== "network_ports" && col !== "comment") {
         fields.push(col);
       }
     });
@@ -633,6 +635,33 @@ class ElementTable extends React.Component<
     this.handleDeleteOpen();
   };
 
+  //ADMIN BUTTON LOGIC
+  renderAdminButton = (item: UserInfoObject) => {
+    console.log(item.is_staff);
+    if (item.is_staff) {
+      return (
+        <AnchorButton
+          className="button-table"
+          intent="danger"
+          icon="user"
+          minimal
+          text="Remove Admin"
+        />
+      );
+    } else {
+      console.log("NOT AN ADMIN");
+      return (
+        <AnchorButton
+          className="button-table"
+          intent="primary"
+          icon="user"
+          minimal
+          text="Add Admin "
+        />
+      );
+    }
+  };
+
   render() {
     console.log(this.state.items);
     // console.log(!(this.state.items && this.state.items.length > 0));
@@ -668,36 +697,35 @@ class ElementTable extends React.Component<
           position={Position.TOP}
           ref={this.refHandlers.toaster}
         />
+        <div className="filter-sort-panel">
+          {this.props.disableFiltering
+            ? null
+            : [
+                <div className="filter-select">
+                  <FilterSelect
+                    handleAddFilter={this.addFilter}
+                    fields={this.state.fields}
+                  />
+                </div>,
+                <div className="table-options">
+                  <p>Applied filters:</p>
+                  <DragDropList
+                    items={this.state.filters}
+                    renderItem={this.renderFilterItem}
+                  />
+                </div>
+              ]}
+          {this.props.disableSorting ? null : (
+            <div className="table-options">
+              <p>Applied sorts:</p>
+              <DragDropList
+                items={this.state.sort_by}
+                renderItem={this.renderSortItem}
+                onChange={this.updateSortOrder}
+              />
+            </div>
+          )}
 
-        {this.props.disableFiltering
-          ? null
-          : [
-              <div className="filter-select">
-                <FilterSelect
-                  handleAddFilter={this.addFilter}
-                  fields={this.state.fields}
-                />
-              </div>,
-              <div className="table-options">
-                <p>Applied filters:</p>
-                <DragDropList
-                  items={this.state.filters}
-                  renderItem={this.renderFilterItem}
-                />
-              </div>
-            ]}
-        {this.props.disableSorting ? null : (
-          <div className="table-options">
-            <p>Applied sorts:</p>
-            <DragDropList
-              items={this.state.sort_by}
-              renderItem={this.renderSortItem}
-              onChange={this.updateSortOrder}
-            />
-          </div>
-        )}
-
-        <div>
           {this.props.getPages ? (
             <div className="table-control">
               <HTMLSelect
@@ -733,6 +761,8 @@ class ElementTable extends React.Component<
                 : null}
             </div>
           ) : null}
+        </div>
+        <div className="table-wrapper">
           {this.state.fields.length === 0 ? null : (
             <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered element-table">
               <thead>
@@ -753,7 +783,7 @@ class ElementTable extends React.Component<
                           </div>
                         </th>
                       ];
-                    } else if (col !== "id") {
+                    } else {
                       return (
                         <th className="header-cell">
                           <div className="header-text">
@@ -763,8 +793,6 @@ class ElementTable extends React.Component<
                         </th>
                       );
                     }
-
-                    return null;
                   })}
                   <th></th>
                 </tr>
@@ -800,14 +828,19 @@ class ElementTable extends React.Component<
                                 }}
                               ></td>
                             );
-                          } else if (col !== "id") {
+                          } else if (
+                            col !== "id" &&
+                            col !== "network_ports" &&
+                            col !== "comment"
+                          ) {
                             return <td>{value}</td>;
                           }
 
                           return null;
                         })}
                         <td>
-                          {this.props.isAdmin ? (
+                          {this.props.isAdmin &&
+                          this.props.type !== ElementType.USER ? (
                             <div className="inline-buttons">
                               <AnchorButton
                                 className="button-table"
@@ -829,6 +862,11 @@ class ElementTable extends React.Component<
                                   event.stopPropagation();
                                 }}
                               />
+                            </div>
+                          ) : null}
+                          {this.props.isAdmin && isUserObject(item) ? (
+                            <div className="inline-buttons">
+                              {this.renderAdminButton(item)}
                             </div>
                           ) : null}
                         </td>
