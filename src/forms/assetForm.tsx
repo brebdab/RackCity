@@ -1,54 +1,52 @@
 import {
   Button,
-  Callout,
-  Classes,
-  FormGroup,
-  Intent,
-  MenuItem,
-  InputGroup,
   ButtonGroup,
+  Callout,
   Checkbox,
-  Collapse
+  Classes,
+  Collapse,
+  FormGroup,
+  InputGroup,
+  Intent,
+  MenuItem
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
+import axios from "axios";
 import * as React from "react";
 import { connect } from "react-redux";
-import $ from "jquery";
+import { isNullOrUndefined } from "util";
+import { ALL_DATACENTERS } from "../components/elementView/elementTabContainer";
+import { PagingTypes } from "../components/elementView/elementUtils";
+import { updateObject } from "../store/utility";
+import { API_ROOT } from "../utils/api-config";
 import {
   AssetObject,
-  ModelObject,
-  ShallowAssetObject,
-  getHeaders,
-  RackObject,
+  DatacenterObject,
   ElementObjectType,
+  getHeaders,
+  ModelObject,
   PowerPortAvailability,
   PowerSide,
-  DatacenterObject
+  RackObject,
+  ShallowAssetObject
 } from "../utils/utils";
-import { updateObject } from "../store/utility";
 import Field from "./field";
 import "./forms.scss";
 import {
-  filterModel,
-  ModelSelect,
-  renderModelItem,
-  RackSelect,
-  renderRackItem,
-  filterRack,
-  FormTypes,
-  renderStringItem,
-  filterString,
-  StringSelect,
   DatacenterSelect,
+  filterDatacenter,
+  filterModel,
+  filterRack,
+  filterString,
+  FormTypes,
+  ModelSelect,
+  RackSelect,
   renderDatacenterItem,
-  filterDatacenter
+  renderModelItem,
+  renderRackItem,
+  renderStringItem,
+  StringSelect
 } from "./formUtils";
-import axios from "axios";
-import { API_ROOT } from "../utils/api-config";
-import { PagingTypes } from "../components/elementView/elementUtils";
-import { thisExpression } from "@babel/types";
-import { isNullOrUndefined } from "util";
-import { ALL_DATACENTERS } from "../components/elementView/elementTabContainer";
 
 //TO DO : add validation of types!!!
 
@@ -287,15 +285,11 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
   shouldDisablePowerPort = (port: number) => {
     //if side has already been selected or this is a modify form
-    let side;
     if (
       this.state.values.power_connections &&
       this.state.values.power_connections[port]
     ) {
       return false;
-
-      // } else if (port === 1 || port === 2) {
-      //   return false;
     } else {
       return true;
     }
@@ -310,11 +304,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       const portString = (port as unknown) as string;
       side = this.state.values.power_connections[portString].left_right;
     }
-    // } else if (port === 1) {
-    //   side = PowerSide.LEFT;
-    // } else if (port === 2) {
-    //   side = PowerSide.RIGHT;
-    // }
+
     if (side === PowerSide.LEFT) {
       return this.state.power_ports.left_available;
     } else {
