@@ -90,6 +90,25 @@ export const authLogin = (username: string, password: string) => {
   };
 };
 
+export const netidAuthLogin = (access_token: string) => {
+  return (dispatch: any) => {
+    dispatch(authStart());
+    console.log(API_ROOT + "api/users/netid-login");
+    axios
+      .post(API_ROOT + "api/users/netid-login", {
+        access_token: access_token
+      })
+      .then(res => {
+        console.log(res);
+        loginHelper(res, dispatch);
+      })
+      .catch(err => {
+        console.log("login failed", err);
+        dispatch(authFail(err));
+      });
+  };
+};
+
 export const checkAdmin = (token: string) => {
   return (dispatch: any) => {
     const headers = {
@@ -136,6 +155,9 @@ export const checkAdmin = (token: string) => {
 // };
 
 export const loginHelper = (res: any, dispatch: any) => {
+  console.log("julia is inside login helper")
+  console.log(res.data)
+  console.log(res.data.key)
   const token = res.data.key;
   const expirationDate = new Date(new Date().getTime() + 3600 * 1000);
   localStorage.setItem("token", token);

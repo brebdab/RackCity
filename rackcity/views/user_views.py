@@ -60,7 +60,7 @@ def netid_login(request):
         user.save()
     token, _ = Token.objects.get_or_create(user=user)
     return JsonResponse(
-        {"token": token.key},
+        {"key": token.key},
         status=HTTPStatus.OK,
     )
 
