@@ -192,7 +192,8 @@ def asset_add(request):  # need to make network and power connections here
                     asset_id=asset.id
                 )
             except MacAddressException as error:
-                failure_message = "Mac addresses were invalid. " + str(error)
+                failure_message += "Some mac addresses couldn't be saved. " + \
+                    str(error)
                 return JsonResponse(
                     {"failure_message": failure_message},
                     status=HTTPStatus.BAD_REQUEST,
@@ -210,6 +211,7 @@ def save_mac_addresses(asset_data, asset_id):
     if 'mac_addresses' not in asset_data:
         return
     mac_address_assignments = asset_data['mac_addresses']
+    failure_message = ""
     for port_name in mac_address_assignments.keys():
         try:
             network_port = NetworkPort.objects.get(
@@ -217,22 +219,19 @@ def save_mac_addresses(asset_data, asset_id):
                 port_name=port_name
             )
         except ObjectDoesNotExist:
-            raise MacAddressException(
-                "Port name '"+port_name+"' is not valid. "
-            )
+            failure_message += "Port name '"+port_name+"' is not valid. "
         else:
             mac_address = mac_address_assignments[port_name]
             network_port.mac_address = mac_address
             try:
                 network_port.save()
             except Exception as error:
-                raise MacAddressException(
-                    "Mac address '" +
-                    mac_address +
-                    "' is not valid. " +
-                    str(error)
-                )
-                # note the fact that this might fail in unexpected ways. E.g. if the first mac address is invalid, none will save. If the last is invalid, all the rest will save.
+                failure_message += \
+                    "Mac address '" + \
+                    mac_address + \
+                    "' is not valid. "
+    if failure_message:
+        raise MacAddressException(failure_message)
 
 
 @api_view(['POST'])
