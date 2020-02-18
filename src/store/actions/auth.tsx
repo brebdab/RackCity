@@ -1,6 +1,9 @@
 import axios from "axios";
 import { API_ROOT } from "../../utils/api-config";
 import * as actionTypes from "./actionTypes";
+
+export const DUKE_OAUTH_URI = "https://oauth.oit.duke.edu/oauth/authorize.php?client_id=hyposoft-rack-city&response_type=token&state=1129&scope=basic&redirect_uri="
+
 export const authStart = () => {
   return {
     type: actionTypes.AUTH_START

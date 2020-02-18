@@ -17,14 +17,13 @@ export interface LoginViewProps {
 
 export class LoginView extends React.PureComponent<RouteComponentProps & LoginViewProps> {
     private handleSSOClick = () => {
-        window.location.href = "https://oauth.oit.duke.edu/oauth/authorize.php?client_id=hyposoft-rack-city&response_type=token&state=1129&scope=basic&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Flogin";
+        const redirect_uri = window.location.href.replace(new RegExp(':', 'g'), '%3A').replace(new RegExp('/', 'g'), '%2F')
+        window.location.href = actions.DUKE_OAUTH_URI + redirect_uri
     };
     public componentDidMount() {
-        console.log("hi it's me julia")
         const params = QueryString.parse(window.location.hash.substring(1))
         const access_token = params.access_token
         if (!isNullOrUndefined(access_token)) {
-            console.log("hi i have access token")
             this.props.onAuth(access_token.toString());
         }
     }
