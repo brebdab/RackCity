@@ -47,7 +47,7 @@ def log_action(user, element, action):
         element_name = element.username
     elif isinstance(element, Datacenter):
         element_type = ElementType.DATACENTER.value
-        element_name = element.name
+        element_name = element.abbreviation
     log_content = " ".join([
         datetime_to_string(date),
         element_type,
