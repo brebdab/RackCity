@@ -41,6 +41,7 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
     rack = RackSerializer()
     mac_addresses = serializers.SerializerMethodField()
     power_connections = serializers.SerializerMethodField()
+    network_connections = serializers.SerializerMethodField()
 
     class Meta:
         model = Asset
@@ -54,6 +55,7 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
             'owner',
             'comment',
             'mac_addresses',
+            'network_connections',
             'power_connections',
         )
 
@@ -80,7 +82,24 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
                     "left_right": port.power_connection.left_right,
                     "port_number": port.power_connection.port_number
                 }
-        return power_connections  # YOU ARE HERE! Test with one that has connections
+        return power_connections
+
+    def get_network_connections(self, asset):
+        try:
+            ports = NetworkPort.objects.filter(asset=asset.id)
+        except ObjectDoesNotExist:
+            return
+        network_connections = []
+        for port in ports:
+            if port.network_connection:
+                destination_port = port.network_connection
+                network_connection_serialized = {
+                    "source_port": port.port_name,
+                    "destination_hostname": destination_port.asset.hostname,
+                    "destination_port": destination_port.port_name
+                }
+                network_connections.append(network_connection_serialized)
+        return network_connections
 
 
 class BulkAssetSerializer(serializers.ModelSerializer):

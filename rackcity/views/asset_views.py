@@ -237,6 +237,12 @@ def save_mac_addresses(asset_data, asset_id):
         raise MacAddressException(failure_message)
 
 
+def save_power_connections():
+    # call create_network_connection
+    # make sure to delete (in both directions) in the case of modifies
+    return
+
+
 def save_power_connections(asset_data, asset_id):
     if (
         'power_connections' not in asset_data

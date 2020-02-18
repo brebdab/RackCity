@@ -25,6 +25,12 @@ class NetworkPort(models.Model):
         blank=True,
     )
 
+    def create_network_connection(self, destination_port):
+        self.network_connection = destination_port
+        destination_port.network_connection = self
+        self.save()
+        destination_port.save()
+
     class Meta:
         constraints = [
             models.UniqueConstraint(
