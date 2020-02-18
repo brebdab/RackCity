@@ -250,6 +250,10 @@ def save_power_connections(asset_data, asset_id):
         else:
             power_connection_data = power_connection_assignments[port_name]
             asset = Asset.objects.get(id=asset_id)
+            if not power_connection_data:
+                power_port.power_connection = None
+                power_port.save()
+                continue
             try:
                 pdu_port = PDUPort.objects.get(
                     rack=asset.rack,
