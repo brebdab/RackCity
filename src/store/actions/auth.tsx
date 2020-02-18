@@ -158,9 +158,6 @@ export const checkAdmin = (token: string) => {
 // };
 
 export const loginHelper = (res: any, dispatch: any) => {
-  console.log("julia is inside login helper")
-  console.log(res.data)
-  console.log(res.data.key)
   const token = res.data.key;
   const expirationDate = new Date(new Date().getTime() + 3600 * 1000);
   localStorage.setItem("token", token);
