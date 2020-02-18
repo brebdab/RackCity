@@ -571,7 +571,7 @@ def asset_page_count(request):
 @api_view(['GET'])
 def asset_fields(request):
     """
-    Return all fields on the AssetSerializer. 
+    Return all fields on the AssetSerializer.
     """
     return JsonResponse(
         {"fields": [
