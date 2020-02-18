@@ -208,7 +208,10 @@ def asset_add(request):  # need to make network and power connections here
 
 
 def save_mac_addresses(asset_data, asset_id):
-    if 'mac_addresses' not in asset_data:
+    if (
+        'mac_addresses' not in asset_data
+        or not asset_data['mac_addresses']
+    ):
         return
     mac_address_assignments = asset_data['mac_addresses']
     failure_message = ""
@@ -235,7 +238,10 @@ def save_mac_addresses(asset_data, asset_id):
 
 
 def save_power_connections(asset_data, asset_id):
-    if 'power_connections' not in asset_data:
+    if (
+        'power_connections' not in asset_data
+        or not asset_data['power_connections']
+    ):
         return
     power_connection_assignments = asset_data['power_connections']
     failure_message = ""
