@@ -546,6 +546,7 @@ class ElementTable extends React.Component<
   getEditForm = () => {
     return (
       <FormPopup
+        {...this.props}
         isOpen={this.state.isEditFormOpen}
         initialValues={this.state.editFormValues}
         type={FormTypes.MODIFY}
