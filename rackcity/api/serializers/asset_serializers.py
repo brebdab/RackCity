@@ -13,12 +13,15 @@ class AssetSerializer(serializers.ModelSerializer):
     hostname = serializers.CharField(validators=[
         UniqueValidator(
             queryset=Asset.objects.all(), lookup='iexact'
-        )])
+        )],
+        required=False
+    )
 
     class Meta:
         model = Asset
         fields = (
             'id',
+            'asset_number',
             'hostname',
             'model',
             'rack',
@@ -40,6 +43,7 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
         model = Asset
         fields = (
             'id',
+            'asset_number',
             'hostname',
             'model',
             'rack',
@@ -73,6 +77,7 @@ class BulkAssetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Asset
         fields = (
+            'asset_number',
             'hostname',
             'rack',
             'rack_position',
