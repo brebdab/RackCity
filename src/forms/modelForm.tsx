@@ -16,6 +16,7 @@ import { ModelObject } from "../utils/utils";
 import { updateObject } from "../store/utility";
 import Field from "./field";
 import "./forms.scss";
+import $ from "jquery";
 import {
   filterString,
   renderCreateItemOption,
@@ -165,13 +166,21 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
     });
   };
   selectText = (event: any) => event.target.select();
+  componentDidMount = () => {
+    $(".suggest").keydown(function(event) {
+      if (event.keyCode === 13) {
+        event.preventDefault();
+        return false;
+      }
+    });
+  };
 
   render() {
     if (this.state.vendors.length === 0) {
       this.getVendors();
     }
     const { values } = this.state;
-    console.log("NETWORK PORTS", this.state.values.network_ports);
+    console.log("vendor", this.state.values.vendor);
     return (
       <div className={Classes.DARK + " login-container"}>
         {this.state.errors.map((err: string) => {
@@ -181,7 +190,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
           onSubmit={this.handleSubmit}
           className="create-form bp3-form-group"
         >
-          <FormGroup label="Vendor (required)">
+          <FormGroup className="suggest" label="Vendor (required)">
             <StringSuggest
               popoverProps={{
                 minimal: true,
@@ -189,18 +198,20 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
                 usePortal: true
               }}
               defaultSelectedItem={this.state.values.vendor}
-              inputValueRenderer={(vendor: string) => vendor}
+              inputValueRenderer={(vendor: string) => this.state.values.vendor}
               items={this.state.vendors}
-              onItemSelect={(vendor: string) =>
-                this.setState({
-                  values: updateObject(values, { vendor: vendor })
-                })
-              }
-              onQueryChange={(vendor: string) => {
+              onItemSelect={(vendor: string) => {
+                console.log("item selected ");
                 this.setState({
                   values: updateObject(values, { vendor: vendor })
                 });
               }}
+              // onQueryChange={(vendor: string) => {
+              //   console.log("CHANGE", vendor);
+              //   this.setState({
+              //     values: updateObject(values, { vendor: vendor })
+              //   });
+              // }}
               createNewItemRenderer={renderCreateItemOption}
               createNewItemFromQuery={(vendor: string) => vendor}
               itemRenderer={renderStringItem}
@@ -208,6 +219,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
               noResults={<MenuItem disabled={true} text="No results." />}
             />
           </FormGroup>
+
           <FormGroup label="Model Number (required)" inline={false}>
             <Field
               placeholder="model_number"
