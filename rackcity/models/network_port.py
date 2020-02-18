@@ -32,7 +32,7 @@ class NetworkPort(models.Model):
         if (
             destination_port.network_connection
             and destination_port.network_connection != self
-        ):  # THIS ISN'T WORKING
+        ):
             from rackcity.views.rackcity_utils import (
                 NetworkConnectionException
             )
