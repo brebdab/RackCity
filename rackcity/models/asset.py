@@ -9,7 +9,7 @@ from .rack import Rack
 
 def validate_hostname(value):
     hostname_pattern = re.compile("[A-Za-z]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?")
-    if value is not None and hostname_pattern.fullmatch(value) is None:
+    if value and hostname_pattern.fullmatch(value) is None:
         raise ValidationError(value + " is not a valid hostname as it is " +
                               "not compliant with RFC 1034")
 
