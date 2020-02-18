@@ -218,10 +218,10 @@ def i_am_admin(request):
     """
     Returns whether logged in user is an admin user.
     """
-    if(request.user.is_staff):
-        return JsonResponse({"is_admin": True})
-    else:
-        return JsonResponse({"is_admin": False})
+    return JsonResponse(
+        {"is_admin": request.user.is_staff},
+        status=HTTPStatus.OK
+    )
 
 
 @api_view(['POST'])
