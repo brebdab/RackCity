@@ -11,9 +11,9 @@ import * as React from "react";
 import { connect } from "react-redux";
 
 import {
-  AssetObject,
+  AssetObjectOld,
   ModelObject,
-  AssetInfoObject,
+  ShallowAssetObjectOld,
   getHeaders,
   RackObject,
   ElementObjectType
@@ -42,11 +42,11 @@ import { PagingTypes } from "../components/elementView/elementUtils";
 export interface AssetFormProps {
   token: string;
   type: FormTypes;
-  initialValues?: AssetObject;
-  submitForm(Asset: AssetInfoObject, headers: any): Promise<any> | void;
+  initialValues?: AssetObjectOld;
+  submitForm(Asset: ShallowAssetObjectOld, headers: any): Promise<any> | void;
 }
 interface AssetFormState {
-  values: AssetObject;
+  values: AssetObjectOld;
   racks: Array<RackObject>;
   models: Array<ModelObject>;
   errors: Array<string>;
@@ -56,8 +56,8 @@ var console: any = {};
 console.log = function() {};
 
 export const required = (
-  values: AssetObject,
-  fieldName: keyof AssetObject
+  values: AssetObjectOld,
+  fieldName: keyof AssetObjectOld
 ): string =>
   values[fieldName] === undefined ||
   values[fieldName] === null ||
@@ -66,9 +66,9 @@ export const required = (
     : "";
 
 class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
-  initialState: AssetObject = this.props.initialValues
+  initialState: AssetObjectOld = this.props.initialValues
     ? this.props.initialValues
-    : ({} as AssetObject);
+    : ({} as AssetObjectOld);
   public state = {
     values: this.initialState,
     racks: [],
@@ -113,13 +113,13 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         return items;
       });
   }
-  private mapAssetObject = (asset: AssetObject): AssetInfoObject => {
+  private mapAssetObject = (asset: AssetObjectOld): ShallowAssetObjectOld => {
     console.log(asset);
 
     const { hostname, id, rack_position, owner, comment } = asset;
     const model = asset.model ? asset.model.id : undefined;
     const rack = asset.rack ? asset.rack.id : undefined;
-    let valuesToSend: AssetInfoObject = {
+    let valuesToSend: ShallowAssetObjectOld = {
       model,
       rack,
       hostname,

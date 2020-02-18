@@ -20,7 +20,7 @@ import FormPopup from "../../../../forms/formPopup";
 import ElementTable from "../../elementTable";
 import {
   ElementType,
-  AssetObject,
+  AssetObjectOld,
   ModelObject,
   getHeaders,
   getFields
@@ -38,7 +38,7 @@ export interface ModelViewProps {
 // var console: any = {};
 // console.log = function () { };
 interface ModelViewState {
-  assets: Array<AssetObject> | undefined;
+  assets: Array<AssetObjectOld> | undefined;
   model: ModelObject | undefined;
   columns: Array<string>;
   fields: Array<string>;

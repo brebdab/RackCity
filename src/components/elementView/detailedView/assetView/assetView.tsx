@@ -16,7 +16,7 @@ import { RouteComponentProps, withRouter } from "react-router";
 import "./assetView.scss";
 import { connect } from "react-redux";
 import {
-  AssetObject,
+  AssetObjectOld,
   ElementType,
   getHeaders,
   getFields
@@ -49,7 +49,7 @@ async function getData(assetkey: string, token: string) {
 }
 
 interface AssetViewState {
-  asset: AssetObject | undefined;
+  asset: AssetObjectOld | undefined;
   columns: Array<string>;
   fields: Array<string>;
   isFormOpen: boolean;
@@ -69,7 +69,7 @@ export class AssetView extends React.PureComponent<
     columns: ["Hostname", "Model", "Rack", "Rack position", "Owner", "Comment"],
     fields: ["hostname", "model", "rack", "Rack position", "owner", "comment"]
   };
-  private updateAsset = (asset: AssetObject, headers: any): Promise<any> => {
+  private updateAsset = (asset: AssetObjectOld, headers: any): Promise<any> => {
     let params: any;
     params = this.props.match.params;
     return modifyAsset(asset, headers).then(res => {

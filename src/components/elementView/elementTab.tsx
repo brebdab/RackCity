@@ -25,7 +25,7 @@ import {
 } from "../../forms/formUtils";
 import { API_ROOT } from "../../utils/api-config";
 import {
-  AssetInfoObject,
+  ShallowAssetObject,
   CreateUserObject,
   ElementObjectType,
   ElementType,
@@ -166,7 +166,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
   };
 
   private createAsset = (
-    asset: AssetInfoObject,
+    asset: ShallowAssetObject,
     headers: any
   ): Promise<any> => {
     console.log("api/assets/add");

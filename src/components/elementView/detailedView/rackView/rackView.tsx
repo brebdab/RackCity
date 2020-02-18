@@ -15,7 +15,7 @@ import { RouteComponentProps, withRouter } from "react-router";
 import { API_ROOT } from "../../../../utils/api-config";
 import {
   getHeaders,
-  AssetObject,
+  AssetObjectOld,
   RackResponseObject
 } from "../../../../utils/utils";
 import "./rackView.scss";
@@ -48,7 +48,7 @@ class RackView extends React.PureComponent<
     let unit = 1;
     let currHeight = 0;
     const { height } = rackResp.rack;
-    let assets: Array<AssetObject> = Object.assign(
+    let assets: Array<AssetObjectOld> = Object.assign(
       [],
       rackResp.assets
     );
