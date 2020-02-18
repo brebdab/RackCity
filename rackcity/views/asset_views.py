@@ -277,7 +277,6 @@ def save_network_connections(asset_data, asset_id):
     network_connections = asset_data['network_connections']
     failure_message = ""
     for network_connection in network_connections:
-        # if this is null, delete??
         port_name = network_connection['source_port']
         try:
             network_port = NetworkPort.objects.get(
