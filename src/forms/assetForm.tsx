@@ -323,10 +323,10 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
               fill={false}
               style={{ marginTop: 5 }}
             >
-              <h5>{i}</h5>
+              <p>PDU Port {i}</p>
               <Checkbox
                 checked={this.state.power_ports_enabled[i]}
-                label="Select PDU Port "
+                label="Add A PDU Connection "
                 onChange={(event: any) => {
                   console.log(
                     "setting staus to ",
