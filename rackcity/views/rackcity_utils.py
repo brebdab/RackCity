@@ -3,6 +3,8 @@ from rackcity.api.objects import RackRangeSerializer
 from rackcity.api.serializers import RecursiveAssetSerializer, RackSerializer
 from http import HTTPStatus
 from django.http import JsonResponse
+import functools
+from django.db import close_old_connections
 
 
 def get_rack_detailed_response(racks):
@@ -182,6 +184,11 @@ class PowerConnectionException(Exception):
         Exception.__init__(self, *args, **kwargs)
 
 
+class NetworkConnectionException(Exception):
+    def __init__(self, *args, **kwargs):
+        Exception.__init__(self, *args, **kwargs)
+
+
 def get_sort_arguments(data):
     sort_args = []
     if 'sort_by' in data:
@@ -311,3 +318,13 @@ def get_filter_arguments(data):
                 )
 
     return filter_args
+
+
+def close_old_connections_decorator(func):
+    @functools.wraps(func)
+    def wrapper_decorator(*args, **kwargs):
+        close_old_connections()
+        value = func(*args, **kwargs)
+        close_old_connections()
+        return value
+    return wrapper_decorator
