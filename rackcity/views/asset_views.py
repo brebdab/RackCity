@@ -286,6 +286,20 @@ def asset_modify(request):
                     status=HTTPStatus.BAD_REQUEST,
                 )
             value = data[field]
+        elif field == 'asset_number':
+            assets_with_asset_number = Asset.objects.filter(
+                asset_number=data[field]
+            )
+            if (
+                len(assets_with_asset_number) > 0
+                and assets_with_asset_number[0].id != id
+            ):
+                return JsonResponse(
+                    {"failure_message": "Asset with asset number '" +
+                        str(data[field]) + "' already exists."},
+                    status=HTTPStatus.BAD_REQUEST,
+                )
+            value = data[field]
         else:
             value = data[field]
         setattr(existing_asset, field, value)
