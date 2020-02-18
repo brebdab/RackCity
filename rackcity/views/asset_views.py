@@ -250,19 +250,27 @@ def save_power_connections(asset_data, asset_id):
         else:
             power_connection_data = power_connection_assignments[port_name]
             asset = Asset.objects.get(id=asset_id)
-            pdu_port = PDUPort.objects.get(
-                rack=asset.rack,
-                left_right=power_connection_data['left_right'],
-                port_number=power_connection_data['port_number']
-            )
-            power_port.power_connection = pdu_port
             try:
-                power_port.save()
-            except Exception as error:
+                pdu_port = PDUPort.objects.get(
+                    rack=asset.rack,
+                    left_right=power_connection_data['left_right'],
+                    port_number=power_connection_data['port_number']
+                )
+            except ObjectDoesNotExist:
                 failure_message += \
-                    "Power connection on port '" + \
-                    port_name + \
-                    "' was not valid. "
+                    "PDU port '" + \
+                    power_connection_data['left_right'] + \
+                    str(power_connection_data['port_number']) + \
+                    "' does not exist. "
+            else:
+                power_port.power_connection = pdu_port
+                try:
+                    power_port.save()
+                except Exception as error:
+                    failure_message += \
+                        "Power connection on port '" + \
+                        port_name + \
+                        "' was not valid. "
     if failure_message:
         raise PowerConnectionException(failure_message)
 
@@ -346,6 +354,7 @@ def asset_modify(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     else:
+        failure_message = ""
         try:
             save_mac_addresses(
                 asset_data=data,
@@ -354,12 +363,24 @@ def asset_modify(request):
         except MacAddressException as error:
             failure_message += "Some mac addresses couldn't be saved. " + \
                 str(error)
+        try:
+            save_power_connections(
+                asset_data=data,
+                asset_id=existing_asset.id
+            )
+        except PowerConnectionException as error:
+            failure_message += "Some power connections couldn't be saved. " + \
+                str(error)
+        if failure_message:
             return JsonResponse(
                 {"failure_message": failure_message},
                 status=HTTPStatus.BAD_REQUEST,
             )
         else:
-            return HttpResponse(status=HTTPStatus.OK)
+            return JsonResponse(
+                {"success_message": "Asset succesfully modified"},
+                status=HTTPStatus.OK,
+            )
 
 
 @api_view(['POST'])
