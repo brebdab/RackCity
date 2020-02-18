@@ -163,56 +163,65 @@ def asset_add(request):  # need to make network and power connections here
     failure_message = ""
     if 'id' in data:
         failure_message += "Don't include id when adding an asset. "
-
-    serializer = AssetSerializer(data=data)
-    if not serializer.is_valid(raise_exception=False):
-        failure_message += str(serializer.errors)
-    if failure_message == "":
-        rack_id = serializer.validated_data['rack'].id
-        rack_position = serializer.validated_data['rack_position']
-        height = serializer.validated_data['model'].height
-        try:
-            validate_asset_location(rack_id, rack_position, height)
-        except LocationException as error:
-            failure_message += str(error)
-            return JsonResponse(
-                {"failure_message": failure_message},
-                status=HTTPStatus.BAD_REQUEST,
-            )
-    if failure_message == "":
-        try:
-            asset = serializer.save()
-        except Exception as error:
-            failure_message += str(error)
-        else:
-            try:
-                save_mac_addresses(
-                    asset_data=data,
-                    asset_id=asset.id
-                )
-            except MacAddressException as error:
-                failure_message += "Some mac addresses couldn't be saved. " + \
-                    str(error)
-            try:
-                save_power_connections(
-                    asset_data=data,
-                    asset_id=asset.id
-                )
-            except PowerConnectionException as error:
-                failure_message += "Some power connections couldn't be saved. " + \
-                    str(error)
-            try:
-                save_network_connections(
-                    asset_data=data,
-                    asset_id=asset.id
-                )
-            except NetworkConnectionException as error:
-                failure_message += "Some network connections couldn't be saved. " + \
-                    str(error)
-    if failure_message:
         return JsonResponse(
             {"failure_message": failure_message},
             status=HTTPStatus.BAD_REQUEST,
+        )
+    serializer = AssetSerializer(data=data)
+    if not serializer.is_valid(raise_exception=False):
+        failure_message += str(serializer.errors)
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    rack_id = serializer.validated_data['rack'].id
+    rack_position = serializer.validated_data['rack_position']
+    height = serializer.validated_data['model'].height
+    try:
+        validate_asset_location(rack_id, rack_position, height)
+    except LocationException as error:
+        failure_message += str(error)
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    try:
+        asset = serializer.save()
+    except Exception as error:
+        failure_message += str(error)
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    warning_message = ""
+    try:
+        save_mac_addresses(
+            asset_data=data,
+            asset_id=asset.id
+        )
+    except MacAddressException as error:
+        warning_message += "Some mac addresses couldn't be saved. " + \
+            str(error)
+    try:
+        save_power_connections(
+            asset_data=data,
+            asset_id=asset.id
+        )
+    except PowerConnectionException as error:
+        warning_message += "Some power connections couldn't be saved. " + \
+            str(error)
+    try:
+        save_network_connections(
+            asset_data=data,
+            asset_id=asset.id
+        )
+    except NetworkConnectionException as error:
+        warning_message += "Some network connections couldn't be saved. " + \
+            str(error)
+    if warning_message:
+        return JsonResponse(
+            {"warning_message": warning_message},
+            status=HTTPStatus.OK,
         )
     else:
         return JsonResponse(
@@ -455,14 +464,14 @@ def asset_modify(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     else:
-        failure_message = ""
+        warning_message = ""
         try:
             save_mac_addresses(
                 asset_data=data,
                 asset_id=existing_asset.id
             )
         except MacAddressException as error:
-            failure_message += "Some mac addresses couldn't be saved. " + \
+            warning_message += "Some mac addresses couldn't be saved. " + \
                 str(error)
         try:
             save_power_connections(
@@ -470,7 +479,7 @@ def asset_modify(request):
                 asset_id=existing_asset.id
             )
         except PowerConnectionException as error:
-            failure_message += "Some power connections couldn't be saved. " + \
+            warning_message += "Some power connections couldn't be saved. " + \
                 str(error)
         try:
             save_network_connections(
@@ -478,12 +487,12 @@ def asset_modify(request):
                 asset_id=existing_asset.id
             )
         except NetworkConnectionException as error:
-            failure_message += "Some network connections couldn't be saved. " + \
+            warning_message += "Some network connections couldn't be saved. " + \
                 str(error)
-        if failure_message:
+        if warning_message:
             return JsonResponse(
-                {"failure_message": failure_message},
-                status=HTTPStatus.BAD_REQUEST,
+                {"warning_message": warning_message},
+                status=HTTPStatus.OK,
             )
         else:
             return JsonResponse(
