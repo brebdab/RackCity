@@ -8,6 +8,13 @@ from rackcity.api.serializers import (
     ITModelSerializer,
     RackSerializer
 )
+from rackcity.utils.log_utils import (
+    log_action,
+    log_bulk_import,
+    log_delete,
+    Action,
+    ElementType,
+)
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.parsers import JSONParser
@@ -166,7 +173,8 @@ def asset_add(request):  # need to make network and power connections here
             )
     if failure_message == "":
         try:
-            serializer.save()
+            new_asset = serializer.save()
+            log_action(request.user, new_asset, Action.CREATE)
             return HttpResponse(status=HTTPStatus.CREATED)
         except Exception as error:
             failure_message += str(error)
@@ -242,6 +250,7 @@ def asset_modify(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     else:
+        log_action(request.user, existing_asset, Action.MODIFY)
         return HttpResponse(status=HTTPStatus.OK)
 
 
@@ -264,7 +273,9 @@ def asset_delete(request):  # need to delete network and power connections here
 
     if failure_message == "":
         try:
+            asset_name = existing_asset.asset_number
             existing_asset.delete()
+            log_delete(request.user, ElementType.ASSET, asset_name)
             return HttpResponse(status=HTTPStatus.OK)
         except Exception as error:
             failure_message = failure_message + str(error)
@@ -483,6 +494,7 @@ def asset_bulk_approve(request):  # need to make network and power connections h
                 value = asset_data[field]
             setattr(existing_asset, field, value)
         existing_asset.save()
+    log_bulk_import(request.user, ElementType.ASSET)
     return HttpResponse(status=HTTPStatus.OK)
 
 
