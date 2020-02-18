@@ -10,6 +10,6 @@ class LogSerializer(serializers.ModelSerializer):
             'date',
             'log_content',
             'user',
-            'related_assets',
+            'related_asset',
             'related_model',
         )
