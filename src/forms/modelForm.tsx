@@ -197,12 +197,13 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
                 })
               }
               onQueryChange={(vendor: string) => {
+                console.log("CHANGE", vendor);
                 this.setState({
                   values: updateObject(values, { vendor: vendor })
                 });
               }}
-              createNewItemRenderer={renderCreateItemOption}
-              createNewItemFromQuery={(vendor: string) => vendor}
+              // createNewItemRenderer={renderCreateItemOption}
+              // createNewItemFromQuery={(vendor: string) => vendor}
               itemRenderer={renderStringItem}
               itemPredicate={filterString}
               noResults={<MenuItem disabled={true} text="No results." />}
