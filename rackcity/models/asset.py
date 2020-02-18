@@ -82,8 +82,11 @@ class Asset(models.Model):
 
     def add_network_ports(self):
         from rackcity.models import NetworkPort
-        if len(NetworkPort.objects.filter(asset=self.id)) == 0:  # only add ports for new assets
-            model = self.model
+        model = self.model
+        if (
+            len(NetworkPort.objects.filter(asset=self.id)) == 0  # only new assets
+            and model.network_ports  # only if the model has ports
+        ):
             for network_port_name in model.network_ports:
                 network_port = NetworkPort(
                     asset=self,
