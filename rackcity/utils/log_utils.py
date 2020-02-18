@@ -67,6 +67,29 @@ def log_action(user, element, action):
     log.save()
 
 
+def log_delete(user, element_type, element_name):
+    """
+    Specified action should be Action enum, element_type should be ElementType
+    enum.
+    """
+    date = datetime.now()
+    log_content = " ".join([
+        datetime_to_string(date),
+        element_type.value,
+        element_name + ":",
+        user.username,
+        Action.DELETE.value,
+        element_type,
+        element_name
+    ])
+    log = Log(
+        date=date,
+        log_content=log_content,
+        user=user,
+    )
+    log.save()
+
+
 def log_rack_action(user, action, related_racks):
     """
     Specified action should be Action enum, related_racks should be list of
@@ -142,3 +165,14 @@ def log_single_network_action(date, user, action, related_asset, other_asset):
         related_asset=related_asset,
     )
     log.save()
+
+
+def log_bulk_import(user, element_type):
+    date = datetime.now()
+    log_content = " ".join([
+        datetime_to_string(date),
+        user.username,
+        "uploaded",
+        element_type.value,
+        "by bulk import",
+    ])
