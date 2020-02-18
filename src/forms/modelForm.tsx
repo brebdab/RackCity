@@ -170,7 +170,6 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
     $(".suggest").keydown(function(event) {
       if (event.keyCode == 13) {
         event.preventDefault();
-        console.log("ENTER");
         return false;
       }
     });
