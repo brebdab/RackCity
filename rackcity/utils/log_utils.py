@@ -27,27 +27,30 @@ def datetime_to_string(date):
     return "[" + str(date) + "]"
 
 
-def log_action(user, element, action):
+def log_action(user, related_element, action):
     """
     Specified action should be Action enum.
     """
     date = datetime.now()
     related_model = None
     related_asset = None
-    if isinstance(element, Asset):
+    if isinstance(related_element, Asset):
         element_type = ElementType.ASSET.value
-        element_name = element.asset_number
-        related_asset = element
-    elif isinstance(element, ITModel):
+        element_name = related_element.asset_number
+        related_asset = related_element
+    elif isinstance(related_element, ITModel):
         element_type = ElementType.MODEL.value
-        element_name = element.vendor + " " + element.model_number
-        related_model = element
-    elif isinstance(element, User):
+        element_name = " ".join([
+            related_element.vendor,
+            related_element.model_number
+        ])
+        related_model = related_element
+    elif isinstance(related_element, User):
         element_type = ElementType.USER.value
-        element_name = element.username
-    elif isinstance(element, Datacenter):
+        element_name = related_element.username
+    elif isinstance(related_element, Datacenter):
         element_type = ElementType.DATACENTER.value
-        element_name = element.abbreviation
+        element_name = related_element.abbreviation
     log_content = " ".join([
         datetime_to_string(date),
         element_type,
@@ -69,8 +72,7 @@ def log_action(user, element, action):
 
 def log_delete(user, element_type, element_name):
     """
-    Specified action should be Action enum, element_type should be ElementType
-    enum.
+    Specified element_type should be ElementType enum.
     """
     date = datetime.now()
     log_content = " ".join([
@@ -168,6 +170,9 @@ def log_single_network_action(date, user, action, related_asset, other_asset):
 
 
 def log_bulk_import(user, element_type):
+    """
+    Specified element_type should be ElementType enum.
+    """
     date = datetime.now()
     log_content = " ".join([
         datetime_to_string(date),
