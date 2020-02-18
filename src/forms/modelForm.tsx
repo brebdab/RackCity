@@ -168,7 +168,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
   selectText = (event: any) => event.target.select();
   componentDidMount = () => {
     $(".suggest").keydown(function(event) {
-      if (event.keyCode == 13) {
+      if (event.keyCode === 13) {
         event.preventDefault();
         return false;
       }
