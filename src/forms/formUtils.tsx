@@ -190,14 +190,14 @@ export const renderCreateItemOption = (
   active: boolean,
   handleClick: React.MouseEventHandler<HTMLElement>
 ) => (
-    <MenuItem
-      icon="add"
-      text={`Use"${query}"`}
-      active={active}
-      onClick={handleClick}
-      shouldDismissPopover={false}
-    />
-  );
+  <MenuItem
+    icon="add"
+    text={`Use "${query}"`}
+    active={active}
+    onClick={handleClick}
+    shouldDismissPopover={false}
+  />
+);
 export const StringSelect = Select.ofType<string>();
 export const StringSuggest = Suggest.ofType<string>();
 export const ModelSelect = Select.ofType<ModelObject>();
