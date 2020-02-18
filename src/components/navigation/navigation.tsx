@@ -55,13 +55,16 @@ export class Navigation extends React.Component<NavigationPropsAll> {
                   />
                 </div>
               ) : (
-                <p></p>
-              )}
+                  <p></p>
+                )}
             </NavbarGroup>
 
             <NavbarGroup align={Alignment.RIGHT}>
               {this.props.isAuthenticated ? (
                 <div>
+                  <p>
+                    Welcome, username
+                  </p>
                   {this.props.isAdmin ? (
                     <AnchorButton
                       icon="user"
@@ -70,7 +73,6 @@ export class Navigation extends React.Component<NavigationPropsAll> {
                       minimal
                     />
                   ) : null}
-
                   <AnchorButton
                     onClick={this.props.logout}
                     className="nav-bar-button"
@@ -80,14 +82,14 @@ export class Navigation extends React.Component<NavigationPropsAll> {
                   />
                 </div>
               ) : (
-                <AnchorButton
-                  onClick={() => this.props.history.push("/login")}
-                  className="nav-bar-button"
-                  icon="user"
-                  text="Login"
-                  minimal
-                />
-              )}
+                  <AnchorButton
+                    onClick={() => this.props.history.push("/login")}
+                    className="nav-bar-button"
+                    icon="user"
+                    text="Login"
+                    minimal
+                  />
+                )}
             </NavbarGroup>
           </Navbar>
         </div>
