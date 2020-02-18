@@ -155,7 +155,10 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     this.setPowerPortInputState();
     let values = this.state.values;
     if (values) {
-      values = updateObject(values, { power_connections: {} });
+      values = updateObject(values, {
+        power_connections: {},
+        mac_addresses: {}
+      });
     }
     this.setState({
       values
@@ -665,12 +668,22 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                             // value={port}
                             type="string"
                             className="network-name"
-                            // onChange={(e: any) =>
-                            //   // this.handleNetworkPortNameChange(
-                            //   //   index,
-                            //   //   e.currentTarget.value
-                            //   // )
-                            // }
+                            onChange={
+                              (e: any) => {
+                                const mac_addresses = values.mac_addresses;
+                                mac_addresses[port] = e.currentTarget.value;
+
+                                this.setState({
+                                  values: updateObject(this.state.values, {
+                                    mac_addresses
+                                  })
+                                });
+                              }
+                              // this.handleNetworkPortNameChange(
+                              //   index,
+                              //   e.currentTarget.value
+                              // )
+                            }
                           />
                         </td>
                       </tr>
