@@ -648,52 +648,63 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
               />
             </ModelSelect>
           </FormGroup>
+          <Collapse
+            isOpen={
+              values.model &&
+              values.model.network_ports &&
+              values.model.network_ports.length !== 0
+            }
+          >
+            {!(
+              values.model &&
+              values.model.network_ports &&
+              values.model.network_ports.length !== 0
+            ) ? null : (
+              <FormGroup label="Mac Addresses" inline={false}>
+                <table className="port-table">
+                  <tbody>
+                    {values.model.network_ports.map((port, index) => {
+                      return (
+                        <tr>
+                          <td>{port}</td>
+                          <td>
+                            <InputGroup
+                              // value={port}
+                              type="string"
+                              className="network-name"
+                              onChange={
+                                (e: any) => {
+                                  const mac_addresses = values.mac_addresses;
+                                  mac_addresses[port] = e.currentTarget.value;
 
-          {!(
-            values.model &&
-            values.model.network_ports &&
-            values.model.network_ports.length !== 0
-          ) ? null : (
-            <FormGroup label="Mac Addresses" inline={false}>
-              <table className="port-table">
-                <tbody>
-                  {values.model.network_ports.map((port, index) => {
-                    return (
-                      <tr>
-                        <td>{port}</td>
-                        <td>
-                          <InputGroup
-                            // value={port}
-                            type="string"
-                            className="network-name"
-                            onChange={
-                              (e: any) => {
-                                const mac_addresses = values.mac_addresses;
-                                mac_addresses[port] = e.currentTarget.value;
-
-                                this.setState({
-                                  values: updateObject(this.state.values, {
-                                    mac_addresses
-                                  })
-                                });
+                                  this.setState({
+                                    values: updateObject(this.state.values, {
+                                      mac_addresses
+                                    })
+                                  });
+                                }
+                                // this.handleNetworkPortNameChange(
+                                //   index,
+                                //   e.currentTarget.value
+                                // )
                               }
-                              // this.handleNetworkPortNameChange(
-                              //   index,
-                              //   e.currentTarget.value
-                              // )
-                            }
-                          />
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </FormGroup>
-          )}
+                            />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </FormGroup>
+            )}
+          </Collapse>
 
-          <div>
-            {" "}
+          <Collapse
+            isOpen={
+              this.state.values.model &&
+              !isNullOrUndefined(this.state.values.model.num_power_ports)
+            }
+          >
             {this.state.values.model &&
             this.state.values.model.num_power_ports &&
             parseInt(this.state.values.model.num_power_ports, 10) > 0 ? (
@@ -701,7 +712,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                 {this.getPowerPortFields()}
               </FormGroup>
             ) : null}
-          </div>
+          </Collapse>
 
           <FormGroup label="Owner" inline={false}>
             <StringSelect
