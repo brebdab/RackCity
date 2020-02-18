@@ -13,7 +13,8 @@ export enum ElementType {
 export interface AssetObject extends ElementObject {
   hostname: string;
   rack_position: string;
-  model: ModelObjectOld;
+  model: ModelObject;
+  macAddresses: { [port: string]: string };
   rack: RackObject;
   owner?: string;
   comment?: string;

@@ -4,7 +4,8 @@ import {
   Classes,
   FormGroup,
   Intent,
-  MenuItem
+  MenuItem,
+  InputGroup
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
@@ -51,6 +52,7 @@ interface AssetFormState {
   models: Array<ModelObject>;
   errors: Array<string>;
   users: Array<string>;
+  currModel: ModelObject;
 }
 var console: any = {};
 console.log = function() {};
@@ -74,7 +76,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     racks: [],
     models: [],
     errors: [],
-    users: []
+    users: [],
+    currModel: {} as ModelObject
   };
   headers = {
     headers: {
@@ -276,6 +279,42 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
               />
             </ModelSelect>
           </FormGroup>
+
+          {!(
+            values.model &&
+            values.model.network_ports &&
+            values.model.network_ports.length !== 0
+          ) ? null : (
+            <table className="port-table">
+              <thead>
+                <th>Port Name</th>
+                <th>Mac Address</th>
+              </thead>
+              <tbody>
+                {values.model.network_ports.map((port, index) => {
+                  return (
+                    <tr>
+                      <td>{port}</td>
+                      <td>
+                        <InputGroup
+                          // value={port}
+                          type="string"
+                          className="network-name"
+                          // onChange={(e: any) =>
+                          //   // this.handleNetworkPortNameChange(
+                          //   //   index,
+                          //   //   e.currentTarget.value
+                          //   // )
+                          // }
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+
           <FormGroup label="Rack (required)" inline={false}>
             <RackSelect
               popoverProps={{
