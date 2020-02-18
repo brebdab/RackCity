@@ -16,6 +16,7 @@ import { ModelObject } from "../utils/utils";
 import { updateObject } from "../store/utility";
 import Field from "./field";
 import "./forms.scss";
+import $ from "jquery";
 import {
   filterString,
   renderCreateItemOption,
@@ -165,6 +166,15 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
     });
   };
   selectText = (event: any) => event.target.select();
+  componentDidMount = () => {
+    $(".suggest").keydown(function(event) {
+      if (event.keyCode == 13) {
+        event.preventDefault();
+        console.log("ENTER");
+        return false;
+      }
+    });
+  };
 
   render() {
     if (this.state.vendors.length === 0) {
@@ -181,7 +191,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
           onSubmit={this.handleSubmit}
           className="create-form bp3-form-group"
         >
-          <FormGroup label="Vendor (required)">
+          <FormGroup className="suggest" label="Vendor (required)">
             <StringSuggest
               popoverProps={{
                 minimal: true,
@@ -209,6 +219,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
               noResults={<MenuItem disabled={true} text="No results." />}
             />
           </FormGroup>
+
           <FormGroup label="Model Number (required)" inline={false}>
             <Field
               placeholder="model_number"
