@@ -6,8 +6,6 @@ import { connect } from "react-redux";
 import "./loginView.scss";
 import * as QueryString from "query-string"
 import { isNullOrUndefined } from "util";
-import axios from "axios";
-import { API_ROOT } from "../../utils/api-config";
 import * as actions from "../../store/actions/auth";
 
 export interface LoginViewProps {
