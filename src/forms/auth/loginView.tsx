@@ -14,7 +14,6 @@ export interface LoginViewProps {
     token: string;
     onAuth(acess_token: string): any;
 }
-
 export class LoginView extends React.PureComponent<RouteComponentProps & LoginViewProps> {
     private handleSSOClick = () => {
         const redirect_uri = window.location.href.replace(new RegExp(':', 'g'), '%3A').replace(new RegExp('/', 'g'), '%2F')
@@ -36,7 +35,6 @@ export class LoginView extends React.PureComponent<RouteComponentProps & LoginVi
         )
     };
 }
-
 const mapStatetoProps = (state: any) => {
     return {
         token: state.token
