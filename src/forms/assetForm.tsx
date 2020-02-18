@@ -549,7 +549,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
               field="hostname"
             />
           </FormGroup>
-          <FormGroup label="Datacenter" inline={true}>
+          <FormGroup label="Datacenter" inline={false}>
             <DatacenterSelect
               popoverProps={{
                 minimal: true,
@@ -654,10 +654,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
           ) ? null : (
             <FormGroup label="Mac Addresses" inline={false}>
               <table className="port-table">
-                <thead>
-                  <th>Port</th>
-                  <th>Mac Address</th>
-                </thead>
                 <tbody>
                   {values.model.network_ports.map((port, index) => {
                     return (
@@ -696,7 +692,9 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
           <div>
             {" "}
-            {this.state.values.model ? (
+            {this.state.values.model &&
+            this.state.values.model.num_power_ports &&
+            parseInt(this.state.values.model.num_power_ports, 10) > 0 ? (
               <FormGroup label="Power Connections " inline={false}>
                 {this.getPowerPortFields()}
               </FormGroup>
