@@ -768,7 +768,9 @@ class ElementTable extends React.Component<
         </div>
         <div className="table-wrapper">
           {this.state.fields.length === 0 ? null : (
-            <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered element-table">
+            <table className={(this.props.type !== ElementType.DATACENTER && this.props.type !== ElementType.USER) ?
+              "bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered element-table" :
+              "bp3-html-table bp3-html-table-striped bp3-html-table-bordered element-table"}>
               <thead>
                 <tr>
                   {this.state.fields.map((col: string) => {
@@ -809,12 +811,14 @@ class ElementTable extends React.Component<
                     }
                     return (
                       <tr
-                        onClick={this.props.type === "datacenters" ? () => { } : () => {
-                          console.log("redirecting", item.id);
-                          this.props.history.push(
-                            "/" + this.props.type + "/" + item.id
-                          );
-                        }}
+                        onClick={this.props.type === ElementType.DATACENTER || this.props.type === ElementType.USER ?
+                          () => { }
+                          : () => {
+                            console.log("redirecting", item.id);
+                            this.props.history.push(
+                              "/" + this.props.type + "/" + item.id
+                            );
+                          }}
                       >
                         {Object.entries(item).map(([col, value]) => {
                           if (isModelObject(value)) {
@@ -898,7 +902,7 @@ class ElementTable extends React.Component<
             </table>
           )}
         </div>
-      </div>
+      </div >
     );
   }
 }
