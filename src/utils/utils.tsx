@@ -98,6 +98,7 @@ export interface RackObject extends ElementObject {
   row_letter: string;
   rack_num: string;
   height: string;
+  is_network_controlled?: boolean;
 }
 
 export interface RackResponseObject {
