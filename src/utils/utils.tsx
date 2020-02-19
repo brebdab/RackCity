@@ -125,7 +125,7 @@ export interface CreateUserObject {
 }
 
 export interface RackObject extends ElementObject {
-  datacenter: string;
+  datacenter: DatacenterObject;
   row_letter: string;
   rack_num: string;
   height: string;

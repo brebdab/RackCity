@@ -503,13 +503,27 @@ class ElementTable extends React.Component<
         });
     }
   };
+  // getFilterFieldNames = () => {
+  //   let newFields: Array<string> = this.state.fields.map((field: string) => {
+  //     if (field === "datacenter") {
+  //       return "rack__datacenter__name";
+  //     } else {
+  //       return field;
+  //     }
+  //   });
 
+  //   console.log(newFields);
+  //   return newFields;
+  // };
   setFieldNamesFromData = (items: Array<ElementObjectType>) => {
     let fields: Array<string> = [];
     Object.keys(items[0]).forEach((col: string) => {
       if (col === "model") {
         fields.push("model__vendor");
         fields.push("model__model_number");
+      } else if (col === "rack") {
+        fields.push("rack");
+        fields.push("rack__datacenter__name");
       } else if (
         col !== "id" &&
         col !== "network_ports" &&
@@ -847,7 +861,10 @@ class ElementTable extends React.Component<
                               <td>{value.model_number}</td>
                             ];
                           } else if (isRackObject(value)) {
-                            return <td>{value.row_letter + value.rack_num}</td>;
+                            return [
+                              <td>{value.row_letter + value.rack_num}</td>,
+                              <td>{value.datacenter.name}</td>
+                            ];
                           } else if (col === "display_color") {
                             console.log(value);
                             return (
