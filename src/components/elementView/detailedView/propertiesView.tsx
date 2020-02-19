@@ -4,6 +4,7 @@ import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
 import { RouteComponentProps, withRouter } from "react-router";
 import "./propertiesView.scss";
+import { isObject } from "../../../utils/utils";
 
 export interface AlertState {
   isDeleteOpen: boolean;
@@ -60,7 +61,8 @@ class PropertiesView extends React.PureComponent<
               );
             } else if (item === "rack") {
               dat = <p>{data[item].row_letter + "" + data[item].rack_num}</p>;
-            } else {
+            } else if (!isObject(data[item])) {
+              //TO DO: decide how to render dicts
               dat = <p>{data[item]}</p>;
             }
             return (

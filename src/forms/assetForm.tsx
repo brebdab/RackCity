@@ -548,7 +548,11 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                 popoverClassName: "dropdown",
                 usePortal: true
               }}
-              items={[ALL_DATACENTERS]}
+              items={
+                this.props.datacenters
+                  ? this.props.datacenters
+                  : [ALL_DATACENTERS]
+              }
               onItemSelect={(datacenter: DatacenterObject) => {
                 this.setState({
                   currDatacenter: datacenter
@@ -739,12 +743,13 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
             /> */}
           </FormGroup>
           <FormGroup label="Comment" inline={false}>
-            <Field
-              field="comment"
+            <textarea
+              className={Classes.INPUT}
               placeholder="comment"
-              value={values.comment}
-              onChange={this.handleChange}
-            />
+              onChange={(e: any) =>
+                this.handleChange({ comment: e.currentTarget.value })
+              }
+            ></textarea>
           </FormGroup>
           <Button className="login-button" type="submit">
             Submit
@@ -761,6 +766,4 @@ const mapStateToProps = (state: any) => {
   };
 };
 export default connect(mapStateToProps)(AssetForm);
-// const WrappedCreateAssetForm = Form.create()(CreateAssetForm);
 
-// export default connect(mapStateToProps)(WrappedCreateAssetForm);

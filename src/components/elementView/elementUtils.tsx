@@ -86,7 +86,10 @@ export const deleteAsset = (asset: AssetObjectOld, headers: any) => {
   const data = { id: asset.id };
   return axios.post(API_ROOT + "api/assets/delete", data, headers);
 };
-export const modifyAsset = (asset: AssetObjectOld, headers: any): Promise<any> => {
+export const modifyAsset = (
+  asset: AssetObjectOld,
+  headers: any
+): Promise<any> => {
   return axios.post(API_ROOT + "api/assets/modify", asset, headers);
 };
 

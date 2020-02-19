@@ -12,13 +12,13 @@ import LandingView from "./components/landingView/landingView";
 import Navigation from "./components/navigation/navigation";
 import Report from "./components/report/report";
 import User from "./components/userView/user";
-import WrappedNormalLoginForm from "./forms/auth/login";
+import LoginView from "./forms/auth/loginView";
 // import BulkExport from "./components/export/export";
 import "./index.scss";
 import * as actions from "./store/actions/auth";
 
 var console: any = {};
-console.log = function() {};
+console.log = function () { };
 export interface AppProps {
   isAuthenticated?: boolean;
   onTryAutoSignup: any;
@@ -36,10 +36,10 @@ class App extends React.Component<AppProps> {
     return this.props.isAuthenticated ? (
       <Route {...rest} />
     ) : (
-      <Route {...rest}>
-        <Redirect to="/login" />
-      </Route>
-    );
+        <Route {...rest}>
+          <Redirect to="/login" />
+        </Route>
+      );
   };
 
   PrivateRoute = ({ path, component, ...rest }: any) => {
@@ -58,8 +58,7 @@ class App extends React.Component<AppProps> {
           <Navigation {...this.props} />
           <Switch>
             <this.RedirectRoute exact path="/" component={LandingView} />
-            <Route path="/login" component={WrappedNormalLoginForm} />
-
+            <Route path="/login" component={LoginView} />
             <this.PrivateRoute path="/models/:rid" component={ModelView} />
             <this.PrivateRoute path="/assets/:rid" component={AssetView} />
             <this.PrivateRoute path="/report" component={Report} />

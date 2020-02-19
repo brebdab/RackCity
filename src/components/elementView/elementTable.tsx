@@ -27,7 +27,8 @@ import {
   UserInfoObject,
   isUserObject,
   isDatacenterObject,
-  DatacenterObject
+  DatacenterObject,
+  isObject
 } from "../../utils/utils";
 import DragDropList from "./dragDropList";
 import "./elementView.scss";
@@ -505,7 +506,13 @@ class ElementTable extends React.Component<
       if (col === "model") {
         fields.push("model__vendor");
         fields.push("model__model_number");
-      } else if (col !== "id" && col !== "network_ports" && col !== "comment") {
+      } else if (
+        col !== "id" &&
+        col !== "network_ports" &&
+        col !== "comment" &&
+        col !== "power_connections" &&
+        col !== "mac_addresses"
+      ) {
         fields.push(col);
       }
     });
@@ -634,6 +641,10 @@ class ElementTable extends React.Component<
   handleDeleteButtonClick = (data: ElementObjectType) => {
     this.handleInlineButtonClick(data);
     this.handleDeleteOpen();
+  };
+
+  handlePowerButtonClick = (data: ElementObjectType) => {
+    alert("This power thingy is open");
   };
 
   //ADMIN BUTTON LOGIC
@@ -765,7 +776,14 @@ class ElementTable extends React.Component<
         </div>
         <div className="table-wrapper">
           {this.state.fields.length === 0 ? null : (
-            <table className="bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered element-table">
+            <table
+              className={
+                this.props.type !== ElementType.DATACENTER &&
+                this.props.type !== ElementType.USER
+                  ? "bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered element-table"
+                  : "bp3-html-table bp3-html-table-striped bp3-html-table-bordered element-table"
+              }
+            >
               <thead>
                 <tr>
                   {this.state.fields.map((col: string) => {
@@ -801,14 +819,22 @@ class ElementTable extends React.Component<
               {this.state.items && this.state.items.length > 0 ? (
                 <tbody>
                   {this.state.items.map((item: ElementObjectType) => {
+                    if (isAssetObject(item)) {
+                      console.log(item);
+                    }
                     return (
                       <tr
-                        onClick={() => {
-                          console.log("redirecting", item.id);
-                          this.props.history.push(
-                            "/" + this.props.type + "/" + item.id
-                          );
-                        }}
+                        onClick={
+                          this.props.type === ElementType.DATACENTER ||
+                          this.props.type === ElementType.USER
+                            ? () => {}
+                            : () => {
+                                console.log("redirecting", item.id);
+                                this.props.history.push(
+                                  "/" + this.props.type + "/" + item.id
+                                );
+                              }
+                        }
                       >
                         {Object.entries(item).map(([col, value]) => {
                           if (isModelObject(value)) {
@@ -832,7 +858,8 @@ class ElementTable extends React.Component<
                           } else if (
                             col !== "id" &&
                             col !== "network_ports" &&
-                            col !== "comment"
+                            col !== "comment" &&
+                            !isObject(value)
                           ) {
                             return <td>{value}</td>;
                           }
@@ -863,8 +890,23 @@ class ElementTable extends React.Component<
                                   event.stopPropagation();
                                 }}
                               />
+                              {this.props.isAdmin &&
+                              isAssetObject(item) &&
+                              item.rack.is_network_controlled ? (
+                                <AnchorButton
+                                  className="button-table"
+                                  intent="warning"
+                                  minimal
+                                  icon="offline"
+                                  onClick={(event: any) => {
+                                    this.handlePowerButtonClick(item);
+                                    event.stopPropagation();
+                                  }}
+                                />
+                              ) : null}
                             </div>
-                          ) : null}
+                          ) : null}{" "}
+                          {/* TODO add logic for determining if isOwner for power button */}
                           {this.props.isAdmin && isUserObject(item) ? (
                             <div className="inline-buttons">
                               {this.renderAdminButton(item)}

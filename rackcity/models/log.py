@@ -17,9 +17,11 @@ class Log(models.Model):
         verbose_name="related user",
         null=True,
     )
-    related_assets = models.ManyToManyField(
+    related_asset = models.ForeignKey(
         Asset,
-        verbose_name="related assets",
+        on_delete=models.SET_NULL,
+        verbose_name="related asset",
+        null=True,
         blank=True,
     )
     related_model = models.ForeignKey(

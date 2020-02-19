@@ -14,7 +14,6 @@ class NetworkPort(models.Model):
     )
     mac_address = models.CharField(
         max_length=17,
-        unique=True,
         null=True,
         blank=True,
         # force this to lowercase and make delimeters :

@@ -131,11 +131,7 @@ tr {
 .flex-grid {
   margin: 0 10pt 0 0;
 }
-// .do-not-print {
-//   margin: 0;
-//   border: 0;
-//   padding: 0;
-// }
+
 @media print {
   .rack-container {
     display: block !important;

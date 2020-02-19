@@ -1,5 +1,12 @@
 from django.http import HttpResponse, JsonResponse
-from rackcity.models import Asset, ITModel, Rack
+from rackcity.models import (
+    Asset,
+    ITModel,
+    Rack,
+    NetworkPort,
+    PowerPort,
+    PDUPort
+)
 from django.core.exceptions import ObjectDoesNotExist
 from rackcity.api.serializers import (
     AssetSerializer,
@@ -7,6 +14,13 @@ from rackcity.api.serializers import (
     BulkAssetSerializer,
     ITModelSerializer,
     RackSerializer
+)
+from rackcity.utils.log_utils import (
+    log_action,
+    log_bulk_import,
+    log_delete,
+    Action,
+    ElementType,
 )
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -21,9 +35,11 @@ from rackcity.views.rackcity_utils import (
     validate_location_modification,
     no_infile_location_conflicts,
     records_are_identical,
-    LocationException,
     get_sort_arguments,
     get_filter_arguments,
+    LocationException,
+    MacAddressException,
+    PowerConnectionException,
 )
 
 
@@ -166,16 +182,115 @@ def asset_add(request):  # need to make network and power connections here
             )
     if failure_message == "":
         try:
-            serializer.save()
-            return HttpResponse(status=HTTPStatus.CREATED)
+            asset = serializer.save()
         except Exception as error:
             failure_message += str(error)
+        else:
+            try:
+                save_mac_addresses(
+                    asset_data=data,
+                    asset_id=asset.id
+                )
+            except MacAddressException as error:
+                failure_message += "Some mac addresses couldn't be saved. " + \
+                    str(error)
+            try:
+                save_power_connections(
+                    asset_data=data,
+                    asset_id=asset.id
+                )
+            except PowerConnectionException as error:
+                failure_message += "Some power connections couldn't be saved. " + \
+                    str(error)
+    if failure_message:
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    else:
+        log_action(request.user, asset, Action.CREATE)
+        return JsonResponse(
+            {"success_message": "Asset created succesfully."},
+            status=HTTPStatus.OK,
+        )
 
-    failure_message = "Request was invalid. " + failure_message
-    return JsonResponse(
-        {"failure_message": failure_message},
-        status=HTTPStatus.BAD_REQUEST,
-    )
+
+def save_mac_addresses(asset_data, asset_id):
+    if (
+        'mac_addresses' not in asset_data
+        or not asset_data['mac_addresses']
+    ):
+        return
+    mac_address_assignments = asset_data['mac_addresses']
+    failure_message = ""
+    for port_name in mac_address_assignments.keys():
+        try:
+            network_port = NetworkPort.objects.get(
+                asset=asset_id,
+                port_name=port_name
+            )
+        except ObjectDoesNotExist:
+            failure_message += "Port name '"+port_name+"' is not valid. "
+        else:
+            mac_address = mac_address_assignments[port_name]
+            network_port.mac_address = mac_address
+            try:
+                network_port.save()
+            except Exception as error:
+                failure_message += \
+                    "Mac address '" + \
+                    mac_address + \
+                    "' is not valid. "
+    if failure_message:
+        raise MacAddressException(failure_message)
+
+
+def save_power_connections(asset_data, asset_id):
+    if (
+        'power_connections' not in asset_data
+        or not asset_data['power_connections']
+    ):
+        return
+    power_connection_assignments = asset_data['power_connections']
+    failure_message = ""
+    for port_name in power_connection_assignments.keys():
+        try:
+            power_port = PowerPort.objects.get(
+                asset=asset_id,
+                port_name=port_name
+            )
+        except ObjectDoesNotExist:
+            failure_message += "Power port '"+port_name+"' does not exist on this asset. "
+        else:
+            power_connection_data = power_connection_assignments[port_name]
+            asset = Asset.objects.get(id=asset_id)
+            if not power_connection_data:
+                power_port.power_connection = None
+                power_port.save()
+                continue
+            try:
+                pdu_port = PDUPort.objects.get(
+                    rack=asset.rack,
+                    left_right=power_connection_data['left_right'],
+                    port_number=power_connection_data['port_number']
+                )
+            except ObjectDoesNotExist:
+                failure_message += \
+                    "PDU port '" + \
+                    power_connection_data['left_right'] + \
+                    str(power_connection_data['port_number']) + \
+                    "' does not exist. "
+            else:
+                power_port.power_connection = pdu_port
+                try:
+                    power_port.save()
+                except Exception as error:
+                    failure_message += \
+                        "Power connection on port '" + \
+                        port_name + \
+                        "' was not valid. "
+    if failure_message:
+        raise PowerConnectionException(failure_message)
 
 
 @api_view(['POST'])
@@ -216,7 +331,7 @@ def asset_modify(request):
             value = ITModel.objects.get(id=data[field])
         elif field == 'rack':
             value = Rack.objects.get(id=data[field])
-        elif field == 'hostname':
+        elif field == 'hostname' and data['hostname']:
             assets_with_hostname = Asset.objects.filter(
                 hostname__iexact=data[field]
             )
@@ -230,19 +345,61 @@ def asset_modify(request):
                     status=HTTPStatus.BAD_REQUEST,
                 )
             value = data[field]
+        elif field == 'asset_number':
+            assets_with_asset_number = Asset.objects.filter(
+                asset_number=data[field]
+            )
+            if (
+                len(assets_with_asset_number) > 0
+                and assets_with_asset_number[0].id != id
+            ):
+                return JsonResponse(
+                    {"failure_message": "Asset with asset number '" +
+                        str(data[field]) + "' already exists."},
+                    status=HTTPStatus.BAD_REQUEST,
+                )
+            value = data[field]
         else:
             value = data[field]
         setattr(existing_asset, field, value)
 
     try:
         existing_asset.save()
+        # will need to save mac addresses and connections here
     except Exception as error:
         return JsonResponse(
             {"failure_message": "Invalid updates: " + str(error)},
             status=HTTPStatus.BAD_REQUEST,
         )
     else:
-        return HttpResponse(status=HTTPStatus.OK)
+        failure_message = ""
+        try:
+            save_mac_addresses(
+                asset_data=data,
+                asset_id=existing_asset.id
+            )
+        except MacAddressException as error:
+            failure_message = "Some mac addresses couldn't be saved. " + \
+                str(error)
+        try:
+            save_power_connections(
+                asset_data=data,
+                asset_id=existing_asset.id
+            )
+        except PowerConnectionException as error:
+            failure_message += "Some power connections couldn't be saved. " + \
+                str(error)
+        if failure_message:
+            return JsonResponse(
+                {"failure_message": failure_message},
+                status=HTTPStatus.BAD_REQUEST,
+            )
+        else:
+            log_action(request.user, existing_asset, Action.MODIFY)
+            return JsonResponse(
+                {"success_message": "Asset succesfully modified"},
+                status=HTTPStatus.OK,
+            )
 
 
 @api_view(['POST'])
@@ -264,7 +421,9 @@ def asset_delete(request):  # need to delete network and power connections here
 
     if failure_message == "":
         try:
+            asset_name = existing_asset.asset_number
             existing_asset.delete()
+            log_delete(request.user, ElementType.ASSET, asset_name)
             return HttpResponse(status=HTTPStatus.OK)
         except Exception as error:
             failure_message = failure_message + str(error)
@@ -374,8 +533,9 @@ def asset_bulk_upload(request):  # need to make network and power connections he
                 validate_location_modification(
                     asset_data, existing_asset)
             except Exception:
+                # this could be problematic if neither hostame or asset number isn't there
                 failure_message = "Asset " + \
-                    asset_data['hostname'] + \
+                    str(asset_data['asset_number']) + \
                     " would conflict location with an existing asset. "
                 return JsonResponse(
                     {"failure_message": failure_message},
@@ -398,8 +558,9 @@ def asset_bulk_upload(request):  # need to make network and power connections he
                     asset_id=None,
                 )
             except LocationException as error:
+                # this could be problematic if neither hostame or asset number isn't there
                 failure_message = "Asset " + \
-                    asset_data['hostname'] + \
+                    str(asset_data['asset_number']) + \
                     " is invalid. " + str(error)
                 return JsonResponse(
                     {"failure_message": failure_message},
@@ -420,6 +581,7 @@ def asset_bulk_upload(request):  # need to make network and power connections he
     for asset_to_add in assets_to_add:
         records_added += 1
         asset_to_add.save()
+        # will need to save mac addresses and connections here
     records_ignored = 0
     modifications_to_approve = []
     for potential_modification in potential_modifications:
@@ -483,6 +645,8 @@ def asset_bulk_approve(request):  # need to make network and power connections h
                 value = asset_data[field]
             setattr(existing_asset, field, value)
         existing_asset.save()
+    log_bulk_import(request.user, ElementType.ASSET)
+    # will need to save mac addresses and connections here
     return HttpResponse(status=HTTPStatus.OK)
 
 
@@ -559,10 +723,11 @@ def asset_page_count(request):
 @api_view(['GET'])
 def asset_fields(request):
     """
-    Return all fields on the AssetSerializer. 
+    Return all fields on the AssetSerializer.
     """
     return JsonResponse(
         {"fields": [
+            'asset_number',
             'hostname',
             'model',
             'rack',

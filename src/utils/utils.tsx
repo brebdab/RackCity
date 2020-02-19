@@ -14,7 +14,6 @@ export enum PowerSide {
   LEFT = "L",
   RIGHT = "R"
 }
-//DEPRACATED
 export interface AssetObjectOld extends ElementObject {
   hostname: string;
   rack_position: string;
@@ -38,6 +37,31 @@ interface ParentAssetObject extends ElementObject {
   power_connections: { [port: string]: PowerConnection };
   owner?: string;
   comment?: string;
+}
+export interface ShallowAssetObject extends ParentAssetObject {
+  model?: string;
+  rack?: string;
+}
+export interface RackRangeFields {
+  datacenter: string;
+  letter_start: string;
+  letter_end: string;
+  num_start: number;
+  num_end: number;
+}
+
+export interface NetworkConnection {
+  source_port: string;
+  destination_hostname: string;
+  destination_port: string;
+}
+export interface NetworkGraph {
+  nodes: { [hostname: string]: string };
+  links: Array<{ [source: string]: string }>;
+}
+export interface PowerConnection {
+  left_right: PowerSide;
+  port_number: string;
 }
 export interface ShallowAssetObject extends ParentAssetObject {
   model?: string;
@@ -71,6 +95,12 @@ export interface RackRangeFields {
   num_end: number;
 }
 
+export interface PowerPortAvailability {
+  left_suggest: string;
+  left_available: Array<string>;
+  right_suggest: string;
+  right_available: Array<string>;
+}
 export interface UserInfoObject extends ElementObject {
   username: string;
   email?: string;
@@ -92,6 +122,7 @@ export interface RackObject extends ElementObject {
   row_letter: string;
   rack_num: string;
   height: string;
+  is_network_controlled?: boolean;
 }
 
 export interface RackResponseObject {
@@ -157,6 +188,10 @@ export type FormObjectType =
   | ShallowAssetObject
   | UserInfoObject
   | CreateUserObject;
+
+export function isObject(obj: any) {
+  return obj === Object(obj);
+}
 export function isModelObject(obj: any): obj is ModelObject {
   return obj && obj.model_number;
 }

@@ -326,12 +326,13 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
             />
           </FormGroup>
           <FormGroup label="Comment" inline={false}>
-            <Field
-              field="comment"
+            <textarea
+              className={Classes.INPUT}
               placeholder="comment"
-              value={values.comment}
-              onChange={this.handleChange}
-            />
+              onChange={(e: any) =>
+                this.handleChange({ comment: e.currentTarget.value })
+              }
+            ></textarea>
           </FormGroup>
 
           <Button className="login-button" type="submit">

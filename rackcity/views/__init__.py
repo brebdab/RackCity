@@ -11,7 +11,6 @@ from .it_model_views import (
     model_bulk_export,
     model_page_count,
     model_fields,
-    i_am_admin,
     model_list,
     model_auth,
     model_admin,
@@ -45,6 +44,9 @@ from .user_views import (
     user_page_count,
     usernames,
     who_am_i,
+    i_am_admin,
+    user_grant_admin,
+    user_revoke_admin,
 )
 from .datacenter_views import (
     datacenter_all,

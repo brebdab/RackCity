@@ -12,6 +12,17 @@
 .login-container {
   text-align: center;
 }
+// textarea {
+//   background-color: #202b33;
+//   outline: none !important;
+//   // border: none !important;
+//   border-color: #182026;
+//   border-radius: 5px;
+//   color: white;
+// }
+textarea:focus {
+  outline: none !important;
+}
 
 .ant-form-explain {
   color: red;
