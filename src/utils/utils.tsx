@@ -1,6 +1,5 @@
 import axios from "axios";
 import { API_ROOT } from "./api-config";
-import { ITableSort, IFilter } from "../components/elementView/elementUtils";
 export interface ElementObject {
   id: string;
 }
@@ -94,11 +93,6 @@ export interface RackRangeFields {
   letter_end: string;
   num_start: number;
   num_end: number;
-}
-
-export interface SortFilterBody {
-  sort_by: Array<ITableSort>;
-  filters: Array<IFilter>;
 }
 
 export interface PowerPortAvailability {

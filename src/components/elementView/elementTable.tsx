@@ -28,8 +28,7 @@ import {
   isUserObject,
   isDatacenterObject,
   DatacenterObject,
-  isObject,
-  SortFilterBody
+  isObject
 } from "../../utils/utils";
 import DragDropList from "./dragDropList";
 import "./elementView.scss";
@@ -81,7 +80,7 @@ interface ElementTableProps {
     type: string,
     page_num: number,
     page_type: PagingTypes,
-    body: SortFilterBody,
+    body: any,
     token: string
   ): Promise<Array<ElementObjectType>>;
 
@@ -163,15 +162,6 @@ class ElementTable extends React.Component<
         });
     }
   };
-  componentWillReceiveProps(
-    nextProps: ElementTableProps & RouteComponentProps
-  ) {
-
-      if (nextProps.currDatacenter !== this.props.currDatacenter) {
-        this.updateTableData();
-      }
-    
-  }
 
   handlePagingChange = (page: PagingTypes) => {
     this.setState({
@@ -332,13 +322,17 @@ class ElementTable extends React.Component<
   updateFilterData = (items: Array<IFilter>) => {
     console.log(items);
     if (this.props.callback! !== undefined) this.props.callback(items);
+    const filter_body = items.map(item => {
+      const { field, filter_type, filter } = item;
+      return { field, filter_type, filter };
+    });
     this.resetPage();
     if (this.props.getData) {
       this.props.getData!(
         this.props.type,
         1,
         this.state.page_type,
-        { sort_by: this.state.sort_by, filters: items },
+        { sort_by: this.state.sort_by, filters: filter_body },
         this.props.token
       )
         .then(res => {
@@ -408,17 +402,17 @@ class ElementTable extends React.Component<
     }
   };
   updateSortData = (items: Array<ITableSort>) => {
-    // const sorts_body = items.map(item => {
-    //   const { field, ascending } = item;
-    //   return { field, ascending };
-    // });
-    console.log("detected new sorts ", items);
+    const sorts_body = items.map(item => {
+      const { field, ascending } = item;
+      return { field, ascending };
+    });
+    console.log("detected new sorts ", sorts_body);
     if (this.props.getData) {
       this.props.getData!(
         this.props.type,
         this.state.curr_page,
         this.state.page_type,
-        { sort_by: items, filters: this.state.filters },
+        { sort_by: sorts_body, filters: this.state.filters },
         this.props.token
       ).then(res => {
         this.setState({
@@ -466,17 +460,17 @@ class ElementTable extends React.Component<
     }
   }
   updateTableData = () => {
-    // const sorts_body = this.state.sort_by.map(item => {
-    //   const { field, ascending } = item;
-    //   return { field, ascending };
-    // });
+    const sorts_body = this.state.sort_by.map(item => {
+      const { field, ascending } = item;
+      return { field, ascending };
+    });
     if (this.props.getData) {
       this.props
         .getData(
           this.props.type,
           this.state.curr_page,
           this.state.page_type,
-          { sort_by: this.state.sort_by, filters: this.state.filters },
+          { sort_by: sorts_body, filters: this.state.filters },
           this.props.token
         )
         .then(res => {
@@ -849,7 +843,9 @@ class ElementTable extends React.Component<
                               <td>{value.model_number}</td>
                             ];
                           } else if (isRackObject(value)) {
-                            return <td>{value.row_letter + value.rack_num}</td>;
+                            return (
+                              <td>{value.row_letter  + value.rack_num}</td>
+                            );
                           } else if (col === "display_color") {
                             console.log(value);
                             return (
