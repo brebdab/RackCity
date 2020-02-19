@@ -12,3 +12,7 @@
 .nav-bar-button:focus {
   outline: none;
 }
+.nav-bar-non-button:hover {
+  cursor: default !important;
+  background-color: #394B59 !important;
+}
