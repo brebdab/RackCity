@@ -22,8 +22,7 @@ import {
   ElementType,
   AssetObject,
   ModelObject,
-  getHeaders,
-  getFields
+  getHeaders
 } from "../../../../utils/utils";
 import PropertiesView from "../propertiesView";
 import { FormTypes } from "../../../../forms/formUtils";

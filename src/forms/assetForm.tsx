@@ -152,7 +152,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   componentDidMount() {
     this.setPowerPortInputState();
     let values = this.state.values;
-    if (values) {
+    if (values && !this.props.initialValues) {
       values = updateObject(values, {
         power_connections: {},
         mac_addresses: {}

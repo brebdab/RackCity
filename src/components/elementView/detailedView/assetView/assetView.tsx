@@ -15,12 +15,7 @@ import PropertiesView from "../propertiesView";
 import { RouteComponentProps, withRouter } from "react-router";
 import "./assetView.scss";
 import { connect } from "react-redux";
-import {
-  AssetObject,
-  ElementType,
-  getHeaders,
-  getFields
-} from "../../../../utils/utils";
+import { AssetObject, ElementType, getHeaders } from "../../../../utils/utils";
 import FormPopup from "../../../../forms/formPopup";
 import { FormTypes } from "../../../../forms/formUtils";
 import { modifyAsset, deleteAsset } from "../../elementUtils";
@@ -65,8 +60,6 @@ export class AssetView extends React.PureComponent<
     isFormOpen: false,
     isDeleteOpen: false,
     isAlertOpen: false
-    // columns: ["Hostname", "Model", "Rack", "Rack position", "Owner", "Comment"],
-    // fields: ["hostname", "model", "rack", "Rack position", "owner", "comment"]
   };
   private updateAsset = (asset: AssetObject, headers: any): Promise<any> => {
     let params: any;
