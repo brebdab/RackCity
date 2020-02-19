@@ -1,6 +1,7 @@
 # from django.http import HttpResponse, JsonResponse
 from django.http import JsonResponse
 from rackcity.models import (
+    Rack,
     Asset
 )
 from rackcity.api.serializers import (
@@ -28,7 +29,7 @@ from rackcity.views.rackcity_utils import (
 import re
 import requests
 
-pdu_url = 'http://hyposoft-mgt.colab.duke.edu:8000/pdu.php?pdu=hpdu-rtp1-A01L'
+pdu_url = 'http://hyposoft-mgt.colab.duke.edu:8000/pdu.php?pdu=hpdu-rtp1-' # need to specify rack + side, e.g. for A1 left, use A01L
 
 
 @api_view(['GET'])
@@ -47,9 +48,16 @@ def power_status(request, id):
             status=HTTPStatus.BAD_REQUEST
         )
     port_info = serialize_power_connections(asset)
-    html = requests.get(pdu_url)
+
+    # get string parameter representing rack number and side (L/R)
+    rack_str = str(asset.rack.row_letter)
+    if (asset.rack.rack_num / 10 < 1):
+        rack_str = rack_str + "0"
+    rack_str = rack_str + str(asset.rack.rack_num)
+
     power_status = dict()
     for port in port_info:
+        html = requests.get(pdu_url + rack_str + str(port_info[port]['left_right']))
         power_status[port] = regex_power_status(html.text, port_info[port]['port_number'])[0]
 
     return JsonResponse(
