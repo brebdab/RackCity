@@ -13,16 +13,46 @@ import { BrowserRouter as Router, withRouter } from "react-router-dom";
 import "./navigation.scss";
 import * as actions from "../../store/actions/auth";
 import { connect } from "react-redux";
+import axios from "axios";
+import { API_ROOT } from "../../utils/api-config";
 
 export interface NavigationProps {
   isAuthenticated: boolean;
   logout(): any;
   isAdmin: boolean;
+  token: string;
+}
+
+export interface NavigationState {
+  username?: string;
 }
 
 type NavigationPropsAll = NavigationProps & RouteComponentProps;
-export class Navigation extends React.Component<NavigationPropsAll> {
+export class Navigation extends React.Component<NavigationPropsAll, NavigationState> {
+  public state = {
+    username: undefined
+  }
+  getUsername(token: string) {
+    const headers = {
+      headers: {
+        Authorization: "Token " + token
+      }
+    };
+    axios
+      .get(API_ROOT + "api/users/who-am-i", headers)
+      .then(res => {
+        this.setState({ username: res.data.username })
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  }
+
   public render() {
+    if (!this.state.username) {
+      this.getUsername(this.props.token)
+    }
+
     return (
       <Router>
         <div>
@@ -63,9 +93,11 @@ export class Navigation extends React.Component<NavigationPropsAll> {
             <NavbarGroup align={Alignment.RIGHT}>
               {this.props.isAuthenticated ? (
                 <div>
-                  <p>
-                    Welcome, username
-                  </p>
+                  <AnchorButton
+                    className="nav-bar-non-button nav-bar-button"
+                    text={"Welcome, " + this.state.username}
+                    minimal
+                  />
                   {this.props.isAdmin ? (
                     <AnchorButton
                       icon="user"
@@ -102,7 +134,8 @@ export class Navigation extends React.Component<NavigationPropsAll> {
 const mapStateToProps = (state: any) => {
   return {
     isAuthenticated: state.token !== null,
-    isAdmin: state.admin
+    isAdmin: state.admin,
+    token: state.token,
   };
 };
 
