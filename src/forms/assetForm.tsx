@@ -45,7 +45,8 @@ import {
   renderModelItem,
   renderRackItem,
   renderStringItem,
-  StringSelect
+  StringSelect,
+  AssetSelect
 } from "./formUtils";
 
 //TO DO : add validation of types!!!
@@ -67,6 +68,7 @@ interface AssetFormState {
   users: Array<string>;
   power_ports: PowerPortAvailability;
   power_ports_default: { [port: string]: boolean };
+  assets: Array<AssetObject>;
 }
 // var console: any = {};
 // console.log = function() {};
@@ -645,7 +647,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
               values.model.network_ports &&
               values.model.network_ports.length !== 0
             ) ? null : (
-              <FormGroup label="Mac Addresses" inline={false}>
+              <FormGroup label="Network Connections" inline={false}>
                 <table className="port-table">
                   <tbody>
                     {values.model.network_ports.map((port, index) => {
@@ -668,6 +670,36 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                                 });
                               }}
                             />
+                            <AssetSelect
+                              className="select"
+                              popoverProps={{
+                                minimal: true,
+                                popoverClassName: "dropdown",
+                                usePortal: true
+                              }}
+                              items={this.state.}
+                              onItemSelect={(model: ModelObject) =>
+                                this.setState({
+                                  values: updateObject(values, { model: model })
+                                })
+                              }
+                              itemRenderer={renderModelItem}
+                              itemPredicate={filterModel}
+                              noResults={
+                                <MenuItem disabled={true} text="No results." />
+                              }
+                            >
+                              <Button
+                                rightIcon="caret-down"
+                                text={
+                                  this.state.values.model
+                                    ? this.state.values.model.vendor +
+                                      " " +
+                                      this.state.values.model.model_number
+                                    : "Select a model"
+                                }
+                              />
+                            </ModelSelect>
                           </td>
                         </tr>
                       );
