@@ -306,6 +306,18 @@ def model_bulk_upload(request):
         )
     csv_string = StringIO(data['import_csv'])
     csvReader = csv.DictReader(csv_string)
+    expected_fields = BulkITModelSerializer.Meta.fields
+    given_fields = csvReader.fieldnames
+    if (
+        len(expected_fields) != len(given_fields)  # check for repeated fields
+        or set(expected_fields) != set(given_fields)
+    ):
+        failure_message = "Please provide exactly the expected columns. " + \
+            "See in-app documentation for reference. "
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST
+        )
     bulk_model_datas = []
     for row in csvReader:
         bulk_model_datas.append(dict(row))
