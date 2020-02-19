@@ -86,15 +86,15 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
 
     def get_network_connections(self, asset):
         try:
-            ports = NetworkPort.objects.filter(asset=asset.id)
+            source_ports = NetworkPort.objects.filter(asset=asset.id)
         except ObjectDoesNotExist:
             return
         network_connections = []
-        for port in ports:
-            if port.network_connection:
-                destination_port = port.network_connection
+        for source_port in source_ports:
+            if source_port.connected_port:
+                destination_port = source_port.connected_port
                 network_connection_serialized = {
-                    "source_port": port.port_name,
+                    "source_port": source_port.port_name,
                     "destination_hostname": destination_port.asset.hostname,
                     "destination_port": destination_port.port_name
                 }

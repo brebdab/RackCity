@@ -19,7 +19,7 @@ class NetworkPort(models.Model):
         blank=True,
         # force this to lowercase and make delimeters :
     )
-    network_connection = models.OneToOneField(
+    connected_port = models.OneToOneField(
         'self',
         on_delete=models.CASCADE,
         null=True,
@@ -27,11 +27,9 @@ class NetworkPort(models.Model):
     )
 
     def create_network_connection(self, destination_port):
-        print("creating connection from "+str(self.id) +
-              " to  "+str(destination_port.id))
         if (
-            destination_port.network_connection
-            and destination_port.network_connection != self
+            destination_port.connected_port
+            and destination_port.connected_port != self
         ):
             from rackcity.views.rackcity_utils import (
                 NetworkConnectionException
@@ -42,27 +40,25 @@ class NetworkPort(models.Model):
                 ":" +
                 destination_port.port_name +
                 "' is already connected to port '" +
-                destination_port.network_connection.asset.hostname +
+                destination_port.connected_port.asset.hostname +
                 ":" +
-                destination_port.network_connection.port_name +
+                destination_port.connected_port.port_name +
                 "'. "
             )
-        if self.network_connection:
-            self.network_connection.network_connection = None
-            self.network_connection.save()
-        self.network_connection = destination_port
-        destination_port.network_connection = self
+        if self.connected_port:
+            self.delete_network_connection()
+        self.connected_port = destination_port
+        destination_port.connected_port = self
         self.save()
         destination_port.save()
 
     def delete_network_connection(self):
-        try:
-            destination_port = self.network_connection
-        except ObjectDoesNotExist:
+        destination_port = self.connected_port
+        if not destination_port:
             return
         else:
-            self.network_connection = None
-            destination_port.network_connection = None
+            self.connected_port = None
+            destination_port.connected_port = None
             self.save()
             destination_port.save()
 
