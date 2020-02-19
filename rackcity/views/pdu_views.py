@@ -29,7 +29,7 @@ from rackcity.views.rackcity_utils import (
 import re
 import requests
 
-pdu_url = 'http://hyposoft-mgt.colab.duke.edu:8000/pdu.php?pdu=hpdu-rtp1-' # need to specify rack + side, e.g. for A1 left, use A01L
+pdu_url = 'http://hyposoft-mgt.colab.duke.edu:8000/pdu.php?pdu=hpdu-rtp1-' # Need to specify rack + side in request, e.g. for A1 left, use A01L
 
 
 @api_view(['GET'])
@@ -49,7 +49,7 @@ def power_status(request, id):
         )
     port_info = serialize_power_connections(asset)
 
-    # get string parameter representing rack number and side (L/R)
+    # get string parameter representing rack number (i.e. A01<L/R>)
     rack_str = str(asset.rack.row_letter)
     if (asset.rack.rack_num / 10 < 1):
         rack_str = rack_str + "0"
