@@ -5,7 +5,8 @@ from rackcity.models import ITModel, Asset
 from rackcity.api.serializers import (
     RecursiveAssetSerializer,
     ITModelSerializer,
-    BulkITModelSerializer
+    BulkITModelSerializer,
+    normalize_bulk_model_data
 )
 from rackcity.utils.log_utils import (
     log_action,
@@ -298,16 +299,21 @@ def model_bulk_upload(request):
     Bulk upload many models to add or modify
     """
     data = JSONParser().parse(request)
-    if 'models' not in data:
+    if 'import_csv' not in data:
         return JsonResponse(
-            {"failure_message": "Bulk upload request should have a parameter 'models'"},
+            {"failure_message": "Bulk upload request should have a parameter 'import_csv'"},
             status=HTTPStatus.BAD_REQUEST
         )
-    model_datas = data['models']
+    csv_string = StringIO(data['import_csv'])
+    csvReader = csv.DictReader(csv_string)
+    bulk_model_datas = []
+    for row in csvReader:
+        bulk_model_datas.append(dict(row))
     models_to_add = []
     potential_modifications = []
     models_in_import = set()
-    for model_data in model_datas:
+    for bulk_model_data in bulk_model_datas:
+        model_data = normalize_bulk_model_data(bulk_model_data)
         model_serializer = ITModelSerializer(data=model_data)
         if not model_serializer.is_valid():
             failure_message = str(model_serializer.errors)
@@ -369,7 +375,7 @@ def model_bulk_upload(request):
         if records_are_identical(existing_data, new_data):
             records_ignored += 1
         else:
-            new_data['id'] = existing_data['id']
+            new_data['id'] = potential_modification['existing_model'].id
             for field in existing_data.keys():
                 if field not in new_data:
                     new_data[field] = None
