@@ -108,8 +108,8 @@ class BulkAssetSerializer(serializers.ModelSerializer):
     for bulk export.
     """
     datacenter = serializers.SlugRelatedField(
-        source='rack',
-        slug_field='datacenter',
+        source='rack.datacenter',
+        slug_field='abbreviation',
         many=False,
         read_only=True,
     )
