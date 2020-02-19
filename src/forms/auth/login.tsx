@@ -38,7 +38,7 @@ class NormalLoginForm extends React.Component<
       <div>
         {this.props.error ? (
           <Callout className={Classes.DARK} intent={Intent.DANGER}>
-            {"Invalid Credentials"}
+            {this.props.error}
           </Callout>
         ) : null}
 
