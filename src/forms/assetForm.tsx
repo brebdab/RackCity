@@ -298,7 +298,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                 text={
                   this.state.values.rack
                     ? this.state.values.rack.row_letter +
-                      " " +
+                      "" +
                       this.state.values.rack.rack_num
                     : "Select a rack"
                 }
