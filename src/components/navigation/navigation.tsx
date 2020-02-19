@@ -28,17 +28,18 @@ export class Navigation extends React.Component<NavigationPropsAll> {
         <div>
           <Navbar className={Classes.DARK + " nav-bar"}>
             <NavbarGroup>
-              <NavbarHeading>HypoSoft</NavbarHeading>
+              <NavbarHeading onClick={() => this.props.history.push("/")}>
+                <AnchorButton
+                  onClick={() => this.props.history.push("/")}
+                  className="nav-bar-button"
+                  icon="home"
+                  text="HypoSoft"
+                  minimal
+                />
+              </NavbarHeading>
               <NavbarDivider />
               {this.props.isAuthenticated ? (
                 <div>
-                  <AnchorButton
-                    onClick={() => this.props.history.push("/")}
-                    className="nav-bar-button"
-                    icon="home"
-                    text="Home"
-                    minimal
-                  />
                   {/*<AnchorButton
                     onClick={() => this.props.history.push("/bulk-export")}
                     className="nav-bar-button"

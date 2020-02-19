@@ -844,7 +844,7 @@ class ElementTable extends React.Component<
                             ];
                           } else if (isRackObject(value)) {
                             return (
-                              <td>{value.row_letter + " " + value.rack_num}</td>
+                              <td>{value.row_letter  + value.rack_num}</td>
                             );
                           } else if (col === "display_color") {
                             console.log(value);
