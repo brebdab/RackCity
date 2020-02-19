@@ -70,18 +70,18 @@ export class Navigation extends React.Component<NavigationPropsAll, NavigationSt
               <NavbarDivider />
               {this.props.isAuthenticated ? (
                 <div>
-                  {/*<AnchorButton
-                    onClick={() => this.props.history.push("/bulk-export")}
-                    className="nav-bar-button"
-                    icon="import"
-                    text="Export"
-                    minimal
-                  />*/}
                   <AnchorButton
                     onClick={() => this.props.history.push("/report")}
                     className="nav-bar-button"
                     icon="numbered-list"
                     text="View Report"
+                    minimal
+                  />
+                  <AnchorButton
+                    onClick={() => this.props.history.push("/logs")}
+                    className="nav-bar-button"
+                    icon="history"
+                    text="View Logs"
                     minimal
                   />
                 </div>
@@ -102,7 +102,7 @@ export class Navigation extends React.Component<NavigationPropsAll, NavigationSt
                     <AnchorButton
                       icon="user"
                       onClick={() => this.props.history.push("/users")}
-                      text="Manage users"
+                      text="Manage Users"
                       minimal
                     />
                   ) : null}
