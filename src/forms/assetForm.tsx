@@ -663,7 +663,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                           <td>{port}</td>
                           <td>
                             <InputGroup
-                              // value={port}
+                              value={values.mac_addresses[port]}
                               type="string"
                               className="network-name"
                               onChange={
@@ -746,6 +746,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
             <textarea
               className={Classes.INPUT}
               placeholder="comment"
+              value={values.comment}
               onChange={(e: any) =>
                 this.handleChange({ comment: e.currentTarget.value })
               }
@@ -766,4 +767,3 @@ const mapStateToProps = (state: any) => {
   };
 };
 export default connect(mapStateToProps)(AssetForm);
-

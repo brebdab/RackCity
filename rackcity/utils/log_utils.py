@@ -54,11 +54,11 @@ def log_action(user, related_element, action):
     log_content = " ".join([
         datetime_to_string(date),
         element_type,
-        element_name + ":",
+        str(element_name) + ":",
         user.username,
         action.value,
         element_type,
-        element_name
+        str(element_name)
     ])
     log = Log(
         date=date,
