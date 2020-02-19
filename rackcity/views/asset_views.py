@@ -40,9 +40,12 @@ from rackcity.views.rackcity_utils import (
     LocationException,
     MacAddressException,
     PowerConnectionException,
+    NetworkConnectionException,
+    close_old_connections_decorator
 )
 
 
+# @close_old_connections_decorator
 @api_view(['GET'])  # DEPRECATED !
 @permission_classes([IsAuthenticated])
 def asset_list(request):
@@ -55,6 +58,7 @@ def asset_list(request):
         return JsonResponse({"assets": serializer.data})
 
 
+# @close_old_connections_decorator
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def asset_many(request):
@@ -134,6 +138,7 @@ def asset_many(request):
     )
 
 
+# @close_old_connections_decorator
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def asset_detail(request, id):
@@ -154,6 +159,7 @@ def asset_detail(request, id):
     return JsonResponse(serializer.data, status=HTTPStatus.OK)
 
 
+# @close_old_connections_decorator
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
 def asset_add(request):  # need to make network and power connections here
@@ -164,48 +170,65 @@ def asset_add(request):  # need to make network and power connections here
     failure_message = ""
     if 'id' in data:
         failure_message += "Don't include id when adding an asset. "
-
-    serializer = AssetSerializer(data=data)
-    if not serializer.is_valid(raise_exception=False):
-        failure_message += str(serializer.errors)
-    if failure_message == "":
-        rack_id = serializer.validated_data['rack'].id
-        rack_position = serializer.validated_data['rack_position']
-        height = serializer.validated_data['model'].height
-        try:
-            validate_asset_location(rack_id, rack_position, height)
-        except LocationException as error:
-            failure_message += str(error)
-            return JsonResponse(
-                {"failure_message": failure_message},
-                status=HTTPStatus.BAD_REQUEST,
-            )
-    if failure_message == "":
-        try:
-            asset = serializer.save()
-        except Exception as error:
-            failure_message += str(error)
-        else:
-            try:
-                save_mac_addresses(
-                    asset_data=data,
-                    asset_id=asset.id
-                )
-            except MacAddressException as error:
-                failure_message += "Some mac addresses couldn't be saved. " + \
-                    str(error)
-            try:
-                save_power_connections(
-                    asset_data=data,
-                    asset_id=asset.id
-                )
-            except PowerConnectionException as error:
-                failure_message += "Some power connections couldn't be saved. " + \
-                    str(error)
-    if failure_message:
         return JsonResponse(
             {"failure_message": failure_message},
             status=HTTPStatus.BAD_REQUEST,
+        )
+    serializer = AssetSerializer(data=data)
+    if not serializer.is_valid(raise_exception=False):
+        failure_message += str(serializer.errors)
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    rack_id = serializer.validated_data['rack'].id
+    rack_position = serializer.validated_data['rack_position']
+    height = serializer.validated_data['model'].height
+    try:
+        validate_asset_location(rack_id, rack_position, height)
+    except LocationException as error:
+        failure_message += str(error)
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    try:
+        asset = serializer.save()
+    except Exception as error:
+        failure_message += str(error)
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    warning_message = ""
+    try:
+        save_mac_addresses(
+            asset_data=data,
+            asset_id=asset.id
+        )
+    except MacAddressException as error:
+        warning_message += "Some mac addresses couldn't be saved. " + \
+            str(error)
+    try:
+        save_power_connections(
+            asset_data=data,
+            asset_id=asset.id
+        )
+    except PowerConnectionException as error:
+        warning_message += "Some power connections couldn't be saved. " + \
+            str(error)
+    try:
+        save_network_connections(
+            asset_data=data,
+            asset_id=asset.id
+        )
+    except NetworkConnectionException as error:
+        warning_message += "Some network connections couldn't be saved. " + \
+            str(error)
+    if warning_message:
+        return JsonResponse(
+            {"warning_message": warning_message},
+            status=HTTPStatus.OK,
         )
     else:
         log_action(request.user, asset, Action.CREATE)
@@ -243,6 +266,81 @@ def save_mac_addresses(asset_data, asset_id):
                     "' is not valid. "
     if failure_message:
         raise MacAddressException(failure_message)
+
+
+def save_network_connections(asset_data, asset_id):
+    if (
+        'network_connections' not in asset_data
+        or not asset_data['network_connections']
+    ):
+        return
+    network_connections = asset_data['network_connections']
+    failure_message = ""
+    for network_connection in network_connections:
+        port_name = network_connection['source_port']
+        try:
+            network_port = NetworkPort.objects.get(
+                asset=asset_id,
+                port_name=port_name
+            )
+        except ObjectDoesNotExist:
+            failure_message += "Port name '"+port_name+"' is not valid. "
+        else:
+            if (
+                not network_connection['destination_hostname'] and
+                not network_connection['destination_port']
+            ):
+                network_port.delete_network_connection()
+                continue
+            if (
+                not network_connection['destination_hostname']
+            ):
+                failure_message += "Could not create connection on port '" + \
+                    port_name + \
+                    "' because no destination hostname was provided."
+                continue
+            if (
+                not network_connection['destination_port']
+            ):
+                failure_message += "Could not create connection on port '" + \
+                    port_name + \
+                    "' because no destination port was provided."
+                continue
+            try:
+                destination_asset = Asset.objects.get(
+                    hostname=network_connection['destination_hostname']
+                )
+            except ObjectDoesNotExist:
+                failure_message += \
+                    "Asset with hostname '" + \
+                    network_connection['destination_hostname'] + \
+                    "' does not exist. "
+            else:
+                try:
+                    destination_port = NetworkPort.objects.get(
+                        asset=destination_asset,
+                        port_name=network_connection['destination_port']
+                    )
+                except ObjectDoesNotExist:
+                    failure_message += \
+                        "Destination port '" + \
+                        network_connection['destination_hostname'] + \
+                        ":" + \
+                        network_connection['destination_port'] + \
+                        "' does not exist. "
+                else:
+                    try:
+                        network_port.create_network_connection(
+                            destination_port=destination_port
+                        )
+                    except Exception as error:
+                        failure_message += \
+                            "Could not save connection for port '" + \
+                            port_name + \
+                            "'. " + \
+                            str(error)
+    if failure_message:
+        raise NetworkConnectionException(failure_message)
 
 
 def save_power_connections(asset_data, asset_id):
@@ -293,6 +391,7 @@ def save_power_connections(asset_data, asset_id):
         raise PowerConnectionException(failure_message)
 
 
+# @close_old_connections_decorator
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
 # need to make network and power connections here
@@ -372,14 +471,14 @@ def asset_modify(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     else:
-        failure_message = ""
+        warning_message = ""
         try:
             save_mac_addresses(
                 asset_data=data,
                 asset_id=existing_asset.id
             )
         except MacAddressException as error:
-            failure_message = "Some mac addresses couldn't be saved. " + \
+            warning_message += "Some mac addresses couldn't be saved. " + \
                 str(error)
         try:
             save_power_connections(
@@ -387,12 +486,20 @@ def asset_modify(request):
                 asset_id=existing_asset.id
             )
         except PowerConnectionException as error:
-            failure_message += "Some power connections couldn't be saved. " + \
+            warning_message += "Some power connections couldn't be saved. " + \
                 str(error)
-        if failure_message:
+        try:
+            save_network_connections(
+                asset_data=data,
+                asset_id=existing_asset.id
+            )
+        except NetworkConnectionException as error:
+            warning_message += "Some network connections couldn't be saved. " + \
+                str(error)
+        if warning_message:
             return JsonResponse(
-                {"failure_message": failure_message},
-                status=HTTPStatus.BAD_REQUEST,
+                {"warning_message": warning_message},
+                status=HTTPStatus.OK,
             )
         else:
             log_action(request.user, existing_asset, Action.MODIFY)
@@ -402,6 +509,7 @@ def asset_modify(request):
             )
 
 
+# @close_old_connections_decorator
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
 def asset_delete(request):  # need to delete network and power connections here
@@ -436,6 +544,7 @@ def asset_delete(request):  # need to delete network and power connections here
     )
 
 
+# @close_old_connections_decorator
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
 def asset_bulk_upload(request):  # need to make network and power connections here
@@ -618,6 +727,7 @@ def asset_bulk_upload(request):  # need to make network and power connections he
     )
 
 
+# @close_old_connections_decorator
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
 def asset_bulk_approve(request):  # need to make network and power connections here
@@ -650,6 +760,7 @@ def asset_bulk_approve(request):  # need to make network and power connections h
     return HttpResponse(status=HTTPStatus.OK)
 
 
+# @close_old_connections_decorator
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def asset_bulk_export(request):
@@ -689,6 +800,7 @@ def asset_bulk_export(request):
     )
 
 
+# @close_old_connections_decorator
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def asset_page_count(request):
@@ -720,6 +832,7 @@ def asset_page_count(request):
     return JsonResponse({"page_count": page_count})
 
 
+# @close_old_connections_decorator
 @api_view(['GET'])
 def asset_fields(request):
     """
