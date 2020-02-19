@@ -66,7 +66,7 @@ interface AssetFormState {
   errors: Array<string>;
   users: Array<string>;
   power_ports: PowerPortAvailability;
-  power_ports_enabled: { [port: string]: boolean };
+  power_ports_default: { [port: string]: boolean };
 }
 // var console: any = {};
 // console.log = function() {};
@@ -86,13 +86,13 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     ? this.props.initialValues
     : ({} as AssetObject);
   private setPowerPortInputState = () => {
-    const power_ports_enabled: { [port: string]: boolean } = {};
+    const power_ports_default: { [port: string]: boolean } = {};
     if (this.state.values && this.state.values.power_connections) {
       Object.keys(this.state.values.power_connections).forEach(port => {
-        power_ports_enabled[port] = true;
+        power_ports_default[port] = true;
       });
     }
-    return power_ports_enabled;
+    return power_ports_default;
   };
 
   public state = {
@@ -110,7 +110,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       right_suggest: "12",
       right_available: ["1", "2", "12", "13"]
     },
-    power_ports_enabled: {} as { [port: string]: boolean }
+    power_ports_default: {} as { [port: string]: boolean }
   };
   headers = {
     headers: {
@@ -349,13 +349,13 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   };
 
   changeCheckBoxState = (port: number, state: boolean) => {
-    const power_ports_enabled = {
-      ...this.state.power_ports_enabled
+    const power_ports_default = {
+      ...this.state.power_ports_default
     };
 
-    power_ports_enabled[port] = state;
+    power_ports_default[port] = state;
     this.setState({
-      power_ports_enabled
+      power_ports_default: power_ports_default
     });
   };
   getPowerPortFields = () => {
@@ -379,45 +379,37 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       );
       const port_fields = [];
       for (let i = 1; i <= num_power_ports; i++) {
-        console.log(this.state.power_ports_enabled[i]);
+        console.log(this.state.power_ports_default[i]);
         port_fields.push(
           <div className="power-form-container">
             <div>
-              {/* <ButtonGroup
-                className="power-form-element"
-                fill={false}
-                style={{ marginTop: 5 }}
-              > */}
               <i>Power Port{i}</i>
 
               {i === 1 || i === 2 ? (
                 <div>
                   <Checkbox
                     className="checkbox"
-                    checked={this.state.power_ports_enabled[i]}
+                    checked={this.state.power_ports_default[i]}
                     label="Use Suggested Values "
                     onChange={(event: any) => {
                       console.log(
                         "setting staus to ",
-                        !this.state.power_ports_enabled[i]
+                        !this.state.power_ports_default[i]
                       );
                       this.setDefaultPortValues(
                         i,
-                        !this.state.power_ports_enabled[i]
+                        !this.state.power_ports_default[i]
                       );
                       this.changeCheckBoxState(
                         i,
-                        !this.state.power_ports_enabled[i]
+                        !this.state.power_ports_default[i]
                       );
                     }}
                   />
                 </div>
               ) : null}
-              {/* </ButtonGroup>{" "} */}
             </div>
-            {/* <Collapse
-              className="power-form-element"
-              isOpen={this.state.power_ports_enabled[i]} */}
+
             <div>
               <ButtonGroup
                 className="power-form-element"
@@ -497,7 +489,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                   />
                 </StringSelect>
               </ButtonGroup>
-              {/* </Collapse> */}
             </div>
           </div>
         );
@@ -666,22 +657,16 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                               value={values.mac_addresses[port]}
                               type="string"
                               className="network-name"
-                              onChange={
-                                (e: any) => {
-                                  const mac_addresses = values.mac_addresses;
-                                  mac_addresses[port] = e.currentTarget.value;
+                              onChange={(e: any) => {
+                                const mac_addresses = values.mac_addresses;
+                                mac_addresses[port] = e.currentTarget.value;
 
-                                  this.setState({
-                                    values: updateObject(this.state.values, {
-                                      mac_addresses
-                                    })
-                                  });
-                                }
-                                // this.handleNetworkPortNameChange(
-                                //   index,
-                                //   e.currentTarget.value
-                                // )
-                              }
+                                this.setState({
+                                  values: updateObject(this.state.values, {
+                                    mac_addresses
+                                  })
+                                });
+                              }}
                             />
                           </td>
                         </tr>
@@ -735,12 +720,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                 }
               />
             </StringSelect>
-            {/* <Field
-              field="owner"
-              placeholder="owner"
-              value={values.owner}
-              onChange={this.handleChange}
-            /> */}
           </FormGroup>
           <FormGroup label="Comment" inline={false}>
             <textarea
