@@ -27,7 +27,8 @@ import {
   UserInfoObject,
   isUserObject,
   isDatacenterObject,
-  DatacenterObject
+  DatacenterObject,
+  isObject
 } from "../../utils/utils";
 import DragDropList from "./dragDropList";
 import "./elementView.scss";
@@ -98,7 +99,7 @@ interface ElementTableProps {
 class ElementTable extends React.Component<
   ElementTableProps & RouteComponentProps,
   ElementTableState
-  > {
+> {
   public state: ElementTableState = {
     page_type: 10,
     filters: [],
@@ -226,7 +227,7 @@ class ElementTable extends React.Component<
         </span>
         <span>{`${item.field} by ${
           item.ascending ? "ascending" : "descending"
-          }`}</span>
+        }`}</span>
 
         <span>
           <Icon
@@ -505,7 +506,13 @@ class ElementTable extends React.Component<
       if (col === "model") {
         fields.push("model__vendor");
         fields.push("model__model_number");
-      } else if (col !== "id" && col !== "network_ports" && col !== "comment") {
+      } else if (
+        col !== "id" &&
+        col !== "network_ports" &&
+        col !== "comment" &&
+        col !== "power_connections" &&
+        col !== "mac_addresses"
+      ) {
         fields.push(col);
       }
     });
@@ -546,6 +553,7 @@ class ElementTable extends React.Component<
   getEditForm = () => {
     return (
       <FormPopup
+        {...this.props}
         isOpen={this.state.isEditFormOpen}
         initialValues={this.state.editFormValues}
         type={FormTypes.MODIFY}
@@ -636,8 +644,8 @@ class ElementTable extends React.Component<
   };
 
   handlePowerButtonClick = (data: ElementObjectType) => {
-    alert("This power thingy is open")
-  }
+    alert("This power thingy is open");
+  };
 
   //ADMIN BUTTON LOGIC
   renderAdminButton = (item: UserInfoObject) => {
@@ -705,20 +713,20 @@ class ElementTable extends React.Component<
           {this.props.disableFiltering
             ? null
             : [
-              <div className="filter-select">
-                <FilterSelect
-                  handleAddFilter={this.addFilter}
-                  fields={this.state.fields}
-                />
-              </div>,
-              <div className="table-options">
-                <p>Applied filters:</p>
-                <DragDropList
-                  items={this.state.filters}
-                  renderItem={this.renderFilterItem}
-                />
-              </div>
-            ]}
+                <div className="filter-select">
+                  <FilterSelect
+                    handleAddFilter={this.addFilter}
+                    fields={this.state.fields}
+                  />
+                </div>,
+                <div className="table-options">
+                  <p>Applied filters:</p>
+                  <DragDropList
+                    items={this.state.filters}
+                    renderItem={this.renderFilterItem}
+                  />
+                </div>
+              ]}
           {this.props.disableSorting ? null : (
             <div className="table-options">
               <p>Applied sorts:</p>
@@ -742,35 +750,40 @@ class ElementTable extends React.Component<
               </HTMLSelect>
               {this.state.page_type !== PagingTypes.ALL
                 ? [
-                  <span>
-                    <Icon
-                      className="icon"
-                      icon={IconNames.CARET_LEFT}
-                      iconSize={Icon.SIZE_LARGE}
-                      onClick={() => this.previousPage()}
-                    />
-                  </span>,
-                  <span>
-                    page {this.state.curr_page} of {this.state.total_pages}
-                  </span>,
-                  <span>
-                    <Icon
-                      className="icon"
-                      icon={IconNames.CARET_RIGHT}
-                      iconSize={Icon.SIZE_LARGE}
-                      onClick={() => this.nextPage()}
-                    />
-                  </span>
-                ]
+                    <span>
+                      <Icon
+                        className="icon"
+                        icon={IconNames.CARET_LEFT}
+                        iconSize={Icon.SIZE_LARGE}
+                        onClick={() => this.previousPage()}
+                      />
+                    </span>,
+                    <span>
+                      page {this.state.curr_page} of {this.state.total_pages}
+                    </span>,
+                    <span>
+                      <Icon
+                        className="icon"
+                        icon={IconNames.CARET_RIGHT}
+                        iconSize={Icon.SIZE_LARGE}
+                        onClick={() => this.nextPage()}
+                      />
+                    </span>
+                  ]
                 : null}
             </div>
           ) : null}
         </div>
         <div className="table-wrapper">
           {this.state.fields.length === 0 ? null : (
-            <table className={(this.props.type !== ElementType.DATACENTER && this.props.type !== ElementType.USER) ?
-              "bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered element-table" :
-              "bp3-html-table bp3-html-table-striped bp3-html-table-bordered element-table"}>
+            <table
+              className={
+                this.props.type !== ElementType.DATACENTER &&
+                this.props.type !== ElementType.USER
+                  ? "bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered element-table"
+                  : "bp3-html-table bp3-html-table-striped bp3-html-table-bordered element-table"
+              }
+            >
               <thead>
                 <tr>
                   {this.state.fields.map((col: string) => {
@@ -807,18 +820,21 @@ class ElementTable extends React.Component<
                 <tbody>
                   {this.state.items.map((item: ElementObjectType) => {
                     if (isAssetObject(item)) {
-                      console.log(item)
+                      console.log(item);
                     }
                     return (
                       <tr
-                        onClick={this.props.type === ElementType.DATACENTER || this.props.type === ElementType.USER ?
-                          () => { }
-                          : () => {
-                            console.log("redirecting", item.id);
-                            this.props.history.push(
-                              "/" + this.props.type + "/" + item.id
-                            );
-                          }}
+                        onClick={
+                          this.props.type === ElementType.DATACENTER ||
+                          this.props.type === ElementType.USER
+                            ? () => {}
+                            : () => {
+                                console.log("redirecting", item.id);
+                                this.props.history.push(
+                                  "/" + this.props.type + "/" + item.id
+                                );
+                              }
+                        }
                       >
                         {Object.entries(item).map(([col, value]) => {
                           if (isModelObject(value)) {
@@ -842,7 +858,8 @@ class ElementTable extends React.Component<
                           } else if (
                             col !== "id" &&
                             col !== "network_ports" &&
-                            col !== "comment"
+                            col !== "comment" &&
+                            !isObject(value)
                           ) {
                             return <td>{value}</td>;
                           }
@@ -851,41 +868,45 @@ class ElementTable extends React.Component<
                         })}
                         <td>
                           {this.props.isAdmin &&
-                            this.props.type !== ElementType.USER ? (
-                              <div className="inline-buttons">
+                          this.props.type !== ElementType.USER ? (
+                            <div className="inline-buttons">
+                              <AnchorButton
+                                className="button-table"
+                                intent="primary"
+                                icon="edit"
+                                minimal
+                                onClick={(event: any) => {
+                                  this.handleEditButtonClick(item);
+                                  event.stopPropagation();
+                                }}
+                              />
+                              <AnchorButton
+                                className="button-table"
+                                intent="danger"
+                                minimal
+                                icon="trash"
+                                onClick={(event: any) => {
+                                  this.handleDeleteButtonClick(item);
+                                  event.stopPropagation();
+                                }}
+                              />
+                              {this.props.isAdmin &&
+                              isAssetObject(item) &&
+                              item.rack.is_network_controlled ? (
                                 <AnchorButton
                                   className="button-table"
-                                  intent="primary"
-                                  icon="edit"
+                                  intent="warning"
                                   minimal
+                                  icon="offline"
                                   onClick={(event: any) => {
-                                    this.handleEditButtonClick(item);
+                                    this.handlePowerButtonClick(item);
                                     event.stopPropagation();
                                   }}
                                 />
-                                <AnchorButton
-                                  className="button-table"
-                                  intent="danger"
-                                  minimal
-                                  icon="trash"
-                                  onClick={(event: any) => {
-                                    this.handleDeleteButtonClick(item);
-                                    event.stopPropagation();
-                                  }}
-                                />
-                                {this.props.isAdmin && isAssetObject(item) && item.rack.is_network_controlled ?
-                                  (<AnchorButton
-                                    className="button-table"
-                                    intent="warning"
-                                    minimal
-                                    icon="offline"
-                                    onClick={(event: any) => {
-                                      this.handlePowerButtonClick(item);
-                                      event.stopPropagation();
-                                    }}
-                                  />) : null}
-                              </div>
-                            ) : null} {/* TODO add logic for determining if isOwner for power button */}
+                              ) : null}
+                            </div>
+                          ) : null}{" "}
+                          {/* TODO add logic for determining if isOwner for power button */}
                           {this.props.isAdmin && isUserObject(item) ? (
                             <div className="inline-buttons">
                               {this.renderAdminButton(item)}
@@ -897,12 +918,12 @@ class ElementTable extends React.Component<
                   })}
                 </tbody>
               ) : (
-                  <h4 className="no-data-text">no {this.props.type} found </h4>
-                )}
+                <h4 className="no-data-text">no {this.props.type} found </h4>
+              )}
             </table>
           )}
         </div>
-      </div >
+      </div>
     );
   }
 }

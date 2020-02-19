@@ -20,10 +20,9 @@ import FormPopup from "../../../../forms/formPopup";
 import ElementTable from "../../elementTable";
 import {
   ElementType,
-  AssetObjectOld,
+  AssetObject,
   ModelObject,
-  getHeaders,
-  getFields
+  getHeaders
 } from "../../../../utils/utils";
 import PropertiesView from "../propertiesView";
 import { FormTypes } from "../../../../forms/formUtils";
@@ -38,10 +37,8 @@ export interface ModelViewProps {
 // var console: any = {};
 // console.log = function () { };
 interface ModelViewState {
-  assets: Array<AssetObjectOld> | undefined;
-  model: ModelObject | undefined;
-  columns: Array<string>;
-  fields: Array<string>;
+  assets: Array<AssetObject>;
+  model: ModelObject;
   isFormOpen: boolean;
   isDeleteOpen: boolean;
 }
@@ -66,34 +63,10 @@ export class ModelView extends React.PureComponent<
   ModelViewState
 > {
   public state: ModelViewState = {
-    assets: undefined,
-    model: undefined,
+    assets: [],
+    model: {} as ModelObject,
     isFormOpen: false,
-    isDeleteOpen: false,
-    columns: [
-      "Model #",
-      "CPU",
-      "Height",
-      "Display Color",
-      "Memory (GB)",
-      "# Ethernet Ports",
-      "# Power Ports",
-      "Storage",
-      "Vendor",
-      "Comment"
-    ],
-    fields: [
-      "model_number",
-      "cpu",
-      "height",
-      "display_color",
-      "memory_gb",
-      "num_ethernet_ports",
-      "num_power_ports",
-      "storage",
-      "vendor",
-      "comment"
-    ]
+    isDeleteOpen: false
   };
 
   private updateModel = (model: ModelObject, headers: any): Promise<any> => {
@@ -149,23 +122,6 @@ export class ModelView extends React.PureComponent<
         this.handleDeleteCancel();
       });
   };
-
-  componentDidMount() {
-    const auth = getHeaders(this.props.token);
-    const headers = {
-      headers: auth.headers,
-      params: {
-        page: 1,
-        page_size: 20
-      }
-    };
-    getFields("models", headers).then((res: any) => {
-      this.setState({
-        fields: res,
-        columns: res
-      });
-    });
-  }
 
   public render() {
     console.log(this.state.assets);
@@ -237,7 +193,7 @@ export class ModelView extends React.PureComponent<
           <Tab
             id="ModelProperties"
             title="Properties"
-            panel={<PropertiesView data={data} {...this.state} />}
+            panel={<PropertiesView data={data} />}
           />
           <Tab
             id="Assets"

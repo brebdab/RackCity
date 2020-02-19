@@ -339,6 +339,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             />
           ) : null}
           <FormPopup
+            {...this.props}
             type={FormTypes.CREATE}
             elementName={this.props.element}
             submitForm={

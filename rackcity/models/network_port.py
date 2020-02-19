@@ -1,5 +1,6 @@
 from django.db import models
 from .asset import Asset
+from django.core.exceptions import ObjectDoesNotExist
 
 
 class NetworkPort(models.Model):
@@ -18,12 +19,48 @@ class NetworkPort(models.Model):
         blank=True,
         # force this to lowercase and make delimeters :
     )
-    network_connection = models.OneToOneField(
+    connected_port = models.OneToOneField(
         'self',
         on_delete=models.CASCADE,
         null=True,
         blank=True,
     )
+
+    def create_network_connection(self, destination_port):
+        if (
+            destination_port.connected_port
+            and destination_port.connected_port != self
+        ):
+            from rackcity.views.rackcity_utils import (
+                NetworkConnectionException
+            )
+            raise NetworkConnectionException(
+                "Destination port '" +
+                destination_port.asset.hostname +
+                ":" +
+                destination_port.port_name +
+                "' is already connected to port '" +
+                destination_port.connected_port.asset.hostname +
+                ":" +
+                destination_port.connected_port.port_name +
+                "'. "
+            )
+        if self.connected_port:
+            self.delete_network_connection()
+        self.connected_port = destination_port
+        destination_port.connected_port = self
+        self.save()
+        destination_port.save()
+
+    def delete_network_connection(self):
+        destination_port = self.connected_port
+        if not destination_port:
+            return
+        else:
+            self.connected_port = None
+            destination_port.connected_port = None
+            self.save()
+            destination_port.save()
 
     class Meta:
         constraints = [

@@ -1,63 +1,79 @@
 import {
   Button,
+  ButtonGroup,
   Callout,
+  Checkbox,
   Classes,
+  Collapse,
   FormGroup,
+  InputGroup,
   Intent,
   MenuItem
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
+import axios from "axios";
 import * as React from "react";
 import { connect } from "react-redux";
-
-import {
-  AssetObjectOld,
-  ModelObject,
-  ShallowAssetObjectOld,
-  getHeaders,
-  RackObject,
-  ElementObjectType
-} from "../utils/utils";
+import { isNullOrUndefined } from "util";
+import { ALL_DATACENTERS } from "../components/elementView/elementTabContainer";
+import { PagingTypes } from "../components/elementView/elementUtils";
 import { updateObject } from "../store/utility";
+import { API_ROOT } from "../utils/api-config";
+import {
+  AssetObject,
+  DatacenterObject,
+  ElementObjectType,
+  getHeaders,
+  ModelObject,
+  PowerPortAvailability,
+  PowerSide,
+  RackObject,
+  ShallowAssetObject
+} from "../utils/utils";
 import Field from "./field";
 import "./forms.scss";
 import {
+  DatacenterSelect,
+  filterDatacenter,
   filterModel,
-  ModelSelect,
-  renderModelItem,
-  RackSelect,
-  renderRackItem,
   filterRack,
-  FormTypes,
-  renderStringItem,
   filterString,
+  FormTypes,
+  ModelSelect,
+  RackSelect,
+  renderDatacenterItem,
+  renderModelItem,
+  renderRackItem,
+  renderStringItem,
   StringSelect
 } from "./formUtils";
-import axios from "axios";
-import { API_ROOT } from "../utils/api-config";
-import { PagingTypes } from "../components/elementView/elementUtils";
 
 //TO DO : add validation of types!!!
 
 export interface AssetFormProps {
   token: string;
   type: FormTypes;
-  initialValues?: AssetObjectOld;
-  submitForm(Asset: ShallowAssetObjectOld, headers: any): Promise<any> | void;
+  initialValues?: AssetObject;
+  submitForm(Asset: ShallowAssetObject, headers: any): Promise<any> | void;
+  datacenters?: Array<DatacenterObject>;
+  currDatacenter?: DatacenterObject;
 }
 interface AssetFormState {
-  values: AssetObjectOld;
+  values: AssetObject;
+  currDatacenter?: DatacenterObject;
   racks: Array<RackObject>;
   models: Array<ModelObject>;
   errors: Array<string>;
   users: Array<string>;
+  power_ports: PowerPortAvailability;
+  power_ports_default: { [port: string]: boolean };
 }
-var console: any = {};
-console.log = function() {};
+// var console: any = {};
+// console.log = function() {};
 
 export const required = (
-  values: AssetObjectOld,
-  fieldName: keyof AssetObjectOld
+  values: AssetObject,
+  fieldName: keyof AssetObject
 ): string =>
   values[fieldName] === undefined ||
   values[fieldName] === null ||
@@ -66,15 +82,35 @@ export const required = (
     : "";
 
 class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
-  initialState: AssetObjectOld = this.props.initialValues
+  initialState: AssetObject = this.props.initialValues
     ? this.props.initialValues
-    : ({} as AssetObjectOld);
+    : ({} as AssetObject);
+  private setPowerPortInputState = () => {
+    const power_ports_default: { [port: string]: boolean } = {};
+    if (this.state.values && this.state.values.power_connections) {
+      Object.keys(this.state.values.power_connections).forEach(port => {
+        power_ports_default[port] = true;
+      });
+    }
+    return power_ports_default;
+  };
+
   public state = {
     values: this.initialState,
+    currDatacenter: this.props.currDatacenter,
     racks: [],
     models: [],
     errors: [],
-    users: []
+    users: [],
+    currModel: {} as ModelObject,
+    //TODO, call endpoint, don't hard code
+    power_ports: {
+      left_suggest: "12",
+      left_available: ["1", "2", "12"],
+      right_suggest: "12",
+      right_available: ["1", "2", "12", "13"]
+    },
+    power_ports_default: {} as { [port: string]: boolean }
   };
   headers = {
     headers: {
@@ -113,20 +149,45 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         return items;
       });
   }
-  private mapAssetObject = (asset: AssetObjectOld): ShallowAssetObjectOld => {
+  componentDidMount() {
+    this.setPowerPortInputState();
+    let values = this.state.values;
+    if (values && !this.props.initialValues) {
+      values = updateObject(values, {
+        power_connections: {},
+        mac_addresses: {}
+      });
+    }
+    this.setState({
+      values
+    });
+  }
+  private mapAssetObject = (asset: AssetObject): ShallowAssetObject => {
     console.log(asset);
 
-    const { hostname, id, rack_position, owner, comment } = asset;
+    const {
+      hostname,
+      id,
+      rack_position,
+      owner,
+      mac_addresses,
+      network_connections,
+      power_connections,
+      comment
+    } = asset;
     const model = asset.model ? asset.model.id : undefined;
     const rack = asset.rack ? asset.rack.id : undefined;
-    let valuesToSend: ShallowAssetObjectOld = {
+    let valuesToSend: ShallowAssetObject = {
       model,
       rack,
       hostname,
       id,
       rack_position,
       owner,
-      comment
+      comment,
+      mac_addresses,
+      network_connections,
+      power_connections
     };
     console.log(valuesToSend);
 
@@ -198,8 +259,245 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         console.log(err);
       });
   };
+  getPowerButtonStatus = (side: PowerSide, port: number) => {
+    console.log(this.state.values.power_connections);
+    //if side has already been selected or this is a modify form
+    if (
+      this.state.values.power_connections &&
+      this.state.values.power_connections[port]
+    ) {
+      const portString = (port as unknown) as string;
+      console.log(
+        "button is ",
+        side === this.state.values.power_connections[portString].left_right
+      );
+      return (
+        side === this.state.values.power_connections[portString].left_right
+      );
+      // } else if (port === 1) {
+      //   return side === PowerSide.LEFT;
+      // } else if (port === 2) {
+      //   return side === PowerSide.RIGHT;
+    } else {
+      return false;
+    }
+  };
+
+  shouldDisablePowerPort = (port: number) => {
+    //if side has already been selected or this is a modify form
+    if (
+      this.state.values.power_connections &&
+      this.state.values.power_connections[port]
+    ) {
+      return false;
+    } else {
+      return true;
+    }
+  };
+  getPortsForSide = (port: number) => {
+    //if side has already been selected or this is a modify form
+    let side;
+    if (
+      this.state.values.power_connections &&
+      this.state.values.power_connections[port]
+    ) {
+      const portString = (port as unknown) as string;
+      side = this.state.values.power_connections[portString].left_right;
+    }
+
+    if (side === PowerSide.LEFT) {
+      return this.state.power_ports.left_available;
+    } else {
+      return this.state.power_ports.right_available;
+    }
+  };
+  setDefaultPortValues = (port: number, status: boolean) => {
+    const power_connections = this.state.values.power_connections;
+    if (status) {
+      if (port === 1) {
+        power_connections[port] = updateObject(power_connections, {
+          left_right: PowerSide.LEFT,
+          port_number: this.state.power_ports.left_suggest
+        });
+        this.setState({
+          values: updateObject(this.state.values, {
+            power_connections
+          })
+        });
+      } else if (port === 2) {
+        power_connections[port] = updateObject(power_connections, {
+          left_right: PowerSide.RIGHT,
+          port_number: this.state.power_ports.right_suggest
+        });
+        this.setState({
+          values: updateObject(this.state.values, {
+            power_connections
+          })
+        });
+      }
+    } else {
+      power_connections[port] = updateObject(power_connections, {
+        left_right: undefined,
+        port_number: undefined
+      });
+      this.setState({
+        values: updateObject(this.state.values, {
+          power_connections
+        })
+      });
+    }
+  };
+
+  changeCheckBoxState = (port: number, state: boolean) => {
+    const power_ports_default = {
+      ...this.state.power_ports_default
+    };
+
+    power_ports_default[port] = state;
+    this.setState({
+      power_ports_default: power_ports_default
+    });
+  };
+  getPowerPortFields = () => {
+    console.log("powerpowerfields", this.state.values.model);
+    if (this.state.values.model && this.state.values.model.num_power_ports) {
+      console.log(
+        "POWERPORTFIELDS",
+        this.state.values.model.num_power_ports,
+        parseInt(this.state.values.model.num_power_ports!, 10)
+      );
+    }
+
+    if (
+      this.state.values.model &&
+      this.state.values.model.num_power_ports &&
+      parseInt(this.state.values.model.num_power_ports, 10) > 0
+    ) {
+      const num_power_ports = parseInt(
+        this.state.values.model.num_power_ports,
+        10
+      );
+      const port_fields = [];
+      for (let i = 1; i <= num_power_ports; i++) {
+        console.log(this.state.power_ports_default[i]);
+        port_fields.push(
+          <div className="power-form-container">
+            <div>
+              <i>Power Port{i}</i>
+
+              {i === 1 || i === 2 ? (
+                <div>
+                  <Checkbox
+                    className="checkbox"
+                    checked={this.state.power_ports_default[i]}
+                    label="Use Suggested Values "
+                    onChange={(event: any) => {
+                      console.log(
+                        "setting staus to ",
+                        !this.state.power_ports_default[i]
+                      );
+                      this.setDefaultPortValues(
+                        i,
+                        !this.state.power_ports_default[i]
+                      );
+                      this.changeCheckBoxState(
+                        i,
+                        !this.state.power_ports_default[i]
+                      );
+                    }}
+                  />
+                </div>
+              ) : null}
+            </div>
+
+            <div>
+              <ButtonGroup
+                className="power-form-element"
+                fill={false}
+                style={{ marginTop: 5 }}
+              >
+                <Button
+                  active={this.getPowerButtonStatus(PowerSide.LEFT, i)}
+                  text="Left"
+                  onClick={(e: any) => {
+                    console.log("Left Button");
+                    const power_connections = this.state.values
+                      .power_connections;
+                    power_connections[i] = updateObject(power_connections[i], {
+                      left_right: PowerSide.LEFT,
+                      port_number: undefined
+                    });
+                    this.changeCheckBoxState(i, false);
+                    this.setState({
+                      values: updateObject(this.state.values, {
+                        power_connections
+                      })
+                    });
+                  }}
+                />
+
+                <Button
+                  active={this.getPowerButtonStatus(PowerSide.RIGHT, i)}
+                  text="Right"
+                  onClick={(e: any) => {
+                    console.log("Right Button ");
+                    const power_connections = this.state.values
+                      .power_connections;
+                    power_connections[i] = updateObject(power_connections[i], {
+                      left_right: PowerSide.RIGHT,
+                      port_number: undefined
+                    });
+                    this.changeCheckBoxState(i, false);
+                    this.setState({
+                      values: updateObject(this.state.values, {
+                        power_connections
+                      })
+                    });
+                  }}
+                />
+
+                <StringSelect
+                  className="power-form-element"
+                  popoverProps={{
+                    minimal: true,
+                    popoverClassName: "dropdown",
+                    usePortal: true
+                  }}
+                  disabled={this.shouldDisablePowerPort(i)}
+                  items={this.getPortsForSide(i)}
+                  onItemSelect={(port: string) => {
+                    console.log(port);
+                    this.changeCheckBoxState(i, false);
+                    const power_connections = this.state.values
+                      .power_connections;
+                    power_connections[i] = updateObject(power_connections[i], {
+                      port_number: port
+                    });
+                  }}
+                  itemRenderer={renderStringItem}
+                  itemPredicate={filterString}
+                  noResults={<MenuItem disabled={true} text="No results." />}
+                >
+                  <Button
+                    rightIcon="caret-down"
+                    text={
+                      this.state.values.power_connections[i] &&
+                      this.state.values.power_connections[i].port_number
+                        ? this.state.values.power_connections[i].port_number
+                        : "PDU Port"
+                    }
+                  />
+                </StringSelect>
+              </ButtonGroup>
+            </div>
+          </div>
+        );
+      }
+      return port_fields;
+    }
+  };
   render() {
-    console.log(this.state.values);
+    console.log("CURR_STATE", this.state.values);
     if (this.state.models.length === 0) {
       this.getElementData(
         "models",
@@ -225,10 +523,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         {this.state.errors.map((err: string) => {
           return <Callout intent={Intent.DANGER}>{err}</Callout>;
         })}
-        <form
-          onSubmit={this.handleSubmit}
-          className="create-form bp3-form-group"
-        >
+        <form onSubmit={this.handleSubmit} className="create-form ">
           <FormGroup label="Hostname (required)" inline={false}>
             <Field
               placeholder="hostname"
@@ -237,6 +532,68 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
               field="hostname"
             />
           </FormGroup>
+          <FormGroup label="Datacenter (required)" inline={false}>
+            <DatacenterSelect
+              popoverProps={{
+                minimal: true,
+                popoverClassName: "dropdown",
+                usePortal: true
+              }}
+              items={
+                this.props.datacenters
+                  ? this.props.datacenters
+                  : [ALL_DATACENTERS]
+              }
+              onItemSelect={(datacenter: DatacenterObject) => {
+                this.setState({
+                  currDatacenter: datacenter
+                });
+              }}
+              itemRenderer={renderDatacenterItem}
+              itemPredicate={filterDatacenter}
+              noResults={<MenuItem disabled={true} text="No results." />}
+            >
+              <Button
+                rightIcon="caret-down"
+                text={
+                  this.props.currDatacenter && this.props.currDatacenter.name
+                    ? this.props.currDatacenter.name
+                    : "Select a datacenter"
+                }
+              />
+            </DatacenterSelect>
+          </FormGroup>
+          <Collapse isOpen={!isNullOrUndefined(this.state.currDatacenter)}>
+            <FormGroup label="Rack (required)" inline={false}>
+              <RackSelect
+                popoverProps={{
+                  minimal: true,
+                  popoverClassName: "dropdown",
+                  usePortal: true
+                }}
+                items={this.state.racks}
+                onItemSelect={(rack: RackObject) =>
+                  this.setState({
+                    values: updateObject(values, { rack: rack })
+                  })
+                }
+                itemRenderer={renderRackItem}
+                itemPredicate={filterRack}
+                noResults={<MenuItem disabled={true} text="No results." />}
+              >
+                <Button
+                  rightIcon="caret-down"
+                  text={
+                    this.state.values.rack
+                      ? this.state.values.rack.row_letter +
+                        " " +
+                        this.state.values.rack.rack_num
+                      : "Select a rack"
+                  }
+                />
+              </RackSelect>
+            </FormGroup>
+          </Collapse>
           <FormGroup label="Rack position (required)" inline={false}>
             <Field
               field="rack_position"
@@ -276,35 +633,66 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
               />
             </ModelSelect>
           </FormGroup>
-          <FormGroup label="Rack (required)" inline={false}>
-            <RackSelect
-              popoverProps={{
-                minimal: true,
-                popoverClassName: "dropdown",
-                usePortal: true
-              }}
-              items={this.state.racks}
-              onItemSelect={(rack: RackObject) =>
-                this.setState({
-                  values: updateObject(values, { rack: rack })
-                })
-              }
-              itemRenderer={renderRackItem}
-              itemPredicate={filterRack}
-              noResults={<MenuItem disabled={true} text="No results." />}
-            >
-              <Button
-                rightIcon="caret-down"
-                text={
-                  this.state.values.rack
-                    ? this.state.values.rack.row_letter +
-                      "" +
-                      this.state.values.rack.rack_num
-                    : "Select a rack"
-                }
-              />
-            </RackSelect>
-          </FormGroup>
+          <Collapse
+            isOpen={
+              values.model &&
+              values.model.network_ports &&
+              values.model.network_ports.length !== 0
+            }
+          >
+            {!(
+              values.model &&
+              values.model.network_ports &&
+              values.model.network_ports.length !== 0
+            ) ? null : (
+              <FormGroup label="Mac Addresses" inline={false}>
+                <table className="port-table">
+                  <tbody>
+                    {values.model.network_ports.map((port, index) => {
+                      return (
+                        <tr>
+                          <td>{port}</td>
+                          <td>
+                            <InputGroup
+                              value={values.mac_addresses[port]}
+                              type="string"
+                              className="network-name"
+                              onChange={(e: any) => {
+                                const mac_addresses = values.mac_addresses;
+                                mac_addresses[port] = e.currentTarget.value;
+
+                                this.setState({
+                                  values: updateObject(this.state.values, {
+                                    mac_addresses
+                                  })
+                                });
+                              }}
+                            />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </FormGroup>
+            )}
+          </Collapse>
+
+          <Collapse
+            isOpen={
+              this.state.values.model &&
+              !isNullOrUndefined(this.state.values.model.num_power_ports)
+            }
+          >
+            {this.state.values.model &&
+            this.state.values.model.num_power_ports &&
+            parseInt(this.state.values.model.num_power_ports, 10) > 0 ? (
+              <FormGroup label="Power Connections " inline={false}>
+                {this.getPowerPortFields()}
+              </FormGroup>
+            ) : null}
+          </Collapse>
+
           <FormGroup label="Owner" inline={false}>
             <StringSelect
               popoverProps={{
@@ -312,8 +700,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                 popoverClassName: "dropdown",
                 usePortal: true
               }}
-              // defaultSelectedItem={this.state.values.owner}
-              // inputValueRenderer={(vendor: string) => vendor}
               items={this.state.users}
               onItemSelect={(owner: string) =>
                 this.setState({
@@ -334,17 +720,12 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                 }
               />
             </StringSelect>
-            {/* <Field
-              field="owner"
-              placeholder="owner"
-              value={values.owner}
-              onChange={this.handleChange}
-            /> */}
           </FormGroup>
           <FormGroup label="Comment" inline={false}>
             <textarea
               className={Classes.INPUT}
               placeholder="comment"
+              value={values.comment}
               onChange={(e: any) =>
                 this.handleChange({ comment: e.currentTarget.value })
               }
@@ -365,6 +746,3 @@ const mapStateToProps = (state: any) => {
   };
 };
 export default connect(mapStateToProps)(AssetForm);
-// const WrappedCreateAssetForm = Form.create()(CreateAssetForm);
-
-// export default connect(mapStateToProps)(WrappedCreateAssetForm);

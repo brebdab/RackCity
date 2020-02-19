@@ -17,20 +17,13 @@ export enum PowerSide {
 export interface AssetObjectOld extends ElementObject {
   hostname: string;
   rack_position: string;
-  model: ModelObjectOld;
+  model: ModelObject;
   rack: RackObject;
+  network_connections: {};
   owner?: string;
   comment?: string;
 }
 
-export interface ShallowAssetObjectOld extends ElementObject {
-  hostname: string;
-  rack_position: string;
-  model?: string;
-  rack?: string;
-  owner?: string;
-  comment?: string;
-}
 export interface AssetObject extends ParentAssetObject {
   model: ModelObject;
   rack: RackObject;
@@ -69,6 +62,37 @@ export interface NetworkGraph {
 export interface PowerConnection {
   left_right: PowerSide;
   port_number: string;
+}
+export interface ShallowAssetObject extends ParentAssetObject {
+  model?: string;
+  rack?: string;
+}
+export interface NetworkConnection {
+  source_port: string;
+  destination_hostname: string;
+  destination_port: string;
+}
+export interface NetworkGraph {
+  nodes: { [hostname: string]: string };
+  links: Array<{ [source: string]: string }>;
+}
+export interface PowerConnection {
+  left_right: PowerSide;
+  port_number: string;
+}
+
+export interface PowerPortAvailability {
+  left_suggest: string;
+  left_available: Array<string>;
+  right_suggest: string;
+  right_available: Array<string>;
+}
+export interface RackRangeFields {
+  datacenter: string;
+  letter_start: string;
+  letter_end: string;
+  num_start: number;
+  num_end: number;
 }
 
 export interface PowerPortAvailability {
@@ -163,8 +187,11 @@ export type FormObjectType =
   | RackRangeFields
   | ShallowAssetObject
   | UserInfoObject
-  | CreateUserObject
-  | ShallowAssetObjectOld;
+  | CreateUserObject;
+
+export function isObject(obj: any) {
+  return obj === Object(obj);
+}
 export function isModelObject(obj: any): obj is ModelObject {
   return obj && obj.model_number;
 }
@@ -174,7 +201,7 @@ export function isDatacenterObject(obj: any): obj is DatacenterObject {
 export function isRackObject(obj: any): obj is RackObject {
   return obj && obj.rack_num;
 }
-export function isAssetObject(obj: any): obj is AssetObjectOld {
+export function isAssetObject(obj: any): obj is AssetObject {
   return obj && obj.hostname;
 }
 

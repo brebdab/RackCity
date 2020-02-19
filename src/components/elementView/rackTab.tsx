@@ -225,6 +225,7 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
         </div>
 
         <FormPopup
+          {...this.props}
           type={FormTypes.CREATE}
           elementName={ElementType.RACK}
           submitForm={this.createRack}
@@ -232,6 +233,7 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
           handleClose={this.handleClose}
         />
         <FormPopup
+          {...this.props}
           type={FormTypes.DELETE}
           elementName={ElementType.RACK}
           submitForm={this.deleteRack}
