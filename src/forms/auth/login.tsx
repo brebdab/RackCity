@@ -15,7 +15,7 @@ import * as actions from "../../store/actions/auth";
 import "./login.scss";
 interface LoginFormProps {
   loading: boolean;
-  error: string;
+  error: any;
   token: string;
   onAuth(username: string, password: string): any;
 }
@@ -38,7 +38,9 @@ class NormalLoginForm extends React.Component<
       <div>
         {this.props.error ? (
           <Callout className={Classes.DARK} intent={Intent.DANGER}>
-            {this.props.error}
+            {this.props.error.response.data.non_field_errors
+              ? this.props.error.response.data.non_field_errors.toString()
+              : ""}
           </Callout>
         ) : null}
 
