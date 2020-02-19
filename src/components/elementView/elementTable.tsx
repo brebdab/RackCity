@@ -656,6 +656,10 @@ class ElementTable extends React.Component<
       .post(API_ROOT + "api/users/revoke-admin", { "id": userid }, headers)
       .then(res => {
         console.log(res.data)
+        this.addToast({
+          message: res.data.success_message,
+          intent: Intent.PRIMARY
+        });
       })
       .catch(err => {
         console.log(err);
@@ -672,6 +676,10 @@ class ElementTable extends React.Component<
       .post(API_ROOT + "api/users/grant-admin", { "id": userid }, headers)
       .then(res => {
         console.log(res.data)
+        this.addToast({
+          message: res.data.success_message,
+          intent: Intent.PRIMARY
+        });
       })
       .catch(err => {
         console.log(err);
