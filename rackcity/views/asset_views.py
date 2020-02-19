@@ -502,7 +502,7 @@ def asset_modify(request):
                 status=HTTPStatus.OK,
             )
         else:
-            # log_action(request.user, existing_asset, Action.MODIFY)
+            log_action(request.user, existing_asset, Action.MODIFY)
             return JsonResponse(
                 {"success_message": "Asset succesfully modified"},
                 status=HTTPStatus.OK,
