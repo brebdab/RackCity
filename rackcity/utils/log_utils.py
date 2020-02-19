@@ -36,7 +36,7 @@ def log_action(user, related_element, action):
     related_asset = None
     if isinstance(related_element, Asset):
         element_type = ElementType.ASSET.value
-        element_name = related_element.asset_number
+        element_name = str(related_element.asset_number)
         related_asset = related_element
     elif isinstance(related_element, ITModel):
         element_type = ElementType.MODEL.value

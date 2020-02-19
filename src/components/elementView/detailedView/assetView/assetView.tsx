@@ -15,12 +15,7 @@ import PropertiesView from "../propertiesView";
 import { RouteComponentProps, withRouter } from "react-router";
 import "./assetView.scss";
 import { connect } from "react-redux";
-import {
-  AssetObjectOld,
-  ElementType,
-  getHeaders,
-  getFields
-} from "../../../../utils/utils";
+import { AssetObject, ElementType, getHeaders } from "../../../../utils/utils";
 import FormPopup from "../../../../forms/formPopup";
 import { FormTypes } from "../../../../forms/formUtils";
 import { modifyAsset, deleteAsset } from "../../elementUtils";
@@ -34,24 +29,23 @@ export interface AssetViewProps {
 
 // var console: any = {};
 // console.log = function() {};
-async function getData(assetkey: string, token: string) {
+function getData(assetkey: string, token: string) {
   const headers = {
     headers: {
       Authorization: "Token " + token
     }
   };
-  return await axios
-    .get(API_ROOT + "api/assets/" + assetkey, headers)
-    .then(res => {
-      const data = res.data;
-      return data;
-    });
+  console.log("getting_data");
+  return axios.get(API_ROOT + "api/assets/" + assetkey, headers).then(res => {
+    const data = res.data;
+    return data;
+  });
 }
 
 interface AssetViewState {
-  asset: AssetObjectOld | undefined;
-  columns: Array<string>;
-  fields: Array<string>;
+  asset: AssetObject;
+  // columns: Array<string>;
+  // fields: Array<string>;
   isFormOpen: boolean;
   isDeleteOpen: boolean;
   isAlertOpen: boolean;
@@ -62,14 +56,12 @@ export class AssetView extends React.PureComponent<
   AssetViewState
 > {
   public state: AssetViewState = {
-    asset: undefined,
+    asset: {} as AssetObject,
     isFormOpen: false,
     isDeleteOpen: false,
-    isAlertOpen: false,
-    columns: ["Hostname", "Model", "Rack", "Rack position", "Owner", "Comment"],
-    fields: ["hostname", "model", "rack", "Rack position", "owner", "comment"]
+    isAlertOpen: false
   };
-  private updateAsset = (asset: AssetObjectOld, headers: any): Promise<any> => {
+  private updateAsset = (asset: AssetObject, headers: any): Promise<any> => {
     let params: any;
     params = this.props.match.params;
     return modifyAsset(asset, headers).then(res => {
@@ -94,28 +86,16 @@ export class AssetView extends React.PureComponent<
     toaster: (ref: Toaster) => (this.toaster = ref)
   };
 
-  public componentDidMount() {
-    const auth = getHeaders(this.props.token);
-    const headers = {
-      headers: auth.headers,
-      params: {
-        page: 1,
-        page_size: 20
-      }
-    };
-    getFields(ElementType.ASSET, headers).then((res: any) => {
-      this.setState({
-        fields: res,
-        columns: res
-      });
-    });
-  }
-
   public render() {
+    console.log(
+      "rendering asset view",
+      Object.keys(this.state.asset).length === 0
+    );
     let params: any;
     params = this.props.match.params;
-    if (this.state.asset === undefined) {
+    if (Object.keys(this.state.asset).length === 0) {
       getData(params.rid, this.props.token).then(result => {
+        console.log("response");
         this.setState({
           asset: result
         });
@@ -169,7 +149,7 @@ export class AssetView extends React.PureComponent<
             </Alert>
           </div>
         ) : null}
-        <PropertiesView data={this.state.asset} {...this.state} />
+        <PropertiesView data={this.state.asset} />
       </div>
     );
   }

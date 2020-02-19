@@ -6,7 +6,8 @@ import {
   isAssetObject,
   isModelObject,
   FormObjectType,
-  isDatacenterObject
+  isDatacenterObject,
+  DatacenterObject
 } from "../utils/utils";
 import RackSelectView from "../components/elementView/rackSelectView";
 import AssetForm from "./assetForm";
@@ -18,6 +19,8 @@ interface FormPopupState {}
 interface FormPopupProps {
   isOpen: boolean;
   type: FormTypes;
+  datacenters?: Array<DatacenterObject>;
+  currDatacenter?: DatacenterObject;
   initialValues?: ElementObjectType;
   elementName: ElementType;
   handleClose(): void;
@@ -50,6 +53,7 @@ class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
         ) : null}
         {this.props.elementName === ElementType.ASSET ? (
           <AssetForm
+            {...this.props}
             type={FormTypes.CREATE}
             submitForm={this.props.submitForm}
             initialValues={
