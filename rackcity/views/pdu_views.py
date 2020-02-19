@@ -1,30 +1,22 @@
-from django.http import HttpResponse, JsonResponse
+# from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from rackcity.models import (
-    Asset,
-    Rack,
-    PowerPort,
-    PDUPort
+    Asset
 )
-from django.core.exceptions import ObjectDoesNotExist
 from rackcity.api.serializers import (
-    AssetSerializer,
-    RecursiveAssetSerializer,
-    RackSerializer,
     serialize_power_connections,
 )
-from rackcity.utils.log_utils import (
-    log_action,
-    log_bulk_import,
-    log_delete,
-    Action,
-    ElementType,
-)
+# from rackcity.utils.log_utils import (
+#     log_action,
+#     log_bulk_import,
+#     log_delete,
+#     Action,
+#     ElementType,
+# )
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_framework.parsers import JSONParser
+# from rest_framework.parsers import JSONParser
 from http import HTTPStatus
-import math
-from io import StringIO
 from rackcity.views.rackcity_utils import (
     validate_asset_location,
     validate_location_modification,
@@ -33,6 +25,10 @@ from rackcity.views.rackcity_utils import (
     get_sort_arguments,
     get_filter_arguments,
 )
+import re
+import requests
+
+pdu_url = 'http://hyposoft-mgt.colab.duke.edu:8000/pdu.php?pdu=hpdu-rtp1-A01L'
 
 
 @api_view(['GET'])
@@ -50,14 +46,21 @@ def power_status(request, id):
             {"failure_message": failure_message},
             status=HTTPStatus.BAD_REQUEST
         )
-    serializer = serialize_power_connections(asset)
-    
+    port_info = serialize_power_connections(asset)
+    html = requests.get(pdu_url)
+    power_status = dict()
+    for port in port_info:
+        power_status[port] = regex_power_status(html.text, port_info[port]['port_number'])[0]
 
     return JsonResponse(
-        {"power_connections": serializer},
-        # {
-        #     "connections": connections,
-
-        # },
+        {
+            "power_connections": port_info,
+            "power_status": power_status
+        },
         status=HTTPStatus.OK
     )
+
+
+def regex_power_status(html, port):
+    status_pattern = re.search('<td>'+str(port)+'<td><span.+(ON|OFF)', html)
+    return status_pattern.groups(1)
