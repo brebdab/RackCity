@@ -88,6 +88,12 @@ class BulkAssetSerializer(serializers.ModelSerializer):
     Serializes all fields on Asset model according to the format required
     for bulk export.
     """
+    datacenter = serializers.SlugRelatedField(
+        source='rack',
+        slug_field='datacenter',
+        many=False,
+        read_only=True,
+    )
     vendor = serializers.SlugRelatedField(
         source='model',
         slug_field='vendor',
@@ -102,20 +108,50 @@ class BulkAssetSerializer(serializers.ModelSerializer):
     )
     # by default, calls get_<field> - in this case, get_rack
     rack = serializers.SerializerMethodField()
-    rack_position = serializers.IntegerField(source='rack_position')
+    power_port_connection_1 = serializers.SerializerMethodField()
+    power_port_connection_2 = serializers.SerializerMethodField()
 
     class Meta:
         model = Asset
         fields = (
             'asset_number',
             'hostname',
+            'datacenter',
             'rack',
             'rack_position',
             'vendor',
             'model_number',
             'owner',
-            'comment'
+            'comment',
+            'power_port_connection_1',
+            'power_port_connection_2'
         )
 
     def get_rack(self, asset):
         return asset.rack.row_letter + str(asset.rack.rack_num)
+
+    def get_power_port_connection_1(self, asset):
+        return self.power_port_connection(asset, port_number=1)
+
+    def get_power_port_connection_2(self, asset):
+        return self.power_port_connection(asset, port_number=2)
+
+    def power_port_connection(self, asset, port_number):
+        power_ports = PowerPort.objects.filter(asset=asset.id)
+        if (
+            not power_ports
+            or len(power_ports) < port_number
+        ):
+            return None
+        power_port = power_ports.get(port_name=str(port_number))
+        if (
+            not power_port.power_connection
+        ):
+            return None
+        pdu_port = power_port.power_connection
+        if (
+            not pdu_port.left_right
+            or not pdu_port.port_number
+        ):
+            return None
+        return pdu_port.left_right+str(pdu_port.port_number)
