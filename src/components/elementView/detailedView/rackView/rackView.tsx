@@ -163,13 +163,6 @@ class RackView extends React.PureComponent<
   };
 
   public render() {
-    // if (this.props.location.state.length === 0) {
-    //   this.getRackRange(this.props.token);
-    // }
-    // const racks: Array<RackResponseObject> =
-    //   this.props.location && this.props.location.state
-    //     ? (this.props.location.state as Array<RackResponseObject>)
-    //     : [];
     const racks = this.props.racks;
 
     return (

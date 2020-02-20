@@ -71,18 +71,7 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
         return mac_addresses
 
     def get_power_connections(self, asset):
-        try:
-            ports = PowerPort.objects.filter(asset=asset.id)
-        except ObjectDoesNotExist:
-            return
-        power_connections = {}
-        for port in ports:
-            if port.power_connection:
-                power_connections[port.port_name] = {
-                    "left_right": port.power_connection.left_right,
-                    "port_number": port.power_connection.port_number
-                }
-        return power_connections
+        return serialize_power_connections(asset)
 
     def get_network_connections(self, asset):
         try:
@@ -138,3 +127,18 @@ class BulkAssetSerializer(serializers.ModelSerializer):
 
     def get_rack(self, asset):
         return asset.rack.row_letter + str(asset.rack.rack_num)
+
+
+def serialize_power_connections(asset):
+    try:
+        ports = PowerPort.objects.filter(asset=asset.id)
+    except ObjectDoesNotExist:
+        return
+    power_connections = {}
+    for port in ports:
+        if port.power_connection:
+            power_connections[port.port_name] = {
+                "left_right": port.power_connection.left_right,
+                "port_number": port.power_connection.port_number
+            }
+    return power_connections
