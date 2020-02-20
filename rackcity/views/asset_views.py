@@ -895,11 +895,95 @@ def asset_bulk_export(request):
     )
 
 
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def network_bulk_upload(request):
+    data = JSONParser().parse(request)
+    if 'import_csv' not in data:
+        return JsonResponse(
+            {"failure_message": "Bulk upload request should have a parameter 'import_csv'"},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    csv_string = StringIO(data['import_csv'])
+    csvReader = csv.DictReader(csv_string)
+    expected_fields = BulkNetworkPortSerializer.Meta.fields
+    given_fields = csvReader.fieldnames
+    if (
+        len(expected_fields) != len(given_fields)  # check for repeated fields
+        or set(expected_fields) != set(given_fields)
+    ):
+        failure_message = "Please provide exactly the expected columns. " + \
+            "See in-app documentation for reference. "
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    bulk_network_port_datas = []
+    for row in csvReader:
+        bulk_network_port_datas.append(dict(row))
+    num_ports_ignored = 0
+    modifications_to_approve = []
+    for bulk_network_port_data in bulk_network_port_datas:
+        if (
+            'src_hostname' not in bulk_network_port_data
+            or not bulk_network_port_data['src_hostname']
+        ):
+            failure_message = "Field 'src_hostname' is required for all network imports. '"
+            return JsonResponse(
+                {"failure_message": failure_message},
+                status=HTTPStatus.BAD_REQUEST
+            )
+        if (
+            'src_port' not in bulk_network_port_data
+            or not bulk_network_port_data['src_port']
+        ):
+            failure_message = "Field 'src_port' is required for all network imports. '"
+            return JsonResponse(
+                {"failure_message": failure_message},
+                status=HTTPStatus.BAD_REQUEST
+            )
+        source_asset = Asset.objects.get(
+            hostname=bulk_network_port_data['src_hostname']
+        )
+        existing_port = NetworkPort.objects.get(
+            asset=source_asset,
+            port_name=bulk_network_port_data['src_port']
+        )
+        existing_port_serializer = BulkNetworkPortSerializer(existing_port)
+        if records_are_identical(
+            bulk_network_port_data,
+            existing_port_serializer.data
+        ):
+            num_ports_ignored += 1
+        else:
+            modifications_to_approve.append(
+                {
+                    "existing": existing_port_serializer.data,
+                    "modified": bulk_network_port_data
+                }
+            )
+    # all network connections are modifications,
+    # because bulk import can't be used to create new ports
+    response = {
+        "added": 0,
+        "ignored": num_ports_ignored,
+        "modifications": modifications_to_approve
+    }
+    return JsonResponse(
+        response,
+        status=HTTPStatus.OK
+    )
+
+
 # @api_view(['POST'])
-# @permission_classes([IsAdminUser])
-# def network_bulk_upload(request):
-    # get the file
-    # parse to rows
+    # @permission_classes([IsAdminUser])
+    # def network_bulk_approve(request):
+    # recieve json
+    # for each row, get the asset
+    # translate the row into the mac address form
+    # and the connection form
+    # save the mac address
+    # save the connection
 
 
 @api_view(['POST'])
