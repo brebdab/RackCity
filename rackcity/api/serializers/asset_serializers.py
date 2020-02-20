@@ -174,3 +174,23 @@ class BulkAssetSerializer(serializers.ModelSerializer):
         ):
             return None
         return pdu_port.left_right+str(pdu_port.port_number)
+
+
+def normalize_bulk_asset_data(bulk_asset_data):
+    power_connections = {}
+    if bulk_asset_data['power_port_connection_1']:
+        power_connections["1"] = {
+            "left_right": bulk_asset_data['power_port_connection_1'][:1],
+            "port_number": int(bulk_asset_data['power_port_connection_1'][1:])
+        }
+    if bulk_asset_data['power_port_connection_2']:
+        power_connections["2"] = {
+            "left_right": bulk_asset_data['power_port_connection_2'][:1],
+            "port_number": int(bulk_asset_data['power_port_connection_2'][1:])
+        }
+    bulk_asset_data['power_connections'] = power_connections
+    del bulk_asset_data['power_port_connection_1']
+    del bulk_asset_data['power_port_connection_2']
+    if not bulk_asset_data['asset_number']:
+        del bulk_asset_data['asset_number']
+    return bulk_asset_data
