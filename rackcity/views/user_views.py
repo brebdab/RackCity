@@ -153,6 +153,13 @@ def user_delete(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
+    if not existing_user.password:
+        return JsonResponse(
+            {
+                "failure_message": "Cannot delete Duke SSO authenticated users."
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
     username = existing_user.username
     if username == 'admin':
         return JsonResponse(
