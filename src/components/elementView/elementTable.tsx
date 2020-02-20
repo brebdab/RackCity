@@ -55,7 +55,6 @@ import {
   modifyDatacenter,
   ElementTableOpenAlert
 } from "./elementUtils";
-import { ELEVATION_0 } from "@blueprintjs/core/lib/esm/common/classes";
 
 interface ElementTableState {
   items: Array<ElementObjectType>;
