@@ -21,7 +21,9 @@ from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
 import math
 import csv
-from io import StringIO
+from base64 import b64decode
+import re
+from io import StringIO, BytesIO
 from rackcity.views.rackcity_utils import (
     validate_asset_location,
     records_are_identical,
@@ -298,15 +300,18 @@ def model_bulk_upload(request):
     """
     Bulk upload many models to add or modify
     """
-    print(request)
-    data = MultiPartParser().parse(request)  # it seems like this is failing
-    if 'file' not in data:
+    data = JSONParser().parse(request)
+    if 'import_csv' not in data:
         return JsonResponse(
             {"failure_message": "Bulk upload request should have a parameter 'file'"},
             status=HTTPStatus.BAD_REQUEST
         )
-    csv_string = data['file']
-    csvReader = csv.DictReader(csv_string)
+    base_64_csv = data['import_csv']
+    csv_bytes_io = BytesIO(
+        b64decode(re.sub("data:text/csv;base64,", '', base_64_csv))
+    )
+    csv_string_io = StringIO(csv_bytes_io.read().decode('UTF-8'))
+    csvReader = csv.DictReader(csv_string_io)
     expected_fields = BulkITModelSerializer.Meta.fields
     given_fields = csvReader.fieldnames
     if (
@@ -326,6 +331,8 @@ def model_bulk_upload(request):
     potential_modifications = []
     models_in_import = set()
     for bulk_model_data in bulk_model_datas:
+        print("HERES A MODEL")
+        print(bulk_model_data)
         model_data = normalize_bulk_model_data(bulk_model_data)
         model_serializer = ITModelSerializer(data=model_data)
         if not model_serializer.is_valid():
