@@ -1,35 +1,17 @@
-# from django.http import HttpResponse, JsonResponse
 from django.http import JsonResponse
 from rackcity.models import (
-    Rack,
     Asset
 )
 from rackcity.api.serializers import (
     serialize_power_connections,
 )
-# from rackcity.utils.log_utils import (
-#     log_action,
-#     log_bulk_import,
-#     log_delete,
-#     Action,
-#     ElementType,
-# )
 from rest_framework.decorators import permission_classes, api_view
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-# from rest_framework.parsers import JSONParser
+from rest_framework.permissions import IsAuthenticated
 from http import HTTPStatus
-from rackcity.views.rackcity_utils import (
-    validate_asset_location,
-    validate_location_modification,
-    no_infile_location_conflicts,
-    records_are_identical,
-    get_sort_arguments,
-    get_filter_arguments,
-)
 import re
 import requests
 
-pdu_url = 'http://hyposoft-mgt.colab.duke.edu:8000/pdu.php?pdu=hpdu-rtp1-' # Need to specify rack + side in request, e.g. for A1 left, use A01L
+pdu_url = 'http://hyposoft-mgt.colab.duke.edu:8005/pdu.php?pdu=hpdu-rtp1-'  # Need to specify rack + side in request, e.g. for A1 left, use A01L
 
 
 @api_view(['GET'])
