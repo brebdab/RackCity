@@ -14,18 +14,17 @@ import Instructions from "./importInstructions"
 //var console: any = {};
 //console.log = function () { };
 interface ImportProps {
-  token: string
+  token: string;
 }
 
 interface AlertState {
-  uploadModelIsOpen: boolean,
-  uploadAssetIsOpen: boolean,
+  uploadFileIsOpen: boolean,
   modelAlterationsIsOpen: boolean,
   assetAlterationsIsOpen: boolean,
   selectedFile?: File,
   encodedFile?: string,
-  loadedModels?: Array<ModelObjectOld>,
-  loadedAssets?: Array<AssetObjectOld>,
+  loadedModels: any,
+  loadedAssets: any,
   modifiedModels?: Array<any>,
   modifiedAssets?: Array<any>,
   ignoredModels?: number,
@@ -52,16 +51,24 @@ const c2j = require('csvtojson')
 export class BulkImport extends React.PureComponent<RouteComponentProps & ImportProps, AlertState> {
 
   public state: AlertState = {
-    uploadModelIsOpen: false,
-    uploadAssetIsOpen: false,
+    uploadFileIsOpen: false,
     modelAlterationsIsOpen: false,
     assetAlterationsIsOpen: false,
+    loadedModels: [],
+    loadedAssets: [],
     uploading: false,
     uploadType: "",
     notify: false
   };
 
   render() {
+    let params: any;
+    params = this.props.match.params;
+    console.log("params")
+    console.log(params)
+    //const resourceType = params.resourceType;
+    //console.log("resourceType")
+    //console.log(resourceType)
     return (
       <div className={Classes.DARK + " import"}>
         <Overlay isOpen={this.state.uploading} className={"uploading-overlay"}>
@@ -69,49 +76,30 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
         </Overlay>
         <div className={"row"}>
           <div className={"column-third-left-import"}>
-            <p> </p>
-            <AnchorButton
-              large={true}
-              intent="primary"
-              icon="import"
-              text="Select Assets File"
-              onClick={this.handleAssetOpen}
-            />
-            <Alert
-              cancelButtonText="Cancel"
-              confirmButtonText="Choose File"
-              intent="primary"
-              isOpen={this.state.uploadAssetIsOpen}
-              onCancel={this.handleAssetCancel}
-              onConfirm={this.handleAssetUpload}
-            >
-              <p>Choose a file</p>
-              <FileSelector {...this.props} callback={this.setFile} />
-            </Alert>
           </div>
           <div className={"column-third-import"}>
-            <h1>OR</h1>
-          </div>
-          <div className={"column-third-right-import"}>
             <p> </p>
             <AnchorButton
               large={true}
               intent="primary"
               icon="import"
-              text="Select Models File"
-              onClick={this.handleModelOpen}
+              text={"Select " + params.resourceType + " file"}
+              onClick={this.handleFilepickerOpen}
             />
             <Alert
               cancelButtonText="Cancel"
               confirmButtonText="Choose File"
               intent="primary"
-              isOpen={this.state.uploadModelIsOpen}
-              onCancel={this.handleModelCancel}
-              onConfirm={this.handleModelUpload}
+              isOpen={this.state.uploadFileIsOpen}
+              onCancel={this.handleFilepickerCancel}
+              onConfirm={this.handleFileUpload}
             >
               <p>Choose a file</p>
               <FileSelector {...this.props} callback={this.setFile} />
             </Alert>
+            <p> </p>
+          </div>
+          <div className={"column-third-right-import"}>
           </div>
         </div>
         <div className={"row"}>
@@ -134,7 +122,9 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
           <div className={"column-third-left-import"}>
           </div>
           <div className={"column-third-import"}>
-            <Tag>
+            <Tag
+              minimal
+            >
               <p>Selected file: {this.state.selectedFile === undefined ? "none" : this.state.selectedFile.name}</p>
             </Tag>
           </div>
@@ -167,73 +157,71 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
 
   /*********** Functions ***********************/
 
-  private handleAssetOpen = () => this.setState({ uploadAssetIsOpen: true, uploadType: "Asset" });
-  private handleAssetCancel = () => this.setState({ uploadAssetIsOpen: false });
-  private handleAssetUpload = () => {
-    this.setState({ loadedModels: undefined })
-    if (this.state.selectedFile !== undefined) {
-      parse(this.state.selectedFile).then((res: any) => {
-        const fields = ["hostname", "rack", "rack_position", "vendor", "model_number", "owner", "comment"]
-        var keys = res.split(/\r\n/)[0].split(",");
-        if (keys.length > fields.length) {
-          alert("ERROR: Too many columns in file")
-          return
-        } else if (keys.length < fields.length) {
-          alert("ERROR: Not enough columns in file")
-          return
-        } else {
-          for (var i = 0; i < keys.length; i++) {
-            if (!fields.includes(keys[i])) {
-              alert("ERROR: File contains badly formatted header: key: " + keys[i])
-              return
-            }
-          }
-        }
+  // private handleAssetUpload = () => { // TODO: MAKE THIS LIKE THE MODEL ONE
+  //   this.setState({ loadedModels: undefined })
+  //   if (this.state.selectedFile !== undefined) {
+  //     parse(this.state.selectedFile).then((res: any) => {
+  //       const fields = ["hostname", "rack", "rack_position", "vendor", "model_number", "owner", "comment"]
+  //       var keys = res.split(/\r\n/)[0].split(",");
+  //       if (keys.length > fields.length) {
+  //         alert("ERROR: Too many columns in file")
+  //         return
+  //       } else if (keys.length < fields.length) {
+  //         alert("ERROR: Not enough columns in file")
+  //         return
+  //       } else {
+  //         for (var i = 0; i < keys.length; i++) {
+  //           if (!fields.includes(keys[i])) {
+  //             alert("ERROR: File contains badly formatted header: key: " + keys[i])
+  //             return
+  //           }
+  //         }
+  //       }
 
-        c2j({
-          noheader: false,
-          output: "json"
-        }).fromString(res).then((csvRow: Array<any>) => {
-          for (var i = 0; i < csvRow.length; i++) {
-            /* This next block is just to fix field names from the csv format to our backend format */
-            const asset: AssetInfoObject = {
-              hostname: csvRow[i].hostname,
-              rack_position: csvRow[i].rack_position,
-              vendor: csvRow[i].vendor,
-              model_number: csvRow[i].model_number,
-              rack: csvRow[i].rack,
-              owner: csvRow[i].owner,
-              comment: csvRow[i].comment
-            };
-            csvRow[i] = asset;
-          }
-          /* set state variable to JSON array with proper field names */
-          this.setState({
-            loadedAssets: csvRow
-          });
-          /* Now make API request with JSON as header */
-          console.log(this.state.loadedAssets);
-        })
-      }, err => {
-        alert(err.response.data.failure_message)
-      })
-      // alert("Models have been loaded to browser, proceed to upload");
-      this.setState({ uploadAssetIsOpen: false });
-    } else {
-      alert("No file selected")
-    }
-  };
+  //       c2j({
+  //         noheader: false,
+  //         output: "json"
+  //       }).fromString(res).then((csvRow: Array<any>) => {
+  //         for (var i = 0; i < csvRow.length; i++) {
+  //           /* This next block is just to fix field names from the csv format to our backend format */
+  //           const asset: AssetInfoObject = {
+  //             hostname: csvRow[i].hostname,
+  //             rack_position: csvRow[i].rack_position,
+  //             vendor: csvRow[i].vendor,
+  //             model_number: csvRow[i].model_number,
+  //             rack: csvRow[i].rack,
+  //             owner: csvRow[i].owner,
+  //             comment: csvRow[i].comment
+  //           };
+  //           csvRow[i] = asset;
+  //         }
+  //         /* set state variable to JSON array with proper field names */
+  //         this.setState({
+  //           loadedAssets: csvRow
+  //         });
+  //         /* Now make API request with JSON as header */
+  //         console.log(this.state.loadedAssets);
+  //       })
+  //     }, err => {
+  //       alert(err.response.data.failure_message)
+  //     })
+  //     // alert("Models have been loaded to browser, proceed to upload");
+  //     this.setState({ uploadFileOpen: false });
+  //   } else {
+  //     alert("No file selected")
+  //   }
+  // };
 
-  private handleModelOpen = () => this.setState({ uploadModelIsOpen: true, uploadType: "Model" });
-  private handleModelCancel = () => this.setState({ uploadModelIsOpen: false });
+  private handleFilepickerOpen = () => this.setState({ uploadFileIsOpen: true });
+  private handleFilepickerCancel = () => this.setState({ uploadFileIsOpen: false });
 
   /*
    * serializes data to JSON and
    * makes backend requests
    */
-  private handleModelUpload = () => {
+  private handleFileUpload = () => {
     /* Encode to base64 */
-    this.setState({ loadedAssets: undefined });
+    this.setState({ encodedFile: undefined });
     if (this.state.selectedFile !== undefined) {
       getBase64(this.state.selectedFile).then((res: any) => {
         this.setState({
@@ -242,7 +230,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
       }, err => {
         alert(err.response.data.failure_message)
       })
-      this.setState({ uploadModelIsOpen: false });
+      this.setState({ uploadFileIsOpen: false });
     } else {
       alert("No file selected")
     }
@@ -251,37 +239,37 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
   private handleUpload = () => {
     if (/*this.state.loadedModels*/this.state.encodedFile !== undefined) {
       this.setState({ uploading: true })
-      uploadBulk(this.state.encodedFile, this.props.token, "models").then(res => {
+      let params: any;
+      params = this.props.match.params;
+      uploadBulk(this.state.encodedFile, this.props.token, params.resourceType).then(res => {
         if (res.modifications.length !== 0) {
-          this.setState({
-            modelAlterationsIsOpen: true,
-            uploading: false,
-            modifiedModels: res.modifications,
-            ignoredModels: res.ignored,
-            addedModels: res.added
-          })
+          if (params.resourceType === "models") {
+            this.setState({
+              modelAlterationsIsOpen: true,
+              uploading: false,
+              modifiedModels: res.modifications,
+              ignoredModels: res.ignored,
+              addedModels: res.added
+            })
+          }
+          else {
+            this.setState({
+              assetAlterationsIsOpen: true,
+              uploading: false,
+              modifiedAssets: res.modifications,
+              ignoredAssets: res.ignored,
+              addedAssets: res.added
+            })
+          }
+
         } else {
           alert("Success! Modified: 0; Added: " + res.added + "; Ignored: " + res.ignored);
-          this.setState({ uploading: false, loadedModels: undefined })
-        }
-      }, err => {
-        this.setState({ uploading: false })
-        alert(err.response.data.failure_message)
-      })
-    } else if (this.state.encodedFile !== undefined) {
-      this.setState({ uploading: true })
-      uploadBulk(this.state.encodedFile, this.props.token, "assets").then(res => {
-        if (res.modifications.length !== 0) {
-          this.setState({
-            assetAlterationsIsOpen: true,
-            uploading: false,
-            modifiedAssets: res.modifications,
-            ignoredAssets: res.ignored,
-            addedAssets: res.added
-          })
-        } else {
-          alert("Success! Modified: 0; Added: " + res.added + "; Ignored: " + res.ignored);
-          this.setState({ uploading: false, loadedModels: undefined })
+          if (params.resourceType === "models") {
+            this.setState({ uploading: false, loadedModels: undefined })
+          }
+          else {
+            this.setState({ uploading: false, loadedAssets: undefined })
+          }
         }
       }, err => {
         this.setState({ uploading: false })
@@ -325,24 +313,24 @@ async function uploadBulk(encodedFile: string, token: string, type: string) {
     });
 }
 
-/*
- * Reads file to string
- */
-async function parse(file: File) {
-  return new Promise((resolve, reject) => {
-    let content = '';
-    const reader = new FileReader();
-    reader.onloadend = function (e: any) {
-      content = e.target.result;
-      const result = content//.split(/\r\n|\n/);
-      resolve(result);
-    };
-    reader.onerror = function (e: any) {
-      reject(e);
-    };
-    reader.readAsText(file)
-  });
-}
+// /*
+//  * Reads file to string
+//  */
+// async function parse(file: File) {
+//   return new Promise((resolve, reject) => {
+//     let content = '';
+//     const reader = new FileReader();
+//     reader.onloadend = function (e: any) {
+//       content = e.target.result;
+//       const result = content//.split(/\r\n|\n/);
+//       resolve(result);
+//     };
+//     reader.onerror = function (e: any) {
+//       reject(e);
+//     };
+//     reader.readAsText(file)
+//   });
+// }
 
 async function getBase64(file: File) {
   return new Promise((resolve, reject) => {

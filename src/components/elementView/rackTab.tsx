@@ -252,40 +252,40 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
         </Alert>
 
         {this.props.currDatacenter &&
-        this.props.currDatacenter.name !== ALL_DATACENTERS.name ? (
-          <div>
-            {this.props.isAdmin ? (
-              <div className=" element-tab-buttons">
-                <AnchorButton
-                  className="add"
-                  text={"Add Rack(s)"}
-                  icon="add"
-                  minimal
-                  intent={Intent.PRIMARY}
-                  onClick={this.handleOpen}
-                />
-                <AnchorButton
-                  className="add "
-                  text={"Delete Rack(s)"}
-                  icon="trash"
-                  minimal
-                  intent={Intent.DANGER}
-                  onClick={this.handleDeleteOpen}
-                />
-              </div>
-            ) : null}
-            <Button
-              text="View All Rack(s)"
-              onClick={(e: any) => this.getAllRacks()}
-            />
+          this.props.currDatacenter.name !== ALL_DATACENTERS.name ? (
+            <div>
+              {this.props.isAdmin ? (
+                <div className=" element-tab-buttons">
+                  <AnchorButton
+                    className="add"
+                    text={"Add Rack(s)"}
+                    icon="add"
+                    minimal
+                    intent={Intent.PRIMARY}
+                    onClick={this.handleOpen}
+                  />
+                  <AnchorButton
+                    className="add "
+                    text={"Delete Rack(s)"}
+                    icon="trash"
+                    minimal
+                    intent={Intent.DANGER}
+                    onClick={this.handleDeleteOpen}
+                  />
+                </div>
+              ) : null}
+              <Button
+                text="View All Rack(s)"
+                onClick={(e: any) => this.getAllRacks()}
+              />
 
-            <RackSelectView submitForm={this.viewRackForm} />
-          </div>
-        ) : (
-          <Callout intent={Intent.PRIMARY}>
-            <h5>Please select a datacenter to view rack information</h5>
-          </Callout>
-        )}
+              <RackSelectView submitForm={this.viewRackForm} />
+            </div>
+          ) : (
+            <Callout intent={Intent.PRIMARY}>
+              <h5>Please select a datacenter to view rack information</h5>
+            </Callout>
+          )}
         <RackView racks={this.state.racks} loading={this.state.loading} />
       </div>
       // </div>
@@ -296,7 +296,7 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
 const mapStatetoProps = (state: any) => {
   return {
     token: state.token,
-    isAdmin: state.admin
+    isAdmin: true /* state.admin */ // TODO: REMOVE!
   };
 };
 export default connect(mapStatetoProps)(RackTab);

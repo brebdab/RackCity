@@ -16,7 +16,7 @@ interface RackSelectViewState {
   errors: Array<string>;
 }
 var console: any = {};
-console.log = function() {};
+console.log = function () { };
 
 interface RackSelectViewProps {
   token: string;
@@ -26,7 +26,7 @@ interface RackSelectViewProps {
 class RackSelectView extends React.Component<
   RackSelectViewProps & RouteComponentProps,
   RackSelectViewState
-> {
+  > {
   public state = {
     viewRange: false,
     values: {} as RackRangeFields,
@@ -63,8 +63,8 @@ class RackSelectView extends React.Component<
     const headers = getHeaders(this.props.token);
     this.props.submitForm(this.state.values, headers);
   };
-  renderRackOptions(range: boolean) {}
-  componentDidMount() {}
+  renderRackOptions(range: boolean) { }
+  componentDidMount() { }
 
   render() {
     return (
@@ -105,7 +105,7 @@ class RackSelectView extends React.Component<
 const mapStateToProps = (state: any) => {
   return {
     token: state.token,
-    isAdmin: state.admin
+    isAdmin: true /* state.admin */ // TODO: REMOVE!
   };
 };
 

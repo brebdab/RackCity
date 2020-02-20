@@ -22,7 +22,7 @@ import {
 } from "./components/fallback";
 
 var console: any = {};
-console.log = function() {};
+console.log = function () { };
 export interface AppProps {
   isAuthenticated?: boolean;
   onTryAutoSignup: any;
@@ -40,10 +40,10 @@ class App extends React.Component<AppProps> {
     return this.props.isAuthenticated ? (
       <Route {...rest} />
     ) : (
-      <Route {...rest}>
-        <Redirect to="/login" />
-      </Route>
-    );
+        <Route {...rest}>
+          <Redirect to="/login" />
+        </Route>
+      );
   };
 
   PrivateRoute = ({ path, component, ...rest }: any) => {
@@ -84,7 +84,7 @@ class App extends React.Component<AppProps> {
 
             {/* admin paths */}
             <this.AdminRoute path="/users" component={User} />
-            <this.AdminRoute path="/bulk-upload" component={BulkImport} />
+            <this.AdminRoute path="/bulk-upload/:resourceType" component={BulkImport} />
             <Route path="/*" component={NotFound} />
           </Switch>
         </div>
@@ -95,8 +95,8 @@ class App extends React.Component<AppProps> {
 
 const mapStateToProps = (state: any) => {
   return {
-    isAuthenticated: state.token !== null,
-    isAdmin: state.admin,
+    isAuthenticated: true, /*state.token !== null,*/ // TODO: REMOVE!
+    isAdmin: true, /* state.admin, */ // TODO: REMOVE!
     loading: state.loading
   };
 };

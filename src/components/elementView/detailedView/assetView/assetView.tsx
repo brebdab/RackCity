@@ -22,7 +22,6 @@ import { modifyAsset, deleteAsset } from "../../elementUtils";
 
 export interface AssetViewProps {
   token: string;
-  rid: any;
   isAdmin: boolean;
 }
 // Given an rid, will perform a GET request of that rid and display info about that instnace
@@ -54,7 +53,7 @@ interface AssetViewState {
 export class AssetView extends React.PureComponent<
   RouteComponentProps & AssetViewProps,
   AssetViewState
-> {
+  > {
   public state: AssetViewState = {
     asset: {} as AssetObject,
     isFormOpen: false,
@@ -93,6 +92,8 @@ export class AssetView extends React.PureComponent<
     );
     let params: any;
     params = this.props.match.params;
+    console.log("asset params")
+    console.log(params)
     if (Object.keys(this.state.asset).length === 0) {
       getData(params.rid, this.props.token).then(result => {
         console.log("response");
@@ -169,7 +170,6 @@ export class AssetView extends React.PureComponent<
   private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
   private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
   private handleDelete = () => {
-    console.log(this.props.rid);
 
     deleteAsset(this.state.asset!, getHeaders(this.props.token))
       .then(res => {
@@ -189,7 +189,7 @@ export class AssetView extends React.PureComponent<
 const mapStatetoProps = (state: any) => {
   return {
     token: state.token,
-    isAdmin: state.admin
+    isAdmin: true /* state.admin */ // TODO: REMOVE!
   };
 };
 

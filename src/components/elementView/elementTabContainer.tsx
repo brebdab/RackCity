@@ -27,7 +27,7 @@ export const ALL_DATACENTERS: DatacenterObject = {
 class ElementTabContainer extends React.Component<
   ElementTabContainerProps & RouteComponentProps,
   ElementTabContainerState
-> {
+  > {
   state = {
     datacenters: [],
     currDatacenter: ALL_DATACENTERS
@@ -122,7 +122,7 @@ class ElementTabContainer extends React.Component<
 
 const mapStateToProps = (state: any) => {
   return {
-    isAdmin: state.admin,
+    isAdmin: true, /*state.admin,*/ // TODO: REMOVE!
     token: state.token
   };
 };

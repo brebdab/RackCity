@@ -61,7 +61,7 @@ async function getData(modelkey: string, token: string) {
 export class ModelView extends React.PureComponent<
   RouteComponentProps & ModelViewProps,
   ModelViewState
-> {
+  > {
   public state: ModelViewState = {
     assets: [],
     model: {} as ModelObject,
@@ -216,7 +216,7 @@ export class ModelView extends React.PureComponent<
 const mapStatetoProps = (state: any) => {
   return {
     token: state.token,
-    isAdmin: state.admin
+    isAdmin: true /* state.admin */ // TODO: REMOVE!
   };
 };
 

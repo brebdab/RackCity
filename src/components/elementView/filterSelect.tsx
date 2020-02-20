@@ -21,7 +21,7 @@ import {
 } from "./elementUtils";
 
 var console: any = {};
-console.log = function() {};
+console.log = function () { };
 
 interface FilterSelectProps {
   token: string;
@@ -32,7 +32,7 @@ interface FilterSelectProps {
 class FilterSelect extends React.Component<
   FilterSelectProps & RouteComponentProps,
   IFilter
-> {
+  > {
   state = {
     id: "",
     field: "",
@@ -211,7 +211,7 @@ const FieldSuggest = Suggest.ofType<string>();
 const mapStateToProps = (state: any) => {
   return {
     token: state.token,
-    isAdmin: state.admin
+    isAdmin: true /* state.admin */ // TODO: REMOVE!
   };
 };
 
