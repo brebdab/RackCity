@@ -51,8 +51,10 @@ import {
   deleteDatacenter,
   modifyModel,
   modifyAsset,
-  modifyDatacenter
+  modifyDatacenter,
+  ElementTableOpenAlert
 } from "./elementUtils";
+import { ELEVATION_0 } from "@blueprintjs/core/lib/esm/common/classes";
 
 interface ElementTableState {
   items: Array<ElementObjectType>;
@@ -66,7 +68,8 @@ interface ElementTableState {
   fields: Array<string>;
   isEditFormOpen: boolean;
   editFormValues: ElementObjectType;
-  isDeleteOpen: boolean;
+  openAlert: ElementTableOpenAlert;
+  selected_userid?: string;
 }
 // var console: any = {};
 // console.log = function() {};
@@ -113,7 +116,8 @@ class ElementTable extends React.Component<
     fields: [],
     isEditFormOpen: false,
     editFormValues: {} as ElementObjectType,
-    isDeleteOpen: false
+    openAlert: ElementTableOpenAlert.NONE,
+    selected_userid: undefined
   };
 
   //PAGING LOGIC
@@ -607,8 +611,8 @@ class ElementTable extends React.Component<
 
   //DELETE LOGIC
 
-  private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
-  private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
+  private handleDeleteOpen = () => this.setState({ openAlert: ElementTableOpenAlert.DELETE });
+  private handleDeleteCancel = () => this.setState({ openAlert: ElementTableOpenAlert.NONE });
 
   private handleDelete = () => {
     console.log("DELETE");
@@ -650,16 +654,27 @@ class ElementTable extends React.Component<
   };
 
   //ADMIN BUTTON LOGIC
-  handleRevokeAdminButtonClick = (userid: string) => {
+  //REVOKE ADMIN BUTTON LOGIC
+  private handleRevokeAdminOpen = (userid: string) => this.setState({
+    openAlert: ElementTableOpenAlert.REVOKE_ADMIN,
+    selected_userid: userid
+  });
+  private handleRevokeAdminCancel = () => this.setState({
+    openAlert: ElementTableOpenAlert.NONE,
+    selected_userid: undefined
+  });
+  private handleRevokeAdmin = () => {
+    this.setState({ openAlert: ElementTableOpenAlert.NONE })
     const headers = getHeaders(this.props.token)
     axios
-      .post(API_ROOT + "api/users/revoke-admin", { "id": userid }, headers)
+      .post(API_ROOT + "api/users/revoke-admin", { "id": this.state.selected_userid }, headers)
       .then(res => {
         console.log(res.data)
         this.addToast({
           message: res.data.success_message,
           intent: Intent.PRIMARY
         });
+        this.updateTableData()
       })
       .catch(err => {
         console.log(err);
@@ -670,16 +685,27 @@ class ElementTable extends React.Component<
       });
   };
 
-  handleGrantAdminButtonClick = (userid: string) => {
+  //GRANT ADMIN BUTTON LOGIC
+  private handleGrantAdminOpen = (userid: string) => this.setState({
+    openAlert: ElementTableOpenAlert.GRANT_ADMIN,
+    selected_userid: userid
+  });
+  private handleGrantAdminCancel = () => this.setState({
+    openAlert: ElementTableOpenAlert.NONE,
+    selected_userid: undefined
+  });
+  private handleGrantAdmin = () => {
+    this.setState({ openAlert: ElementTableOpenAlert.NONE })
     const headers = getHeaders(this.props.token)
     axios
-      .post(API_ROOT + "api/users/grant-admin", { "id": userid }, headers)
+      .post(API_ROOT + "api/users/grant-admin", { "id": this.state.selected_userid }, headers)
       .then(res => {
         console.log(res.data)
         this.addToast({
           message: res.data.success_message,
           intent: Intent.PRIMARY
         });
+        this.updateTableData()
       })
       .catch(err => {
         console.log(err);
@@ -700,7 +726,7 @@ class ElementTable extends React.Component<
           icon="user"
           minimal
           text="Remove Admin"
-          onClick={() => this.handleRevokeAdminButtonClick(item.id)}
+          onClick={() => this.handleRevokeAdminOpen(item.id)}
         />
       );
     } else {
@@ -712,7 +738,7 @@ class ElementTable extends React.Component<
           icon="user"
           minimal
           text="Add Admin "
-          onClick={() => this.handleGrantAdminButtonClick(item.id)}
+          onClick={() => this.handleGrantAdminOpen(item.id)}
         />
       );
     }
@@ -741,11 +767,31 @@ class ElementTable extends React.Component<
           cancelButtonText="Cancel"
           confirmButtonText="Delete"
           intent="danger"
-          isOpen={this.state.isDeleteOpen}
+          isOpen={this.state.openAlert === ElementTableOpenAlert.DELETE}
           onCancel={this.handleDeleteCancel}
           onConfirm={this.handleDelete}
         >
           <p>Are you sure you want to delete?</p>
+        </Alert>
+        <Alert
+          cancelButtonText="Cancel"
+          confirmButtonText="Confirm"
+          intent="danger"
+          isOpen={this.state.openAlert === ElementTableOpenAlert.GRANT_ADMIN}
+          onCancel={this.handleGrantAdminCancel}
+          onConfirm={this.handleGrantAdmin}
+        >
+          <p>Are you sure you want to grant admin permission to this user?</p>
+        </Alert>
+        <Alert
+          cancelButtonText="Cancel"
+          confirmButtonText="Confirm"
+          intent="danger"
+          isOpen={this.state.openAlert === ElementTableOpenAlert.REVOKE_ADMIN}
+          onCancel={this.handleRevokeAdminCancel}
+          onConfirm={this.handleRevokeAdmin}
+        >
+          <p>Are you sure you want to revoke admin permission from this user?</p>
         </Alert>
         <Toaster
           autoFocus={false}
