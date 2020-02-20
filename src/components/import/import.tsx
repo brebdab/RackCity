@@ -1,4 +1,4 @@
-import { Classes, AnchorButton, Alert, Dialog, Tag, Overlay, Spinner } from "@blueprintjs/core";
+import { Classes, AnchorButton, Alert, Dialog, Tag, Overlay, Spinner, Button, ButtonGroup } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
@@ -33,7 +33,8 @@ interface AlertState {
   addedAssets?: number,
   uploading: boolean,
   uploadType: string,
-  notify: boolean
+  notify: boolean,
+  assetUploadType: string
 }
 
 interface AssetInfoObject {
@@ -58,12 +59,14 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
     loadedAssets: [],
     uploading: false,
     uploadType: "",
-    notify: false
+    notify: false,
+    assetUploadType: "assets"
   };
 
   render() {
     let params: any;
     params = this.props.match.params;
+    const resourceType: string = params.resourceType;
     console.log("params")
     console.log(params)
     //const resourceType = params.resourceType;
@@ -75,15 +78,38 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
           <Spinner size={Spinner.SIZE_LARGE} />
         </Overlay>
         <div className={"row"}>
-          <div className={"column-third-left-import"}>
+          <div className={"column-third-import"}>
+            <ButtonGroup
+              fill={false}
+              style={{ marginTop: 5 }}
+            >
+              <Button
+                active={this.state.assetUploadType === "assets"}
+                text="assets"
+                onClick={(e: any) => {
+                  this.setState({ assetUploadType: "assets" })
+                }
+                }
+              />
+              <Button
+                active={this.state.assetUploadType === "network connections"}
+                text="network connections"
+                onClick={(e: any) => {
+                  this.setState({ assetUploadType: "network connections" })
+                }
+                }
+              />
+            </ButtonGroup>
           </div>
+        </div>
+        <div className={"row"}>
           <div className={"column-third-import"}>
             <p> </p>
             <AnchorButton
               large={true}
               intent="primary"
               icon="import"
-              text={"Select " + params.resourceType + " file"}
+              text={"Select " + resourceType === "models" ? resourceType : this.state.assetUploadType + " file"}
               onClick={this.handleFilepickerOpen}
             />
             <Alert
@@ -99,12 +125,8 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
             </Alert>
             <p> </p>
           </div>
-          <div className={"column-third-right-import"}>
-          </div>
         </div>
         <div className={"row"}>
-          <div className={"column-third-left-import"}>
-          </div>
           <div className={"column-third-import"}>
             <AnchorButton
               large={true}
@@ -115,20 +137,14 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
               onClick={this.handleUpload}
             />
           </div>
-          <div className={"column-third-right-import"}>
-          </div>
         </div>
         <div className={"row"}>
-          <div className={"column-third-left-import"}>
-          </div>
           <div className={"column-third-import"}>
             <Tag
               minimal
             >
               <p>Selected file: {this.state.selectedFile === undefined ? "none" : this.state.selectedFile.name}</p>
             </Tag>
-          </div>
-          <div className={"column-third-right-import"}>
           </div>
         </div>
         <div>
@@ -151,7 +167,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
           </Dialog>
         </div>
         <Instructions />
-      </div>
+      </div >
     )
   }
 
