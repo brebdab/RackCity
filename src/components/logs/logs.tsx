@@ -43,6 +43,10 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
         }
     }
 
+    private handleSort() {
+        console.log("sorting lmao")
+    }
+
     public render() {
         if (!this.state.state_loaded) {
             getLogs(this.props.token).then(result => {
@@ -58,6 +62,19 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
         return (
             <div className={Classes.DARK + " log-view"}>
                 <h1>System Logs</h1>
+                <div className={Classes.DARK + " bp3-input-group .modifier"}>
+                    <span className="bp3-icon bp3-icon-search"></span>
+                    <input
+                        className="bp3-input .modifier"
+                        type="search"
+                        placeholder="Search logs by username, asset number, or asset hostname"
+                        dir="auto"
+                    />
+                    <button
+                        className="bp3-button bp3-minimal bp3-intent-primary bp3-icon-arrow-right .modifier"
+                        onClick={() => this.handleSort()}
+                    ></button>
+                </div>
                 <Pre>
                     {this.state.logs.map(log => this.getLinkedLog(log))}
                 </Pre>
