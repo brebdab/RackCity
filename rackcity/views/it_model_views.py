@@ -1,4 +1,4 @@
-from rest_framework.parsers import JSONParser
+from rest_framework.parsers import JSONParser, FileUploadParser, MultiPartParser
 from django.http import HttpResponse, JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
 from rackcity.models import ITModel, Asset
@@ -298,13 +298,14 @@ def model_bulk_upload(request):
     """
     Bulk upload many models to add or modify
     """
-    data = JSONParser().parse(request)
-    if 'import_csv' not in data:
+    print(request)
+    data = MultiPartParser().parse(request)  # it seems like this is failing
+    if 'file' not in data:
         return JsonResponse(
-            {"failure_message": "Bulk upload request should have a parameter 'import_csv'"},
+            {"failure_message": "Bulk upload request should have a parameter 'file'"},
             status=HTTPStatus.BAD_REQUEST
         )
-    csv_string = StringIO(data['import_csv'])
+    csv_string = data['file']
     csvReader = csv.DictReader(csv_string)
     expected_fields = BulkITModelSerializer.Meta.fields
     given_fields = csvReader.fieldnames

@@ -234,54 +234,54 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
     /* Serialize to JSON */
     this.setState({ loadedAssets: undefined });
     if (this.state.selectedFile !== undefined) {
-      parse(this.state.selectedFile).then((res: any) => {
-        const fields = ["vendor", "model_number", "height", "display_color", "ethernet_ports", "power_ports", "cpu", "memory", "storage", "comment"]
-        var keys = res.split(/\r\n/)[0].split(",");
-        if (keys.length > fields.length) {
-          alert("ERROR: Too many columns in file")
-          return
-        } else if (keys.length < fields.length) {
-          alert("ERROR: Not enough columns in file")
-          return
-        } else {
-          for (var i = 0; i < keys.length; i++) {
-            if (!fields.includes(keys[i])) {
-              alert("ERROR: File contains badly formatted header: key: " + keys[i])
-              return
-            }
-          }
-        }
-        c2j({
-          noheader: false,
-          output: "json"
-        }).fromString(res).then((csvRow: Array<any>) => {
-          for (var i = 0; i < csvRow.length; i++) {
-            /* This next block is just to fix field names from the csv format to our backend format */
-            const model: ModelObjectOld = {
-              vendor: csvRow[i].vendor,
-              model_number: csvRow[i].model_number,
-              height: csvRow[i].height,
-              display_color: csvRow[i].display_color,
-              num_ethernet_ports: csvRow[i].ethernet_ports,
-              num_power_ports: csvRow[i].power_ports,
-              cpu: csvRow[i].cpu,
-              memory_gb: csvRow[i].memory,
-              storage: csvRow[i].storage,
-              comment: csvRow[i].comment,
-              id: csvRow[i].id
-            };
-            csvRow[i] = model;
-          }
-          /* set state variable to JSON array with proper field names */
-          this.setState({
-            loadedModels: csvRow
-          })
-          /* Now make API request with JSON as header */
-          console.log(this.state.loadedModels)
-        })
-      }, err => {
-        alert(err.response.data.failure_message)
-      })
+      // parse(this.state.selectedFile).then((res: any) => {
+      //   const fields = ["vendor", "model_number", "height", "display_color", "ethernet_ports", "power_ports", "cpu", "memory", "storage", "comment"]
+      //   var keys = res.split(/\r\n/)[0].split(",");
+      //   if (keys.length > fields.length) {
+      //     alert("ERROR: Too many columns in file")
+      //     return
+      //   } else if (keys.length < fields.length) {
+      //     alert("ERROR: Not enough columns in file")
+      //     return
+      //   } else {
+      //     for (var i = 0; i < keys.length; i++) {
+      //       if (!fields.includes(keys[i])) {
+      //         alert("ERROR: File contains badly formatted header: key: " + keys[i])
+      //         return
+      //       }
+      //     }
+      //   }
+      //   c2j({
+      //     noheader: false,
+      //     output: "json"
+      //   }).fromString(res).then((csvRow: Array<any>) => {
+      //     for (var i = 0; i < csvRow.length; i++) {
+      //       /* This next block is just to fix field names from the csv format to our backend format */
+      //       const model: ModelObjectOld = {
+      //         vendor: csvRow[i].vendor,
+      //         model_number: csvRow[i].model_number,
+      //         height: csvRow[i].height,
+      //         display_color: csvRow[i].display_color,
+      //         num_ethernet_ports: csvRow[i].ethernet_ports,
+      //         num_power_ports: csvRow[i].power_ports,
+      //         cpu: csvRow[i].cpu,
+      //         memory_gb: csvRow[i].memory,
+      //         storage: csvRow[i].storage,
+      //         comment: csvRow[i].comment,
+      //         id: csvRow[i].id
+      //       };
+      //       csvRow[i] = model;
+      //     }
+      //     /* set state variable to JSON array with proper field names */
+      //     this.setState({
+      //       loadedModels: csvRow
+      //     })
+      //     /* Now make API request with JSON as header */
+      //     console.log(this.state.loadedModels)
+      //   })
+      // }, err => {
+      //   alert(err.response.data.failure_message)
+      // })
       // alert("Models have been loaded to browser, proceed to upload");
       this.setState({ uploadModelIsOpen: false });
     } else {
@@ -290,9 +290,9 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
   };
 
   private handleUpload = () => {
-    if (this.state.loadedModels !== undefined) {
+    if (/*this.state.loadedModels*/this.state.selectedFile !== undefined) {
       this.setState({ uploading: true })
-      uploadBulk({ models: this.state.loadedModels }, this.props.token, "models").then(res => {
+      uploadBulk(this.state.selectedFile, this.props.token, "models").then(res => {
         if (res.modifications.length !== 0) {
           this.setState({
             modelAlterationsIsOpen: true,
@@ -309,9 +309,9 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
         this.setState({ uploading: false })
         alert(err.response.data.failure_message)
       })
-    } else if (this.state.loadedAssets !== undefined) {
+    } else if (this.state.selectedFile !== undefined) {
       this.setState({ uploading: true })
-      uploadBulk({ assets: this.state.loadedAssets }, this.props.token, "assets").then(res => {
+      uploadBulk(this.state.selectedFile, this.props.token, "assets").then(res => {
         if (res.modifications.length !== 0) {
           this.setState({
             assetAlterationsIsOpen: true,
@@ -348,17 +348,20 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
 }
 
 
-async function uploadBulk(modelList: any, token: string, type: string) {
-  console.log(modelList)
+async function uploadBulk(file: File, token: string, type: string) {
+  //console.log(modelList)
   console.log(API_ROOT + "api/" + type + "/bulk-upload");
   console.log(token)
   const headers = {
     headers: {
-      Authorization: "Token " + token
+      Authorization: "Token " + token,
+      'Content-Type': 'multipart/form-data'
     }
   };
+  const formData = new FormData();
+  formData.append('file', file)
   return await axios
-    .post(API_ROOT + "api/" + type + "/bulk-upload", modelList, headers)
+    .post(API_ROOT + "api/" + type + "/bulk-upload", formData, headers)
     .then(res => {
       console.log(res.data)
       const data = res.data;
