@@ -9,6 +9,7 @@ import {
   isDatacenterObject,
   DatacenterObject
 } from "../utils/utils";
+import { ALL_DATACENTERS } from "../components/elementView/elementTabContainer";
 import RackSelectView from "../components/elementView/rackSelectView";
 import AssetForm from "./assetForm";
 import ModelForm from "./modelForm";
@@ -53,7 +54,12 @@ class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
         ) : null}
         {this.props.elementName === ElementType.ASSET ? (
           <AssetForm
-            {...this.props}
+            datacenters={this.props.datacenters ? this.props.datacenters : []}
+            currDatacenter={
+              this.props.currDatacenter
+                ? this.props.currDatacenter
+                : ALL_DATACENTERS
+            }
             type={FormTypes.CREATE}
             submitForm={this.props.submitForm}
             initialValues={

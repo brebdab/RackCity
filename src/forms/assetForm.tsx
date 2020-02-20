@@ -34,7 +34,9 @@ import {
   PowerSide,
   RackObject,
   ShallowAssetObject,
-  ElementType
+  ElementType,
+  NetworkConnection,
+  isAssetObject
 } from "../utils/utils";
 import Field from "./field";
 import "./forms.scss";
@@ -56,6 +58,7 @@ import {
   renderAssetItem,
   filterAsset
 } from "./formUtils";
+import { hostname } from "os";
 
 //TO DO : add validation of types!!!
 
@@ -64,8 +67,8 @@ export interface AssetFormProps {
   type: FormTypes;
   initialValues?: AssetObject;
   submitForm(Asset: ShallowAssetObject, headers: any): Promise<any> | void;
-  datacenters?: Array<DatacenterObject>;
-  currDatacenter?: DatacenterObject;
+  datacenters: Array<DatacenterObject>;
+  currDatacenter: DatacenterObject;
 }
 interface AssetFormState {
   values: AssetObject;
@@ -77,7 +80,7 @@ interface AssetFormState {
   power_ports: PowerPortAvailability;
   power_ports_default: { [port: string]: boolean };
   assets: Array<AssetObject>;
-  currAsset: AssetObject;
+  networkConnectedHostnames: { [port: string]: string };
 }
 // var console: any = {};
 // console.log = function() {};
@@ -109,14 +112,13 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   public state = {
     values: this.initialState,
     currDatacenter:
-      this.props.currDatacenter === ALL_DATACENTERS
+      this.initialState.rack? this.initialState.rack.datacenter : (this.props.currDatacenter === ALL_DATACENTERS
         ? undefined
-        : this.props.currDatacenter,
+        : this.props.currDatacenter),
     racks: [],
     models: [],
     errors: [],
     users: [],
-    currAsset: {} as AssetObject,
     assets: [],
     //TODO, call endpoint, don't hard code
     power_ports: {
@@ -125,7 +127,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       right_suggest: "12",
       right_available: ["1", "2", "12", "13"]
     },
-    power_ports_default: {} as { [port: string]: boolean }
+    power_ports_default: {} as { [port: string]: boolean },
+    networkConnectedHostnames: {} as { [port: string]: string }
   };
   headers = {
     headers: {
@@ -168,6 +171,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
   componentDidMount() {
     this.setPowerPortInputState();
+    this.setInitialNetworkConnectedAssets();
     let values = this.state.values;
     if (values && !this.props.initialValues) {
       values = updateObject(values, {
@@ -263,7 +267,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       });
   };
   getRacks = (datacenter: DatacenterObject) => {
-
     const config = {
       headers: {
         Authorization: "Token " + this.props.token
@@ -456,11 +459,10 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       );
       const port_fields = [];
       for (let i = 1; i <= num_power_ports; i++) {
-        console.log(this.state.power_ports_default[i]);
         port_fields.push(
           <div className="power-form-container">
             <div>
-              <i>Power Port{i}</i>
+              <i>Power Port: {i}</i>
 
               {i === 1 || i === 2 ? (
                 <div>
@@ -574,6 +576,108 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       return port_fields;
     }
   };
+
+  getValidDatacenters() {
+    return this.props.datacenters.filter(
+      datacenter => datacenter !== ALL_DATACENTERS
+    );
+  }
+
+  handleDatacenterSelect(datacenter: DatacenterObject) {
+    console.log("SELECTER DATACENTER", datacenter);
+    this.setState({
+      currDatacenter: datacenter
+    });
+    this.getAssetsWithHostname(datacenter);
+    this.getRacks(datacenter);
+  }
+  handleNetworkConnectionSelection(
+    source_port: string,
+    destination_port: string
+  ) {
+    const networkConnection: NetworkConnection = {
+      source_port,
+      destination_hostname: this.state.networkConnectedHostnames[source_port],
+      destination_port
+    };
+    let modification = false;
+    let networkConnections: Array<NetworkConnection> = [];
+    if (this.state.values.network_connections) {
+      networkConnections = this.state.values.network_connections.slice();
+
+      networkConnections = networkConnections.map(
+        (connection: NetworkConnection) => {
+          if (connection.source_port === source_port) {
+            modification = true;
+            return networkConnection;
+          } else {
+            return connection;
+          }
+        }
+      );
+    } else {
+      networkConnections = [] as Array<NetworkConnection>;
+    }
+    if (!modification) {
+      networkConnections.push(networkConnection);
+    }
+    this.setState({
+      values: updateObject(this.state.values, {
+        network_connections: networkConnections
+      })
+    });
+    console.log("UPDSTED NETWORK CONNECTIONS", networkConnections);
+  }
+  getSelectedPort = (source_port: string) => {
+    console.log(source_port, this.state.values);
+    if (this.state.values.network_connections) {
+      const connection = this.state.values.network_connections.find(
+        (connection: NetworkConnection) =>
+          connection.source_port === source_port
+      );
+      if (connection) {
+        console.log("found port", connection);
+        return connection.destination_port;
+      }
+    }
+  };
+  setInitialNetworkConnectedAssets() {
+    if (this.props.initialValues) {
+      let networkConnectedHostnames = this.state.networkConnectedHostnames;
+      this.state.values.network_connections.forEach(
+        (connection: NetworkConnection) => {
+          networkConnectedHostnames[connection.source_port] =
+            connection.destination_hostname;
+        }
+      );
+      console.log(this.state.values.network_connections);
+    }
+  }
+
+  updateNetworkConnectedAssets(source_port: string, asset: AssetObject) {
+    const networkConnectedHostnames = this.state.networkConnectedHostnames;
+    networkConnectedHostnames[source_port] = asset.hostname!;
+    this.setState({
+      networkConnectedHostnames
+    });
+    console.log("ASSETS", networkConnectedHostnames);
+  }
+
+  getAssetObjectFromHostname(hostname: string): AssetObject | void {
+    return this.state.assets.find(
+      (asset: AssetObject) => asset.hostname === hostname
+    );
+  }
+
+  getPortsFromHostname(hostname: string) {
+    const asset = this.getAssetObjectFromHostname(hostname);
+    if (isAssetObject(asset)) {
+      return asset.model.network_ports ? asset.model.network_ports : [];
+    } else {
+      return [];
+    }
+  }
+
   render() {
     console.log(
       "CURR_STATE",
@@ -617,18 +721,9 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                 popoverClassName: "dropdown",
                 usePortal: true
               }}
-              items={
-                this.props.datacenters
-                  ? this.props.datacenters
-                  : [ALL_DATACENTERS]
-              }
+              items={this.getValidDatacenters()}
               onItemSelect={(datacenter: DatacenterObject) => {
-                console.log(datacenter);
-                this.getAssetsWithHostname(datacenter);
-                this.getRacks(datacenter);
-                this.setState({
-                  currDatacenter: datacenter
-                });
+                this.handleDatacenterSelect(datacenter);
               }}
               itemRenderer={renderDatacenterItem}
               itemPredicate={filterDatacenter}
@@ -643,7 +738,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                 text={
                   this.state.currDatacenter && this.state.currDatacenter.name
                     ? this.state.currDatacenter.name
-                    : "Select a datacenter"
+                    : "Select a Datacenter"
                 }
               />
             </DatacenterSelect>
@@ -678,132 +773,177 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                 />
               </RackSelect>
             </FormGroup>
-          </Collapse>
-          <FormGroup label="Rack position (required)" inline={false}>
-            <Field
-              field="rack_position"
-              placeholder="rack_position"
-              value={values.rack_position}
-              onChange={this.handleChange}
-            />
-          </FormGroup>
-
-          <FormGroup label="Model (required)" inline={false}>
-            <ModelSelect
-              className="select"
-              popoverProps={{
-                minimal: true,
-                popoverClassName: "dropdown",
-                usePortal: true
-              }}
-              items={this.state.models}
-              onItemSelect={(model: ModelObject) =>
-                this.setState({
-                  values: updateObject(values, { model: model })
-                })
-              }
-              itemRenderer={renderModelItem}
-              itemPredicate={filterModel}
-              noResults={<MenuItem disabled={true} text="No results." />}
-            >
-              <Button
-                rightIcon="caret-down"
-                text={
-                  this.state.values.model
-                    ? this.state.values.model.vendor +
-                      " " +
-                      this.state.values.model.model_number
-                    : "Select a model"
-                }
+            <FormGroup label="Rack position (required)" inline={false}>
+              <Field
+                field="rack_position"
+                placeholder="rack_position"
+                value={values.rack_position}
+                onChange={this.handleChange}
               />
-            </ModelSelect>
-          </FormGroup>
-          <Collapse
-            isOpen={
-              values.model &&
-              values.model.network_ports &&
-              values.model.network_ports.length !== 0
-            }
-          >
-            {!(
-              values.model &&
-              values.model.network_ports &&
-              values.model.network_ports.length !== 0
-            ) ? null : (
-              <FormGroup label="Network Connections" inline={false}>
-                <table className="port-table">
-                  <tbody>
-                    {values.model.network_ports.map((port, index) => {
-                      return (
-                        <tr>
-                          <td>{port}</td>
-                          <td>
-                            <InputGroup
-                              value={values.mac_addresses[port]}
-                              type="string"
-                              className="network-name"
-                              onChange={(e: any) => {
-                                const mac_addresses = values.mac_addresses;
-                                mac_addresses[port] = e.currentTarget.value;
+            </FormGroup>
 
-                                this.setState({
-                                  values: updateObject(this.state.values, {
-                                    mac_addresses
-                                  })
-                                });
-                              }}
-                            />
-                            <AssetSelect
-                              className="select"
-                              popoverProps={{
-                                minimal: true,
-                                popoverClassName: "dropdown",
-                                usePortal: true
-                              }}
-                              items={this.state.assets}
-                              onItemSelect={(asset: AssetObject) =>
-                                this.setState({
-                                  currAsset: asset
+            <FormGroup label="Model (required)" inline={false}>
+              <ModelSelect
+                className="select"
+                popoverProps={{
+                  minimal: true,
+                  popoverClassName: "dropdown",
+                  usePortal: true
+                }}
+                items={this.state.models}
+                onItemSelect={(model: ModelObject) =>
+                  this.setState({
+                    values: updateObject(values, { model: model })
+                  })
+                }
+                itemRenderer={renderModelItem}
+                itemPredicate={filterModel}
+                noResults={<MenuItem disabled={true} text="No results." />}
+              >
+                <Button
+                  rightIcon="caret-down"
+                  text={
+                    this.state.values.model
+                      ? this.state.values.model.vendor +
+                        " " +
+                        this.state.values.model.model_number
+                      : "Select a model"
+                  }
+                />
+              </ModelSelect>
+            </FormGroup>
+            <Collapse
+              isOpen={
+                values.model &&
+                values.model.network_ports &&
+                values.model.network_ports.length !== 0
+              }
+            >
+              {!(
+                values.model &&
+                values.model.network_ports &&
+                values.model.network_ports.length !== 0
+              ) ? null : (
+                <FormGroup label="Network Ports" inline={false}>
+                  {values.model.network_ports.map((port, index) => {
+                    return (
+                      <div className="power-form-container">
+                        <i>{"Network Port: " + port}</i>
+                        <FormGroup label="Mac Address " inline={false}>
+                          <InputGroup
+                            value={values.mac_addresses[port]}
+                            type="string"
+                            className="network-name"
+                            onChange={(e: any) => {
+                              const mac_addresses = values.mac_addresses;
+                              mac_addresses[port] = e.currentTarget.value;
+
+                              this.setState({
+                                values: updateObject(this.state.values, {
+                                  mac_addresses
                                 })
+                              });
+                            }}
+                          />
+                        </FormGroup>
+                        <FormGroup
+                          label="Add Network Connection"
+                          inline={false}
+                        >
+                          <AssetSelect
+                            className="select"
+                            popoverProps={{
+                              minimal: true,
+                              popoverClassName: "dropdown",
+                              usePortal: true
+                            }}
+                            items={this.state.assets}
+                            onItemSelect={(asset: AssetObject) => {
+                              this.updateNetworkConnectedAssets(port, asset);
+                            }}
+                            itemRenderer={renderAssetItem}
+                            itemPredicate={filterAsset}
+                            noResults={
+                              <MenuItem disabled={true} text="No results." />
+                            }
+                          >
+                            <Button
+                              rightIcon="caret-down"
+                              text={
+                                this.state.networkConnectedHostnames[port]
+                                  ? this.state.networkConnectedHostnames[port]
+                                  : "Select Asset"
                               }
-                              itemRenderer={renderAssetItem}
-                              itemPredicate={filterAsset}
-                              noResults={
-                                <MenuItem disabled={true} text="No results." />
-                              }
-                            >
-                              <Button
-                                rightIcon="caret-down"
-                                text={
-                                  this.state.currAsset.hostname
-                                    ? this.state.currAsset.hostname
-                                    : "Select Asset"
-                                }
-                              />
-                            </AssetSelect>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </FormGroup>
-            )}
-          </Collapse>
+                            />
+                          </AssetSelect>
 
-          <Collapse
-            isOpen={
-              this.state.values.model &&
-              !isNullOrUndefined(this.state.values.model.num_power_ports)
-            }
-          >
-            {this.state.values.model &&
-            this.state.values.model.num_power_ports &&
-            parseInt(this.state.values.model.num_power_ports, 10) > 0 ? (
-              <FormGroup label="Power Connections " inline={false}>
-                {this.getPowerPortFields()}
-              </FormGroup>
-            ) : null}
+                          <StringSelect
+                            popoverProps={{
+                              minimal: true,
+                              popoverClassName: "dropdown",
+                              usePortal: true
+                            }}
+                            disabled={
+                              this.state.networkConnectedHostnames[port]
+                                ? false
+                                : true
+                            }
+                            items={
+                              this.state.networkConnectedHostnames[port]
+                                ? this.getPortsFromHostname(
+                                    this.state.networkConnectedHostnames[port]
+                                  )
+                                : []
+                            }
+                            onItemSelect={(dest_port: string) => {
+                              this.handleNetworkConnectionSelection(
+                                port,
+                                dest_port
+                              );
+                            }}
+                            // createNewItemRenderer={renderCreateItemOption}
+                            itemRenderer={renderStringItem}
+                            itemPredicate={filterString}
+                            noResults={
+                              <MenuItem disabled={true} text="No results." />
+                            }
+                          >
+                            <Button
+                              disabled={
+                                this.state.networkConnectedHostnames[port]
+                                  ? false
+                                  : true
+                              }
+                              rightIcon="caret-down"
+                              text={
+                                this.getSelectedPort(port)
+                                  ? this.getSelectedPort(port)
+                                  : "Select Port"
+                              }
+                            />
+                          </StringSelect>
+                        </FormGroup>
+                      </div>
+                    );
+                  })}
+                </FormGroup>
+              )}
+            </Collapse>
+
+            <Collapse
+              isOpen={
+                this.state.values.model &&
+                !isNullOrUndefined(this.state.values.model.num_power_ports)
+              }
+            >
+              {this.state.values.model &&
+              this.state.values.model.num_power_ports &&
+              parseInt(this.state.values.model.num_power_ports, 10) > 0 ? (
+                <FormGroup label="Power Connections " inline={false}>
+                  {this.getPowerPortFields()}
+                </FormGroup>
+              ) : null}
+            </Collapse>
           </Collapse>
 
           <FormGroup label="Owner" inline={false}>
