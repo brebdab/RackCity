@@ -58,5 +58,6 @@ from .datacenter_views import (
 from .pdu_views import (
     power_status,
     power_on,
-    power_off
+    power_off,
+    power_cycle
 )
