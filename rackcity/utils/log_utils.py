@@ -81,7 +81,7 @@ def log_delete(user, element_type, element_name):
         element_name + ":",
         user.username,
         Action.DELETE.value,
-        element_type,
+        element_type.value,
         element_name
     ])
     log = Log(
