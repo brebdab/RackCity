@@ -16,7 +16,8 @@ from rackcity.api.serializers import (
     BulkNetworkPortSerializer,
     ITModelSerializer,
     RackSerializer,
-    normalize_bulk_asset_data
+    normalize_bulk_asset_data,
+    normalize_bulk_network_data,
 )
 from rackcity.utils.log_utils import (
     log_action,
@@ -975,15 +976,53 @@ def network_bulk_upload(request):
     )
 
 
-# @api_view(['POST'])
-    # @permission_classes([IsAdminUser])
-    # def network_bulk_approve(request):
-    # recieve json
-    # for each row, get the asset
-    # translate the row into the mac address form
-    # and the connection form
-    # save the mac address
-    # save the connection
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def network_bulk_approve(request):
+    data = JSONParser().parse(request)
+    if 'approved_modifications' not in data:
+        return JsonResponse(
+            {"failure_message": "Bulk approve request should have a parameter 'approved_modifications'"},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    network_datas = data['approved_modifications']
+    warning_message = ""
+    for network_data in network_datas:
+        source_asset = Asset.objects.get(
+            hostname=network_data['src_hostname']
+        )
+        source_asset_data = RecursiveAssetSerializer(source_asset).data
+        mac_address, network_connection = normalize_bulk_network_data(
+            network_data
+        )
+        source_asset_data['mac_addresses'] = mac_address
+        source_asset_data['network_connections'] = network_connection
+        try:
+            save_mac_addresses(
+                asset_data=source_asset_data,
+                asset_id=source_asset.id
+            )
+        except MacAddressException as error:
+            warning_message += "Some mac addresses couldn't be saved. " + \
+                str(error)
+        try:
+            save_network_connections(
+                asset_data=source_asset_data,
+                asset_id=source_asset.id
+            )
+        except NetworkConnectionException as error:
+            warning_message += "Some network connections couldn't be saved. " + \
+                str(error)
+    if warning_message:
+        return JsonResponse(
+            {"warning_message": warning_message},
+            status=HTTPStatus.OK,
+        )
+    else:
+        return JsonResponse(
+            {"success_message": "All network connections created succesfully."},
+            status=HTTPStatus.OK,
+        )
 
 
 @api_view(['POST'])

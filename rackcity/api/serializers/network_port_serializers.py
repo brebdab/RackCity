@@ -37,3 +37,17 @@ class BulkNetworkPortSerializer(serializers.ModelSerializer):
             'dest_hostname',
             'dest_port',
         )
+
+
+def normalize_bulk_network_data(bulk_network_data):
+    mac_address = {
+        bulk_network_data['src_port']: bulk_network_data['src_mac']
+    }
+    network_connection = [
+        {
+            "source_port": bulk_network_data['src_port'],
+            "destination_hostname": bulk_network_data['dest_hostname'],
+            "destination_port": bulk_network_data['dest_port']
+        }
+    ]
+    return mac_address, network_connection

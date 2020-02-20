@@ -14,4 +14,7 @@ from .it_model_serializers import (
 )
 from .rack_serializers import RackSerializer
 from .user_serializers import RegisterNameSerializer, UserSerializer
-from .network_port_serializers import BulkNetworkPortSerializer
+from .network_port_serializers import (
+    BulkNetworkPortSerializer,
+    normalize_bulk_network_data
+)
