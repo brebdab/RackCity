@@ -19,7 +19,13 @@ def rack_get_all(request):
     """
     List all racks
     """
-    racks = Rack.objects.all()
+    datacenter_id = request.query_params.get('datacenter')
+    if not datacenter_id:
+        return JsonResponse(
+            {"failure_message": "Query parameter 'datacenter' is required"},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    racks = Rack.objects.filter(datacenter=datacenter_id)
     return get_rack_detailed_response(racks)
 
 
@@ -156,6 +162,12 @@ def rack_delete(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def rack_summary(request):
-    racks = Rack.objects.all()
+    datacenter_id = request.query_params.get('datacenter')
+    if not datacenter_id:
+        return JsonResponse(
+            {"failure_message": "Query parameter 'datacenter' is required"},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    racks = Rack.objects.filter(datacenter=datacenter_id)
     serializer = RackSerializer(racks, many=True)
     return JsonResponse({"racks": serializer.data}, status=HTTPStatus.OK)
