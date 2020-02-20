@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from http import HTTPStatus
 import math
 from rackcity.api.serializers import RegisterNameSerializer, UserSerializer
+from rackcity.utils.user_utils import is_netid_user
 import requests
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import permission_classes, api_view
@@ -150,6 +151,14 @@ def user_delete(request):
             {
                 "failure_message": "User does not exist.",
                 "errors": "No existing user with id="+str(data['id'])+".",
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    if is_netid_user(existing_user):
+        return JsonResponse(
+            {
+                "failure_message":
+                "Duke SSO authenticated users cannot be deleted."
             },
             status=HTTPStatus.BAD_REQUEST,
         )
