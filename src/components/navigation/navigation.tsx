@@ -53,7 +53,7 @@ export class Navigation extends React.Component<NavigationPropsAll, NavigationSt
   }
 
   public render() {
-    if (!this.state.username) {
+    if (this.props.isAuthenticated && !this.state.username) {
       this.getUsername(this.props.token)
     }
 
