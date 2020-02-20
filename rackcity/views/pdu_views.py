@@ -64,26 +64,7 @@ def power_on(request):
     """
     Turn on power to specified port
     """
-    data = JSONParser().parse(request)
-    failure_message = ""
-    try:
-        asset = Asset.objects.get(id=data['id'])
-    except Asset.DoesNotExist:
-        failure_message = "No model exists with id=" + str(id)
-        return JsonResponse(
-            {"failure_message": failure_message},
-            status=HTTPStatus.BAD_REQUEST,
-        )
-    asset_port_number = data['power_port_number']
-    power_connections = serialize_power_connections(asset)
-    pdu_port = power_connections[asset_port_number]['port_number']
-    pdu = 'hpdu-rtp1-' + str(asset.rack.row_letter)
-    if (asset.rack.rack_num / 10 < 1):
-        pdu = pdu + "0"
-    pdu = pdu + str(asset.rack.rack_num) + str(power_connections[asset_port_number]['left_right'])
-
-    requests.post(pdu_url + toggle_pdu, {"pdu": pdu, "port": pdu_port, "v": "on"})
-
+    toggle_power(request, "on")
     return HttpResponse(status=HTTPStatus.OK)
 
 
@@ -93,6 +74,25 @@ def power_off(request):
     """
     Turn on power to specified port
     """
+    toggle_power(request, "off")
+    return HttpResponse(status=HTTPStatus.OK)
+
+
+def regex_power_status(html, port):
+    status_pattern = re.search('<td>'+str(port)+'<td><span.+(ON|OFF)', html)
+    return status_pattern.groups(1)
+
+
+def get_pdu_status_ext(asset, left_right):
+    rack_str = str(asset.rack.row_letter)
+    if (asset.rack.rack_num / 10 < 1):
+        rack_str = rack_str + "0"
+    rack_str = rack_str + str(asset.rack.rack_num)
+
+    return rack_str + left_right
+
+
+def toggle_power(request, goal_state):
     data = JSONParser().parse(request)
     failure_message = ""
     try:
@@ -106,16 +106,9 @@ def power_off(request):
     asset_port_number = data['power_port_number']
     power_connections = serialize_power_connections(asset)
     pdu_port = power_connections[asset_port_number]['port_number']
-    pdu = 'hpdu-rtp1-' + str(asset.rack.row_letter)
-    if (asset.rack.rack_num / 10 < 1):
-        pdu = pdu + "0"
-    pdu = pdu + str(asset.rack.rack_num) + str(power_connections[asset_port_number]['left_right'])
-
-    requests.post(pdu_url + toggle_pdu, {"pdu": pdu, "port": pdu_port, "v": "off"})
-
-    return HttpResponse(status=HTTPStatus.OK)
-
-
-def regex_power_status(html, port):
-    status_pattern = re.search('<td>'+str(port)+'<td><span.+(ON|OFF)', html)
-    return status_pattern.groups(1)
+    pdu = 'hpdu-rtp1-' + get_pdu_status_ext(asset, str(power_connections[asset_port_number]['left_right']))
+    requests.post(
+        pdu_url + toggle_pdu,
+        {"pdu": pdu, "port": pdu_port, "v": goal_state}
+    )
+    return
