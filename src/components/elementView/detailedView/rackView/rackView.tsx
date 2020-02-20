@@ -15,7 +15,7 @@ import { RouteComponentProps, withRouter } from "react-router";
 import { API_ROOT } from "../../../../utils/api-config";
 import {
   getHeaders,
-  AssetObjectOld,
+  AssetObject,
   RackResponseObject
 } from "../../../../utils/utils";
 import "./rackView.scss";
@@ -40,7 +40,7 @@ export interface RackViewState {
 class RackView extends React.PureComponent<
   RouteComponentProps & RackViewProps,
   RackViewState
-  > {
+> {
   state = { isDeleteOpen: false };
   private getRows(rackResp: RackResponseObject) {
     let rows = [];
@@ -48,10 +48,7 @@ class RackView extends React.PureComponent<
     let unit = 1;
     let currHeight = 0;
     const { height } = rackResp.rack;
-    let assets: Array<AssetObjectOld> = Object.assign(
-      [],
-      rackResp.assets
-    );
+    let assets: Array<AssetObject> = Object.assign([], rackResp.assets);
     // console.log(row_letter, rack_num, height);
     // console.log("rackResp", rackResp);
     // console.log("initial", assets, rackResp.assets);
@@ -190,12 +187,12 @@ class RackView extends React.PureComponent<
             size={Spinner.SIZE_STANDARD}
           />
         ) : (
-            <div className="rack-container">
-              {racks.map((rackResp: RackResponseObject) => {
-                return (
-                  <span>
-                    <div className="rack-parent">
-                      {/* <div className="delete-rack">
+          <div className="rack-container">
+            {racks.map((rackResp: RackResponseObject) => {
+              return (
+                <span>
+                  <div className="rack-parent">
+                    {/* <div className="delete-rack">
                     <AnchorButton
                       minimal
                       intent="danger"
@@ -204,49 +201,49 @@ class RackView extends React.PureComponent<
                       onClick={this.handleDeleteOpen}
                     />
                   </div> */}
-                      <Alert
-                        cancelButtonText="Cancel"
-                        confirmButtonText="Delete"
-                        intent="danger"
-                        isOpen={this.state.isDeleteOpen}
-                        onCancel={this.handleDeleteCancel}
-                        onConfirm={() =>
-                          this.handleDelete(
-                            rackResp.rack.row_letter,
-                            rackResp.rack.rack_num
-                          )
-                        }
-                      >
-                        {" "}
-                        <p>Are you sure you want to delete?</p>
-                      </Alert>
-                      <div className={Classes.DARK + " rack"}>
-                        <table className=" bp3-html-table bp3-interactive rack-table">
-                          <thead>
-                            <tr>
-                              <th className=" cell header">
-                                Rack {rackResp.rack.row_letter}
-                                {rackResp.rack.rack_num}
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody>{this.getRows(rackResp)}</tbody>
-                        </table>
-                        <table className="bp3-html-table loc-table">
-                          <thead>
-                            <tr>
-                              <th className=" cell header"> (U)</th>
-                            </tr>
-                          </thead>
-                          <tbody>{this.getUnitRows(rackResp)}</tbody>
-                        </table>
-                      </div>
+                    <Alert
+                      cancelButtonText="Cancel"
+                      confirmButtonText="Delete"
+                      intent="danger"
+                      isOpen={this.state.isDeleteOpen}
+                      onCancel={this.handleDeleteCancel}
+                      onConfirm={() =>
+                        this.handleDelete(
+                          rackResp.rack.row_letter,
+                          rackResp.rack.rack_num
+                        )
+                      }
+                    >
+                      {" "}
+                      <p>Are you sure you want to delete?</p>
+                    </Alert>
+                    <div className={Classes.DARK + " rack"}>
+                      <table className=" bp3-html-table bp3-interactive rack-table">
+                        <thead>
+                          <tr>
+                            <th className=" cell header">
+                              Rack {rackResp.rack.row_letter}
+                              {rackResp.rack.rack_num}
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>{this.getRows(rackResp)}</tbody>
+                      </table>
+                      <table className="bp3-html-table loc-table">
+                        <thead>
+                          <tr>
+                            <th className=" cell header"> (U)</th>
+                          </tr>
+                        </thead>
+                        <tbody>{this.getUnitRows(rackResp)}</tbody>
+                      </table>
                     </div>
-                  </span>
-                );
-              })}
-            </div>
-          )}
+                  </div>
+                </span>
+              );
+            })}
+          </div>
+        )}
       </div>
     );
   }

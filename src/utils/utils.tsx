@@ -31,7 +31,7 @@ export interface AssetObject extends ParentAssetObject {
 }
 
 interface ParentAssetObject extends ElementObject {
-  hostname: string;
+  hostname?: string;
   rack_position: string;
   mac_addresses: { [port: string]: string };
   network_connections: Array<NetworkConnection>;
@@ -182,6 +182,7 @@ export type ElementObjectType =
   | ModelObject
   | RackObject
   | AssetObjectOld
+  | AssetObject
   | ShallowAssetObject
   | UserInfoObject
   | DatacenterObject;
@@ -190,6 +191,7 @@ export type FormObjectType =
   | ModelObjectOld
   | RackObject
   | AssetObjectOld
+  | AssetObject
   | DatacenterObject
   | RackRangeFields
   | ShallowAssetObject

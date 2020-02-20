@@ -97,7 +97,7 @@ export const filterAsset: ItemPredicate<AssetObject> = (
   _index,
   exactMatch
 ) => {
-  const normalizedHostname = asset.hostname.toLowerCase();
+  const normalizedHostname = asset.hostname!.toLowerCase();
 
   const normalizedQuery = query.toLowerCase();
 
@@ -216,14 +216,17 @@ export const renderAssetItem: ItemRenderer<AssetObject> = (
     return null;
   }
   const text = asset.hostname;
-  return (
-    <MenuItem
-      active={modifiers.active}
-      label={asset.hostname}
-      text={highlightText(text, query)}
-      onClick={handleClick}
-    />
-  );
+  if (text) {
+    return (
+      <MenuItem
+        active={modifiers.active}
+        label={asset.hostname}
+        text={highlightText(text, query)}
+        onClick={handleClick}
+      />
+    );
+  }
+  return null;
 };
 export const renderCreateItemOption = (
   query: string,

@@ -16,7 +16,12 @@ import * as React from "react";
 import { connect } from "react-redux";
 import { isNullOrUndefined } from "util";
 import { ALL_DATACENTERS } from "../components/elementView/elementTabContainer";
-import { PagingTypes } from "../components/elementView/elementUtils";
+import {
+  PagingTypes,
+  FilterTypes,
+  TextFilterTypes,
+  IFilter
+} from "../components/elementView/elementUtils";
 import { updateObject } from "../store/utility";
 import { API_ROOT } from "../utils/api-config";
 import {
@@ -28,7 +33,8 @@ import {
   PowerPortAvailability,
   PowerSide,
   RackObject,
-  ShallowAssetObject
+  ShallowAssetObject,
+  ElementType
 } from "../utils/utils";
 import Field from "./field";
 import "./forms.scss";
@@ -46,8 +52,11 @@ import {
   renderRackItem,
   renderStringItem,
   StringSelect,
-  AssetSelect
+  AssetSelect,
+  renderAssetItem,
+  filterAsset
 } from "./formUtils";
+import { allSettled } from "q";
 
 //TO DO : add validation of types!!!
 
@@ -69,6 +78,7 @@ interface AssetFormState {
   power_ports: PowerPortAvailability;
   power_ports_default: { [port: string]: boolean };
   assets: Array<AssetObject>;
+  currAsset: AssetObject;
 }
 // var console: any = {};
 // console.log = function() {};
@@ -99,12 +109,16 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
   public state = {
     values: this.initialState,
-    currDatacenter: this.props.currDatacenter,
+    currDatacenter:
+      this.props.currDatacenter === ALL_DATACENTERS
+        ? undefined
+        : this.props.currDatacenter,
     racks: [],
     models: [],
     errors: [],
     users: [],
-    currModel: {} as ModelObject,
+    currAsset: {} as AssetObject,
+    assets: [],
     //TODO, call endpoint, don't hard code
     power_ports: {
       left_suggest: "12",
@@ -143,6 +157,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
       params: params
     };
+
     return axios
       .post(API_ROOT + "api/" + path + "/get-many", body, config)
       .then(res => {
@@ -151,6 +166,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         return items;
       });
   }
+
   componentDidMount() {
     this.setPowerPortInputState();
     let values = this.state.values;
@@ -163,6 +179,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     this.setState({
       values
     });
+    this.getAssetsWithHostname(this.state.currDatacenter!);
   }
   private mapAssetObject = (asset: AssetObject): ShallowAssetObject => {
     console.log(asset);
@@ -233,8 +250,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       })
     });
   };
-  getUsers = (token: string) => {
-    const headers = getHeaders(token);
+  getUsers = () => {
+    const headers = getHeaders(this.props.token);
     axios
       .get(API_ROOT + "api/usernames", headers)
       .then(res => {
@@ -260,6 +277,57 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       .catch(err => {
         console.log(err);
       });
+  };
+  getModels = () => {
+    this.getElementData(
+      ElementType.MODEL,
+      1,
+      PagingTypes.ALL,
+      {},
+      this.props.token
+    ).then(res => {
+      this.setState({
+        models: res as Array<ModelObject>
+      });
+    });
+  };
+  getAssetsWithHostname = (currDatacenter: DatacenterObject) => {
+    console.log("getting assets from this datacenter", currDatacenter);
+    let body = {};
+    const filters: Array<IFilter> = [];
+    let datacenterName;
+    if (currDatacenter) {
+      if (currDatacenter.name !== ALL_DATACENTERS.name) {
+        datacenterName = currDatacenter.name;
+        filters.push({
+          id: "",
+          field: "rack__datacenter__name",
+          filter_type: FilterTypes.TEXT,
+          filter: { value: datacenterName, match_type: TextFilterTypes.EXACT }
+        });
+        body = updateObject(body, { filters });
+      }
+    }
+    console.log(body);
+    this.getElementData(
+      ElementType.ASSET,
+      1,
+      PagingTypes.ALL,
+      body,
+      this.props.token
+    ).then(res => {
+      let assetsWithHostname: Array<AssetObject> = res as Array<AssetObject>;
+      assetsWithHostname = assetsWithHostname.filter(asset => {
+        if (!asset.hostname || asset.hostname === "") {
+          return false;
+        }
+        return true;
+      });
+      console.log("NEW ASSERTS", assetsWithHostname, body);
+      this.setState({
+        assets: assetsWithHostname as Array<AssetObject>
+      });
+    });
   };
   getPowerButtonStatus = (side: PowerSide, port: number) => {
     console.log(this.state.values.power_connections);
@@ -481,6 +549,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                   noResults={<MenuItem disabled={true} text="No results." />}
                 >
                   <Button
+                    disabled={this.shouldDisablePowerPort(i)}
                     rightIcon="caret-down"
                     text={
                       this.state.values.power_connections[i] &&
@@ -499,26 +568,22 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     }
   };
   render() {
-    console.log("CURR_STATE", this.state.values);
+    console.log(
+      "CURR_STATE",
+      this.state.currDatacenter,
+      this.props.currDatacenter
+    );
     if (this.state.models.length === 0) {
-      this.getElementData(
-        "models",
-        1,
-        PagingTypes.ALL,
-        {},
-        this.props.token
-      ).then(res => {
-        this.setState({
-          models: res as Array<ModelObject>
-        });
-      });
+      this.getModels();
     }
+
     if (this.state.racks.length === 0) {
       this.getRacks(this.props.token);
     }
     if (this.state.users.length === 0) {
-      this.getUsers(this.props.token);
+      this.getUsers();
     }
+
     const { values } = this.state;
     return (
       <div className={Classes.DARK + " login-container"}>
@@ -536,6 +601,10 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
           </FormGroup>
           <FormGroup label="Datacenter (required)" inline={false}>
             <DatacenterSelect
+              disabled={
+                this.props.currDatacenter &&
+                this.props.currDatacenter !== ALL_DATACENTERS
+              }
               popoverProps={{
                 minimal: true,
                 popoverClassName: "dropdown",
@@ -547,6 +616,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                   : [ALL_DATACENTERS]
               }
               onItemSelect={(datacenter: DatacenterObject) => {
+                console.log(datacenter);
+                this.getAssetsWithHostname(datacenter);
                 this.setState({
                   currDatacenter: datacenter
                 });
@@ -557,9 +628,13 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
             >
               <Button
                 rightIcon="caret-down"
+                disabled={
+                  this.props.currDatacenter &&
+                  this.props.currDatacenter !== ALL_DATACENTERS
+                }
                 text={
-                  this.props.currDatacenter && this.props.currDatacenter.name
-                    ? this.props.currDatacenter.name
+                  this.state.currDatacenter && this.state.currDatacenter.name
+                    ? this.state.currDatacenter.name
                     : "Select a datacenter"
                 }
               />
@@ -677,14 +752,14 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                                 popoverClassName: "dropdown",
                                 usePortal: true
                               }}
-                              items={this.state.}
-                              onItemSelect={(model: ModelObject) =>
+                              items={this.state.assets}
+                              onItemSelect={(asset: AssetObject) =>
                                 this.setState({
-                                  values: updateObject(values, { model: model })
+                                  currAsset: asset
                                 })
                               }
-                              itemRenderer={renderModelItem}
-                              itemPredicate={filterModel}
+                              itemRenderer={renderAssetItem}
+                              itemPredicate={filterAsset}
                               noResults={
                                 <MenuItem disabled={true} text="No results." />
                               }
@@ -692,14 +767,12 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                               <Button
                                 rightIcon="caret-down"
                                 text={
-                                  this.state.values.model
-                                    ? this.state.values.model.vendor +
-                                      " " +
-                                      this.state.values.model.model_number
-                                    : "Select a model"
+                                  this.state.currAsset.hostname
+                                    ? this.state.currAsset.hostname
+                                    : "Select Asset"
                                 }
                               />
-                            </ModelSelect>
+                            </AssetSelect>
                           </td>
                         </tr>
                       );
