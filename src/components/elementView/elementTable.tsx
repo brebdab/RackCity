@@ -56,7 +56,6 @@ import {
 interface ElementTableState {
   items: Array<ElementObjectType>;
   sort_by: Array<ITableSort>;
-  // sort_by_id: Array<ITableSort & IDragAndDrop>;
   filters: Array<IFilter>;
   sorted_cols: Array<string>;
   curr_page: number;
@@ -275,10 +274,8 @@ class ElementTable extends React.Component<
   };
   removeFilterItem = (filter: IFilter) => {
     const filters = this.state.filters.filter(item => {
-      // console.log(item.filter, filter.filter);
       return JSON.stringify(item) !== JSON.stringify(filter);
     });
-    // console.log(filters);
     this.setState({
       filters
     });
@@ -298,7 +295,6 @@ class ElementTable extends React.Component<
       });
       this.setState({
         sort_by: sorts
-        // sort_by_id: sorts_id
       });
     } else {
       ascending = true;
@@ -406,10 +402,6 @@ class ElementTable extends React.Component<
     }
   };
   updateSortData = (items: Array<ITableSort>) => {
-    // const sorts_body = items.map(item => {
-    //   const { field, ascending } = item;
-    //   return { field, ascending };
-    // });
     console.log("detected new sorts ", items);
     if (this.props.getData) {
       this.props.getData!(
@@ -464,10 +456,6 @@ class ElementTable extends React.Component<
     }
   }
   updateTableData = () => {
-    // const sorts_body = this.state.sort_by.map(item => {
-    //   const { field, ascending } = item;
-    //   return { field, ascending };
-    // });
     if (this.props.getData) {
       this.props
         .getData(
@@ -503,18 +491,7 @@ class ElementTable extends React.Component<
         });
     }
   };
-  // getFilterFieldNames = () => {
-  //   let newFields: Array<string> = this.state.fields.map((field: string) => {
-  //     if (field === "datacenter") {
-  //       return "rack__datacenter__name";
-  //     } else {
-  //       return field;
-  //     }
-  //   });
 
-  //   console.log(newFields);
-  //   return newFields;
-  // };
   setFieldNamesFromData = (items: Array<ElementObjectType>) => {
     let fields: Array<string> = [];
     Object.keys(items[0]).forEach((col: string) => {
@@ -549,7 +526,6 @@ class ElementTable extends React.Component<
 
   //EDIT AND DELETE LOGIC
   handleInlineButtonClick = (data: ElementObjectType) => {
-    // const headers = getHeaders(this.props.token);
     if (isAssetObject(data)) {
       this.setState({
         editFormValues: data
@@ -612,7 +588,6 @@ class ElementTable extends React.Component<
 
   getSubmitFormFunction = (type: FormTypes) => {
     let submitForm;
-    // if (type === FormTypes.MODIFY) {
     submitForm = this.handleEditFormSubmit;
     return submitForm;
   };
