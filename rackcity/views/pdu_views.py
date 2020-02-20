@@ -12,8 +12,8 @@ from http import HTTPStatus
 import re
 import requests
 
-pdu_url = 'http://hyposoft-mgt.colab.duke.edu:8005/'  # Need to specify rack + side in request, e.g. for A1 left, use A01L
-get_pdu = 'pdu.php?pdu=hpdu-rtp1-'
+pdu_url = 'http://hyposoft-mgt.colab.duke.edu:8005/'
+get_pdu = 'pdu.php?pdu=hpdu-rtp1-'  # Need to specify rack + side in request, e.g. for A1 left, use A01L
 toggle_pdu = 'power.php'
 
 
@@ -54,6 +54,10 @@ def power_status(request, id):
     )
 
 
+"""
+TODO check that power is in opposite state when performing a toggle
+TODO validate if ports exist/are connected
+"""
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
 def power_on(request):
