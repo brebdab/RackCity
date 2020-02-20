@@ -1,6 +1,6 @@
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
-import { Classes, Pre } from "@blueprintjs/core";
+import { Classes, Pre, Tooltip, Position } from "@blueprintjs/core";
 import { RouteComponentProps } from "react-router";
 import "../elementView//elementView.scss";
 import { connect } from "react-redux";
@@ -34,12 +34,24 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
     private getLinkedLog(log: LogEntry) {
         if (log.related_asset) {
             const id = log.related_asset.toString()
-            return <div><a href={"/assets/" + id}>{log.log_content}</a></div>
+            return <div>
+                <Tooltip content="Click to see related asset" position={Position.TOP}>
+                    <a className="log-link" href={"/assets/" + id}>{log.log_content}</a>
+                </Tooltip>
+            </div>
         } else if (log.related_model) {
             const id = log.related_model.toString()
-            return <div><a href={"/models/" + id}>{log.log_content}</a></div>
+            return <div>
+                <Tooltip content="Click to see related model" position={Position.TOP}>
+                    <a className="log-link" href={"/models/" + id}>{log.log_content}</a>
+                </Tooltip>
+            </div >
         } else {
-            return <div>{log.log_content}</div>
+            return <div>
+                <Tooltip content="Related object no longer exists" position={Position.TOP}>
+                    <a className="log-link">{log.log_content}</a>
+                </Tooltip>
+            </div>
         }
     }
 
