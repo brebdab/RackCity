@@ -47,6 +47,10 @@ export class Navigation extends React.Component<NavigationPropsAll, NavigationSt
         console.log(err);
       });
   }
+  clearUsernameAndLogout() {
+    this.setState({ username: undefined })
+    this.props.logout()
+  }
 
   public render() {
     if (!this.state.username) {
@@ -93,11 +97,13 @@ export class Navigation extends React.Component<NavigationPropsAll, NavigationSt
             <NavbarGroup align={Alignment.RIGHT}>
               {this.props.isAuthenticated ? (
                 <div>
-                  <AnchorButton
-                    className="nav-bar-non-button nav-bar-button"
-                    text={"Welcome, " + this.state.username}
-                    minimal
-                  />
+                  {this.state.username ? (
+                    <AnchorButton
+                      className="nav-bar-non-button nav-bar-button"
+                      text={"Welcome, " + this.state.username}
+                      minimal
+                    />
+                  ) : null}
                   {this.props.isAdmin ? (
                     <AnchorButton
                       icon="user"
@@ -107,7 +113,7 @@ export class Navigation extends React.Component<NavigationPropsAll, NavigationSt
                     />
                   ) : null}
                   <AnchorButton
-                    onClick={this.props.logout}
+                    onClick={() => this.clearUsernameAndLogout()}
                     className="nav-bar-button"
                     icon="user"
                     text="Logout"
