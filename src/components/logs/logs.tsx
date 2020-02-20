@@ -1,11 +1,9 @@
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
 import { Classes, Pre } from "@blueprintjs/core";
-import ElementTab from "../elementView/elementTab";
 import { RouteComponentProps } from "react-router";
 import "../elementView//elementView.scss";
 import { connect } from "react-redux";
-import { ElementType } from "../../utils/utils";
 import { API_ROOT } from "../../utils/api-config";
 import axios from "axios";
 import "./logs.scss";
@@ -24,11 +22,13 @@ interface LogsProps {
 interface LogsState {
     logs: Array<LogEntry>;
     state_loaded: boolean;
+    search_query?: string;
 }
 class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
     public state: LogsState = {
         logs: [],
-        state_loaded: false
+        state_loaded: false,
+        search_query: undefined
     };
 
     private getLinkedLog(log: LogEntry) {
@@ -43,8 +43,12 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
         }
     }
 
-    private handleSort() {
-        console.log("sorting lmao")
+    private handleSearchInputChange() {
+        console.log("searching input change")
+    }
+
+    private handleSearch() {
+        console.log("searching lmao")
     }
 
     public render() {
@@ -69,10 +73,12 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
                         type="search"
                         placeholder="Search logs by username, asset number, or asset hostname"
                         dir="auto"
+                        value=""
+                        onChange={() => this.handleSearchInputChange()}
                     />
                     <button
                         className="bp3-button bp3-minimal bp3-intent-primary bp3-icon-arrow-right .modifier"
-                        onClick={() => this.handleSort()}
+                        onClick={() => this.handleSearch()}
                     ></button>
                 </div>
                 <Pre>
