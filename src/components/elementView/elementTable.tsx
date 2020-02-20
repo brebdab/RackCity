@@ -506,7 +506,8 @@ class ElementTable extends React.Component<
         col !== "network_ports" &&
         col !== "comment" &&
         col !== "power_connections" &&
-        col !== "mac_addresses"
+        col !== "mac_addresses" &&
+        col !== "network_connections"
       ) {
         fields.push(col);
       }
