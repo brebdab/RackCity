@@ -30,11 +30,19 @@ import {
   ElementObjectType,
   ElementType,
   ModelObject,
-  DatacenterObject
+  DatacenterObject,
+  SortFilterBody
 } from "../../utils/utils";
 import ElementTable from "./elementTable";
 import "./elementView.scss";
-import { IFilter, PagingTypes } from "./elementUtils";
+import {
+  IFilter,
+  PagingTypes,
+  FilterTypes,
+  TextFilterTypes
+} from "./elementUtils";
+import { updateObject } from "../../store/utility";
+import { ALL_DATACENTERS } from "./elementTabContainer";
 
 var console: any = {};
 console.log = function() {};
@@ -114,7 +122,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     path: string,
     page: number,
     page_type: PagingTypes,
-    body: any,
+    body: SortFilterBody,
     token: string
   ): Promise<Array<ElementObjectType>> => {
     console.log(API_ROOT + "api/" + path + "/get-many");
@@ -134,8 +142,24 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
 
       params: params
     };
+    let bodyCopy = JSON.parse(JSON.stringify(body));
+    const { filters } = bodyCopy;
+    let datacenterName;
+    if (this.props.currDatacenter) {
+      if (this.props.currDatacenter.name !== ALL_DATACENTERS.name) {
+        datacenterName = this.props.currDatacenter.name;
+        filters.push({
+          id: "",
+          field: "rack__datacenter__name",
+          filter_type: FilterTypes.TEXT,
+          filter: { value: datacenterName, match_type: TextFilterTypes.EXACT }
+        });
+        bodyCopy = updateObject(bodyCopy, { filters });
+      }
+    }
+
     return axios
-      .post(API_ROOT + "api/" + path + "/get-many", body, config)
+      .post(API_ROOT + "api/" + path + "/get-many", bodyCopy, config)
       .then(res => {
         const items = res.data[path];
 
