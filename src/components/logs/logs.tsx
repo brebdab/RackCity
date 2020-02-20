@@ -31,6 +31,18 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
         state_loaded: false
     };
 
+    private getLinkedLog(log: LogEntry) {
+        if (log.related_asset) {
+            const id = log.related_asset.toString()
+            return <div><a href={"/assets/" + id}>{log.log_content}</a></div>
+        } else if (log.related_model) {
+            const id = log.related_model.toString()
+            return <div><a href={"/models/" + id}>{log.log_content}</a></div>
+        } else {
+            return <div>{log.log_content}</div>
+        }
+    }
+
     public render() {
         if (!this.state.state_loaded) {
             getLogs(this.props.token).then(result => {
@@ -47,7 +59,7 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
             <div className={Classes.DARK + " log-view"}>
                 <h1>System Logs</h1>
                 <Pre>
-                    {this.state.logs.map(log => <div>{log.log_content}</div>)}
+                    {this.state.logs.map(log => this.getLinkedLog(log))}
                 </Pre>
             </div>
         );
