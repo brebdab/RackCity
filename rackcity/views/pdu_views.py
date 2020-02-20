@@ -29,7 +29,7 @@ def power_status(request, id):
             {"failure_message": failure_message},
             status=HTTPStatus.BAD_REQUEST
         )
-    port_info = serialize_power_connections(asset)
+    power_connections = serialize_power_connections(asset)
 
     # get string parameter representing rack number (i.e. A01<L/R>)
     rack_str = str(asset.rack.row_letter)
@@ -38,13 +38,13 @@ def power_status(request, id):
     rack_str = rack_str + str(asset.rack.rack_num)
 
     power_status = dict()
-    for port in port_info:
-        html = requests.get(pdu_url + rack_str + str(port_info[port]['left_right']))
-        power_status[port] = regex_power_status(html.text, port_info[port]['port_number'])[0]
+    for power_connection in power_connections:
+        html = requests.get(pdu_url + rack_str + str(power_connections[power_connection]['left_right']))
+        power_status[power_connection] = regex_power_status(html.text, power_connections[power_connection]['port_number'])[0]
 
     return JsonResponse(
         {
-            "power_connections": port_info,
+            "power_connections": power_connections,
             "power_status": power_status
         },
         status=HTTPStatus.OK
