@@ -13,6 +13,7 @@ from rackcity.api.serializers import (
     AssetSerializer,
     RecursiveAssetSerializer,
     BulkAssetSerializer,
+    BulkNetworkPortSerializer,
     ITModelSerializer,
     RackSerializer,
     normalize_bulk_asset_data
@@ -863,7 +864,6 @@ def asset_bulk_export(request):
     List all assets in csv form, in accordance with Bulk Spec.
     """
     assets_query = Asset.objects
-
     try:
         filter_args = get_filter_arguments(request.data)
     except Exception as error:
@@ -886,6 +886,54 @@ def asset_bulk_export(request):
     serializer = BulkAssetSerializer(assets, many=True)
     csv_string = StringIO()
     fields = serializer.data[0].keys()
+    csv_writer = csv.DictWriter(csv_string, fields)
+    csv_writer.writeheader()
+    csv_writer.writerows(serializer.data)
+    return JsonResponse(
+        {"export_csv": csv_string.getvalue()},
+        status=HTTPStatus.OK,
+    )
+
+
+# @api_view(['POST'])
+# @permission_classes([IsAdminUser])
+# def network_bulk_upload(request):
+    # get the file
+    # parse to rows
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def network_bulk_export(request):
+    assets_query = Asset.objects
+    try:
+        filter_args = get_filter_arguments(request.data)
+    except Exception as error:
+        return JsonResponse(
+            {"failure_message": "Filter error: " + str(error)},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    for filter_arg in filter_args:
+        assets_query = assets_query.filter(**filter_arg)
+
+    try:
+        sort_args = get_sort_arguments(request.data)
+    except Exception as error:
+        return JsonResponse(
+            {"failure_message": "Sort error: " + str(error)},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    assets = assets_query.order_by(*sort_args)
+    all_ports = []
+    for asset in assets:
+        ports = NetworkPort.objects.filter(asset=asset)
+        for port in ports:
+            if port.asset.hostname:
+                all_ports.append(port)
+    serializer = BulkNetworkPortSerializer(all_ports, many=True)
+    csv_string = StringIO()
+    fields = BulkNetworkPortSerializer.Meta.fields
+    print(fields)
     csv_writer = csv.DictWriter(csv_string, fields)
     csv_writer.writeheader()
     csv_writer.writerows(serializer.data)
