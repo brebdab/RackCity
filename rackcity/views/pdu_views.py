@@ -13,7 +13,7 @@ import re
 import requests
 import time
 
-pdu_url = 'http://hyposoft-mgt.colab.duke.edu:8000/'
+pdu_url = 'http://hyposoft-mgt.colab.duke.edu:8005/'
 get_pdu = 'pdu.php?pdu=hpdu-rtp1-'  # Need to specify rack + side in request, e.g. for A1 left, use A01L
 toggle_pdu = 'power.php'
 
