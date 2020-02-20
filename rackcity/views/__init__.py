@@ -55,3 +55,6 @@ from .datacenter_views import (
     datacenter_page_count,
     datacenter_modify
 )
+from .pdu_views import (
+    power_status
+)
