@@ -127,7 +127,7 @@ export class ModelView extends React.PureComponent<
     console.log(this.state.assets);
     let params: any;
     params = this.props.match.params;
-    if (this.state.model === undefined) {
+    if (Object.keys(this.state.model).length === 0) {
       getData(params.rid, this.props.token).then(result => {
         console.log("result", result);
         this.setState({
@@ -137,7 +137,6 @@ export class ModelView extends React.PureComponent<
       });
     }
 
-    var data = this.state.model;
     return (
       <div className={Classes.DARK + " model-view"}>
         <Toaster
@@ -193,7 +192,7 @@ export class ModelView extends React.PureComponent<
           <Tab
             id="ModelProperties"
             title="Properties"
-            panel={<PropertiesView data={data} />}
+            panel={<PropertiesView data={this.state.model} />}
           />
           <Tab
             id="Assets"
