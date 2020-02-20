@@ -262,11 +262,19 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         console.log(err);
       });
   };
-  getRacks = (token: string) => {
-    const headers = getHeaders(token);
+  getRacks = (datacenter: DatacenterObject) => {
+
+    const config = {
+      headers: {
+        Authorization: "Token " + this.props.token
+      },
+      params: {
+        datacenter: datacenter ? datacenter.id : undefined
+      }
+    };
     console.log(API_ROOT + "api/racks/summary");
     axios
-      .get(API_ROOT + "api/racks/summary", headers)
+      .get(API_ROOT + "api/racks/summary", config)
       .then(res => {
         console.log(res.data.racks);
         this.setState({
@@ -576,9 +584,9 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       this.getModels();
     }
 
-    if (this.state.racks.length === 0) {
-      this.getRacks(this.props.token);
-    }
+    // if (this.state.racks.length === 0) {
+    //   this.getRacks(this.props.token);
+    // }
     if (this.state.users.length === 0) {
       this.getUsers();
     }
@@ -617,6 +625,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
               onItemSelect={(datacenter: DatacenterObject) => {
                 console.log(datacenter);
                 this.getAssetsWithHostname(datacenter);
+                this.getRacks(datacenter);
                 this.setState({
                   currDatacenter: datacenter
                 });
