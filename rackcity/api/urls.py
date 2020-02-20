@@ -49,5 +49,7 @@ urlpatterns = [
     path('users/pages', views.user_page_count),
     path('users/grant-admin', views.user_grant_admin),
     path('users/revoke-admin', views.user_revoke_admin),
-    path('power/get-state/<int:id>', views.power_status)
+    path('power/get-state/<int:id>', views.power_status),
+    path('power/mask-on', views.power_on),
+    path('power/mask-off', views.power_off)
 ]

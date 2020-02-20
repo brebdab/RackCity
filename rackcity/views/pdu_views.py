@@ -1,17 +1,20 @@
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from rackcity.models import (
     Asset
 )
 from rackcity.api.serializers import (
     serialize_power_connections,
 )
+from rest_framework.parsers import JSONParser
 from rest_framework.decorators import permission_classes, api_view
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from http import HTTPStatus
 import re
 import requests
 
-pdu_url = 'http://hyposoft-mgt.colab.duke.edu:8005/pdu.php?pdu=hpdu-rtp1-'  # Need to specify rack + side in request, e.g. for A1 left, use A01L
+pdu_url = 'http://hyposoft-mgt.colab.duke.edu:8005/'  # Need to specify rack + side in request, e.g. for A1 left, use A01L
+get_pdu = 'pdu.php?pdu=hpdu-rtp1-'
+toggle_pdu = 'power.php'
 
 
 @api_view(['GET'])
@@ -39,7 +42,7 @@ def power_status(request, id):
 
     power_status = dict()
     for power_connection in power_connections:
-        html = requests.get(pdu_url + rack_str + str(power_connections[power_connection]['left_right']))
+        html = requests.get(pdu_url + get_pdu + rack_str + str(power_connections[power_connection]['left_right']))
         power_status[power_connection] = regex_power_status(html.text, power_connections[power_connection]['port_number'])[0]
 
     return JsonResponse(
@@ -49,6 +52,64 @@ def power_status(request, id):
         },
         status=HTTPStatus.OK
     )
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def power_on(request):
+    """
+    Turn on power to specified port
+    """
+    data = JSONParser().parse(request)
+    failure_message = ""
+    try:
+        asset = Asset.objects.get(id=data['id'])
+    except Asset.DoesNotExist:
+        failure_message = "No model exists with id=" + str(id)
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    asset_port_number = data['power_port_number']
+    power_connections = serialize_power_connections(asset)
+    pdu_port = power_connections[asset_port_number]['port_number']
+    pdu = 'hpdu-rtp1-' + str(asset.rack.row_letter)
+    if (asset.rack.rack_num / 10 < 1):
+        pdu = pdu + "0"
+    pdu = pdu + str(asset.rack.rack_num) + str(power_connections[asset_port_number]['left_right'])
+
+    requests.post(pdu_url + toggle_pdu, {"pdu": pdu, "port": pdu_port, "v": "on"})
+
+    return HttpResponse(status=HTTPStatus.OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def power_off(request):
+    """
+    Turn on power to specified port
+    """
+    data = JSONParser().parse(request)
+    failure_message = ""
+    try:
+        asset = Asset.objects.get(id=data['id'])
+    except Asset.DoesNotExist:
+        failure_message = "No model exists with id=" + str(id)
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    asset_port_number = data['power_port_number']
+    power_connections = serialize_power_connections(asset)
+    pdu_port = power_connections[asset_port_number]['port_number']
+    pdu = 'hpdu-rtp1-' + str(asset.rack.row_letter)
+    if (asset.rack.rack_num / 10 < 1):
+        pdu = pdu + "0"
+    pdu = pdu + str(asset.rack.rack_num) + str(power_connections[asset_port_number]['left_right'])
+
+    requests.post(pdu_url + toggle_pdu, {"pdu": pdu, "port": pdu_port, "v": "off"})
+
+    return HttpResponse(status=HTTPStatus.OK)
 
 
 def regex_power_status(html, port):
