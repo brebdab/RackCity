@@ -1,4 +1,4 @@
-from rest_framework.parsers import JSONParser, FileUploadParser, MultiPartParser
+from rest_framework.parsers import JSONParser, FileUploadParser
 from django.http import HttpResponse, JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
 from rackcity.models import ITModel, Asset
