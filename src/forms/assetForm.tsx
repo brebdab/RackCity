@@ -56,7 +56,6 @@ import {
   renderAssetItem,
   filterAsset
 } from "./formUtils";
-import { allSettled } from "q";
 
 //TO DO : add validation of types!!!
 
