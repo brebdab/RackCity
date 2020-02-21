@@ -76,21 +76,18 @@ export class AssetView extends React.PureComponent<
       console.log(this.state.isFormOpen);
     });
   };
-
+  private toaster: Toaster = {} as Toaster;
   private addToast(toast: IToastProps) {
     toast.timeout = 5000;
     this.toaster.show(toast);
   }
-  private toaster: Toaster = {} as Toaster;
+
   private refHandlers = {
     toaster: (ref: Toaster) => (this.toaster = ref)
   };
 
   public render() {
-    console.log(
-      "rendering asset view",
-      Object.keys(this.state.asset).length === 0
-    );
+    console.log("rendering asset view", this.state.asset);
     let params: any;
     params = this.props.match.params;
     if (Object.keys(this.state.asset).length === 0) {
