@@ -27,6 +27,7 @@ from .asset_views import (
     asset_bulk_export,
     asset_page_count,
     asset_fields,
+    asset_number,
 )
 from .rack_views import (
     rack_get,

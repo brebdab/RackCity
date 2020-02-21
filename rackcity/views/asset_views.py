@@ -43,6 +43,7 @@ from rackcity.views.rackcity_utils import (
     NetworkConnectionException,
     close_old_connections_decorator
 )
+from rackcity.utils.asset_utils import get_asset_number
 
 
 # @close_old_connections_decorator
@@ -850,3 +851,13 @@ def asset_fields(request):
         ]},
         status=HTTPStatus.OK,
     )
+
+@api_view(['GET'])
+def asset_number(request):
+    """
+    Get a suggest asset number for Asset creation
+    """
+    return JsonResponse(
+        {"asset_number": get_asset_number()}
+    )
+    

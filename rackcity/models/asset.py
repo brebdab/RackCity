@@ -5,6 +5,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from .it_model import ITModel
 from .rack import Rack
+from rackcity.utils.asset_utils import get_asset_number
 
 
 def validate_hostname(value):
@@ -22,14 +23,6 @@ def validate_owner(value):
         raise ValidationError(
             "There is no existing user with the username " + value
         )
-
-
-def get_asset_number():
-    for asset_number in range(100000, 999999):
-        try:
-            Asset.objects.get(asset_number=asset_number)
-        except ObjectDoesNotExist:
-            return asset_number
 
 
 class Asset(models.Model):
