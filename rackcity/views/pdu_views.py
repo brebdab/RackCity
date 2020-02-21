@@ -1,4 +1,4 @@
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from rackcity.models import (
     Asset
 )
@@ -66,7 +66,18 @@ def power_on(request):
     Turn on power to specified port
     """
     data = JSONParser().parse(request)
-    failure_message = ""
+    if 'id' not in data.keys():
+        failure_message = "No asset id given"
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    elif 'power_port_number' not in data.keys():
+        failure_message = "No asset power port given"
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST
+        )
     try:
         asset = Asset.objects.get(id=data['id'])
     except Asset.DoesNotExist:
@@ -76,16 +87,25 @@ def power_on(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     power_connections = serialize_power_connections(asset)
+    if data['power_port_number'] not in power_connections:
+        failure_message = "Power port does not exist"
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST
+        )
     # Check power is off
     html = requests.get(pdu_url + get_pdu + get_pdu_status_ext(asset, str(power_connections[data['power_port_number']]['left_right'])))
     power_status = regex_power_status(html.text, power_connections[data['power_port_number']]['port_number'])[0]
     if power_status == "ON":
         return JsonResponse(
-            {"data": "Port is already on"},
+            {"warning_message": "Port is already on"},
             status=HTTPStatus.OK
         )
     toggle_power(asset, data['power_port_number'], "on")
-    return HttpResponse(status=HTTPStatus.OK)
+    return JsonResponse(
+        {"success_message": "Power successfully turned on for port " + data['power_port_number']},
+        status=HTTPStatus.OK
+    )
 
 
 @api_view(['POST'])
@@ -95,7 +115,18 @@ def power_off(request):
     Turn on power to specified port
     """
     data = JSONParser().parse(request)
-    failure_message = ""
+    if 'id' not in data.keys():
+        failure_message = "No asset id given"
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    elif 'power_port_number' not in data:
+        failure_message = "No asset power port given"
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST
+        )
     try:
         asset = Asset.objects.get(id=data['id'])
     except Asset.DoesNotExist:
@@ -105,23 +136,37 @@ def power_off(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     power_connections = serialize_power_connections(asset)
+    if data['power_port_number'] not in power_connections:
+        failure_message = "Power port does not exist"
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST
+        )
     # Check power is off
     html = requests.get(pdu_url + get_pdu + get_pdu_status_ext(asset, str(power_connections[data['power_port_number']]['left_right'])))
     power_status = regex_power_status(html.text, power_connections[data['power_port_number']]['port_number'])[0]
     if power_status == "OFF":
         return JsonResponse(
-            {"data": "Port is already off"},
+            {"warning_message": "Port is already off"},
             status=HTTPStatus.OK
         )
     toggle_power(asset, data['power_port_number'], "off")
-    return HttpResponse(status=HTTPStatus.OK)
+    return JsonResponse(
+        {"success_message": "Power successfully turned off for port " + data['power_port_number']},
+        status=HTTPStatus.OK
+    )
 
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
 def power_cycle(request):
     data = JSONParser().parse(request)
-    failure_message = ""
+    if 'id' not in data.keys():
+        failure_message = "No asset id given"
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST
+        )
     try:
         asset = Asset.objects.get(id=data['id'])
     except Asset.DoesNotExist:
@@ -136,7 +181,10 @@ def power_cycle(request):
     time.sleep(2)
     for connection in power_connections:
         toggle_power(asset, connection, "on")
-    return HttpResponse(status=HTTPStatus.OK)
+    return JsonResponse(
+        {"success_message": "Power successfully cycled, all asset power ports reset"},
+        status=HTTPStatus.OK
+    )
 
 
 def regex_power_status(html, port):
