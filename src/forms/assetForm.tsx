@@ -8,7 +8,9 @@ import {
   FormGroup,
   InputGroup,
   Intent,
-  MenuItem
+  MenuItem,
+  Tooltip,
+  Icon
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -57,8 +59,10 @@ import {
   AssetSelect,
   renderAssetItem,
   filterAsset,
-  isMacAddressValid
+  isMacAddressValid,
+  macAddressInfo
 } from "./formUtils";
+import { IconNames } from "@blueprintjs/icons";
 
 //TO DO : add validation of types!!!
 
@@ -256,11 +260,15 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         if (!isMacAddressValid(mac_address)) {
           const errors: Array<string> = this.state.errors;
           errors.push(
-            "The mac adddress: " +
+            "Mac Address " +
+              '"' +
               mac_address +
-              " for port: " +
+              '"' +
+              " for " +
+              '"' +
               port +
-              " is invalid. See tooltip for valid formats"
+              '"' +
+              " is invalid."
           );
           this.setState({
             errors
@@ -474,7 +482,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         port_fields.push(
           <div className="power-form-container">
             <div>
-              <i>Power Port: {i}</i>
+              <i className="section-title">Power Port: {i}</i>
 
               {i === 1 || i === 2 ? (
                 <div>
@@ -834,8 +842,19 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                   {values.model.network_ports.map((port, index) => {
                     return (
                       <div className="power-form-container">
-                        <i>{"Network Port: " + port}</i>
-                        <FormGroup label="Mac Address " inline={false}>
+                        <i className="section-title">
+                          {"Network Port: " + port}
+                        </i>
+                        <div>
+                          <div className="text-with-tooltip">
+                            {"Mac Address "}
+                            <Tooltip
+                              className="tooltip-icon"
+                              content={macAddressInfo}
+                            >
+                              <Icon icon={IconNames.INFO_SIGN} />
+                            </Tooltip>
+                          </div>
                           <InputGroup
                             value={values.mac_addresses[port]}
                             type="string"
@@ -851,7 +870,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                               });
                             }}
                           />
-                        </FormGroup>
+                        </div>
                         <FormGroup
                           label="Add Network Connection"
                           inline={false}
