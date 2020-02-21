@@ -801,6 +801,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
               >
                 <Button
                   rightIcon="caret-down"
+                  disabled={!isNullOrUndefined(this.initialState.model)}
+
                   text={
                     this.state.values.model
                       ? this.state.values.model.vendor +
