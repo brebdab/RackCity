@@ -925,7 +925,7 @@ class ElementTable extends React.Component<
 const mapStateToProps = (state: any) => {
   return {
     token: state.token,
-    isAdmin: true /* state.admin */ // TODO: REMOVE!
+    isAdmin: state.admin
   };
 };
 export default connect(mapStateToProps)(withRouter(ElementTable));

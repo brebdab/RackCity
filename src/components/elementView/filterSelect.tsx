@@ -211,7 +211,7 @@ const FieldSuggest = Suggest.ofType<string>();
 const mapStateToProps = (state: any) => {
   return {
     token: state.token,
-    isAdmin: true /* state.admin */ // TODO: REMOVE!
+    isAdmin: state.admin
   };
 };
 

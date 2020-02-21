@@ -331,8 +331,6 @@ def model_bulk_upload(request):
     potential_modifications = []
     models_in_import = set()
     for bulk_model_data in bulk_model_datas:
-        print("HERES A MODEL")
-        print(bulk_model_data)
         model_data = normalize_bulk_model_data(bulk_model_data)
         model_serializer = ITModelSerializer(data=model_data)
         if not model_serializer.is_valid():

@@ -22,7 +22,7 @@ class User extends React.Component<UserProps & RouteComponentProps> {
 
 const mapStateToProps = (state: any) => {
   return {
-    isAdmin: true /* state.admin */ // TODO: REMOVE!
+    isAdmin: state.admin
   };
 };
 

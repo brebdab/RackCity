@@ -71,7 +71,9 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
     console.log(params)
     //const resourceType = params.resourceType;
     //console.log("resourceType")
-    //console.log(resourceType)
+    console.log(resourceType)
+    const uploadType = resourceType === "models" ? resourceType : this.state.assetUploadType
+    const selectButtonText = "Select " + uploadType + " file"
     return (
       <div className={Classes.DARK + " import"}>
         <Overlay isOpen={this.state.uploading} className={"uploading-overlay"}>
@@ -109,7 +111,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
               large={true}
               intent="primary"
               icon="import"
-              text={"Select " + resourceType === "models" ? resourceType : this.state.assetUploadType + " file"}
+              text={selectButtonText}
               onClick={this.handleFilepickerOpen}
             />
             <Alert

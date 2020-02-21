@@ -122,7 +122,7 @@ class ElementTabContainer extends React.Component<
 
 const mapStateToProps = (state: any) => {
   return {
-    isAdmin: true, /*state.admin,*/ // TODO: REMOVE!
+    isAdmin: state.admin,
     token: state.token
   };
 };

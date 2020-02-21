@@ -296,7 +296,7 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
 const mapStatetoProps = (state: any) => {
   return {
     token: state.token,
-    isAdmin: true /* state.admin */ // TODO: REMOVE!
+    isAdmin: state.admin
   };
 };
 export default connect(mapStatetoProps)(RackTab);

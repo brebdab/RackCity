@@ -133,8 +133,8 @@ export class Navigation extends React.Component<NavigationPropsAll, NavigationSt
 
 const mapStateToProps = (state: any) => {
   return {
-    isAuthenticated: true,/*state.token !== null,*/ // TODO: REMOVE!
-    isAdmin: true, /* state.admin */ // TODO: REMOVE!
+    isAuthenticated: state.token !== null,
+    isAdmin: state.admin,
     token: state.token,
   };
 };

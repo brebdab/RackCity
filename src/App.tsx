@@ -95,8 +95,8 @@ class App extends React.Component<AppProps> {
 
 const mapStateToProps = (state: any) => {
   return {
-    isAuthenticated: true, /*state.token !== null,*/ // TODO: REMOVE!
-    isAdmin: true, /* state.admin, */ // TODO: REMOVE!
+    isAuthenticated: state.token !== null,
+    isAdmin: state.admin,
     loading: state.loading
   };
 };

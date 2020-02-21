@@ -411,7 +411,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
 const mapStateToProps = (state: any) => {
   return {
     token: state.token,
-    isAdmin: true /* state.admin */ //TODO: REMOVE!
+    isAdmin: state.admin
   };
 };
 export default connect(mapStateToProps)(ElementTab);

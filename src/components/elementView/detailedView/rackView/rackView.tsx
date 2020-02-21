@@ -244,7 +244,7 @@ class RackView extends React.PureComponent<
 const mapStatetoProps = (state: any) => {
   return {
     token: state.token,
-    isAdmin: "true" /* state.admin */ // TODO: REMOVE!
+    isAdmin: state.admin
   };
 };
 
