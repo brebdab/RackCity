@@ -49,18 +49,6 @@ class NetworkGraph extends React.Component<
       });
     }
   }
-  // componentDidUpdate() {
-  //   if (this.props.networkGraph) {
-  //     const data = {
-  //       nodes: this.getInitialNodes(),
-
-  //       links: this.props.networkGraph.links.slice()
-  //     };
-  //     this.setState({
-  //       data
-  //     });
-  //   }
-  // }
 
   // the graph configuration, you only need to pass down properties
   // that you want to override, otherwise default ones will be used
