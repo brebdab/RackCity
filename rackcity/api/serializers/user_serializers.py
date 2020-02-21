@@ -14,6 +14,8 @@ class RegisterNameSerializer(RegisterSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    is_admin = serializers.BooleanField(source='is_staff')
+
     class Meta:
         model = User
         fields = (
@@ -22,5 +24,5 @@ class UserSerializer(serializers.ModelSerializer):
             'email',
             'first_name',
             'last_name',
-            'is_staff'
+            'is_admin'
         )

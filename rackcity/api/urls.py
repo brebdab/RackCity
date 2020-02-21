@@ -42,7 +42,7 @@ urlpatterns = [
     path('datacenters/pages', views.datacenter_page_count),
     path('datacenters/modify', views.datacenter_modify),
     path('users/who-am-i', views.who_am_i),
-    path('users/get-many', views.user_list),
+    path('users/get-many', views.user_many),
     path('users/add', views.RegisterNameView.as_view()),
     path('users/delete', views.user_delete),
     path('users/netid-login', views.netid_login),

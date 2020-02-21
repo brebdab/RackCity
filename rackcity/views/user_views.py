@@ -4,6 +4,10 @@ from django.http import JsonResponse
 from http import HTTPStatus
 import math
 from rackcity.api.serializers import RegisterNameSerializer, UserSerializer
+from rackcity.views.rackcity_utils import (
+    get_filter_arguments,
+    get_sort_arguments,
+)
 from rackcity.utils.user_utils import is_netid_user
 import requests
 from rest_framework.authtoken.models import Token
@@ -68,7 +72,7 @@ def netid_login(request):
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
-def user_list(request):
+def user_many(request):
     """
     List many users. If page is not specified as a query parameter, all
     instances are returned. If page is specified as a query parameter, page
@@ -99,7 +103,28 @@ def user_list(request):
             status=HTTPStatus.BAD_REQUEST,
         )
 
-    users = User.objects.all()
+    users_query = User.objects
+
+    try:
+        filter_args = get_filter_arguments(request.data)
+    except Exception as error:
+        return JsonResponse(
+            {"failure_message": "Filter error: " + str(error)},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    for filter_arg in filter_args:
+        users_query = users_query.filter(**filter_arg)
+
+    try:
+        sort_args = get_sort_arguments(request.data)
+        if len(sort_args) == 0:
+            sort_args = ['username']
+    except Exception as error:
+        return JsonResponse(
+            {"failure_message": "Sort error: " + str(error)},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    users = users_query.order_by(*sort_args)
 
     if should_paginate:
         paginator = PageNumberPagination()

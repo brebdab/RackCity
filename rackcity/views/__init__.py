@@ -40,7 +40,7 @@ from .user_views import (
     netid_login,
     RegisterNameView,
     user_delete,
-    user_list,
+    user_many,
     user_page_count,
     usernames,
     who_am_i,
