@@ -11,7 +11,11 @@ def format_mac_address(mac_address):
     return mac_address
     
 class NetworkPort(models.Model):
-    asset = models.ForeignKey(Asset, on_delete=models.CASCADE, verbose_name="asset",)
+    asset = models.ForeignKey(
+        Asset,
+        on_delete=models.CASCADE,
+        verbose_name="asset",
+    )
     port_name = models.CharField(
         max_length=150
         # electing not to validate this as it is not user entered
@@ -23,11 +27,17 @@ class NetworkPort(models.Model):
         # force this to lowercase and make delimeters :
     )
     connected_port = models.OneToOneField(
-        "self", on_delete=models.CASCADE, null=True, blank=True,
+        'self',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
     )
 
     def create_network_connection(self, destination_port):
-        if destination_port.connected_port and destination_port.connected_port != self:
+        if (
+            destination_port.connected_port
+            and destination_port.connected_port != self
+        ):
             from rackcity.views.rackcity_utils import NetworkConnectionException
 
             raise NetworkConnectionException(
