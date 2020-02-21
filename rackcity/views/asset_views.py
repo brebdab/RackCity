@@ -5,15 +5,19 @@ from rackcity.models import (
     Rack,
     NetworkPort,
     PowerPort,
-    PDUPort
+    PDUPort,
+    Datacenter,
 )
 from django.core.exceptions import ObjectDoesNotExist
 from rackcity.api.serializers import (
     AssetSerializer,
     RecursiveAssetSerializer,
     BulkAssetSerializer,
+    BulkNetworkPortSerializer,
     ITModelSerializer,
-    RackSerializer
+    RackSerializer,
+    normalize_bulk_asset_data,
+    normalize_bulk_network_data,
 )
 from rackcity.utils.log_utils import (
     log_action,
@@ -162,7 +166,7 @@ def asset_detail(request, id):
 # @close_old_connections_decorator
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
-def asset_add(request):  # need to make network and power connections here
+def asset_add(request):
     """
     Add a new asset.
     """
@@ -386,6 +390,8 @@ def save_power_connections(asset_data, asset_id):
                     failure_message += \
                         "Power connection on port '" + \
                         port_name + \
+                        "' of asset '" + \
+                        str(asset.asset_number) + \
                         "' was not valid. "
     if failure_message:
         raise PowerConnectionException(failure_message)
@@ -394,7 +400,6 @@ def save_power_connections(asset_data, asset_id):
 # @close_old_connections_decorator
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
-# need to make network and power connections here
 def asset_modify(request):
     """
     Modify a single existing asset
@@ -464,7 +469,6 @@ def asset_modify(request):
 
     try:
         existing_asset.save()
-        # will need to save mac addresses and connections here
     except Exception as error:
         return JsonResponse(
             {"failure_message": "Invalid updates: " + str(error)},
@@ -512,7 +516,7 @@ def asset_modify(request):
 # @close_old_connections_decorator
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
-def asset_delete(request):  # need to delete network and power connections here
+def asset_delete(request):
     """
     Delete a single existing asset
     """
@@ -547,29 +551,42 @@ def asset_delete(request):  # need to delete network and power connections here
 # @close_old_connections_decorator
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
-def asset_bulk_upload(request):  # need to make network and power connections here
+def asset_bulk_upload(request):
     """
     Bulk upload many assets to add or modify
     """
     data = JSONParser().parse(request)
-    if 'assets' not in data:
+    if 'import_csv' not in data:
         return JsonResponse(
-            {"failure_message": "Bulk upload request should have a parameter 'assets'"},
+            {"failure_message": "Bulk upload request should have a parameter 'import_csv'"},
             status=HTTPStatus.BAD_REQUEST
         )
-    asset_datas = data['assets']
+    csv_string = StringIO(data['import_csv'])
+    csvReader = csv.DictReader(csv_string)
+    expected_fields = BulkAssetSerializer.Meta.fields
+    given_fields = csvReader.fieldnames
+    if (
+        len(expected_fields) != len(given_fields)  # check for repeated fields
+        or set(expected_fields) != set(given_fields)
+    ):
+        failure_message = "Please provide exactly the expected columns. " + \
+            "See in-app documentation for reference. "
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    bulk_asset_datas = []
+    for row in csvReader:
+        bulk_asset_datas.append(dict(row))
     assets_to_add = []
     potential_modifications = []
     hostnames_in_import = set()
-    for asset_data in asset_datas:
-        if (
-            'vendor' not in asset_data
-            or 'model_number' not in asset_data
-        ):
-            return JsonResponse(
-                {"failure_message": "Asset records must include 'vendor' and 'model_number'. "},
-                status=HTTPStatus.BAD_REQUEST
-            )
+    asset_numbers_in_import = set()
+    asset_datas = []
+    warning_message = ""
+    for bulk_asset_data in bulk_asset_datas:
+        asset_data = normalize_bulk_asset_data(bulk_asset_data)
+        asset_datas.append(asset_data)
         try:
             model = ITModel.objects.get(
                 vendor=asset_data['vendor'],
@@ -586,15 +603,25 @@ def asset_bulk_upload(request):  # need to make network and power connections he
         asset_data['model'] = model.id
         del asset_data['vendor']
         del asset_data['model_number']
-        if 'rack' not in asset_data:
+        try:
+            datacenter = Datacenter.objects.get(
+                abbreviation=asset_data['datacenter']
+            )
+        except ObjectDoesNotExist:
+            failure_message = "Provided datacenter doesn't exist: " + \
+                asset_data['datacenter']
             return JsonResponse(
-                {"failure_message": "Asset records must include 'rack'"},
+                {"failure_message": failure_message},
                 status=HTTPStatus.BAD_REQUEST
             )
         try:
             row_letter = asset_data['rack'][:1].upper()
             rack_num = asset_data['rack'][1:]
-            rack = Rack.objects.get(row_letter=row_letter, rack_num=rack_num)
+            rack = Rack.objects.get(
+                datacenter=datacenter,
+                row_letter=row_letter,
+                rack_num=rack_num
+            )
         except ObjectDoesNotExist:
             failure_message = "Provided rack doesn't exist: " + \
                 asset_data['rack']
@@ -607,11 +634,23 @@ def asset_bulk_upload(request):  # need to make network and power connections he
             data=asset_data)  # non-recursive to validate
         if not asset_serializer.is_valid():
             errors = asset_serializer.errors
-            if not (  # if the only error is the hostname uniqueness, that's fine - it's a modify
-                len(errors.keys()) == 1
-                and 'hostname' in errors
-                and len(errors['hostname']) == 1
-                and errors['hostname'][0].code == 'unique'
+            if not (  # if the only errors are the asset number and/or hostname uniqueness, that's fine - it's a modify
+                (
+                    len(errors.keys()) == 2  # known bug here!
+                    and 'hostname' in errors
+                    and len(errors['hostname']) == 1
+                    and errors['hostname'][0].code == 'unique'
+                    and 'asset_number' in errors
+                    and len(errors['asset_number']) == 1
+                    and errors['asset_number'][0].code == 'unique'
+                )
+                or
+                (
+                    len(errors.keys()) == 1
+                    and 'asset_number' in errors
+                    and len(errors['asset_number']) == 1
+                    and errors['asset_number'][0].code == 'unique'
+                )
             ):
                 failure_message = str(asset_serializer.errors)
                 failure_message = "At least one provided asset was not valid. "+failure_message
@@ -619,30 +658,46 @@ def asset_bulk_upload(request):  # need to make network and power connections he
                     {"failure_message": failure_message},
                     status=HTTPStatus.BAD_REQUEST
                 )
-
         # Check that all hostnames in file are case insensitive unique
-        asset_data_hostname_lower = asset_data['hostname'].lower()
-        if asset_data_hostname_lower in hostnames_in_import:
-            failure_message = "Hostname must be unique, but '" + \
-                asset_data_hostname_lower + \
-                "' appears more than once in import. "
-            return JsonResponse(
-                {"failure_message": failure_message},
-                status=HTTPStatus.BAD_REQUEST
-            )
-        else:
-            hostnames_in_import.add(asset_data_hostname_lower)
-
-        existing_asset_filtered = Asset.objects.filter(
-            hostname__iexact=asset_data['hostname'])
-        if len(existing_asset_filtered) == 1:
-            # asset with same (case insensitive) hostname already exists
-            existing_asset = existing_asset_filtered[0]
+        if asset_data['hostname']:
+            asset_data_hostname_lower = asset_data['hostname'].lower()
+            if asset_data_hostname_lower in hostnames_in_import:
+                failure_message = "Hostname must be unique, but '" + \
+                    asset_data_hostname_lower + \
+                    "' appears more than once in import. "
+                return JsonResponse(
+                    {"failure_message": failure_message},
+                    status=HTTPStatus.BAD_REQUEST
+                )
+            else:
+                hostnames_in_import.add(asset_data_hostname_lower)
+        # Check that all asset_numbers in file are unique
+        if 'asset_number' in asset_data and asset_data['asset_number']:
+            asset_number = asset_data['asset_number']
+            if asset_number in asset_numbers_in_import:
+                failure_message = "Asset number must be unique, but '" + \
+                    str(asset_number) + \
+                    "' appears more than once in import. "
+                return JsonResponse(
+                    {"failure_message": failure_message},
+                    status=HTTPStatus.BAD_REQUEST
+                )
+            else:
+                asset_numbers_in_import.add(asset_number)
+        asset_exists = False
+        if 'asset_number' in asset_data and asset_data['asset_number']:
             try:
-                validate_location_modification(
-                    asset_data, existing_asset)
+                existing_asset = Asset.objects.get(
+                    asset_number=asset_data['asset_number'])
+            except ObjectDoesNotExist:
+                pass
+            else:
+                asset_exists = True
+        if asset_exists:
+            # asset number specfies existing asset
+            try:
+                validate_location_modification(asset_data, existing_asset)
             except Exception:
-                # this could be problematic if neither hostame or asset number isn't there
                 failure_message = "Asset " + \
                     str(asset_data['asset_number']) + \
                     " would conflict location with an existing asset. "
@@ -657,7 +712,7 @@ def asset_bulk_upload(request):  # need to make network and power connections he
                 }
             )
         else:
-            # asset with this hostname does not yet exist
+            # asset number not provided or it is new
             model = ITModel.objects.get(id=asset_data['model'])
             try:
                 validate_asset_location(
@@ -667,16 +722,26 @@ def asset_bulk_upload(request):  # need to make network and power connections he
                     asset_id=None,
                 )
             except LocationException as error:
-                # this could be problematic if neither hostame or asset number isn't there
+                if 'asset_number' in asset_data and asset_data['asset_number']:
+                    asset_name = str(asset_data['asset_number'])
+                elif 'hostname' in asset_data and asset_data['hostname']:
+                    asset_name = asset_data['hostname']
+                else:
+                    asset_name = ""
                 failure_message = "Asset " + \
-                    str(asset_data['asset_number']) + \
+                    asset_name + \
                     " is invalid. " + str(error)
                 return JsonResponse(
                     {"failure_message": failure_message},
                     status=HTTPStatus.BAD_REQUEST
                 )
             else:
-                assets_to_add.append(asset_serializer)
+                assets_to_add.append(
+                    {
+                        "asset_serializer": asset_serializer,
+                        "asset_data": asset_data
+                    }
+                )
     try:
         no_infile_location_conflicts(asset_datas)
     except LocationException as error:
@@ -689,8 +754,17 @@ def asset_bulk_upload(request):  # need to make network and power connections he
     records_added = 0
     for asset_to_add in assets_to_add:
         records_added += 1
-        asset_to_add.save()
-        # will need to save mac addresses and connections here
+        asset_serializer = asset_to_add['asset_serializer']
+        asset_data = asset_to_add['asset_data']
+        asset_added = asset_serializer.save()
+        try:
+            save_power_connections(
+                asset_data=asset_data,
+                asset_id=asset_added.id
+            )
+        except PowerConnectionException as error:
+            warning_message += "Some power connections couldn't be saved. " + \
+                str(error)
     records_ignored = 0
     modifications_to_approve = []
     for potential_modification in potential_modifications:
@@ -704,6 +778,9 @@ def asset_bulk_upload(request):  # need to make network and power connections he
         existing_data = RecursiveAssetSerializer(
             potential_modification['existing_asset']
         ).data
+        # macs and connections aren't specified in this file, so ignore them
+        del existing_data['mac_addresses']
+        del existing_data['network_connections']
         if records_are_identical(existing_data, new_data):
             records_ignored += 1
         else:
@@ -717,12 +794,15 @@ def asset_bulk_upload(request):  # need to make network and power connections he
                     "modified": new_data
                 }
             )
+    response = {
+        "added": records_added,
+        "ignored": records_ignored,
+        "modifications": modifications_to_approve
+    }
+    if warning_message:
+        response['warning_message'] = warning_message
     return JsonResponse(
-        {
-            "added": records_added,
-            "ignored": records_ignored,
-            "modifications": modifications_to_approve
-        },
+        response,
         status=HTTPStatus.OK
     )
 
@@ -730,7 +810,7 @@ def asset_bulk_upload(request):  # need to make network and power connections he
 # @close_old_connections_decorator
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
-def asset_bulk_approve(request):  # need to make network and power connections here
+def asset_bulk_approve(request):
     """
     Bulk approve many assets to modify
     """
@@ -755,9 +835,26 @@ def asset_bulk_approve(request):  # need to make network and power connections h
                 value = asset_data[field]
             setattr(existing_asset, field, value)
         existing_asset.save()
+        warning_message = ""
+        try:
+            save_power_connections(
+                asset_data=asset_data,
+                asset_id=existing_asset.id
+            )
+        except PowerConnectionException as error:
+            warning_message += "Some power connections couldn't be saved. " + \
+                str(error)
     log_bulk_import(request.user, ElementType.ASSET)
-    # will need to save mac addresses and connections here
-    return HttpResponse(status=HTTPStatus.OK)
+    if warning_message:
+        return JsonResponse(
+            {"warning_message": warning_message},
+            status=HTTPStatus.OK
+        )
+    else:
+        return JsonResponse(
+            {"success_message": "Assets succesfully modified. "},
+            status=HTTPStatus.OK
+        )
 
 
 # @close_old_connections_decorator
@@ -768,7 +865,6 @@ def asset_bulk_export(request):
     List all assets in csv form, in accordance with Bulk Spec.
     """
     assets_query = Asset.objects
-
     try:
         filter_args = get_filter_arguments(request.data)
     except Exception as error:
@@ -791,6 +887,176 @@ def asset_bulk_export(request):
     serializer = BulkAssetSerializer(assets, many=True)
     csv_string = StringIO()
     fields = serializer.data[0].keys()
+    csv_writer = csv.DictWriter(csv_string, fields)
+    csv_writer.writeheader()
+    csv_writer.writerows(serializer.data)
+    return JsonResponse(
+        {"export_csv": csv_string.getvalue()},
+        status=HTTPStatus.OK,
+    )
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def network_bulk_upload(request):
+    data = JSONParser().parse(request)
+    if 'import_csv' not in data:
+        return JsonResponse(
+            {"failure_message": "Bulk upload request should have a parameter 'import_csv'"},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    csv_string = StringIO(data['import_csv'])
+    csvReader = csv.DictReader(csv_string)
+    expected_fields = BulkNetworkPortSerializer.Meta.fields
+    given_fields = csvReader.fieldnames
+    if (
+        len(expected_fields) != len(given_fields)  # check for repeated fields
+        or set(expected_fields) != set(given_fields)
+    ):
+        failure_message = "Please provide exactly the expected columns. " + \
+            "See in-app documentation for reference. "
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    bulk_network_port_datas = []
+    for row in csvReader:
+        bulk_network_port_datas.append(dict(row))
+    num_ports_ignored = 0
+    modifications_to_approve = []
+    for bulk_network_port_data in bulk_network_port_datas:
+        if (
+            'src_hostname' not in bulk_network_port_data
+            or not bulk_network_port_data['src_hostname']
+        ):
+            failure_message = "Field 'src_hostname' is required for all network imports. '"
+            return JsonResponse(
+                {"failure_message": failure_message},
+                status=HTTPStatus.BAD_REQUEST
+            )
+        if (
+            'src_port' not in bulk_network_port_data
+            or not bulk_network_port_data['src_port']
+        ):
+            failure_message = "Field 'src_port' is required for all network imports. '"
+            return JsonResponse(
+                {"failure_message": failure_message},
+                status=HTTPStatus.BAD_REQUEST
+            )
+        source_asset = Asset.objects.get(
+            hostname=bulk_network_port_data['src_hostname']
+        )
+        existing_port = NetworkPort.objects.get(
+            asset=source_asset,
+            port_name=bulk_network_port_data['src_port']
+        )
+        existing_port_serializer = BulkNetworkPortSerializer(existing_port)
+        if records_are_identical(
+            bulk_network_port_data,
+            existing_port_serializer.data
+        ):
+            num_ports_ignored += 1
+        else:
+            modifications_to_approve.append(
+                {
+                    "existing": existing_port_serializer.data,
+                    "modified": bulk_network_port_data
+                }
+            )
+    # all network connections are modifications,
+    # because bulk import can't be used to create new ports
+    response = {
+        "added": 0,
+        "ignored": num_ports_ignored,
+        "modifications": modifications_to_approve
+    }
+    return JsonResponse(
+        response,
+        status=HTTPStatus.OK
+    )
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def network_bulk_approve(request):
+    data = JSONParser().parse(request)
+    if 'approved_modifications' not in data:
+        return JsonResponse(
+            {"failure_message": "Bulk approve request should have a parameter 'approved_modifications'"},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    network_datas = data['approved_modifications']
+    warning_message = ""
+    for network_data in network_datas:
+        source_asset = Asset.objects.get(
+            hostname=network_data['src_hostname']
+        )
+        source_asset_data = RecursiveAssetSerializer(source_asset).data
+        mac_address, network_connection = normalize_bulk_network_data(
+            network_data
+        )
+        source_asset_data['mac_addresses'] = mac_address
+        source_asset_data['network_connections'] = network_connection
+        try:
+            save_mac_addresses(
+                asset_data=source_asset_data,
+                asset_id=source_asset.id
+            )
+        except MacAddressException as error:
+            warning_message += "Some mac addresses couldn't be saved. " + \
+                str(error)
+        try:
+            save_network_connections(
+                asset_data=source_asset_data,
+                asset_id=source_asset.id
+            )
+        except NetworkConnectionException as error:
+            warning_message += "Some network connections couldn't be saved. " + \
+                str(error)
+    if warning_message:
+        return JsonResponse(
+            {"warning_message": warning_message},
+            status=HTTPStatus.OK,
+        )
+    else:
+        return JsonResponse(
+            {"success_message": "All network connections created succesfully."},
+            status=HTTPStatus.OK,
+        )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def network_bulk_export(request):
+    assets_query = Asset.objects
+    try:
+        filter_args = get_filter_arguments(request.data)
+    except Exception as error:
+        return JsonResponse(
+            {"failure_message": "Filter error: " + str(error)},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    for filter_arg in filter_args:
+        assets_query = assets_query.filter(**filter_arg)
+
+    try:
+        sort_args = get_sort_arguments(request.data)
+    except Exception as error:
+        return JsonResponse(
+            {"failure_message": "Sort error: " + str(error)},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    assets = assets_query.order_by(*sort_args)
+    all_ports = []
+    for asset in assets:
+        ports = NetworkPort.objects.filter(asset=asset)
+        for port in ports:
+            if port.asset.hostname:
+                all_ports.append(port)
+    serializer = BulkNetworkPortSerializer(all_ports, many=True)
+    csv_string = StringIO()
+    fields = BulkNetworkPortSerializer.Meta.fields
+    print(fields)
     csv_writer = csv.DictWriter(csv_string, fields)
     csv_writer.writeheader()
     csv_writer.writerows(serializer.data)
