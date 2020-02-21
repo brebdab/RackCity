@@ -5,16 +5,13 @@ $row-height: 6px;
   .rack-container {
     padding-left: 20px;
     display: inline-block;
-    overflow-x: auto;
-    white-space: nowrap;
+    overflow: scroll;
+    // white-space: nowrap;
     width: 100%;
   }
+
   .rack-container span {
-    display: inline-block;
-  }
-  .rack-container span ~ span {
     padding-left: 20px;
-    display: inline-block;
   }
 }
 .rack-parent {
@@ -67,8 +64,8 @@ $row-height: 6px;
 .rack-table .cell {
   max-width: 200px;
   min-width: 200px;
-  // display: block;
-  overflow-x: auto !important;
+  display: block;
+  overflow: auto;
   position: relative !important;
   white-space: nowrap !important;
   padding-left: 0px !important;
@@ -93,8 +90,10 @@ $row-height: 6px;
 //       -1px 1px 0 #333,
 //       2px 2px 5px rgba(0,0,0,0.65);
 // }
+
 tr {
   outline: 1px solid #202b33;
+  // overflow: auto !important;
 }
 
 // .rack table {
@@ -135,12 +134,17 @@ tr {
 
 @media print {
   .rack-container {
-    display: block;
-    overflow-x: visible;
+    display: block !important;
+
+    overflow-y: visible !important;
   }
-  .rack-container span ~ span {
-    padding-left: 20px;
+
+  .rack-container span {
+    padding-left: 10px !important;
   }
+  // .rack-parent {
+  //   display: block !important;
+  // }
   .bp3-navbar {
     display: none;
   }
@@ -148,34 +152,57 @@ tr {
     display: none;
   }
 
-  @page {
-    margin: 3cm;
+  .bp3-tab-indicator-wrapper {
+    display: none;
   }
+  @page {
+    margin-top: 2cm;
+  }
+  body {
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    display: block !important;
+    height: auto !important;
+  }
+  div {
+    overflow: visible !important;
+  }
+  // .rack-table {
+  //   page-break-after: always !important;
+  // }
   // .body {
   //   background-color: white !important;
   // }
-  .rack-table .cell {
-    max-width: none !important;
-    width: fit-content !important;
+  // .rack-table .cell {
+  //   max-width: none !important;
+  //   width: fit-content !important;
 
-    text-shadow: 1px 1px 0 #333, -1px -1px 0 #333, 1px -1px 0 #333,
-      -1px 1px 0 #333 !important;
+  //   text-shadow: 1px 1px 0 #333, -1px -1px 0 #333, 1px -1px 0 #333,
+  //     -1px 1px 0 #333 !important;
 
-    -webkit-filter: drop-shadow(1px 1px 0 black) drop-shadow(-1px -1px 0 #333)
-      drop-shadow(1px -1px 0 #333) drop-shadow(-1px 1px 0 #333) !important;
-  }
+  //   -webkit-filter: drop-shadow(1px 1px 0 black) drop-shadow(-1px -1px 0 #333)
+  //     drop-shadow(1px -1px 0 #333) drop-shadow(-1px 1px 0 #333) !important;
+  // }
 
   .rack-row {
     -webkit-print-color-adjust: exact !important;
     color-adjust: exact !important;
   }
+
   .header,
   .unit {
     color: black !important;
   }
 
-  .rack-view-select {
+  // .rack-view-select {
+  //   display: none;
+  // }
+  .do-not-print {
     display: none;
+  }
+  .bp3-tab {
+    color: transparent !important;
+    max-width: 1pt;
   }
 
   .delete-rack {

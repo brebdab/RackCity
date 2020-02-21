@@ -15,8 +15,21 @@ class NetworkGraph extends React.Component<
     Sally: "1",
     Alice: "1"
   };
+  decorateGraphNodesWithInitialPositioning = (nodes: any) => {
+    return nodes.map((n: any) =>
+      Object.assign({}, n, {
+        x: n.x || Math.floor(Math.random() * 500),
+        y: n.y || Math.floor(Math.random() * 500)
+      })
+    );
+  };
   data = {
-    nodes: [{ id: "Harry" }, { id: "Sally" }, { id: "Alice" }],
+    nodes: this.decorateGraphNodesWithInitialPositioning([
+      { id: "Harry" },
+      { id: "Sally" },
+      { id: "Alice" }
+    ]),
+
     links: [
       { source: "Harry", target: "Sally" },
       { source: "Harry", target: "Alice" },
@@ -28,6 +41,7 @@ class NetworkGraph extends React.Component<
   // that you want to override, otherwise default ones will be used
   myConfig = {
     nodeHighlightBehavior: true,
+    staticGraphWithDragAndDrop: true,
     node: {
       color: "lightgreen",
       fontColor: "white",
@@ -90,24 +104,25 @@ class NetworkGraph extends React.Component<
 
   render() {
     return (
-      <Graph
-        className={Classes.DARK}
-        id="graph-id" // id is mandatory, if no id is defined rd3g will throw an error
-        data={this.data}
-        config={this.myConfig}
-        onClickNode={(nodeID: any) => {
-          this.props.onClickNode(this.asset_id[nodeID]);
-        }}
-        onRightClickNode={this.onRightClickNode}
-        onClickGraph={this.onClickGraph}
-        onClickLink={this.onClickLink}
-        onRightClickLink={this.onRightClickLink}
-        // onMouseOverNode={this.onMouseOverNode}
-        // onMouseOutNode={this.onMouseOutNode}
-        // onMouseOverLink={this.onMouseOverLink}
-        // onMouseOutLink={this.onMouseOutLink}
-        onNodePositionChange={this.onNodePositionChange}
-      />
+      <div className="graph-container">
+        <Graph
+          id="graph-id" // id is mandatory, if no id is defined rd3g will throw an error
+          data={this.data}
+          config={this.myConfig}
+          onClickNode={(nodeID: any) => {
+            this.props.onClickNode(this.asset_id[nodeID]);
+          }}
+          onRightClickNode={this.onRightClickNode}
+          onClickGraph={this.onClickGraph}
+          onClickLink={this.onClickLink}
+          onRightClickLink={this.onRightClickLink}
+          // onMouseOverNode={this.onMouseOverNode}
+          // onMouseOutNode={this.onMouseOutNode}
+          // onMouseOverLink={this.onMouseOverLink}
+          // onMouseOutLink={this.onMouseOutLink}
+          onNodePositionChange={this.onNodePositionChange}
+        />
+      </div>
     );
   }
 }

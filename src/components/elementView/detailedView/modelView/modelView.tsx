@@ -21,12 +21,12 @@ import ElementTable from "../../elementTable";
 import {
   ElementType,
   AssetObject,
-  ModelObjectOld,
-  getHeaders,
-  getFields
+  ModelObject,
+  getHeaders
 } from "../../../../utils/utils";
 import PropertiesView from "../propertiesView";
 import { FormTypes } from "../../../../forms/formUtils";
+import { modifyModel, deleteModel } from "../../elementUtils";
 
 export interface ModelViewProps {
   token: string;
@@ -34,13 +34,11 @@ export interface ModelViewProps {
   isAdmin: boolean;
 }
 
-var console: any = {};
-console.log = function () { };
+// var console: any = {};
+// console.log = function () { };
 interface ModelViewState {
-  assets: Array<AssetObject> | undefined;
-  model: ModelObjectOld | undefined;
-  columns: Array<string>;
-  fields: Array<string>;
+  assets: Array<AssetObject>;
+  model: ModelObject;
   isFormOpen: boolean;
   isDeleteOpen: boolean;
 }
@@ -63,57 +61,32 @@ async function getData(modelkey: string, token: string) {
 export class ModelView extends React.PureComponent<
   RouteComponentProps & ModelViewProps,
   ModelViewState
-  > {
+> {
   public state: ModelViewState = {
-    assets: undefined,
-    model: undefined,
+    assets: [],
+    model: {} as ModelObject,
     isFormOpen: false,
-    isDeleteOpen: false,
-    columns: [
-      "Model #",
-      "CPU",
-      "Height",
-      "Display Color",
-      "Memory (GB)",
-      "# Ethernet Ports",
-      "# Power Ports",
-      "Storage",
-      "Vendor",
-      "Comment"
-    ],
-    fields: [
-      "model_number",
-      "cpu",
-      "height",
-      "display_color",
-      "memory_gb",
-      "num_ethernet_ports",
-      "num_power_ports",
-      "storage",
-      "vendor",
-      "comment"
-    ]
+    isDeleteOpen: false
   };
 
-  private updateModel = (model: ModelObjectOld, headers: any): Promise<any> => {
-    return axios
-      .post(API_ROOT + "api/models/modify", model, headers)
-      .then(res => {
-        console.log("success");
-        let params: any;
-        params = this.props.match.params;
-        getData(params.rid, this.props.token).then(result => {
-          console.log("result", result);
-          this.setState({
-            model: result.model,
-            assets: result.assets
-          });
+  private updateModel = (model: ModelObject, headers: any): Promise<any> => {
+    return modifyModel(model, headers).then(res => {
+      console.log("success");
+      let params: any;
+      params = this.props.match.params;
+      getData(params.rid, this.props.token).then(result => {
+        console.log("result", result);
+        this.setState({
+          model: result.model,
+          assets: result.assets
         });
-        this.handleFormClose();
-        console.log(this.state.isFormOpen);
       });
+      this.handleFormClose();
+      console.log(this.state.isFormOpen);
+    });
   };
   private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
+  private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
   private handleFormOpen = () => {
     this.setState({
       isFormOpen: true
@@ -124,21 +97,19 @@ export class ModelView extends React.PureComponent<
       isFormOpen: false
     });
   };
+  private toaster: Toaster = {} as Toaster;
   private addToast(toast: IToastProps) {
     toast.timeout = 5000;
     this.toaster.show(toast);
   }
-  private toaster: Toaster = {} as Toaster;
+
   private refHandlers = {
     toaster: (ref: Toaster) => (this.toaster = ref)
   };
 
-  private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
   private handleFormClose = () => this.setState({ isFormOpen: false });
   private handleDelete = () => {
-    const data = { id: this.state.model!.id };
-    axios
-      .post(API_ROOT + "api/models/delete", data, getHeaders(this.props.token))
+    deleteModel(this.state.model!, getHeaders(this.props.token))
       .then(res => {
         this.setState({ isDeleteOpen: false });
         this.props.history.push("/");
@@ -149,31 +120,15 @@ export class ModelView extends React.PureComponent<
           message: err.response.data.failure_message,
           intent: Intent.DANGER
         });
+        this.handleDeleteCancel();
       });
   };
-
-  componentDidMount() {
-    const auth = getHeaders(this.props.token)
-    const headers = {
-      headers: auth.headers,
-      params: {
-        page: 1,
-        page_size: 20
-      }
-    }
-    getFields("models", headers).then((res: any) => {
-      this.setState({
-        fields: res,
-        columns: res
-      })
-    })
-  }
 
   public render() {
     console.log(this.state.assets);
     let params: any;
     params = this.props.match.params;
-    if (this.state.model === undefined) {
+    if (Object.keys(this.state.model).length === 0) {
       getData(params.rid, this.props.token).then(result => {
         console.log("result", result);
         this.setState({
@@ -183,7 +138,6 @@ export class ModelView extends React.PureComponent<
       });
     }
 
-    var data = this.state.model;
     return (
       <div className={Classes.DARK + " model-view"}>
         <Toaster
@@ -199,6 +153,7 @@ export class ModelView extends React.PureComponent<
               intent="primary"
               icon="edit"
               text="Edit"
+              minimal
               onClick={() => this.handleFormOpen()}
             />
             <FormPopup
@@ -214,6 +169,7 @@ export class ModelView extends React.PureComponent<
               intent="danger"
               icon="trash"
               text="Delete"
+              minimal
               onClick={this.handleDeleteOpen}
             />
             <Alert
@@ -237,7 +193,7 @@ export class ModelView extends React.PureComponent<
           <Tab
             id="ModelProperties"
             title="Properties"
-            panel={<PropertiesView data={data} {...this.state} />}
+            panel={<PropertiesView data={this.state.model} />}
           />
           <Tab
             id="Assets"

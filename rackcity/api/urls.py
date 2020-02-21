@@ -2,6 +2,7 @@ from django.urls import path
 from rackcity import views
 
 urlpatterns = [
+    path('logs/get-many', views.log_many),
     path('models', views.model_list),
     path('models/add', views.model_add),
     path('models/modify', views.model_modify),
@@ -35,10 +36,21 @@ urlpatterns = [
     path('iamadmin', views.i_am_admin),
     path('report', views.report_rack_usage),
     path('usernames', views.usernames),
-    path('datacenters/get-all', views.datacenter_all),
+    path('datacenters/get-many', views.datacenter_all),
     path('datacenters/add', views.datacenter_create),
     path('datacenters/delete', views.datacenter_delete),
+    path('datacenters/pages', views.datacenter_page_count),
+    path('datacenters/modify', views.datacenter_modify),
     path('users/who-am-i', views.who_am_i),
+    path('users/get-many', views.user_list),
     path('users/add', views.RegisterNameView.as_view()),
+    path('users/delete', views.user_delete),
     path('users/netid-login', views.netid_login),
+    path('users/pages', views.user_page_count),
+    path('users/grant-admin', views.user_grant_admin),
+    path('users/revoke-admin', views.user_revoke_admin),
+    path('power/get-state/<int:id>', views.power_status),
+    path('power/mask-on', views.power_on),
+    path('power/mask-off', views.power_off),
+    path('power/cycle', views.power_cycle)
 ]

@@ -18,14 +18,10 @@ import NetworkGraph from "./graph";
 import "./assetView.scss";
 
 import { connect } from "react-redux";
-import {
-  AssetObject,
-  ElementType,
-  getHeaders,
-  getFields
-} from "../../../../utils/utils";
+import { AssetObject, ElementType, getHeaders } from "../../../../utils/utils";
 import FormPopup from "../../../../forms/formPopup";
 import { FormTypes } from "../../../../forms/formUtils";
+import { modifyAsset, deleteAsset } from "../../elementUtils";
 
 export interface AssetViewProps {
   token: string;
@@ -34,26 +30,25 @@ export interface AssetViewProps {
 }
 // Given an rid, will perform a GET request of that rid and display info about that instnace
 
-var console: any = {};
-console.log = function() {};
-async function getData(assetkey: string, token: string) {
+// var console: any = {};
+// console.log = function() {};
+function getData(assetkey: string, token: string) {
   const headers = {
     headers: {
       Authorization: "Token " + token
     }
   };
-  return await axios
-    .get(API_ROOT + "api/assets/" + assetkey, headers)
-    .then(res => {
-      const data = res.data;
-      return data;
-    });
+  console.log("getting_data");
+  return axios.get(API_ROOT + "api/assets/" + assetkey, headers).then(res => {
+    const data = res.data;
+    return data;
+  });
 }
 
 interface AssetViewState {
-  asset: AssetObject | undefined;
-  columns: Array<string>;
-  fields: Array<string>;
+  asset: AssetObject;
+  // columns: Array<string>;
+  // fields: Array<string>;
   isFormOpen: boolean;
   isDeleteOpen: boolean;
   isAlertOpen: boolean;
@@ -64,56 +59,35 @@ export class AssetView extends React.PureComponent<
   AssetViewState
 > {
   public state: AssetViewState = {
-    asset: undefined,
+    asset: {} as AssetObject,
     isFormOpen: false,
     isDeleteOpen: false,
-    isAlertOpen: false,
-    columns: ["Hostname", "Model", "Rack", "Elevation", "Owner", "Comment"],
-    fields: ["hostname", "model", "rack", "elevation", "owner", "comment"]
+    isAlertOpen: false
   };
   private updateAsset = (asset: AssetObject, headers: any): Promise<any> => {
     let params: any;
     params = this.props.match.params;
-    return axios
-      .post(API_ROOT + "api/assets/modify", asset, headers)
-      .then(res => {
-        console.log("success");
-        getData(params.rid, this.props.token).then(result => {
-          this.setState({
-            asset: result
-          });
+    return modifyAsset(asset, headers).then(res => {
+      console.log("success");
+      getData(params.rid, this.props.token).then(result => {
+        this.setState({
+          asset: result
         });
-        console.log(this.state.asset);
-        this.handleFormClose();
-        console.log(this.state.isFormOpen);
       });
+      console.log(this.state.asset);
+      this.handleFormClose();
+      console.log(this.state.isFormOpen);
+    });
   };
-
+  private toaster: Toaster = {} as Toaster;
   private addToast(toast: IToastProps) {
     toast.timeout = 5000;
     this.toaster.show(toast);
   }
-  private toaster: Toaster = {} as Toaster;
+
   private refHandlers = {
     toaster: (ref: Toaster) => (this.toaster = ref)
   };
-
-  public componentDidMount() {
-    const auth = getHeaders(this.props.token);
-    const headers = {
-      headers: auth.headers,
-      params: {
-        page: 1,
-        page_size: 20
-      }
-    };
-    getFields("instances", headers).then((res: any) => {
-      this.setState({
-        fields: res,
-        columns: res
-      });
-    });
-  }
 
   public updateAssetData() {
     let params: any;
@@ -127,7 +101,7 @@ export class AssetView extends React.PureComponent<
   }
 
   public render() {
-    if (this.state.asset === undefined) {
+    if (Object.keys(this.state.asset).length === 0) {
       this.updateAssetData();
     }
 
@@ -177,8 +151,10 @@ export class AssetView extends React.PureComponent<
             </Alert>
           </div>
         ) : null}
-        <PropertiesView data={this.state.asset} {...this.state} />
-        <NetworkGraph onClickNode={this.redirectToAsset} />
+        <PropertiesView data={this.state.asset} />
+        <div>
+          <NetworkGraph onClickNode={this.redirectToAsset} />
+        </div>
       </div>
     );
   }
@@ -202,10 +178,8 @@ export class AssetView extends React.PureComponent<
   private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
   private handleDelete = () => {
     console.log(this.props.rid);
-    const data = { id: this.state.asset!.id };
 
-    axios
-      .post(API_ROOT + "api/assets/delete", data, getHeaders(this.props.token))
+    deleteAsset(this.state.asset!, getHeaders(this.props.token))
       .then(res => {
         this.setState({ isDeleteOpen: false });
         this.props.history.push("/");

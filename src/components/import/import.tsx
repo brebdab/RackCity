@@ -5,7 +5,7 @@ import * as React from "react";
 import { API_ROOT } from "../../utils/api-config";
 import { RouteComponentProps, withRouter } from "react-router";
 import { connect } from "react-redux";
-import { AssetObject, ModelObjectOld } from "../../utils/utils";
+import { AssetObjectOld, ModelObjectOld } from "../../utils/utils";
 import "./import.scss";
 import { FileSelector } from "../lib/fileSelect"
 import { Modifier } from "./viewModified"
@@ -24,7 +24,7 @@ interface AlertState {
   assetAlterationsIsOpen: boolean,
   selectedFile?: File,
   loadedModels?: Array<ModelObjectOld>,
-  loadedAssets?: Array<AssetObject>,
+  loadedAssets?: Array<AssetObjectOld>,
   modifiedModels?: Array<any>,
   modifiedAssets?: Array<any>,
   ignoredModels?: number,
@@ -38,7 +38,7 @@ interface AlertState {
 
 interface AssetInfoObject {
   hostname: string,
-  elevation: string,
+  rack_position: string,
   vendor: string,
   model_number: string,
   rack: string,
@@ -197,7 +197,7 @@ export class BulkImport extends React.PureComponent<RouteComponentProps & Import
             /* This next block is just to fix field names from the csv format to our backend format */
             const asset: AssetInfoObject = {
               hostname: csvRow[i].hostname,
-              elevation: csvRow[i].rack_position,
+              rack_position: csvRow[i].rack_position,
               vendor: csvRow[i].vendor,
               model_number: csvRow[i].model_number,
               rack: csvRow[i].rack,

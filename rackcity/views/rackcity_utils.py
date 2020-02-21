@@ -3,6 +3,8 @@ from rackcity.api.objects import RackRangeSerializer
 from rackcity.api.serializers import RecursiveAssetSerializer, RackSerializer
 from http import HTTPStatus
 from django.http import JsonResponse
+import functools
+from django.db import close_old_connections
 
 
 def get_rack_detailed_response(racks):
@@ -17,7 +19,7 @@ def get_rack_detailed_response(racks):
         rack_serializer = RackSerializer(rack)
         assets = Asset.objects \
             .filter(rack=rack.id) \
-            .order_by("elevation")
+            .order_by("rack_position")
         assets_serializer = RecursiveAssetSerializer(
             assets,
             many=True
@@ -36,12 +38,12 @@ def get_rack_detailed_response(racks):
 
 def validate_asset_location(
     rack_id,
-    asset_elevation,
+    asset_rack_position,
     asset_height,
     asset_id=None,
 ):
     new_asset_location_range = [
-        asset_elevation + i for i in range(asset_height)
+        asset_rack_position + i for i in range(asset_height)
     ]
     rack_height = Rack.objects.get(id=rack_id).height
     for location in new_asset_location_range:
@@ -52,13 +54,13 @@ def validate_asset_location(
         # Ignore if asset being modified conflicts with its old location
         if (asset_id is None or asset_in_rack.id != asset_id):
             for occupied_location in [
-                asset_in_rack.elevation + i for i
+                asset_in_rack.rack_position + i for i
                     in range(asset_in_rack.model.height)
             ]:
                 if occupied_location in new_asset_location_range:
                     raise LocationException(
                         "Asset location conflicts with another asset: '" +
-                        asset_in_rack.hostname +
+                        str(asset_in_rack.asset_number) +
                         "'. "
                     )
 
@@ -66,14 +68,14 @@ def validate_asset_location(
 def validate_location_modification(data, existing_asset):
     asset_id = existing_asset.id
     rack_id = existing_asset.rack.id
-    asset_elevation = existing_asset.elevation
+    asset_rack_position = existing_asset.rack_position
     asset_height = existing_asset.model.height
 
-    if 'elevation' in data:
+    if 'rack_position' in data:
         try:
-            asset_elevation = int(data['elevation'])
+            asset_rack_position = int(data['rack_position'])
         except ValueError:
-            raise Exception("Field 'elevation' must be of type int.")
+            raise Exception("Field 'rack_position' must be of type int.")
 
     if 'model' in data:
         try:
@@ -92,7 +94,7 @@ def validate_location_modification(data, existing_asset):
     try:
         validate_asset_location(
             rack_id,
-            asset_elevation,
+            asset_rack_position,
             asset_height,
             asset_id=asset_id,
         )
@@ -147,9 +149,9 @@ def no_infile_location_conflicts(asset_datas):
     for asset_data in asset_datas:
         rack = asset_data['rack']
         height = ITModel.objects.get(id=asset_data['model']).height
-        elevation = int(asset_data['elevation'])
+        rack_position = int(asset_data['rack_position'])
         asset_location_range = [  # THIS IS REPEATED! FACTOR OUT.
-            elevation + i for i in range(height)
+            rack_position + i for i in range(height)
         ]
         if rack not in location_occupied_by:
             location_occupied_by[rack] = {}
@@ -157,16 +159,32 @@ def no_infile_location_conflicts(asset_datas):
             if location in location_occupied_by[rack]:
                 raise LocationException(
                     "Asset '" +
-                    asset_data['hostname'] +
+                    str(asset_data['asset_number']) +
                     "' conflicts with asset '" +
                     location_occupied_by[rack][location] +
                     "'. ")
             else:
-                location_occupied_by[rack][location] = asset_data['hostname']
+                # this is going to be a problem if neither hostname or asset number exists on the record
+                location_occupied_by[rack][location] = asset_data['asset_number']
     return
 
 
 class LocationException(Exception):
+    def __init__(self, *args, **kwargs):
+        Exception.__init__(self, *args, **kwargs)
+
+
+class MacAddressException(Exception):
+    def __init__(self, *args, **kwargs):
+        Exception.__init__(self, *args, **kwargs)
+
+
+class PowerConnectionException(Exception):
+    def __init__(self, *args, **kwargs):
+        Exception.__init__(self, *args, **kwargs)
+
+
+class NetworkConnectionException(Exception):
     def __init__(self, *args, **kwargs):
         Exception.__init__(self, *args, **kwargs)
 
@@ -300,3 +318,13 @@ def get_filter_arguments(data):
                 )
 
     return filter_args
+
+
+def close_old_connections_decorator(func):
+    @functools.wraps(func)
+    def wrapper_decorator(*args, **kwargs):
+        close_old_connections()
+        value = func(*args, **kwargs)
+        close_old_connections()
+        return value
+    return wrapper_decorator
