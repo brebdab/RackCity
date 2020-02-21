@@ -191,6 +191,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     console.log(asset);
 
     const {
+      asset_number,
       hostname,
       id,
       rack_position,
@@ -203,6 +204,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     const model = asset.model ? asset.model.id : undefined;
     const rack = asset.rack ? asset.rack.id : undefined;
     let valuesToSend: ShallowAssetObject = {
+      asset_number,
       model,
       rack,
       hostname,
@@ -697,7 +699,15 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
           return <Callout intent={Intent.DANGER}>{err}</Callout>;
         })}
         <form onSubmit={this.handleSubmit} className="create-form ">
-          <FormGroup label="Hostname (required)" inline={false}>
+          <FormGroup label="Asset number" inline={false}>
+            <Field
+              placeholder="asset_number"
+              onChange={this.handleChange}
+              value={values.asset_number}
+              field="asset_number"
+            />
+          </FormGroup>
+          <FormGroup label="Hostname " inline={false}>
             <Field
               placeholder="hostname"
               onChange={this.handleChange}
@@ -707,11 +717,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
           </FormGroup>
           <FormGroup label="Datacenter (required)" inline={false}>
             <DatacenterSelect
-              disabled={
-                !isNullOrUndefined(this.initialState.rack) ||
-                (this.props.currDatacenter &&
-                  this.props.currDatacenter !== ALL_DATACENTERS)
-              }
               popoverProps={{
                 minimal: true,
                 popoverClassName: "dropdown",
@@ -727,11 +732,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
             >
               <Button
                 rightIcon="caret-down"
-                disabled={
-                  !isNullOrUndefined(this.initialState.rack) ||
-                  (this.props.currDatacenter &&
-                    this.props.currDatacenter !== ALL_DATACENTERS)
-                }
+         
                 text={
                   this.state.currDatacenter && this.state.currDatacenter.name
                     ? this.state.currDatacenter.name

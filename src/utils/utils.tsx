@@ -31,6 +31,7 @@ export interface AssetObject extends ParentAssetObject {
 }
 
 interface ParentAssetObject extends ElementObject {
+  asset_number: string;
   hostname?: string;
   rack_position: string;
   mac_addresses: { [port: string]: string };
