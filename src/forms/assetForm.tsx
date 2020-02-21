@@ -183,7 +183,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     this.setState({
       values
     });
-    this.getAssetsWithHostname(this.state.currDatacenter!);
+    this.getValidAssets(this.state.currDatacenter!);
   }
   private mapAssetObject = (asset: AssetObject): ShallowAssetObject => {
     console.log(asset);
@@ -304,7 +304,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       });
     });
   };
-  getAssetsWithHostname = (currDatacenter: DatacenterObject) => {
+  getValidAssets = (currDatacenter: DatacenterObject) => {
     console.log("getting assets from this datacenter", currDatacenter);
     let body = {};
     const filters: Array<IFilter> = [];
@@ -331,7 +331,10 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     ).then(res => {
       let assetsWithHostname: Array<AssetObject> = res as Array<AssetObject>;
       assetsWithHostname = assetsWithHostname.filter(asset => {
-        if (asset.hostname === "") {
+        if (
+          asset.hostname === "" ||
+          asset.hostname === this.state.values.hostname
+        ) {
           return false;
         }
         return true;
@@ -580,7 +583,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     this.setState({
       currDatacenter: datacenter
     });
-    this.getAssetsWithHostname(datacenter);
+    this.getValidAssets(datacenter);
     this.getRacks(datacenter);
   }
   handleNetworkConnectionSelection(
