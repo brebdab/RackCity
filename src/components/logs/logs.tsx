@@ -37,25 +37,6 @@ interface LogsState {
     total_pages: number;
     page_type: PagingTypes;
 }
-export function getLogPages(
-    page_type: PagingTypes,
-    token: string
-) {
-    const config = {
-        headers: {
-            Authorization: "Token " + token
-        },
-        params: (page_type === PagingTypes.ALL) ?
-            {} : {
-                page_size: page_type,
-            }
-    };
-    return axios
-        .post(API_ROOT + "api/logs/pages", {}, config)
-        .then(res => {
-            return res.data.page_count;
-        });
-}
 class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
     public state: LogsState = {
         logs: [],
