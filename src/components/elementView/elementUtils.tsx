@@ -12,6 +12,13 @@ export interface ITableSort {
   id: string;
 }
 
+export enum ElementTableOpenAlert {
+  NONE = "none",
+  DELETE = "delete",
+  GRANT_ADMIN = "grant_admin",
+  REVOKE_ADMIN = "revoke_admin"
+}
+
 export enum FilterTypes {
   TEXT = "text",
   NUMERIC = "numeric",
