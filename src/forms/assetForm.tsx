@@ -56,7 +56,8 @@ import {
   StringSelect,
   AssetSelect,
   renderAssetItem,
-  filterAsset
+  filterAsset,
+  isMacAddressValid
 } from "./formUtils";
 
 //TO DO : add validation of types!!!
@@ -224,6 +225,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     });
     e.preventDefault();
     if (this.state.values) {
+      this.validateMacAddresses();
       if (this.props.initialValues) {
         this.setState({
           values: updateObject(this.state.values, {
@@ -231,7 +233,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
           })
         });
       }
-
       const resp = this.props.submitForm(
         this.mapAssetObject(this.state.values),
         this.headers
@@ -249,6 +250,25 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     }
   };
 
+  validateMacAddresses = () => {
+    Object.entries(this.state.values.mac_addresses).forEach(
+      ([port, mac_address]) => {
+        if (!isMacAddressValid(mac_address)) {
+          const errors: Array<string> = this.state.errors;
+          errors.push(
+            "The mac adddress: " +
+              mac_address +
+              " for port: " +
+              port +
+              " is invalid. See tooltip for valid formats"
+          );
+          this.setState({
+            errors
+          });
+        }
+      }
+    );
+  };
   handleChange = (field: { [key: string]: any }) => {
     this.setState({
       values: updateObject(this.state.values, {
