@@ -1,15 +1,18 @@
 from django.db import models
 from .asset import Asset
 
+
 def format_mac_address(mac_address):
     # all lower case
     mac_address = mac_address.lower()
     # if contains - as a delimiter, convert to :
     mac_address = mac_address.replace("-", ":")
     # if contains no delimiters:
-    mac_address = '-'.join(a+b for a, b in zip(mac_address[::2], mac_address[1::2]))
+    if (not mac_address.__contains__(":")):
+        mac_address = ':'.join(a+b for a, b in zip(mac_address[::2], mac_address[1::2]))
     return mac_address
-    
+
+
 class NetworkPort(models.Model):
     asset = models.ForeignKey(
         Asset,
@@ -53,8 +56,6 @@ class NetworkPort(models.Model):
             )
         if self.connected_port:
             self.delete_network_connection()
-        if self.mac_address is not None:
-            self.mac_address = format_mac_address(self.mac_address)
         self.connected_port = destination_port
         destination_port.connected_port = self
         self.save()
@@ -77,3 +78,8 @@ class NetworkPort(models.Model):
                 name="unique network port names on assets",
             ),
         ]
+
+    def save(self, *args, **kwargs):
+        if self.mac_address is not None:
+            self.mac_address = format_mac_address(self.mac_address)
+        super(NetworkPort, self).save(*args, **kwargs)
