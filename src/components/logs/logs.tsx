@@ -161,7 +161,6 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
         }
     }
 
-    // SEARCHING
     private handleSearchInputChange() {
         console.log("searching input change")
     }
