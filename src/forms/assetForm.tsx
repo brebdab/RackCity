@@ -331,7 +331,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     ).then(res => {
       let assetsWithHostname: Array<AssetObject> = res as Array<AssetObject>;
       assetsWithHostname = assetsWithHostname.filter(asset => {
-        if (!asset.hostname || asset.hostname === "") {
+        if (asset.hostname === "") {
           return false;
         }
         return true;
