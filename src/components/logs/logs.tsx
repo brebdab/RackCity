@@ -7,7 +7,42 @@ import { connect } from "react-redux";
 import { API_ROOT } from "../../utils/api-config";
 import axios from "axios";
 import "./logs.scss";
+import {
+    FilterTypes,
+    TextFilterTypes
+} from "../elementView/elementUtils";
 
+export function getLogFilters(filterValue: string) {
+    const username_filter = {
+        field: "user__username",
+        filter_type: FilterTypes.TEXT,
+        filter: {
+            value: filterValue,
+            match_type: TextFilterTypes.CONTAINS
+        }
+    }
+    const hostname_filter = {
+        field: "related_asset__hostname",
+        filter_type: FilterTypes.TEXT,
+        filter: {
+            value: filterValue,
+            match_type: TextFilterTypes.CONTAINS
+        }
+    }
+    if (Number(filterValue)) {
+        const asset_number_filter = {
+            field: "related_asset__asset_number",
+            filter_type: FilterTypes.NUMERIC,
+            filter: {
+                max: Number(filterValue),
+                min: Number(filterValue)
+            }
+        }
+        return [username_filter, hostname_filter, asset_number_filter]
+    } else {
+        return [username_filter, hostname_filter]
+    }
+}
 interface LogEntry {
     id: number,
     date: string,
@@ -55,12 +90,10 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
         }
     }
 
-    private handleSearchInputChange() {
-        console.log("searching input change")
-    }
-
     private handleSearch() {
-        console.log("searching lmao")
+        if (this.state.search_query !== undefined) {
+            console.log(getLogFilters(this.state.search_query))
+        }
     }
 
     public render() {
@@ -85,8 +118,11 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
                         type="search"
                         placeholder="Search logs by username, asset number, or asset hostname"
                         dir="auto"
-                        value=""
-                        onChange={() => this.handleSearchInputChange()}
+                        onChange={(e: any) =>
+                            this.setState({
+                                search_query: e.currentTarget.value
+                            })
+                        }
                     />
                     <button
                         className="bp3-button bp3-minimal bp3-intent-primary bp3-icon-arrow-right .modifier"
