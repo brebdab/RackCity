@@ -6,7 +6,8 @@ import {
   Intent,
   IToastProps,
   Position,
-  Toaster
+  Toaster,
+  Dialog
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { IconNames } from "@blueprintjs/icons";
@@ -55,6 +56,7 @@ import {
   modifyDatacenter,
   ElementTableOpenAlert
 } from "./elementUtils";
+import { PowerView } from "./powerView/powerView";
 
 interface ElementTableState {
   items: Array<ElementObjectType>;
@@ -69,6 +71,7 @@ interface ElementTableState {
   editFormValues: ElementObjectType;
   openAlert: ElementTableOpenAlert;
   selected_userid?: string;
+  isPowerOptionsOpen: boolean;
 }
 // var console: any = {};
 // console.log = function() {};
@@ -116,7 +119,8 @@ class ElementTable extends React.Component<
     isEditFormOpen: false,
     editFormValues: {} as ElementObjectType,
     openAlert: ElementTableOpenAlert.NONE,
-    selected_userid: undefined
+    selected_userid: undefined,
+    isPowerOptionsOpen: false
   };
 
   //PAGING LOGIC
@@ -564,6 +568,22 @@ class ElementTable extends React.Component<
     );
   };
 
+  // POWER LOGIC
+  getPowerOptions = () => {
+    return (
+      <Dialog
+        {...this.props}
+        isOpen={this.state.isPowerOptionsOpen}
+        onClose={() => { this.setState({ isPowerOptionsOpen: false }) }}
+      >
+        <PowerView
+          {...this.props}
+          callback={() => { this.setState({ isPowerOptionsOpen: false }) }}
+        />
+      </Dialog>
+    )
+  }
+
   successfulModification() {
     this.updateTableData();
     this.handleEditFormClose();
@@ -643,7 +663,9 @@ class ElementTable extends React.Component<
   };
 
   handlePowerButtonClick = (data: ElementObjectType) => {
-    alert("This power thingy is open");
+    this.setState({
+      isPowerOptionsOpen: true
+    })
   };
 
   //ADMIN BUTTON LOGIC
@@ -756,6 +778,7 @@ class ElementTable extends React.Component<
     return (
       <div className="tab-panel">
         {this.getEditForm()}
+        {this.getPowerOptions()}
         <Alert
           cancelButtonText="Cancel"
           confirmButtonText="Delete"
