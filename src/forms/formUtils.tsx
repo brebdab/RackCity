@@ -97,14 +97,18 @@ export const filterAsset: ItemPredicate<AssetObject> = (
   _index,
   exactMatch
 ) => {
-  const normalizedHostname = asset.hostname!.toLowerCase();
+  if (asset.hostname) {
+    const normalizedHostname = asset.hostname.toLowerCase();
 
-  const normalizedQuery = query.toLowerCase();
+    const normalizedQuery = query.toLowerCase();
 
-  if (exactMatch) {
-    return normalizedHostname === normalizedQuery;
+    if (exactMatch) {
+      return normalizedHostname === normalizedQuery;
+    } else {
+      return `. ${normalizedHostname}`.indexOf(normalizedQuery) >= 0;
+    }
   } else {
-    return `. ${normalizedHostname}`.indexOf(normalizedQuery) >= 0;
+    return false;
   }
 };
 
