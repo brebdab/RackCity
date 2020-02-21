@@ -76,3 +76,24 @@ def log_many(request):
         {"logs": serializer.data},
         status=HTTPStatus.OK,
     )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def log_page_count(request):
+    """
+    Return total number of pages according to page size, which must be
+    specified as query parameter.
+    """
+    if (
+        not request.query_params.get('page_size')
+        or int(request.query_params.get('page_size')) <= 0
+    ):
+        return JsonResponse(
+            {"failure_message": "Must specify positive integer page_size."},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    page_size = int(request.query_params.get('page_size'))
+    log_count = Log.objects.all().count()
+    page_count = math.ceil(log_count / page_size)
+    return JsonResponse({"page_count": page_count})

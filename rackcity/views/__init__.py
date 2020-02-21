@@ -1,4 +1,7 @@
-from .log_views import log_many
+from .log_views import (
+    log_many,
+    log_page_count,
+)
 from .it_model_views import (
     model_add,
     model_modify,

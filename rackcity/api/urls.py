@@ -3,6 +3,7 @@ from rackcity import views
 
 urlpatterns = [
     path('logs/get-many', views.log_many),
+    path('logs/pages', views.log_page_count),
     path('models', views.model_list),
     path('models/add', views.model_add),
     path('models/modify', views.model_modify),

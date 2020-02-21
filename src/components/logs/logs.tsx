@@ -7,6 +7,7 @@ import { connect } from "react-redux";
 import { API_ROOT } from "../../utils/api-config";
 import axios from "axios";
 import "./logs.scss";
+import { PagingTypes } from "../components/elementView/elementUtils";
 
 interface LogEntry {
     id: number,
