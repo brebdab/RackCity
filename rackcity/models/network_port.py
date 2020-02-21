@@ -2,6 +2,15 @@ from django.db import models
 from .asset import Asset
 from django.core.exceptions import ObjectDoesNotExist
 
+def format_mac_address(mac_address):
+    # all lower case
+    mac_address = mac_address.lower()
+    # if contains - as a delimiter, convert to :
+    mac_address = mac_address.replace("-",":")
+    # if contains no delimiters:
+    mac_address = '-'.join(a+b for a,b in zip(mac_address[::2], mac_address[1::2]))
+    return mac_address
+
 
 class NetworkPort(models.Model):
     asset = models.ForeignKey(
@@ -49,6 +58,7 @@ class NetworkPort(models.Model):
             self.delete_network_connection()
         self.connected_port = destination_port
         destination_port.connected_port = self
+        self.mac_address = format_mac_address(self.mac_address)
         self.save()
         destination_port.save()
 
