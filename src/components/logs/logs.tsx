@@ -202,10 +202,7 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
 
     private handleSearch() {
         if (this.state.search_query !== undefined) {
-            const query_filters = getLogFilters(this.state.search_query)
-            this.setState({
-                filters: query_filters
-            })
+            console.log(getLogFilters(this.state.search_query))
         }
     }
 
