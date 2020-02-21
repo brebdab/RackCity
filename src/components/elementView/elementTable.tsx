@@ -7,7 +7,8 @@ import {
   IToastProps,
   Position,
   Toaster,
-  Dialog
+  Dialog,
+  Classes
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { IconNames } from "@blueprintjs/icons";
@@ -30,7 +31,8 @@ import {
   isDatacenterObject,
   DatacenterObject,
   isObject,
-  SortFilterBody
+  SortFilterBody,
+  AssetObject
 } from "../../utils/utils";
 import DragDropList from "./dragDropList";
 import "./elementView.scss";
@@ -72,6 +74,7 @@ interface ElementTableState {
   openAlert: ElementTableOpenAlert;
   selected_userid?: string;
   isPowerOptionsOpen: boolean;
+  assetPower?: AssetObject
 }
 // var console: any = {};
 // console.log = function() {};
@@ -572,6 +575,7 @@ class ElementTable extends React.Component<
   getPowerOptions = () => {
     return (
       <Dialog
+        className={Classes.DARK}
         {...this.props}
         isOpen={this.state.isPowerOptionsOpen}
         onClose={() => { this.setState({ isPowerOptionsOpen: false }) }}
@@ -579,6 +583,7 @@ class ElementTable extends React.Component<
         <PowerView
           {...this.props}
           callback={() => { this.setState({ isPowerOptionsOpen: false }) }}
+          asset={this.state.assetPower}
         />
       </Dialog>
     )
@@ -662,9 +667,10 @@ class ElementTable extends React.Component<
     this.handleDeleteOpen();
   };
 
-  handlePowerButtonClick = (data: ElementObjectType) => {
+  handlePowerButtonClick = (data: AssetObject) => {
     this.setState({
-      isPowerOptionsOpen: true
+      isPowerOptionsOpen: true,
+      assetPower: data
     })
   };
 
