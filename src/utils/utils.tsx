@@ -28,6 +28,7 @@ export interface AssetObjectOld extends ElementObject {
 export interface AssetObject extends ParentAssetObject {
   model: ModelObject;
   rack: RackObject;
+  network_graph: NetworkGraphData;
 }
 
 interface ParentAssetObject extends ElementObject {
@@ -57,7 +58,7 @@ export interface NetworkConnection {
   destination_hostname: string;
   destination_port: string;
 }
-export interface NetworkGraph {
+export interface NetworkGraphData {
   nodes: { [hostname: string]: string };
   links: Array<{ [source: string]: string }>;
 }
@@ -74,7 +75,7 @@ export interface NetworkConnection {
   destination_hostname: string;
   destination_port: string;
 }
-export interface NetworkGraph {
+export interface NetworkGraphData {
   nodes: { [hostname: string]: string };
   links: Array<{ [source: string]: string }>;
 }

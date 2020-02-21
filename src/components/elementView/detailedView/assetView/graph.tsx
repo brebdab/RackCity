@@ -1,45 +1,66 @@
 import React from "react";
 import { Graph } from "react-d3-graph";
 import { RouteComponentProps, withRouter } from "react-router";
+import { NetworkGraphData } from "../../../../utils/utils";
 
 interface NetworkGraphProps {
   onClickNode(id: string): any;
+  networkGraph: NetworkGraphData;
+}
+interface NetworkGraphState {
+  data: any;
 }
 
 class NetworkGraph extends React.Component<
-  NetworkGraphProps & RouteComponentProps
+  NetworkGraphProps & RouteComponentProps,
+  NetworkGraphState
 > {
-  asset_id: any = {
-    Harry: "117",
-    Sally: "1",
-    Alice: "1"
+  public state = {
+    data: { nodes: [], links: {} }
   };
-  myCustomLabelBuilder() {
-    // do stuff to get the final result...
-    return "label string";
-  }
-  decorateGraphNodesWithInitialPositioning = (nodes: any) => {
+  getNodesFromNodeDict = () => {
+    const nodes = JSON.parse(JSON.stringify(this.props.networkGraph.nodes));
+    return Object.keys(nodes).map((hostname: string) => {
+      return { id: hostname };
+    });
+  };
+
+  setInitialPositions = (nodes: any) => {
     return nodes.map((n: any) =>
       Object.assign({}, n, {
         x: n.x || Math.floor(Math.random() * 500),
-        y: n.y || Math.floor(Math.random() * 500),
-        labelProperty: this.myCustomLabelBuilder()
+        y: n.y || Math.floor(Math.random() * 500)
       })
     );
   };
-  data = {
-    nodes: this.decorateGraphNodesWithInitialPositioning([
-      { id: "Harry" },
-      { id: "Sally" },
-      { id: "Alice" }
-    ]),
 
-    links: [
-      { source: "Harry", target: "Sally" },
-      { source: "Harry", target: "Alice" },
-      { source: "Alice", target: "Harry" }
-    ]
+  getInitialNodes = () => {
+    return this.setInitialPositions(this.getNodesFromNodeDict());
   };
+  componentDidMount() {
+    if (this.props.networkGraph) {
+      const data = {
+        nodes: this.getInitialNodes(),
+
+        links: this.props.networkGraph.links.slice()
+      };
+      this.setState({
+        data
+      });
+    }
+  }
+  // componentDidUpdate() {
+  //   if (this.props.networkGraph) {
+  //     const data = {
+  //       nodes: this.getInitialNodes(),
+
+  //       links: this.props.networkGraph.links.slice()
+  //     };
+  //     this.setState({
+  //       data
+  //     });
+  //   }
+  // }
 
   // the graph configuration, you only need to pass down properties
   // that you want to override, otherwise default ones will be used
@@ -109,25 +130,41 @@ class NetworkGraph extends React.Component<
   };
 
   render() {
+    console.log(this.state.data, this.props);
+    if (this.state.data.nodes.length === 0) {
+      if (this.props.networkGraph) {
+        const data = {
+          nodes: this.getInitialNodes(),
+
+          links: this.props.networkGraph.links.slice()
+        };
+        this.setState({
+          data
+        });
+      }
+    }
+
     return (
       <div className="graph-container">
-        <Graph
-          id="graph-id" // id is mandatory, if no id is defined rd3g will throw an error
-          data={this.data}
-          config={this.myConfig}
-          onClickNode={(nodeID: any) => {
-            this.props.onClickNode(this.asset_id[nodeID]);
-          }}
-          onRightClickNode={this.onRightClickNode}
-          onClickGraph={this.onClickGraph}
-          onClickLink={this.onClickLink}
-          onRightClickLink={this.onRightClickLink}
-          // onMouseOverNode={this.onMouseOverNode}
-          // onMouseOutNode={this.onMouseOutNode}
-          // onMouseOverLink={this.onMouseOverLink}
-          // onMouseOutLink={this.onMouseOutLink}
-          onNodePositionChange={this.onNodePositionChange}
-        />
+        {this.state.data.nodes.length !== 0 ? (
+          <Graph
+            id="graph-id" // id is mandatory, if no id is defined rd3g will throw an error
+            data={this.state.data}
+            config={this.myConfig}
+            onClickNode={(nodeID: any) => {
+              this.props.onClickNode(this.props.networkGraph.nodes[nodeID]);
+            }}
+            onRightClickNode={this.onRightClickNode}
+            onClickGraph={this.onClickGraph}
+            onClickLink={this.onClickLink}
+            onRightClickLink={this.onRightClickLink}
+            // onMouseOverNode={this.onMouseOverNode}
+            // onMouseOutNode={this.onMouseOutNode}
+            // onMouseOverLink={this.onMouseOverLink}
+            // onMouseOutLink={this.onMouseOutLink}
+            onNodePositionChange={this.onNodePositionChange}
+          />
+        ) : null}
       </div>
     );
   }

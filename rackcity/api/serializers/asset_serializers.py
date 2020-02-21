@@ -169,10 +169,9 @@ def generate_network_graph(asset):
                     nodes[hostname],
                     nodes,
                     links)
-        return nodes, links
+        return {"nodes": nodes,"links": links }
     except ObjectDoesNotExist:
         return
-
 
 
 def get_neighbor_assets(hostname, id, nodes, links):
@@ -184,8 +183,8 @@ def get_neighbor_assets(hostname, id, nodes, links):
                 if destination_port_asset.hostname not in nodes:
                     nodes[destination_port_asset.hostname] = destination_port_asset.id
                 links.append(
-                    {source_port.asset.hostname,
-                        destination_port_asset.hostname}
+                    {"source":source_port.asset.hostname,
+                        "target":destination_port_asset.hostname}
                     )
         return nodes, links
     except ObjectDoesNotExist:

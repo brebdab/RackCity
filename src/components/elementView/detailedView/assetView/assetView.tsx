@@ -65,6 +65,7 @@ export class AssetView extends React.PureComponent<
     isAlertOpen: false
   };
   private updateAsset = (asset: AssetObject, headers: any): Promise<any> => {
+    console.log("updateAsset");
     let params: any;
     params = this.props.match.params;
     return modifyAsset(asset, headers).then(res => {
@@ -90,6 +91,7 @@ export class AssetView extends React.PureComponent<
   };
 
   public updateAssetData() {
+    console.log("updateAssetData");
     let params: any;
     params = this.props.match.params;
     getData(params.rid, this.props.token).then(result => {
@@ -101,6 +103,7 @@ export class AssetView extends React.PureComponent<
   }
 
   public render() {
+    console.log(this.state.asset);
     if (Object.keys(this.state.asset).length === 0) {
       this.updateAssetData();
     }
@@ -153,7 +156,10 @@ export class AssetView extends React.PureComponent<
         ) : null}
         <PropertiesView data={this.state.asset} />
         <div>
-          <NetworkGraph onClickNode={this.redirectToAsset} />
+          <NetworkGraph
+            networkGraph={this.state.asset.network_graph}
+            onClickNode={this.redirectToAsset}
+          />
         </div>
       </div>
     );
