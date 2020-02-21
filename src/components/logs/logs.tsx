@@ -35,21 +35,21 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
         if (log.related_asset) {
             const id = log.related_asset.toString()
             return <div>
-                <Tooltip content="Click to see related asset" position={Position.TOP}>
+                <Tooltip content="Click to see related asset" position={Position.BOTTOM_RIGHT}>
                     <a className="log-link" href={"/assets/" + id}>{log.log_content}</a>
                 </Tooltip>
             </div>
         } else if (log.related_model) {
             const id = log.related_model.toString()
             return <div>
-                <Tooltip content="Click to see related model" position={Position.TOP}>
+                <Tooltip content="Click to see related model" position={Position.BOTTOM_RIGHT}>
                     <a className="log-link" href={"/models/" + id}>{log.log_content}</a>
                 </Tooltip>
             </div >
         } else {
             return <div>
-                <Tooltip content="Related object no longer exists" position={Position.TOP}>
-                    <a className="log-link">{log.log_content}</a>
+                <Tooltip content="Related object no longer exists" position={Position.BOTTOM_RIGHT}>
+                    <a className="log-no-link">{log.log_content}</a>
                 </Tooltip>
             </div>
         }

@@ -2,7 +2,19 @@
     padding-left: 20px;
     padding-right: 20px;
   }
-
 .log-link {
   color: white !important;
+}
+.log-link:focus {
+  outline: none;
+}
+.log-no-link {
+  color: white !important;
+  text-decoration: none !important;
+}
+.log-no-link:hover{
+  cursor: default !important;
+}
+.log-no-link:focus {
+  outline: none;
 }
