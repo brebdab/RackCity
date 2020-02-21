@@ -1,6 +1,5 @@
 import React from "react";
 import { Graph } from "react-d3-graph";
-import { Classes } from "@blueprintjs/core";
 import { RouteComponentProps, withRouter } from "react-router";
 
 interface NetworkGraphProps {
@@ -15,11 +14,16 @@ class NetworkGraph extends React.Component<
     Sally: "1",
     Alice: "1"
   };
+  myCustomLabelBuilder() {
+    // do stuff to get the final result...
+    return "label string";
+  }
   decorateGraphNodesWithInitialPositioning = (nodes: any) => {
     return nodes.map((n: any) =>
       Object.assign({}, n, {
         x: n.x || Math.floor(Math.random() * 500),
-        y: n.y || Math.floor(Math.random() * 500)
+        y: n.y || Math.floor(Math.random() * 500),
+        labelProperty: this.myCustomLabelBuilder()
       })
     );
   };
@@ -65,10 +69,12 @@ class NetworkGraph extends React.Component<
   // };
 
   onDoubleClickNode = function(nodeId: any) {
+    console.log(nodeId);
     window.alert(`Double clicked node ${nodeId}`);
   };
 
   onRightClickNode = function(event: any, nodeId: any) {
+    console.log(nodeId);
     window.alert(`Right clicked node ${nodeId}`);
   };
 

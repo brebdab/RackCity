@@ -42,6 +42,7 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
     mac_addresses = serializers.SerializerMethodField()
     power_connections = serializers.SerializerMethodField()
     network_connections = serializers.SerializerMethodField()
+    network_graph = serializers.SerializerMethodField()
 
     class Meta:
         model = Asset
@@ -56,6 +57,7 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
             'comment',
             'mac_addresses',
             'network_connections',
+            'network_graph',
             'power_connections',
         )
 
@@ -70,6 +72,9 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
                 mac_addresses[port.port_name] = port.mac_address
         return mac_addresses
 
+    def get_network_graph(self,asset):
+        return generate_network_graph(asset)
+        
     def get_power_connections(self, asset):
         return serialize_power_connections(asset)
 
@@ -142,3 +147,50 @@ def serialize_power_connections(asset):
                 "port_number": port.power_connection.port_number
             }
     return power_connections
+
+
+def generate_network_graph(asset):
+    try:
+        nodes = {}
+        nodes[asset.hostname] = asset.id
+        links = []
+        # neighbors of distance one 
+        [nodes, links] = get_neighbor_assets(
+            asset.hostname,
+            asset.id,
+            nodes,
+            links)
+        # neighbors of distance two 
+        for hostname in nodes.keys():
+            # ignore current asset, already found neighbors
+            if(hostname != asset.hostname):
+                [nodes, links] = get_neighbor_assets(
+                    hostname,
+                    nodes[hostname],
+                    nodes,
+                    links)
+        return nodes, links
+    except ObjectDoesNotExist:
+        return
+
+
+
+def get_neighbor_assets(hostname, id, nodes, links):
+    try: 
+        source_ports = NetworkPort.objects.filter(asset=id)
+        for source_port in source_ports:
+            if source_port.connected_port:
+                destination_port_asset = source_port.connected_port.asset
+                if destination_port_asset.hostname not in nodes:
+                    nodes[destination_port_asset.hostname] = destination_port_asset.id
+                links.append(
+                    {source_port.asset.hostname,
+                        destination_port_asset.hostname}
+                    )
+        return nodes, links
+    except ObjectDoesNotExist:
+        return
+
+
+
+
