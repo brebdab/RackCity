@@ -58,7 +58,6 @@ import {
   renderAssetItem,
   filterAsset
 } from "./formUtils";
-import { hostname } from "os";
 
 //TO DO : add validation of types!!!
 
@@ -66,6 +65,7 @@ export interface AssetFormProps {
   token: string;
   type: FormTypes;
   initialValues?: AssetObject;
+  isOpen: boolean;
   submitForm(Asset: ShallowAssetObject, headers: any): Promise<any> | void;
   datacenters: Array<DatacenterObject>;
   currDatacenter: DatacenterObject;
@@ -97,7 +97,7 @@ export const required = (
 
 class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   initialState: AssetObject = this.props.initialValues
-    ? this.props.initialValues
+    ? JSON.parse(JSON.stringify(this.props.initialValues))
     : ({} as AssetObject);
   private setPowerPortInputState = () => {
     const power_ports_default: { [port: string]: boolean } = {};
@@ -111,10 +111,11 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
   public state = {
     values: this.initialState,
-    currDatacenter:
-      this.initialState.rack? this.initialState.rack.datacenter : (this.props.currDatacenter === ALL_DATACENTERS
-        ? undefined
-        : this.props.currDatacenter),
+    currDatacenter: this.initialState.rack
+      ? this.initialState.rack.datacenter
+      : this.props.currDatacenter === ALL_DATACENTERS
+      ? undefined
+      : this.props.currDatacenter,
     racks: [],
     models: [],
     errors: [],
@@ -170,10 +171,12 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   }
 
   componentDidMount() {
+    console.log("COMPONENT MOUNTED");
     this.setPowerPortInputState();
     this.setInitialNetworkConnectedAssets();
     let values = this.state.values;
-    if (values && !this.props.initialValues) {
+    console.log(this.props.initialValues);
+    if (!this.props.initialValues) {
       values = updateObject(values, {
         power_connections: {},
         mac_addresses: {}
@@ -347,10 +350,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       this.state.values.power_connections[port]
     ) {
       const portString = (port as unknown) as string;
-      console.log(
-        "button is ",
-        side === this.state.values.power_connections[portString].left_right
-      );
       return (
         side === this.state.values.power_connections[portString].left_right
       );
@@ -679,11 +678,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   }
 
   render() {
-    console.log(
-      "CURR_STATE",
-      this.state.currDatacenter,
-      this.props.currDatacenter
-    );
+    console.log("CURR_STATE", this.state.values);
     if (this.state.models.length === 0) {
       this.getModels();
     }
@@ -713,8 +708,9 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
           <FormGroup label="Datacenter (required)" inline={false}>
             <DatacenterSelect
               disabled={
-                this.props.currDatacenter &&
-                this.props.currDatacenter !== ALL_DATACENTERS
+                !isNullOrUndefined(this.initialState.rack) ||
+                (this.props.currDatacenter &&
+                  this.props.currDatacenter !== ALL_DATACENTERS)
               }
               popoverProps={{
                 minimal: true,
@@ -732,8 +728,9 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
               <Button
                 rightIcon="caret-down"
                 disabled={
-                  this.props.currDatacenter &&
-                  this.props.currDatacenter !== ALL_DATACENTERS
+                  !isNullOrUndefined(this.initialState.rack) ||
+                  (this.props.currDatacenter &&
+                    this.props.currDatacenter !== ALL_DATACENTERS)
                 }
                 text={
                   this.state.currDatacenter && this.state.currDatacenter.name
@@ -790,6 +787,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                   popoverClassName: "dropdown",
                   usePortal: true
                 }}
+                disabled={!isNullOrUndefined(this.initialState.model)}
                 items={this.state.models}
                 onItemSelect={(model: ModelObject) =>
                   this.setState({

@@ -60,6 +60,7 @@ class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
                 ? this.props.currDatacenter
                 : ALL_DATACENTERS
             }
+            isOpen={this.props.isOpen}
             type={FormTypes.CREATE}
             submitForm={this.props.submitForm}
             initialValues={

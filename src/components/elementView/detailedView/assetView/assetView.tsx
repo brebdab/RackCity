@@ -87,10 +87,7 @@ export class AssetView extends React.PureComponent<
   };
 
   public render() {
-    console.log(
-      "rendering asset view",
-      Object.keys(this.state.asset).length === 0
-    );
+    console.log("rendering asset view", this.state.asset);
     let params: any;
     params = this.props.match.params;
     if (Object.keys(this.state.asset).length === 0) {
