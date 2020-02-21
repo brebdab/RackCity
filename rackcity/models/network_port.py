@@ -1,6 +1,16 @@
 from django.db import models
 from .asset import Asset
-from django.core.exceptions import ObjectDoesNotExist
+
+
+def format_mac_address(mac_address):
+    # all lower case
+    mac_address = mac_address.lower()
+    # if contains - as a delimiter, convert to :
+    mac_address = mac_address.replace("-", ":")
+    # if contains no delimiters:
+    if (not mac_address.__contains__(":")):
+        mac_address = ':'.join(a+b for a, b in zip(mac_address[::2], mac_address[1::2]))
+    return mac_address
 
 
 class NetworkPort(models.Model):
@@ -31,19 +41,18 @@ class NetworkPort(models.Model):
             destination_port.connected_port
             and destination_port.connected_port != self
         ):
-            from rackcity.views.rackcity_utils import (
-                NetworkConnectionException
-            )
+            from rackcity.views.rackcity_utils import NetworkConnectionException
+
             raise NetworkConnectionException(
-                "Destination port '" +
-                destination_port.asset.hostname +
-                ":" +
-                destination_port.port_name +
-                "' is already connected to port '" +
-                destination_port.connected_port.asset.hostname +
-                ":" +
-                destination_port.connected_port.port_name +
-                "'. "
+                "Destination port '"
+                + destination_port.asset.hostname
+                + ":"
+                + destination_port.port_name
+                + "' is already connected to port '"
+                + destination_port.connected_port.asset.hostname
+                + ":"
+                + destination_port.connected_port.port_name
+                + "'. "
             )
         if self.connected_port:
             self.delete_network_connection()
@@ -65,6 +74,12 @@ class NetworkPort(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['asset', 'port_name'],
-                name='unique network port names on assets'),
+                fields=["asset", "port_name"],
+                name="unique network port names on assets",
+            ),
         ]
+
+    def save(self, *args, **kwargs):
+        if self.mac_address is not None:
+            self.mac_address = format_mac_address(self.mac_address)
+        super(NetworkPort, self).save(*args, **kwargs)

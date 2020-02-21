@@ -8,7 +8,9 @@ import {
   FormGroup,
   InputGroup,
   Intent,
-  MenuItem
+  MenuItem,
+  Tooltip,
+  Icon
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -56,8 +58,11 @@ import {
   StringSelect,
   AssetSelect,
   renderAssetItem,
-  filterAsset
+  filterAsset,
+  isMacAddressValid,
+  macAddressInfo
 } from "./formUtils";
+import { IconNames } from "@blueprintjs/icons";
 
 //TO DO : add validation of types!!!
 
@@ -224,6 +229,16 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     });
     e.preventDefault();
     if (this.state.values) {
+      this.validateMacAddresses();
+      if (this.state.values.hostname === "") {
+        this.setState({
+          values: updateObject(this.state.values, { hostname: undefined })
+        });
+      } else if (this.state.values.asset_number === "") {
+        this.setState({
+          values: updateObject(this.state.values, { asset_number: undefined })
+        });
+      }
       if (this.props.initialValues) {
         this.setState({
           values: updateObject(this.state.values, {
@@ -231,24 +246,48 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
           })
         });
       }
-
-      const resp = this.props.submitForm(
-        this.mapAssetObject(this.state.values),
-        this.headers
-      );
-      if (resp) {
-        resp.catch(err => {
-          console.log(err.response.data.failure_message);
-          let errors: Array<string> = this.state.errors;
-          errors.push(err.response.data.failure_message as string);
-          this.setState({
-            errors: errors
+      if (this.state.errors.length === 0) {
+        const resp = this.props.submitForm(
+          this.mapAssetObject(this.state.values),
+          this.headers
+        );
+        if (resp) {
+          resp.catch(err => {
+            console.log(err.response.data.failure_message);
+            let errors: Array<string> = this.state.errors;
+            errors.push(err.response.data.failure_message as string);
+            this.setState({
+              errors: errors
+            });
           });
-        });
+        }
       }
     }
   };
 
+  validateMacAddresses = () => {
+    Object.entries(this.state.values.mac_addresses).forEach(
+      ([port, mac_address]) => {
+        if (!isMacAddressValid(mac_address)) {
+          const errors: Array<string> = this.state.errors;
+          errors.push(
+            "Mac Address " +
+              '"' +
+              mac_address +
+              '"' +
+              " for " +
+              '"' +
+              port +
+              '"' +
+              " is invalid."
+          );
+          this.setState({
+            errors
+          });
+        }
+      }
+    );
+  };
   handleChange = (field: { [key: string]: any }) => {
     this.setState({
       values: updateObject(this.state.values, {
@@ -457,7 +496,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         port_fields.push(
           <div className="power-form-container">
             <div>
-              <i>Power Port: {i}</i>
+              <i className="section-title">Power Port: {i}</i>
 
               {i === 1 || i === 2 ? (
                 <div>
@@ -674,7 +713,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   }
 
   render() {
-    console.log("CURR_STATE", this.state.values);
+    console.log("CURR_STATE", this.state.values,this.props.initialValues);
     if (this.state.models.length === 0) {
       this.getModels();
     }
@@ -817,8 +856,19 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                   {values.model.network_ports.map((port, index) => {
                     return (
                       <div className="power-form-container">
-                        <i>{"Network Port: " + port}</i>
-                        <FormGroup label="Mac Address " inline={false}>
+                        <i className="section-title">
+                          {"Network Port: " + port}
+                        </i>
+                        <div>
+                          <div className="text-with-tooltip">
+                            {"Mac Address "}
+                            <Tooltip
+                              className="tooltip-icon"
+                              content={macAddressInfo}
+                            >
+                              <Icon icon={IconNames.INFO_SIGN} />
+                            </Tooltip>
+                          </div>
                           <InputGroup
                             value={values.mac_addresses[port]}
                             type="string"
@@ -834,7 +884,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                               });
                             }}
                           />
-                        </FormGroup>
+                        </div>
                         <FormGroup
                           label="Add Network Connection"
                           inline={false}
