@@ -50,7 +50,7 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
         } else {
             return <div>
                 <Tooltip content="Related object no longer exists" position={Position.BOTTOM_RIGHT}>
-                    <a className="log-no-link">{log.log_content}</a>
+                    <p className="log-no-link">{log.log_content}</p>
                 </Tooltip>
             </div>
         }
