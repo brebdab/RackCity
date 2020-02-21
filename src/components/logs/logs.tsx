@@ -44,8 +44,7 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
         total_pages: 0,
         page_type: PagingTypes.TEN
     };
-
-    getTotalPages = async (
+    private getTotalPages = async (
         page_size: number
     ): Promise<number> => {
         const config = {
@@ -62,8 +61,7 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
                 return res.data.page_count;
             });
     }
-
-    getLogs = async (
+    private getLogs = async (
         page: number,
         page_type: PagingTypes
     ): Promise<Array<LogEntry>> => {
@@ -83,14 +81,12 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
                 return res.data.logs;
             });
     }
-
-    // Paging
-    resetPage = () => {
+    private resetPage = () => {
         this.setState({
             curr_page: 1
         });
     };
-    previousPage = () => {
+    private previousPage = () => {
         if (this.state.curr_page > 1) {
             const next_page = this.state.curr_page - 1;
             this.getLogs(
@@ -104,7 +100,7 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
             });
         }
     };
-    nextPage = () => {
+    private nextPage = () => {
         if (this.state.curr_page < this.state.total_pages) {
             const next_page = this.state.curr_page + 1;
             this.getLogs(
@@ -118,7 +114,7 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
             });
         }
     };
-    handlePagingChange = (page: PagingTypes) => {
+    private handlePagingChange = (page: PagingTypes) => {
         this.resetPage();
         this.setState({
             page_type: page
@@ -141,21 +137,6 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
             })
         }
     };
-
-    // TOASTS
-    private toaster: Toaster = {} as Toaster;
-    private addToast = (toast: IToastProps) => {
-        toast.timeout = 5000;
-        this.toaster.show(toast);
-    };
-    private addSuccessToast = (message: string) => {
-        this.addToast({ message: message, intent: Intent.PRIMARY });
-    };
-    private addErrorToast = (message: string) => {
-        this.addToast({ message: message, intent: Intent.DANGER });
-    };
-
-    // LINKS
     private getLinkedLog(log: LogEntry) {
         if (log.related_asset) {
             const id = log.related_asset.toString()
@@ -189,7 +170,6 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
         console.log("searching lmao")
     }
 
-    // render
     public render() {
         console.log(this.state);
         if (
