@@ -1,6 +1,13 @@
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
-import { Classes, Pre, Tooltip, Position } from "@blueprintjs/core";
+import {
+    Classes,
+    Pre,
+    Tooltip,
+    Position,
+    HTMLSelect,
+    Icon,
+} from "@blueprintjs/core";
 import { RouteComponentProps } from "react-router";
 import "../elementView//elementView.scss";
 import { connect } from "react-redux";
@@ -9,8 +16,10 @@ import axios from "axios";
 import "./logs.scss";
 import {
     FilterTypes,
-    TextFilterTypes
+    TextFilterTypes,
+    PagingTypes
 } from "../elementView/elementUtils";
+import { IconNames } from "@blueprintjs/icons";
 
 export function getLogFilters(filterValue: string) {
     const username_filter = {
@@ -56,16 +65,112 @@ interface LogsProps {
 }
 interface LogsState {
     logs: Array<LogEntry>;
-    state_loaded: boolean;
+    curr_page: number;
+    total_pages: number;
+    page_type: PagingTypes;
     search_query?: string;
 }
 class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
     public state: LogsState = {
         logs: [],
-        state_loaded: false,
+        curr_page: 1,
+        total_pages: 0,
+        page_type: PagingTypes.TEN,
         search_query: undefined
     };
-
+    private getTotalPages = async (
+        page_size: number
+    ): Promise<number> => {
+        const config = {
+            headers: {
+                Authorization: "Token " + this.props.token
+            },
+            params: {
+                page_size
+            }
+        };
+        return await axios
+            .post(API_ROOT + "api/logs/pages", {}, config)
+            .then(res => {
+                return res.data.page_count;
+            });
+    }
+    private getLogs = async (
+        page: number,
+        page_type: PagingTypes
+    ): Promise<Array<LogEntry>> => {
+        const config = {
+            headers: {
+                Authorization: "Token " + this.props.token
+            },
+            params: (page_type === PagingTypes.ALL) ?
+                {} : {
+                    page_size: page_type,
+                    page
+                }
+        };
+        return await axios
+            .post(API_ROOT + "api/logs/get-many", {}, config)
+            .then(res => {
+                return res.data.logs;
+            });
+    }
+    private resetPage = () => {
+        this.setState({
+            curr_page: 1
+        });
+    };
+    private previousPage = () => {
+        if (this.state.curr_page > 1) {
+            const next_page = this.state.curr_page - 1;
+            this.getLogs(
+                next_page,
+                this.state.page_type
+            ).then(res => {
+                this.setState({
+                    logs: res,
+                    curr_page: next_page
+                });
+            });
+        }
+    };
+    private nextPage = () => {
+        if (this.state.curr_page < this.state.total_pages) {
+            const next_page = this.state.curr_page + 1;
+            this.getLogs(
+                next_page,
+                this.state.page_type
+            ).then(res => {
+                this.setState({
+                    logs: res,
+                    curr_page: next_page
+                });
+            });
+        }
+    };
+    private handlePagingChange = (page: PagingTypes) => {
+        this.resetPage();
+        this.setState({
+            page_type: page
+        });
+        this.getLogs(
+            1,
+            page
+        ).then(res => {
+            this.setState({
+                logs: res
+            })
+        })
+        if (page !== PagingTypes.ALL) {
+            this.getTotalPages(
+                page
+            ).then(res => {
+                this.setState({
+                    total_pages: res
+                })
+            })
+        }
+    };
     private getLinkedLog(log: LogEntry) {
         if (log.related_asset) {
             const id = log.related_asset.toString()
@@ -97,17 +202,28 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
     }
 
     public render() {
-        if (!this.state.state_loaded) {
-            getLogs(this.props.token).then(result => {
-                const logs_array = result.logs
-                console.log(logs_array)
-                this.setState({
-                    logs: logs_array,
-                    state_loaded: true
-                });
-            });
-        }
         console.log(this.state);
+        if (
+            this.state.logs.length === 0
+        ) {
+            this.getLogs(
+                this.state.curr_page,
+                this.state.page_type
+            ).then(res => {
+                this.setState({
+                    logs: res
+                })
+            })
+            if (this.state.page_type !== PagingTypes.ALL) {
+                this.getTotalPages(
+                    this.state.page_type
+                ).then(res => {
+                    this.setState({
+                        total_pages: res
+                    })
+                })
+            }
+        }
         return (
             <div className={Classes.DARK + " log-view"}>
                 <h1>System Logs</h1>
@@ -129,29 +245,47 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
                         onClick={() => this.handleSearch()}
                     ></button>
                 </div>
-                <Pre>
-                    {this.state.logs.map(log => this.getLinkedLog(log))}
-                </Pre>
+                <div className="page-control">
+                    <HTMLSelect
+                        onChange={(e: any) => this.handlePagingChange(e.target.value)}
+                    >
+                        {" "}
+                        <option> {PagingTypes.TEN}</option>
+                        <option>{PagingTypes.FIFTY}</option>
+                        <option>{PagingTypes.ALL}</option>
+                    </HTMLSelect>
+                    {this.state.page_type !== PagingTypes.ALL
+                        ? [
+                            <span>
+                                <Icon
+                                    className="icon"
+                                    icon={IconNames.CARET_LEFT}
+                                    iconSize={Icon.SIZE_LARGE}
+                                    onClick={() => this.previousPage()}
+                                />
+                            </span>,
+                            <span>
+                                page {this.state.curr_page} of {this.state.total_pages}
+                            </span>,
+                            <span>
+                                <Icon
+                                    className="icon"
+                                    icon={IconNames.CARET_RIGHT}
+                                    iconSize={Icon.SIZE_LARGE}
+                                    onClick={() => this.nextPage()}
+                                />
+                            </span>
+                        ]
+                        : null}
+                </div>
+                <div>
+                    <Pre>
+                        {this.state.logs.map(log => this.getLinkedLog(log))}
+                    </Pre>
+                </div>
             </div>
         );
     }
-}
-
-async function getLogs(token: string) {
-    const headers = {
-        headers: {
-            Authorization: "Token " + token
-        }
-    };
-    return await axios
-        .post(
-            API_ROOT + "api/logs/get-many",
-            {},
-            headers
-        )
-        .then(res => {
-            return res.data;
-        });
 }
 
 const mapStateToProps = (state: any) => {
