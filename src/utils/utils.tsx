@@ -212,7 +212,7 @@ export function isRackObject(obj: any): obj is RackObject {
   return obj && obj.rack_num;
 }
 export function isAssetObject(obj: any): obj is AssetObject {
-  return obj && obj.hostname;
+  return obj && obj.model;
 }
 
 export function isUserObject(obj: any): obj is UserInfoObject {

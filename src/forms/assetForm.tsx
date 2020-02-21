@@ -230,6 +230,15 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     e.preventDefault();
     if (this.state.values) {
       this.validateMacAddresses();
+      if (this.state.values.hostname === "") {
+        this.setState({
+          values: updateObject(this.state.values, { hostname: undefined })
+        });
+      } else if (this.state.values.asset_number === "") {
+        this.setState({
+          values: updateObject(this.state.values, { asset_number: undefined })
+        });
+      }
       if (this.props.initialValues) {
         this.setState({
           values: updateObject(this.state.values, {
@@ -701,7 +710,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   }
 
   render() {
-    console.log("CURR_STATE", this.state.values);
+    console.log("CURR_STATE", this.state.values,this.props.initialValues);
     if (this.state.models.length === 0) {
       this.getModels();
     }
