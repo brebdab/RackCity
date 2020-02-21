@@ -24,6 +24,14 @@ def validate_owner(value):
         )
 
 
+def get_asset_number():
+    for asset_number in range(100000, 999999):
+        try:
+            Asset.objects.get(asset_number=asset_number)
+        except ObjectDoesNotExist:
+            return asset_number
+
+
 class Asset(models.Model):
     asset_number = models.IntegerField(
         unique=True,
@@ -72,12 +80,7 @@ class Asset(models.Model):
             raise valid_error
         else:
             if self.asset_number is None:
-                for asset_number in range(100000, 999999):
-                    try:
-                        Asset.objects.get(asset_number=asset_number)
-                    except ObjectDoesNotExist:
-                        self.asset_number = asset_number
-                        break
+                self.asset_number = get_asset_number()
             super(Asset, self).save(*args, **kwargs)
             self.add_network_ports()
             self.add_power_ports()
