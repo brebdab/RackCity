@@ -33,12 +33,9 @@ interface LogsProps {
 }
 interface LogsState {
     logs: Array<LogEntry>;
-    state_loaded: boolean;
-    // search_query?: string;
     curr_page: number;
     total_pages: number;
     page_type: PagingTypes;
-    should_update: boolean;
 }
 export function getLogPages(
     page_type: PagingTypes,
@@ -62,90 +59,49 @@ export function getLogPages(
 class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
     public state: LogsState = {
         logs: [],
-        state_loaded: false,
-        // search_query: undefined,
         curr_page: 1,
         total_pages: 0,
-        page_type: PagingTypes.TEN,
-        should_update: true
+        page_type: PagingTypes.TEN
     };
 
-    private async updateTotalPages() {
+    getTotalPages = async (
+        page_size: number
+    ): Promise<number> => {
         const config = {
             headers: {
                 Authorization: "Token " + this.props.token
             },
-            params: (this.state.page_type === PagingTypes.ALL) ?
-                {} : {
-                    page_size: this.state.page_type,
-                }
+            params: {
+                page_size
+            }
         };
         return await axios
             .post(API_ROOT + "api/logs/pages", {}, config)
             .then(res => {
-                this.setState({
-                    total_pages: res.data.page_count
-                });
+                return res.data.page_count;
             });
     }
 
-    private async updateLogs() {
-        this.handleLogsUpdate(false);
+    getLogs = async (
+        page: number,
+        page_type: PagingTypes
+    ): Promise<Array<LogEntry>> => {
         const config = {
             headers: {
                 Authorization: "Token " + this.props.token
             },
-            params: (this.state.page_type === PagingTypes.ALL) ?
+            params: (page_type === PagingTypes.ALL) ?
                 {} : {
-                    page_size: this.state.page_type,
-                    page: this.state.curr_page
+                    page_size: page_type,
+                    page
                 }
         };
-        console.log(config)
         return await axios
             .post(API_ROOT + "api/logs/get-many", {}, config)
             .then(res => {
-                this.setState({
-                    logs: res.data.logs
-                })
-            })
-            .catch(err => {
-                this.addToast({
-                    message: err.response.data.failure_message,
-                    intent: Intent.DANGER
-                });
+                return res.data.logs;
             });
     }
-
-    // // Get logs
-    // private getLogs = async (
-    //     page: number,
-    //     page_type: PagingTypes,
-    //     token: string
-    // ): Promise<Array<LogEntry>> => {
-    //     this.handleLogsUpdate(false);
-    //     const config = {
-    //         headers: {
-    //             Authorization: "Token " + token
-    //         },
-    //         params: (page_type === PagingTypes.ALL) ?
-    //             {} : {
-    //                 page_size: page_type,
-    //                 page
-    //             }
-    //     };
-    //     return await axios
-    //         .post(API_ROOT + "api/logs/get-many", {}, config)
-    //         .then(res => {
-    //             return res.data.logs;
-    //         });
-    // };
-
-    public handleLogsUpdate = (status: boolean) => {
-        this.setState({
-            should_update: status
-        });
-    };
 
     // Paging
     resetPage = () => {
@@ -156,32 +112,53 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
     previousPage = () => {
         if (this.state.curr_page > 1) {
             const next_page = this.state.curr_page - 1;
-            this.setState({
-                curr_page: next_page
+            this.getLogs(
+                next_page,
+                this.state.page_type
+            ).then(res => {
+                this.setState({
+                    logs: res,
+                    curr_page: next_page
+                });
             });
-            this.updateLogs();
         }
     };
     nextPage = () => {
         if (this.state.curr_page < this.state.total_pages) {
             const next_page = this.state.curr_page + 1;
-            this.setState({
-                curr_page: next_page
+            this.getLogs(
+                next_page,
+                this.state.page_type
+            ).then(res => {
+                this.setState({
+                    logs: res,
+                    curr_page: next_page
+                });
             });
-            this.updateLogs();
         }
     };
     handlePagingChange = (page: PagingTypes) => {
-        console.log("handling page change")
-        console.log(this.state.curr_page)
-        console.log(this.state.total_pages)
         this.resetPage();
         this.setState({
             page_type: page
         });
-        console.log(this.state.page_type)
-        this.updateLogs();
-        this.updateTotalPages();
+        this.getLogs(
+            1,
+            page
+        ).then(res => {
+            this.setState({
+                logs: res
+            })
+        })
+        if (page !== PagingTypes.ALL) {
+            this.getTotalPages(
+                page
+            ).then(res => {
+                this.setState({
+                    total_pages: res
+                })
+            })
+        }
     };
 
     // TOASTS
@@ -231,25 +208,30 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
         console.log("searching lmao")
     }
 
-    // render stuff
-    componentDidUpdate() {
-        if (this.state.should_update) {
-            console.log("table updated");
-            this.updateLogs();
-            this.updateTotalPages();
-        }
-    }
-
-    componentDidMount() {
-        if (this.state.should_update) {
-            console.log("table updated");
-            this.updateLogs();
-            this.updateTotalPages();
-        }
-    }
-
+    // render
     public render() {
         console.log(this.state);
+        if (
+            this.state.logs.length === 0
+        ) {
+            this.getLogs(
+                this.state.curr_page,
+                this.state.page_type
+            ).then(res => {
+                this.setState({
+                    logs: res
+                })
+            })
+            if (this.state.page_type !== PagingTypes.ALL) {
+                this.getTotalPages(
+                    this.state.page_type
+                ).then(res => {
+                    this.setState({
+                        total_pages: res
+                    })
+                })
+            }
+        }
         return (
             <div className={Classes.DARK + " log-view"}>
                 <h1>System Logs</h1>
