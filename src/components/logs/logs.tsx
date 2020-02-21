@@ -33,28 +33,25 @@ interface LogsProps {
 }
 interface LogsState {
     logs: Array<LogEntry>;
-    state_loaded: boolean;
-    search_query?: string;
+    // state_loaded: boolean;
+    // search_query?: string;
     curr_page: number;
     total_pages: number;
     page_type: PagingTypes;
-    updateLogs: boolean;
+    shouldUpdateLogs: boolean;
 }
 export function getLogPages(
     page_type: PagingTypes,
     token: string
 ) {
-    const params =
-        page_type === PagingTypes.ALL
-            ? {}
-            : {
-                page_size: page_type,
-            };
     const config = {
         headers: {
             Authorization: "Token " + token
         },
-        params: params
+        params: (page_type === PagingTypes.ALL) ?
+            {} : {
+                page_size: page_type,
+            }
     };
     return axios
         .post(API_ROOT + "api/logs/pages", {}, config)
@@ -65,84 +62,120 @@ export function getLogPages(
 class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
     public state: LogsState = {
         logs: [],
-        state_loaded: false,
-        search_query: undefined,
+        // state_loaded: false,
+        // search_query: undefined,
         curr_page: 1,
         total_pages: 0,
-        page_type: 10,
-        updateLogs: false
+        page_type: PagingTypes.FIFTY,
+        shouldUpdateLogs: true
     };
 
-    // Get
-    getLogs = (
-        page: number,
-        page_type: PagingTypes,
-        token: string
-    ): Promise<Array<LogEntry>> => {
-        this.handleDataUpdate(false);
+    private async updateTotalPages() {
+        const config = {
+            headers: {
+                Authorization: "Token " + this.props.token
+            },
+            params: (this.state.page_type === PagingTypes.ALL) ?
+                {} : {
+                    page_size: this.state.page_type,
+                }
+        };
+        return await axios
+            .post(API_ROOT + "api/logs/pages", {}, config)
+            .then(res => {
+                this.setState({
+                    total_pages: res.data.page_count
+                });
+            });
+    }
+
+    private async updateLogs(page: number, page_type: PagingTypes, token: string) {
+        this.handleLogsUpdate(false);
         const config = {
             headers: {
                 Authorization: "Token " + token
             },
-            params: page_type === PagingTypes.ALL
-                ? {}
-                : {
+            params: (page_type === PagingTypes.ALL) ?
+                {} : {
                     page_size: page_type,
                     page
                 }
         };
-        return axios
+        return await axios
             .post(API_ROOT + "api/logs/get-many", {}, config)
             .then(res => {
-                return res.data.logs;
+                this.setState({
+                    logs: res.data.logs
+                })
+            })
+            .catch(err => {
+                this.addToast({
+                    message: err.response.data.failure_message,
+                    intent: Intent.DANGER
+                });
             });
-    };
+    }
 
-    public handleDataUpdate = (status: boolean) => {
+    // // Get logs
+    // private getLogs = async (
+    //     page: number,
+    //     page_type: PagingTypes,
+    //     token: string
+    // ): Promise<Array<LogEntry>> => {
+    //     this.handleLogsUpdate(false);
+    //     const config = {
+    //         headers: {
+    //             Authorization: "Token " + token
+    //         },
+    //         params: (page_type === PagingTypes.ALL) ?
+    //             {} : {
+    //                 page_size: page_type,
+    //                 page
+    //             }
+    //     };
+    //     return await axios
+    //         .post(API_ROOT + "api/logs/get-many", {}, config)
+    //         .then(res => {
+    //             return res.data.logs;
+    //         });
+    // };
+
+    public handleLogsUpdate = (status: boolean) => {
         this.setState({
-            updateLogs: status
+            shouldUpdateLogs: status
         });
     };
 
     // Paging
     resetPage = () => {
-        console.log("setting currpage to 1");
         this.setState({
             curr_page: 1
         });
     };
     previousPage = () => {
-        if (this.state.curr_page > 1 && this.getLogs) {
+        if (this.state.curr_page > 1) {
             const next_page = this.state.curr_page - 1;
-            this
-                .getLogs(
-                    next_page,
-                    this.state.page_type,
-                    this.props.token
-                )
-                .then(res => {
-                    this.setState({
-                        logs: res,
-                        curr_page: next_page
-                    });
-                });
+            this.updateLogs(
+                next_page,
+                this.state.page_type,
+                this.props.token
+            );
+            this.setState({
+                curr_page: next_page
+            });
         }
     };
     nextPage = () => {
-        if (this.state.curr_page < this.state.total_pages && this.getLogs) {
+        if (this.state.curr_page < this.state.total_pages) {
             const next_page = this.state.curr_page + 1;
-            this
-                .getLogs(
-                    next_page,
-                    this.state.page_type,
-                    this.props.token
-                )
-                .then(res => {
-                    this.setState({
-                        logs: res,
-                        curr_page: next_page
-                    });
-                });
+            this.updateLogs(
+                next_page,
+                this.state.page_type,
+                this.props.token
+            );
+            this.setState({
+                curr_page: next_page
+            });
         }
     };
     handlePagingChange = (page: PagingTypes) => {
@@ -152,31 +185,15 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
         this.updateData(page);
     };
     updateData = (page: PagingTypes) => {
-        this.getLogs!(
+        this.updateLogs(
             this.state.curr_page,
             page,
             this.props.token
-        )
-            .then(res => {
-                this.setState({
-                    logs: res
-                });
-            })
-            .catch(err => {
-                this.addToast({
-                    message: err.response.data.failure_message,
-                    intent: Intent.DANGER
-                });
-            });
-        getLogPages(page, this.props.token)
-            .then(res => {
-                this.setState({
-                    total_pages: res
-                });
-            });
+        );
+        this.updateTotalPages();
     };
 
-    //TOASTS
+    // TOASTS
     private toaster: Toaster = {} as Toaster;
     private addToast = (toast: IToastProps) => {
         toast.timeout = 5000;
@@ -189,7 +206,7 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
         this.addToast({ message: message, intent: Intent.DANGER });
     };
 
-    // Links
+    // LINKS
     private getLinkedLog(log: LogEntry) {
         if (log.related_asset) {
             const id = log.related_asset.toString()
@@ -214,6 +231,7 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
         }
     }
 
+    // SEARCHING
     private handleSearchInputChange() {
         console.log("searching input change")
     }
@@ -226,18 +244,18 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
         // if (!this.state.state_loaded) {
         //     this
         //         .getLogs(
+        //             this.state.curr_page,
+        //             this.state.page_type,
         //             this.props.token
         //         )
-        //         .then(result => {
-        //             const logs_array = result.logs
-        //             console.log(logs_array)
+        //         .then(res => {
         //             this.setState({
-        //                 logs: logs_array,
-        //                 state_loaded: true
+        //                 state_loaded: true,
+        //                 logs: res
         //             });
         //         });
         // }
-        // console.log(this.state);
+        console.log(this.state);
         return (
             <div className={Classes.DARK + " log-view"}>
                 <h1>System Logs</h1>
@@ -256,8 +274,7 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
                         onClick={() => this.handleSearch()}
                     ></button>
                 </div>
-
-                <div className="table-control">
+                <div className="page-control">
                     <HTMLSelect
                         onChange={(e: any) => this.handlePagingChange(e.target.value)}
                     >
