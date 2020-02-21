@@ -229,6 +229,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       console.log(this.state.isOpen);
     });
   };
+  private toaster: Toaster = {} as Toaster;
   private addSuccessToast(message: string) {
     this.addToast({ message: message, intent: Intent.PRIMARY });
   }
@@ -239,7 +240,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     toast.timeout = 5000;
     this.toaster.show(toast);
   }
-  private toaster: Toaster = {} as Toaster;
+
   private refHandlers = {
     toaster: (ref: Toaster) => (this.toaster = ref)
   };

@@ -6,7 +6,12 @@ import {
 } from "@blueprintjs/select";
 import React from "react";
 import { MenuItem } from "@blueprintjs/core";
-import { ModelObject, RackObject, DatacenterObject } from "../utils/utils";
+import {
+  ModelObject,
+  RackObject,
+  DatacenterObject,
+  AssetObject
+} from "../utils/utils";
 
 export enum FormTypes {
   CREATE = "create",
@@ -83,6 +88,27 @@ export const filterModel: ItemPredicate<ModelObject> = (
     return (
       `. ${normalizedVendor} ${normalizedModel}`.indexOf(normalizedQuery) >= 0
     );
+  }
+};
+
+export const filterAsset: ItemPredicate<AssetObject> = (
+  query,
+  asset,
+  _index,
+  exactMatch
+) => {
+  if (asset.hostname) {
+    const normalizedHostname = asset.hostname.toLowerCase();
+
+    const normalizedQuery = query.toLowerCase();
+
+    if (exactMatch) {
+      return normalizedHostname === normalizedQuery;
+    } else {
+      return `. ${normalizedHostname}`.indexOf(normalizedQuery) >= 0;
+    }
+  } else {
+    return false;
   }
 };
 
@@ -185,6 +211,27 @@ export const renderModelItem: ItemRenderer<ModelObject> = (
     />
   );
 };
+
+export const renderAssetItem: ItemRenderer<AssetObject> = (
+  asset: AssetObject,
+  { handleClick, modifiers, query }
+) => {
+  if (!modifiers.matchesPredicate) {
+    return null;
+  }
+  const text = asset.hostname;
+  if (text) {
+    return (
+      <MenuItem
+        active={modifiers.active}
+        label={asset.hostname}
+        text={highlightText(text, query)}
+        onClick={handleClick}
+      />
+    );
+  }
+  return null;
+};
 export const renderCreateItemOption = (
   query: string,
   active: boolean,
@@ -203,3 +250,4 @@ export const StringSuggest = Suggest.ofType<string>();
 export const ModelSelect = Select.ofType<ModelObject>();
 export const RackSelect = Select.ofType<RackObject>();
 export const DatacenterSelect = Select.ofType<DatacenterObject>();
+export const AssetSelect = Select.ofType<AssetObject>();
