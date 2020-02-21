@@ -237,19 +237,21 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
           })
         });
       }
-      const resp = this.props.submitForm(
-        this.mapAssetObject(this.state.values),
-        this.headers
-      );
-      if (resp) {
-        resp.catch(err => {
-          console.log(err.response.data.failure_message);
-          let errors: Array<string> = this.state.errors;
-          errors.push(err.response.data.failure_message as string);
-          this.setState({
-            errors: errors
+      if (this.state.errors.length === 0) {
+        const resp = this.props.submitForm(
+          this.mapAssetObject(this.state.values),
+          this.headers
+        );
+        if (resp) {
+          resp.catch(err => {
+            console.log(err.response.data.failure_message);
+            let errors: Array<string> = this.state.errors;
+            errors.push(err.response.data.failure_message as string);
+            this.setState({
+              errors: errors
+            });
           });
-        });
+        }
       }
     }
   };
