@@ -17,7 +17,8 @@ import "./logs.scss";
 import {
     FilterTypes,
     TextFilterTypes,
-    PagingTypes
+    PagingTypes,
+    IFilter
 } from "../elementView/elementUtils";
 import { IconNames } from "@blueprintjs/icons";
 
@@ -69,6 +70,7 @@ interface LogsState {
     total_pages: number;
     page_type: PagingTypes;
     search_query?: string;
+    filters?: Array<Map<string, string>>;
 }
 class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
     public state: LogsState = {
@@ -76,7 +78,8 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
         curr_page: 1,
         total_pages: 0,
         page_type: PagingTypes.TEN,
-        search_query: undefined
+        search_query: undefined,
+        filters: undefined
     };
     private getTotalPages = async (
         page_size: number
@@ -89,8 +92,9 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
                 page_size
             }
         };
+        const body = (this.state.filters !== undefined) ? this.state.filters : {}
         return await axios
-            .post(API_ROOT + "api/logs/pages", {}, config)
+            .post(API_ROOT + "api/logs/pages", body, config)
             .then(res => {
                 return res.data.page_count;
             });
@@ -109,8 +113,9 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
                     page
                 }
         };
+        const body = (this.state.filters !== undefined) ? this.state.filters : {}
         return await axios
-            .post(API_ROOT + "api/logs/get-many", {}, config)
+            .post(API_ROOT + "api/logs/get-many", body, config)
             .then(res => {
                 return res.data.logs;
             });
@@ -197,7 +202,10 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
 
     private handleSearch() {
         if (this.state.search_query !== undefined) {
-            console.log(getLogFilters(this.state.search_query))
+            const query_filters = getLogFilters(this.state.search_query)
+            this.setState({
+                filters: query_filters
+            })
         }
     }
 
