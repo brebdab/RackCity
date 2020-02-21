@@ -171,11 +171,9 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   }
 
   componentDidMount() {
-    console.log("COMPONENT MOUNTED");
     this.setPowerPortInputState();
     this.setInitialNetworkConnectedAssets();
     let values = this.state.values;
-    console.log(this.props.initialValues);
     if (!this.props.initialValues) {
       values = updateObject(values, {
         power_connections: {},
@@ -346,7 +344,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   };
   getPowerButtonStatus = (side: PowerSide, port: number) => {
     console.log(this.state.values.power_connections);
-    //if side has already been selected or this is a modify form
     if (
       this.state.values.power_connections &&
       this.state.values.power_connections[port]
@@ -355,17 +352,12 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       return (
         side === this.state.values.power_connections[portString].left_right
       );
-      // } else if (port === 1) {
-      //   return side === PowerSide.LEFT;
-      // } else if (port === 2) {
-      //   return side === PowerSide.RIGHT;
     } else {
       return false;
     }
   };
 
   shouldDisablePowerPort = (port: number) => {
-    //if side has already been selected or this is a modify form
     if (
       this.state.values.power_connections &&
       this.state.values.power_connections[port]
@@ -376,7 +368,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     }
   };
   getPortsForSide = (port: number) => {
-    //if side has already been selected or this is a modify form
     let side;
     if (
       this.state.values.power_connections &&
@@ -684,10 +675,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     if (this.state.models.length === 0) {
       this.getModels();
     }
-
-    // if (this.state.racks.length === 0) {
-    //   this.getRacks(this.props.token);
-    // }
     if (this.state.users.length === 0) {
       this.getUsers();
     }
@@ -732,7 +719,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
             >
               <Button
                 rightIcon="caret-down"
-         
                 text={
                   this.state.currDatacenter && this.state.currDatacenter.name
                     ? this.state.currDatacenter.name
@@ -802,7 +788,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                 <Button
                   rightIcon="caret-down"
                   disabled={!isNullOrUndefined(this.initialState.model)}
-
                   text={
                     this.state.values.model
                       ? this.state.values.model.vendor +
@@ -902,7 +887,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                                 dest_port
                               );
                             }}
-                            // createNewItemRenderer={renderCreateItemOption}
                             itemRenderer={renderStringItem}
                             itemPredicate={filterString}
                             noResults={
@@ -960,7 +944,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                   values: updateObject(values, { owner: owner })
                 })
               }
-              // createNewItemRenderer={renderCreateItemOption}
               itemRenderer={renderStringItem}
               itemPredicate={filterString}
               noResults={<MenuItem disabled={true} text="No results." />}
