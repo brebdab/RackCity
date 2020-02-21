@@ -25,6 +25,9 @@ from .asset_views import (
     asset_bulk_upload,
     asset_bulk_approve,
     asset_bulk_export,
+    network_bulk_upload,
+    network_bulk_approve,
+    network_bulk_export,
     asset_page_count,
     asset_fields,
 )
@@ -40,7 +43,7 @@ from .user_views import (
     netid_login,
     RegisterNameView,
     user_delete,
-    user_list,
+    user_many,
     user_page_count,
     usernames,
     who_am_i,

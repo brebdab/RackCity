@@ -1,0 +1,21 @@
+.log-view {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+.log-link {
+  color: white !important;
+}
+.log-link:focus {
+  outline: none;
+}
+.log-no-link {
+  color: white !important;
+  text-decoration: none !important;
+  line-height: 0em;
+}
+.log-no-link:hover{
+  cursor: default !important;
+}
+.log-no-link:focus {
+  outline: none;
+}

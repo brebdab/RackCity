@@ -1,7 +1,7 @@
 import {
   RackRangeFields,
   ModelObject,
-  AssetObjectOld,
+  AssetObject,
   DatacenterObject
 } from "../../utils/utils";
 import { API_ROOT } from "../../utils/api-config";
@@ -88,15 +88,12 @@ export const deleteModel = (model: ModelObject, headers: any) => {
   const data = { id: model!.id };
   return axios.post(API_ROOT + "api/models/delete", data, headers);
 };
-export const deleteAsset = (asset: AssetObjectOld, headers: any) => {
+export const deleteAsset = (asset: AssetObject, headers: any) => {
   console.log("Deleting asset");
   const data = { id: asset.id };
   return axios.post(API_ROOT + "api/assets/delete", data, headers);
 };
-export const modifyAsset = (
-  asset: AssetObjectOld,
-  headers: any
-): Promise<any> => {
+export const modifyAsset = (asset: AssetObject, headers: any): Promise<any> => {
   return axios.post(API_ROOT + "api/assets/modify", asset, headers);
 };
 

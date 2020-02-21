@@ -97,11 +97,12 @@ export class ModelView extends React.PureComponent<
       isFormOpen: false
     });
   };
+  private toaster: Toaster = {} as Toaster;
   private addToast(toast: IToastProps) {
     toast.timeout = 5000;
     this.toaster.show(toast);
   }
-  private toaster: Toaster = {} as Toaster;
+
   private refHandlers = {
     toaster: (ref: Toaster) => (this.toaster = ref)
   };

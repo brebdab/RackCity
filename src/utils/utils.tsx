@@ -31,13 +31,14 @@ export interface AssetObject extends ParentAssetObject {
 }
 
 interface ParentAssetObject extends ElementObject {
+  asset_number: string;
   hostname: string;
   rack_position: string;
   mac_addresses: { [port: string]: string };
   network_connections: Array<NetworkConnection>;
   power_connections: { [port: string]: PowerConnection };
-  owner?: string;
-  comment?: string;
+  owner: string;
+  comment: string;
 }
 export interface ShallowAssetObject extends ParentAssetObject {
   model?: string;
@@ -112,7 +113,7 @@ export interface UserInfoObject extends ElementObject {
   email?: string;
   first_name?: string;
   last_name?: string;
-  is_staff?: string;
+  is_admin?: boolean;
 }
 
 export interface CreateUserObject {
@@ -182,6 +183,7 @@ export type ElementObjectType =
   | ModelObject
   | RackObject
   | AssetObjectOld
+  | AssetObject
   | ShallowAssetObject
   | UserInfoObject
   | DatacenterObject;
@@ -190,6 +192,7 @@ export type FormObjectType =
   | ModelObjectOld
   | RackObject
   | AssetObjectOld
+  | AssetObject
   | DatacenterObject
   | RackRangeFields
   | ShallowAssetObject
@@ -209,7 +212,7 @@ export function isRackObject(obj: any): obj is RackObject {
   return obj && obj.rack_num;
 }
 export function isAssetObject(obj: any): obj is AssetObject {
-  return obj && obj.hostname;
+  return obj && obj.model;
 }
 
 export function isUserObject(obj: any): obj is UserInfoObject {
