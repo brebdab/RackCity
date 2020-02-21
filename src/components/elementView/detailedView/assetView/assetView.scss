@@ -31,6 +31,7 @@
   z-index: 1;
   overflow: hidden;
   display: block;
+  flex: 1;
 }
 
 .graph-container div {
@@ -40,7 +41,12 @@
 
   display: block;
 }
-
+.graph-container svg {
+  width: 100% !important;
+}
+.network-connections {
+  display: flex;
+}
 :not(svg) {
   transform-origin: 30px 30px;
 }

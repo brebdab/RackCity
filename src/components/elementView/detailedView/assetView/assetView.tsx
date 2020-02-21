@@ -5,7 +5,8 @@ import {
   Toaster,
   IToastProps,
   Position,
-  Intent
+  Intent,
+  Callout
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -18,10 +19,16 @@ import NetworkGraph from "./graph";
 import "./assetView.scss";
 
 import { connect } from "react-redux";
-import { AssetObject, ElementType, getHeaders } from "../../../../utils/utils";
+import {
+  AssetObject,
+  ElementType,
+  getHeaders,
+  NetworkConnection
+} from "../../../../utils/utils";
 import FormPopup from "../../../../forms/formPopup";
 import { FormTypes } from "../../../../forms/formUtils";
 import { modifyAsset, deleteAsset } from "../../elementUtils";
+import { thisExpression } from "@babel/types";
 
 export interface AssetViewProps {
   token: string;
@@ -102,6 +109,11 @@ export class AssetView extends React.PureComponent<
     console.log(this.state.asset);
   }
 
+  getNetworkConnectionForPort(port: string) {
+    return this.state.asset.network_connections.find(
+      (connection: NetworkConnection) => connection.source_port === port
+    );
+  }
   public render() {
     console.log(this.state.asset);
     if (Object.keys(this.state.asset).length === 0) {
@@ -155,11 +167,47 @@ export class AssetView extends React.PureComponent<
           </div>
         ) : null}
         <PropertiesView data={this.state.asset} />
-        <div>
-          <NetworkGraph
-            networkGraph={this.state.asset.network_graph}
-            onClickNode={this.redirectToAsset}
-          />
+        <div className="propsview">
+          <h3>Network Connections</h3>
+
+          {this.state.asset.model &&
+          this.state.asset.model.network_ports &&
+          this.state.asset.model.network_ports.length !== 0 ? (
+            <div className="network-connections">
+              <table className="bp3-html-table bp3-html-table-striped bp3-html-table-bordered">
+                <tr>
+                  <th>Network Port</th>
+                  <th>Mac Address</th>
+                  <th>Destination Asset</th>
+                  <th>Destination Port</th>
+                </tr>
+
+                {this.state.asset.model.network_ports.map((port: string) => {
+                  var connection = this.getNetworkConnectionForPort(port);
+                  return (
+                    <tr>
+                      {" "}
+                      <td>{port}</td>
+                      <td>{}</td>{" "}
+                      {connection
+                        ? [
+                            <td>{connection.destination_hostname}</td>,
+                            <td>{connection.destination_port}</td>
+                          ]
+                        : null}
+                    </tr>
+                  );
+                })}
+              </table>
+
+              <NetworkGraph
+                networkGraph={this.state.asset.network_graph}
+                onClickNode={this.redirectToAsset}
+              />
+            </div>
+          ) : (
+            <Callout title="No network ports" intent={Intent.PRIMARY}></Callout>
+          )}
         </div>
       </div>
     );

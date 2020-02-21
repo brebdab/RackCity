@@ -184,31 +184,17 @@ export class ModelView extends React.PureComponent<
             </Alert>
           </div>
         ) : null}
-        <Tabs
-          id="ModelViewer"
-          animate={true}
-          large
-          renderActiveTabPanelOnly={false}
-        >
-          <Tab
-            id="ModelProperties"
-            title="Properties"
-            panel={<PropertiesView data={this.state.model} />}
+
+        <PropertiesView data={this.state.model} />
+        <div className="propsview">
+          <h3>Assets</h3>
+          <ElementTable
+            type={ElementType.ASSET}
+            data={this.state.assets}
+            disableFiltering={true}
+            disableSorting={true}
           />
-          <Tab
-            id="Assets"
-            title="Assets"
-            panel={
-              <ElementTable
-                type={ElementType.ASSET}
-                data={this.state.assets}
-                disableFiltering={true}
-                disableSorting={true}
-              />
-            }
-          />
-          <Tabs.Expander />
-        </Tabs>
+        </div>
       </div>
     );
   }
