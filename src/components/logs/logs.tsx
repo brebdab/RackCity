@@ -70,7 +70,7 @@ interface LogsState {
     total_pages: number;
     page_type: PagingTypes;
     search_query?: string;
-    filters?: Array<Map<string, string>>;
+    filters?: Array<any>;
 }
 class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
     public state: LogsState = {
@@ -101,7 +101,8 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
     }
     private getLogs = async (
         page: number,
-        page_type: PagingTypes
+        page_type: PagingTypes,
+        filters?: Array<any>
     ): Promise<Array<LogEntry>> => {
         const config = {
             headers: {
@@ -113,12 +114,40 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
                     page
                 }
         };
-        const body = (this.state.filters !== undefined) ? this.state.filters : {}
+        const body = (filters !== undefined) ? filters : {}
+        console.log("api/logs/get-many")
+        console.log(config)
+        console.log(body)
         return await axios
             .post(API_ROOT + "api/logs/get-many", body, config)
             .then(res => {
+                console.log(res.data.logs)
                 return res.data.logs;
             });
+    }
+    private updateLogsAndPages = (
+        page_number: number,
+        page_type: PagingTypes,
+        filters?: Array<any>
+    ) => {
+        this.getLogs(
+            page_number,
+            page_type,
+            filters
+        ).then(res => {
+            this.setState({
+                logs: res
+            })
+        })
+        if (page_type !== PagingTypes.ALL) {
+            this.getTotalPages(
+                page_type
+            ).then(res => {
+                this.setState({
+                    total_pages: res
+                })
+            })
+        }
     }
     private resetPage = () => {
         this.setState({
@@ -158,23 +187,7 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
         this.setState({
             page_type: page
         });
-        this.getLogs(
-            1,
-            page
-        ).then(res => {
-            this.setState({
-                logs: res
-            })
-        })
-        if (page !== PagingTypes.ALL) {
-            this.getTotalPages(
-                page
-            ).then(res => {
-                this.setState({
-                    total_pages: res
-                })
-            })
-        }
+        this.updateLogsAndPages(1, page);
     };
     private getLinkedLog(log: LogEntry) {
         if (log.related_asset) {
@@ -202,32 +215,19 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
 
     private handleSearch() {
         if (this.state.search_query !== undefined) {
-            console.log(getLogFilters(this.state.search_query))
+            const query_filters = getLogFilters(this.state.search_query)
+            console.log(query_filters)
+            this.setState({
+                filters: query_filters
+            })
+            this.resetPage();
+            this.updateLogsAndPages(1, this.state.page_type, query_filters)
         }
     }
 
     public render() {
-        console.log(this.state);
-        if (
-            this.state.logs.length === 0
-        ) {
-            this.getLogs(
-                this.state.curr_page,
-                this.state.page_type
-            ).then(res => {
-                this.setState({
-                    logs: res
-                })
-            })
-            if (this.state.page_type !== PagingTypes.ALL) {
-                this.getTotalPages(
-                    this.state.page_type
-                ).then(res => {
-                    this.setState({
-                        total_pages: res
-                    })
-                })
-            }
+        if (this.state.logs.length === 0) {
+            this.updateLogsAndPages(this.state.curr_page, this.state.page_type)
         }
         return (
             <div className={Classes.DARK + " log-view"}>

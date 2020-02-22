@@ -1,8 +1,9 @@
+from django.db.models import Q
 from django.http import JsonResponse
 from http import HTTPStatus
 from rackcity.api.serializers import LogSerializer
 from rackcity.models import Log
-from rackcity.views.rackcity_utils import get_filter_arguments
+from rackcity.views.rackcity_utils import get_filter_arguments, get_filter_arguments_as_strings
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
@@ -49,10 +50,12 @@ def log_many(request):
     except Exception as error:
         return JsonResponse(
             {"failure_message": "Filter error: " + str(error)},
-            status=HTTPStatus.BAD_REQUEST
-        )
-    for filter_arg in filter_args:
-        logs = logs.filter(**filter_arg)
+            status=HTTPStatus.BAD_REQUEST)
+    if len(filter_args) > 0:
+        q_objects = Q()
+        for filter_arg in filter_args:
+            q_objects |= Q(**filter_arg)
+        logs = logs.filter(q_objects)
 
     if should_paginate:
         paginator = PageNumberPagination()
