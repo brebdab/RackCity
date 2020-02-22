@@ -1,6 +1,10 @@
 .detail-buttons {
-  display: flex;
   float: right;
+}
+.detail-buttons-wrapper {
+  padding-top: 10pt;
+  padding-right: 10pt;
+  padding-bottom: 20pt;
 }
 
 // .column {
@@ -15,9 +19,7 @@
 //   flex: 50%;
 //   border-left: 1px solid white;
 // }
-.button-add {
-  float: left;
-}
+
 .asset-link:hover {
   background-color: #5c7080 !important;
   cursor: pointer;
@@ -35,6 +37,7 @@
   overflow: hidden;
   display: block;
   flex: 1;
+  background-color: #394b59;
 }
 
 .graph-container div {

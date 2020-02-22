@@ -14,6 +14,12 @@
 }
 .propsview {
   margin: 10pt;
+  background-color: #202b33 !important;
+  padding-left: 10pt;
+  padding-right: 10pt;
+  padding-top: 2pt;
+  border-radius: 5pt;
+  padding-bottom: 10pt;
 }
 .propsdetail {
   overflow: auto;
@@ -24,4 +30,8 @@
   flex: 1;
   padding-right: 30pt;
 }
+.label {
+  color: #bfccd6 !important;
+}
+
 //

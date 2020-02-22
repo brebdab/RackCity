@@ -1,34 +1,33 @@
 import {
-  Classes,
-  AnchorButton,
   Alert,
-  Toaster,
+  AnchorButton,
+  Callout,
+  Classes,
+  Intent,
   IToastProps,
   Position,
-  Intent,
-  Callout
+  Toaster
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
-import { API_ROOT } from "../../../../utils/api-config";
-import PropertiesView from "../propertiesView";
-import { RouteComponentProps, withRouter } from "react-router";
-
-import NetworkGraph from "./graph";
-import "./assetView.scss";
-
 import { connect } from "react-redux";
+import { RouteComponentProps, withRouter } from "react-router";
+import FormPopup from "../../../../forms/formPopup";
+import { FormTypes } from "../../../../forms/formUtils";
+import { API_ROOT } from "../../../../utils/api-config";
 import {
   AssetObject,
   ElementType,
   getHeaders,
-  NetworkConnection
+  NetworkConnection,
+  Node
 } from "../../../../utils/utils";
-import FormPopup from "../../../../forms/formPopup";
-import { FormTypes } from "../../../../forms/formUtils";
-import { modifyAsset, deleteAsset } from "../../elementUtils";
-import { thisExpression } from "@babel/types";
+import { deleteAsset, modifyAsset } from "../../elementUtils";
+import PropertiesView from "../propertiesView";
+import "./assetView.scss";
+import NetworkGraph from "./graph";
+import GraphAlt from "./graph-alt";
 
 export interface AssetViewProps {
   token: string;
@@ -97,14 +96,14 @@ export class AssetView extends React.PureComponent<
     toaster: (ref: Toaster) => (this.toaster = ref)
   };
 
-  public updateAssetData(rid: string) {
+  public updateAssetData = (rid: string) => {
     getData(rid, this.props.token).then(result => {
       this.setState({
         asset: result
       });
     });
     console.log(this.state.asset);
-  }
+  };
 
   getNetworkConnectionForPort(port: string) {
     return this.state.asset.network_connections.find(
@@ -131,41 +130,41 @@ export class AssetView extends React.PureComponent<
           ref={this.refHandlers.toaster}
         />
         {this.props.isAdmin ? (
-          <div className={"detail-buttons"}>
-            <AnchorButton
-              className="button-add"
-              intent="primary"
-              icon="edit"
-              text="Edit"
-              minimal
-              onClick={() => this.handleFormOpen()}
-            />
-            <FormPopup
-              isOpen={this.state.isFormOpen}
-              initialValues={this.state.asset}
-              type={FormTypes.MODIFY}
-              elementName={ElementType.ASSET}
-              handleClose={this.handleFormClose}
-              submitForm={this.updateAsset}
-            />
-            <AnchorButton
-              minimal
-              className="button-add"
-              intent="danger"
-              icon="trash"
-              text="Delete"
-              onClick={this.handleDeleteOpen}
-            />
-            <Alert
-              cancelButtonText="Cancel"
-              confirmButtonText="Delete"
-              intent="danger"
-              isOpen={this.state.isDeleteOpen}
-              onCancel={this.handleDeleteCancel}
-              onConfirm={this.handleDelete}
-            >
-              <p>Are you sure you want to delete?</p>
-            </Alert>
+          <div className="detail-buttons-wrapper">
+            <div className={"detail-buttons"}>
+              <AnchorButton
+                intent="primary"
+                icon="edit"
+                text="Edit"
+                minimal
+                onClick={() => this.handleFormOpen()}
+              />
+              <FormPopup
+                isOpen={this.state.isFormOpen}
+                initialValues={this.state.asset}
+                type={FormTypes.MODIFY}
+                elementName={ElementType.ASSET}
+                handleClose={this.handleFormClose}
+                submitForm={this.updateAsset}
+              />
+              <AnchorButton
+                minimal
+                intent="danger"
+                icon="trash"
+                text="Delete"
+                onClick={this.handleDeleteOpen}
+              />
+              <Alert
+                cancelButtonText="Cancel"
+                confirmButtonText="Delete"
+                intent="danger"
+                isOpen={this.state.isDeleteOpen}
+                onCancel={this.handleDeleteCancel}
+                onConfirm={this.handleDelete}
+              >
+                <p>Are you sure you want to delete?</p>
+              </Alert>
+            </div>
           </div>
         ) : null}
         <PropertiesView data={this.state.asset} />
@@ -195,11 +194,12 @@ export class AssetView extends React.PureComponent<
                           <td
                             className="asset-link"
                             onClick={(e: any) => {
-                              this.redirectToAsset(
-                                this.getAssetIdFromHostname(
-                                  connection!.destination_hostname
-                                )
+                              const id = this.getAssetIdFromHostname(
+                                connection!.destination_hostname
                               );
+                              if (id) {
+                                this.redirectToAsset(id);
+                              }
                             }}
                           >
                             {connection.destination_hostname}
@@ -229,7 +229,12 @@ export class AssetView extends React.PureComponent<
     );
   }
   private getAssetIdFromHostname = (hostname: string) => {
-    return this.state.asset.network_graph.nodes[hostname];
+    const node = this.state.asset.network_graph.nodes.find(
+      (node: Node) => node.label === hostname
+    );
+    if (node) {
+      return (node.id as unknown) as string;
+    }
   };
   private redirectToAsset = (id: string) => {
     this.props.history.push("/assets/" + id);

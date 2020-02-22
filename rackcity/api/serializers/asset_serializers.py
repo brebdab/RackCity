@@ -4,7 +4,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from rackcity.models import Asset, PowerPort, NetworkPort
 from .it_model_serializers import ITModelSerializer
 from .rack_serializers import RackSerializer
-
+import copy 
 
 class AssetSerializer(serializers.ModelSerializer):
     """
@@ -207,43 +207,45 @@ def serialize_power_connections(asset):
 
 def generate_network_graph(asset):
     try:
-        nodes = {}
-        nodes[asset.hostname] = asset.id
-        links = []
+        nodes =[]
+        nodes.append({"id": asset.id, "label": asset.hostname})
+        edges = []
         # neighbors of distance one 
-        [nodes, links] = get_neighbor_assets(
+        [nodes, edges] = get_neighbor_assets(
             asset.hostname,
             asset.id,
             nodes,
-            links)
+            edges)
         # neighbors of distance two 
-        nodes_copy = nodes.copy()
-        for hostname in nodes_copy.keys():
+        nodes_copy = copy.deepcopy(nodes)
+        for node in nodes_copy:
             # ignore current asset, already found neighbors
-            if(hostname != asset.hostname):
-                [nodes, links] = get_neighbor_assets(
-                    hostname,
-                    nodes[hostname],
+            if(node["label"] != asset.hostname):
+                [nodes, edges] = get_neighbor_assets(
+                    node["label"],
+                    node["id"],
                     nodes,
-                    links)
-        return {"nodes": nodes,"links": links }
+                    edges)
+        return {"nodes": nodes,"edges": edges }
     except ObjectDoesNotExist:
         return
 
 
-def get_neighbor_assets(hostname, id, nodes, links):
+def get_neighbor_assets(hostname, id, nodes, edges):
     try: 
         source_ports = NetworkPort.objects.filter(asset=id)
         for source_port in source_ports:
             if source_port.connected_port:
                 destination_port_asset = source_port.connected_port.asset
-                if destination_port_asset.hostname not in nodes:
-                    nodes[destination_port_asset.hostname] = destination_port_asset.id
-                links.append(
-                    {"source":source_port.asset.hostname,
-                        "target":destination_port_asset.hostname}
+                node = {"id": destination_port_asset.id,
+                        "label" : destination_port_asset.hostname}
+                if node not in nodes:
+                    nodes.append(node)
+                edges.append(
+                    {"from":source_port.asset.id,
+                        "to":destination_port_asset.id}
                     )
-        return nodes, links
+        return nodes, edges
     except ObjectDoesNotExist:
         return
 

@@ -1,10 +1,10 @@
-import { Card, Classes, Elevation } from "@blueprintjs/core";
+import { Classes } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 // import axios from "axios";
 import * as React from "react";
 import { RouteComponentProps, withRouter } from "react-router";
+import { ElementObjectType, isObject } from "../../../utils/utils";
 import "./propertiesView.scss";
-import { isObject, ElementObjectType } from "../../../utils/utils";
 
 export interface AlertState {
   isDeleteOpen: boolean;
@@ -80,7 +80,7 @@ class PropertiesView extends React.PureComponent<
       return (
         <tr>
           <td key={item}>
-            <em>{item}:</em>
+            <p className="label">{item}:</p>
           </td>
 
           <td>{dat}</td>
