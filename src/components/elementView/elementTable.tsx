@@ -53,7 +53,8 @@ import {
   modifyModel,
   modifyAsset,
   modifyDatacenter,
-  ElementTableOpenAlert
+  ElementTableOpenAlert,
+  deleteUser
 } from "./elementUtils";
 
 interface ElementTableState {
@@ -533,17 +534,12 @@ class ElementTable extends React.Component<
 
   //EDIT AND DELETE LOGIC
   handleInlineButtonClick = (data: ElementObjectType) => {
-    if (isAssetObject(data)) {
-      this.setState({
-        editFormValues: data
-      });
-    }
-    if (isModelObject(data)) {
-      this.setState({
-        editFormValues: data
-      });
-    }
-    if (isDatacenterObject(data)) {
+    if (
+      isAssetObject(data) ||
+      isModelObject(data) ||
+      isDatacenterObject(data) ||
+      isUserObject(data)
+    ) {
       this.setState({
         editFormValues: data
       });
@@ -611,9 +607,30 @@ class ElementTable extends React.Component<
     this.setState({ openAlert: ElementTableOpenAlert.NONE });
 
   private handleDelete = () => {
-    console.log("DELETE");
+    let resp;
     if (isModelObject(this.state.editFormValues)) {
-      deleteModel(this.state.editFormValues, getHeaders(this.props.token))
+      resp = deleteModel(
+        this.state.editFormValues,
+        getHeaders(this.props.token)
+      );
+    } else if (isAssetObject(this.state.editFormValues)) {
+      resp = deleteAsset(
+        this.state.editFormValues,
+        getHeaders(this.props.token)
+      );
+    } else if (isDatacenterObject(this.state.editFormValues)) {
+      resp = deleteDatacenter(
+        this.state.editFormValues,
+        getHeaders(this.props.token)
+      );
+    } else if (isUserObject(this.state.editFormValues)) {
+      resp = deleteUser(
+        this.state.editFormValues,
+        getHeaders(this.props.token)
+      );
+    }
+    if (resp) {
+      resp
         .then(res => {
           this.addErrorToast("Sucessfully deleted");
           this.updateTableData();
@@ -623,23 +640,6 @@ class ElementTable extends React.Component<
           this.addErrorToast(err.response.data.failure_message);
           this.handleDeleteCancel();
         });
-    } else if (isAssetObject(this.state.editFormValues)) {
-      deleteAsset(this.state.editFormValues, getHeaders(this.props.token)).then(
-        res => {
-          this.addErrorToast("Sucessfully deleted");
-          this.updateTableData();
-          this.handleDeleteCancel();
-        }
-      );
-    } else if (isDatacenterObject(this.state.editFormValues)) {
-      deleteDatacenter(
-        this.state.editFormValues,
-        getHeaders(this.props.token)
-      ).then(res => {
-        this.addErrorToast("Successfully deleted");
-        this.updateTableData();
-        this.handleDeleteCancel();
-      });
     }
   };
 
@@ -810,6 +810,7 @@ class ElementTable extends React.Component<
           position={Position.TOP}
           ref={this.refHandlers.toaster}
         />
+
         <div className="filter-sort-panel">
           {this.props.disableFiltering
             ? null
@@ -970,19 +971,25 @@ class ElementTable extends React.Component<
                           return null;
                         })}
                         <td>
-                          {this.props.isAdmin &&
-                          this.props.type !== ElementType.USER ? (
+                          {this.props.isAdmin && isUserObject(item) ? (
+                            <div className="inline-buttons grant-admin-button">
+                              {this.renderAdminButton(item)}
+                            </div>
+                          ) : null}
+                          {this.props.isAdmin ? (
                             <div className="inline-buttons">
-                              <AnchorButton
-                                className="button-table"
-                                intent="primary"
-                                icon="edit"
-                                minimal
-                                onClick={(event: any) => {
-                                  this.handleEditButtonClick(item);
-                                  event.stopPropagation();
-                                }}
-                              />
+                              {this.props.type !== ElementType.USER ? (
+                                <AnchorButton
+                                  className="button-table"
+                                  intent="primary"
+                                  icon="edit"
+                                  minimal
+                                  onClick={(event: any) => {
+                                    this.handleEditButtonClick(item);
+                                    event.stopPropagation();
+                                  }}
+                                />
+                              ) : null}
                               <AnchorButton
                                 className="button-table"
                                 intent="danger"
@@ -1010,11 +1017,6 @@ class ElementTable extends React.Component<
                             </div>
                           ) : null}{" "}
                           {/* TODO add logic for determining if isOwner for power button */}
-                          {this.props.isAdmin && isUserObject(item) ? (
-                            <div className="inline-buttons">
-                              {this.renderAdminButton(item)}
-                            </div>
-                          ) : null}
                         </td>
                       </tr>
                     );

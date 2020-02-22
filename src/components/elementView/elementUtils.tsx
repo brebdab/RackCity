@@ -2,10 +2,12 @@ import {
   RackRangeFields,
   ModelObject,
   AssetObject,
-  DatacenterObject
+  DatacenterObject,
+  UserInfoObject
 } from "../../utils/utils";
 import { API_ROOT } from "../../utils/api-config";
 import axios from "axios";
+import { actions } from "react-table";
 export interface ITableSort {
   field: string;
   ascending: boolean;
@@ -110,4 +112,11 @@ export const modifyDatacenter = (
   headers: any
 ): Promise<any> => {
   return axios.post(API_ROOT + "api/datacenters/modify", dc, headers);
+};
+export const deleteUser = (
+  user: UserInfoObject,
+  headers: any
+): Promise<any> => {
+  const data = { id: user.id };
+  return axios.post(API_ROOT + "api/users/delete", data, headers);
 };
