@@ -27,7 +27,6 @@ import { deleteAsset, modifyAsset } from "../../elementUtils";
 import PropertiesView from "../propertiesView";
 import "./assetView.scss";
 import NetworkGraph from "./graph";
-import GraphAlt from "./graph-alt";
 
 export interface AssetViewProps {
   token: string;

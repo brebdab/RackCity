@@ -207,7 +207,7 @@ def serialize_power_connections(asset):
 
 def generate_network_graph(asset):
     try:
-        nodes =[]
+        nodes = []
         nodes.append({"id": asset.id, "label": asset.hostname})
         edges = []
         # neighbors of distance one 
@@ -226,7 +226,7 @@ def generate_network_graph(asset):
                     node["id"],
                     nodes,
                     edges)
-        return {"nodes": nodes,"edges": edges }
+        return {"nodes": nodes, "edges": edges}
     except ObjectDoesNotExist:
         return
 

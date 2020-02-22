@@ -38,7 +38,7 @@ class NetworkGraph extends React.Component<
   };
 
   onClickNode = (event: any) => {
-    var { nodes, edges } = event;
+    var { nodes } = event;
     if (nodes.length > 0) {
       this.props.onClickNode(nodes[0]);
     }

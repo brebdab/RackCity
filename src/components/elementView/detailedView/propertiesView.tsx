@@ -27,7 +27,9 @@ class PropertiesView extends React.PureComponent<
       if (
         col !== "id" &&
         col !== "power_connections" &&
-        col !== "mac_addresses"
+        col !== "mac_addresses" &&
+        col !== "network_connections" &&
+        col !== "network_graph"
       ) {
         fields.push(col);
       }
