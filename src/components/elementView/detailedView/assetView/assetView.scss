@@ -18,7 +18,10 @@
 .button-add {
   float: left;
 }
-
+.asset-link:hover {
+  background-color: #5c7080 !important;
+  cursor: pointer;
+}
 .graph-container {
   // overflow: scroll;
   // background-color: red !important;

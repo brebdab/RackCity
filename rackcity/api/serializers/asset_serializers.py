@@ -161,7 +161,8 @@ def generate_network_graph(asset):
             nodes,
             links)
         # neighbors of distance two 
-        for hostname in nodes.keys():
+        nodes_copy = nodes.copy()
+        for hostname in nodes_copy.keys():
             # ignore current asset, already found neighbors
             if(hostname != asset.hostname):
                 [nodes, links] = get_neighbor_assets(

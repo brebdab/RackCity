@@ -97,11 +97,8 @@ export class AssetView extends React.PureComponent<
     toaster: (ref: Toaster) => (this.toaster = ref)
   };
 
-  public updateAssetData() {
-    console.log("updateAssetData");
-    let params: any;
-    params = this.props.match.params;
-    getData(params.rid, this.props.token).then(result => {
+  public updateAssetData(rid: string) {
+    getData(rid, this.props.token).then(result => {
       this.setState({
         asset: result
       });
@@ -114,10 +111,15 @@ export class AssetView extends React.PureComponent<
       (connection: NetworkConnection) => connection.source_port === port
     );
   }
+  componentDidMount() {
+    console.log("asset view mounted");
+  }
   public render() {
     console.log(this.state.asset);
     if (Object.keys(this.state.asset).length === 0) {
-      this.updateAssetData();
+      let params: any;
+      params = this.props.match.params;
+      this.updateAssetData(params.rid);
     }
 
     return (
@@ -174,30 +176,44 @@ export class AssetView extends React.PureComponent<
           this.state.asset.model.network_ports &&
           this.state.asset.model.network_ports.length !== 0 ? (
             <div className="network-connections">
-              <table className="bp3-html-table bp3-html-table-striped bp3-html-table-bordered">
+              <table className="bp3-html-table bp3-html-table-bordered bp3-html-table-striped">
                 <tr>
                   <th>Network Port</th>
                   <th>Mac Address</th>
                   <th>Destination Asset</th>
                   <th>Destination Port</th>
                 </tr>
-
-                {this.state.asset.model.network_ports.map((port: string) => {
-                  var connection = this.getNetworkConnectionForPort(port);
-                  return (
-                    <tr>
-                      {" "}
-                      <td>{port}</td>
-                      <td>{}</td>{" "}
-                      {connection
-                        ? [
-                            <td>{connection.destination_hostname}</td>,
-                            <td>{connection.destination_port}</td>
-                          ]
-                        : null}
-                    </tr>
-                  );
-                })}
+                <tbody>
+                  {this.state.asset.model.network_ports.map((port: string) => {
+                    var connection = this.getNetworkConnectionForPort(port);
+                    return (
+                      <tr>
+                        {" "}
+                        <td>{port}</td>
+                        <td>{this.state.asset.mac_addresses[port]}</td>{" "}
+                        {connection ? (
+                          <td
+                            className="asset-link"
+                            onClick={(e: any) => {
+                              this.redirectToAsset(
+                                this.getAssetIdFromHostname(
+                                  connection!.destination_hostname
+                                )
+                              );
+                            }}
+                          >
+                            {connection.destination_hostname}
+                          </td>
+                        ) : (
+                          <td> </td>
+                        )}
+                        <td>
+                          {connection ? connection.destination_port : " "}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
               </table>
 
               <NetworkGraph
@@ -212,9 +228,12 @@ export class AssetView extends React.PureComponent<
       </div>
     );
   }
+  private getAssetIdFromHostname = (hostname: string) => {
+    return this.state.asset.network_graph.nodes[hostname];
+  };
   private redirectToAsset = (id: string) => {
     this.props.history.push("/assets/" + id);
-    this.updateAssetData();
+    this.updateAssetData(id);
   };
   private handleFormOpen = () => {
     this.setState({
