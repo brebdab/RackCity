@@ -135,18 +135,19 @@ def rack_delete(request):
                 if Asset.objects.filter(rack=rack.id).count() > 0:
                     unempty_racks.append(row_letter + str(rack_num))
     if len(unempty_racks) > 0:
-        failure_message += "The following racks within this" +
-        " range contain assets: " + ", ".join(unempty_racks) + ". "
+        failure_message += "The following racks within this" + \
+            " range contain assets: " + ", ".join(unempty_racks) + ". "
     if len(nonexistent_racks) > 0:
-        failure_message += "The following racks within this" +
-        " range do not exist: " + ", ".join(nonexistent_racks) + ". "
+        failure_message += "The following racks within this" + \
+            " range do not exist: " + ", ".join(nonexistent_racks) + ". "
     if failure_message != "":
-        failure_message = "The range of racks " +
-        range_serializer.get_row_range_as_string() + " " +
-        range_serializer.get_number_range_as_string() +
-        " in datacenter '" +
-        range_serializer.get_datacenter().abbreviation +
-        "' cannot be deleted. " + failure_message
+        failure_message = "The range of racks " + \
+            range_serializer.get_row_range_as_string() + " " + \
+            range_serializer.get_number_range_as_string() + \
+            " in datacenter '" + \
+            range_serializer.get_datacenter().abbreviation + \
+            "' cannot be deleted. " + \
+            failure_message
         return JsonResponse(
             {"failure_message": failure_message},
             status=HTTPStatus.BAD_REQUEST,
