@@ -19,6 +19,7 @@ import { AssetObject, ElementType, getHeaders } from "../../../../utils/utils";
 import FormPopup from "../../../../forms/formPopup";
 import { FormTypes } from "../../../../forms/formUtils";
 import { modifyAsset, deleteAsset } from "../../elementUtils";
+import PowerView from "../../powerView/powerView"
 
 export interface AssetViewProps {
   token: string;
@@ -54,7 +55,7 @@ interface AssetViewState {
 export class AssetView extends React.PureComponent<
   RouteComponentProps & AssetViewProps,
   AssetViewState
-> {
+  > {
   public state: AssetViewState = {
     asset: {} as AssetObject,
     isFormOpen: false,
@@ -86,20 +87,22 @@ export class AssetView extends React.PureComponent<
     toaster: (ref: Toaster) => (this.toaster = ref)
   };
 
-  public render() {
+  public componentDidMount() {
     console.log("rendering asset view", this.state.asset);
     let params: any;
     params = this.props.match.params;
-    if (Object.keys(this.state.asset).length === 0) {
-      getData(params.rid, this.props.token).then(result => {
-        console.log("response");
-        this.setState({
-          asset: result
-        });
+    // if (Object.keys(this.state.asset).length === 0) {
+    getData(params.rid, this.props.token).then(result => {
+      console.log("response");
+      this.setState({
+        asset: result
       });
-      console.log(this.state.asset);
-    }
+    });
+    console.log(this.state.asset);
+    // }
+  }
 
+  public render() {
     return (
       <div className={Classes.DARK + " asset-view"}>
         <Toaster
@@ -147,8 +150,18 @@ export class AssetView extends React.PureComponent<
           </div>
         ) : null}
         <PropertiesView data={this.state.asset} />
+        {Object.keys(this.state.asset).length !== 0 ? this.renderPower() : null}
       </div>
     );
+  }
+
+  private renderPower() {
+    return (
+      <PowerView
+        {...this.props}
+        asset={this.state.asset}
+      />
+    )
   }
 
   private handleFormOpen = () => {
