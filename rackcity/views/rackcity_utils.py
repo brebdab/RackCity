@@ -213,7 +213,7 @@ def get_sort_arguments(data):
     return sort_args
 
 
-def get_filter_arguments(data, filter_type=FilterType.AND):
+def get_filter_arguments(data):
     filter_args = []
     if 'filters' in data:
         filters = data['filters']
