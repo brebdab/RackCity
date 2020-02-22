@@ -121,12 +121,9 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
         const body = (filters !== undefined) ? {
             "filters": filters
         } : {}
-        console.log("api/logs/get-many")
-        console.log(this.state)
         return await axios
             .post(API_ROOT + "api/logs/get-many", body, config)
             .then(res => {
-                console.log(res)
                 return res.data.logs;
             });
     }
