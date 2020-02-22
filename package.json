@@ -26,7 +26,6 @@
     "axios": "^0.19.2",
     "classnames": "^2.2.6",
     "csvtojson": "^2.0.10",
-    "d3": "^5.15.0",
     "dom4": "^2.1.5",
     "jquery": "^3.4.1",
     "js-file-download": "^0.4.9",
@@ -60,7 +59,6 @@
     "eject": "react-scripts eject",
     "postinstall": "npm run build"
   },
-  "types:": "types.d.ts",
   "engines": {
     "node": "12.14.1",
     "npm": "6.13.4"
