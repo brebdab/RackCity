@@ -70,6 +70,7 @@ interface LogsState {
     page_type: PagingTypes;
     search_query?: string;
     filters?: Array<any>;
+    is_state_loaded: boolean;
 }
 class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
     public state: LogsState = {
@@ -78,7 +79,8 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
         total_pages: 0,
         page_type: PagingTypes.TEN,
         search_query: undefined,
-        filters: undefined
+        filters: undefined,
+        is_state_loaded: false
     };
     private getTotalPages = async (
         page_size: number,
@@ -120,12 +122,11 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
             "filters": filters
         } : {}
         console.log("api/logs/get-many")
-        console.log(config)
-        console.log(body)
+        console.log(this.state)
         return await axios
             .post(API_ROOT + "api/logs/get-many", body, config)
             .then(res => {
-                console.log(res.data.logs)
+                console.log(res)
                 return res.data.logs;
             });
     }
@@ -197,7 +198,6 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
     private handleSearch = () => {
         if (this.state.search_query !== undefined) {
             const query_filters = getLogFilters(this.state.search_query)
-            console.log(query_filters)
             this.setState({
                 filters: query_filters
             })
@@ -235,7 +235,10 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
         }
     }
     public render() {
-        if (this.state.logs.length === 0) {
+        if (!this.state.is_state_loaded) {
+            this.setState({
+                is_state_loaded: true
+            })
             this.updateLogsAndPages(
                 this.state.curr_page,
                 this.state.page_type,

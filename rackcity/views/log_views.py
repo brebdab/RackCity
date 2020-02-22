@@ -109,7 +109,7 @@ def log_page_count(request):
         q_objects = Q()
         for filter_arg in filter_args:
             q_objects |= Q(**filter_arg)
-        logs = logs.filter(q_objev)
+        logs = logs.filter(q_objects)
     log_count = logs.count()
     page_count = math.ceil(log_count / page_size)
     return JsonResponse({"page_count": page_count})

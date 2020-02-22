@@ -37,6 +37,8 @@ def log_action(user, related_element, action):
     if isinstance(related_element, Asset):
         element_type = ElementType.ASSET.value
         element_name = str(related_element.asset_number)
+        if (related_element.hostname):
+            element_name += (' (' + related_element.hostname + ')')
         related_asset = related_element
     elif isinstance(related_element, ITModel):
         element_type = ElementType.MODEL.value
