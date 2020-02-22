@@ -268,7 +268,9 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   validateMacAddresses = () => {
     Object.entries(this.state.values.mac_addresses).forEach(
       ([port, mac_address]) => {
-        if (!isMacAddressValid(mac_address)) {
+        if (mac_address === "") {
+          delete this.state.values.mac_addresses[port];
+        } else if (!isMacAddressValid(mac_address)) {
           const errors: Array<string> = this.state.errors;
           errors.push(
             "Mac Address " +
@@ -713,7 +715,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   }
 
   render() {
-    console.log("CURR_STATE", this.state.values,this.props.initialValues);
+    console.log("CURR_STATE", this.state.values, this.props.initialValues);
     if (this.state.models.length === 0) {
       this.getModels();
     }
