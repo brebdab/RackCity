@@ -17,8 +17,7 @@ import "./logs.scss";
 import {
     FilterTypes,
     TextFilterTypes,
-    PagingTypes,
-    IFilter
+    PagingTypes
 } from "../elementView/elementUtils";
 import { IconNames } from "@blueprintjs/icons";
 
@@ -82,7 +81,8 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
         filters: undefined
     };
     private getTotalPages = async (
-        page_size: number
+        page_size: number,
+        filters?: Array<any>
     ): Promise<number> => {
         const config = {
             headers: {
@@ -92,7 +92,9 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
                 page_size
             }
         };
-        const body = (this.state.filters !== undefined) ? this.state.filters : {}
+        const body = (filters !== undefined) ? {
+            "filters": filters
+        } : {}
         return await axios
             .post(API_ROOT + "api/logs/pages", body, config)
             .then(res => {
@@ -114,7 +116,9 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
                     page
                 }
         };
-        const body = (filters !== undefined) ? filters : {}
+        const body = (filters !== undefined) ? {
+            "filters": filters
+        } : {}
         console.log("api/logs/get-many")
         console.log(config)
         console.log(body)
@@ -141,7 +145,8 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
         })
         if (page_type !== PagingTypes.ALL) {
             this.getTotalPages(
-                page_type
+                page_type,
+                filters
             ).then(res => {
                 this.setState({
                     total_pages: res
@@ -187,9 +192,26 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
         this.setState({
             page_type: page
         });
-        this.updateLogsAndPages(1, page);
+        this.updateLogsAndPages(1, page, this.state.filters);
     };
-    private getLinkedLog(log: LogEntry) {
+    private handleSearch = () => {
+        if (this.state.search_query !== undefined) {
+            const query_filters = getLogFilters(this.state.search_query)
+            console.log(query_filters)
+            this.setState({
+                filters: query_filters
+            })
+            this.resetPage();
+            this.updateLogsAndPages(1, this.state.page_type, query_filters)
+        } else {
+            this.setState({
+                filters: undefined
+            })
+            this.resetPage();
+            this.updateLogsAndPages(1, this.state.page_type)
+        }
+    }
+    private renderLinkedLog(log: LogEntry) {
         if (log.related_asset) {
             const id = log.related_asset.toString()
             return <div>
@@ -212,22 +234,13 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
             </div>
         }
     }
-
-    private handleSearch() {
-        if (this.state.search_query !== undefined) {
-            const query_filters = getLogFilters(this.state.search_query)
-            console.log(query_filters)
-            this.setState({
-                filters: query_filters
-            })
-            this.resetPage();
-            this.updateLogsAndPages(1, this.state.page_type, query_filters)
-        }
-    }
-
     public render() {
         if (this.state.logs.length === 0) {
-            this.updateLogsAndPages(this.state.curr_page, this.state.page_type)
+            this.updateLogsAndPages(
+                this.state.curr_page,
+                this.state.page_type,
+                this.state.filters
+            )
         }
         return (
             <div className={Classes.DARK + " log-view"}>
@@ -285,7 +298,7 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
                 </div>
                 <div>
                     <Pre>
-                        {this.state.logs.map(log => this.getLinkedLog(log))}
+                        {this.state.logs.map(log => this.renderLinkedLog(log))}
                     </Pre>
                 </div>
             </div>
