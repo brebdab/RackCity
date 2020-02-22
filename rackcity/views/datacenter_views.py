@@ -1,6 +1,12 @@
 from django.http import HttpResponse, JsonResponse
 from rackcity.models import Datacenter
 from rackcity.api.serializers import DatacenterSerializer
+from rackcity.utils.log_utils import (
+    log_action,
+    log_delete,
+    ElementType,
+    Action
+)
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from http import HTTPStatus
@@ -40,7 +46,8 @@ def datacenter_create(request):
         failure_message += str(serializer.errors)
     if failure_message == "":
         try:
-            serializer.save()
+            new_datacenter = serializer.save()
+            log_action(request.user, new_datacenter, Action.CREATE)
             return HttpResponse(status=HTTPStatus.CREATED)
         except Exception as error:
             failure_message += str(error)
@@ -67,11 +74,14 @@ def datacenter_delete(request):
         try:
             existing_dc = Datacenter.objects.get(id=id)
         except ObjectDoesNotExist:
-            failure_message += "No existing datacenter with id = " + str(id) + ". "
+            failure_message += "No existing datacenter with id = " + \
+                str(id) + ". "
 
     if failure_message == "":
+        dc_abbreviation = existing_dc.abbreviation
         try:
             existing_dc.delete()
+            log_delete(request.user, ElementType.DATACENTER, dc_abbreviation)
             return HttpResponse(status=HTTPStatus.OK)
         except Exception as error:
             failure_message = failure_message + str(error)
@@ -154,6 +164,7 @@ def datacenter_modify(request):
                     setattr(existing_dc, field, data[field])
             try:
                 existing_dc.save()
+                log_action(request.user, existing_dc, Action.MODIFY)
                 return HttpResponse(status=HTTPStatus.OK)
             except Exception as error:
                 failure_message = failure_message + str(error)
