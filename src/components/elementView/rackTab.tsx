@@ -112,8 +112,11 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
   };
 
   deleteRack = (rack: RackRangeFields, headers: any) => {
+    const rack_new = updateObject(rack, {
+      datacenter: this.props.currDatacenter.id
+    });
     this.setState({
-      deleteRackInfo: rack,
+      deleteRackInfo: rack_new,
       headers
     });
     this.handleConfirmationOpen();
@@ -143,8 +146,11 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
   };
 
   createRack = (rack: RackRangeFields, headers: any) => {
+    const rack_new = updateObject(rack, {
+      datacenter: this.props.currDatacenter.id
+    });
     return axios
-      .post(API_ROOT + "api/racks/create", rack, headers)
+      .post(API_ROOT + "api/racks/create", rack_new, headers)
       .then(res => {
         this.setState({ isOpen: false });
         this.addToast({

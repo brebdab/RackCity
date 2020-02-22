@@ -61,7 +61,17 @@ class RackSelectView extends React.Component<
     e.preventDefault();
 
     const headers = getHeaders(this.props.token);
-    this.props.submitForm(this.state.values, headers);
+    const resp = this.props.submitForm(this.state.values, headers);
+    if (resp) {
+      resp.catch(err => {
+        console.log(err.response.data.failure_message);
+        let errors: Array<string> = this.state.errors;
+        errors.push(err.response.data.failure_message as string);
+        this.setState({
+          errors: errors
+        });
+      });
+    }
   };
   renderRackOptions(range: boolean) {}
   componentDidMount() {}
