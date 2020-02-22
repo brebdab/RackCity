@@ -7,7 +7,6 @@ import {
 } from "../../utils/utils";
 import { API_ROOT } from "../../utils/api-config";
 import axios from "axios";
-import { actions } from "react-table";
 export interface ITableSort {
   field: string;
   ascending: boolean;
