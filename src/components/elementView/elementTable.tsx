@@ -513,7 +513,8 @@ class ElementTable extends React.Component<
         col !== "power_connections" &&
         col !== "mac_addresses" &&
         col !== "network_connections" &&
-        col !== "network_graph"
+        col !== "network_graph" && 
+        col !== "is_admin"
       ) {
         fields.push(col);
       }
@@ -725,27 +726,25 @@ class ElementTable extends React.Component<
   };
 
   renderAdminButton = (item: UserInfoObject) => {
-    console.log(item.is_staff);
-    if (item.is_staff) {
+    if (item.is_admin) {
       return (
         <AnchorButton
           className="button-table"
           intent="danger"
-          icon="user"
+          icon="delete"
           minimal
-          text="Remove Admin"
+          text="Revoke admin"
           onClick={() => this.handleRevokeAdminOpen(item.id)}
         />
       );
     } else {
-      console.log("NOT AN ADMIN");
       return (
         <AnchorButton
           className="button-table"
           intent="primary"
-          icon="user"
+          icon="add"
           minimal
-          text="Add Admin "
+          text="Grant admin"
           onClick={() => this.handleGrantAdminOpen(item.id)}
         />
       );
@@ -960,6 +959,7 @@ class ElementTable extends React.Component<
                             col !== "id" &&
                             col !== "network_ports" &&
                             col !== "comment" &&
+                            col !== "is_admin" &&
                             !isObject(value)
                           ) {
                             return <td>{value}</td>;

@@ -6,6 +6,7 @@ import { RouteComponentProps } from "react-router";
 import "../elementView//elementView.scss";
 import { connect } from "react-redux";
 import { ElementType } from "../../utils/utils";
+import "./user.scss";
 
 interface UserProps {
   isAdmin: boolean;
@@ -13,7 +14,8 @@ interface UserProps {
 class User extends React.Component<UserProps & RouteComponentProps> {
   public render() {
     return (
-      <div className={Classes.DARK}>
+      <div className={Classes.DARK + " user-view"}>
+        <h1>Users</h1>
         <ElementTab {...this.props} element={ElementType.USER} />
       </div>
     );

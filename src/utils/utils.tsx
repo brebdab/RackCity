@@ -114,7 +114,7 @@ export interface UserInfoObject extends ElementObject {
   email?: string;
   first_name?: string;
   last_name?: string;
-  is_staff?: string;
+  is_admin?: boolean;
 }
 
 export interface CreateUserObject {

@@ -146,6 +146,7 @@ def empty_string_null_comparison(existing_value, new_value):
 
 def no_infile_location_conflicts(asset_datas):
     location_occupied_by = {}
+    unnamed_asset_count = 0
     for asset_data in asset_datas:
         rack = asset_data['rack']
         height = ITModel.objects.get(id=asset_data['model']).height
@@ -164,8 +165,14 @@ def no_infile_location_conflicts(asset_datas):
                     location_occupied_by[rack][location] +
                     "'. ")
             else:
-                # this is going to be a problem if neither hostname or asset number exists on the record
-                location_occupied_by[rack][location] = asset_data['asset_number']
+                if 'asset_number' in asset_data and asset_data['asset_number']:
+                    asset_name = asset_data['asset_number']
+                elif 'hostname' in asset_data and asset_data['hostname']:
+                    asset_name = asset_data['hostname']
+                else:
+                    asset_name = "unnamed_asset_"+str(unnamed_asset_count)
+                    unnamed_asset_count += 1
+                location_occupied_by[rack][location] = asset_name
     return
 
 
