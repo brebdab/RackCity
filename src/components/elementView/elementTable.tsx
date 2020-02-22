@@ -59,6 +59,7 @@ import {
   ElementTableOpenAlert
 } from "./elementUtils";
 import { PowerView } from "./powerView/powerView";
+import "./powerView/powerView.scss"
 
 interface ElementTableState {
   items: Array<ElementObjectType>;
@@ -576,7 +577,7 @@ class ElementTable extends React.Component<
   getPowerOptions = () => {
     return (
       <Dialog
-        className={Classes.DARK}
+        className={Classes.DARK + " power-dialog"}
         {...this.props}
         isOpen={this.state.isPowerOptionsOpen}
         onClose={() => { this.setState({ isPowerOptionsOpen: false }) }}

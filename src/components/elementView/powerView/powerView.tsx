@@ -6,7 +6,10 @@ import {
     IToastProps,
     Position,
     Intent,
-    Spinner
+    Card,
+    Elevation,
+    Spinner,
+    Divider
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -14,7 +17,8 @@ import * as React from "react";
 import { API_ROOT } from "../../../utils/api-config";
 import { RouteComponentProps, withRouter } from "react-router";
 import { connect } from "react-redux";
-import { AssetObject, ElementType, getHeaders } from "../../../utils/utils";
+import { AssetObject, getHeaders } from "../../../utils/utils";
+import "./powerView.scss";
 
 interface PowerViewProps {
     token: string;
@@ -58,11 +62,29 @@ export class PowerView extends React.PureComponent<
                         null :
                         Object.keys(this.state.powerConnections).map((port: string) => {
                             return (
-                                Object.keys(this.state.powerConnections[port]).map((field: string) => {
-                                    return (
-                                        <p key={field}>{this.state.powerConnections[port][field]}</p>
-                                    )
-                                })
+                                <Card elevation={Elevation.TWO}>
+                                    <div key={port} className={"row-power"}>
+                                        <h6 className={"column-power"}>Asset Power Port: {port}</h6>
+                                        <Divider />
+                                        <h6 className={"column-power"}>
+                                            PDU Port: {Object.keys(this.state.powerConnections[port]).map((field: string) => {
+                                                return (
+                                                    this.state.powerConnections[port][field]
+                                                )
+                                            })}
+                                        </h6>
+                                        <Divider />
+                                        <h6 className={"column-power"}>{this.state.powerStatus[port]}</h6>
+                                        <Divider />
+                                        <AnchorButton
+                                            className={"column-power"}
+                                            intent={this.state.powerStatus[port] === "OFF" ? "primary" : "danger"}
+                                            minimal
+                                            text={"Toggle power"}
+                                            icon="power"
+                                        />
+                                    </div>
+                                </Card>
                             )
                         })) :
                     <Spinner />
@@ -80,7 +102,7 @@ export class PowerView extends React.PureComponent<
                         this.props.callback()
                     }}
                 />
-            </div>
+            </div >
         )
     }
 
