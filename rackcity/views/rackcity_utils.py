@@ -3,14 +3,8 @@ from rackcity.api.objects import RackRangeSerializer
 from rackcity.api.serializers import RecursiveAssetSerializer, RackSerializer
 from http import HTTPStatus
 from django.http import JsonResponse
-from enum import Enum
 import functools
 from django.db import close_old_connections
-
-
-class FilterType(Enum):
-    AND = "and"
-    OR = "or"
 
 
 def get_rack_detailed_response(racks):
@@ -217,14 +211,6 @@ def get_sort_arguments(data):
             order = "-" if not sort['ascending'] else ""
             sort_args.append(order + field_name)
     return sort_args
-
-
-def get_filter_arguments_as_strings(filter_args):
-    as_strings = []
-    for filter_arg in filter_args:
-        for (key, val) in filter_arg.items():
-            as_strings.append(str(key) + "=" + "'" + str(val) + "'")
-    return as_strings
 
 
 def get_filter_arguments(data, filter_type=FilterType.AND):
