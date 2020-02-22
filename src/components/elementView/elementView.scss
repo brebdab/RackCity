@@ -34,6 +34,13 @@
   // display: inline-block;
   table-layout: auto;
 }
+.rack-view-options {
+  display: inline-block;
+  text-align: center;
+}
+.all-racks {
+  height: fit-content;
+}
 .table-wrapper {
   width: 100%;
   overflow-x: scroll;
@@ -119,8 +126,13 @@
   font-weight: bold;
   text-transform: uppercase;
 }
+.or {
+  margin-top: -30pt;
+}
 .rack-field {
   float: left;
+  padding: 0;
+  margin: 0;
 }
 
 .tab {
@@ -156,6 +168,8 @@ input {
 
 .rack-select {
   float: left;
+  padding: 0;
+  margin: 0;
 }
 .table-control {
   float: right !important;

@@ -69,34 +69,32 @@ class RackSelectView extends React.Component<
   render() {
     return (
       <div>
-        <div>
-          {this.state.errors.map((err: string) => {
-            return <Callout intent={Intent.DANGER}>{err}</Callout>;
-          })}
-          <form
-            onSubmit={this.handleSubmit}
-            className="create-form bp3-form-group"
-          >
-            <Switch
-              defaultChecked={false}
-              onChange={this.handleSwitchChange}
-              label="Rack Range"
+        {this.state.errors.map((err: string) => {
+          return <Callout intent={Intent.DANGER}>{err}</Callout>;
+        })}
+        <form
+          onSubmit={this.handleSubmit}
+          className="create-form bp3-form-group"
+        >
+          <Switch
+            defaultChecked={false}
+            onChange={this.handleSwitchChange}
+            label="Select Rack Range"
+          />
+          <div className="rack-select">
+            <RackRangeForm
+              className="rack-field"
+              handleChange={this.handleChange}
+              range={this.state.viewRange}
             />
-            <div className="rack-select">
-              <RackRangeForm
-                className="rack-field"
-                handleChange={this.handleChange}
-                range={this.state.viewRange}
-              />
 
-              <div className="rack-field ">
-                <Button className="button" type="submit">
-                  Submit
-                </Button>
-              </div>
+            <div className="rack-field ">
+              <Button className="button" type="submit">
+                Submit
+              </Button>
             </div>
-          </form>
-        </div>
+          </div>
+        </form>
       </div>
     );
   }

@@ -25,7 +25,6 @@ import { API_ROOT } from "../../utils/api-config";
 import {
   DatacenterObject,
   ElementType,
-  getHeaders,
   RackRangeFields,
   RackResponseObject
 } from "../../utils/utils";
@@ -155,23 +154,30 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
       });
   };
 
-  getAllRacks = () => {
+  getAllRacks = (datacenter: DatacenterObject) => {
+    console.log(this.props);
     this.setState({
       loading: true
     });
+    const config = {
+      headers: {
+        Authorization: "Token " + this.props.token
+      },
+      params: {
+        datacenter: datacenter.id
+      }
+    };
     axios
-      .get(
-        API_ROOT + "api/racks/get-all",
-        // { sort_by: [], filters: [] },
-        getHeaders(this.props.token)
-      )
+      .get(API_ROOT + "api/racks/get-all", config)
       .then(res => {
+        console.log("GOT RACKS", res.data, this.state.racks);
         this.setState({
           racks: res.data.racks,
           loading: false
         });
       })
       .catch(err => {
+        console.log("failed to get racks");
         this.setState({
           loading: false,
           racks: []
@@ -274,12 +280,17 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
                 />
               </div>
             ) : null}
-            <Button
-              text="View All Rack(s)"
-              onClick={(e: any) => this.getAllRacks()}
-            />
-
-            <RackSelectView submitForm={this.viewRackForm} />
+            <div className="rack-view-options">
+              <RackSelectView submitForm={this.viewRackForm} />
+              <p className="or">or </p>
+              <Button
+                className="all-racks"
+                text="View All Racks"
+                onClick={(e: any) =>
+                  this.getAllRacks(this.props.currDatacenter)
+                }
+              />
+            </div>
           </div>
         ) : (
           <Callout intent={Intent.PRIMARY}>
