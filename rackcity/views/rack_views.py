@@ -7,6 +7,10 @@ from rackcity.api.serializers import (
     RecursiveAssetSerializer,
 )
 from rackcity.api.objects import RackRangeSerializer
+from rackcity.utils.log_utils import (
+    log_rack_action,
+    Action,
+)
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from http import HTTPStatus
@@ -95,6 +99,10 @@ def rack_create(request):
                     rack_num=num
                 )
                 rack.save()
+        related_racks = \
+            range_serializer.get_row_range_as_string() + " " + \
+            range_serializer.get_number_range_as_string()
+        log_rack_action(request.user, Action.CREATE, related_racks)
         return HttpResponse(status=HTTPStatus.OK)
 
 
@@ -127,18 +135,18 @@ def rack_delete(request):
                 if Asset.objects.filter(rack=rack.id).count() > 0:
                     unempty_racks.append(row_letter + str(rack_num))
     if len(unempty_racks) > 0:
-        failure_message += "The following racks within this" + \
-            " range contain assets: " + ", ".join(unempty_racks) + ". "
+        failure_message += "The following racks within this" +
+        " range contain assets: " + ", ".join(unempty_racks) + ". "
     if len(nonexistent_racks) > 0:
-        failure_message += "The following racks within this" + \
-            " range do not exist: " + ", ".join(nonexistent_racks) + ". "
+        failure_message += "The following racks within this" +
+        " range do not exist: " + ", ".join(nonexistent_racks) + ". "
     if failure_message != "":
-        failure_message = "The range of racks " + \
-            range_serializer.get_row_range_as_string() + " " + \
-            range_serializer.get_number_range_as_string() + \
-            " in datacenter '" + \
-            range_serializer.get_datacenter().abbreviation + \
-            "' cannot be deleted. " + failure_message
+        failure_message = "The range of racks " +
+        range_serializer.get_row_range_as_string() + " " +
+        range_serializer.get_number_range_as_string() +
+        " in datacenter '" +
+        range_serializer.get_datacenter().abbreviation +
+        "' cannot be deleted. " + failure_message
         return JsonResponse(
             {"failure_message": failure_message},
             status=HTTPStatus.BAD_REQUEST,
@@ -150,6 +158,10 @@ def rack_delete(request):
     )
     try:
         racks.delete()
+        related_racks = \
+            range_serializer.get_row_range_as_string() + " " + \
+            range_serializer.get_number_range_as_string()
+        log_rack_action(request.user, Action.DELETE, related_racks)
     except Exception as error:
         failure_message = str(error)
         return JsonResponse(
