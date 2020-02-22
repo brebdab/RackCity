@@ -150,7 +150,7 @@ export class AssetView extends React.PureComponent<
           </div>
         ) : null}
         <PropertiesView data={this.state.asset} />
-        {Object.keys(this.state.asset).length !== 0 ? this.renderPower() : null}
+        {(Object.keys(this.state.asset).length !== 0 && this.state.asset.rack.is_network_controlled) ? this.renderPower() : null}
       </div>
     );
   }
