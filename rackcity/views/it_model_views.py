@@ -252,7 +252,7 @@ def model_many(request):
     size must also be specified, and a page of models will be returned.
     """
 
-    failure_message = ""
+    errors = []
 
     should_paginate = not(
         request.query_params.get('page') is None
@@ -261,18 +261,23 @@ def model_many(request):
 
     if should_paginate:
         if not request.query_params.get('page'):
-            failure_message += "Must specify field 'page' on " + \
-                "paginated requests. "
+            errors.append("Must specify field 'page' on paginated requests")
         elif not request.query_params.get('page_size'):
-            failure_message += "Must specify field 'page_size' on " + \
-                "paginated requests. "
+            errors.append(
+                "Must specify field 'page_size' on paginated requests"
+            )
         elif int(request.query_params.get('page_size')) <= 0:
-            failure_message += "Field 'page_size' must be an integer " + \
-                "greater than 0. "
+            errors.append(
+                "Field 'page_size' must be an integer greater than 0"
+            )
 
-    if failure_message != "":
+    if len(errors) > 0:
         return JsonResponse(
-            {"failure_message": failure_message},
+            {
+                "failure_message":
+                    Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                "errors": " ".join(errors)
+            },
             status=HTTPStatus.BAD_REQUEST,
         )
 
@@ -282,7 +287,11 @@ def model_many(request):
         filter_args = get_filter_arguments(request.data)
     except Exception as error:
         return JsonResponse(
-            {"failure_message": "Filter error: " + str(error)},
+            {
+                "failure_message":
+                    Status.ERROR.value + GenericFailure.FILTER.value,
+                "errors": str(error)
+            },
             status=HTTPStatus.BAD_REQUEST
         )
     for filter_arg in filter_args:
@@ -292,7 +301,11 @@ def model_many(request):
         sort_args = get_sort_arguments(request.data)
     except Exception as error:
         return JsonResponse(
-            {"failure_message": "Sort error: " + str(error)},
+            {
+                "failure_message":
+                    Status.ERROR.value + GenericFailure.SORT.value,
+                "errors": str(error)
+            },
             status=HTTPStatus.BAD_REQUEST
         )
     models = models_query.order_by(*sort_args)
@@ -302,10 +315,13 @@ def model_many(request):
         paginator.page_size = request.query_params.get('page_size')
         try:
             page_of_models = paginator.paginate_queryset(models, request)
-        except Exception:
-            failure_message += "Invalid page requested. "
+        except Exception as error:
             return JsonResponse(
-                {"failure_message": failure_message},
+                {
+                    "failure_message":
+                        Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                    "errors": str(error)
+                },
                 status=HTTPStatus.BAD_REQUEST,
             )
         models_to_serialize = page_of_models
@@ -339,10 +355,14 @@ def model_detail(request, id):
         }
         return JsonResponse(model_detail, status=HTTPStatus.OK)
     except ITModel.DoesNotExist:
-        failure_message = "No model exists with id="+str(id)
         return JsonResponse(
-            {"failure_message": failure_message},
-            status=HTTPStatus.NOT_FOUND
+            {
+                "failure_message":
+                    Status.ERROR.value +
+                    "Model" + GenericFailure.DOES_NOT_EXIST.value,
+                "errors": "No existing model with id="+str(id)
+            },
+            status=HTTPStatus.BAD_REQUEST
         )
 
 
@@ -557,7 +577,11 @@ def model_page_count(request):
         or int(request.query_params.get('page_size')) <= 0
     ):
         return JsonResponse(
-            {"failure_message": "Must specify positive integer page_size."},
+            {
+                "failure_message":
+                    Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                "errors": "Must specify positive integer page_size."
+            },
             status=HTTPStatus.BAD_REQUEST,
         )
     page_size = int(request.query_params.get('page_size'))
@@ -566,7 +590,11 @@ def model_page_count(request):
         filter_args = get_filter_arguments(request.data)
     except Exception as error:
         return JsonResponse(
-            {"failure_message": "Filter error: " + str(error)},
+            {
+                "failure_message":
+                    Status.ERROR.value + GenericFailure.FILTER.value,
+                "errors": str(error)
+            },
             status=HTTPStatus.BAD_REQUEST
         )
     for filter_arg in filter_args:
