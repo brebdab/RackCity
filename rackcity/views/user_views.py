@@ -38,7 +38,8 @@ def netid_login(request):
     if 'access_token' not in request.data:
         return JsonResponse(
             {
-                "failure_message": UserFailure.LOGIN + UserFailure.NETID,
+                "failure_message":
+                    UserFailure.LOGIN.value + UserFailure.NETID.value,
                 "errors": "Must include token on login"
             },
             status=HTTPStatus.BAD_REQUEST,
@@ -54,7 +55,8 @@ def netid_login(request):
     if response.status_code != 200:
         return JsonResponse(
             {
-                "failure_message": UserFailure.LOGIN + UserFailure.NETID,
+                "failure_message":
+                    UserFailure.LOGIN.value + UserFailure.NETID.value,
                 "errors": "Request to Duke colab failed"},
             status=HTTPStatus.BAD_REQUEST,
         )
@@ -110,7 +112,8 @@ def user_many(request):
     if len(errors) > 0:
         return JsonResponse(
             {
-                "failure_message": UserFailure.GET + GenericFailure.UNKNOWN,
+                "failure_message":
+                    UserFailure.GET.value + GenericFailure.UNKNOWN.value,
                 "errors": " ".join(errors)
             },
             status=HTTPStatus.BAD_REQUEST,
@@ -123,7 +126,8 @@ def user_many(request):
     except Exception as error:
         return JsonResponse(
             {
-                "failure_message": UserFailure.GET + GenericFailure.FILTER,
+                "failure_message":
+                    UserFailure.GET.value + GenericFailure.FILTER.value,
                 "errors": str(error)
             },
             status=HTTPStatus.BAD_REQUEST
@@ -138,7 +142,8 @@ def user_many(request):
     except Exception as error:
         return JsonResponse(
             {
-                "failure_message": UserFailure.GET + GenericFailure.SORT,
+                "failure_message":
+                    UserFailure.GET.value + GenericFailure.SORT.value,
                 "errors": str(error)
             },
             status=HTTPStatus.BAD_REQUEST
@@ -154,7 +159,7 @@ def user_many(request):
             return JsonResponse(
                 {
                     "failure_message":
-                        UserFailure.GET + GenericFailure.UNKNOWN,
+                        UserFailure.GET.value + GenericFailure.UNKNOWN.value,
                     "errors": str(error)
                 },
                 status=HTTPStatus.BAD_REQUEST,
@@ -185,7 +190,7 @@ def user_delete(request):
         return JsonResponse(
             {
                 "failure_message":
-                    UserFailure.DELETE + GenericFailure.UNKNOWN,
+                    UserFailure.DELETE.value + GenericFailure.UNKNOWN.value,
                 "errors": "Must include user id when deleting a user",
             },
             status=HTTPStatus.BAD_REQUEST,
@@ -196,8 +201,8 @@ def user_delete(request):
         return JsonResponse(
             {
                 "failure_message":
-                    UserFailure.DELETE +
-                    "User" + GenericFailure.DOES_NOT_EXIST,
+                    UserFailure.DELETE.value +
+                    "User" + GenericFailure.DOES_NOT_EXIST.value,
                 "errors": "No existing user with id="+str(data['id']),
             },
             status=HTTPStatus.BAD_REQUEST,
@@ -206,7 +211,7 @@ def user_delete(request):
         return JsonResponse(
             {
                 "failure_message":
-                    UserFailure.DELETE +
+                    UserFailure.DELETE.value +
                     "Duke SSO authenticated users cannot be deleted"
             },
             status=HTTPStatus.BAD_REQUEST,
@@ -216,7 +221,7 @@ def user_delete(request):
         return JsonResponse(
             {
                 "failure_message":
-                    UserFailure.DELETE + "Not allowed to delete user 'admin'",
+                    UserFailure.DELETE.value + "Not allowed to delete user 'admin'",
             },
             status=HTTPStatus.BAD_REQUEST,
         )
@@ -227,7 +232,7 @@ def user_delete(request):
         return JsonResponse(
             {
                 "failure_message":
-                    UserFailure.DELETE + GenericFailure.UNKNOWN,
+                    UserFailure.DELETE.value + GenericFailure.UNKNOWN.value,
                 "errors": str(error),
             },
             status=HTTPStatus.BAD_REQUEST,
@@ -255,7 +260,7 @@ def user_page_count(request):
         return JsonResponse(
             {
                 "failure_message":
-                    UserFailure.GET + GenericFailure.UNKNOWN,
+                    UserFailure.GET.value + GenericFailure.UNKNOWN.value,
                 "errors": "Must specify positive integer page_size."
             },
             status=HTTPStatus.BAD_REQUEST,
@@ -299,7 +304,8 @@ def user_grant_admin(request):
         return JsonResponse(
             {
                 "failure_message":
-                    UserFailure.GRANT_ADMIN + GenericFailure.UNKNOWN,
+                    UserFailure.GRANT_ADMIN.value +
+                    GenericFailure.UNKNOWN.value,
                 "errors":
                     "Must specify user id on grant admin permission"
             },
@@ -311,8 +317,8 @@ def user_grant_admin(request):
         return JsonResponse(
             {
                 "failure_message":
-                    UserFailure.GRANT_ADMIN +
-                    "User" + GenericFailure.DOES_NOT_EXIST,
+                    UserFailure.GRANT_ADMIN.value +
+                    "User" + GenericFailure.DOES_NOT_EXIST.value,
                 "errors":
                     "No existing user with id=" + data['id']
             },
@@ -322,7 +328,7 @@ def user_grant_admin(request):
         return JsonResponse(
             {
                 "failure_message":
-                    UserFailure.GRANT_ADMIN +
+                    UserFailure.GRANT_ADMIN.value +
                     "User " + user.username +
                     " already has admin permission"
             },
@@ -357,7 +363,8 @@ def user_revoke_admin(request):
         return JsonResponse(
             {
                 "failure_message":
-                    UserFailure.REVOKE_ADMIN + GenericFailure.UNKNOWN,
+                    UserFailure.REVOKE_ADMIN.value +
+                    GenericFailure.UNKNOWN.value,
                 "errors": "Must specify user id on admin permission revoke"
             },
             status=HTTPStatus.BAD_REQUEST,
@@ -368,8 +375,8 @@ def user_revoke_admin(request):
         return JsonResponse(
             {
                 "failure_message":
-                    UserFailure.REVOKE_ADMIN +
-                    "User" + GenericFailure.DOES_NOT_EXIST,
+                    UserFailure.REVOKE_ADMIN.value +
+                    "User" + GenericFailure.DOES_NOT_EXIST.value,
                 "errors": "No existing user with id=" + data['id']
             },
             status=HTTPStatus.BAD_REQUEST,
@@ -388,7 +395,7 @@ def user_revoke_admin(request):
         return JsonResponse(
             {
                 "failure_message":
-                    UserFailure.REVOKE_ADMIN +
+                    UserFailure.REVOKE_ADMIN.value +
                     "User " + user.username +
                     " does not have admin permission"
             },
