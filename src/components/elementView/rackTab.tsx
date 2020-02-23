@@ -32,6 +32,8 @@ import {
 import RackView from "./detailedView/rackView/rackView";
 import { ALL_DATACENTERS } from "./elementTabContainer";
 import RackSelectView from "./rackSelectView";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 interface RackTabState {
   isOpen: boolean;
@@ -184,109 +186,127 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
       });
   };
 
+  printDocument() {
+    const input = document.getElementById("rack-view-print");
+    const pdf = new jsPDF();
+    if (pdf && input) {
+      html2canvas(input, {
+        useCORS: true
+      }).then((canvas: any) => {
+        const imgData = canvas.toDataURL("image/png");
+        pdf.addImage(imgData, "PNG", 10, 10);
+        pdf.save("download.pdf");
+      });
+    }
+  }
   render() {
     return (
       <div className="rack-tab">
-        {/* <div className="do-not-print"> */}
-        <Toaster
-          autoFocus={false}
-          canEscapeKeyClear={true}
-          position={Position.TOP}
-          ref={this.refHandlers.toaster}
-        />
-        <div>
-          <Callout>
-            <FormGroup label="Datacenter" inline={true}>
-              <DatacenterSelect
-                popoverProps={{
-                  minimal: true,
-                  popoverClassName: "dropdown",
-                  usePortal: true
-                }}
-                items={this.props.datacenters!}
-                onItemSelect={(datacenter: DatacenterObject) => {
-                  this.props.onDatacenterSelect!(datacenter);
-                }}
-                itemRenderer={renderDatacenterItem}
-                itemPredicate={filterDatacenter}
-                noResults={<MenuItem disabled={true} text="No results." />}
-              >
-                <Button
-                  rightIcon="caret-down"
-                  text={
-                    this.props.currDatacenter && this.props.currDatacenter.name
-                      ? this.props.currDatacenter.name
-                      : "All datacenters"
-                  }
-                />
-              </DatacenterSelect>
-            </FormGroup>
-          </Callout>
-        </div>
-
-        <FormPopup
-          {...this.props}
-          type={FormTypes.CREATE}
-          elementName={ElementType.RACK}
-          submitForm={this.createRack}
-          isOpen={this.state.isOpen}
-          handleClose={this.handleClose}
-        />
-        <FormPopup
-          {...this.props}
-          type={FormTypes.DELETE}
-          elementName={ElementType.RACK}
-          submitForm={this.deleteRack}
-          isOpen={this.state.isDeleteOpen}
-          handleClose={this.handleDeleteCancel}
-        />
-        <Alert
-          cancelButtonText="Cancel"
-          confirmButtonText="Delete"
-          intent="danger"
-          isOpen={this.state.isConfirmationOpen}
-          onCancel={this.handleConfirmationCancel}
-          onConfirm={this.actuallyDelete}
-        >
-          <p>Are you sure you want to delete?</p>
-        </Alert>
-
-        {this.props.currDatacenter &&
-        this.props.currDatacenter.name !== ALL_DATACENTERS.name ? (
+        <div className="do-not-print">
+          <Toaster
+            autoFocus={false}
+            canEscapeKeyClear={true}
+            position={Position.TOP}
+            ref={this.refHandlers.toaster}
+          />
           <div>
-            {this.props.isAdmin ? (
-              <div className=" element-tab-buttons">
-                <AnchorButton
-                  className="add"
-                  text={"Add Rack(s)"}
-                  icon="add"
-                  minimal
-                  intent={Intent.PRIMARY}
-                  onClick={this.handleOpen}
-                />
-                <AnchorButton
-                  className="add "
-                  text={"Delete Rack(s)"}
-                  icon="trash"
-                  minimal
-                  intent={Intent.DANGER}
-                  onClick={this.handleDeleteOpen}
-                />
-              </div>
-            ) : null}
-            <Button
-              text="View All Rack(s)"
-              onClick={(e: any) => this.getAllRacks()}
-            />
-
-            <RackSelectView submitForm={this.viewRackForm} />
+            <Callout>
+              <FormGroup label="Datacenter" inline={true}>
+                <DatacenterSelect
+                  popoverProps={{
+                    minimal: true,
+                    popoverClassName: "dropdown",
+                    usePortal: true
+                  }}
+                  items={this.props.datacenters!}
+                  onItemSelect={(datacenter: DatacenterObject) => {
+                    this.props.onDatacenterSelect!(datacenter);
+                  }}
+                  itemRenderer={renderDatacenterItem}
+                  itemPredicate={filterDatacenter}
+                  noResults={<MenuItem disabled={true} text="No results." />}
+                >
+                  <Button
+                    rightIcon="caret-down"
+                    text={
+                      this.props.currDatacenter &&
+                      this.props.currDatacenter.name
+                        ? this.props.currDatacenter.name
+                        : "All datacenters"
+                    }
+                  />
+                </DatacenterSelect>
+              </FormGroup>
+            </Callout>
           </div>
-        ) : (
-          <Callout intent={Intent.PRIMARY}>
-            <h5>Please select a datacenter to view rack information</h5>
-          </Callout>
-        )}
-        <RackView racks={this.state.racks} loading={this.state.loading} />
+
+          <FormPopup
+            {...this.props}
+            type={FormTypes.CREATE}
+            elementName={ElementType.RACK}
+            submitForm={this.createRack}
+            isOpen={this.state.isOpen}
+            handleClose={this.handleClose}
+          />
+          <FormPopup
+            {...this.props}
+            type={FormTypes.DELETE}
+            elementName={ElementType.RACK}
+            submitForm={this.deleteRack}
+            isOpen={this.state.isDeleteOpen}
+            handleClose={this.handleDeleteCancel}
+          />
+          <Alert
+            cancelButtonText="Cancel"
+            confirmButtonText="Delete"
+            intent="danger"
+            isOpen={this.state.isConfirmationOpen}
+            onCancel={this.handleConfirmationCancel}
+            onConfirm={this.actuallyDelete}
+          >
+            <p>Are you sure you want to delete?</p>
+          </Alert>
+
+          {this.props.currDatacenter &&
+          this.props.currDatacenter.name !== ALL_DATACENTERS.name ? (
+            <div>
+              {this.props.isAdmin ? (
+                <div className=" element-tab-buttons">
+                  <AnchorButton
+                    className="add"
+                    text={"Add Rack(s)"}
+                    icon="add"
+                    minimal
+                    intent={Intent.PRIMARY}
+                    onClick={this.handleOpen}
+                  />
+                  <AnchorButton
+                    className="add "
+                    text={"Delete Rack(s)"}
+                    icon="trash"
+                    minimal
+                    intent={Intent.DANGER}
+                    onClick={this.handleDeleteOpen}
+                  />
+                </div>
+              ) : null}
+              <Button
+                text="View All Rack(s)"
+                onClick={(e: any) => this.getAllRacks()}
+              />
+
+              <RackSelectView submitForm={this.viewRackForm} />
+            </div>
+          ) : (
+            <Callout intent={Intent.PRIMARY}>
+              <h5>Please select a datacenter to view rack information</h5>
+            </Callout>
+          )}
+          <Button onClick={() => this.printDocument()} text={"Print Racks"} />
+        </div>
+        <div id="rack-view-print">
+          <RackView racks={this.state.racks} loading={this.state.loading} />
+        </div>
       </div>
       // </div>
     );

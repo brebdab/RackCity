@@ -23,7 +23,7 @@ import {
 } from "./components/fallback";
 
 var console: any = {};
-console.log = function () { };
+console.log = function() {};
 export interface AppProps {
   isAuthenticated?: boolean;
   onTryAutoSignup: any;
@@ -41,10 +41,10 @@ class App extends React.Component<AppProps> {
     return this.props.isAuthenticated ? (
       <Route {...rest} />
     ) : (
-        <Route {...rest}>
-          <Redirect to="/login" />
-        </Route>
-      );
+      <Route {...rest}>
+        <Redirect to="/login" />
+      </Route>
+    );
   };
 
   PrivateRoute = ({ path, component, ...rest }: any) => {
