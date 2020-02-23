@@ -86,17 +86,17 @@ export class PowerView extends React.PureComponent<
                             return (
                                 <Card elevation={Elevation.TWO}>
                                     <div key={port} className={"row-power"}>
-                                        <h6 className={"column-power"}>Asset Power Port: {port}</h6>
+                                        <h3 className={"column-power"}>Asset Power Port: {port}</h3>
                                         <Divider />
-                                        <h6 className={"column-power"}>
+                                        <h3 className={"column-power"}>
                                             PDU Port: {Object.keys(this.state.powerConnections[port]).map((field: string) => {
                                                 return (
                                                     this.state.powerConnections[port][field]
                                                 )
                                             })}
-                                        </h6>
+                                        </h3>
                                         <Divider />
-                                        <h6 className={"column-power"}>{this.state.powerStatus[port]}</h6>
+                                        <h3 className={"column-power"}>{this.state.powerStatus[port]}</h3>
                                         <Divider />
                                         <AnchorButton
                                             className={"column-power"}

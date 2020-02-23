@@ -1,4 +1,4 @@
-import { Button, Callout, Intent, Switch } from "@blueprintjs/core";
+import { Button, Callout, Intent } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { handleBooleanChange } from "@blueprintjs/docs-theme";
 import * as React from "react";
@@ -7,7 +7,11 @@ import { RouteComponentProps, withRouter } from "react-router";
 import "../../forms/forms.scss";
 import RackRangeForm from "../../forms/rackRangeForm";
 import { updateObject } from "../../store/utility";
-import { getHeaders, RackRangeFields } from "../../utils/utils";
+import {
+  DatacenterObject,
+  getHeaders,
+  RackRangeFields
+} from "../../utils/utils";
 import "./elementView.scss";
 interface RackSelectViewState {
   viewRange: boolean;
@@ -15,13 +19,18 @@ interface RackSelectViewState {
 
   errors: Array<string>;
 }
-var console: any = {};
-console.log = function() {};
+// var console: any = {};
+// console.log = function() {};
 
 interface RackSelectViewProps {
   token: string;
+  currDatacenter?: DatacenterObject;
 
-  submitForm(model: RackRangeFields, headers: any): Promise<any> | void;
+  submitForm(
+    model: RackRangeFields,
+    headers: any,
+    showError: boolean
+  ): Promise<any> | void;
 }
 class RackSelectView extends React.Component<
   RackSelectViewProps & RouteComponentProps,
@@ -33,6 +42,21 @@ class RackSelectView extends React.Component<
 
     errors: []
   };
+  componentWillReceiveProps(nextProps: RackSelectViewProps) {
+    console.log(nextProps.currDatacenter, this.props.currDatacenter);
+    if (nextProps.currDatacenter !== this.props.currDatacenter) {
+      console.log("NEW DATACENTER", nextProps);
+      this.setState({
+        values: {
+          letter_start: "",
+          letter_end: "",
+          num_start: "",
+          num_end: "",
+          datacenter: ""
+        } as RackRangeFields
+      });
+    }
+  }
   private handleSwitchChange = handleBooleanChange(viewRange => {
     this.setState({ viewRange: viewRange });
     if (!viewRange) {
@@ -59,44 +83,54 @@ class RackSelectView extends React.Component<
     });
 
     e.preventDefault();
+    const values: any = this.state.values;
+    Object.entries(values).forEach(([field, value]) => {
+      if (value === "") {
+        values[field] = undefined;
+      }
+    });
 
     const headers = getHeaders(this.props.token);
-    this.props.submitForm(this.state.values, headers);
+    const resp = this.props.submitForm(values, headers, true);
+    if (resp) {
+      resp.catch(err => {
+        console.log(err.response.data.failure_message);
+        let errors: Array<string> = this.state.errors;
+        errors.push(err.response.data.failure_message as string);
+        this.setState({
+          errors: errors
+        });
+      });
+    }
   };
   renderRackOptions(range: boolean) {}
   componentDidMount() {}
 
   render() {
+    console.log(this.state.values);
     return (
       <div>
-        <div>
-          {this.state.errors.map((err: string) => {
-            return <Callout intent={Intent.DANGER}>{err}</Callout>;
-          })}
-          <form
-            onSubmit={this.handleSubmit}
-            className="create-form bp3-form-group"
-          >
-            <Switch
-              defaultChecked={false}
-              onChange={this.handleSwitchChange}
-              label="Rack Range"
+        {this.state.errors.map((err: string) => {
+          return <Callout intent={Intent.DANGER}>{err}</Callout>;
+        })}
+        <form
+          onSubmit={this.handleSubmit}
+          className="create-form bp3-form-group"
+        >
+          <div className="rack-select">
+            <RackRangeForm
+              className="rack-field"
+              handleChange={this.handleChange}
+              values={this.state.values}
             />
-            <div className="rack-select">
-              <RackRangeForm
-                className="rack-field"
-                handleChange={this.handleChange}
-                range={this.state.viewRange}
-              />
 
-              <div className="rack-field ">
-                <Button className="button" type="submit">
-                  Submit
-                </Button>
-              </div>
+            <div className="rack-field ">
+              <Button className="button" type="submit">
+                Submit
+              </Button>
             </div>
-          </form>
-        </div>
+          </div>
+        </form>
       </div>
     );
   }
