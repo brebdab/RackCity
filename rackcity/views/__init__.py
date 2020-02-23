@@ -41,7 +41,11 @@ from .rack_views import (
     rack_delete,
     rack_summary,
 )
-from .report_views import report_rack_usage
+from .report_views import (
+    report_rack_usage,
+    rack_report_datacenter
+)
+
 from .user_views import (
     netid_login,
     RegisterNameView,

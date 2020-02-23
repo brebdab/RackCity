@@ -28,7 +28,7 @@ def power_status(request, id):
     try:
         asset = Asset.objects.get(id=id)
     except Asset.DoesNotExist:
-        failure_message = "No model exists with id=" + str(id)
+        failure_message = "No asset exists with id=" + str(id)
         return JsonResponse(
             {"failure_message": failure_message},
             status=HTTPStatus.BAD_REQUEST
@@ -81,7 +81,7 @@ def power_on(request):
     try:
         asset = Asset.objects.get(id=data['id'])
     except Asset.DoesNotExist:
-        failure_message = "No model exists with id=" + str(id)
+        failure_message = "No asset exists with id=" + str(id)
         return JsonResponse(
             {"failure_message": failure_message},
             status=HTTPStatus.BAD_REQUEST,
@@ -130,7 +130,7 @@ def power_off(request):
     try:
         asset = Asset.objects.get(id=data['id'])
     except Asset.DoesNotExist:
-        failure_message = "No model exists with id=" + str(id)
+        failure_message = "No asset exists with id=" + str(id)
         return JsonResponse(
             {"failure_message": failure_message},
             status=HTTPStatus.BAD_REQUEST,
@@ -170,7 +170,7 @@ def power_cycle(request):
     try:
         asset = Asset.objects.get(id=data['id'])
     except Asset.DoesNotExist:
-        failure_message = "No model exists with id=" + str(id)
+        failure_message = "No asset exists with id=" + str(id)
         return JsonResponse(
             {"failure_message": failure_message},
             status=HTTPStatus.BAD_REQUEST,
@@ -185,6 +185,28 @@ def power_cycle(request):
         {"success_message": "Power successfully cycled, all asset power ports reset"},
         status=HTTPStatus.OK
     )
+
+
+# @api_view(['POST'])
+# @permission_classes([IsAdminUser])
+# def power_availability(request):
+#     data = JSONParser().parse(request)
+#     if 'id' not in data.keys():
+#         failure_message = "No rack id given"
+#         return JsonResponse(
+#             {"failure_message": failure_message},
+#             status=HTTPStatus.BAD_REQUEST
+#         )
+#     try:
+#         rack = Rack.objects.get(id=data['id'])
+#     except Rack.DoesNotExist:
+#         failure_message = "No rack exists with id=" + str(id)
+#         return JsonResponse(
+#             {"failure_message": failure_message},
+#             status=HTTPStatus.BAD_REQUEST,
+#         )
+    
+    
 
 
 def regex_power_status(html, port):
