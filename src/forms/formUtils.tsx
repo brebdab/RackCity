@@ -24,7 +24,7 @@ export function escapeRegExpChars(text: string) {
 }
 export function isMacAddressValid(text: string) {
   const regex = new RegExp(
-    "^([0-9A-Fa-f]{2}[-:.,;]){5}([0-9A-Fa-f]{2})$|^[A-Fa-f0-9]{12}$"
+    "^([0-9A-Fa-f]{2}[-_:.,;]){5}([0-9A-Fa-f]{2})$|^[A-Fa-f0-9]{12}$"
   );
   if (regex.exec(text)) {
     return true;
