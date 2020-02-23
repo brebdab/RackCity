@@ -19,9 +19,10 @@
 .no-data-text {
   padding: 30px;
 }
-.tab-panel {
-  width: 100%;
+.grant-admin-button {
+  width: 135px !important;
 }
+
 .rack-tab .element-tab {
   display: block;
   margin: 10pt;
@@ -50,11 +51,15 @@
   margin-bottom: 5pt;
   padding-bottom: 2pt;
 }
+.bp3-tab-panel {
+  overflow: scroll;
+
+  width: 95%;
+}
 .element-view {
   margin: 10pt;
-  overflow: clip;
-  width: calc(100% - 110pt) !important;
 }
+
 .filter-select {
   margin: 0 !important;
   // float: left;
