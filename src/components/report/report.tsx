@@ -1,4 +1,4 @@
-import { Classes, Spinner, Card, Elevation, AnchorButton } from "@blueprintjs/core";
+import { Classes, Spinner, Card, Elevation, AnchorButton, Button, FormGroup, MenuItem } from "@blueprintjs/core";
 import * as React from "react";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -6,6 +6,8 @@ import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import { API_ROOT } from "../../utils/api-config";
 import "./report.scss";
+import { DatacenterSelect, filterDatacenter, renderDatacenterItem } from "../../forms/formUtils";
+import { DatacenterObject } from "../../utils/utils";
 
 interface ReportProps {
   token: string;
@@ -34,6 +36,7 @@ interface ReportState {
   owner_allocation: Array<OwnerAlloc>;
   vendor_allocation: Array<VendorAlloc>;
   state_loaded: boolean;
+  datacenter: string
 }
 var console: any = {};
 console.log = function () { };
@@ -46,8 +49,13 @@ export class Report extends React.PureComponent<
     model_allocation: [],
     owner_allocation: [],
     vendor_allocation: [],
-    state_loaded: false
+    state_loaded: false,
+    datacenter: ""
   };
+
+  componentDidMount() {
+
+  }
 
   render() {
     const modelFields = {
@@ -66,10 +74,49 @@ export class Report extends React.PureComponent<
     return (
       <div className={Classes.DARK}>
         <Card elevation={Elevation.TWO}>
+          <FormGroup label="Datacenter" inline={true}>
+            <DatacenterSelect
+              popoverProps={{
+                minimal: true,
+                popoverClassName: "dropdown",
+                usePortal: true
+              }}
+              items={this.props.datacenters!}
+              onItemSelect={(datacenter: DatacenterObject) => {
+                this.props.onDatacenterSelect!(datacenter);
+              }}
+              itemRenderer={renderDatacenterItem}
+              itemPredicate={filterDatacenter}
+              noResults={<MenuItem disabled={true} text="No results." />}
+            >
+              <Button
+                rightIcon="caret-down"
+                text={
+                  this.props.currDatacenter && this.props.currDatacenter.name
+                    ? this.props.currDatacenter.name
+                    : "All datacenters"
+                }
+              />
+            </DatacenterSelect>
+          </FormGroup>
           <AnchorButton
             text={"Submit"}
             onClick={() => {
-              getReport(this.props.token)
+              if (this.state.datacenter === "global") {
+                getGlobalReport(this.props.token).then(result => {
+                  this.setState({
+                    freeRack: result.free_rackspace_percent,
+                    model_allocation: result.model_allocation,
+                    owner_allocation: result.owner_allocation,
+                    vendor_allocation: result.vendor_allocation,
+                    state_loaded: true
+                  })
+                })
+              } else if (this.state.datacenter.length > 0) {
+                alert("datacenter")
+              } else {
+                alert("no datacenter selected")
+              }
             }}
           />
         </Card>
@@ -155,7 +202,7 @@ class Tabular extends React.PureComponent<TabProps> {
   }
 }
 
-async function getReport(token: string) {
+async function getGlobalReport(token: string) {
   const headers = {
     headers: {
       Authorization: "Token " + token
