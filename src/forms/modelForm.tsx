@@ -19,7 +19,6 @@ import "./forms.scss";
 import $ from "jquery";
 import {
   filterString,
-  renderCreateItemOption,
   renderStringItem,
   StringSuggest,
   FormTypes
@@ -120,7 +119,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
     let network_ports: Array<string> = this.state.values.network_ports
       ? this.state.values.network_ports
       : [];
-
+    console.log("new change", field);
     if (field["num_network_ports"]) {
       let num_network_ports = field["num_network_ports"];
       console.log(num_network_ports, network_ports);
@@ -192,6 +191,9 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
         >
           <FormGroup className="suggest" label="Vendor (required)">
             <StringSuggest
+              inputProps={{
+                placeholder: "vendor"
+              }}
               popoverProps={{
                 minimal: true,
                 popoverClassName: "dropdown",
@@ -206,14 +208,12 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
                   values: updateObject(values, { vendor: vendor })
                 });
               }}
-              // onQueryChange={(vendor: string) => {
-              //   console.log("CHANGE", vendor);
-              //   this.setState({
-              //     values: updateObject(values, { vendor: vendor })
-              //   });
-              // }}
-              createNewItemRenderer={renderCreateItemOption}
-              createNewItemFromQuery={(vendor: string) => vendor}
+              onQueryChange={(vendor: string) => {
+                console.log("CHANGE", vendor);
+                this.setState({
+                  values: updateObject(values, { vendor: vendor })
+                });
+              }}
               itemRenderer={renderStringItem}
               itemPredicate={filterString}
               noResults={<MenuItem disabled={true} text="No results." />}
