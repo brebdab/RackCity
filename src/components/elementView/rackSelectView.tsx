@@ -126,7 +126,7 @@ class RackSelectView extends React.Component<
 
             <div className="rack-field ">
               <Button className="button" type="submit">
-                View Range of Racks
+                Submit
               </Button>
             </div>
           </div>
