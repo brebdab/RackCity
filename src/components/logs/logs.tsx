@@ -231,6 +231,10 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
             </div>
         }
     }
+    onFormSubmit = (e: any) => {
+        e.preventDefault();
+    }
+
     public render() {
         if (!this.state.is_state_loaded) {
             this.setState({
@@ -246,22 +250,25 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
             <div className={Classes.DARK + " log-view"}>
                 <h1>System Logs</h1>
                 <div className={Classes.DARK + " bp3-input-group .modifier"}>
-                    <span className="bp3-icon bp3-icon-search"></span>
-                    <input
-                        className="bp3-input .modifier"
-                        type="search"
-                        placeholder="Search logs by username, asset number, or asset hostname"
-                        dir="auto"
-                        onChange={(e: any) =>
-                            this.setState({
-                                search_query: e.currentTarget.value
-                            })
-                        }
-                    />
-                    <button
-                        className="bp3-button bp3-minimal bp3-intent-primary bp3-icon-arrow-right .modifier"
-                        onClick={() => this.handleSearch()}
-                    ></button>
+                    <span className="search-span bp3-icon bp3-icon-search"></span>
+                    <form onSubmit={this.onFormSubmit}>
+                        <span></span>
+                        <input
+                            className="search-input bp3-input .modifier"
+                            type="text"
+                            placeholder="Search logs by username, asset number, or asset hostname"
+                            dir="auto"
+                            onChange={(e: any) =>
+                                this.setState({
+                                    search_query: e.currentTarget.value
+                                })
+                            }
+                        />
+                        <button
+                            className="search-button bp3-button bp3-minimal bp3-intent-primary bp3-icon-arrow-right .modifier"
+                            onClick={() => this.handleSearch()}
+                        ></button>
+                    </form>
                 </div>
                 <div className="page-control">
                     <HTMLSelect
@@ -301,7 +308,7 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
                         {this.state.logs.map(log => this.renderLinkedLog(log))}
                     </Pre>
                 </div>
-            </div>
+            </div >
         );
     }
 }
