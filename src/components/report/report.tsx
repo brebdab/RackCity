@@ -1,4 +1,4 @@
-import { Classes, Spinner, Card, Elevation, AnchorButton, Button, FormGroup, MenuItem } from "@blueprintjs/core";
+import { Classes, Spinner, Card, Elevation, AnchorButton, Button, FormGroup, MenuItem, Tab, Tabs, TabId } from "@blueprintjs/core";
 import * as React from "react";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -7,7 +7,7 @@ import { RouteComponentProps, withRouter } from "react-router";
 import { API_ROOT } from "../../utils/api-config";
 import "./report.scss";
 import { DatacenterSelect, filterDatacenter, renderDatacenterItem } from "../../forms/formUtils";
-import { DatacenterObject } from "../../utils/utils";
+import { DatacenterObject, getHeaders } from "../../utils/utils";
 
 interface ReportProps {
   token: string;
@@ -36,7 +36,10 @@ interface ReportState {
   owner_allocation: Array<OwnerAlloc>;
   vendor_allocation: Array<VendorAlloc>;
   state_loaded: boolean;
-  datacenter: string
+  datacenter?: DatacenterObject;
+  datacenters?: Array<DatacenterObject>;
+  selectedTab: string;
+  datacenter_loaded: boolean
 }
 var console: any = {};
 console.log = function () { };
@@ -50,78 +53,29 @@ export class Report extends React.PureComponent<
     owner_allocation: [],
     vendor_allocation: [],
     state_loaded: false,
-    datacenter: ""
+    selectedTab: "global",
+    datacenter_loaded: false
   };
 
-  componentDidMount() {
+  private modelFields = {
+    vendor: "Vendor",
+    model_number: "Model Number",
+    allocation_percent: "Allocation %"
+  };
+  private ownerFields = {
+    owner: "Owner",
+    allocation_percent: "Allocation %"
+  };
+  private vendorFields = {
+    vendor: "Vendor",
+    allocation_percent: "Allocation %"
+  };
 
-  }
-
-  render() {
-    const modelFields = {
-      vendor: "Vendor",
-      model_number: "Model Number",
-      allocation_percent: "Allocation %"
-    };
-    const ownerFields = {
-      owner: "Owner",
-      allocation_percent: "Allocation %"
-    };
-    const vendorFields = {
-      vendor: "Vendor",
-      allocation_percent: "Allocation %"
-    };
+  showReport = (field: string) => {
     return (
-      <div className={Classes.DARK}>
-        <Card elevation={Elevation.TWO}>
-          <FormGroup label="Datacenter" inline={true}>
-            <DatacenterSelect
-              popoverProps={{
-                minimal: true,
-                popoverClassName: "dropdown",
-                usePortal: true
-              }}
-              items={this.props.datacenters!}
-              onItemSelect={(datacenter: DatacenterObject) => {
-                this.props.onDatacenterSelect!(datacenter);
-              }}
-              itemRenderer={renderDatacenterItem}
-              itemPredicate={filterDatacenter}
-              noResults={<MenuItem disabled={true} text="No results." />}
-            >
-              <Button
-                rightIcon="caret-down"
-                text={
-                  this.props.currDatacenter && this.props.currDatacenter.name
-                    ? this.props.currDatacenter.name
-                    : "All datacenters"
-                }
-              />
-            </DatacenterSelect>
-          </FormGroup>
-          <AnchorButton
-            text={"Submit"}
-            onClick={() => {
-              if (this.state.datacenter === "global") {
-                getGlobalReport(this.props.token).then(result => {
-                  this.setState({
-                    freeRack: result.free_rackspace_percent,
-                    model_allocation: result.model_allocation,
-                    owner_allocation: result.owner_allocation,
-                    vendor_allocation: result.vendor_allocation,
-                    state_loaded: true
-                  })
-                })
-              } else if (this.state.datacenter.length > 0) {
-                alert("datacenter")
-              } else {
-                alert("no datacenter selected")
-              }
-            }}
-          />
-        </Card>
+      <div>
         {this.state.state_loaded ? <Card elevation={Elevation.TWO}>
-          <h2 className={"report-title"}>Datacenter Report</h2>
+          <h2 className={"report-title"}>{field} Datacenter Report</h2>
           <h4 className={"report-summary"}>Percent of unused rack space: {(this.state.freeRack * 100).toFixed(2)}%</h4>
           <h4 className={"report-summary"}>Allocation of used rack space:</h4>
           <div className={"row"}>
@@ -139,23 +93,144 @@ export class Report extends React.PureComponent<
             <div className={"column-third-report"}>
               <Tabular
                 data={this.state.vendor_allocation}
-                fields={vendorFields}
+                fields={this.vendorFields}
               />
             </div>
             <div className={"column-third-right-report"}>
               <Tabular
                 data={this.state.model_allocation}
-                fields={modelFields}
+                fields={this.modelFields}
               />
             </div>
             <div className={"column-third-right-report"}>
               <Tabular
                 data={this.state.owner_allocation}
-                fields={ownerFields}
+                fields={this.ownerFields}
               />
             </div>
           </div>
         </Card> : null}
+      </div>
+    )
+  }
+
+  showDatacenterReport = () => {
+    return (
+      <div>
+        <Card elevation={Elevation.TWO} className={"row"}>
+          {this.state.datacenters ? <FormGroup label="" inline={true}>
+            <DatacenterSelect
+              popoverProps={{
+                minimal: true,
+                popoverClassName: "dropdown",
+                usePortal: true
+              }}
+              items={this.state.datacenters!}
+              onItemSelect={(datacenter: DatacenterObject) => {
+                this.onDatacenterSelect(datacenter);
+              }}
+              itemRenderer={renderDatacenterItem}
+              itemPredicate={filterDatacenter}
+              noResults={<MenuItem disabled={true} text="No results." />}
+            >
+              <Button
+                rightIcon="caret-down"
+                text={
+                  this.state.datacenter && this.state.datacenter.name
+                    ? this.state.datacenter.name
+                    : "Select datacenter"
+                }
+              />
+            </DatacenterSelect>
+          </FormGroup> : null}
+          <AnchorButton
+            text={"View Datacenter Report"}
+            onClick={() => {
+              if (!this.state.datacenter) {
+                alert("No datacenter selected")
+              } else {
+                getDatacenterReport(this.props.token, this.state.datacenter).then(result => {
+                  this.setState({
+                    freeRack: result.free_rackspace_percent,
+                    model_allocation: result.model_allocation,
+                    owner_allocation: result.owner_allocation,
+                    vendor_allocation: result.vendor_allocation,
+                    datacenter_loaded: true,
+                    state_loaded: true
+                  })
+                })
+              }
+            }}
+          />
+        </Card>
+        {this.state.datacenter_loaded ? this.showReport(this.state.datacenter!.name) : null}
+      </div>
+    )
+  }
+
+  onDatacenterSelect = (datacenter: DatacenterObject) => {
+    this.setState({
+      datacenter: datacenter
+    });
+  };
+
+  componentDidMount() {
+    axios.post(API_ROOT + "api/datacenters/get-many", {}, getHeaders(this.props.token))
+      .then(res => {
+        const dcs = res.data.datacenters as Array<DatacenterObject>;
+        this.setState({
+          datacenters: dcs
+        })
+        getGlobalReport(this.props.token).then(result => {
+          this.setState({
+            freeRack: result.free_rackspace_percent,
+            model_allocation: result.model_allocation,
+            owner_allocation: result.owner_allocation,
+            vendor_allocation: result.vendor_allocation,
+            state_loaded: true
+          })
+        })
+      })
+  }
+
+  render() {
+    return (
+      <div className={Classes.DARK}>
+        <Tabs
+          id="ReportTabs"
+          selectedTabId={this.state.selectedTab}
+          animate={true}
+          onChange={(newTab: TabId) => {
+            this.setState({
+              freeRack: 0,
+              model_allocation: [],
+              owner_allocation: [],
+              vendor_allocation: [],
+              state_loaded: false,
+              datacenter_loaded: false
+            })
+            if (newTab === "global") {
+              getGlobalReport(this.props.token).then(result => {
+                this.setState({
+                  freeRack: result.free_rackspace_percent,
+                  model_allocation: result.model_allocation,
+                  owner_allocation: result.owner_allocation,
+                  vendor_allocation: result.vendor_allocation,
+                  state_loaded: true
+                })
+              })
+            } else {
+              this.setState({
+                datacenter: undefined,
+                datacenter_loaded: false
+              })
+            }
+            this.setState({ selectedTab: newTab })
+          }}
+        >
+          <Tab id="global" title="Global Report" panel={this.showReport("Global")} />
+          <Tab id="datacenter" title="Datacenter Report" panel={this.showDatacenterReport()} />
+        </Tabs>
       </div>
     );
   }
@@ -211,6 +286,17 @@ async function getGlobalReport(token: string) {
   return await axios.get(API_ROOT + "api/report/global", headers).then(res => {
     return res.data;
   });
+}
+
+async function getDatacenterReport(token: string, datacenter: DatacenterObject) {
+  const headers = {
+    headers: {
+      Authorization: "Token " + token
+    }
+  };
+  return await axios.get(API_ROOT + "api/report/datacenter/" + datacenter.id, headers).then(res => {
+    return res.data;
+  })
 }
 
 const mapStatetoProps = (state: any) => {
