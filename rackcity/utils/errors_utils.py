@@ -44,7 +44,7 @@ def get_rack_exist_failure(racks):
     else:
         failure_message = \
             " because at least the following racks already exist: " + \
-            get_rack_list(racks[0:5])
+            get_rack_list(racks[0:5]) + ", ..."
     return failure_message
 
 
@@ -56,7 +56,7 @@ def get_rack_do_not_exist_failure(rack_names):
     else:
         failure_message = \
             " because at least the following racks do not exist: " + \
-            ", ".join(rack_names[0:5])
+            ", ".join(rack_names[0:5]) + ", ..."
     return failure_message
 
 
@@ -68,7 +68,7 @@ def get_rack_with_asset_failure(racks):
     else:
         failure_message = \
             " because at least the following racks contain assets: "
-        failure_message += get_rack_list(racks[0:5])
+        failure_message += get_rack_list(racks[0:5]) + ", ..."
     return failure_message
 
 
