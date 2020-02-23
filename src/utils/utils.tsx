@@ -199,7 +199,7 @@ export function isAssetObject(obj: any): obj is AssetObject {
   return obj && obj.model;
 }
 export function isRackRangeFields(obj: any): obj is RackRangeFields {
-  return obj && obj.letter_start;
+  return obj && (obj.letter_start || obj.letter_start === "");
 }
 export function isUserObject(obj: any): obj is UserInfoObject {
   return obj && obj.username;

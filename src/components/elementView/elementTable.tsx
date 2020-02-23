@@ -32,7 +32,8 @@ import {
   DatacenterObject,
   isObject,
   SortFilterBody,
-  AssetObject
+  AssetObject,
+  isRackRangeFields
 } from "../../utils/utils";
 import DragDropList from "./dragDropList";
 import "./elementView.scss";
@@ -61,6 +62,7 @@ import {
 } from "./elementUtils";
 import { PowerView } from "./powerView/powerView";
 import "./powerView/powerView.scss";
+import { updateObject } from "../../store/utility";
 
 interface ElementTableState {
   items: Array<ElementObjectType>;
@@ -106,6 +108,7 @@ interface ElementTableProps {
   data?: Array<ElementObjectType>;
   shouldUpdateData?: boolean;
   isAdmin: boolean;
+  updateDatacenters?(): void;
 }
 
 class ElementTable extends React.Component<
@@ -328,27 +331,59 @@ class ElementTable extends React.Component<
   }
 
   addFilter = (filter: IFilter) => {
-    const filters = this.state.filters;
-    filters.push(filter);
-    console.log(filters);
-    this.setState({
-      filters
-    });
-    this.updateFilterData(filters);
+    const filters_copy = this.state.filters.slice();
+
+    if (isRackRangeFields(filter.filter)) {
+      if (this.props.currDatacenter && this.props.currDatacenter.id !== "") {
+        let filter_datacenter = updateObject(filter.filter, {
+          datacenter: this.props.currDatacenter!.id
+        });
+
+        console.log(filter_datacenter);
+        filter = updateObject(filter, { filter: filter_datacenter });
+        console.log(filter);
+      }
+    }
+    filters_copy.push(filter);
+    let resp = this.updateFilterData(filters_copy);
+    if (resp) {
+      resp.then(res =>
+        this.setState({
+          filters: filters_copy
+        })
+      );
+    }
   };
 
   updateFilterData = (items: Array<IFilter>) => {
     console.log(items);
+    let resp;
     if (this.props.callback! !== undefined) this.props.callback(items);
     this.resetPage();
+
+    if (this.props.getPages) {
+      this.props
+        .getPages(
+          this.props.type,
+          this.state.page_type,
+          items,
+          this.props.token
+        )
+        .then(res => {
+          this.setState({
+            total_pages: res
+          });
+        });
+    }
     if (this.props.getData) {
-      this.props.getData!(
+      resp = this.props.getData!(
         this.props.type,
         1,
         this.state.page_type,
         { sort_by: this.state.sort_by, filters: items },
         this.props.token
-      )
+      );
+      resp
         .then(res => {
           this.setState({
             items: res
@@ -367,20 +402,7 @@ class ElementTable extends React.Component<
           });
         });
     }
-    if (this.props.getPages) {
-      this.props
-        .getPages(
-          this.props.type,
-          this.state.page_type,
-          items,
-          this.props.token
-        )
-        .then(res => {
-          this.setState({
-            total_pages: res
-          });
-        });
-    }
+    return resp;
   };
 
   updateData = (page: PagingTypes) => {
@@ -610,6 +632,9 @@ class ElementTable extends React.Component<
     } else if (isDatacenterObject(values)) {
       modifyDatacenter(values, headers).then(res => {
         this.successfulModification();
+        if (this.props.updateDatacenters) {
+          this.props.updateDatacenters();
+        }
       });
     }
   };
@@ -666,6 +691,9 @@ class ElementTable extends React.Component<
           this.addErrorToast("Sucessfully deleted");
           this.updateTableData();
           this.handleDeleteCancel();
+          if (this.props.updateDatacenters) {
+            this.props.updateDatacenters();
+          }
         })
         .catch(err => {
           this.addErrorToast(err.response.data.failure_message);

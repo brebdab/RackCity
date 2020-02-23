@@ -20,8 +20,8 @@ import {
   getFilterType
 } from "./elementUtils";
 
-var console: any = {};
-console.log = function() {};
+// var console: any = {};
+// console.log = function() {};
 
 interface FilterSelectProps {
   token: string;
@@ -56,6 +56,7 @@ class FilterSelect extends React.Component<
     this.setState({});
   }
   getRackFilterOptions() {
+    console.log(this.state.filter);
     return this.state.filter && isRackRangeFields(this.state.filter) ? (
       <div className="field">
         <RackRangeForm
@@ -136,7 +137,7 @@ class FilterSelect extends React.Component<
       });
     }
     if (type === FilterTypes.RACKRANGE) {
-      const filter: RackRangeFields = {} as RackRangeFields;
+      const filter: RackRangeFields = { letter_start: "" } as RackRangeFields;
       this.setState({
         filter: filter
       });
@@ -165,6 +166,7 @@ class FilterSelect extends React.Component<
       id: this.state.field + JSON.stringify(this.state.filter)
     };
     console.log(filter);
+
     this.props.handleAddFilter(filter);
   };
   render() {

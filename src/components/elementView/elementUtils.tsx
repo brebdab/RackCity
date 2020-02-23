@@ -79,7 +79,15 @@ export const renderNumericFilterItem = (item: NumericFilter) => {
   return `between ${item.min} - ${item.max}`;
 };
 export const renderRackRangeFilterItem = (item: RackRangeFields) => {
-  return `rows  ${item.letter_start} - ${item.letter_end} & racks ${item.num_start} - ${item.num_end}`;
+  if (item.letter_end && item.num_end) {
+    return `rows  ${item.letter_start} - ${item.letter_end} & letters ${item.num_start} - ${item.num_end}`;
+  } else if (item.letter_end) {
+    return `rows  ${item.letter_start} - ${item.letter_end} & letters ${item.num_start}`;
+  } else if (item.num_end) {
+    return `row  ${item.letter_start}  & letters ${item.num_start} - ${item.num_end}`;
+  } else {
+    return ` ${item.letter_start}${item.num_start} `;
+  }
 };
 
 export const modifyModel = (model: ModelObject, headers: any) => {
