@@ -241,7 +241,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
               field="display_color"
               type="color"
               value={
-                this.props.initialValues ? values.display_color : "#394B59"
+                values.display_color? values.display_color : "#394B59"
               }
               onChange={this.handleChange}
             />
