@@ -1,7 +1,11 @@
 from enum import Enum
 
 
-SUCCESS = "SUCCESS: "
+class Status(Enum):
+    SUCCESS = "SUCCESS: "
+    ERROR = "ERROR: "
+    DELETE_ERROR = "DELETE ERROR: "
+    MODIFY_ERROR = "MODIFY ERROR: "
 
 
 class GenericFailure(Enum):
@@ -12,9 +16,7 @@ class GenericFailure(Enum):
 
 
 class UserFailure(Enum):
-    GET = "ERROR: VIEW USERS"
     REVOKE_ADMIN = "ERROR: REVOKE ADMIN PERMISSION\n"
     GRANT_ADMIN = "ERROR: GRANT ADMIN PERMISSION\n"
-    DELETE = "ERROR: DELETE USER\n"
-    NETID = "The Duke NetID login credentials you have provided are invalid."
-    LOGIN = "ERROR: LOGIN\n"
+    DELETE = "Cannot delete user"
+    NETID_LOGIN = "The Duke NetID login credentials you have provided are invalid."
