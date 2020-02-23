@@ -1,4 +1,4 @@
-import { Classes, Spinner, Card, Elevation } from "@blueprintjs/core";
+import { Classes, Spinner, Card, Elevation, AnchorButton } from "@blueprintjs/core";
 import * as React from "react";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -36,11 +36,11 @@ interface ReportState {
   state_loaded: boolean;
 }
 var console: any = {};
-console.log = function() {};
+console.log = function () { };
 
 export class Report extends React.PureComponent<
   ReportProps & RouteComponentProps
-> {
+  > {
   public state: ReportState = {
     freeRack: 0,
     model_allocation: [],
@@ -50,18 +50,6 @@ export class Report extends React.PureComponent<
   };
 
   render() {
-    if (!this.state.state_loaded) {
-      getReport(this.props.token).then(result => {
-        this.setState({
-          freeRack: result.free_rackspace_percent,
-          model_allocation: result.model_allocation,
-          owner_allocation: result.owner_allocation,
-          vendor_allocation: result.vendor_allocation,
-          state_loaded: true
-        });
-      });
-    }
-    console.log(this.state);
     const modelFields = {
       vendor: "Vendor",
       model_number: "Model Number",
@@ -75,50 +63,54 @@ export class Report extends React.PureComponent<
       vendor: "Vendor",
       allocation_percent: "Allocation %"
     };
-    if (!this.state.state_loaded) {
-      return <Spinner size={Spinner.SIZE_LARGE} />;
-    } else {
-      return (
-        <div className={Classes.DARK}>
-          <Card elevation={Elevation.TWO}>
-            <h2 className={"report-title"}>Datacenter Report</h2>
-            <h4 className={"report-summary"}>Percent of unused rack space: {(this.state.freeRack * 100).toFixed(2)}%</h4>
-            <h4 className={"report-summary"}>Allocation of used rack space:</h4>
-            <div className={"row"}>
-              <div className={"column-third-report"}>
-                <h5>Used rack space by vendor:</h5>
-              </div>
-              <div className={"column-third-right-report"}>
-                <h5>Used rack space by model:</h5>
-              </div>
-              <div className={"column-third-right-report"}>
-                <h5>Used rack space by owner:</h5>
-              </div>
+    return (
+      <div className={Classes.DARK}>
+        <Card elevation={Elevation.TWO}>
+          <AnchorButton
+            text={"Submit"}
+            onClick={() => {
+              getReport(this.props.token)
+            }}
+          />
+        </Card>
+        {this.state.state_loaded ? <Card elevation={Elevation.TWO}>
+          <h2 className={"report-title"}>Datacenter Report</h2>
+          <h4 className={"report-summary"}>Percent of unused rack space: {(this.state.freeRack * 100).toFixed(2)}%</h4>
+          <h4 className={"report-summary"}>Allocation of used rack space:</h4>
+          <div className={"row"}>
+            <div className={"column-third-report"}>
+              <h5>Used rack space by vendor:</h5>
             </div>
-            <div className={"row"}>
-              <div className={"column-third-report"}>
-                <Tabular
-                  data={this.state.vendor_allocation}
-                  fields={vendorFields}
-                />
-              </div>
-              <div className={"column-third-right-report"}>
-                <Tabular
-                  data={this.state.model_allocation}
-                  fields={modelFields}
-                />
-              </div>
-              <div className={"column-third-right-report"}>
-                <Tabular
-                  data={this.state.owner_allocation}
-                  fields={ownerFields}
-                />
-              </div>
+            <div className={"column-third-right-report"}>
+              <h5>Used rack space by model:</h5>
             </div>
-          </Card>
-        </div>
-      );
-    }
+            <div className={"column-third-right-report"}>
+              <h5>Used rack space by owner:</h5>
+            </div>
+          </div>
+          <div className={"row"}>
+            <div className={"column-third-report"}>
+              <Tabular
+                data={this.state.vendor_allocation}
+                fields={vendorFields}
+              />
+            </div>
+            <div className={"column-third-right-report"}>
+              <Tabular
+                data={this.state.model_allocation}
+                fields={modelFields}
+              />
+            </div>
+            <div className={"column-third-right-report"}>
+              <Tabular
+                data={this.state.owner_allocation}
+                fields={ownerFields}
+              />
+            </div>
+          </div>
+        </Card> : null}
+      </div>
+    );
   }
 }
 
@@ -169,7 +161,7 @@ async function getReport(token: string) {
       Authorization: "Token " + token
     }
   };
-  return await axios.get(API_ROOT + "api/report", headers).then(res => {
+  return await axios.get(API_ROOT + "api/report/global", headers).then(res => {
     return res.data;
   });
 }
