@@ -4,7 +4,7 @@ $row-height: 6px;
 @media screen {
   .rack-container {
     padding-left: 20px;
-    display: inline-block;
+    display: block;
     overflow: scroll;
     // white-space: nowrap;
     width: 100%;
@@ -105,10 +105,6 @@ tr {
   // outline-color: #202b33 !important;
   // outline-width: 5pt !important;
 }
-.flex-grid-thirds {
-  display: flex;
-  justify-content: space-between;
-}
 
 // .unit {
 
@@ -138,7 +134,12 @@ tr {
 
     overflow-y: visible !important;
   }
-
+  div {
+    display: block !important;
+  }
+  // .tab {
+  //   display: block !important;
+  // }
   .rack-container span {
     padding-left: 10px !important;
   }
@@ -146,14 +147,14 @@ tr {
   //   display: block !important;
   // }
   .bp3-navbar {
-    display: none;
+    display: none !important;
   }
   .nav-bar-button {
-    display: none;
+    display: none !important;
   }
 
   .bp3-tab-indicator-wrapper {
-    display: none;
+    display: none !important;
   }
   @page {
     margin-top: 2cm;
@@ -167,9 +168,10 @@ tr {
   div {
     overflow: visible !important;
   }
-  // .rack-table {
-  //   page-break-after: always !important;
-  // }
+  .rack-parent {
+    // page-break-after: always !important;
+    display: inline-block !important;
+  }
   .body {
     background-color: white !important;
   }
@@ -198,8 +200,9 @@ tr {
   //   display: none;
   // }
   .do-not-print {
-    display: none;
+    display: none !important;
   }
+
   .bp3-tab {
     color: transparent !important;
     max-width: 1pt;

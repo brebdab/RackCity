@@ -70,7 +70,7 @@ class ElementTabContainer extends React.Component<
         large
       >
         <Tab
-          className="tab"
+          className="tab do-not-print"
           id="rack"
           title="Racks"
           panel={
@@ -82,7 +82,7 @@ class ElementTabContainer extends React.Component<
           }
         />
         <Tab
-          className="tab"
+          className="tab do-not-print"
           id="asset"
           title="Assets"
           panel={
@@ -97,7 +97,7 @@ class ElementTabContainer extends React.Component<
         />
 
         <Tab
-          className="tab"
+          className="tab do-not-print"
           id="model"
           title="Models"
           panel={<ElementTab {...this.props} element={ElementType.MODEL} />}
