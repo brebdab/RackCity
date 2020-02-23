@@ -19,7 +19,6 @@ import "./forms.scss";
 import $ from "jquery";
 import {
   filterString,
-  renderCreateItemOption,
   renderStringItem,
   StringSuggest,
   FormTypes
@@ -215,8 +214,6 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
                   values: updateObject(values, { vendor: vendor })
                 });
               }}
-              // createNewItemRenderer={renderCreateItemOption}
-              // createNewItemFromQuery={(vendor: string) => vendor}
               itemRenderer={renderStringItem}
               itemPredicate={filterString}
               noResults={<MenuItem disabled={true} text="No results." />}
