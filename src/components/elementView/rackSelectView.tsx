@@ -1,4 +1,4 @@
-import { Button, Callout, Intent, Switch } from "@blueprintjs/core";
+import { Button, Callout, Intent } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { handleBooleanChange } from "@blueprintjs/docs-theme";
 import * as React from "react";
@@ -8,9 +8,9 @@ import "../../forms/forms.scss";
 import RackRangeForm from "../../forms/rackRangeForm";
 import { updateObject } from "../../store/utility";
 import {
+  DatacenterObject,
   getHeaders,
-  RackRangeFields,
-  DatacenterObject
+  RackRangeFields
 } from "../../utils/utils";
 import "./elementView.scss";
 interface RackSelectViewState {
@@ -84,7 +84,7 @@ class RackSelectView extends React.Component<
 
     e.preventDefault();
     const values: any = this.state.values;
-    Object.entries(values).map(([field, value]) => {
+    Object.entries(values).forEach(([field, value]) => {
       if (value === "") {
         values[field] = undefined;
       }
