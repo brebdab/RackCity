@@ -10,7 +10,7 @@ import { filterString, renderStringItem } from "../../forms/formUtils";
 import { updateObject } from "../../store/utility";
 import "./elementView.scss";
 import RackRangeForm from "../../forms/rackRangeForm";
-import { RackRangeFields } from "../../utils/utils";
+import { RackRangeFields, isRackRangeFields } from "../../utils/utils";
 import {
   IFilter,
   FilterTypes,
@@ -36,7 +36,7 @@ class FilterSelect extends React.Component<
   state = {
     id: "",
     field: "",
-    filter: undefined,
+    filter: {} as TextFilter | NumericFilter | RackRangeFields,
     filter_type: FilterTypes.TEXT
   };
   renderFilterOptions(field: string | undefined) {
@@ -56,15 +56,15 @@ class FilterSelect extends React.Component<
     this.setState({});
   }
   getRackFilterOptions() {
-    return (
+    return this.state.filter && isRackRangeFields(this.state.filter) ? (
       <div className="field">
         <RackRangeForm
           className="field"
+          values={this.state.filter}
           handleChange={this.handleChange}
-          range={true}
         />
       </div>
-    );
+    ) : null;
   }
   getNumericFilterOptions() {
     return (

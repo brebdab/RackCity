@@ -160,7 +160,14 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
       );
     }
   };
-
+  componentWillReceiveProps(nextProps: RackTabProps) {
+    if (nextProps.currDatacenter !== this.props.currDatacenter) {
+      this.setState({
+        racks: [],
+        selectedRackRange: {} as RackRangeFields
+      });
+    }
+  }
   createRack = (rack: RackRangeFields, headers: any) => {
     const rack_new = updateObject(rack, {
       datacenter: this.props.currDatacenter.id
@@ -304,14 +311,17 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
               </div>
             ) : null}
             <div className="rack-view-options">
-              <RackSelectView submitForm={this.viewRackForm} />
-              <p className="or">or </p>
               <Button
                 className="all-racks"
                 text="View All Racks"
                 onClick={(e: any) =>
                   this.getAllRacks(this.props.currDatacenter)
                 }
+              />
+              <p className="or">or </p>
+              <RackSelectView
+                currDatacenter={this.props.currDatacenter}
+                submitForm={this.viewRackForm}
               />
             </div>
           </div>

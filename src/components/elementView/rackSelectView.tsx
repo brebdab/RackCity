@@ -7,7 +7,11 @@ import { RouteComponentProps, withRouter } from "react-router";
 import "../../forms/forms.scss";
 import RackRangeForm from "../../forms/rackRangeForm";
 import { updateObject } from "../../store/utility";
-import { getHeaders, RackRangeFields } from "../../utils/utils";
+import {
+  getHeaders,
+  RackRangeFields,
+  DatacenterObject
+} from "../../utils/utils";
 import "./elementView.scss";
 interface RackSelectViewState {
   viewRange: boolean;
@@ -15,11 +19,12 @@ interface RackSelectViewState {
 
   errors: Array<string>;
 }
-var console: any = {};
-console.log = function() {};
+// var console: any = {};
+// console.log = function() {};
 
 interface RackSelectViewProps {
   token: string;
+  currDatacenter?: DatacenterObject;
 
   submitForm(
     model: RackRangeFields,
@@ -37,6 +42,21 @@ class RackSelectView extends React.Component<
 
     errors: []
   };
+  componentWillReceiveProps(nextProps: RackSelectViewProps) {
+    console.log(nextProps.currDatacenter, this.props.currDatacenter);
+    if (nextProps.currDatacenter !== this.props.currDatacenter) {
+      console.log("NEW DATACENTER", nextProps);
+      this.setState({
+        values: {
+          letter_start: "",
+          letter_end: "",
+          num_start: "",
+          num_end: "",
+          datacenter: ""
+        } as RackRangeFields
+      });
+    }
+  }
   private handleSwitchChange = handleBooleanChange(viewRange => {
     this.setState({ viewRange: viewRange });
     if (!viewRange) {
@@ -63,9 +83,15 @@ class RackSelectView extends React.Component<
     });
 
     e.preventDefault();
+    const values: any = this.state.values;
+    Object.entries(values).map(([field, value]) => {
+      if (value === "") {
+        values[field] = undefined;
+      }
+    });
 
     const headers = getHeaders(this.props.token);
-    const resp = this.props.submitForm(this.state.values, headers, true);
+    const resp = this.props.submitForm(values, headers, true);
     if (resp) {
       resp.catch(err => {
         console.log(err.response.data.failure_message);
@@ -81,6 +107,7 @@ class RackSelectView extends React.Component<
   componentDidMount() {}
 
   render() {
+    console.log(this.state.values);
     return (
       <div>
         {this.state.errors.map((err: string) => {
@@ -90,21 +117,16 @@ class RackSelectView extends React.Component<
           onSubmit={this.handleSubmit}
           className="create-form bp3-form-group"
         >
-          <Switch
-            defaultChecked={false}
-            onChange={this.handleSwitchChange}
-            label="Select Rack Range"
-          />
           <div className="rack-select">
             <RackRangeForm
               className="rack-field"
               handleChange={this.handleChange}
-              range={this.state.viewRange}
+              values={this.state.values}
             />
 
             <div className="rack-field ">
               <Button className="button" type="submit">
-                Submit
+                View Range of Racks
               </Button>
             </div>
           </div>
