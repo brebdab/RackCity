@@ -15,6 +15,10 @@ from rackcity.utils.log_utils import (
     Action,
     ElementType,
 )
+from rackcity.utils.errors_utils import (
+    GenericFailure,
+    Status,
+)
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.pagination import PageNumberPagination
@@ -50,25 +54,46 @@ def model_add(request):
     Add a new model
     """
     data = JSONParser().parse(request)
-    failure_message = ""
     if 'id' in data:
-        failure_message = failure_message + "Don't include id when adding a model. "
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.CREATE_ERROR.value + GenericFailure.UNKNOWN.value,
+                "errors": "Don't include 'id' when creating a model"
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
     serializer = ITModelSerializer(data=data)
     if not serializer.is_valid(raise_exception=False):
-        failure_message = failure_message + str(serializer.errors)
-    if failure_message == "":
-        try:
-            new_model = serializer.save()
-            log_action(request.user, new_model, Action.CREATE)
-            return HttpResponse(status=HTTPStatus.CREATED)
-        except Exception as error:
-            failure_message = failure_message + str(error)
-
-    failure_message = "Request was invalid. " + failure_message
-    return JsonResponse({
-        "failure_message": failure_message
-    },
-        status=HTTPStatus.NOT_ACCEPTABLE
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.CREATE_ERROR.value +
+                    GenericFailure.INVALID_DATA.value,
+                "errors": str(serializer.errors)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    try:
+        new_model = serializer.save()
+    except Exception as error:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.CREATE_ERROR.value + GenericFailure.UNKNOWN.value,
+                "errors": str(error)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    log_action(request.user, new_model, Action.CREATE)
+    return JsonResponse(
+        {
+            "success_message":
+                Status.SUCCESS.value +
+                new_model.vendor + " " + new_model.model_number +
+                " created"
+        },
+        status=HTTPStatus.CREATED
     )
 
 
@@ -79,38 +104,60 @@ def model_modify(request):
     Modify an existing model
     """
     data = JSONParser().parse(request)
-    failure_message = ""
     if 'id' not in data:
-        failure_message += "Must include id when modifying a model. "
-    else:
-        id = data['id']
-        try:
-            existing_model = ITModel.objects.get(id=id)
-        except ObjectDoesNotExist:
-            failure_message += "No existing model with id="+str(id)+". "
-        else:
-            try:
-                validate_model_height_change(data, existing_model)
-            except LocationException as error:
-                failure_message = "Height change of model causes conflicts. " + \
-                    str(error)
-                return JsonResponse(
-                    {"failure_message": failure_message},
-                    status=HTTPStatus.NOT_ACCEPTABLE
-                )
-            for field in data.keys():
-                setattr(existing_model, field, data[field])
-            try:
-                existing_model.save()
-                log_action(request.user, existing_model, Action.MODIFY)
-                return HttpResponse(status=HTTPStatus.OK)
-            except Exception as error:
-                failure_message = failure_message + str(error)
-    failure_message = "Request was invalid. " + failure_message
-    return JsonResponse({
-        "failure_message": failure_message
-    },
-        status=HTTPStatus.NOT_ACCEPTABLE
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR.value + GenericFailure.UNKNOWN.value,
+                "errors": "Must include 'id' when modifying a model"
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    id = data['id']
+    try:
+        existing_model = ITModel.objects.get(id=id)
+    except ObjectDoesNotExist:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR.value +
+                    "Model" + GenericFailure.DOES_NOT_EXIST.value,
+                "errors": "No existing model with id="+str(id)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    try:
+        validate_model_height_change(data, existing_model)
+    except LocationException as error:
+        location_failure = "Height change of model causes conflicts. " + \
+            str(error)
+        return JsonResponse(
+            {"failure_message": Status.MODIFY_ERROR.value + location_failure},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    for field in data.keys():
+        setattr(existing_model, field, data[field])
+    try:
+        existing_model.save()
+    except Exception as error:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR.value +
+                    GenericFailure.INVALID_DATA.value,
+                "errors": str(error)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    log_action(request.user, existing_model, Action.MODIFY)
+    return JsonResponse(
+        {
+            "success_message":
+                Status.SUCCESS.value +
+                existing_model.vendor + " " + existing_model.model_number +
+                " modified"
+        },
+        status=HTTPStatus.OK
     )
 
 
@@ -142,36 +189,57 @@ def model_delete(request):
     Delete an existing model
     """
     data = JSONParser().parse(request)
-    failure_message = ""
     if 'id' not in data:
-        failure_message += "Must include id when deleting a model. "
-    else:
-        id = data['id']
-        try:
-            existing_model = ITModel.objects.get(id=id)
-        except ObjectDoesNotExist:
-            failure_message += "No existing model with id="+str(id)+". "
-        else:
-            assets = Asset.objects.filter(model=id)
-            if assets:
-                failure_message += \
-                    "Cannot delete this model because assets of it exist. "
-            if failure_message == "":
-                try:
-                    model_name = " ".join([
-                        existing_model.vendor,
-                        existing_model.model_number
-                    ])
-                    existing_model.delete()
-                    log_delete(request.user, ElementType.MODEL, model_name)
-                    return HttpResponse(status=HTTPStatus.OK)
-                except Exception as error:
-                    failure_message = failure_message + str(error)
-    failure_message = "Request was invalid. " + failure_message
-    return JsonResponse({
-        "failure_message": failure_message
-    },
-        status=HTTPStatus.NOT_ACCEPTABLE
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.DELETE_ERROR.value + GenericFailure.UNKNOWN.value,
+                "errors": "Must include 'id' when deleting a model"
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    id = data['id']
+    try:
+        existing_model = ITModel.objects.get(id=id)
+    except ObjectDoesNotExist:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.DELETE_ERROR.value +
+                    "Model" + GenericFailure.DOES_NOT_EXIST.value,
+                "errors": "No existing model with id="+str(id)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    assets = Asset.objects.filter(model=id)
+    if assets:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.DELETE_ERROR.value +
+                    "Cannot delete this model because assets of it exist"
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    try:
+        model_name = " ".join([
+            existing_model.vendor,
+            existing_model.model_number
+        ])
+        existing_model.delete()
+    except Exception as error:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.DELETE_ERROR.value + GenericFailure.UNKNOWN.value,
+                "errors": str(error)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    log_delete(request.user, ElementType.MODEL, model_name)
+    return JsonResponse(
+        {"success_message": Status.SUCCESS.value + model_name + " deleted"},
+        status=HTTPStatus.OK
     )
 
 

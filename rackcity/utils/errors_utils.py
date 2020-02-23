@@ -14,6 +14,7 @@ class GenericFailure(Enum):
     DOES_NOT_EXIST = " does not exist"
     FILTER = "Invalid filter applied"
     SORT = "Invalid sort applied"
+    INVALID_DATA = "Required values are missing or invalid"
 
 
 class UserFailure(Enum):
