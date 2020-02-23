@@ -10,6 +10,11 @@ class Action(Enum):
     DELETE = "deleted"
 
 
+class PermissionAction(Enum):
+    REVOKE = "revoked admin permission from"
+    GRANT = "granted admin permission to"
+
+
 class PowerAction(Enum):
     ON = "turned on"
     OFF = "turned off"
@@ -21,6 +26,7 @@ class ElementType(Enum):
     DATACENTER = "datacenter"
     MODEL = "model"
     USER = "user"
+    NETWORK_CONNECTIONS = "network connections"
 
 
 def datetime_to_string(date):
@@ -104,6 +110,25 @@ def log_rack_action(user, action, related_racks):
         action.value,
         "the following racks:",
         ",".join(related_racks),
+    ])
+    log = Log(
+        date=date,
+        log_content=log_content,
+        user=user,
+    )
+    log.save()
+
+
+def log_user_permission_action(user, permission_action, username):
+    """
+    Specified permission_action should be PermissionAction enum.
+    """
+    date = datetime.now()
+    log_content = " ".join([
+        datetime_to_string(date),
+        user.username,
+        permission_action.value,
+        username,
     ])
     log = Log(
         date=date,
