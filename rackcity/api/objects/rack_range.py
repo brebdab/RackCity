@@ -61,6 +61,10 @@ class RackRangeSerializer(serializers.Serializer):
             num_col = 1
         return num_row * num_col
 
+    def get_range_as_string(self):
+        return "{" + self.get_row_range_as_string() + "}{" + \
+            self.get_number_range_as_string() + "}"
+
     def get_row_range(self):
         """
         Returns str tuple specifying rack row range
