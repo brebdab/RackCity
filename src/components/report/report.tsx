@@ -1,4 +1,4 @@
-import { Classes, Spinner, Card, Elevation, AnchorButton, Button, FormGroup, MenuItem, Tab, Tabs, TabId } from "@blueprintjs/core";
+import { Classes, Card, Elevation, AnchorButton, Button, FormGroup, MenuItem, Tab, Tabs, TabId, Alert } from "@blueprintjs/core";
 import * as React from "react";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -31,6 +31,7 @@ interface VendorAlloc extends Allocation {
 }
 
 interface ReportState {
+  datacenterSelectionAlert: boolean;
   freeRack: number;
   model_allocation: Array<ModelAlloc>;
   owner_allocation: Array<OwnerAlloc>;
@@ -54,7 +55,8 @@ export class Report extends React.PureComponent<
     vendor_allocation: [],
     state_loaded: false,
     selectedTab: "global",
-    datacenter_loaded: false
+    datacenter_loaded: false,
+    datacenterSelectionAlert: false
   };
 
   private modelFields = {
@@ -144,10 +146,13 @@ export class Report extends React.PureComponent<
             </DatacenterSelect>
           </FormGroup> : null}
           <AnchorButton
+            small
             text={"View Datacenter Report"}
             onClick={() => {
               if (!this.state.datacenter) {
-                alert("No datacenter selected")
+                this.setState({
+                  datacenterSelectionAlert: true
+                })
               } else {
                 getDatacenterReport(this.props.token, this.state.datacenter).then(result => {
                   this.setState({
@@ -195,8 +200,9 @@ export class Report extends React.PureComponent<
 
   render() {
     return (
-      <div className={Classes.DARK}>
+      <div className={Classes.DARK + " report-all"}>
         <Tabs
+          className={"report-all"}
           id="ReportTabs"
           selectedTabId={this.state.selectedTab}
           animate={true}
@@ -228,9 +234,20 @@ export class Report extends React.PureComponent<
             this.setState({ selectedTab: newTab })
           }}
         >
-          <Tab id="global" title="Global Report" panel={this.showReport("Global")} />
-          <Tab id="datacenter" title="Datacenter Report" panel={this.showDatacenterReport()} />
+          <Tab className={"report-all"} id="global" title="Global Report" panel={this.showReport("Global")} />
+          <Tab className={"report-all"} id="datacenter" title="Datacenter Report" panel={this.showDatacenterReport()} />
         </Tabs>
+        <Alert
+          isOpen={this.state.datacenterSelectionAlert}
+          confirmButtonText={"OK"}
+          onConfirm={() => {
+            this.setState({
+              datacenterSelectionAlert: false
+            })
+          }}
+        >
+          <p>Error: must select a datacenter</p>
+        </Alert>
       </div>
     );
   }
