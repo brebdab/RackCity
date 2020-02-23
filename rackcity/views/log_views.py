@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.http import JsonResponse
 from http import HTTPStatus
 from rackcity.api.serializers import LogSerializer
@@ -49,10 +50,12 @@ def log_many(request):
     except Exception as error:
         return JsonResponse(
             {"failure_message": "Filter error: " + str(error)},
-            status=HTTPStatus.BAD_REQUEST
-        )
-    for filter_arg in filter_args:
-        logs = logs.filter(**filter_arg)
+            status=HTTPStatus.BAD_REQUEST)
+    if len(filter_args) > 0:
+        q_objects = Q()
+        for filter_arg in filter_args:
+            q_objects |= Q(**filter_arg)
+        logs = logs.filter(q_objects)
 
     if should_paginate:
         paginator = PageNumberPagination()
@@ -95,6 +98,18 @@ def log_page_count(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     page_size = int(request.query_params.get('page_size'))
-    log_count = Log.objects.all().count()
+    logs = Log.objects.all()
+    try:
+        filter_args = get_filter_arguments(request.data)
+    except Exception as error:
+        return JsonResponse(
+            {"failure_message": "Filter error: " + str(error)},
+            status=HTTPStatus.BAD_REQUEST)
+    if len(filter_args) > 0:
+        q_objects = Q()
+        for filter_arg in filter_args:
+            q_objects |= Q(**filter_arg)
+        logs = logs.filter(q_objects)
+    log_count = logs.count()
     page_count = math.ceil(log_count / page_size)
     return JsonResponse({"page_count": page_count})

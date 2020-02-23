@@ -14,9 +14,44 @@ import { connect } from "react-redux";
 import { API_ROOT } from "../../utils/api-config";
 import axios from "axios";
 import "./logs.scss";
-import { PagingTypes } from "../elementView/elementUtils";
+import {
+    FilterTypes,
+    TextFilterTypes,
+    PagingTypes
+} from "../elementView/elementUtils";
 import { IconNames } from "@blueprintjs/icons";
 
+export function getLogFilters(filterValue: string) {
+    const username_filter = {
+        field: "user__username",
+        filter_type: FilterTypes.TEXT,
+        filter: {
+            value: filterValue,
+            match_type: TextFilterTypes.CONTAINS
+        }
+    }
+    const hostname_filter = {
+        field: "related_asset__hostname",
+        filter_type: FilterTypes.TEXT,
+        filter: {
+            value: filterValue,
+            match_type: TextFilterTypes.CONTAINS
+        }
+    }
+    if (Number(filterValue)) {
+        const asset_number_filter = {
+            field: "related_asset__asset_number",
+            filter_type: FilterTypes.NUMERIC,
+            filter: {
+                max: Number(filterValue),
+                min: Number(filterValue)
+            }
+        }
+        return [username_filter, hostname_filter, asset_number_filter]
+    } else {
+        return [username_filter, hostname_filter]
+    }
+}
 interface LogEntry {
     id: number,
     date: string,
@@ -33,16 +68,23 @@ interface LogsState {
     curr_page: number;
     total_pages: number;
     page_type: PagingTypes;
+    search_query?: string;
+    filters?: Array<any>;
+    is_state_loaded: boolean;
 }
 class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
     public state: LogsState = {
         logs: [],
         curr_page: 1,
         total_pages: 0,
-        page_type: PagingTypes.TEN
+        page_type: PagingTypes.TEN,
+        search_query: undefined,
+        filters: undefined,
+        is_state_loaded: false
     };
     private getTotalPages = async (
-        page_size: number
+        page_size: number,
+        filters?: Array<any>
     ): Promise<number> => {
         const config = {
             headers: {
@@ -52,15 +94,19 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
                 page_size
             }
         };
+        const body = (filters !== undefined) ? {
+            "filters": filters
+        } : {}
         return await axios
-            .post(API_ROOT + "api/logs/pages", {}, config)
+            .post(API_ROOT + "api/logs/pages", body, config)
             .then(res => {
                 return res.data.page_count;
             });
     }
     private getLogs = async (
         page: number,
-        page_type: PagingTypes
+        page_type: PagingTypes,
+        filters?: Array<any>
     ): Promise<Array<LogEntry>> => {
         const config = {
             headers: {
@@ -72,11 +118,39 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
                     page
                 }
         };
+        const body = (filters !== undefined) ? {
+            "filters": filters
+        } : {}
         return await axios
-            .post(API_ROOT + "api/logs/get-many", {}, config)
+            .post(API_ROOT + "api/logs/get-many", body, config)
             .then(res => {
                 return res.data.logs;
             });
+    }
+    private updateLogsAndPages = (
+        page_number: number,
+        page_type: PagingTypes,
+        filters?: Array<any>
+    ) => {
+        this.getLogs(
+            page_number,
+            page_type,
+            filters
+        ).then(res => {
+            this.setState({
+                logs: res
+            })
+        })
+        if (page_type !== PagingTypes.ALL) {
+            this.getTotalPages(
+                page_type,
+                filters
+            ).then(res => {
+                this.setState({
+                    total_pages: res
+                })
+            })
+        }
     }
     private resetPage = () => {
         this.setState({
@@ -116,25 +190,25 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
         this.setState({
             page_type: page
         });
-        this.getLogs(
-            1,
-            page
-        ).then(res => {
-            this.setState({
-                logs: res
-            })
-        })
-        if (page !== PagingTypes.ALL) {
-            this.getTotalPages(
-                page
-            ).then(res => {
-                this.setState({
-                    total_pages: res
-                })
-            })
-        }
+        this.updateLogsAndPages(1, page, this.state.filters);
     };
-    private getLinkedLog(log: LogEntry) {
+    private handleSearch = () => {
+        if (this.state.search_query !== undefined) {
+            const query_filters = getLogFilters(this.state.search_query)
+            this.setState({
+                filters: query_filters
+            })
+            this.resetPage();
+            this.updateLogsAndPages(1, this.state.page_type, query_filters)
+        } else {
+            this.setState({
+                filters: undefined
+            })
+            this.resetPage();
+            this.updateLogsAndPages(1, this.state.page_type)
+        }
+    }
+    private renderLinkedLog(log: LogEntry) {
         if (log.related_asset) {
             const id = log.related_asset.toString()
             return <div>
@@ -157,55 +231,44 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
             </div>
         }
     }
-
-    private handleSearchInputChange() {
-        console.log("searching input change")
-    }
-
-    private handleSearch() {
-        console.log("searching lmao")
+    onFormSubmit = (e: any) => {
+        e.preventDefault();
     }
 
     public render() {
-        console.log(this.state);
-        if (
-            this.state.logs.length === 0
-        ) {
-            this.getLogs(
-                this.state.curr_page,
-                this.state.page_type
-            ).then(res => {
-                this.setState({
-                    logs: res
-                })
+        if (!this.state.is_state_loaded) {
+            this.setState({
+                is_state_loaded: true
             })
-            if (this.state.page_type !== PagingTypes.ALL) {
-                this.getTotalPages(
-                    this.state.page_type
-                ).then(res => {
-                    this.setState({
-                        total_pages: res
-                    })
-                })
-            }
+            this.updateLogsAndPages(
+                this.state.curr_page,
+                this.state.page_type,
+                this.state.filters
+            )
         }
         return (
             <div className={Classes.DARK + " log-view"}>
                 <h1>System Logs</h1>
                 <div className={Classes.DARK + " bp3-input-group .modifier"}>
-                    <span className="bp3-icon bp3-icon-search"></span>
-                    <input
-                        className="bp3-input .modifier"
-                        type="search"
-                        placeholder="Search logs by username, asset number, or asset hostname"
-                        dir="auto"
-                        value=""
-                        onChange={() => this.handleSearchInputChange()}
-                    />
-                    <button
-                        className="bp3-button bp3-minimal bp3-intent-primary bp3-icon-arrow-right .modifier"
-                        onClick={() => this.handleSearch()}
-                    ></button>
+                    <span className="search-span bp3-icon bp3-icon-search"></span>
+                    <form onSubmit={this.onFormSubmit}>
+                        <span></span>
+                        <input
+                            className="search-input bp3-input .modifier"
+                            type="text"
+                            placeholder="Search logs by username, asset number, or asset hostname"
+                            dir="auto"
+                            onChange={(e: any) =>
+                                this.setState({
+                                    search_query: e.currentTarget.value
+                                })
+                            }
+                        />
+                        <button
+                            className="search-button bp3-button bp3-minimal bp3-intent-primary bp3-icon-arrow-right .modifier"
+                            onClick={() => this.handleSearch()}
+                        ></button>
+                    </form>
                 </div>
                 <div className="page-control">
                     <HTMLSelect
@@ -242,10 +305,10 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
                 </div>
                 <div>
                     <Pre>
-                        {this.state.logs.map(log => this.getLinkedLog(log))}
+                        {this.state.logs.map(log => this.renderLinkedLog(log))}
                     </Pre>
                 </div>
-            </div>
+            </div >
         );
     }
 }

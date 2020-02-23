@@ -9,6 +9,12 @@ from rackcity.views.rackcity_utils import (
     get_sort_arguments,
 )
 from rackcity.utils.user_utils import is_netid_user
+from rackcity.utils.log_utils import (
+    log_delete,
+    log_user_permission_action,
+    ElementType,
+    PermissionAction,
+)
 import requests
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import permission_classes, api_view
@@ -197,6 +203,7 @@ def user_delete(request):
         )
     try:
         existing_user.delete()
+        log_delete(request.user, ElementType.USER, username)
     except Exception as error:
         return JsonResponse(
             {
@@ -300,6 +307,11 @@ def user_grant_admin(request):
     else:
         user.is_staff = True
         user.save()
+        log_user_permission_action(
+            request.user,
+            PermissionAction.GRANT,
+            user.username
+        )
         return JsonResponse(
             {
                 "success_message":
@@ -362,6 +374,11 @@ def user_revoke_admin(request):
     else:
         user.is_staff = False
         user.save()
+        log_user_permission_action(
+            request.user,
+            PermissionAction.REVOKE,
+            user.username
+        )
         return JsonResponse(
             {
                 "success_message":

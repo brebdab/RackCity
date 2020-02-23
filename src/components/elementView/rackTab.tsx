@@ -282,8 +282,8 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
             <RackSelectView submitForm={this.viewRackForm} />
           </div>
         ) : (
-          <Callout intent={Intent.PRIMARY}>
-            <h5>Please select a datacenter to view rack information</h5>
+          <Callout title="No Datacenter Delected" intent={Intent.PRIMARY}>
+            <em>Please select a datacenter to view rack information</em>
           </Callout>
         )}
         <RackView racks={this.state.racks} loading={this.state.loading} />
