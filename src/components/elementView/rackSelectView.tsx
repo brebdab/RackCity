@@ -21,7 +21,11 @@ console.log = function() {};
 interface RackSelectViewProps {
   token: string;
 
-  submitForm(model: RackRangeFields, headers: any): Promise<any> | void;
+  submitForm(
+    model: RackRangeFields,
+    headers: any,
+    showError: boolean
+  ): Promise<any> | void;
 }
 class RackSelectView extends React.Component<
   RackSelectViewProps & RouteComponentProps,
@@ -61,7 +65,7 @@ class RackSelectView extends React.Component<
     e.preventDefault();
 
     const headers = getHeaders(this.props.token);
-    const resp = this.props.submitForm(this.state.values, headers);
+    const resp = this.props.submitForm(this.state.values, headers, true);
     if (resp) {
       resp.catch(err => {
         console.log(err.response.data.failure_message);

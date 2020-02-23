@@ -26,7 +26,8 @@ import {
   DatacenterObject,
   ElementType,
   RackRangeFields,
-  RackResponseObject
+  RackResponseObject,
+  getHeaders
 } from "../../utils/utils";
 import RackView from "./detailedView/rackView/rackView";
 import { ALL_DATACENTERS } from "./elementTabContainer";
@@ -40,6 +41,7 @@ interface RackTabState {
   isConfirmationOpen: boolean;
   racks: Array<RackResponseObject>;
   loading: boolean;
+  selectedRackRange: RackRangeFields;
 }
 interface RackTabProps {
   token: string;
@@ -52,6 +54,7 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
   state = {
     isOpen: false,
     isDeleteOpen: false,
+    selectedRackRange: {} as RackRangeFields,
     deleteRackInfo: {} as RackRangeFields,
     headers: {},
     isConfirmationOpen: false,
@@ -76,9 +79,10 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
     this.setState({ isConfirmationOpen: false });
   private handleConfirmationOpen = () =>
     this.setState({ isConfirmationOpen: true });
-  viewRackForm = (rack: RackRangeFields, headers: any) => {
+  viewRackForm = (rack: RackRangeFields, headers: any, showError: boolean) => {
     this.setState({
-      loading: true
+      loading: true,
+      selectedRackRange: rack
     });
     let rack_datacenter = updateObject(rack, {
       datacenter: this.props.currDatacenter.id
@@ -97,11 +101,12 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
           loading: false,
           racks: []
         });
-
-        this.addToast({
-          message: err.response.data.failure_message,
-          intent: Intent.DANGER
-        });
+        if (showError) {
+          this.addToast({
+            message: err.response.data.failure_message,
+            intent: Intent.DANGER
+          });
+        }
       });
   };
   private handleOpen = () => {
@@ -133,6 +138,7 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
           message: "Deleted rack(s) successfully",
           intent: Intent.PRIMARY
         });
+        this.updateRackData(false);
         this.setState({ isDeleteOpen: false, isConfirmationOpen: false });
       })
       .catch(err => {
@@ -145,6 +151,16 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
       });
   };
 
+  updateRackData = (showError: boolean) => {
+    if (this.state.selectedRackRange.num_start) {
+      this.viewRackForm(
+        this.state.selectedRackRange,
+        getHeaders(this.props.token),
+        showError
+      );
+    }
+  };
+
   createRack = (rack: RackRangeFields, headers: any) => {
     const rack_new = updateObject(rack, {
       datacenter: this.props.currDatacenter.id
@@ -153,6 +169,7 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
       .post(API_ROOT + "api/racks/create", rack_new, headers)
       .then(res => {
         this.setState({ isOpen: false });
+        this.updateRackData(true);
         this.addToast({
           message: "Created rack(s) successfully",
           intent: Intent.PRIMARY
