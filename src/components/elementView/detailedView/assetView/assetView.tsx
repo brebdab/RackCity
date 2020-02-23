@@ -27,6 +27,7 @@ import { deleteAsset, modifyAsset } from "../../elementUtils";
 import PropertiesView from "../propertiesView";
 import "./assetView.scss";
 import NetworkGraph from "./graph";
+import PowerView from "../../powerView/powerView";
 
 export interface AssetViewProps {
   token: string;
@@ -224,9 +225,15 @@ export class AssetView extends React.PureComponent<
             <Callout title="No network ports" intent={Intent.PRIMARY}></Callout>
           )}
         </div>
+
+        {Object.keys(this.state.asset).length !== 0 &&
+        this.state.asset.rack.is_network_controlled
+          ? this.renderPower()
+          : null}
       </div>
     );
   }
+
   private getAssetIdFromHostname = (hostname: string) => {
     const node = this.state.asset.network_graph.nodes.find(
       (node: Node) => node.label === hostname
@@ -239,6 +246,11 @@ export class AssetView extends React.PureComponent<
     this.props.history.push("/assets/" + id);
     this.updateAssetData(id);
   };
+
+  private renderPower() {
+    return <PowerView {...this.props} asset={this.state.asset} />;
+  }
+
   private handleFormOpen = () => {
     this.setState({
       isFormOpen: true
