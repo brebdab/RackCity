@@ -6,7 +6,9 @@ import {
   Intent,
   IToastProps,
   Position,
-  Toaster
+  Toaster,
+  Dialog,
+  Classes
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { IconNames } from "@blueprintjs/icons";
@@ -29,7 +31,8 @@ import {
   isDatacenterObject,
   DatacenterObject,
   isObject,
-  SortFilterBody
+  SortFilterBody,
+  AssetObject
 } from "../../utils/utils";
 import DragDropList from "./dragDropList";
 import "./elementView.scss";
@@ -55,6 +58,8 @@ import {
   modifyDatacenter,
   ElementTableOpenAlert
 } from "./elementUtils";
+import { PowerView } from "./powerView/powerView";
+import "./powerView/powerView.scss"
 
 interface ElementTableState {
   items: Array<ElementObjectType>;
@@ -69,6 +74,8 @@ interface ElementTableState {
   editFormValues: ElementObjectType;
   openAlert: ElementTableOpenAlert;
   selected_userid?: string;
+  isPowerOptionsOpen: boolean;
+  assetPower?: AssetObject
 }
 // var console: any = {};
 // console.log = function() {};
@@ -116,7 +123,8 @@ class ElementTable extends React.Component<
     isEditFormOpen: false,
     editFormValues: {} as ElementObjectType,
     openAlert: ElementTableOpenAlert.NONE,
-    selected_userid: undefined
+    selected_userid: undefined,
+    isPowerOptionsOpen: false
   };
 
   //PAGING LOGIC
@@ -565,6 +573,24 @@ class ElementTable extends React.Component<
     );
   };
 
+  // POWER LOGIC
+  getPowerOptions = () => {
+    return (
+      <Dialog
+        className={Classes.DARK + " power-dialog"}
+        {...this.props}
+        isOpen={this.state.isPowerOptionsOpen}
+        onClose={() => { this.setState({ isPowerOptionsOpen: false }) }}
+      >
+        <PowerView
+          {...this.props}
+          callback={() => { this.setState({ isPowerOptionsOpen: false }) }}
+          asset={this.state.assetPower}
+        />
+      </Dialog>
+    )
+  }
+
   successfulModification() {
     this.updateTableData();
     this.handleEditFormClose();
@@ -643,8 +669,11 @@ class ElementTable extends React.Component<
     this.handleDeleteOpen();
   };
 
-  handlePowerButtonClick = (data: ElementObjectType) => {
-    alert("This power thingy is open");
+  handlePowerButtonClick = (data: AssetObject) => {
+    this.setState({
+      isPowerOptionsOpen: true,
+      assetPower: data
+    })
   };
 
   //ADMIN BUTTON LOGIC
@@ -755,6 +784,7 @@ class ElementTable extends React.Component<
     return (
       <div className="tab-panel">
         {this.getEditForm()}
+        {this.getPowerOptions()}
         <Alert
           cancelButtonText="Cancel"
           confirmButtonText="Delete"
