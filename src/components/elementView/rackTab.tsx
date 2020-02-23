@@ -25,9 +25,9 @@ import { API_ROOT } from "../../utils/api-config";
 import {
   DatacenterObject,
   ElementType,
-  getHeaders,
   RackRangeFields,
-  RackResponseObject
+  RackResponseObject,
+  getHeaders
 } from "../../utils/utils";
 import RackView from "./detailedView/rackView/rackView";
 import { ALL_DATACENTERS } from "./elementTabContainer";
@@ -41,6 +41,7 @@ interface RackTabState {
   isConfirmationOpen: boolean;
   racks: Array<RackResponseObject>;
   loading: boolean;
+  selectedRackRange: RackRangeFields;
 }
 interface RackTabProps {
   token: string;
@@ -53,6 +54,7 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
   state = {
     isOpen: false,
     isDeleteOpen: false,
+    selectedRackRange: {} as RackRangeFields,
     deleteRackInfo: {} as RackRangeFields,
     headers: {},
     isConfirmationOpen: false,
@@ -77,9 +79,10 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
     this.setState({ isConfirmationOpen: false });
   private handleConfirmationOpen = () =>
     this.setState({ isConfirmationOpen: true });
-  viewRackForm = (rack: RackRangeFields, headers: any) => {
+  viewRackForm = (rack: RackRangeFields, headers: any, showError: boolean) => {
     this.setState({
-      loading: true
+      loading: true,
+      selectedRackRange: rack
     });
     let rack_datacenter = updateObject(rack, {
       datacenter: this.props.currDatacenter.id
@@ -98,11 +101,12 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
           loading: false,
           racks: []
         });
-
-        this.addToast({
-          message: err.response.data.failure_message,
-          intent: Intent.DANGER
-        });
+        if (showError) {
+          this.addToast({
+            message: err.response.data.failure_message,
+            intent: Intent.DANGER
+          });
+        }
       });
   };
   private handleOpen = () => {
@@ -113,8 +117,11 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
   };
 
   deleteRack = (rack: RackRangeFields, headers: any) => {
+    const rack_new = updateObject(rack, {
+      datacenter: this.props.currDatacenter.id
+    });
     this.setState({
-      deleteRackInfo: rack,
+      deleteRackInfo: rack_new,
       headers
     });
     this.handleConfirmationOpen();
@@ -131,6 +138,7 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
           message: "Deleted rack(s) successfully",
           intent: Intent.PRIMARY
         });
+        this.updateRackData(false);
         this.setState({ isDeleteOpen: false, isConfirmationOpen: false });
       })
       .catch(err => {
@@ -143,11 +151,32 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
       });
   };
 
+  updateRackData = (showError: boolean) => {
+    if (this.state.selectedRackRange.num_start) {
+      this.viewRackForm(
+        this.state.selectedRackRange,
+        getHeaders(this.props.token),
+        showError
+      );
+    }
+  };
+  componentWillReceiveProps(nextProps: RackTabProps) {
+    if (nextProps.currDatacenter !== this.props.currDatacenter) {
+      this.setState({
+        racks: [],
+        selectedRackRange: {} as RackRangeFields
+      });
+    }
+  }
   createRack = (rack: RackRangeFields, headers: any) => {
+    const rack_new = updateObject(rack, {
+      datacenter: this.props.currDatacenter.id
+    });
     return axios
-      .post(API_ROOT + "api/racks/create", rack, headers)
+      .post(API_ROOT + "api/racks/create", rack_new, headers)
       .then(res => {
         this.setState({ isOpen: false });
+        this.updateRackData(true);
         this.addToast({
           message: "Created rack(s) successfully",
           intent: Intent.PRIMARY
@@ -155,23 +184,30 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
       });
   };
 
-  getAllRacks = () => {
+  getAllRacks = (datacenter: DatacenterObject) => {
+    console.log(this.props);
     this.setState({
       loading: true
     });
+    const config = {
+      headers: {
+        Authorization: "Token " + this.props.token
+      },
+      params: {
+        datacenter: datacenter.id
+      }
+    };
     axios
-      .get(
-        API_ROOT + "api/racks/get-all",
-        // { sort_by: [], filters: [] },
-        getHeaders(this.props.token)
-      )
+      .get(API_ROOT + "api/racks/get-all", config)
       .then(res => {
+        console.log("GOT RACKS", res.data, this.state.racks);
         this.setState({
           racks: res.data.racks,
           loading: false
         });
       })
       .catch(err => {
+        console.log("failed to get racks");
         this.setState({
           loading: false,
           racks: []
@@ -274,12 +310,20 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
                 />
               </div>
             ) : null}
-            <Button
-              text="View All Rack(s)"
-              onClick={(e: any) => this.getAllRacks()}
-            />
-
-            <RackSelectView submitForm={this.viewRackForm} />
+            <div className="rack-view-options">
+              <Button
+                className="all-racks"
+                text="View All Racks"
+                onClick={(e: any) =>
+                  this.getAllRacks(this.props.currDatacenter)
+                }
+              />
+              <p className="or">or </p>
+              <RackSelectView
+                currDatacenter={this.props.currDatacenter}
+                submitForm={this.viewRackForm}
+              />
+            </div>
           </div>
         ) : (
           <Callout title="No Datacenter Delected" intent={Intent.PRIMARY}>
