@@ -1,10 +1,10 @@
-import { Card, Classes, Elevation } from "@blueprintjs/core";
+import { Classes } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 // import axios from "axios";
 import * as React from "react";
 import { RouteComponentProps, withRouter } from "react-router";
+import { ElementObjectType, isObject } from "../../../utils/utils";
 import "./propertiesView.scss";
-import { isObject, ElementObjectType } from "../../../utils/utils";
 
 export interface AlertState {
   isDeleteOpen: boolean;
@@ -27,7 +27,9 @@ class PropertiesView extends React.PureComponent<
       if (
         col !== "id" &&
         col !== "power_connections" &&
-        col !== "mac_addresses"
+        col !== "mac_addresses" &&
+        col !== "network_connections" &&
+        col !== "network_graph"
       ) {
         fields.push(col);
       }
@@ -41,56 +43,52 @@ class PropertiesView extends React.PureComponent<
   };
 
   renderData(fields: Array<any>, data: any) {
-    return (
-      <div>
-        {fields.map((item: string) => {
-          if (item === "display_color") {
-            var dat;
-            dat = (
-              <p
-                className="color"
-                style={{
-                  backgroundColor: data[item]
-                }}
-              >
-                {data[item]}
-              </p>
-            );
-          } else if (item === "network_ports") {
-            console.log(item, data[item]);
-            if (data[item]) {
-              const network_ports: Array<string> = data[item];
-              console.log(network_ports.toString());
-              dat = <p>{network_ports.toString()}</p>;
-            }
-          } else if (item === "model") {
-            dat = (
-              <p
-                className="model-link"
-                onClick={() =>
-                  this.props.history.push("/models/" + data[item].id)
-                }
-              >
-                {data[item].vendor + " " + data[item].model_number}
-              </p>
-            );
-          } else if (item === "rack") {
-            dat = <p>{data[item].row_letter + "" + data[item].rack_num}</p>;
-          } else if (!isObject(data[item])) {
-            //TO DO: decide how to render dicts
-            dat = <p>{data[item]}</p>;
-          }
-          return (
-            <div className={"row-props"} key={item}>
-              <div className={"column-props"}>
-                <p key={item}>{item}:</p>
-              </div>
-              <div className={"column-props"}>{dat}</div>
-            </div>
-          );
-        })}
-      </div>
-    );
+    return fields.map((item: string) => {
+      if (item === "display_color") {
+        var dat;
+        dat = (
+          <p
+            className="color"
+            style={{
+              backgroundColor: data[item]
+            }}
+          >
+            {data[item]}
+          </p>
+        );
+      } else if (item === "network_ports") {
+        console.log(item, data[item]);
+        if (data[item]) {
+          const network_ports: Array<string> = data[item];
+          console.log(network_ports.toString());
+          dat = <p>{network_ports.toString()}</p>;
+        }
+      } else if (item === "model") {
+        dat = (
+          <p
+            className="model-link"
+            onClick={() => this.props.history.push("/models/" + data[item].id)}
+          >
+            {data[item].vendor + " " + data[item].model_number}
+          </p>
+        );
+      } else if (item === "rack") {
+        dat = <p>{data[item].row_letter + "" + data[item].rack_num}</p>;
+      } else if (!isObject(data[item])) {
+        //TO DO: decide how to render dicts
+        dat = <p>{data[item]}</p>;
+      }
+
+      return (
+        <tr>
+          <td key={item}>
+            <p className="label">{item}:</p>
+          </td>
+
+          <td>{dat}</td>
+        </tr>
+      );
+    });
   }
 
   public render() {
@@ -104,18 +102,44 @@ class PropertiesView extends React.PureComponent<
         fields: this.setFieldNamesFromData()
       });
     }
+    const length = Math.ceil(this.state.fields.length / 4);
+
     return (
       <div className={Classes.DARK + " propsview"}>
-        <Card interactive={false} elevation={Elevation.TWO}>
-          <h5>Properties</h5>
-          <div className={"row"}>
-            <div className={"column-props"}>
-              {this.renderData(this.state.fields, this.props.data)}
-            </div>
+        <h3>Properties</h3>
+        <div className="propsdetail">
+          <div className="props-column">
+            <table className="bp3-html-table">
+              {this.renderData(
+                this.state.fields.slice(0, length),
+                this.props.data
+              )}
+            </table>
           </div>
-        </Card>
-        <div>
-          <p> </p>
+          <div className="props-column">
+            <table className="bp3-html-table">
+              {this.renderData(
+                this.state.fields.slice(length, 2 * length),
+                this.props.data
+              )}
+            </table>
+          </div>
+          <div className="props-column">
+            <table className="bp3-html-table">
+              {this.renderData(
+                this.state.fields.slice(2 * length, 3 * length),
+                this.props.data
+              )}
+            </table>
+          </div>
+          <div className="props-column">
+            <table className="bp3-html-table">
+              {this.renderData(
+                this.state.fields.slice(3 * length),
+                this.props.data
+              )}
+            </table>
+          </div>
         </div>
       </div>
     );

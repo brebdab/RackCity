@@ -60,7 +60,7 @@ import {
   deleteUser
 } from "./elementUtils";
 import { PowerView } from "./powerView/powerView";
-import "./powerView/powerView.scss"
+import "./powerView/powerView.scss";
 
 interface ElementTableState {
   items: Array<ElementObjectType>;
@@ -76,7 +76,7 @@ interface ElementTableState {
   openAlert: ElementTableOpenAlert;
   selected_userid?: string;
   isPowerOptionsOpen: boolean;
-  assetPower?: AssetObject
+  assetPower?: AssetObject;
 }
 // var console: any = {};
 // console.log = function() {};
@@ -522,6 +522,7 @@ class ElementTable extends React.Component<
         col !== "power_connections" &&
         col !== "mac_addresses" &&
         col !== "network_connections" &&
+        col !== "network_graph" &&
         col !== "is_admin"
       ) {
         fields.push(col);
@@ -576,16 +577,20 @@ class ElementTable extends React.Component<
         className={Classes.DARK + " power-dialog"}
         {...this.props}
         isOpen={this.state.isPowerOptionsOpen}
-        onClose={() => { this.setState({ isPowerOptionsOpen: false }) }}
+        onClose={() => {
+          this.setState({ isPowerOptionsOpen: false });
+        }}
       >
         <PowerView
           {...this.props}
-          callback={() => { this.setState({ isPowerOptionsOpen: false }) }}
+          callback={() => {
+            this.setState({ isPowerOptionsOpen: false });
+          }}
           asset={this.state.assetPower}
         />
       </Dialog>
-    )
-  }
+    );
+  };
 
   successfulModification() {
     this.updateTableData();
@@ -678,7 +683,7 @@ class ElementTable extends React.Component<
     this.setState({
       isPowerOptionsOpen: true,
       assetPower: data
-    })
+    });
   };
 
   //ADMIN BUTTON LOGIC
