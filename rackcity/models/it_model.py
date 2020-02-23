@@ -48,5 +48,6 @@ class ITModel(models.Model):
         except ValidationError as valid_error:
             raise valid_error
         else:
-            self.num_network_ports = len(self.network_ports)
+            if (self.network_ports):
+                self.num_network_ports = len(self.network_ports)
             super(ITModel, self).save(*args, **kwargs)
