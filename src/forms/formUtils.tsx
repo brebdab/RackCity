@@ -33,9 +33,7 @@ export function isMacAddressValid(text: string) {
 }
 
 export const macAddressInfo = (
-  <p>
-    6-byte hexadecimal string. <em>Valid delimiters: none, :, - </em>
-  </p>
+  <p>6-byte hexadecimal string with optional delimiters</p>
 );
 export const filterString: ItemPredicate<string> = (
   query,
