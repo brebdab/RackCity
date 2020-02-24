@@ -28,9 +28,12 @@ class UserFailure(Enum):
 
 class BulkFailure(Enum):
     MODEL_IMPORT = \
-        "This file of models cannot be imported due to unknown internal error."
+        "This file of models cannot be imported. Please verify file format."
     ASSET_IMPORT = \
-        "This file of assets"
+        "This file of assets cannot be imported. Please verify file format."
+    NETWORK_IMPORT = \
+        "This file of network connections cannot be imported. " + \
+        "Please verify file format."
 
 
 def get_rack_failure_message(range_serializer, action):
