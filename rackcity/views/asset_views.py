@@ -54,6 +54,7 @@ from rackcity.views.rackcity_utils import (
     NetworkConnectionException,
     close_old_connections_decorator
 )
+from rackcity.models.asset import get_next_available_asset_number
 
 
 # @close_old_connections_decorator
@@ -1212,3 +1213,14 @@ def asset_fields(request):
         ]},
         status=HTTPStatus.OK,
     )
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def asset_number(request):
+    """
+    Get a suggest asset number for Asset creation
+    """
+    return JsonResponse(
+        {"asset_number": get_next_available_asset_number()}
+    )
+    
