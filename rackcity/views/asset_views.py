@@ -227,6 +227,7 @@ def asset_add(request):
             asset_data=data,
             asset_id=asset.id
         )
+        log_network_action(request.user, asset)
     except NetworkConnectionException as error:
         warning_message += "Some network connections couldn't be saved. " + \
             str(error)
