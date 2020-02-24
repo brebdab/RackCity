@@ -19,9 +19,10 @@
 .no-data-text {
   padding: 30px;
 }
-.tab-panel {
-  width: 100%;
+.grant-admin-button {
+  width: 135px !important;
 }
+
 .rack-tab .element-tab {
   display: block;
   margin: 10pt;
@@ -34,6 +35,13 @@
   // display: inline-block;
   table-layout: auto;
 }
+.rack-view-options {
+  display: inline-block;
+  text-align: center;
+}
+.all-racks {
+  height: fit-content;
+}
 .table-wrapper {
   width: 100%;
   overflow-x: scroll;
@@ -43,11 +51,15 @@
   margin-bottom: 5pt;
   padding-bottom: 2pt;
 }
+.bp3-tab-panel {
+  overflow: scroll;
+
+  width: 95%;
+}
 .element-view {
   margin: 10pt;
-  overflow: clip;
-  width: calc(100% - 110pt) !important;
 }
+
 .filter-select {
   margin: 0 !important;
   // float: left;
@@ -119,8 +131,8 @@
   font-weight: bold;
   text-transform: uppercase;
 }
-.rack-field {
-  float: left;
+.or {
+  margin-top: 10pt;
 }
 
 .tab {
@@ -132,10 +144,10 @@
 .element-tab table {
   width: 100%;
 }
-.rack-field .button {
-  float: left;
-  margin-top: 20px;
+.print-racks {
+  float: right;
 }
+
 .header-text icon {
   float: right;
 }
@@ -156,6 +168,8 @@ input {
 
 .rack-select {
   float: left;
+  padding: 0;
+  margin: 0;
 }
 .table-control {
   float: right !important;

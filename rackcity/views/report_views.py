@@ -9,11 +9,27 @@ from rest_framework.permissions import IsAuthenticated
 @permission_classes([IsAuthenticated])
 def report_rack_usage(request):
     """
-    Get summary of rack usage: the percentage of rackspace free versus used,
+    Get summary of rack usage across ALL DATACENTERs: the percentage of rackspace free versus used,
     allocated per vendor, allocated per model, and allocated per owner.
     """
-    total_num_rack_slots = 0
     racks = Rack.objects.all()
+    return compute_report_given_racks(racks)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def rack_report_datacenter(request, id):
+    """
+    Get summary of rack usage for ONE DATACENTER: the percentage of rackspace free versus used,
+    allocated per vendor, allocated per model, and allocated per owner.
+    """
+    datacenter_id = id
+    racks = Rack.objects.filter(datacenter=datacenter_id)
+    return compute_report_given_racks(racks)
+
+
+def compute_report_given_racks(racks):
+    total_num_rack_slots = 0
     for rack in racks:
         total_num_rack_slots += rack.height
 

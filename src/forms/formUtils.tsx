@@ -22,6 +22,19 @@ export function escapeRegExpChars(text: string) {
   // eslint-disable-next-line
   return text.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
 }
+export function isMacAddressValid(text: string) {
+  const regex = new RegExp(
+    "^([0-9A-Fa-f]{2}[-_:.,;]){5}([0-9A-Fa-f]{2})$|^[A-Fa-f0-9]{12}$"
+  );
+  if (regex.exec(text)) {
+    return true;
+  }
+  return false;
+}
+
+export const macAddressInfo = (
+  <p>6-byte hexadecimal string with optional delimiters</p>
+);
 export const filterString: ItemPredicate<string> = (
   query,
   vendor,
