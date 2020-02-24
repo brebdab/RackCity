@@ -54,11 +54,34 @@ export interface RackRangeFields {
 }
 
 export interface NetworkConnection {
-  source_port: string;
-  destination_hostname: string;
-  destination_port: string;
+  source_port?: string;
+  destination_hostname?: string;
+  destination_port?: string;
 }
 
+export const AssetFieldsTable = {
+  asset_number: "Asset Number",
+  hostname: "Hostname",
+  model__vendor: "Model Vendor",
+  model__model_number: "Model Number",
+  rack: "Rack",
+  rack__datacenter__name: "Datacenter",
+  rack_position: "Rack Position",
+  owner: "Owner"
+};
+
+export enum AssetFormLabels {
+  asset_number = "Asset Number",
+  hostname = "Hostname",
+  datacenter = "Datacenter*",
+  rack = "Rack*",
+  rack_position = "Rack Position*",
+  model = "Model*",
+  owner = "Owner",
+  comment = "Comment",
+  network_ports = "Network Ports",
+  power_connections = "Power Connections"
+}
 export interface Link {
   to: number;
   from: number;

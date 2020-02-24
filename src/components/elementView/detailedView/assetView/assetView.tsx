@@ -52,11 +52,10 @@ function getData(assetkey: string, token: string) {
 
 interface AssetViewState {
   asset: AssetObject;
-  // columns: Array<string>;
-  // fields: Array<string>;
   isFormOpen: boolean;
   isDeleteOpen: boolean;
   isAlertOpen: boolean;
+  powerShouldUpdate: boolean;
 }
 
 export class AssetView extends React.PureComponent<
@@ -67,22 +66,28 @@ export class AssetView extends React.PureComponent<
     asset: {} as AssetObject,
     isFormOpen: false,
     isDeleteOpen: false,
-    isAlertOpen: false
+    isAlertOpen: false,
+    powerShouldUpdate: false
   };
   private updateAsset = (asset: AssetObject, headers: any): Promise<any> => {
     console.log("updateAsset");
     let params: any;
     params = this.props.match.params;
     return modifyAsset(asset, headers).then(res => {
-      console.log("success");
+      if (res.data.warning_message) {
+        this.addWarnToast(res.data.warning_message);
+      } else {
+        this.addSuccessToast("Successfuly modified asset");
+      }
+
       getData(params.rid, this.props.token).then(result => {
         this.setState({
-          asset: result
+          asset: result,
+          powerShouldUpdate: true
         });
       });
-      console.log(this.state.asset);
+
       this.handleFormClose();
-      console.log(this.state.isFormOpen);
     });
   };
   private toaster: Toaster = {} as Toaster;
@@ -95,6 +100,22 @@ export class AssetView extends React.PureComponent<
     toaster: (ref: Toaster) => (this.toaster = ref)
   };
 
+  private addSuccessToast = (message: string) => {
+    this.addToast({ message: message, intent: Intent.PRIMARY });
+  };
+  private addWarnToast = (message: string) => {
+    this.addToast({
+      message: message,
+      intent: Intent.WARNING,
+      action: {
+        onClick: () => this.setState({ isFormOpen: true }),
+        text: "Edit values"
+      }
+    });
+  };
+  private addErrorToast = (message: string) => {
+    this.addToast({ message: message, intent: Intent.DANGER });
+  };
   public updateAssetData = (rid: string) => {
     getData(rid, this.props.token).then(result => {
       this.setState({
@@ -169,62 +190,57 @@ export class AssetView extends React.PureComponent<
           <h3>Network Connections</h3>
 
           {this.state.asset.model &&
-          this.state.asset.model.network_ports &&
-          this.state.asset.model.network_ports.length !== 0 ? (
-            <div className="network-connections">
-              <table className="bp3-html-table bp3-html-table-bordered bp3-html-table-striped">
-                <tr>
-                  <th>Network Port</th>
-                  <th>Mac Address</th>
-                  <th>Destination Asset</th>
-                  <th>Destination Port</th>
-                </tr>
-                <tbody>
-                  {this.state.asset.model.network_ports.map((port: string) => {
-                    var connection = this.getNetworkConnectionForPort(port);
-                    return (
-                      <tr>
-                        {" "}
-                        <td>{port}</td>
-                        <td>{this.state.asset.mac_addresses[port]}</td>{" "}
-                        {connection ? (
-                          <td
-                            className="asset-link"
-                            onClick={(e: any) => {
-                              const id = this.getAssetIdFromHostname(
-                                connection!.destination_hostname
-                              );
-                              if (id) {
-                                this.redirectToAsset(id);
-                              }
-                            }}
-                          >
-                            {connection.destination_hostname}
-                          </td>
-                        ) : (
-                          <td> </td>
-                        )}
-                        <td>
-                          {connection ? connection.destination_port : " "}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+            this.state.asset.model.network_ports &&
+            this.state.asset.model.network_ports.length !== 0 ? (
+              <div className="network-connections">
+                <table className="bp3-html-table bp3-html-table-bordered bp3-html-table-striped">
+                  <tr>
+                    <th>Network Port</th>
+                    <th>Mac Address</th>
+                    <th>Destination Asset</th>
+                    <th>Destination Port</th>
+                  </tr>
+                  <tbody>
+                    {this.state.asset.model.network_ports.map((port: string) => {
+                      var connection = this.getNetworkConnectionForPort(port);
+                      return (
+                        <tr>
+                          {" "}
+                          <td>{port}</td>
+                          <td>{this.state.asset.mac_addresses[port]}</td>{" "}
+                          {connection ? (
+                            <td
+                              className="asset-link"
+                              onClick={(e: any) => {
+                                const id = this.getAssetIdFromHostname(
+                                  connection!.destination_hostname!
+                                );
+                                if (id) {
+                                  this.redirectToAsset(id);
+                                }
+                              }}
+                            >
+                              {connection.destination_hostname}
+                            </td>
+                          ) : (<td></td>)}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
 
-              <NetworkGraph
-                networkGraph={this.state.asset.network_graph}
-                onClickNode={this.redirectToAsset}
-              />
-            </div>
-          ) : (
-            <Callout title="No network ports" intent={Intent.PRIMARY}></Callout>
-          )}
+                <NetworkGraph
+                  networkGraph={this.state.asset.network_graph}
+                  onClickNode={this.redirectToAsset}
+                />
+              </div>
+            ) : (
+              <Callout title="No network ports" intent={Intent.PRIMARY}></Callout>
+            )}
         </div>
 
         {Object.keys(this.state.asset).length !== 0 &&
-        this.state.asset.rack.is_network_controlled
+          Object.keys(this.state.asset.power_connections).length > 0
           ? this.renderPower()
           : null}
       </div>
@@ -245,7 +261,8 @@ export class AssetView extends React.PureComponent<
   };
 
   private renderPower() {
-    return <PowerView {...this.props} asset={this.state.asset} />;
+    return <PowerView {...this.props} asset={this.state.asset} shouldUpdate={this.state.powerShouldUpdate}
+      updated={() => { this.setState({ powerShouldUpdate: false }) }} />;
   }
 
   private handleFormOpen = () => {

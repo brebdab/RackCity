@@ -1,68 +1,23 @@
-import {
-  Alert,
-  AnchorButton,
-  HTMLSelect,
-  Icon,
-  Intent,
-  IToastProps,
-  Position,
-  Toaster,
-  Dialog,
-  Classes
-} from "@blueprintjs/core";
+import { Alert, AnchorButton, Classes, Dialog, HTMLSelect, Icon, Intent, IToastProps, Position, Toaster } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { IconNames } from "@blueprintjs/icons";
 import "@blueprintjs/icons/lib/css/blueprint-icons.css";
+import axios from "axios";
 import React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import FormPopup from "../../forms/formPopup";
 import { FormTypes } from "../../forms/formUtils";
-import {
-  ElementObjectType,
-  ElementType,
-  getHeaders,
-  isAssetObject,
-  isModelObject,
-  isRackObject,
-  RackRangeFields,
-  UserInfoObject,
-  isUserObject,
-  isDatacenterObject,
-  DatacenterObject,
-  isObject,
-  SortFilterBody,
-  AssetObject,
-  isRackRangeFields
-} from "../../utils/utils";
+import { updateObject } from "../../store/utility";
+import { API_ROOT } from "../../utils/api-config";
+import { AssetObject, DatacenterObject, ElementObjectType, ElementType, getHeaders, isAssetObject, isDatacenterObject, isModelObject, isObject, isRackObject, isRackRangeFields, isUserObject, RackRangeFields, SortFilterBody, UserInfoObject } from "../../utils/utils";
 import DragDropList from "./dragDropList";
+import { deleteAsset, deleteDatacenter, deleteModel, deleteUser, ElementTableOpenAlert, FilterTypes, IFilter, ITableSort, modifyAsset, modifyDatacenter, modifyModel, NumericFilter, PagingTypes, renderNumericFilterItem, renderRackRangeFilterItem, renderTextFilterItem, TextFilter } from "./elementUtils";
 import "./elementView.scss";
 import FilterSelect from "./filterSelect";
-import axios from "axios";
-import { API_ROOT } from "../../utils/api-config";
-
-import {
-  ITableSort,
-  PagingTypes,
-  renderTextFilterItem,
-  renderNumericFilterItem,
-  renderRackRangeFilterItem,
-  IFilter,
-  FilterTypes,
-  TextFilter,
-  NumericFilter,
-  deleteModel,
-  deleteAsset,
-  deleteDatacenter,
-  modifyModel,
-  modifyAsset,
-  modifyDatacenter,
-  ElementTableOpenAlert,
-  deleteUser
-} from "./elementUtils";
 import { PowerView } from "./powerView/powerView";
 import "./powerView/powerView.scss";
-import { updateObject } from "../../store/utility";
+
 
 interface ElementTableState {
   items: Array<ElementObjectType>;
@@ -114,7 +69,7 @@ interface ElementTableProps {
 class ElementTable extends React.Component<
   ElementTableProps & RouteComponentProps,
   ElementTableState
-> {
+  > {
   public state: ElementTableState = {
     page_type: 10,
     filters: [],
@@ -251,7 +206,7 @@ class ElementTable extends React.Component<
         </span>
         <span>{`${item.field} by ${
           item.ascending ? "ascending" : "descending"
-        }`}</span>
+          }`}</span>
 
         <span>
           <Icon
@@ -463,6 +418,16 @@ class ElementTable extends React.Component<
   private addSuccessToast = (message: string) => {
     this.addToast({ message: message, intent: Intent.PRIMARY });
   };
+  private addWarnToast = (message: string) => {
+    this.addToast({
+      message: message,
+      intent: Intent.WARNING,
+      action: {
+        onClick: () => this.setState({ isEditFormOpen: true }),
+        text: "Edit values"
+      }
+    });
+  };
   private addErrorToast = (message: string) => {
     this.addToast({ message: message, intent: Intent.DANGER });
   };
@@ -609,6 +574,8 @@ class ElementTable extends React.Component<
             this.setState({ isPowerOptionsOpen: false });
           }}
           asset={this.state.assetPower}
+          shouldUpdate={false}
+          updated={() => { }}
         />
       </Dialog>
     );
@@ -619,7 +586,11 @@ class ElementTable extends React.Component<
     this.handleEditFormClose();
     this.addSuccessToast("Successfuly modified");
   }
-
+  successfulModifcationWithWarning = (warning: string) => {
+    this.updateTableData();
+    this.handleEditFormClose();
+    this.addWarnToast(warning);
+  };
   handleEditFormSubmit = (values: ElementObjectType, headers: any) => {
     if (isModelObject(values)) {
       modifyModel(values, headers).then(res => {
@@ -627,7 +598,12 @@ class ElementTable extends React.Component<
       });
     } else if (isAssetObject(values)) {
       modifyAsset(values, headers).then(res => {
-        this.successfulModification();
+        console.log("RESPONSE", res);
+        if (res.data.warning_message) {
+          this.successfulModifcationWithWarning(res.data.warning_message);
+        } else {
+          this.successfulModification();
+        }
       });
     } else if (isDatacenterObject(values)) {
       modifyDatacenter(values, headers).then(res => {
@@ -878,20 +854,20 @@ class ElementTable extends React.Component<
           {this.props.disableFiltering
             ? null
             : [
-                <div className="filter-select">
-                  <FilterSelect
-                    handleAddFilter={this.addFilter}
-                    fields={this.state.fields}
-                  />
-                </div>,
-                <div className="table-options">
-                  <p>Applied filters:</p>
-                  <DragDropList
-                    items={this.state.filters}
-                    renderItem={this.renderFilterItem}
-                  />
-                </div>
-              ]}
+              <div className="filter-select">
+                <FilterSelect
+                  handleAddFilter={this.addFilter}
+                  fields={this.state.fields}
+                />
+              </div>,
+              <div className="table-options">
+                <p>Applied filters:</p>
+                <DragDropList
+                  items={this.state.filters}
+                  renderItem={this.renderFilterItem}
+                />
+              </div>
+            ]}
           {this.props.disableSorting ? null : (
             <div className="table-options">
               <p>Applied sorts:</p>
@@ -915,26 +891,26 @@ class ElementTable extends React.Component<
               </HTMLSelect>
               {this.state.page_type !== PagingTypes.ALL
                 ? [
-                    <span>
-                      <Icon
-                        className="icon"
-                        icon={IconNames.CARET_LEFT}
-                        iconSize={Icon.SIZE_LARGE}
-                        onClick={() => this.previousPage()}
-                      />
-                    </span>,
-                    <span>
-                      page {this.state.curr_page} of {this.state.total_pages}
-                    </span>,
-                    <span>
-                      <Icon
-                        className="icon"
-                        icon={IconNames.CARET_RIGHT}
-                        iconSize={Icon.SIZE_LARGE}
-                        onClick={() => this.nextPage()}
-                      />
-                    </span>
-                  ]
+                  <span>
+                    <Icon
+                      className="icon"
+                      icon={IconNames.CARET_LEFT}
+                      iconSize={Icon.SIZE_LARGE}
+                      onClick={() => this.previousPage()}
+                    />
+                  </span>,
+                  <span>
+                    page {this.state.curr_page} of {this.state.total_pages}
+                  </span>,
+                  <span>
+                    <Icon
+                      className="icon"
+                      icon={IconNames.CARET_RIGHT}
+                      iconSize={Icon.SIZE_LARGE}
+                      onClick={() => this.nextPage()}
+                    />
+                  </span>
+                ]
                 : null}
             </div>
           ) : null}
@@ -944,7 +920,7 @@ class ElementTable extends React.Component<
             <table
               className={
                 this.props.type !== ElementType.DATACENTER &&
-                this.props.type !== ElementType.USER
+                  this.props.type !== ElementType.USER
                   ? "bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered element-table"
                   : "bp3-html-table bp3-html-table-striped bp3-html-table-bordered element-table"
               }
@@ -991,14 +967,14 @@ class ElementTable extends React.Component<
                       <tr
                         onClick={
                           this.props.type === ElementType.DATACENTER ||
-                          this.props.type === ElementType.USER
-                            ? () => {}
+                            this.props.type === ElementType.USER
+                            ? () => { }
                             : () => {
-                                console.log("redirecting", item.id);
-                                this.props.history.push(
-                                  "/" + this.props.type + "/" + item.id
-                                );
-                              }
+                              console.log("redirecting", item.id);
+                              this.props.history.push(
+                                "/" + this.props.type + "/" + item.id
+                              );
+                            }
                         }
                       >
                         {Object.entries(item).map(([col, value]) => {
@@ -1039,46 +1015,43 @@ class ElementTable extends React.Component<
                               {this.renderAdminButton(item)}
                             </div>
                           ) : null}
-                          {this.props.isAdmin ? (
-                            <div className="inline-buttons">
-                              {this.props.type !== ElementType.USER ? (
-                                <AnchorButton
-                                  className="button-table"
-                                  intent="primary"
-                                  icon="edit"
-                                  minimal
-                                  onClick={(event: any) => {
-                                    this.handleEditButtonClick(item);
-                                    event.stopPropagation();
-                                  }}
-                                />
-                              ) : null}
+                          <div className="inline-buttons">
+                            {this.props.type !== ElementType.USER && this.props.isAdmin ? (
                               <AnchorButton
                                 className="button-table"
-                                intent="danger"
+                                intent="primary"
+                                icon="edit"
                                 minimal
-                                icon="trash"
                                 onClick={(event: any) => {
-                                  this.handleDeleteButtonClick(item);
+                                  this.handleEditButtonClick(item);
                                   event.stopPropagation();
                                 }}
                               />
-                              {this.props.isAdmin &&
-                              isAssetObject(item) &&
-                              item.rack.is_network_controlled ? (
-                                <AnchorButton
-                                  className="button-table"
-                                  intent="warning"
-                                  minimal
-                                  icon="offline"
-                                  onClick={(event: any) => {
-                                    this.handlePowerButtonClick(item);
-                                    event.stopPropagation();
-                                  }}
-                                />
-                              ) : null}
-                            </div>
-                          ) : null}{" "}
+                            ) : null}
+                            {this.props.isAdmin ? <AnchorButton
+                              className="button-table"
+                              intent="danger"
+                              minimal
+                              icon="trash"
+                              onClick={(event: any) => {
+                                this.handleDeleteButtonClick(item);
+                                event.stopPropagation();
+                              }}
+                            /> : null}
+                            {isAssetObject(item) ? (
+                              <AnchorButton
+                                className="button-table"
+                                intent="warning"
+                                minimal
+                                icon="offline"
+                                onClick={(event: any) => {
+                                  this.handlePowerButtonClick(item);
+                                  event.stopPropagation();
+                                }}
+                              />
+                            ) : null}
+                          </div>
+                          {" "}
                           {/* TODO add logic for determining if isOwner for power button */}
                         </td>
                       </tr>
@@ -1086,8 +1059,8 @@ class ElementTable extends React.Component<
                   })}
                 </tbody>
               ) : (
-                <h4 className="no-data-text">no {this.props.type} found </h4>
-              )}
+                  <h4 className="no-data-text">no {this.props.type} found </h4>
+                )}
             </table>
           )}
         </div>
