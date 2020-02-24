@@ -224,20 +224,26 @@ def power_cycle(request):
     )
 
 
-@api_view(['POST'])
+@api_view(['GET'])
 @permission_classes([IsAdminUser])
 def power_availability(request):
-    data = JSONParser().parse(request)
-    if 'rack_id' not in data.keys():
-        failure_message = "No rack id given"
+    rack_id = request.query_params.get('id')
+    print(rack_id)
+    
+    if not rack_id:
         return JsonResponse(
-            {"failure_message": failure_message},
+            {
+                "failure_message":
+                     "Must specifiy rack id",
+                "errors": "Query parameter 'id' is required"
+            },
             status=HTTPStatus.BAD_REQUEST
         )
+
     try:
-        rack = Rack.objects.get(id=data['rack_id'])
+        rack = Rack.objects.get(id=rack_id)
     except Rack.DoesNotExist:
-        failure_message = "No rack exists with id=" + str(id)
+        failure_message = "No rack exists with id=" + str(rack_id)
         return JsonResponse(
             {"failure_message": failure_message},
             status=HTTPStatus.BAD_REQUEST,
