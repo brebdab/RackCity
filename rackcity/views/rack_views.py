@@ -13,8 +13,8 @@ from rackcity.utils.log_utils import (
 )
 from rackcity.utils.errors_utils import (
     Status,
-    RackFailure,
     GenericFailure,
+    parse_serializer_errors,
     get_rack_failure_message,
     get_rack_exist_failure,
     get_rack_with_asset_failure,
@@ -58,7 +58,8 @@ def rack_get(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.ERROR.value + RackFailure.RANGE.value,
+                    Status.INVALID_INPUT.value +
+                    parse_serializer_errors(range_serializer.errors),
                 "errors": str(range_serializer.errors)
             },
             status=HTTPStatus.BAD_REQUEST,
@@ -84,7 +85,8 @@ def rack_create(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.CREATE_ERROR.value + RackFailure.RANGE.value,
+                    Status.INVALID_INPUT.value +
+                    parse_serializer_errors(range_serializer.errors),
                 "errors": str(range_serializer.errors)
             },
             status=HTTPStatus.BAD_REQUEST,
@@ -138,7 +140,8 @@ def rack_delete(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.DELETE_ERROR.value + RackFailure.RANGE.value,
+                    Status.INVALID_INPUT.value +
+                    parse_serializer_errors(range_serializer.errors),
                 "errors": str(range_serializer.errors)
             },
             status=HTTPStatus.BAD_REQUEST,
