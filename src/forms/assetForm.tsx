@@ -1,19 +1,4 @@
-import {
-  Button,
-  ButtonGroup,
-  Callout,
-  Checkbox,
-  Classes,
-  Collapse,
-  FormGroup,
-  Icon,
-  InputGroup,
-  Intent,
-  MenuItem,
-  Tooltip,
-  Alert,
-  Spinner
-} from "@blueprintjs/core";
+import { Alert, Button, ButtonGroup, Callout, Checkbox, Classes, Collapse, FormGroup, Icon, InputGroup, Intent, MenuItem, Spinner, Tooltip } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { IconNames } from "@blueprintjs/icons";
 import axios from "axios";
@@ -21,56 +6,13 @@ import * as React from "react";
 import { connect } from "react-redux";
 import { isNullOrUndefined } from "util";
 import { ALL_DATACENTERS } from "../components/elementView/elementTabContainer";
-import {
-  FilterTypes,
-  IFilter,
-  PagingTypes,
-  TextFilterTypes
-} from "../components/elementView/elementUtils";
+import { FilterTypes, IFilter, PagingTypes, TextFilterTypes } from "../components/elementView/elementUtils";
 import { updateObject } from "../store/utility";
 import { API_ROOT } from "../utils/api-config";
-import {
-  AssetFormLabels,
-  AssetObject,
-  DatacenterObject,
-  ElementObjectType,
-  ElementType,
-  getHeaders,
-  isAssetObject,
-  ModelObject,
-  NetworkConnection,
-  PowerConnection,
-  PowerPortAvailability,
-  PowerSide,
-  RackObject,
-  ShallowAssetObject,
-  isDatacenterObject,
-  isRackObject
-} from "../utils/utils";
+import { AssetFormLabels, AssetObject, DatacenterObject, ElementObjectType, ElementType, getHeaders, isAssetObject, isDatacenterObject, isRackObject, ModelObject, NetworkConnection, PowerConnection, PowerPortAvailability, PowerSide, RackObject, ShallowAssetObject } from "../utils/utils";
 import Field from "./field";
 import "./forms.scss";
-import {
-  AssetSelect,
-  DatacenterSelect,
-  filterAsset,
-  filterDatacenter,
-  filterModel,
-  filterRack,
-  filterString,
-  FormTypes,
-  isMacAddressValid,
-  macAddressInfo,
-  ModelSelect,
-  RackSelect,
-  renderAssetItem,
-  renderDatacenterItem,
-  renderModelItem,
-  renderRackItem,
-  renderStringItem,
-  StringSelect
-} from "./formUtils";
-import { INTENT_WARNING } from "@blueprintjs/core/lib/esm/common/classes";
-import { tsObjectKeyword } from "@babel/types";
+import { AssetSelect, DatacenterSelect, filterAsset, filterDatacenter, filterModel, filterRack, filterString, FormTypes, isMacAddressValid, macAddressInfo, ModelSelect, RackSelect, renderAssetItem, renderDatacenterItem, renderModelItem, renderRackItem, renderStringItem, StringSelect } from "./formUtils";
 
 //TO DO : add validation of types!!!
 
