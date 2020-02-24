@@ -1,4 +1,4 @@
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from rackcity.models import (
     Asset,
     ITModel,
@@ -30,7 +30,8 @@ from rackcity.utils.log_utils import (
 from rackcity.utils.errors_utils import (
     Status,
     GenericFailure,
-    parse_serializer_errors
+    parse_serializer_errors,
+    parse_validation_error
 )
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -232,7 +233,7 @@ def asset_add(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.CREATE_ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.CREATE_ERROR.value + parse_validation_error(error),
                 "errors": str(error)
             },
             status=HTTPStatus.BAD_REQUEST
@@ -539,7 +540,7 @@ def asset_modify(request):
             {
                 "failure_message":
                     Status.MODIFY_ERROR.value +
-                    GenericFailure.INVALID_DATA.value,
+                    parse_validation_error(error),
                 "errors": str(error)
             },
             status=HTTPStatus.BAD_REQUEST
