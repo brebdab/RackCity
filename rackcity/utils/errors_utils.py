@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from enum import Enum
 
 
@@ -85,3 +86,13 @@ def parse_serializer_errors(errors):
             "(" + str(error_num) + ") " + field + ": " + " ".join(field_errors)
         )
     return " ".join(failure_messages)
+
+
+def parse_validation_error(error):
+    failure_detail = ""
+    if isinstance(error, ValidationError):
+        for err in error:
+            failure_detail += err
+    else:
+        failure_detail = GenericFailure.UNKNOWN.value
+    return failure_detail

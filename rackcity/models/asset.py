@@ -17,8 +17,8 @@ def get_next_available_asset_number():
 def validate_hostname(value):
     hostname_pattern = re.compile("[A-Za-z]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?")
     if value and hostname_pattern.fullmatch(value) is None:
-        raise ValidationError(value + " is not a valid hostname as it is " +
-                              "not compliant with RFC 1034")
+        raise ValidationError("'" + value + "' is not a valid hostname as " +
+                              "it is not compliant with RFC 1034.")
 
 
 def validate_owner(value):
@@ -27,7 +27,7 @@ def validate_owner(value):
         and value not in [obj.username for obj in User.objects.all()]
     ):
         raise ValidationError(
-            "There is no existing user with the username " + value
+            "There is no existing user with the username '" + value + "'."
         )
 
 

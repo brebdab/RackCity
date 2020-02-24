@@ -35,6 +35,19 @@ export function isMacAddressValid(text: string) {
 export const macAddressInfo = (
   <p>6-byte hexadecimal string with optional delimiters</p>
 );
+export const filterNumber: ItemPredicate<string> = (
+  query,
+  value,
+  _index,
+  exactMatch
+) => {
+  const normalizedQuery = query.toLowerCase();
+  const normalizedValue = value.toString().toLowerCase();
+  if (exactMatch) {
+    return query === value;
+  }
+  return normalizedQuery === normalizedValue;
+};
 export const filterString: ItemPredicate<string> = (
   query,
   vendor,
@@ -237,7 +250,7 @@ export const renderAssetItem: ItemRenderer<AssetObject> = (
     return (
       <MenuItem
         active={modifiers.active}
-        label={asset.hostname}
+        label={asset.model.vendor + " " + asset.model.model_number}
         text={highlightText(text, query)}
         onClick={handleClick}
       />
