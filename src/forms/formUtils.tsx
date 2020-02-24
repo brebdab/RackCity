@@ -237,7 +237,7 @@ export const renderAssetItem: ItemRenderer<AssetObject> = (
     return (
       <MenuItem
         active={modifiers.active}
-        label={asset.hostname}
+        label={asset.model.vendor + " " + asset.model.model_number}
         text={highlightText(text, query)}
         onClick={handleClick}
       />
