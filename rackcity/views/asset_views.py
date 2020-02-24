@@ -483,7 +483,7 @@ def asset_modify(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.MODIFY_ERROR +
+                    Status.MODIFY_ERROR.value +
                     "Invalid datacenter change. " + str(error)
             },
             status=HTTPStatus.BAD_REQUEST,
