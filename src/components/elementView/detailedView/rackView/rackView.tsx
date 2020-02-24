@@ -169,6 +169,9 @@ class RackView extends React.PureComponent<
       this.props.location && this.props.location.state
         ? (this.props.location.state as Array<RackResponseObject>)
         : this.props.racks;
+    if (this.props.location && this.props.location.state) {
+      window.print();
+    }
 
     return (
       <div className={Classes.DARK}>

@@ -332,17 +332,19 @@ class RackTab extends React.Component<
             <em>Please select a datacenter to view rack information</em>
           </Callout>
         )}
+        {this.state.racks.length !== 0 ? (
+          <Button
+            className="print-racks"
+            text="Print Racks Page"
+            onClick={(e: any) => {
+              this.props.history.push({
+                pathname: "/rack-print",
+                state: this.state.racks
+              });
+            }}
+          />
+        ) : null}
 
-        <Button
-          className="print-racks"
-          text="Print Racks Page"
-          onClick={(e: any) => {
-            this.props.history.push({
-              pathname: "/rack-print",
-              state: this.state.racks
-            });
-          }}
-        />
         <div id="rack-view-print">
           <RackView racks={this.state.racks} loading={this.state.loading} />
         </div>
