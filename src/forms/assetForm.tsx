@@ -34,6 +34,7 @@ import {
   ElementType,
   getHeaders,
   isAssetObject,
+  PowerConnection,
   ModelObject,
   NetworkConnection,
   PowerPortAvailability,
@@ -475,7 +476,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   clearPowerSelection = (port: number) => {
     this.changeCheckBoxState(port, false);
     const power_connections = this.state.values.power_connections;
-    delete power_connections[port];
+    power_connections[port] = {} as PowerConnection;
 
     this.setState({
       values: updateObject(this.state.values, {
@@ -1047,14 +1048,17 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
               {this.state.values.model &&
               this.state.values.model.num_power_ports &&
               parseInt(this.state.values.model.num_power_ports, 10) > 0 ? (
-                <FormGroup label={AssetFormLabels.power_connections} inline={false}>
+                <FormGroup
+                  label={AssetFormLabels.power_connections}
+                  inline={false}
+                >
                   {this.getPowerPortFields()}
                 </FormGroup>
               ) : null}
             </Collapse>
           </Collapse>
 
-          <FormGroup label={AssetFormLabels.owner}inline={false}>
+          <FormGroup label={AssetFormLabels.owner} inline={false}>
             <StringSelect
               popoverProps={{
                 minimal: true,
