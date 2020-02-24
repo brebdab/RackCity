@@ -69,5 +69,6 @@ from .pdu_views import (
     power_status,
     power_on,
     power_off,
-    power_cycle
+    power_cycle,
+    power_availability
 )

@@ -57,5 +57,6 @@ urlpatterns = [
     path('power/get-state/<int:id>', views.power_status),
     path('power/mask-on', views.power_on),
     path('power/mask-off', views.power_off),
-    path('power/cycle', views.power_cycle)
+    path('power/cycle', views.power_cycle),
+    path('power/availability', views.power_availability)
 ]
