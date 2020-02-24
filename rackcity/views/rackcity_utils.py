@@ -1,4 +1,4 @@
-from rackcity.models import Asset, ITModel, Rack
+from rackcity.models import Asset, ITModel, Rack, PowerPort, NetworkPort
 from rackcity.api.objects import RackRangeSerializer
 from rackcity.api.serializers import RecursiveAssetSerializer, RackSerializer
 from http import HTTPStatus
@@ -34,6 +34,29 @@ def get_rack_detailed_response(racks):
         {"racks": racks_with_assets},
         status=HTTPStatus.OK
     )
+
+
+def validate_asset_datacenter_move(data, asset):
+    old_datacenter = asset.rack.datacenter
+    if 'rack' not in data:
+        return
+    new_datacenter = Rack.objects.get(id=data['rack']).datacenter
+    if (old_datacenter == new_datacenter):
+        return
+    power_ports = PowerPort.objects.filter(asset=asset.id)
+    for power_port in power_ports:
+        if (power_port.power_connection is not None):
+            raise LocationException(
+                "Cannot move asset with existing power connections " +
+                "to different datacenter."
+            )
+    network_ports = NetworkPort.objects.filter(asset=asset.id)
+    for network_port in network_ports:
+        if (network_port.connected_port is not None):
+            raise LocationException(
+                "Cannot move asset with existing network connections " +
+                "to different datacenter."
+            )
 
 
 def validate_asset_location(
