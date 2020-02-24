@@ -467,17 +467,6 @@ def asset_modify(request):
             status=HTTPStatus.BAD_REQUEST
         )
     try:
-        validate_location_modification(data, existing_asset)
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.MODIFY_ERROR.value +
-                    "Invalid location change. " + str(error)
-            },
-            status=HTTPStatus.BAD_REQUEST,
-        )
-    try:
         validate_asset_datacenter_move(data, existing_asset)
     except Exception as error:
         return JsonResponse(
@@ -485,6 +474,17 @@ def asset_modify(request):
                 "failure_message":
                     Status.MODIFY_ERROR.value +
                     "Invalid datacenter change. " + str(error)
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    try:
+        validate_location_modification(data, existing_asset)
+    except Exception as error:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR.value +
+                    "Invalid location change. " + str(error)
             },
             status=HTTPStatus.BAD_REQUEST,
         )
