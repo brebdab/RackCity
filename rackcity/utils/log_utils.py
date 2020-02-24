@@ -63,6 +63,7 @@ def log_action(user, related_element, action):
         datetime_to_string(date),
         element_type,
         element_name + ":",
+        "user",
         user.username,
         action.value,
         element_type,
@@ -87,6 +88,7 @@ def log_delete(user, element_type, element_name):
         datetime_to_string(date),
         element_type.value,
         element_name + ":",
+        "user",
         user.username,
         Action.DELETE.value,
         element_type.value,
@@ -108,10 +110,11 @@ def log_rack_action(user, action, related_racks):
     date = datetime.now()
     log_content = " ".join([
         datetime_to_string(date),
+        "user",
         user.username,
         action.value,
         "the following racks:",
-        ",".join(related_racks),
+        related_racks,
     ])
     log = Log(
         date=date,
@@ -128,8 +131,10 @@ def log_user_permission_action(user, permission_action, username):
     date = datetime.now()
     log_content = " ".join([
         datetime_to_string(date),
+        "user",
         user.username,
         permission_action.value,
+        "user",
         username,
     ])
     log = Log(
@@ -149,6 +154,7 @@ def log_power_action(user, power_action, related_asset):
         datetime_to_string(date),
         ElementType.ASSET.value,
         related_asset.asset_number + ":",
+        "user",
         user.username,
         power_action.value,
         "for asset",
@@ -203,6 +209,7 @@ def log_bulk_import(user, element_type):
     date = datetime.now()
     log_content = " ".join([
         datetime_to_string(date),
+        "user",
         user.username,
         "uploaded",
         element_type.value,
