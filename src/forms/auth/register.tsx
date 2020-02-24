@@ -61,7 +61,11 @@ class RegistrationForm extends React.Component<
           resp.catch(err => {
             console.log(err);
             let errors: Array<string> = this.state.errors;
-            errors.push(JSON.stringify(err.response.data));
+
+            Object.entries(err.response.data).forEach(([field, error]) => {
+              errors.push(field + ": " + error);
+            });
+
             this.setState({
               errors: errors
             });
