@@ -38,7 +38,8 @@ urlpatterns = [
     path('racks/delete', views.rack_delete),
     path('racks/summary', views.rack_summary),
     path('iamadmin', views.i_am_admin),
-    path('report', views.report_rack_usage),
+    path('report/global', views.report_rack_usage),
+    path('report/datacenter/<int:id>', views.rack_report_datacenter),
     path('usernames', views.usernames),
     path('datacenters/get-many', views.datacenter_all),
     path('datacenters/add', views.datacenter_create),
@@ -56,5 +57,6 @@ urlpatterns = [
     path('power/get-state/<int:id>', views.power_status),
     path('power/mask-on', views.power_on),
     path('power/mask-off', views.power_off),
-    path('power/cycle', views.power_cycle)
+    path('power/cycle', views.power_cycle),
+    path('power/availability', views.power_availability)
 ]

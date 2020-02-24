@@ -1,5 +1,6 @@
 from django.http import JsonResponse
 from rackcity.models import (
+    Rack,
     Asset
 )
 from rackcity.api.serializers import (
@@ -33,7 +34,7 @@ def power_status(request, id):
     try:
         asset = Asset.objects.get(id=id)
     except Asset.DoesNotExist:
-        failure_message = "No model exists with id=" + str(id)
+        failure_message = "No asset exists with id=" + str(id)
         return JsonResponse(
             {"failure_message": failure_message},
             status=HTTPStatus.BAD_REQUEST
@@ -88,7 +89,7 @@ def power_on(request):
     try:
         asset = Asset.objects.get(id=data['id'])
     except Asset.DoesNotExist:
-        failure_message = "No model exists with id=" + str(id)
+        failure_message = "No asset exists with id=" + str(id)
         return JsonResponse(
             {"failure_message": failure_message},
             status=HTTPStatus.BAD_REQUEST,
@@ -117,7 +118,12 @@ def power_on(request):
             status=HTTPStatus.OK
         )
     toggle_power(asset, data['power_port_number'], "on")
-    log_power_action(request.user, PowerAction.ON, asset)
+    log_power_action(
+        request.user,
+        PowerAction.ON,
+        asset,
+        data['power_port_number'],
+    )
     return JsonResponse(
         {"success_message": "Power successfully turned on for port " +
             data['power_port_number']},
@@ -147,7 +153,7 @@ def power_off(request):
     try:
         asset = Asset.objects.get(id=data['id'])
     except Asset.DoesNotExist:
-        failure_message = "No model exists with id=" + str(id)
+        failure_message = "No asset exists with id=" + str(id)
         return JsonResponse(
             {"failure_message": failure_message},
             status=HTTPStatus.BAD_REQUEST,
@@ -174,7 +180,12 @@ def power_off(request):
             status=HTTPStatus.OK
         )
     toggle_power(asset, data['power_port_number'], "off")
-    log_power_action(request.user, PowerAction.OFF, asset)
+    log_power_action(
+        request.user,
+        PowerAction.OFF,
+        asset,
+        data['power_port_number'],
+    )
     return JsonResponse(
         {"success_message": "Power successfully turned off for port " +
             data['power_port_number']},
@@ -195,7 +206,7 @@ def power_cycle(request):
     try:
         asset = Asset.objects.get(id=data['id'])
     except Asset.DoesNotExist:
-        failure_message = "No model exists with id=" + str(id)
+        failure_message = "No asset exists with id=" + str(id)
         return JsonResponse(
             {"failure_message": failure_message},
             status=HTTPStatus.BAD_REQUEST,
@@ -209,6 +220,64 @@ def power_cycle(request):
     log_power_action(request.user, PowerAction.CYCLE, asset)
     return JsonResponse(
         {"success_message": "Power successfully cycled, all asset power ports reset"},
+        status=HTTPStatus.OK
+    )
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def power_availability(request):
+    data = JSONParser().parse(request)
+    if 'rack_id' not in data.keys():
+        failure_message = "No rack id given"
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    try:
+        rack = Rack.objects.get(id=data['rack_id'])
+    except Rack.DoesNotExist:
+        failure_message = "No rack exists with id=" + str(id)
+        return JsonResponse(
+            {"failure_message": failure_message},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    assets = Asset.objects.filter(rack=rack.id)
+    availableL = list(range(1, 25))
+    availableR = list(range(1, 25))
+    for asset in assets:
+        asset_power = serialize_power_connections(asset)
+        for port_num in asset_power.keys():
+            if asset_power[port_num]["left_right"] == "L":
+                try:
+                    availableL.remove(asset_power[port_num]["port_number"])
+                except ValueError:
+                    failure_message = "Port " + asset_power[port_num]["port_number"] + " does not exist on PDU"
+                    return JsonResponse(
+                        {"failure_message": failure_message},
+                        status=HTTPStatus.BAD_REQUEST
+                    )
+            else:
+                try:
+                    availableR.remove(asset_power[port_num]["port_number"])
+                except ValueError:
+                    failure_message = "Port " + asset_power[port_num]["port_number"] + " does not exist on PDU"
+                    return JsonResponse(
+                        {"failure_message": failure_message},
+                        status=HTTPStatus.BAD_REQUEST
+                    )
+    for index in availableL:
+        if index in availableR:
+            suggest = index
+            break
+
+    return JsonResponse(
+        {
+            "left_available": availableL,
+            "right_available": availableR,
+            "left_suggest": suggest,
+            "right_suggest": suggest
+        },
         status=HTTPStatus.OK
     )
 

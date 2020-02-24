@@ -42,6 +42,7 @@ interface RackTabState {
   racks: Array<RackResponseObject>;
   loading: boolean;
   selectedRackRange: RackRangeFields;
+  viewAll: boolean;
 }
 interface RackTabProps {
   token: string;
@@ -59,7 +60,8 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
     headers: {},
     isConfirmationOpen: false,
     racks: [],
-    loading: false
+    loading: false,
+    viewAll: false
   };
   private toaster: Toaster = {} as Toaster;
   private addToast(toast: IToastProps) {
@@ -158,6 +160,8 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
         getHeaders(this.props.token),
         showError
       );
+    } else if (this.state.viewAll) {
+      this.getAllRacks(this.props.currDatacenter);
     }
   };
   componentWillReceiveProps(nextProps: RackTabProps) {
@@ -187,7 +191,8 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
   getAllRacks = (datacenter: DatacenterObject) => {
     console.log(this.props);
     this.setState({
-      loading: true
+      loading: true,
+      viewAll: true
     });
     const config = {
       headers: {
