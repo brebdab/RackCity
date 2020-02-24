@@ -16,9 +16,9 @@ class PermissionAction(Enum):
 
 
 class PowerAction(Enum):
-    ON = "turned on"
-    OFF = "turned off"
-    CYCLE = "cycled"
+    ON = "turned on power to port"
+    OFF = "turned off power to port"
+    CYCLE = "cycled power to all ports"
 
 
 class ElementType(Enum):
@@ -42,9 +42,7 @@ def log_action(user, related_element, action):
     related_asset = None
     if isinstance(related_element, Asset):
         element_type = ElementType.ASSET.value
-        element_name = str(related_element.asset_number)
-        if (related_element.hostname):
-            element_name += (' (' + related_element.hostname + ')')
+        element_name = get_asset_name(related_element)
         related_asset = related_element
     elif isinstance(related_element, ITModel):
         element_type = ElementType.MODEL.value
@@ -63,10 +61,11 @@ def log_action(user, related_element, action):
         datetime_to_string(date),
         element_type,
         element_name + ":",
+        ElementType.USER.value,
         user.username,
         action.value,
-        element_type,
-        element_name
+        "this",
+        element_type
     ])
     log = Log(
         date=date,
@@ -87,10 +86,11 @@ def log_delete(user, element_type, element_name):
         datetime_to_string(date),
         element_type.value,
         element_name + ":",
+        ElementType.USER.value,
         user.username,
         Action.DELETE.value,
-        element_type.value,
-        element_name
+        "this",
+        element_type.value
     ])
     log = Log(
         date=date,
@@ -108,10 +108,11 @@ def log_rack_action(user, action, related_racks):
     date = datetime.now()
     log_content = " ".join([
         datetime_to_string(date),
+        ElementType.USER.value,
         user.username,
         action.value,
         "the following racks:",
-        ",".join(related_racks),
+        related_racks,
     ])
     log = Log(
         date=date,
@@ -128,8 +129,10 @@ def log_user_permission_action(user, permission_action, username):
     date = datetime.now()
     log_content = " ".join([
         datetime_to_string(date),
+        ElementType.USER.value,
         user.username,
         permission_action.value,
+        ElementType.USER.value,
         username,
     ])
     log = Log(
@@ -140,7 +143,7 @@ def log_user_permission_action(user, permission_action, username):
     log.save()
 
 
-def log_power_action(user, power_action, related_asset):
+def log_power_action(user, power_action, related_asset, port_num=None):
     """
     Specified power_action should be PowerAction enum.
     """
@@ -148,12 +151,13 @@ def log_power_action(user, power_action, related_asset):
     log_content = " ".join([
         datetime_to_string(date),
         ElementType.ASSET.value,
-        related_asset.asset_number + ":",
+        get_asset_name(related_asset) + ":",
+        ElementType.USER.value,
         user.username,
         power_action.value,
-        "for asset",
-        related_asset.asset_number,
     ])
+    if (port_num):
+        log_content += " " + str(port_num)
     log = Log(
         date=date,
         log_content=log_content,
@@ -163,29 +167,19 @@ def log_power_action(user, power_action, related_asset):
     log.save()
 
 
-def log_network_action(user, action, asset_0, asset_1):
+def log_network_action(user, related_asset):
     """
     Specified action should be Action enum.
     """
     date = datetime.now()
-    log_single_network_action(date, user, action, asset_0, asset_1)
-    log_single_network_action(date, user, action, asset_1, asset_0)
-
-
-def log_single_network_action(date, user, action, related_asset, other_asset):
-    """
-    Specified action should be Action enum.
-    """
     log_content = " ".join([
         datetime_to_string(date),
         ElementType.ASSET.value,
-        related_asset.asset_number + ":",
-        "a network connection from asset",
-        related_asset.asset_number,
-        "to asset",
-        other_asset.asset_number,
-        "has been",
-        action.value
+        get_asset_name(related_asset) + ":",
+        ElementType.USER.value,
+        user.username,
+        Action.MODIFY.value,
+        "a network connection from this asset"
     ])
     log = Log(
         date=date,
@@ -203,8 +197,17 @@ def log_bulk_import(user, element_type):
     date = datetime.now()
     log_content = " ".join([
         datetime_to_string(date),
+        ElementType.USER.value,
         user.username,
         "uploaded",
         element_type.value,
         "by bulk import",
     ])
+
+
+def get_asset_name(asset):
+    asset_name = str(asset.asset_number)
+    if (asset.hostname):
+        asset_name += \
+            " (" + asset.hostname + ")"
+    return asset_name

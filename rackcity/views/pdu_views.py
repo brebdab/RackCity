@@ -117,7 +117,12 @@ def power_on(request):
             status=HTTPStatus.OK
         )
     toggle_power(asset, data['power_port_number'], "on")
-    log_power_action(request.user, PowerAction.ON, asset)
+    log_power_action(
+        request.user,
+        PowerAction.ON,
+        asset,
+        data['power_port_number'],
+    )
     return JsonResponse(
         {"success_message": "Power successfully turned on for port " +
             data['power_port_number']},
@@ -174,7 +179,12 @@ def power_off(request):
             status=HTTPStatus.OK
         )
     toggle_power(asset, data['power_port_number'], "off")
-    log_power_action(request.user, PowerAction.OFF, asset)
+    log_power_action(
+        request.user,
+        PowerAction.OFF,
+        asset,
+        data['power_port_number'],
+    )
     return JsonResponse(
         {"success_message": "Power successfully turned off for port " +
             data['power_port_number']},
