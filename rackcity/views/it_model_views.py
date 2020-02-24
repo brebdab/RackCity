@@ -390,7 +390,11 @@ def model_bulk_upload(request):
     data = JSONParser().parse(request)
     if 'import_csv' not in data:
         return JsonResponse(
-            {"failure_message": "Bulk upload request should have a parameter 'import_csv'"},
+            {
+                "failure_message":
+                    Status.IMPORT_ERROR.value + GenericFailure.IMPORT.value,
+                "errors": "Bulk upload request should have a parameter 'import_csv'"
+            },
             status=HTTPStatus.BAD_REQUEST
         )
     csv_string = StringIO(data['import_csv'])

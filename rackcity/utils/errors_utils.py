@@ -9,6 +9,7 @@ class Status(Enum):
     DELETE_ERROR = "DELETE ERROR: "
     MODIFY_ERROR = "MODIFY ERROR: "
     INVALID_INPUT = "INVALID INPUT: "
+    IMPORT_ERROR = "IMPORT ERROR: "
 
 
 class GenericFailure(Enum):
@@ -23,6 +24,13 @@ class UserFailure(Enum):
     DELETE = "Cannot delete user"
     NETID_LOGIN = \
         "The Duke NetID login credentials you have provided are invalid."
+
+
+class BulkFailure(Enum):
+    MODEL_IMPORT = \
+        "This file of models cannot be imported due to unknown internal error."
+    ASSET_IMPORT = \
+        "This file of assets"
 
 
 def get_rack_failure_message(range_serializer, action):
