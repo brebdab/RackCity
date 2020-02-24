@@ -87,7 +87,7 @@ export function getPages(
     });
 }
 
-async function getExportData( // TODO: make a second call here
+async function getExportData(
   path: string,
   filters: Array<any>,
   token: string,
@@ -339,7 +339,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             onCancel={() => {
               this.setState({ fileNameIsOpen: false });
             }}
-            onConfirm={() => { // TODO: add stuff here for error checking
+            onConfirm={() => {
               if (this.state.fileName === "" || this.state.networkFileName === "") {
                 alert("Please provide filenames for both files");
               } else {
