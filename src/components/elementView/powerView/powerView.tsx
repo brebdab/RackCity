@@ -23,7 +23,9 @@ import "./powerView.scss";
 interface PowerViewProps {
     token: string;
     callback?: Function;
-    asset?: AssetObject
+    asset?: AssetObject;
+    shouldUpdate: boolean;
+    updated: Function;
 }
 
 interface PowerViewState {
@@ -76,14 +78,19 @@ export class PowerView extends React.PureComponent<
     }
 
     componentDidUpdate() {
-        axios.get(API_ROOT + "api/power/get-state/" + this.props.asset!.id, getHeaders(this.props.token))
-            .then(res => {
-                this.setState({
-                    powerConnections: res.data.power_connections,
-                    powerStatus: res.data.power_status,
-                    statusLoaded: true
+        console.log("componentDIDUPDST")
+        if (this.props.shouldUpdate) {
+            console.log("here")
+            axios.get(API_ROOT + "api/power/get-state/" + this.props.asset!.id, getHeaders(this.props.token))
+                .then(res => {
+                    this.setState({
+                        powerConnections: res.data.power_connections,
+                        powerStatus: res.data.power_status,
+                        statusLoaded: true
+                    })
                 })
-            })
+        }
+        this.props.updated()
     }
 
     render() {
