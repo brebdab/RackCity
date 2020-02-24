@@ -158,16 +158,6 @@ def rack_delete(request):
             else:
                 if Asset.objects.filter(rack=rack.id).count() > 0:
                     unempty_racks.append(rack)
-    if len(nonexistent_rack_names) > 0:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.DELETE_ERROR.value +
-                    get_rack_failure_message(range_serializer, 'deleted') +
-                    get_rack_do_not_exist_failure(nonexistent_rack_names)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
     if len(unempty_racks) > 0:
         return JsonResponse(
             {
@@ -175,6 +165,16 @@ def rack_delete(request):
                     Status.DELETE_ERROR.value +
                     get_rack_failure_message(range_serializer, 'deleted') +
                     get_rack_with_asset_failure(unempty_racks)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    if len(nonexistent_rack_names) > 0:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.DELETE_ERROR.value +
+                    get_rack_failure_message(range_serializer, 'deleted') +
+                    get_rack_do_not_exist_failure(nonexistent_rack_names)
             },
             status=HTTPStatus.BAD_REQUEST
         )
