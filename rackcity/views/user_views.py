@@ -8,6 +8,7 @@ from rackcity.views.rackcity_utils import (
     get_filter_arguments,
     get_sort_arguments,
 )
+from rackcity.utils.errors_utils import UserFailure, GenericFailure, Status
 from rackcity.utils.user_utils import is_netid_user
 from rackcity.utils.log_utils import (
     log_delete,
@@ -34,11 +35,13 @@ def netid_login(request):
     """
     Validate user's OAuth2 access token and return API user token.
     """
-    failure_message = "The Duke NetID login credentials you have provided " + \
-        "are invalid."
     if 'access_token' not in request.data:
         return JsonResponse(
-            {"failure_message": failure_message},
+            {
+                "failure_message":
+                    Status.ERROR.value + UserFailure.NETID_LOGIN.value,
+                "errors": "Must include token on login"
+            },
             status=HTTPStatus.BAD_REQUEST,
         )
     access_token = request.data['access_token']
@@ -51,7 +54,10 @@ def netid_login(request):
     response = requests.get(url, headers=headers)
     if response.status_code != 200:
         return JsonResponse(
-            {"failure_message": failure_message},
+            {
+                "failure_message":
+                    Status.ERROR.value + UserFailure.NETID_LOGIN.value,
+                "errors": "Request to Duke colab failed"},
             status=HTTPStatus.BAD_REQUEST,
         )
     user_data = response.json()
@@ -85,7 +91,7 @@ def user_many(request):
     size must also be specified, and a page of users will be returned.
     """
 
-    failure_message = ""
+    errors = []
 
     should_paginate = not(
         request.query_params.get('page') is None
@@ -94,18 +100,22 @@ def user_many(request):
 
     if should_paginate:
         if not request.query_params.get('page'):
-            failure_message += "Must specify field 'page' on " + \
-                "paginated requests. "
+            errors.append("Must specify field 'page' on " +
+                          "paginated requests.")
         elif not request.query_params.get('page_size'):
-            failure_message += "Must specify field 'page_size' on " + \
-                "paginated requests. "
+            errors.append("Must specify field 'page_size' on " +
+                          "paginated requests.")
         elif int(request.query_params.get('page_size')) <= 0:
-            failure_message += "Field 'page_size' must be an integer " + \
-                "greater than 0. "
+            errors.append("Field 'page_size' must be an integer " +
+                          "greater than 0.")
 
-    if failure_message != "":
+    if len(errors) > 0:
         return JsonResponse(
-            {"failure_message": failure_message},
+            {
+                "failure_message":
+                    Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                "errors": " ".join(errors)
+            },
             status=HTTPStatus.BAD_REQUEST,
         )
 
@@ -115,7 +125,11 @@ def user_many(request):
         filter_args = get_filter_arguments(request.data)
     except Exception as error:
         return JsonResponse(
-            {"failure_message": "Filter error: " + str(error)},
+            {
+                "failure_message":
+                    Status.ERROR.value + GenericFailure.FILTER.value,
+                "errors": str(error)
+            },
             status=HTTPStatus.BAD_REQUEST
         )
     for filter_arg in filter_args:
@@ -127,7 +141,11 @@ def user_many(request):
             sort_args = ['username']
     except Exception as error:
         return JsonResponse(
-            {"failure_message": "Sort error: " + str(error)},
+            {
+                "failure_message":
+                    Status.ERROR.value + GenericFailure.SORT.value,
+                "errors": str(error)
+            },
             status=HTTPStatus.BAD_REQUEST
         )
     users = users_query.order_by(*sort_args)
@@ -138,9 +156,12 @@ def user_many(request):
         try:
             page_of_users = paginator.paginate_queryset(users, request)
         except Exception as error:
-            failure_message += "Invalid page requested: " + str(error)
             return JsonResponse(
-                {"failure_message": failure_message},
+                {
+                    "failure_message":
+                        Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                    "errors": str(error)
+                },
                 status=HTTPStatus.BAD_REQUEST,
             )
         users_to_serialize = page_of_users
@@ -164,14 +185,13 @@ def user_delete(request):
     Delete an existing user. Any assets owned by this user will be updated to
     have no owner.
     """
-    delete_error_message = \
-        "User cannot be deleted because an error has occurred."
     data = JSONParser().parse(request)
     if 'id' not in data:
         return JsonResponse(
             {
-                "failure_message": delete_error_message,
-                "errors": "Must include user id when deleting a user.",
+                "failure_message":
+                    Status.DELETE_ERROR.value + GenericFailure.UNKNOWN.value,
+                "errors": "Must include user id when deleting a user",
             },
             status=HTTPStatus.BAD_REQUEST,
         )
@@ -180,8 +200,10 @@ def user_delete(request):
     except ObjectDoesNotExist:
         return JsonResponse(
             {
-                "failure_message": "User does not exist.",
-                "errors": "No existing user with id="+str(data['id'])+".",
+                "failure_message":
+                    Status.DELETE_ERROR.value +
+                    "User" + GenericFailure.DOES_NOT_EXIST.value,
+                "errors": "No existing user with id="+str(data['id']),
             },
             status=HTTPStatus.BAD_REQUEST,
         )
@@ -189,7 +211,8 @@ def user_delete(request):
         return JsonResponse(
             {
                 "failure_message":
-                "Duke SSO authenticated users cannot be deleted."
+                    Status.DELETE_ERROR.value +
+                    "Duke SSO authenticated users cannot be deleted"
             },
             status=HTTPStatus.BAD_REQUEST,
         )
@@ -197,7 +220,9 @@ def user_delete(request):
     if username == 'admin':
         return JsonResponse(
             {
-                "failure_message": "User admin cannot be deleted.",
+                "failure_message":
+                    Status.DELETE_ERROR.value +
+                    "Not allowed to delete user 'admin'",
             },
             status=HTTPStatus.BAD_REQUEST,
         )
@@ -207,7 +232,8 @@ def user_delete(request):
     except Exception as error:
         return JsonResponse(
             {
-                "failure_message": delete_error_message,
+                "failure_message":
+                    Status.DELETE_ERROR.value + GenericFailure.UNKNOWN.value,
                 "errors": str(error),
             },
             status=HTTPStatus.BAD_REQUEST,
@@ -216,7 +242,7 @@ def user_delete(request):
         return JsonResponse(
             {
                 "success_message":
-                "User " + username + " successfully deleted."
+                    Status.SUCCESS.value + "User " + username + " deleted."
             },
             status=HTTPStatus.OK,
         )
@@ -234,7 +260,11 @@ def user_page_count(request):
         or int(request.query_params.get('page_size')) <= 0
     ):
         return JsonResponse(
-            {"failure_message": "Must specify positive integer page_size."},
+            {
+                "failure_message":
+                    Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                "errors": "Must specify positive integer page_size."
+            },
             status=HTTPStatus.BAD_REQUEST,
         )
     page_size = int(request.query_params.get('page_size'))
@@ -271,14 +301,15 @@ def user_grant_admin(request):
     """
     Grants admin permission to the specified user.
     """
-    failure_message = "Grant admin permission failed: "
     data = JSONParser().parse(request)
     if 'id' not in data:
         return JsonResponse(
             {
                 "failure_message":
-                failure_message + "Internal error",
-                "errors": "Must specify user id on grant admin permission"
+                    Status.MODIFY_ERROR.value +
+                    GenericFailure.UNKNOWN.value,
+                "errors":
+                    "Must specify user id on grant admin permission"
             },
             status=HTTPStatus.BAD_REQUEST,
         )
@@ -288,8 +319,10 @@ def user_grant_admin(request):
         return JsonResponse(
             {
                 "failure_message":
-                failure_message + "User does not exist",
-                "errors": "No existing user with id=" + data['id']
+                    Status.MODIFY_ERROR.value +
+                    "User" + GenericFailure.DOES_NOT_EXIST.value,
+                "errors":
+                    "No existing user with id=" + data['id']
             },
             status=HTTPStatus.BAD_REQUEST,
         )
@@ -297,10 +330,9 @@ def user_grant_admin(request):
         return JsonResponse(
             {
                 "failure_message":
-                failure_message +
-                "User " +
-                user.username +
-                " already has admin permission"
+                    Status.MODIFY_ERROR.value +
+                    "User " + user.username +
+                    "already has admin permission"
             },
             status=HTTPStatus.BAD_REQUEST,
         )
@@ -315,8 +347,8 @@ def user_grant_admin(request):
         return JsonResponse(
             {
                 "success_message":
-                "Admin permission has been granted to user " +
-                user.username
+                    Status.SUCCESS.value + "Admin permission granted to user " +
+                    user.username
             },
             status=HTTPStatus.OK,
         )
@@ -328,13 +360,13 @@ def user_revoke_admin(request):
     """
     Revokes admin permission from the specified user.
     """
-    failure_message = "Revoke admin permission failed: "
     data = JSONParser().parse(request)
     if 'id' not in data:
         return JsonResponse(
             {
                 "failure_message":
-                failure_message + "Internal error",
+                    Status.MODIFY_ERROR.value +
+                    GenericFailure.UNKNOWN.value,
                 "errors": "Must specify user id on admin permission revoke"
             },
             status=HTTPStatus.BAD_REQUEST,
@@ -345,7 +377,8 @@ def user_revoke_admin(request):
         return JsonResponse(
             {
                 "failure_message":
-                failure_message + "User does not exist",
+                    Status.MODIFY_ERROR.value +
+                    "User" + GenericFailure.DOES_NOT_EXIST.value,
                 "errors": "No existing user with id=" + data['id']
             },
             status=HTTPStatus.BAD_REQUEST,
@@ -354,9 +387,9 @@ def user_revoke_admin(request):
         return JsonResponse(
             {
                 "failure_message":
-                failure_message +
-                "Admin permission cannot be revoked from superuser " +
-                user.username
+                    Status.MODIFY_ERROR.value +
+                    "Not allowed to revoke admin permission from superuser " +
+                    user.username
             },
             status=HTTPStatus.BAD_REQUEST,
         )
@@ -364,10 +397,9 @@ def user_revoke_admin(request):
         return JsonResponse(
             {
                 "failure_message":
-                failure_message +
-                "User " +
-                user.username +
-                " does not have admin permission to revoke"
+                    Status.MODIFY_ERROR.value +
+                    "Cannot revoke admin permission because user " + user.username +
+                    " does not have it"
             },
             status=HTTPStatus.BAD_REQUEST,
         )
@@ -382,8 +414,8 @@ def user_revoke_admin(request):
         return JsonResponse(
             {
                 "success_message":
-                "Admin permission has been revoked from user " +
-                user.username
+                    Status.SUCCESS.value + "Admin permission revoked from user " +
+                    user.username
             },
             status=HTTPStatus.OK,
         )

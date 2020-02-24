@@ -189,6 +189,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       values
     });
     this.getValidAssets(this.state.currDatacenter!);
+    this.getRacks(this.state.currDatacenter!);
   }
   private mapAssetObject = (asset: AssetObject): ShallowAssetObject => {
     console.log(asset);
@@ -268,7 +269,9 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   validateMacAddresses = () => {
     Object.entries(this.state.values.mac_addresses).forEach(
       ([port, mac_address]) => {
-        if (!isMacAddressValid(mac_address)) {
+        if (mac_address === "") {
+          delete this.state.values.mac_addresses[port];
+        } else if (!isMacAddressValid(mac_address)) {
           const errors: Array<string> = this.state.errors;
           errors.push(
             "Mac Address " +
@@ -309,26 +312,28 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       });
   };
   getRacks = (datacenter: DatacenterObject) => {
-    const config = {
-      headers: {
-        Authorization: "Token " + this.props.token
-      },
-      params: {
-        datacenter: datacenter ? datacenter.id : undefined
-      }
-    };
-    console.log(API_ROOT + "api/racks/summary");
-    axios
-      .get(API_ROOT + "api/racks/summary", config)
-      .then(res => {
-        console.log(res.data.racks);
-        this.setState({
-          racks: res.data.racks as Array<RackObject>
+    if (datacenter) {
+      const config = {
+        headers: {
+          Authorization: "Token " + this.props.token
+        },
+        params: {
+          datacenter: datacenter ? datacenter.id : undefined
+        }
+      };
+      console.log(API_ROOT + "api/racks/summary");
+      axios
+        .get(API_ROOT + "api/racks/summary", config)
+        .then(res => {
+          console.log(res.data.racks);
+          this.setState({
+            racks: res.data.racks as Array<RackObject>
+          });
+        })
+        .catch(err => {
+          console.log(err);
         });
-      })
-      .catch(err => {
-        console.log(err);
-      });
+    }
   };
   getModels = () => {
     this.getElementData(
@@ -713,12 +718,19 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   }
 
   render() {
-    console.log("CURR_STATE", this.state.values,this.props.initialValues);
+    console.log("CURR_STATE", this.state.values, this.props.initialValues);
     if (this.state.models.length === 0) {
       this.getModels();
     }
     if (this.state.users.length === 0) {
       this.getUsers();
+    }
+    if (
+      this.state.currDatacenter &&
+      this.state.currDatacenter !== ALL_DATACENTERS &&
+      this.state.racks.length === 0
+    ) {
+      this.getRacks(this.state.currDatacenter);
     }
 
     const { values } = this.state;

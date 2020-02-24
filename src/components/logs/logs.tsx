@@ -225,7 +225,7 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
             </div >
         } else {
             return <div>
-                <Tooltip content="Related object no longer exists" position={Position.BOTTOM_RIGHT}>
+                <Tooltip>
                     <p className="log-no-link">{log.log_content}</p>
                 </Tooltip>
             </div>
@@ -304,7 +304,7 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
                         : null}
                 </div>
                 <div>
-                    <Pre>
+                    <Pre className="log-block">
                         {this.state.logs.map(log => this.renderLinkedLog(log))}
                     </Pre>
                 </div>
