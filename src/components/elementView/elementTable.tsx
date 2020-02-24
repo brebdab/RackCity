@@ -1041,46 +1041,44 @@ class ElementTable extends React.Component<
                               {this.renderAdminButton(item)}
                             </div>
                           ) : null}
-                          {this.props.isAdmin ? (
-                            <div className="inline-buttons">
-                              {this.props.type !== ElementType.USER ? (
+                          <div className="inline-buttons">
+                            {this.props.type !== ElementType.USER && this.props.isAdmin ? (
+                              <AnchorButton
+                                className="button-table"
+                                intent="primary"
+                                icon="edit"
+                                minimal
+                                onClick={(event: any) => {
+                                  this.handleEditButtonClick(item);
+                                  event.stopPropagation();
+                                }}
+                              />
+                            ) : null}
+                            {this.props.isAdmin ? <AnchorButton
+                              className="button-table"
+                              intent="danger"
+                              minimal
+                              icon="trash"
+                              onClick={(event: any) => {
+                                this.handleDeleteButtonClick(item);
+                                event.stopPropagation();
+                              }}
+                            /> : null}
+                            {isAssetObject(item) &&
+                              item.rack.is_network_controlled ? (
                                 <AnchorButton
                                   className="button-table"
-                                  intent="primary"
-                                  icon="edit"
+                                  intent="warning"
                                   minimal
+                                  icon="offline"
                                   onClick={(event: any) => {
-                                    this.handleEditButtonClick(item);
+                                    this.handlePowerButtonClick(item);
                                     event.stopPropagation();
                                   }}
                                 />
                               ) : null}
-                              <AnchorButton
-                                className="button-table"
-                                intent="danger"
-                                minimal
-                                icon="trash"
-                                onClick={(event: any) => {
-                                  this.handleDeleteButtonClick(item);
-                                  event.stopPropagation();
-                                }}
-                              />
-                              {this.props.isAdmin &&
-                                isAssetObject(item) &&
-                                item.rack.is_network_controlled ? (
-                                  <AnchorButton
-                                    className="button-table"
-                                    intent="warning"
-                                    minimal
-                                    icon="offline"
-                                    onClick={(event: any) => {
-                                      this.handlePowerButtonClick(item);
-                                      event.stopPropagation();
-                                    }}
-                                  />
-                                ) : null}
-                            </div>
-                          ) : null}{" "}
+                          </div>
+                          {" "}
                           {/* TODO add logic for determining if isOwner for power button */}
                         </td>
                       </tr>

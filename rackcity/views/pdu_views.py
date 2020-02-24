@@ -106,7 +106,7 @@ def power_on(request):
                     str(power_connections[connection]['left_right'])
                 )
             )
-        except ConnectionError as e:
+        except ConnectionError:
             return JsonResponse(
                 {"failure_message": "Unable to contact PDU controller. Please try again later"},
                 status=HTTPStatus.REQUEST_TIMEOUT
@@ -160,7 +160,7 @@ def power_off(request):
                     str(power_connections[connection]['left_right'])
                 )
             )
-        except ConnectionError as e:
+        except ConnectionError:
             return JsonResponse(
                 {"failure_message": "Unable to contact PDU controller. Please try again later"},
                 status=HTTPStatus.REQUEST_TIMEOUT
@@ -297,7 +297,7 @@ def toggle_power(asset, asset_port_number, goal_state):
             pdu_url + toggle_pdu,
             {"pdu": pdu, "port": pdu_port, "v": goal_state}
         )
-    except ConnectionError as e:
+    except ConnectionError:
             return JsonResponse(
                 {"failure_message": "Unable to contact PDU controller. Please try again later"},
                 status=HTTPStatus.REQUEST_TIMEOUT
