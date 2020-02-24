@@ -304,7 +304,7 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
                         : null}
                 </div>
                 <div>
-                    <Pre>
+                    <Pre className="log-block">
                         {this.state.logs.map(log => this.renderLinkedLog(log))}
                     </Pre>
                 </div>

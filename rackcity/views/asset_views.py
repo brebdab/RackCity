@@ -23,6 +23,7 @@ from rackcity.utils.log_utils import (
     log_action,
     log_bulk_import,
     log_delete,
+    log_network_action,
     Action,
     ElementType,
 )
@@ -497,6 +498,7 @@ def asset_modify(request):
                 asset_data=data,
                 asset_id=existing_asset.id
             )
+            log_network_action(request.user, existing_asset)
         except NetworkConnectionException as error:
             warning_message += "Some network connections couldn't be saved. " + \
                 str(error)
