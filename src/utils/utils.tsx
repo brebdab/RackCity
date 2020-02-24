@@ -68,8 +68,8 @@ export const AssetFieldsTable = {
 };
 
 export enum AssetFormLabels {
-  asset_number = "Asset Number*",
-  hostname = "Hostname*",
+  asset_number = "Asset Number",
+  hostname = "Hostname",
   datacenter = "Datacenter*",
   rack = "Rack*",
   rack_position = "Rack Position*",

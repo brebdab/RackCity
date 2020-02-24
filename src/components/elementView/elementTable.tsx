@@ -114,7 +114,7 @@ interface ElementTableProps {
 class ElementTable extends React.Component<
   ElementTableProps & RouteComponentProps,
   ElementTableState
-> {
+  > {
   public state: ElementTableState = {
     page_type: 10,
     filters: [],
@@ -251,7 +251,7 @@ class ElementTable extends React.Component<
         </span>
         <span>{`${item.field} by ${
           item.ascending ? "ascending" : "descending"
-        }`}</span>
+          }`}</span>
 
         <span>
           <Icon
@@ -619,6 +619,8 @@ class ElementTable extends React.Component<
             this.setState({ isPowerOptionsOpen: false });
           }}
           asset={this.state.assetPower}
+          shouldUpdate={false}
+          updated={() => { }}
         />
       </Dialog>
     );
@@ -897,20 +899,20 @@ class ElementTable extends React.Component<
           {this.props.disableFiltering
             ? null
             : [
-                <div className="filter-select">
-                  <FilterSelect
-                    handleAddFilter={this.addFilter}
-                    fields={this.state.fields}
-                  />
-                </div>,
-                <div className="table-options">
-                  <p>Applied filters:</p>
-                  <DragDropList
-                    items={this.state.filters}
-                    renderItem={this.renderFilterItem}
-                  />
-                </div>
-              ]}
+              <div className="filter-select">
+                <FilterSelect
+                  handleAddFilter={this.addFilter}
+                  fields={this.state.fields}
+                />
+              </div>,
+              <div className="table-options">
+                <p>Applied filters:</p>
+                <DragDropList
+                  items={this.state.filters}
+                  renderItem={this.renderFilterItem}
+                />
+              </div>
+            ]}
           {this.props.disableSorting ? null : (
             <div className="table-options">
               <p>Applied sorts:</p>
@@ -934,26 +936,26 @@ class ElementTable extends React.Component<
               </HTMLSelect>
               {this.state.page_type !== PagingTypes.ALL
                 ? [
-                    <span>
-                      <Icon
-                        className="icon"
-                        icon={IconNames.CARET_LEFT}
-                        iconSize={Icon.SIZE_LARGE}
-                        onClick={() => this.previousPage()}
-                      />
-                    </span>,
-                    <span>
-                      page {this.state.curr_page} of {this.state.total_pages}
-                    </span>,
-                    <span>
-                      <Icon
-                        className="icon"
-                        icon={IconNames.CARET_RIGHT}
-                        iconSize={Icon.SIZE_LARGE}
-                        onClick={() => this.nextPage()}
-                      />
-                    </span>
-                  ]
+                  <span>
+                    <Icon
+                      className="icon"
+                      icon={IconNames.CARET_LEFT}
+                      iconSize={Icon.SIZE_LARGE}
+                      onClick={() => this.previousPage()}
+                    />
+                  </span>,
+                  <span>
+                    page {this.state.curr_page} of {this.state.total_pages}
+                  </span>,
+                  <span>
+                    <Icon
+                      className="icon"
+                      icon={IconNames.CARET_RIGHT}
+                      iconSize={Icon.SIZE_LARGE}
+                      onClick={() => this.nextPage()}
+                    />
+                  </span>
+                ]
                 : null}
             </div>
           ) : null}
@@ -963,7 +965,7 @@ class ElementTable extends React.Component<
             <table
               className={
                 this.props.type !== ElementType.DATACENTER &&
-                this.props.type !== ElementType.USER
+                  this.props.type !== ElementType.USER
                   ? "bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered element-table"
                   : "bp3-html-table bp3-html-table-striped bp3-html-table-bordered element-table"
               }
@@ -1010,14 +1012,14 @@ class ElementTable extends React.Component<
                       <tr
                         onClick={
                           this.props.type === ElementType.DATACENTER ||
-                          this.props.type === ElementType.USER
-                            ? () => {}
+                            this.props.type === ElementType.USER
+                            ? () => { }
                             : () => {
-                                console.log("redirecting", item.id);
-                                this.props.history.push(
-                                  "/" + this.props.type + "/" + item.id
-                                );
-                              }
+                              console.log("redirecting", item.id);
+                              this.props.history.push(
+                                "/" + this.props.type + "/" + item.id
+                              );
+                            }
                         }
                       >
                         {Object.entries(item).map(([col, value]) => {
@@ -1058,46 +1060,43 @@ class ElementTable extends React.Component<
                               {this.renderAdminButton(item)}
                             </div>
                           ) : null}
-                          {this.props.isAdmin ? (
-                            <div className="inline-buttons">
-                              {this.props.type !== ElementType.USER ? (
-                                <AnchorButton
-                                  className="button-table"
-                                  intent="primary"
-                                  icon="edit"
-                                  minimal
-                                  onClick={(event: any) => {
-                                    this.handleEditButtonClick(item);
-                                    event.stopPropagation();
-                                  }}
-                                />
-                              ) : null}
+                          <div className="inline-buttons">
+                            {this.props.type !== ElementType.USER && this.props.isAdmin ? (
                               <AnchorButton
                                 className="button-table"
-                                intent="danger"
+                                intent="primary"
+                                icon="edit"
                                 minimal
-                                icon="trash"
                                 onClick={(event: any) => {
-                                  this.handleDeleteButtonClick(item);
+                                  this.handleEditButtonClick(item);
                                   event.stopPropagation();
                                 }}
                               />
-                              {this.props.isAdmin &&
-                              isAssetObject(item) &&
-                              item.rack.is_network_controlled ? (
-                                <AnchorButton
-                                  className="button-table"
-                                  intent="warning"
-                                  minimal
-                                  icon="offline"
-                                  onClick={(event: any) => {
-                                    this.handlePowerButtonClick(item);
-                                    event.stopPropagation();
-                                  }}
-                                />
-                              ) : null}
-                            </div>
-                          ) : null}{" "}
+                            ) : null}
+                            {this.props.isAdmin ? <AnchorButton
+                              className="button-table"
+                              intent="danger"
+                              minimal
+                              icon="trash"
+                              onClick={(event: any) => {
+                                this.handleDeleteButtonClick(item);
+                                event.stopPropagation();
+                              }}
+                            /> : null}
+                            {isAssetObject(item) ? (
+                              <AnchorButton
+                                className="button-table"
+                                intent="warning"
+                                minimal
+                                icon="offline"
+                                onClick={(event: any) => {
+                                  this.handlePowerButtonClick(item);
+                                  event.stopPropagation();
+                                }}
+                              />
+                            ) : null}
+                          </div>
+                          {" "}
                           {/* TODO add logic for determining if isOwner for power button */}
                         </td>
                       </tr>
@@ -1105,8 +1104,8 @@ class ElementTable extends React.Component<
                   })}
                 </tbody>
               ) : (
-                <h4 className="no-data-text">no {this.props.type} found </h4>
-              )}
+                  <h4 className="no-data-text">no {this.props.type} found </h4>
+                )}
             </table>
           )}
         </div>

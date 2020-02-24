@@ -59,6 +59,7 @@ interface AssetViewState {
   isDeleteOpen: boolean;
   isAlertOpen: boolean;
   datacenters: Array<DatacenterObject>;
+  powerShouldUpdate: boolean;
 }
 
 export class AssetView extends React.PureComponent<
@@ -70,7 +71,8 @@ export class AssetView extends React.PureComponent<
     isFormOpen: false,
     isDeleteOpen: false,
     isAlertOpen: false,
-    datacenters: []
+    datacenters: [],
+    powerShouldUpdate: false
   };
   private updateAsset = (asset: AssetObject, headers: any): Promise<any> => {
     console.log("updateAsset");
@@ -85,7 +87,8 @@ export class AssetView extends React.PureComponent<
 
       getData(params.rid, this.props.token).then(result => {
         this.setState({
-          asset: result
+          asset: result,
+          powerShouldUpdate: true
         });
       });
 
@@ -248,11 +251,8 @@ export class AssetView extends React.PureComponent<
                             {connection.destination_hostname}
                           </td>
                         ) : (
-                          <td> </td>
+                          <td></td>
                         )}
-                        <td>
-                          {connection ? connection.destination_port : " "}
-                        </td>
                       </tr>
                     );
                   })}
@@ -270,7 +270,7 @@ export class AssetView extends React.PureComponent<
         </div>
 
         {Object.keys(this.state.asset).length !== 0 &&
-        this.state.asset.rack.is_network_controlled
+        Object.keys(this.state.asset.power_connections).length > 0
           ? this.renderPower()
           : null}
       </div>
@@ -291,7 +291,16 @@ export class AssetView extends React.PureComponent<
   };
 
   private renderPower() {
-    return <PowerView {...this.props} asset={this.state.asset} />;
+    return (
+      <PowerView
+        {...this.props}
+        asset={this.state.asset}
+        shouldUpdate={this.state.powerShouldUpdate}
+        updated={() => {
+          this.setState({ powerShouldUpdate: false });
+        }}
+      />
+    );
   }
 
   private handleFormOpen = () => {
