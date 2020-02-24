@@ -246,11 +246,13 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     e.preventDefault();
     if (this.state.values) {
       this.validateMacAddresses();
+      console.log(this.state.values.asset_number);
       if (this.state.values.hostname === "") {
         this.setState({
           values: updateObject(this.state.values, { hostname: undefined })
         });
-      } else if (this.state.values.asset_number === "") {
+      }
+      if (this.state.values.asset_number === "") {
         this.setState({
           values: updateObject(this.state.values, { asset_number: undefined })
         });
