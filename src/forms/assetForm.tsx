@@ -1,4 +1,19 @@
-import { Alert, Button, ButtonGroup, Callout, Checkbox, Classes, Collapse, FormGroup, Icon, InputGroup, Intent, MenuItem, Spinner, Tooltip } from "@blueprintjs/core";
+import {
+  Alert,
+  Button,
+  ButtonGroup,
+  Callout,
+  Checkbox,
+  Classes,
+  Collapse,
+  FormGroup,
+  Icon,
+  InputGroup,
+  Intent,
+  MenuItem,
+  Spinner,
+  Tooltip
+} from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { IconNames } from "@blueprintjs/icons";
 import axios from "axios";
@@ -6,13 +21,54 @@ import * as React from "react";
 import { connect } from "react-redux";
 import { isNullOrUndefined } from "util";
 import { ALL_DATACENTERS } from "../components/elementView/elementTabContainer";
-import { FilterTypes, IFilter, PagingTypes, TextFilterTypes } from "../components/elementView/elementUtils";
+import {
+  FilterTypes,
+  IFilter,
+  PagingTypes,
+  TextFilterTypes
+} from "../components/elementView/elementUtils";
 import { updateObject } from "../store/utility";
 import { API_ROOT } from "../utils/api-config";
-import { AssetFormLabels, AssetObject, DatacenterObject, ElementObjectType, ElementType, getHeaders, isAssetObject, isDatacenterObject, isRackObject, ModelObject, NetworkConnection, PowerConnection, PowerPortAvailability, PowerSide, RackObject, ShallowAssetObject } from "../utils/utils";
+import {
+  AssetFormLabels,
+  AssetObject,
+  DatacenterObject,
+  ElementObjectType,
+  ElementType,
+  getHeaders,
+  isAssetObject,
+  isDatacenterObject,
+  isRackObject,
+  ModelObject,
+  NetworkConnection,
+  PowerConnection,
+  PowerPortAvailability,
+  PowerSide,
+  RackObject,
+  ShallowAssetObject
+} from "../utils/utils";
 import Field from "./field";
 import "./forms.scss";
-import { AssetSelect, DatacenterSelect, filterAsset, filterDatacenter, filterModel, filterRack, filterString, FormTypes, isMacAddressValid, macAddressInfo, ModelSelect, RackSelect, renderAssetItem, renderDatacenterItem, renderModelItem, renderRackItem, renderStringItem, StringSelect } from "./formUtils";
+import {
+  AssetSelect,
+  DatacenterSelect,
+  filterAsset,
+  filterDatacenter,
+  filterModel,
+  filterRack,
+  filterString,
+  FormTypes,
+  isMacAddressValid,
+  macAddressInfo,
+  ModelSelect,
+  RackSelect,
+  renderAssetItem,
+  renderDatacenterItem,
+  renderModelItem,
+  renderRackItem,
+  renderStringItem,
+  StringSelect
+} from "./formUtils";
 
 //TO DO : add validation of types!!!
 
@@ -400,14 +456,13 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   };
 
   shouldDisablePowerPort = (port: number) => {
-    if (
-      this.state.values.power_connections &&
-      this.state.values.power_connections[port]
-    ) {
-      return false;
-    } else {
+    if (!this.state.values.rack) {
       return true;
     }
+    return !(
+      this.state.values.power_connections &&
+      this.state.values.power_connections[port]
+    );
   };
   getPortsForSide = (port: number) => {
     let side;
@@ -479,7 +534,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     if (
       this.state.values.model &&
       this.state.values.model.num_power_ports &&
-      parseInt(this.state.values.model.num_power_ports, 10) > 0
+      parseInt(this.state.values.model.num_power_ports, 10) > 0 &&
+      this.state.values.power_connections
     ) {
       const num_power_ports = parseInt(
         this.state.values.model.num_power_ports,
@@ -494,15 +550,18 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   }
 
   clearPowerSelection = (port: number) => {
-    this.changeCheckBoxState(port, false);
     const power_connections = this.state.values.power_connections;
-    power_connections[port] = {} as PowerConnection;
+    if (power_connections && power_connections[port]) {
+      this.changeCheckBoxState(port, false);
 
-    this.setState({
-      values: updateObject(this.state.values, {
-        power_connections
-      })
-    });
+      power_connections[port] = {} as PowerConnection;
+
+      this.setState({
+        values: updateObject(this.state.values, {
+          power_connections
+        })
+      });
+    }
   };
   getPowerPortFields = () => {
     if (
@@ -551,6 +610,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                 <Button
                   active={this.getPowerButtonStatus(PowerSide.LEFT, i)}
                   text="Left"
+                  disabled={isNullOrUndefined(this.state.values.rack)}
                   onClick={(e: any) => {
                     const power_connections = this.state.values
                       .power_connections;
@@ -570,6 +630,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                 <Button
                   active={this.getPowerButtonStatus(PowerSide.RIGHT, i)}
                   text="Right"
+                  disabled={isNullOrUndefined(this.state.values.rack)}
                   onClick={(e: any) => {
                     const power_connections = this.state.values
                       .power_connections;
@@ -616,6 +677,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                     disabled={this.shouldDisablePowerPort(i)}
                     rightIcon="caret-down"
                     text={
+                      this.state.values.power_connections &&
                       this.state.values.power_connections[i] &&
                       this.state.values.power_connections[i].port_number
                         ? this.state.values.power_connections[i].port_number
@@ -665,6 +727,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
   handleRackSelect(rack: RackObject) {
     console.log("SELECTED RACK:", rack);
+
     const clearedPowerConnections = this.getClearedPowerSelections();
     this.setState({
       values: updateObject(this.state.values, {
@@ -937,10 +1000,12 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
               }}
               items={this.getValidDatacenters()}
               onItemSelect={(datacenter: DatacenterObject) => {
-                this.showChangeWarningAlert(
-                  "Are you sure you want to change datacenter? This will clear all datacenter related properties",
-                  datacenter
-                );
+                this.state.currDatacenter
+                  ? this.showChangeWarningAlert(
+                      "Are you sure you want to change datacenter? This will clear all datacenter related properties",
+                      datacenter
+                    )
+                  : this.handleDatacenterSelect(datacenter);
               }}
               itemRenderer={renderDatacenterItem}
               itemPredicate={filterDatacenter}
@@ -966,10 +1031,12 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                 }}
                 items={this.state.racks}
                 onItemSelect={(rack: RackObject) => {
-                  this.showChangeWarningAlert(
-                    "Are you sure you want to change rack? This will clear all rack related fields",
-                    rack
-                  );
+                  this.state.values.rack
+                    ? this.showChangeWarningAlert(
+                        "Are you sure you want to change rack? This will clear all rack related fields",
+                        rack
+                      )
+                    : this.handleRackSelect(rack);
                 }}
                 itemRenderer={renderRackItem}
                 itemPredicate={filterRack}
