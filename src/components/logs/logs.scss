@@ -1,0 +1,40 @@
+.log-view {
+  padding-left: 50px;
+  padding-right: 50px;
+}
+.log-link {
+  color: white !important;
+}
+.log-link:focus {
+  outline: none;
+}
+.log-no-link {
+  color: white !important;
+  text-decoration: none !important;
+  line-height: 0em;
+}
+.log-no-link:hover{
+  cursor: default !important;
+}
+.log-no-link:focus {
+  outline: none;
+}
+.page-control {
+  text-align: right;
+  padding-top: 20px;
+  padding-bottom: 5px;
+}
+form {
+  display:flex;
+  flex-direction:row;
+}
+.search-span, .search-input, .search-button {
+  padding: 0.2em;
+  margin: 0.1em 0.2em;
+  -moz-box-sizing: content-box;
+  -webkit-box-sizing: content-box;
+  box-sizing: content-box;
+}
+.log-block {
+  overflow: scroll;
+}

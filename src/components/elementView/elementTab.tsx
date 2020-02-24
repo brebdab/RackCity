@@ -62,6 +62,7 @@ interface ElementViewProps {
   datacenters?: Array<DatacenterObject>;
   currDatacenter?: DatacenterObject;
   onDatacenterSelect?(datacenter: DatacenterObject): void;
+  updateDatacenters?(): void;
 }
 export function getPages(
   path: string,
@@ -214,6 +215,10 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
         this.handleDataUpdate(true);
         this.handleClose();
         this.addSuccessToast("Successfully created datacenter!");
+        if (this.props.updateDatacenters) {
+          this.props.updateDatacenters();
+        }
+
         console.log(this.state.isOpen);
       });
   };
@@ -229,6 +234,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       console.log(this.state.isOpen);
     });
   };
+  private toaster: Toaster = {} as Toaster;
   private addSuccessToast(message: string) {
     this.addToast({ message: message, intent: Intent.PRIMARY });
   }
@@ -239,7 +245,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     toast.timeout = 5000;
     this.toaster.show(toast);
   }
-  private toaster: Toaster = {} as Toaster;
+
   private refHandlers = {
     toaster: (ref: Toaster) => (this.toaster = ref)
   };
@@ -386,6 +392,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
 
         <div>
           <ElementTable
+            updateDatacenters={this.props.updateDatacenters}
             type={this.props.element}
             getData={this.getElementData}
             getPages={getPages}
@@ -393,14 +400,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               this.setState({ filters: data });
             }}
             shouldUpdateData={this.state.updateTable}
-            disableSorting={
-              this.props.element === ElementType.USER ||
-              this.props.element === ElementType.DATACENTER
-            }
-            disableFiltering={
-              this.props.element === ElementType.USER ||
-              this.props.element === ElementType.DATACENTER
-            }
+            disableSorting={this.props.element === ElementType.DATACENTER}
+            disableFiltering={this.props.element === ElementType.DATACENTER}
             currDatacenter={this.props.currDatacenter}
           />
         </div>

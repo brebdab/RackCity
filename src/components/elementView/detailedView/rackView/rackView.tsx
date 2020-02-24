@@ -15,7 +15,7 @@ import { RouteComponentProps, withRouter } from "react-router";
 import { API_ROOT } from "../../../../utils/api-config";
 import {
   getHeaders,
-  AssetObjectOld,
+  AssetObject,
   RackResponseObject
 } from "../../../../utils/utils";
 import "./rackView.scss";
@@ -48,7 +48,7 @@ class RackView extends React.PureComponent<
     let unit = 1;
     let currHeight = 0;
     const { height } = rackResp.rack;
-    let assets: Array<AssetObjectOld> = Object.assign([], rackResp.assets);
+    let assets: Array<AssetObject> = Object.assign([], rackResp.assets);
     // console.log(row_letter, rack_num, height);
     // console.log("rackResp", rackResp);
     // console.log("initial", assets, rackResp.assets);
@@ -81,6 +81,7 @@ class RackView extends React.PureComponent<
           );
         } else {
           currHeight = width + currHeight;
+          const hostname = assets[0].hostname ? assets[0].hostname : " ";
           rows.unshift(
             <tr
               className="rack-row"
@@ -97,7 +98,7 @@ class RackView extends React.PureComponent<
                   " " +
                   assets[0].model.model_number +
                   " | " +
-                  assets[0].hostname}
+                  hostname}
               </td>
             </tr>
           );
@@ -131,11 +132,12 @@ class RackView extends React.PureComponent<
     }
     return unitBarRows;
   }
+  private toaster: Toaster = {} as Toaster;
   private addToast(toast: IToastProps) {
     toast.timeout = 5000;
     this.toaster.show(toast);
   }
-  private toaster: Toaster = {} as Toaster;
+
   private refHandlers = {
     toaster: (ref: Toaster) => (this.toaster = ref)
   };
@@ -161,9 +163,21 @@ class RackView extends React.PureComponent<
         });
       });
   };
+  componentDidMount = () => {
+    if (this.props.location.pathname === "/rack-print") {
+      console.log(this.props.location);
+      window.print();
+    }
+  };
 
   public render() {
-    const racks = this.props.racks;
+    const racks =
+      this.props.location.pathname === "/rack-print"
+        ? JSON.parse(localStorage.getItem("racks")!)
+        : this.props.racks;
+    if (this.props.location && this.props.location.state) {
+      console.log(this.props.location);
+    }
 
     return (
       <div className={Classes.DARK}>

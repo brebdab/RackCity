@@ -6,7 +6,12 @@ import {
 } from "@blueprintjs/select";
 import React from "react";
 import { MenuItem } from "@blueprintjs/core";
-import { ModelObject, RackObject, DatacenterObject } from "../utils/utils";
+import {
+  ModelObject,
+  RackObject,
+  DatacenterObject,
+  AssetObject
+} from "../utils/utils";
 
 export enum FormTypes {
   CREATE = "create",
@@ -17,6 +22,19 @@ export function escapeRegExpChars(text: string) {
   // eslint-disable-next-line
   return text.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
 }
+export function isMacAddressValid(text: string) {
+  const regex = new RegExp(
+    "^([0-9A-Fa-f]{2}[-_:.,;]){5}([0-9A-Fa-f]{2})$|^[A-Fa-f0-9]{12}$"
+  );
+  if (regex.exec(text)) {
+    return true;
+  }
+  return false;
+}
+
+export const macAddressInfo = (
+  <p>6-byte hexadecimal string with optional delimiters</p>
+);
 export const filterString: ItemPredicate<string> = (
   query,
   vendor,
@@ -83,6 +101,27 @@ export const filterModel: ItemPredicate<ModelObject> = (
     return (
       `. ${normalizedVendor} ${normalizedModel}`.indexOf(normalizedQuery) >= 0
     );
+  }
+};
+
+export const filterAsset: ItemPredicate<AssetObject> = (
+  query,
+  asset,
+  _index,
+  exactMatch
+) => {
+  if (asset.hostname) {
+    const normalizedHostname = asset.hostname.toLowerCase();
+
+    const normalizedQuery = query.toLowerCase();
+
+    if (exactMatch) {
+      return normalizedHostname === normalizedQuery;
+    } else {
+      return `. ${normalizedHostname}`.indexOf(normalizedQuery) >= 0;
+    }
+  } else {
+    return false;
   }
 };
 
@@ -185,6 +224,27 @@ export const renderModelItem: ItemRenderer<ModelObject> = (
     />
   );
 };
+
+export const renderAssetItem: ItemRenderer<AssetObject> = (
+  asset: AssetObject,
+  { handleClick, modifiers, query }
+) => {
+  if (!modifiers.matchesPredicate) {
+    return null;
+  }
+  const text = asset.hostname;
+  if (text) {
+    return (
+      <MenuItem
+        active={modifiers.active}
+        label={asset.hostname}
+        text={highlightText(text, query)}
+        onClick={handleClick}
+      />
+    );
+  }
+  return null;
+};
 export const renderCreateItemOption = (
   query: string,
   active: boolean,
@@ -203,3 +263,4 @@ export const StringSuggest = Suggest.ofType<string>();
 export const ModelSelect = Select.ofType<ModelObject>();
 export const RackSelect = Select.ofType<RackObject>();
 export const DatacenterSelect = Select.ofType<DatacenterObject>();
+export const AssetSelect = Select.ofType<AssetObject>();

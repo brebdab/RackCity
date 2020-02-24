@@ -6,7 +6,8 @@ from rackcity.models import Datacenter
 class RackRangeSerializer(serializers.Serializer):
     datacenter = serializers.PrimaryKeyRelatedField(
         label='datacenter',
-        queryset=Datacenter.objects.all()
+        queryset=Datacenter.objects.all(),
+        required=False
     )
     letter_start = serializers.CharField(required=True, max_length=1)
     letter_end = serializers.CharField(required=False, max_length=1)
@@ -60,6 +61,10 @@ class RackRangeSerializer(serializers.Serializer):
         else:
             num_col = 1
         return num_row * num_col
+
+    def get_range_as_string(self):
+        return "{" + self.get_row_range_as_string() + "}{" + \
+            self.get_number_range_as_string() + "}"
 
     def get_row_range(self):
         """
@@ -128,4 +133,6 @@ class RackRangeSerializer(serializers.Serializer):
         return str(number_range[0]) + "-" + str(number_range[1])
 
     def get_datacenter(self):
-        return self.validated_data['datacenter']
+        if 'datacenter' in self.validated_data:
+            return self.validated_data['datacenter']
+        return None

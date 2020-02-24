@@ -12,6 +12,20 @@
 .login-container {
   text-align: center;
 }
+.rack-range .bp3-label {
+  min-width: 100pt;
+}
+.rack-range .bp3-input {
+  width: 50pt;
+  margin-right: 8pt;
+  margin-left: 8pt;
+}
+.rack-letter {
+  display: flex;
+}
+.dash {
+  margin-top: 5pt;
+}
 // textarea {
 //   background-color: #202b33;
 //   outline: none !important;
@@ -23,7 +37,13 @@
 textarea:focus {
   outline: none !important;
 }
+.text-with-tooltip {
+  display: inline-block !important;
+}
 
+// .tooltip-icon {
+//   display: inline-block;
+// }
 .ant-form-explain {
   color: red;
   padding: 0pt;
@@ -35,7 +55,10 @@ textarea:focus {
 .power-form-container {
   display: block;
   align-items: center;
-  margin-top: 10px;
+  margin-bottom: 15pt;
+}
+.text-with-tooltip {
+  margin: 5pt;
 }
 .port-table {
   max-height: 100pt;

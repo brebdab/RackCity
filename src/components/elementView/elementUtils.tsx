@@ -1,8 +1,9 @@
 import {
   RackRangeFields,
   ModelObject,
-  AssetObjectOld,
-  DatacenterObject
+  AssetObject,
+  DatacenterObject,
+  UserInfoObject
 } from "../../utils/utils";
 import { API_ROOT } from "../../utils/api-config";
 import axios from "axios";
@@ -10,6 +11,13 @@ export interface ITableSort {
   field: string;
   ascending: boolean;
   id: string;
+}
+
+export enum ElementTableOpenAlert {
+  NONE = "none",
+  DELETE = "delete",
+  GRANT_ADMIN = "grant_admin",
+  REVOKE_ADMIN = "revoke_admin"
 }
 
 export enum FilterTypes {
@@ -71,7 +79,15 @@ export const renderNumericFilterItem = (item: NumericFilter) => {
   return `between ${item.min} - ${item.max}`;
 };
 export const renderRackRangeFilterItem = (item: RackRangeFields) => {
-  return `rows  ${item.letter_start} - ${item.letter_end} & racks ${item.num_start} - ${item.num_end}`;
+  if (item.letter_end && item.num_end) {
+    return `rows  ${item.letter_start} - ${item.letter_end} & letters ${item.num_start} - ${item.num_end}`;
+  } else if (item.letter_end) {
+    return `rows  ${item.letter_start} - ${item.letter_end} & letters ${item.num_start}`;
+  } else if (item.num_end) {
+    return `row  ${item.letter_start}  & letters ${item.num_start} - ${item.num_end}`;
+  } else {
+    return ` ${item.letter_start}${item.num_start} `;
+  }
 };
 
 export const modifyModel = (model: ModelObject, headers: any) => {
@@ -81,15 +97,12 @@ export const deleteModel = (model: ModelObject, headers: any) => {
   const data = { id: model!.id };
   return axios.post(API_ROOT + "api/models/delete", data, headers);
 };
-export const deleteAsset = (asset: AssetObjectOld, headers: any) => {
+export const deleteAsset = (asset: AssetObject, headers: any) => {
   console.log("Deleting asset");
   const data = { id: asset.id };
   return axios.post(API_ROOT + "api/assets/delete", data, headers);
 };
-export const modifyAsset = (
-  asset: AssetObjectOld,
-  headers: any
-): Promise<any> => {
+export const modifyAsset = (asset: AssetObject, headers: any): Promise<any> => {
   return axios.post(API_ROOT + "api/assets/modify", asset, headers);
 };
 
@@ -106,4 +119,11 @@ export const modifyDatacenter = (
   headers: any
 ): Promise<any> => {
   return axios.post(API_ROOT + "api/datacenters/modify", dc, headers);
+};
+export const deleteUser = (
+  user: UserInfoObject,
+  headers: any
+): Promise<any> => {
+  const data = { id: user.id };
+  return axios.post(API_ROOT + "api/users/delete", data, headers);
 };

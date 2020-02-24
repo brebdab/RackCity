@@ -10,7 +10,7 @@ import { filterString, renderStringItem } from "../../forms/formUtils";
 import { updateObject } from "../../store/utility";
 import "./elementView.scss";
 import RackRangeForm from "../../forms/rackRangeForm";
-import { RackRangeFields } from "../../utils/utils";
+import { RackRangeFields, isRackRangeFields } from "../../utils/utils";
 import {
   IFilter,
   FilterTypes,
@@ -20,8 +20,8 @@ import {
   getFilterType
 } from "./elementUtils";
 
-var console: any = {};
-console.log = function () { };
+// var console: any = {};
+// console.log = function() {};
 
 interface FilterSelectProps {
   token: string;
@@ -32,11 +32,11 @@ interface FilterSelectProps {
 class FilterSelect extends React.Component<
   FilterSelectProps & RouteComponentProps,
   IFilter
-  > {
+> {
   state = {
     id: "",
     field: "",
-    filter: undefined,
+    filter: {} as TextFilter | NumericFilter | RackRangeFields,
     filter_type: FilterTypes.TEXT
   };
   renderFilterOptions(field: string | undefined) {
@@ -56,15 +56,16 @@ class FilterSelect extends React.Component<
     this.setState({});
   }
   getRackFilterOptions() {
-    return (
+    console.log(this.state.filter);
+    return this.state.filter && isRackRangeFields(this.state.filter) ? (
       <div className="field">
         <RackRangeForm
           className="field"
+          values={this.state.filter}
           handleChange={this.handleChange}
-          range={true}
         />
       </div>
-    );
+    ) : null;
   }
   getNumericFilterOptions() {
     return (
@@ -136,7 +137,7 @@ class FilterSelect extends React.Component<
       });
     }
     if (type === FilterTypes.RACKRANGE) {
-      const filter: RackRangeFields = {} as RackRangeFields;
+      const filter: RackRangeFields = { letter_start: "" } as RackRangeFields;
       this.setState({
         filter: filter
       });
@@ -165,6 +166,7 @@ class FilterSelect extends React.Component<
       id: this.state.field + JSON.stringify(this.state.filter)
     };
     console.log(filter);
+
     this.props.handleAddFilter(filter);
   };
   render() {

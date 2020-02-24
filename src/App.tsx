@@ -12,6 +12,8 @@ import Navigation from "./components/navigation/navigation";
 import Report from "./components/report/report";
 import User from "./components/userView/user";
 import LoginView from "./forms/auth/loginView";
+import Logs from "./components/logs/logs";
+import RackView from "./components/elementView/detailedView/rackView/rackView";
 // import BulkExport from "./components/export/export";
 import "./index.scss";
 import * as actions from "./store/actions/auth";
@@ -75,12 +77,15 @@ class App extends React.Component<AppProps> {
       <BrowserRouter basename="/">
         <div>
           <Navigation {...this.props} />
+
           <Switch>
             <this.RedirectRoute exact path="/" component={LandingView} />
             <Route path="/login" component={LoginView} />
             <this.PrivateRoute path="/models/:rid" component={ModelView} />
             <this.PrivateRoute path="/assets/:rid" component={AssetView} />
             <this.PrivateRoute path="/report" component={Report} />
+            <this.PrivateRoute path="/logs" component={Logs} />
+            <this.PrivateRoute path="/rack-print" component={RackView} />
 
             {/* admin paths */}
             <this.AdminRoute path="/users" component={User} />

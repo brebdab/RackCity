@@ -23,6 +23,7 @@ from rackcity.utils.log_utils import (
     log_action,
     log_bulk_import,
     log_delete,
+    log_network_action,
     Action,
     ElementType,
 )
@@ -226,6 +227,7 @@ def asset_add(request):
             asset_data=data,
             asset_id=asset.id
         )
+        log_network_action(request.user, asset)
     except NetworkConnectionException as error:
         warning_message += "Some network connections couldn't be saved. " + \
             str(error)
@@ -497,6 +499,7 @@ def asset_modify(request):
                 asset_data=data,
                 asset_id=existing_asset.id
             )
+            log_network_action(request.user, existing_asset)
         except NetworkConnectionException as error:
             warning_message += "Some network connections couldn't be saved. " + \
                 str(error)
@@ -533,9 +536,14 @@ def asset_delete(request):
 
     if failure_message == "":
         try:
-            asset_name = existing_asset.asset_number
+            asset_number = existing_asset.asset_number
+            if (existing_asset.hostname):
+                asset_hostname = existing_asset.hostname
+                asset_log_name = str(asset_number) + ' (' + asset_hostname + ')'
+            else:
+                asset_log_name = str(asset_number)
             existing_asset.delete()
-            log_delete(request.user, ElementType.ASSET, asset_name)
+            log_delete(request.user, ElementType.ASSET, asset_log_name)
             return HttpResponse(status=HTTPStatus.OK)
         except Exception as error:
             failure_message = failure_message + str(error)

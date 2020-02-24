@@ -1,6 +1,17 @@
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from rackcity.models import Datacenter
 from rackcity.api.serializers import DatacenterSerializer
+from rackcity.utils.log_utils import (
+    log_action,
+    log_delete,
+    ElementType,
+    Action
+)
+from rackcity.utils.errors_utils import (
+    Status,
+    GenericFailure,
+    parse_serializer_errors
+)
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from http import HTTPStatus
@@ -14,7 +25,7 @@ import math
 @permission_classes([IsAuthenticated])
 def datacenter_all(request):
     """
-        Return List of all datacenters.
+    Return List of all datacenters.
     """
     datacenters = Datacenter.objects.all()
     serializer = DatacenterSerializer(datacenters, many=True)
@@ -31,24 +42,45 @@ def datacenter_create(request):
     Add a datacenter.
     """
     data = JSONParser().parse(request)
-    failure_message = ""
     if 'id' in data:
-        failure_message += "Don't include id when adding a datacenter"
-
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.CREATE_ERROR.value + GenericFailure.UNKNOWN.value,
+                "errors": "Don't include 'id' when creating a datacenter"
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
     serializer = DatacenterSerializer(data=data)
     if not serializer.is_valid(raise_exception=False):
-        failure_message += str(serializer.errors)
-    if failure_message == "":
-        try:
-            serializer.save()
-            return HttpResponse(status=HTTPStatus.CREATED)
-        except Exception as error:
-            failure_message += str(error)
-
-    failure_message = "Request was invalid. " + failure_message
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.INVALID_INPUT.value +
+                    parse_serializer_errors(serializer.errors),
+                "errors": str(serializer.errors)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    try:
+        new_datacenter = serializer.save()
+    except Exception as error:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.CREATE_ERROR.value + GenericFailure.UNKNOWN.value,
+                "errors": str(error)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    log_action(request.user, new_datacenter, Action.CREATE)
     return JsonResponse(
-        {"failure_message": failure_message},
-        status=HTTPStatus.BAD_REQUEST,
+        {
+            "success_message":
+                Status.SUCCESS.value +
+                new_datacenter.abbreivation + " created"
+        },
+        status=HTTPStatus.CREATED
     )
 
 
@@ -59,28 +91,44 @@ def datacenter_delete(request):
     Delete a single datacenter
     """
     data = JSONParser().parse(request)
-    failure_message = ""
     if 'id' not in data:
-        failure_message += "Must include id when deleting a datacenter. "
-    else:
-        id = data['id']
-        try:
-            existing_dc = Datacenter.objects.get(id=id)
-        except ObjectDoesNotExist:
-            failure_message += "No existing datacenter with id = " + str(id) + ". "
-
-    if failure_message == "":
-        try:
-            existing_dc.delete()
-            return HttpResponse(status=HTTPStatus.OK)
-        except Exception as error:
-            failure_message = failure_message + str(error)
-
-    failure_message = "Request was invalid: " + failure_message
-
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.DELETE_ERROR.value + GenericFailure.UNKNOWN.value,
+                "errors": "Must include 'id' when creating a datacenter"
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    id = data['id']
+    try:
+        existing_dc = Datacenter.objects.get(id=id)
+    except ObjectDoesNotExist:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.DELETE_ERROR.value +
+                    "Datacenter" + GenericFailure.DOES_NOT_EXIST.value,
+                "errors": "No existing datacenter with id="+str(id)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    dc_abbreviation = existing_dc.abbreviation
+    try:
+        existing_dc.delete()
+    except Exception as error:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.DELETE_ERROR.value + GenericFailure.UNKNOWN.value,
+                "errors": str(error)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    log_delete(request.user, ElementType.DATACENTER, dc_abbreviation)
     return JsonResponse(
-        {"failure_message": failure_message},
-        status=HTTPStatus.BAD_REQUEST,
+        {Status.SUCCESS.value + dc_abbreviation + " deleted"},
+        status=HTTPStatus.OK
     )
 
 
@@ -96,7 +144,11 @@ def datacenter_page_count(request):
         or int(request.query_params.get('page_size')) <= 0
     ):
         return JsonResponse(
-            {"failure_message": "Must specify positive integer page_size."},
+            {
+                "failure_message":
+                    Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                "errors": "Must specify positive integer page_size."
+            },
             status=HTTPStatus.BAD_REQUEST,
         )
     page_size = int(request.query_params.get('page_size'))
@@ -105,7 +157,11 @@ def datacenter_page_count(request):
         filter_args = get_filter_arguments(request.data)
     except Exception as error:
         return JsonResponse(
-            {"failure_message": "Filter error: " + str(error)},
+            {
+                "failure_message":
+                    Status.ERROR.value + GenericFailure.FILTER.value,
+                "errors": str(error)
+            },
             status=HTTPStatus.BAD_REQUEST
         )
     for filter_arg in filter_args:
@@ -122,44 +178,69 @@ def datacenter_modify(request):
     Modify an existing model
     """
     data = JSONParser().parse(request)
-    failure_message = ""
     if 'id' not in data:
-        failure_message += "Must include id when modifying a datacenter. "
-    else:
-        id = data['id']
-        try:
-            existing_dc = Datacenter.objects.get(id=id)
-        except ObjectDoesNotExist:
-            failure_message += "No existing datacenter with id="+str(id)+". "
-        else:
-            for field in data.keys():
-                if field != "id":
-                    if field == "name":
-                        dc_with_name = Datacenter.objects.filter(
-                            name__iexact=data[field]
-                        )
-                    else:
-                        dc_with_name = Datacenter.objects.filter(
-                            abbreviation__iexact=data[field]
-                        )
-                    if (
-                        len(dc_with_name) > 0
-                        and dc_with_name[0].id != id
-                    ):
-                        return JsonResponse(
-                            {"failure_message": "Datacenter with name '" +
-                                data[field].lower() + "' already exists."},
-                            status=HTTPStatus.BAD_REQUEST,
-                        )
-                    setattr(existing_dc, field, data[field])
-            try:
-                existing_dc.save()
-                return HttpResponse(status=HTTPStatus.OK)
-            except Exception as error:
-                failure_message = failure_message + str(error)
-    failure_message = "Request was invalid. " + failure_message
-    return JsonResponse({
-        "failure_message": failure_message
-    },
-        status=HTTPStatus.NOT_ACCEPTABLE
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR.value + GenericFailure.UNKNOWN.value,
+                "errors": "Must include 'id' when modifying a datacenter"
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    id = data['id']
+    try:
+        existing_dc = Datacenter.objects.get(id=id)
+    except ObjectDoesNotExist:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR.value +
+                    "Datacenter" + GenericFailure.DOES_NOT_EXIST.value,
+                "errors": "No existing datacenter with id="+str(id)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    for field in data.keys():
+        if field != "id":
+            if field == "name":
+                dc_with_name = Datacenter.objects.filter(
+                    name__iexact=data[field]
+                )
+            else:
+                dc_with_name = Datacenter.objects.filter(
+                    abbreviation__iexact=data[field]
+                )
+            if (
+                len(dc_with_name) > 0
+                and dc_with_name[0].id != id
+            ):
+                return JsonResponse(
+                    {
+                        "failure_message":
+                            Status.MODIFY_ERROR.value +
+                            "Datacenter with name '" +
+                            data[field].lower() + "' already exists"
+                    },
+                    status=HTTPStatus.BAD_REQUEST,
+                )
+            setattr(existing_dc, field, data[field])
+    try:
+        existing_dc.save()
+    except Exception as error:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR.value +
+                    GenericFailure.INVALID_DATA.value,
+                "errors": str(error)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    log_action(request.user, existing_dc, Action.MODIFY)
+    return JsonResponse(
+        {
+            "success_message":
+                Status.SUCCESS.value + existing_dc.abbreviation + " modified"
+        },
+        status=HTTPStatus.OK
     )

@@ -28,16 +28,18 @@ export interface AssetObjectOld extends ElementObject {
 export interface AssetObject extends ParentAssetObject {
   model: ModelObject;
   rack: RackObject;
+  network_graph: NetworkGraphData;
 }
 
 interface ParentAssetObject extends ElementObject {
+  asset_number: string;
   hostname: string;
   rack_position: string;
   mac_addresses: { [port: string]: string };
   network_connections: Array<NetworkConnection>;
   power_connections: { [port: string]: PowerConnection };
-  owner?: string;
-  comment?: string;
+  owner: string;
+  comment: string;
 }
 export interface ShallowAssetObject extends ParentAssetObject {
   model?: string;
@@ -47,8 +49,8 @@ export interface RackRangeFields {
   datacenter: string;
   letter_start: string;
   letter_end: string;
-  num_start: number;
-  num_end: number;
+  num_start: string;
+  num_end: string;
 }
 
 export interface NetworkConnection {
@@ -56,9 +58,19 @@ export interface NetworkConnection {
   destination_hostname: string;
   destination_port: string;
 }
-export interface NetworkGraph {
-  nodes: { [hostname: string]: string };
-  links: Array<{ [source: string]: string }>;
+
+export interface Link {
+  to: number;
+  from: number;
+}
+
+export interface Node {
+  id: number;
+  label: string;
+}
+export interface NetworkGraphData {
+  nodes: Array<Node>;
+  links: Array<Link>;
 }
 export interface PowerConnection {
   left_right: PowerSide;
@@ -67,33 +79,6 @@ export interface PowerConnection {
 export interface ShallowAssetObject extends ParentAssetObject {
   model?: string;
   rack?: string;
-}
-export interface NetworkConnection {
-  source_port: string;
-  destination_hostname: string;
-  destination_port: string;
-}
-export interface NetworkGraph {
-  nodes: { [hostname: string]: string };
-  links: Array<{ [source: string]: string }>;
-}
-export interface PowerConnection {
-  left_right: PowerSide;
-  port_number: string;
-}
-
-export interface PowerPortAvailability {
-  left_suggest: string;
-  left_available: Array<string>;
-  right_suggest: string;
-  right_available: Array<string>;
-}
-export interface RackRangeFields {
-  datacenter: string;
-  letter_start: string;
-  letter_end: string;
-  num_start: number;
-  num_end: number;
 }
 
 export interface SortFilterBody {
@@ -112,7 +97,7 @@ export interface UserInfoObject extends ElementObject {
   email?: string;
   first_name?: string;
   last_name?: string;
-  is_staff?: string;
+  is_admin?: boolean;
 }
 
 export interface CreateUserObject {
@@ -182,6 +167,7 @@ export type ElementObjectType =
   | ModelObject
   | RackObject
   | AssetObjectOld
+  | AssetObject
   | ShallowAssetObject
   | UserInfoObject
   | DatacenterObject;
@@ -190,6 +176,7 @@ export type FormObjectType =
   | ModelObjectOld
   | RackObject
   | AssetObjectOld
+  | AssetObject
   | DatacenterObject
   | RackRangeFields
   | ShallowAssetObject
@@ -209,9 +196,11 @@ export function isRackObject(obj: any): obj is RackObject {
   return obj && obj.rack_num;
 }
 export function isAssetObject(obj: any): obj is AssetObject {
-  return obj && obj.hostname;
+  return obj && obj.model;
 }
-
+export function isRackRangeFields(obj: any): obj is RackRangeFields {
+  return obj && (obj.letter_start || obj.letter_start === "");
+}
 export function isUserObject(obj: any): obj is UserInfoObject {
   return obj && obj.username;
 }

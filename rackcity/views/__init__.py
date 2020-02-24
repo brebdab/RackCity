@@ -1,4 +1,7 @@
-from .log_views import log_many
+from .log_views import (
+    log_many,
+    log_page_count,
+)
 from .it_model_views import (
     model_add,
     model_modify,
@@ -38,12 +41,16 @@ from .rack_views import (
     rack_delete,
     rack_summary,
 )
-from .report_views import report_rack_usage
+from .report_views import (
+    report_rack_usage,
+    rack_report_datacenter
+)
+
 from .user_views import (
     netid_login,
     RegisterNameView,
     user_delete,
-    user_list,
+    user_many,
     user_page_count,
     usernames,
     who_am_i,
@@ -59,5 +66,9 @@ from .datacenter_views import (
     datacenter_modify
 )
 from .pdu_views import (
-    power_status
+    power_status,
+    power_on,
+    power_off,
+    power_cycle,
+    power_availability
 )
