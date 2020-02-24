@@ -48,6 +48,9 @@ textarea:focus {
   color: red;
   padding: 0pt;
 }
+.comment {
+  white-space: pre-wrap !important;
+}
 .create-form {
   padding: 10pt !important;
 }

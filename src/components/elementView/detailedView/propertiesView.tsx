@@ -74,6 +74,8 @@ class PropertiesView extends React.PureComponent<
         );
       } else if (item === "rack") {
         dat = <p>{data[item].row_letter + "" + data[item].rack_num}</p>;
+      } else if (item === "comment") {
+        dat = <p className="comment">{data[item]}</p>;
       } else if (!isObject(data[item])) {
         //TO DO: decide how to render dicts
         dat = <p>{data[item]}</p>;

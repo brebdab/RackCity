@@ -240,9 +240,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
             <Field
               field="display_color"
               type="color"
-              value={
-                values.display_color? values.display_color : "#394B59"
-              }
+              value={values.display_color ? values.display_color : "#394B59"}
               onChange={this.handleChange}
             />
           </FormGroup>
@@ -329,6 +327,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
             <textarea
               className={Classes.INPUT}
               placeholder="comment"
+              value={values.comment}
               onChange={(e: any) =>
                 this.handleChange({ comment: e.currentTarget.value })
               }
