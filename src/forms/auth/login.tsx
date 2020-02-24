@@ -79,7 +79,7 @@ class NormalLoginForm extends React.Component<
                 </Button>
                 </Form.Item>
               </Form>
-              {this.props.loading ? <Spinner size={Spinner.SIZE_STANDARD} /> : <p></p>}
+              {this.props.loading ? <Spinner size={Spinner.SIZE_STANDARD} /> : null}
             </div>
           )}
       </div>

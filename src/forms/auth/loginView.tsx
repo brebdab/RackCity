@@ -32,7 +32,7 @@ export class LoginView extends React.PureComponent<RouteComponentProps & LoginVi
                     <WrappedNormalLoginForm />
                 </Card>
                 <Card className="login-card" elevation={Elevation.ZERO}>
-                    <AnchorButton onClick={this.handleSSOClick} rightIcon="log-in">SSO Login</AnchorButton>
+                    <AnchorButton onClick={this.handleSSOClick} rightIcon="log-in">Duke SSO Login</AnchorButton>
                 </Card>
             </div >
         )
