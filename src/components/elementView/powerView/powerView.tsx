@@ -26,6 +26,7 @@ interface PowerViewProps {
     asset?: AssetObject;
     shouldUpdate: boolean;
     updated: Function;
+    isAdmin: boolean
 }
 
 interface PowerViewState {
@@ -33,7 +34,8 @@ interface PowerViewState {
     powerStatus: any;
     statusLoaded: boolean;
     alertOpen: boolean;
-    confirmationMessage: string
+    confirmationMessage: string;
+    username?: string
 }
 
 export class PowerView extends React.PureComponent<
@@ -74,7 +76,10 @@ export class PowerView extends React.PureComponent<
                     powerStatus: res.data.power_status,
                     statusLoaded: true
                 })
+            }).catch(err => {
+                alert(err)
             })
+        this.getUsername(this.props.token)
     }
 
     componentDidUpdate() {
@@ -88,6 +93,8 @@ export class PowerView extends React.PureComponent<
                         powerStatus: res.data.power_status,
                         statusLoaded: true
                     })
+                }).catch(err => {
+                    alert(err)
                 })
         }
         this.props.updated()
@@ -122,77 +129,79 @@ export class PowerView extends React.PureComponent<
                     <Spinner />
                 }
                 <div className={"row-power"}>
-                    {this.state.powerStatus ? <AnchorButton
-                        className={"power-close"}
-                        intent={this.state.powerStatus[1] === "OFF" ? "primary" : "danger"}
-                        minimal
-                        text={this.state.powerStatus[1] === "OFF" ?
-                            "Turn on" : "Turn off"
-                        }
-                        icon="power"
-                        onClick={this.state.powerStatus[1] === "OFF" ?
-                            () => {
-                                this.setState({
-                                    statusLoaded: !this.state.statusLoaded
-                                })
-                                axios.post(
-                                    API_ROOT + "api/power/mask-on",
-                                    { id: this.props.asset!.id },
-                                    getHeaders(this.props.token)
-                                ).then(res => {
-                                    this.setState({
-                                        alertOpen: true,
-                                        confirmationMessage: res.data.success_message
-                                    })
-                                    this.componentDidMount()
-                                }).catch(err => {
-
-                                })
-                            } :
-                            () => {
-                                this.setState({
-                                    statusLoaded: !this.state.statusLoaded
-                                })
-                                axios.post(
-                                    API_ROOT + "api/power/mask-off",
-                                    { id: this.props.asset!.id },
-                                    getHeaders(this.props.token)
-                                ).then(res => {
-                                    this.setState({
-                                        alertOpen: true,
-                                        confirmationMessage: res.data.success_message
-                                    })
-                                    this.componentDidMount()
-                                }).catch(err => {
-
-                                })
+                    {this.props.asset!.rack.is_network_controlled && this.state.powerStatus &&
+                        (this.state.username === this.props.asset!.owner || this.props.isAdmin) ? <AnchorButton
+                            className={"power-close"}
+                            intent={this.state.powerStatus[Object.keys(this.state.powerStatus)[0]] === "OFF" ? "primary" : "danger"}
+                            minimal
+                            text={this.state.powerStatus[Object.keys(this.state.powerStatus)[0]] === "OFF" ?
+                                "Turn on" : "Turn off"
                             }
-                        }
-                    /> : null}
-                    <AnchorButton
-                        className={"power-close"}
-                        minimal
-                        intent="warning"
-                        text={"Cycle Power"}
-                        onClick={() => {
-                            this.setState({
-                                statusLoaded: !this.state.statusLoaded
-                            })
-                            axios.post(
-                                API_ROOT + "api/power/cycle",
-                                { id: this.props.asset!.id },
-                                getHeaders(this.props.token)
-                            ).then(res => {
+                            icon="power"
+                            onClick={this.state.powerStatus[Object.keys(this.state.powerStatus)[0]] === "OFF" ?
+                                () => {
+                                    this.setState({
+                                        statusLoaded: !this.state.statusLoaded
+                                    })
+                                    axios.post(
+                                        API_ROOT + "api/power/mask-on",
+                                        { id: this.props.asset!.id },
+                                        getHeaders(this.props.token)
+                                    ).then(res => {
+                                        this.setState({
+                                            alertOpen: true,
+                                            confirmationMessage: res.data.success_message
+                                        })
+                                        this.componentDidMount()
+                                    }).catch(err => {
+                                        alert(err)
+                                    })
+                                } :
+                                () => {
+                                    this.setState({
+                                        statusLoaded: !this.state.statusLoaded
+                                    })
+                                    axios.post(
+                                        API_ROOT + "api/power/mask-off",
+                                        { id: this.props.asset!.id },
+                                        getHeaders(this.props.token)
+                                    ).then(res => {
+                                        this.setState({
+                                            alertOpen: true,
+                                            confirmationMessage: res.data.success_message
+                                        })
+                                        this.componentDidMount()
+                                    }).catch(err => {
+                                        alert(err)
+                                    })
+                                }
+                            }
+                        /> : null}
+                    {this.props.asset!.rack.is_network_controlled && this.state.powerStatus &&
+                        (this.state.username === this.props.asset!.owner || this.props.isAdmin) ? <AnchorButton
+                            className={"power-close"}
+                            minimal
+                            intent="warning"
+                            text={"Cycle Power"}
+                            onClick={() => {
                                 this.setState({
-                                    alertOpen: true,
-                                    confirmationMessage: res.data.success_message
+                                    statusLoaded: !this.state.statusLoaded
                                 })
-                                this.componentDidMount()
-                            }).catch(err => {
-
-                            })
-                        }}
-                    />
+                                axios.post(
+                                    API_ROOT + "api/power/cycle",
+                                    { id: this.props.asset!.id },
+                                    getHeaders(this.props.token)
+                                ).then(res => {
+                                    this.setState({
+                                        alertOpen: true,
+                                        confirmationMessage: res.data.success_message
+                                    })
+                                    this.componentDidMount()
+                                }).catch(err => {
+                                    alert(err)
+                                })
+                            }}
+                        /> : null}
                     <Divider />
                     {this.props.callback === undefined ? null :
                         <AnchorButton
@@ -235,6 +244,22 @@ export class PowerView extends React.PureComponent<
                 />
             </div >
         )
+    }
+
+    private getUsername(token: string) {
+        const headers = {
+            headers: {
+                Authorization: "Token " + token
+            }
+        };
+        axios
+            .get(API_ROOT + "api/users/who-am-i", headers)
+            .then(res => {
+                this.setState({ username: res.data.username })
+            })
+            .catch(err => {
+                console.log(err);
+            });
     }
 
 }
