@@ -28,20 +28,20 @@ import {
 import { updateObject } from "../store/utility";
 import { API_ROOT } from "../utils/api-config";
 import {
+  AssetFormLabels,
   AssetObject,
   DatacenterObject,
   ElementObjectType,
   ElementType,
   getHeaders,
   isAssetObject,
-  PowerConnection,
   ModelObject,
   NetworkConnection,
+  PowerConnection,
   PowerPortAvailability,
   PowerSide,
   RackObject,
-  ShallowAssetObject,
-  AssetFormLabels
+  ShallowAssetObject
 } from "../utils/utils";
 import Field from "./field";
 import "./forms.scss";
@@ -63,8 +63,7 @@ import {
   renderModelItem,
   renderRackItem,
   renderStringItem,
-  StringSelect,
-  filterNumber
+  StringSelect
 } from "./formUtils";
 
 //TO DO : add validation of types!!!
@@ -446,7 +445,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         return this.state.power_ports.right_available.map(String);
       }
     }
-    return []
+    return [];
   };
   setDefaultPortValues = (port: number, status: boolean) => {
     const power_connections = this.state.values.power_connections;
