@@ -174,10 +174,27 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         return items;
       });
   }
-
+  getAssetNumber() {
+    axios
+      .get(
+        API_ROOT + "api/" + "assets/asset-number",
+        getHeaders(this.props.token)
+      )
+      .then((res: any) => {
+        this.setState({
+          values: updateObject(this.state.values, {
+            asset_number: res.data.asset_number
+          })
+        });
+      });
+  }
   componentDidMount() {
     this.setPowerPortInputState();
     this.setInitialNetworkConnectedAssets();
+    if (!this.state.values.asset_number && !this.props.initialValues) {
+      this.getAssetNumber();
+    }
+
     let values = this.state.values;
     if (!this.props.initialValues) {
       values = updateObject(values, {
@@ -725,6 +742,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     if (this.state.users.length === 0) {
       this.getUsers();
     }
+
     if (
       this.state.currDatacenter &&
       this.state.currDatacenter !== ALL_DATACENTERS &&

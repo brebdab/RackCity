@@ -48,7 +48,7 @@ from rackcity.views.rackcity_utils import (
     NetworkConnectionException,
     close_old_connections_decorator
 )
-from rackcity.utils.asset_utils import get_asset_number
+from rackcity.models.asset import get_asset_number
 
 
 # @close_old_connections_decorator

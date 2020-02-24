@@ -5,9 +5,15 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from .it_model import ITModel
 from .rack import Rack
-from rackcity.utils.asset_utils import get_asset_number
 
 
+def get_asset_number():
+    for asset_number in range(100000, 999999):
+        try:
+            Asset.objects.get(asset_number=asset_number)
+        except ObjectDoesNotExist:
+            return asset_number
+            
 def validate_hostname(value):
     hostname_pattern = re.compile("[A-Za-z]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?")
     if value and hostname_pattern.fullmatch(value) is None:
