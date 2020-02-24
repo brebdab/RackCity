@@ -10,7 +10,9 @@ import {
   InputGroup,
   Intent,
   MenuItem,
-  Tooltip
+  Tooltip,
+  Alert,
+  Spinner
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { IconNames } from "@blueprintjs/icons";
@@ -41,7 +43,9 @@ import {
   PowerPortAvailability,
   PowerSide,
   RackObject,
-  ShallowAssetObject
+  ShallowAssetObject,
+  isDatacenterObject,
+  isRackObject
 } from "../utils/utils";
 import Field from "./field";
 import "./forms.scss";
@@ -65,6 +69,8 @@ import {
   renderStringItem,
   StringSelect
 } from "./formUtils";
+import { INTENT_WARNING } from "@blueprintjs/core/lib/esm/common/classes";
+import { tsObjectKeyword } from "@babel/types";
 
 //TO DO : add validation of types!!!
 
@@ -89,6 +95,9 @@ interface AssetFormState {
   assets: Array<AssetObject>;
   left_ports: Array<string>;
   right_ports: Array<string>;
+  isAlertOpen: boolean;
+  warningMessage: string;
+  selectedValue: any;
 }
 // var console: any = {};
 // console.log = function() {};
@@ -117,6 +126,9 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     return power_ports_default;
   };
   initialGetRacks = false;
+  gettingAssetsInProgress = false;
+  gettingRacksInProgress = false;
+  gettingPowerPortsInProgress = false;
 
   public state = {
     values: this.initialState,
@@ -140,10 +152,14 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     //   right_suggest: "12",
     //   right_available: ["1", "2", "12", "13"]
     // },
-    power_ports_default: {} as { [port: string]: boolean }
+    power_ports_default: {} as { [port: string]: boolean },
+    isAlertOpen: false,
+    warningMessage: "",
+    selectedValue: undefined
   };
 
   getPowerPortAvailability(rack: RackObject) {
+    this.gettingPowerPortsInProgress = true;
     const params = { id: rack.id };
     const config = {
       headers: {
@@ -153,6 +169,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       params: params
     };
     axios.get(API_ROOT + "api/power/availability", config).then(res => {
+      this.gettingPowerPortsInProgress = false;
       this.setState({ power_ports: res.data });
     });
   }
@@ -221,8 +238,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       power_connections,
       comment
     } = asset;
-    const model = asset.model ? asset.model.id : undefined;
-    const rack = asset.rack ? asset.rack.id : undefined;
+    const model = asset.model ? asset.model.id : null;
+    const rack = asset.rack ? asset.rack.id : null;
     let valuesToSend: ShallowAssetObject = {
       asset_number,
       model,
@@ -328,7 +345,9 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       });
   };
   getRacks = (datacenter: DatacenterObject) => {
+    console.log("GETTING RACKS for ", datacenter);
     if (datacenter) {
+      this.gettingRacksInProgress = true;
       const config = {
         headers: {
           Authorization: "Token " + this.props.token
@@ -343,6 +362,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         .then(res => {
           console.log(res.data.racks);
           this.initialGetRacks = true;
+          this.gettingRacksInProgress = false;
           this.setState({
             racks: res.data.racks as Array<RackObject>
           });
@@ -366,6 +386,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     });
   };
   getValidAssets = (currDatacenter: DatacenterObject) => {
+    this.gettingAssetsInProgress = true;
     console.log("getting assets from this datacenter", currDatacenter);
     let body = {};
     const filters: Array<IFilter> = [];
@@ -390,6 +411,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       body,
       this.props.token
     ).then(res => {
+      console.log(res);
       let assetsWithHostname: Array<AssetObject> = res as Array<AssetObject>;
       assetsWithHostname = assetsWithHostname.filter(asset => {
         if (
@@ -400,10 +422,12 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         }
         return true;
       });
+      console.log("got assets", assetsWithHostname);
 
       this.setState({
         assets: assetsWithHostname as Array<AssetObject>
       });
+      this.gettingAssetsInProgress = false;
     });
   };
   getPowerButtonStatus = (side: PowerSide, port: number) => {
@@ -432,7 +456,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   };
   getPortsForSide = (port: number) => {
     let side;
-    console.log(this.state.values.power_connections, this.state.power_ports);
+    // console.log(this.state.values.power_connections, this.state.power_ports);
     if (
       this.state.values.power_connections &&
       this.state.values.power_connections[port] &&
@@ -496,6 +520,23 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       power_ports_default: power_ports_default
     });
   };
+  getClearedPowerSelections() {
+    if (
+      this.state.values.model &&
+      this.state.values.model.num_power_ports &&
+      parseInt(this.state.values.model.num_power_ports, 10) > 0
+    ) {
+      const num_power_ports = parseInt(
+        this.state.values.model.num_power_ports,
+        10
+      );
+      const power_connections = this.state.values.power_connections;
+      for (let i = 1; i <= num_power_ports; i++) {
+        power_connections[i] = {} as PowerConnection;
+      }
+      return power_connections;
+    }
+  }
 
   clearPowerSelection = (port: number) => {
     this.changeCheckBoxState(port, false);
@@ -650,16 +691,34 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   }
 
   handleDatacenterSelect(datacenter: DatacenterObject) {
-    console.log("SELECTER DATACENTER", datacenter);
+    const clearedNetworkConnections = this.getClearedNetworkConnections();
+    const clearedPowerConnections = this.getClearedPowerSelections();
+    const newValues = updateObject(this.state.values, {
+      rack: undefined,
+      power_connections: clearedPowerConnections,
+      network_connections: clearedNetworkConnections
+    });
+    console.log("SELECTER DATACENTER", datacenter, newValues);
     this.setState({
-      currDatacenter: datacenter
+      currDatacenter: datacenter,
+      values: newValues
     });
 
-    this.setState({
-      values: updateObject(this.state.values, { rack: undefined })
-    });
     this.getValidAssets(datacenter);
     this.getRacks(datacenter);
+  }
+
+  handleRackSelect(rack: RackObject) {
+    console.log("SELECTED RACK:", rack);
+    const clearedPowerConnections = this.getClearedPowerSelections();
+    this.setState({
+      values: updateObject(this.state.values, {
+        rack: rack,
+        power_connections: clearedPowerConnections
+      })
+    });
+
+    this.getPowerPortAvailability(rack);
   }
   handleNetworkConnectionAssetSelection(
     source_port: string,
@@ -706,14 +765,34 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       })
     });
   }
+
+  getClearedNetworkConnections() {
+    if (this.state.values.network_connections) {
+      return this.state.values.network_connections.map(
+        (connection: NetworkConnection) => {
+          return updateObject(connection, {
+            destination_hostname: null,
+            destination_port: null
+          });
+        }
+      );
+    }
+  }
   clearNetworkConnectionSelection(source_port: string) {
     let networkConnections: Array<NetworkConnection> = [];
     if (this.state.values.network_connections) {
       networkConnections = this.state.values.network_connections.slice();
 
-      networkConnections = networkConnections.filter(
+      networkConnections = networkConnections.map(
         (connection: NetworkConnection) => {
-          return connection.source_port !== source_port;
+          if (connection.source_port === source_port) {
+            return updateObject(connection, {
+              destination_hostname: null,
+              destination_port: null
+            });
+          } else {
+            return connection;
+          }
         }
       );
     } else {
@@ -791,6 +870,51 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       return [];
     }
   }
+  getChangeWarningAlert() {
+    return (
+      <Alert
+        className={Classes.DARK}
+        cancelButtonText="Cancel"
+        confirmButtonText="Change"
+        intent={Intent.WARNING}
+        icon={IconNames.WARNING_SIGN}
+        isOpen={this.state.isAlertOpen}
+        onCancel={this.handleChangeDecline}
+        onConfirm={this.handleChangeAccept}
+      >
+        <p>{this.state.warningMessage}</p>
+      </Alert>
+    );
+  }
+
+  handleChangeDecline = () => {
+    this.setState({
+      isAlertOpen: false
+    });
+  };
+
+  showChangeWarningAlert(warningMessage: string, selectedValue: any) {
+    this.setState({
+      warningMessage,
+      selectedValue,
+      isAlertOpen: true
+    });
+  }
+
+  handleChangeAccept = () => {
+    if (
+      this.state.selectedValue &&
+      isDatacenterObject(this.state.selectedValue)
+    ) {
+      this.handleDatacenterSelect(this.state.selectedValue!);
+    }
+    if (this.state.selectedValue && isRackObject(this.state.selectedValue)) {
+      this.handleRackSelect(this.state.selectedValue!);
+    }
+    this.setState({
+      isAlertOpen: false
+    });
+  };
 
   render() {
     if (this.state.models.length === 0) {
@@ -807,10 +931,11 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       this.getRacks(this.state.currDatacenter);
     }
 
-    console.log(this.state.values.network_connections);
+    console.log(this.state.values);
     const { values } = this.state;
     return (
       <div className={Classes.DARK + " login-container"}>
+        {this.getChangeWarningAlert()}
         {this.state.errors.map((err: string) => {
           return <Callout intent={Intent.DANGER}>{err}</Callout>;
         })}
@@ -840,7 +965,10 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
               }}
               items={this.getValidDatacenters()}
               onItemSelect={(datacenter: DatacenterObject) => {
-                this.handleDatacenterSelect(datacenter);
+                this.showChangeWarningAlert(
+                  "Are you sure you want to change datacenter? This will clear all datacenter related properties",
+                  datacenter
+                );
               }}
               itemRenderer={renderDatacenterItem}
               itemPredicate={filterDatacenter}
@@ -866,22 +994,30 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                 }}
                 items={this.state.racks}
                 onItemSelect={(rack: RackObject) => {
-                  this.setState({
-                    values: updateObject(values, { rack: rack })
-                  });
-                  this.getPowerPortAvailability(rack);
+                  this.showChangeWarningAlert(
+                    "Are you sure you want to change rack? This will clear all rack related fields",
+                    rack
+                  );
                 }}
                 itemRenderer={renderRackItem}
                 itemPredicate={filterRack}
-                noResults={<MenuItem disabled={true} text="No results." />}
+                noResults={
+                  this.gettingRacksInProgress ? (
+                    <div>
+                      <Spinner intent="primary" size={Spinner.SIZE_SMALL} />
+                      <MenuItem disabled={true} text="Getting all racks" />
+                    </div>
+                  ) : (
+                    <MenuItem disabled={true} text="No available racks" />
+                  )
+                }
               >
                 <Button
                   rightIcon="caret-down"
                   text={
                     this.state.values.rack
                       ? this.state.values.rack.row_letter +
-                        " " +
-                        this.state.values.rack.rack_num
+                        +this.state.values.rack.rack_num
                       : "Select a rack"
                   }
                 />
@@ -994,7 +1130,23 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                             itemRenderer={renderAssetItem}
                             itemPredicate={filterAsset}
                             noResults={
-                              <MenuItem disabled={true} text="No results." />
+                              this.gettingAssetsInProgress ? (
+                                <div>
+                                  <Spinner
+                                    intent="primary"
+                                    size={Spinner.SIZE_SMALL}
+                                  />
+                                  <MenuItem
+                                    disabled={true}
+                                    text="Getting all available assets"
+                                  />
+                                </div>
+                              ) : (
+                                <MenuItem
+                                  disabled={true}
+                                  text="No available assets"
+                                />
+                              )
                             }
                           >
                             <Button
@@ -1036,7 +1188,23 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                             itemRenderer={renderStringItem}
                             itemPredicate={filterString}
                             noResults={
-                              <MenuItem disabled={true} text="No results." />
+                              this.gettingPowerPortsInProgress ? (
+                                <div>
+                                  <Spinner
+                                    intent="primary"
+                                    size={Spinner.SIZE_SMALL}
+                                  />
+                                  <MenuItem
+                                    disabled={true}
+                                    text="Getting available power ports"
+                                  />
+                                </div>
+                              ) : (
+                                <MenuItem
+                                  disabled={true}
+                                  text="No available power ports"
+                                />
+                              )
                             }
                           >
                             <Button
