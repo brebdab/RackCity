@@ -21,13 +21,15 @@ import {
   ElementType,
   getHeaders,
   NetworkConnection,
-  Node
+  Node,
+  DatacenterObject
 } from "../../../../utils/utils";
 import { deleteAsset, modifyAsset } from "../../elementUtils";
 import PropertiesView from "../propertiesView";
 import "./assetView.scss";
 import NetworkGraph from "./graph";
 import PowerView from "../../powerView/powerView";
+import { ALL_DATACENTERS } from "../../elementTabContainer";
 
 export interface AssetViewProps {
   token: string;
@@ -56,6 +58,7 @@ interface AssetViewState {
   isFormOpen: boolean;
   isDeleteOpen: boolean;
   isAlertOpen: boolean;
+  datacenters: Array<DatacenterObject>;
 }
 
 export class AssetView extends React.PureComponent<
@@ -66,7 +69,8 @@ export class AssetView extends React.PureComponent<
     asset: {} as AssetObject,
     isFormOpen: false,
     isDeleteOpen: false,
-    isAlertOpen: false
+    isAlertOpen: false,
+    datacenters: []
   };
   private updateAsset = (asset: AssetObject, headers: any): Promise<any> => {
     console.log("updateAsset");
@@ -131,12 +135,32 @@ export class AssetView extends React.PureComponent<
   componentDidMount() {
     console.log("asset view mounted");
   }
+  getDatacenters = () => {
+    const headers = getHeaders(this.props.token);
+    // console.log(API_ROOT + "api/datacenters/get-all");
+    axios
+      .post(API_ROOT + "api/datacenters/get-many", {}, headers)
+      .then(res => {
+        console.log(res.data.datacenters);
+        const datacenters = res.data.datacenters as Array<DatacenterObject>;
+        datacenters.push(ALL_DATACENTERS);
+        this.setState({
+          datacenters
+        });
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  };
   public render() {
     console.log(this.state.asset);
     if (Object.keys(this.state.asset).length === 0) {
       let params: any;
       params = this.props.match.params;
       this.updateAssetData(params.rid);
+    }
+    if (this.state.datacenters.length === 0) {
+      this.getDatacenters();
     }
 
     return (
@@ -158,6 +182,7 @@ export class AssetView extends React.PureComponent<
                 onClick={() => this.handleFormOpen()}
               />
               <FormPopup
+                datacenters={this.state.datacenters}
                 isOpen={this.state.isFormOpen}
                 initialValues={this.state.asset}
                 type={FormTypes.MODIFY}
