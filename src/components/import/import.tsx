@@ -41,27 +41,26 @@ interface AlertState {
   addedModels?: number;
   addedAssets?: number;
   uploading: boolean;
-  uploadType: string;
   notify: boolean;
   assetUploadType: string;
 }
 
-interface AssetInfoObject {
-  hostname: string;
-  rack_position: string;
-  vendor: string;
-  model_number: string;
-  rack: string;
-  owner: string;
-  comment: string;
-}
+// interface AssetInfoObject {
+//   hostname: string;
+//   rack_position: string;
+//   vendor: string;
+//   model_number: string;
+//   rack: string;
+//   owner: string;
+//   comment: string;
+// }
 
 const c2j = require("csvtojson");
 
 export class BulkImport extends React.PureComponent<
   RouteComponentProps & ImportProps,
   AlertState
-> {
+  > {
   public state: AlertState = {
     uploadFileIsOpen: false,
     modelAlterationsIsOpen: false,
@@ -69,7 +68,6 @@ export class BulkImport extends React.PureComponent<
     loadedModels: [],
     loadedAssets: [],
     uploading: false,
-    uploadType: "",
     notify: false,
     assetUploadType: "assets"
   };
@@ -93,22 +91,24 @@ export class BulkImport extends React.PureComponent<
         </Overlay>
         <div className={"row"}>
           <div className={"column-third-import"}>
-            <ButtonGroup fill={false} style={{ marginTop: 5 }}>
-              <Button
-                active={this.state.assetUploadType === "assets"}
-                text="assets"
-                onClick={(e: any) => {
-                  this.setState({ assetUploadType: "assets" });
-                }}
-              />
-              <Button
-                active={this.state.assetUploadType === "network connections"}
-                text="network connections"
-                onClick={(e: any) => {
-                  this.setState({ assetUploadType: "network connections" });
-                }}
-              />
-            </ButtonGroup>
+            {resourceType === "assets" ? (
+              <ButtonGroup fill={false} style={{ marginTop: 10 }}>
+                <Button
+                  active={this.state.assetUploadType === "assets"}
+                  text="assets"
+                  onClick={(e: any) => {
+                    this.setState({ assetUploadType: "assets" });
+                  }}
+                />
+                <Button
+                  active={this.state.assetUploadType === "network connections"}
+                  text="network connections"
+                  onClick={(e: any) => {
+                    this.setState({ assetUploadType: "network connections" });
+                  }}
+                />
+              </ButtonGroup>
+            ) : null}
           </div>
         </div>
         <div className={"row"}>
@@ -141,7 +141,7 @@ export class BulkImport extends React.PureComponent<
               large={true}
               intent="success"
               icon="upload"
-              text={"Upload " + this.state.uploadType}
+              text={"Upload " + uploadType}
               disabled={this.state.selectedFile === undefined}
               onClick={this.handleUpload}
             />
@@ -149,7 +149,10 @@ export class BulkImport extends React.PureComponent<
         </div>
         <div className={"row"}>
           <div className={"column-third-import"}>
-            <Tag minimal>
+            <Tag
+              minimal
+              style={{ marginBottom: 5 }}
+            >
               <p>
                 Selected file:{" "}
                 {this.state.selectedFile === undefined
@@ -321,14 +324,16 @@ export class BulkImport extends React.PureComponent<
   };
 
   private handleUpload = () => {
+    let params: any;
+    params = this.props.match.params;
+    const resourceType: string = params.resourceType;
+    const uploadType = resourceType === "models" ? resourceType : this.state.assetUploadType;
     if (/*this.state.loadedModels*/ this.state.encodedFile !== undefined) {
       this.setState({ uploading: true });
-      let params: any;
-      params = this.props.match.params;
       uploadBulk(
         this.state.encodedFile,
         this.props.token,
-        params.resourceType
+        uploadType
       ).then(
         res => {
           if (res.modifications.length !== 0) {
@@ -352,9 +357,9 @@ export class BulkImport extends React.PureComponent<
           } else {
             alert(
               "Success! Modified: 0; Added: " +
-                res.added +
-                "; Ignored: " +
-                res.ignored
+              res.added +
+              "; Ignored: " +
+              res.ignored
             );
             if (params.resourceType === "models") {
               this.setState({ uploading: false, loadedModels: undefined });
@@ -392,7 +397,10 @@ export class BulkImport extends React.PureComponent<
 }
 
 async function uploadBulk(encodedFile: string, token: string, type: string) {
-  console.log(API_ROOT + "api/" + type + "/bulk-upload");
+  const url = type === "network connections" ?
+    API_ROOT + "api/" + "assets" + "/network-bulk-upload"
+    : API_ROOT + "api/" + type + "/bulk-upload";
+  console.log(url);
   console.log(token);
   const headers = {
     headers: {
@@ -401,7 +409,7 @@ async function uploadBulk(encodedFile: string, token: string, type: string) {
   };
   const postBody = { import_csv: encodedFile };
   return await axios
-    .post(API_ROOT + "api/" + type + "/bulk-upload", postBody, headers)
+    .post(url, postBody, headers)
     .then(res => {
       console.log(res.data);
       const data = res.data;
@@ -432,12 +440,12 @@ async function getBase64(file: File) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     let content = "";
-    reader.onload = function(e: any) {
+    reader.onload = function (e: any) {
       content = e.target.result;
       const result = content;
       resolve(result);
     };
-    reader.onerror = function(e: any) {
+    reader.onerror = function (e: any) {
       reject(e);
     };
     reader.readAsDataURL(file);
