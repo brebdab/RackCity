@@ -4,7 +4,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from rackcity.models import Asset, PowerPort, NetworkPort
 from .it_model_serializers import ITModelSerializer
 from .rack_serializers import RackSerializer
-
+import copy 
 
 class AssetSerializer(serializers.ModelSerializer):
     """
@@ -42,6 +42,7 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
     mac_addresses = serializers.SerializerMethodField()
     power_connections = serializers.SerializerMethodField()
     network_connections = serializers.SerializerMethodField()
+    network_graph = serializers.SerializerMethodField()
 
     class Meta:
         model = Asset
@@ -56,6 +57,7 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
             'comment',
             'mac_addresses',
             'network_connections',
+            'network_graph',
             'power_connections',
         )
 
@@ -70,6 +72,9 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
                 mac_addresses[port.port_name] = port.mac_address
         return mac_addresses
 
+    def get_network_graph(self,asset):
+        return generate_network_graph(asset)
+        
     def get_power_connections(self, asset):
         return serialize_power_connections(asset)
 
@@ -198,3 +203,52 @@ def serialize_power_connections(asset):
                 "port_number": port.power_connection.port_number
             }
     return power_connections
+
+
+def generate_network_graph(asset):
+    try:
+        nodes = []
+        nodes.append({"id": asset.id, "label": asset.hostname})
+        edges = []
+        # neighbors of distance one 
+        [nodes, edges] = get_neighbor_assets(
+            asset.hostname,
+            asset.id,
+            nodes,
+            edges)
+        # neighbors of distance two 
+        nodes_copy = copy.deepcopy(nodes)
+        for node in nodes_copy:
+            # ignore current asset, already found neighbors
+            if(node["label"] != asset.hostname):
+                [nodes, edges] = get_neighbor_assets(
+                    node["label"],
+                    node["id"],
+                    nodes,
+                    edges)
+        return {"nodes": nodes, "edges": edges}
+    except ObjectDoesNotExist:
+        return
+
+
+def get_neighbor_assets(hostname, id, nodes, edges):
+    try: 
+        source_ports = NetworkPort.objects.filter(asset=id)
+        for source_port in source_ports:
+            if source_port.connected_port:
+                destination_port_asset = source_port.connected_port.asset
+                node = {"id": destination_port_asset.id,
+                        "label" : destination_port_asset.hostname}
+                if node not in nodes:
+                    nodes.append(node)
+                edges.append(
+                    {"from":source_port.asset.id,
+                        "to":destination_port_asset.id}
+                    )
+        return nodes, edges
+    except ObjectDoesNotExist:
+        return
+
+
+
+

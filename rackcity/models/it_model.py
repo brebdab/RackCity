@@ -26,7 +26,7 @@ class ITModel(models.Model):
         null=True,
         blank=True,
     )
-    num_network_ports = RCPositiveIntegerField(null=False, blank=True)
+    num_network_ports = RCPositiveIntegerField(null=True, blank=True)
     num_power_ports = RCPositiveIntegerField(null=True, blank=True)
     cpu = models.CharField(max_length=150, null=True, blank=True)
     memory_gb = RCPositiveIntegerField(null=True, blank=True)
@@ -48,5 +48,6 @@ class ITModel(models.Model):
         except ValidationError as valid_error:
             raise valid_error
         else:
-            self.num_network_ports = len(self.network_ports)
+            if (self.network_ports):
+                self.num_network_ports = len(self.network_ports)
             super(ITModel, self).save(*args, **kwargs)

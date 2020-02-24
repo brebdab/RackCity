@@ -38,8 +38,8 @@ class ElementTabContainer extends React.Component<
       currDatacenter: datacenter
     });
   };
-  getDatacenters = (token: string) => {
-    const headers = getHeaders(token);
+  getDatacenters = () => {
+    const headers = getHeaders(this.props.token);
     // console.log(API_ROOT + "api/datacenters/get-all");
     axios
       .post(API_ROOT + "api/datacenters/get-many", {}, headers)
@@ -56,7 +56,7 @@ class ElementTabContainer extends React.Component<
       });
   };
   componentDidMount = () => {
-    this.getDatacenters(this.props.token);
+    this.getDatacenters();
   };
   public render() {
     return (
@@ -70,7 +70,7 @@ class ElementTabContainer extends React.Component<
         large
       >
         <Tab
-          className="tab do-not-print"
+          className="tab"
           id="rack"
           title="Racks"
           panel={
@@ -105,11 +105,15 @@ class ElementTabContainer extends React.Component<
 
         {this.props.isAdmin ? (
           <Tab
-            className="tab"
+            className="tab do-not-print"
             id="datacenter"
             title="Datacenters"
             panel={
-              <ElementTab {...this.props} element={ElementType.DATACENTER} />
+              <ElementTab
+                {...this.props}
+                updateDatacenters={this.getDatacenters}
+                element={ElementType.DATACENTER}
+              />
             }
           />
         ) : null}

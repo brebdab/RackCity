@@ -2,7 +2,8 @@ import {
   RackRangeFields,
   ModelObject,
   AssetObject,
-  DatacenterObject
+  DatacenterObject,
+  UserInfoObject
 } from "../../utils/utils";
 import { API_ROOT } from "../../utils/api-config";
 import axios from "axios";
@@ -78,7 +79,15 @@ export const renderNumericFilterItem = (item: NumericFilter) => {
   return `between ${item.min} - ${item.max}`;
 };
 export const renderRackRangeFilterItem = (item: RackRangeFields) => {
-  return `rows  ${item.letter_start} - ${item.letter_end} & racks ${item.num_start} - ${item.num_end}`;
+  if (item.letter_end && item.num_end) {
+    return `rows  ${item.letter_start} - ${item.letter_end} & letters ${item.num_start} - ${item.num_end}`;
+  } else if (item.letter_end) {
+    return `rows  ${item.letter_start} - ${item.letter_end} & letters ${item.num_start}`;
+  } else if (item.num_end) {
+    return `row  ${item.letter_start}  & letters ${item.num_start} - ${item.num_end}`;
+  } else {
+    return ` ${item.letter_start}${item.num_start} `;
+  }
 };
 
 export const modifyModel = (model: ModelObject, headers: any) => {
@@ -110,4 +119,11 @@ export const modifyDatacenter = (
   headers: any
 ): Promise<any> => {
   return axios.post(API_ROOT + "api/datacenters/modify", dc, headers);
+};
+export const deleteUser = (
+  user: UserInfoObject,
+  headers: any
+): Promise<any> => {
+  const data = { id: user.id };
+  return axios.post(API_ROOT + "api/users/delete", data, headers);
 };

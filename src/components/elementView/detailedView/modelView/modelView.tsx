@@ -2,31 +2,28 @@ import {
   Alert,
   AnchorButton,
   Classes,
-  Tab,
-  Tabs,
-  IToastProps,
-  Toaster,
   Intent,
-  Position
+  IToastProps,
+  Position,
+  Toaster
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
-import { API_ROOT } from "../../../../utils/api-config";
 import FormPopup from "../../../../forms/formPopup";
-
-import ElementTable from "../../elementTable";
-import {
-  ElementType,
-  AssetObject,
-  ModelObject,
-  getHeaders
-} from "../../../../utils/utils";
-import PropertiesView from "../propertiesView";
 import { FormTypes } from "../../../../forms/formUtils";
-import { modifyModel, deleteModel } from "../../elementUtils";
+import { API_ROOT } from "../../../../utils/api-config";
+import {
+  AssetObject,
+  ElementType,
+  getHeaders,
+  ModelObject
+} from "../../../../utils/utils";
+import ElementTable from "../../elementTable";
+import { deleteModel, modifyModel } from "../../elementUtils";
+import PropertiesView from "../propertiesView";
 
 export interface ModelViewProps {
   token: string;
@@ -184,31 +181,17 @@ export class ModelView extends React.PureComponent<
             </Alert>
           </div>
         ) : null}
-        <Tabs
-          id="ModelViewer"
-          animate={true}
-          large
-          renderActiveTabPanelOnly={false}
-        >
-          <Tab
-            id="ModelProperties"
-            title="Properties"
-            panel={<PropertiesView data={this.state.model} />}
+
+        <PropertiesView data={this.state.model} />
+        <div className="propsview">
+          <h3>Assets</h3>
+          <ElementTable
+            type={ElementType.ASSET}
+            data={this.state.assets}
+            disableFiltering={true}
+            disableSorting={true}
           />
-          <Tab
-            id="Assets"
-            title="Assets"
-            panel={
-              <ElementTable
-                type={ElementType.ASSET}
-                data={this.state.assets}
-                disableFiltering={true}
-                disableSorting={true}
-              />
-            }
-          />
-          <Tabs.Expander />
-        </Tabs>
+        </div>
       </div>
     );
   }

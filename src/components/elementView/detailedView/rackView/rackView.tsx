@@ -81,6 +81,7 @@ class RackView extends React.PureComponent<
           );
         } else {
           currHeight = width + currHeight;
+          const hostname = assets[0].hostname ? assets[0].hostname : " ";
           rows.unshift(
             <tr
               className="rack-row"
@@ -97,7 +98,7 @@ class RackView extends React.PureComponent<
                   " " +
                   assets[0].model.model_number +
                   " | " +
-                  assets[0].hostname}
+                  hostname}
               </td>
             </tr>
           );
@@ -164,7 +165,10 @@ class RackView extends React.PureComponent<
   };
 
   public render() {
-    const racks = this.props.racks;
+    const racks =
+      this.props.location && this.props.location.state
+        ? (this.props.location.state as Array<RackResponseObject>)
+        : this.props.racks;
 
     return (
       <div className={Classes.DARK}>
