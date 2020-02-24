@@ -3,7 +3,8 @@ import {
   Classes,
   InputGroup,
   Callout,
-  Intent
+  Intent,
+  Spinner,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { Form } from "antd";
@@ -21,7 +22,7 @@ interface LoginFormProps {
 }
 class NormalLoginForm extends React.Component<
   LoginFormProps & FormComponentProps & RouteComponentProps
-> {
+  > {
   handleSubmit = (e: any) => {
     e.preventDefault();
     this.props.form.validateFields((err, values) => {
@@ -47,41 +48,40 @@ class NormalLoginForm extends React.Component<
         {this.props.token !== null ? (
           <Redirect to="/" />
         ) : (
-          <div className={Classes.DARK + " login-container"}>
-            <Form
-              onSubmit={this.handleSubmit}
-              className="login-form .bp3-form-group"
-            >
-              <h2>Login</h2>
-              <Form.Item>
-                {getFieldDecorator("username", {
-                  rules: [
-                    { required: true, message: "Please input your username!" }
-                  ]
-                })(<InputGroup id="username" placeholder="username" />)}
-              </Form.Item>
-              <Form.Item>
-                {getFieldDecorator("password", {
-                  rules: [
-                    { required: true, message: "Please input your Password!" }
-                  ]
-                })(
-                  <InputGroup
-                    type="password"
-                    id="password"
-                    placeholder="password"
-                  />
-                )}
-              </Form.Item>
-              <Form.Item>
-                <Button className="login-button" type="submit">
-                  Login
+            <div className={Classes.DARK + " login-container"}>
+              <Form
+                onSubmit={this.handleSubmit}
+                className="login-form .bp3-form-group"
+              >
+                <Form.Item>
+                  {getFieldDecorator("username", {
+                    rules: [
+                      { required: true, message: "Please input your username!" }
+                    ]
+                  })(<InputGroup id="username" placeholder="username" />)}
+                </Form.Item>
+                <Form.Item>
+                  {getFieldDecorator("password", {
+                    rules: [
+                      { required: true, message: "Please input your Password!" }
+                    ]
+                  })(
+                    <InputGroup
+                      type="password"
+                      id="password"
+                      placeholder="password"
+                    />
+                  )}
+                </Form.Item>
+                <Form.Item>
+                  <Button className="login-button" type="submit">
+                    Login
                 </Button>
-              </Form.Item>
-            </Form>
-            {this.props.loading ? <p>loading</p> : <p></p>}
-          </div>
-        )}
+                </Form.Item>
+              </Form>
+              {this.props.loading ? <Spinner size={Spinner.SIZE_STANDARD} /> : <p></p>}
+            </div>
+          )}
       </div>
     );
   }
