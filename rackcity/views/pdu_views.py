@@ -49,18 +49,19 @@ def power_status(request, id):
     rack_str = rack_str + str(asset.rack.rack_num)
 
     power_status = dict()
-    for power_connection in power_connections:
-        try:
-            html = requests.get(pdu_url + get_pdu + rack_str +
-                        str(power_connections[power_connection]['left_right']),
-                        timeout=5)
-        except ConnectionError:
-            return JsonResponse(
-                {"failure_message": "Unable to contact PDU controller. Please try again later"},
-                status=HTTPStatus.REQUEST_TIMEOUT
-            )
-        power_status[power_connection] = regex_power_status(
-            html.text, power_connections[power_connection]['port_number'])[0]
+    if asset.rack.is_network_controlled:
+        for power_connection in power_connections:
+            try:
+                html = requests.get(pdu_url + get_pdu + rack_str +
+                            str(power_connections[power_connection]['left_right']),
+                            timeout=5)
+            except ConnectionError:
+                return JsonResponse(
+                    {"failure_message": "Unable to contact PDU controller. Please try again later"},
+                    status=HTTPStatus.REQUEST_TIMEOUT
+                )
+            power_status[power_connection] = regex_power_status(
+                html.text, power_connections[power_connection]['port_number'])[0]
 
     return JsonResponse(
         {

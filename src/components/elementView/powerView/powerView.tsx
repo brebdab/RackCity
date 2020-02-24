@@ -105,8 +105,8 @@ export class PowerView extends React.PureComponent<
         return (
             <div className={Classes.DARK}>
                 {this.state.statusLoaded ?
-                    (this.state.powerConnections === undefined ?
-                        null :
+                    (this.state.powerConnections === undefined || Object.keys(this.state.powerConnections).length === 0 ?
+                        <h4>No power connections</h4> :
                         Object.keys(this.state.powerConnections).map((port: string) => {
                             return (
                                 <Card elevation={Elevation.TWO}>

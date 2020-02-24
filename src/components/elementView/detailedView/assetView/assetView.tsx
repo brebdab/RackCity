@@ -243,7 +243,7 @@ export class AssetView extends React.PureComponent<
         </div>
 
         {Object.keys(this.state.asset).length !== 0 &&
-          this.state.asset.rack.is_network_controlled
+          Object.keys(this.state.asset.power_connections).length > 0
           ? this.renderPower()
           : null}
       </div>

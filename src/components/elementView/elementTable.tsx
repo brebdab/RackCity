@@ -1038,19 +1038,18 @@ class ElementTable extends React.Component<
                                 event.stopPropagation();
                               }}
                             /> : null}
-                            {isAssetObject(item) &&
-                              item.rack.is_network_controlled ? (
-                                <AnchorButton
-                                  className="button-table"
-                                  intent="warning"
-                                  minimal
-                                  icon="offline"
-                                  onClick={(event: any) => {
-                                    this.handlePowerButtonClick(item);
-                                    event.stopPropagation();
-                                  }}
-                                />
-                              ) : null}
+                            {isAssetObject(item) ? (
+                              <AnchorButton
+                                className="button-table"
+                                intent="warning"
+                                minimal
+                                icon="offline"
+                                onClick={(event: any) => {
+                                  this.handlePowerButtonClick(item);
+                                  event.stopPropagation();
+                                }}
+                              />
+                            ) : null}
                           </div>
                           {" "}
                           {/* TODO add logic for determining if isOwner for power button */}
