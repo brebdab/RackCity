@@ -44,8 +44,8 @@ import {
 import { updateObject } from "../../store/utility";
 import { ALL_DATACENTERS } from "./elementTabContainer";
 
-var console: any = {};
-console.log = function () { };
+// var console: any = {};
+// console.log = function () { };
 const fs = require("js-file-download");
 
 interface ElementViewState {
@@ -340,22 +340,36 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               this.setState({ fileNameIsOpen: false });
             }}
             onConfirm={() => { // TODO: add stuff here for error checking
-              if (this.state.fileName === "") {
-                alert("need file name");
-              } else if (this.state.fileName.split(".")[1] !== "csv") {
-                alert("ERROR: Must be csv file");
-              } else if (this.state.fileName.split(".")[0].length === 0) {
-                alert("ERROR: .csv file must have non-empty name");
+              if (this.state.fileName === "" || this.state.networkFileName === "") {
+                alert("Please provide filenames for both files");
               } else {
-                getExportData(
-                  this.props.element.slice(0, -1) + "s",
-                  this.state.filters,
-                  this.props.token,
-                  this.state.fileName,
-                  this.state.networkFileName
-                );
-                console.log("finished both exports")
-                this.setState({ fileNameIsOpen: false, fileName: "", networkFileName: "" });
+                let fileRegEx = /.*\.(\w+)/;
+                let extension = this.state.fileName.match(fileRegEx);
+                console.log(extension)
+                let ext = extension ? extension[extension.length - 1] : null;
+                console.log(ext)
+                let networkExtension = this.state.networkFileName.match(fileRegEx);
+                console.log(networkExtension)
+                let networkExt = networkExtension ? networkExtension[networkExtension.length - 1] : null;
+                console.log(networkExt)
+                if (ext !== "csv" || networkExt !== "csv") {
+                  alert("ERROR: Filenames must be valid and end in .csv");
+                } else if (
+                  this.state.fileName.split(".")[0].length === 0
+                  || this.state.networkFileName.split(".")[0].length === 0
+                ) {
+                  alert("ERROR: .csv file must have non-empty name");
+                } else {
+                  getExportData(
+                    this.props.element.slice(0, -1) + "s",
+                    this.state.filters,
+                    this.props.token,
+                    this.state.fileName,
+                    this.state.networkFileName
+                  );
+                  console.log("finished both exports")
+                  this.setState({ fileNameIsOpen: false, fileName: "", networkFileName: "" });
+                }
               }
             }}
           >

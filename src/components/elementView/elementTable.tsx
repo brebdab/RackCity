@@ -961,7 +961,7 @@ class ElementTable extends React.Component<
                 <tbody>
                   {this.state.items.map((item: ElementObjectType) => {
                     if (isAssetObject(item)) {
-                      console.log(item);
+                      //console.log(item);
                     }
                     return (
                       <tr
