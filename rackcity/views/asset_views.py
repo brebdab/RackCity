@@ -43,6 +43,7 @@ from io import StringIO
 from rackcity.views.rackcity_utils import (
     validate_asset_location,
     validate_location_modification,
+    validate_asset_datacenter_move,
     no_infile_location_conflicts,
     records_are_identical,
     get_sort_arguments,
@@ -472,6 +473,17 @@ def asset_modify(request):
                 "failure_message":
                     Status.MODIFY_ERROR +
                     "Invalid location change. " + str(error)
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    try:
+        validate_asset_datacenter_move(data, existing_asset)
+    except Exception as error:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR +
+                    "Invalid datacenter change. " + str(error)
             },
             status=HTTPStatus.BAD_REQUEST,
         )
