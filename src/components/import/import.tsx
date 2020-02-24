@@ -440,7 +440,7 @@ export class BulkImport extends React.PureComponent<
 
 async function uploadBulk(encodedFile: string, token: string, type: string) {
   const url = type === "network connections" ?
-    API_ROOT + "api/" + "assets" + "/network-bulk-upload"
+    API_ROOT + "api/assets/network-bulk-upload"
     : API_ROOT + "api/" + type + "/bulk-upload";
   console.log(url);
   console.log(token);
