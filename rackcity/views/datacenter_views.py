@@ -1,4 +1,4 @@
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from rackcity.models import Datacenter
 from rackcity.api.serializers import DatacenterSerializer
 from rackcity.utils.log_utils import (
@@ -9,7 +9,8 @@ from rackcity.utils.log_utils import (
 )
 from rackcity.utils.errors_utils import (
     Status,
-    GenericFailure
+    GenericFailure,
+    parse_serializer_errors
 )
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -55,8 +56,8 @@ def datacenter_create(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.CREATE_ERROR.value +
-                    GenericFailure.INVALID_DATA.value,
+                    Status.INVALID_INPUT.value +
+                    parse_serializer_errors(serializer.errors),
                 "errors": str(serializer.errors)
             },
             status=HTTPStatus.BAD_REQUEST
