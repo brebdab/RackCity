@@ -10,6 +10,7 @@ class Status(Enum):
     MODIFY_ERROR = "MODIFY ERROR: "
     INVALID_INPUT = "INVALID INPUT: "
     IMPORT_ERROR = "IMPORT ERROR: "
+    EXPORT_ERROR = "EXPORT ERROR: "
 
 
 class GenericFailure(Enum):
@@ -27,13 +28,14 @@ class UserFailure(Enum):
 
 
 class BulkFailure(Enum):
-    MODEL_IMPORT = \
-        "This file of models cannot be imported. Please verify file format."
-    ASSET_IMPORT = \
-        "This file of assets cannot be imported. Please verify file format."
-    NETWORK_IMPORT = \
-        "This file of network connections cannot be imported. " + \
-        "Please verify file format."
+    IMPORT_UNKNOWN = \
+        "Unknown error importing file. " + \
+        "See in-app documentation for format specifications."
+    IMPORT_COLUMNS = \
+        "Please provide exactly the expected columns. " + \
+        "See in-app documentation for reference."
+    MODEL_INVALID = "At least one provided model was not valid: "
+    ASSET_INVALID = "At least one provided asset was not valid: "
 
 
 def get_rack_failure_message(range_serializer, action):

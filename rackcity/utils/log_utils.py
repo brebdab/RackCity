@@ -190,7 +190,7 @@ def log_network_action(user, related_asset):
     log.save()
 
 
-def log_bulk_import(user, element_type):
+def log_bulk_upload(user, element_type, num_approved, num_ignored, num_modified):
     """
     Specified element_type should be ElementType enum.
     """
@@ -201,8 +201,42 @@ def log_bulk_import(user, element_type):
         user.username,
         "uploaded",
         element_type.value,
-        "by bulk import",
+        "by bulk import:",
+        str(num_approved),
+        "adds,",
+        str(num_ignored),
+        "ignores",
+        str(num_modified),
+        "potential modifies"
     ])
+    log = Log(
+        date=date,
+        log_content=log_content,
+        user=user,
+    )
+    log.save()
+
+
+def log_bulk_approve(user, element_type, num_modified):
+    """
+    Specified element_type should be ElementType enum.
+    """
+    date = datetime.now()
+    log_content = " ".join([
+        datetime_to_string(date),
+        ElementType.USER.value,
+        user.username,
+        "approved",
+        str(num_modified),
+        element_type.value,
+        "modifications by bulk import"
+    ])
+    log = Log(
+        date=date,
+        log_content=log_content,
+        user=user,
+    )
+    log.save()
 
 
 def get_asset_name(asset):

@@ -21,7 +21,8 @@ from rackcity.api.serializers import (
 )
 from rackcity.utils.log_utils import (
     log_action,
-    log_bulk_import,
+    log_bulk_upload,
+    log_bulk_approve,
     log_delete,
     log_network_action,
     Action,
@@ -31,7 +32,8 @@ from rackcity.utils.errors_utils import (
     Status,
     GenericFailure,
     parse_serializer_errors,
-    parse_validation_error
+    parse_validation_error,
+    BulkFailure
 )
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -647,7 +649,13 @@ def asset_bulk_upload(request):
     data = JSONParser().parse(request)
     if 'import_csv' not in data:
         return JsonResponse(
-            {"failure_message": "Bulk upload request should have a parameter 'import_csv'"},
+            {
+                "failure_message":
+                    Status.IMPORT_ERROR.value +
+                    BulkFailure.IMPORT_UNKNOWN.value,
+                "errors":
+                    "Bulk upload request should have a parameter 'import_csv'"
+            },
             status=HTTPStatus.BAD_REQUEST
         )
     csv_string = StringIO(data['import_csv'])
@@ -658,10 +666,12 @@ def asset_bulk_upload(request):
         len(expected_fields) != len(given_fields)  # check for repeated fields
         or set(expected_fields) != set(given_fields)
     ):
-        failure_message = "Please provide exactly the expected columns. " + \
-            "See in-app documentation for reference. "
         return JsonResponse(
-            {"failure_message": failure_message},
+            {
+                "failure_message":
+                    Status.IMPORT_ERROR.value +
+                    BulkFailure.IMPORT_COLUMNS.value
+            },
             status=HTTPStatus.BAD_REQUEST
         )
     bulk_asset_datas = []
@@ -682,7 +692,9 @@ def asset_bulk_upload(request):
                 model_number=asset_data['model_number']
             )
         except ObjectDoesNotExist:
-            failure_message = "Model does not exist: " + \
+            failure_message = \
+                Status.IMPORT_ERROR.value + \
+                "Model does not exist: " + \
                 "vendor="+asset_data['vendor'] + \
                 ", model_number="+asset_data['model_number']
             return JsonResponse(
@@ -697,7 +709,9 @@ def asset_bulk_upload(request):
                 abbreviation=asset_data['datacenter']
             )
         except ObjectDoesNotExist:
-            failure_message = "Provided datacenter doesn't exist: " + \
+            failure_message = \
+                Status.IMPORT_ERROR.value + \
+                "Provided datacenter doesn't exist: " + \
                 asset_data['datacenter']
             return JsonResponse(
                 {"failure_message": failure_message},
@@ -712,7 +726,9 @@ def asset_bulk_upload(request):
                 rack_num=rack_num
             )
         except ObjectDoesNotExist:
-            failure_message = "Provided rack doesn't exist: " + \
+            failure_message = \
+                Status.IMPORT_ERROR.value + \
+                "Provided rack doesn't exist: " + \
                 asset_data['rack']
             return JsonResponse(
                 {"failure_message": failure_message},
@@ -741,17 +757,23 @@ def asset_bulk_upload(request):
                     and errors['asset_number'][0].code == 'unique'
                 )
             ):
-                failure_message = str(asset_serializer.errors)
-                failure_message = "At least one provided asset was not valid. "+failure_message
                 return JsonResponse(
-                    {"failure_message": failure_message},
+                    {
+                        "failure_message":
+                            Status.IMPORT_ERROR.value +
+                            BulkFailure.ASSET_INVALID.value +
+                            parse_serializer_errors(asset_serializer.errors),
+                        "errors": str(asset_serializer.errors)
+                    },
                     status=HTTPStatus.BAD_REQUEST
                 )
         # Check that all hostnames in file are case insensitive unique
         if asset_data['hostname']:
             asset_data_hostname_lower = asset_data['hostname'].lower()
             if asset_data_hostname_lower in hostnames_in_import:
-                failure_message = "Hostname must be unique, but '" + \
+                failure_message = \
+                    Status.IMPORT_ERROR.value + \
+                    "Hostname must be unique, but '" + \
                     asset_data_hostname_lower + \
                     "' appears more than once in import. "
                 return JsonResponse(
@@ -764,7 +786,9 @@ def asset_bulk_upload(request):
         if 'asset_number' in asset_data and asset_data['asset_number']:
             asset_number = asset_data['asset_number']
             if asset_number in asset_numbers_in_import:
-                failure_message = "Asset number must be unique, but '" + \
+                failure_message = \
+                    Status.IMPORT_ERROR.value + \
+                    "Asset number must be unique, but '" + \
                     str(asset_number) + \
                     "' appears more than once in import. "
                 return JsonResponse(
@@ -787,7 +811,9 @@ def asset_bulk_upload(request):
             try:
                 validate_location_modification(asset_data, existing_asset)
             except Exception:
-                failure_message = "Asset " + \
+                failure_message = \
+                    Status.IMPORT_ERROR.value + \
+                    "Asset " + \
                     str(asset_data['asset_number']) + \
                     " would conflict location with an existing asset. "
                 return JsonResponse(
@@ -817,11 +843,13 @@ def asset_bulk_upload(request):
                     asset_name = asset_data['hostname']
                 else:
                     asset_name = ""
-                failure_message = "Asset " + \
-                    asset_name + \
-                    " is invalid. " + str(error)
                 return JsonResponse(
-                    {"failure_message": failure_message},
+                    {
+                        "failure_message":
+                            Status.IMPORT_ERROR.value +
+                            "Asset " + asset_name +
+                            " is invalid. " + str(error)
+                    },
                     status=HTTPStatus.BAD_REQUEST
                 )
             else:
@@ -834,7 +862,9 @@ def asset_bulk_upload(request):
     try:
         no_infile_location_conflicts(asset_datas)
     except LocationException as error:
-        failure_message = "Location conflicts among assets in import file. " + \
+        failure_message = \
+            Status.IMPORT_ERROR.value + \
+            "Location conflicts among assets in import file. " + \
             str(error)
         return JsonResponse(
             {"failure_message": failure_message},
@@ -890,6 +920,13 @@ def asset_bulk_upload(request):
     }
     if warning_message:
         response['warning_message'] = warning_message
+    log_bulk_upload(
+        request.user,
+        ElementType.ASSET,
+        records_added,
+        records_ignored,
+        len(modifications_to_approve)
+    )
     return JsonResponse(
         response,
         status=HTTPStatus.OK
@@ -906,7 +943,14 @@ def asset_bulk_approve(request):
     data = JSONParser().parse(request)
     if 'approved_modifications' not in data:
         return JsonResponse(
-            {"failure_message": "Bulk approve request should have a parameter 'approved_modifications'"},
+            {
+                "failure_message":
+                    Status.IMPORT_ERROR.value +
+                    BulkFailure.IMPORT_UNKNOWN.value,
+                "errors":
+                    "Bulk approve request should have a parameter " +
+                    "'approved_modifications'"
+            },
             status=HTTPStatus.BAD_REQUEST
         )
     asset_datas = data['approved_modifications']
@@ -933,7 +977,7 @@ def asset_bulk_approve(request):
         except PowerConnectionException as error:
             warning_message += "Some power connections couldn't be saved. " + \
                 str(error)
-    log_bulk_import(request.user, ElementType.ASSET)
+    log_bulk_approve(request.user, ElementType.ASSET, len(asset_datas))
     if warning_message:
         return JsonResponse(
             {"warning_message": warning_message},
@@ -958,7 +1002,11 @@ def asset_bulk_export(request):
         filter_args = get_filter_arguments(request.data)
     except Exception as error:
         return JsonResponse(
-            {"failure_message": "Filter error: " + str(error)},
+            {
+                "failure_message":
+                    Status.EXPORT_ERROR.value + GenericFailure.FILTER.value,
+                "errors": str(error)
+            },
             status=HTTPStatus.BAD_REQUEST
         )
     for filter_arg in filter_args:
@@ -968,7 +1016,11 @@ def asset_bulk_export(request):
         sort_args = get_sort_arguments(request.data)
     except Exception as error:
         return JsonResponse(
-            {"failure_message": "Sort error: " + str(error)},
+            {
+                "failure_message":
+                    Status.EXPORT_ERROR.value + GenericFailure.SORT.value,
+                "errors": str(error)
+            },
             status=HTTPStatus.BAD_REQUEST
         )
     assets = assets_query.order_by(*sort_args)
@@ -1214,6 +1266,7 @@ def asset_fields(request):
         status=HTTPStatus.OK,
     )
 
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def asset_number(request):
@@ -1223,4 +1276,3 @@ def asset_number(request):
     return JsonResponse(
         {"asset_number": get_next_available_asset_number()}
     )
-    
