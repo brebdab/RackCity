@@ -9,6 +9,7 @@ class Status(Enum):
     DELETE_ERROR = "DELETE ERROR: "
     MODIFY_ERROR = "MODIFY ERROR: "
     INVALID_INPUT = "INVALID INPUT: "
+    CONNECTION = "CONNECTION ERROR: "
 
 
 class GenericFailure(Enum):
@@ -23,6 +24,10 @@ class UserFailure(Enum):
     DELETE = "Cannot delete user"
     NETID_LOGIN = \
         "The Duke NetID login credentials you have provided are invalid."
+
+
+class PowerFailure(Enum):
+    CONNECTION = "Unable to contact PDU controller. Please try again later."
 
 
 def get_rack_failure_message(range_serializer, action):
