@@ -75,6 +75,17 @@ export class PowerView extends React.PureComponent<
             })
     }
 
+    componentDidUpdate() {
+        axios.get(API_ROOT + "api/power/get-state/" + this.props.asset!.id, getHeaders(this.props.token))
+            .then(res => {
+                this.setState({
+                    powerConnections: res.data.power_connections,
+                    powerStatus: res.data.power_status,
+                    statusLoaded: true
+                })
+            })
+    }
+
     render() {
 
         return (
