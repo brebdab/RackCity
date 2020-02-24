@@ -1043,7 +1043,13 @@ def network_bulk_upload(request):
     data = JSONParser().parse(request)
     if 'import_csv' not in data:
         return JsonResponse(
-            {"failure_message": "Bulk upload request should have a parameter 'import_csv'"},
+            {
+                "failure_message":
+                    Status.IMPORT_ERROR.value +
+                    BulkFailure.IMPORT_UNKNOWN.value,
+                "errors":
+                    "Bulk upload request should have a parameter 'import_csv'"
+            },
             status=HTTPStatus.BAD_REQUEST
         )
     csv_string = StringIO(data['import_csv'])
@@ -1054,10 +1060,12 @@ def network_bulk_upload(request):
         len(expected_fields) != len(given_fields)  # check for repeated fields
         or set(expected_fields) != set(given_fields)
     ):
-        failure_message = "Please provide exactly the expected columns. " + \
-            "See in-app documentation for reference. "
         return JsonResponse(
-            {"failure_message": failure_message},
+            {
+                "failure_message":
+                    Status.IMPORT_ERROR.value +
+                    BulkFailure.IMPORT_COLUMNS.value
+            },
             status=HTTPStatus.BAD_REQUEST
         )
     bulk_network_port_datas = []
@@ -1070,7 +1078,9 @@ def network_bulk_upload(request):
             'src_hostname' not in bulk_network_port_data
             or not bulk_network_port_data['src_hostname']
         ):
-            failure_message = "Field 'src_hostname' is required for all network imports. '"
+            failure_message = \
+                Status.IMPORT_ERROR.value + \
+                "Field 'src_hostname' is required for all network imports."
             return JsonResponse(
                 {"failure_message": failure_message},
                 status=HTTPStatus.BAD_REQUEST
@@ -1079,7 +1089,9 @@ def network_bulk_upload(request):
             'src_port' not in bulk_network_port_data
             or not bulk_network_port_data['src_port']
         ):
-            failure_message = "Field 'src_port' is required for all network imports. '"
+            failure_message = \
+                Status.IMPORT_ERROR.value + \
+                "Field 'src_port' is required for all network imports."
             return JsonResponse(
                 {"failure_message": failure_message},
                 status=HTTPStatus.BAD_REQUEST
@@ -1111,6 +1123,13 @@ def network_bulk_upload(request):
         "ignored": num_ports_ignored,
         "modifications": modifications_to_approve
     }
+    log_bulk_upload(
+        request.user,
+        ElementType.NETWORK_CONNECTIONS,
+        0,
+        num_ports_ignored,
+        len(modifications_to_approve)
+    )
     return JsonResponse(
         response,
         status=HTTPStatus.OK
@@ -1123,7 +1142,14 @@ def network_bulk_approve(request):
     data = JSONParser().parse(request)
     if 'approved_modifications' not in data:
         return JsonResponse(
-            {"failure_message": "Bulk approve request should have a parameter 'approved_modifications'"},
+            {
+                "failure_message":
+                    Status.IMPORT_ERROR.value +
+                    BulkFailure.IMPORT_UNKNOWN.value,
+                "errors":
+                    "Bulk approve request should have a parameter " +
+                    "'approved_modifications'"
+            },
             status=HTTPStatus.BAD_REQUEST
         )
     network_datas = data['approved_modifications']
@@ -1144,7 +1170,8 @@ def network_bulk_approve(request):
                 asset_id=source_asset.id
             )
         except MacAddressException as error:
-            warning_message += "Some mac addresses couldn't be saved. " + \
+            warning_message += \
+                "Some mac addresses couldn't be saved. " + \
                 str(error)
         try:
             save_network_connections(
@@ -1152,8 +1179,14 @@ def network_bulk_approve(request):
                 asset_id=source_asset.id
             )
         except NetworkConnectionException as error:
-            warning_message += "Some network connections couldn't be saved. " + \
+            warning_message += \
+                "Some network connections couldn't be saved. " + \
                 str(error)
+    log_bulk_approve(
+        request.user,
+        ElementType.NETWORK_CONNECTIONS,
+        len(network_datas)
+    )
     if warning_message:
         return JsonResponse(
             {"warning_message": warning_message},
@@ -1161,7 +1194,10 @@ def network_bulk_approve(request):
         )
     else:
         return JsonResponse(
-            {"success_message": "All network connections created succesfully."},
+            {
+                "success_message":
+                    "All network connections created succesfully."
+            },
             status=HTTPStatus.OK,
         )
 
@@ -1174,7 +1210,11 @@ def network_bulk_export(request):
         filter_args = get_filter_arguments(request.data)
     except Exception as error:
         return JsonResponse(
-            {"failure_message": "Filter error: " + str(error)},
+            {
+                "failure_message":
+                    Status.EXPORT_ERROR.value + GenericFailure.FILTER.value,
+                "errors": str(error)
+            },
             status=HTTPStatus.BAD_REQUEST
         )
     for filter_arg in filter_args:
@@ -1184,7 +1224,11 @@ def network_bulk_export(request):
         sort_args = get_sort_arguments(request.data)
     except Exception as error:
         return JsonResponse(
-            {"failure_message": "Sort error: " + str(error)},
+            {
+                "failure_message":
+                    Status.EXPORT_ERROR.value + GenericFailure.SORT.value,
+                "errors": str(error)
+            },
             status=HTTPStatus.BAD_REQUEST
         )
     assets = assets_query.order_by(*sort_args)
