@@ -38,8 +38,9 @@ def get_rack_detailed_response(racks):
 
 def validate_asset_datacenter_move(data, asset):
     old_datacenter = asset.rack.datacenter
-    if 'rack' in data:
-        new_datacenter = Rack.objects.get(id=data['rack']).datacenter
+    if 'rack' not in data:
+        return
+    new_datacenter = Rack.objects.get(id=data['rack']).datacenter
     if (old_datacenter == new_datacenter):
         return
     power_ports = PowerPort.objects.get(asset=asset.id)
