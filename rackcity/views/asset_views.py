@@ -795,6 +795,7 @@ def asset_bulk_upload(request):
         # macs and connections aren't specified in this file, so ignore them
         del existing_data['mac_addresses']
         del existing_data['network_connections']
+        del existing_data['network_graph']
         if records_are_identical(existing_data, new_data):
             records_ignored += 1
         else:
