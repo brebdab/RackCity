@@ -43,14 +43,14 @@ def validate_asset_datacenter_move(data, asset):
     new_datacenter = Rack.objects.get(id=data['rack']).datacenter
     if (old_datacenter == new_datacenter):
         return
-    power_ports = PowerPort.objects.get(asset=asset.id)
+    power_ports = PowerPort.objects.filter(asset=asset.id)
     for power_port in power_ports:
         if (power_port.power_connection is not None):
             raise LocationException(
                 "Cannot move asset with existing power connections " +
                 "to different datacenter."
             )
-    network_ports = NetworkPort.objects.get(asset=asset.id)
+    network_ports = NetworkPort.objects.filter(asset=asset.id)
     for network_port in network_ports:
         if (network_port.connected_port is not None):
             raise LocationException(
