@@ -163,6 +163,12 @@ class RackView extends React.PureComponent<
         });
       });
   };
+  componentDidMount = () => {
+    if (this.props.location && this.props.location.state) {
+      console.log(this.props.location);
+      window.print();
+    }
+  };
 
   public render() {
     const racks =
@@ -170,7 +176,7 @@ class RackView extends React.PureComponent<
         ? (this.props.location.state as Array<RackResponseObject>)
         : this.props.racks;
     if (this.props.location && this.props.location.state) {
-      window.print();
+      console.log(this.props.location);
     }
 
     return (
