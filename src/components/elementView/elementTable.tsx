@@ -1,68 +1,23 @@
-import {
-  Alert,
-  AnchorButton,
-  HTMLSelect,
-  Icon,
-  Intent,
-  IToastProps,
-  Position,
-  Toaster,
-  Dialog,
-  Classes
-} from "@blueprintjs/core";
+import { Alert, AnchorButton, Classes, Dialog, HTMLSelect, Icon, Intent, IToastProps, Position, Toaster } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { IconNames } from "@blueprintjs/icons";
 import "@blueprintjs/icons/lib/css/blueprint-icons.css";
+import axios from "axios";
 import React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import FormPopup from "../../forms/formPopup";
 import { FormTypes } from "../../forms/formUtils";
-import {
-  ElementObjectType,
-  ElementType,
-  getHeaders,
-  isAssetObject,
-  isModelObject,
-  isRackObject,
-  RackRangeFields,
-  UserInfoObject,
-  isUserObject,
-  isDatacenterObject,
-  DatacenterObject,
-  isObject,
-  SortFilterBody,
-  AssetObject,
-  isRackRangeFields
-} from "../../utils/utils";
+import { updateObject } from "../../store/utility";
+import { API_ROOT } from "../../utils/api-config";
+import { AssetObject, DatacenterObject, ElementObjectType, ElementType, getHeaders, isAssetObject, isDatacenterObject, isModelObject, isObject, isRackObject, isRackRangeFields, isUserObject, RackRangeFields, SortFilterBody, UserInfoObject } from "../../utils/utils";
 import DragDropList from "./dragDropList";
+import { deleteAsset, deleteDatacenter, deleteModel, deleteUser, ElementTableOpenAlert, FilterTypes, IFilter, ITableSort, modifyAsset, modifyDatacenter, modifyModel, NumericFilter, PagingTypes, renderNumericFilterItem, renderRackRangeFilterItem, renderTextFilterItem, TextFilter } from "./elementUtils";
 import "./elementView.scss";
 import FilterSelect from "./filterSelect";
-import axios from "axios";
-import { API_ROOT } from "../../utils/api-config";
-
-import {
-  ITableSort,
-  PagingTypes,
-  renderTextFilterItem,
-  renderNumericFilterItem,
-  renderRackRangeFilterItem,
-  IFilter,
-  FilterTypes,
-  TextFilter,
-  NumericFilter,
-  deleteModel,
-  deleteAsset,
-  deleteDatacenter,
-  modifyModel,
-  modifyAsset,
-  modifyDatacenter,
-  ElementTableOpenAlert,
-  deleteUser
-} from "./elementUtils";
 import { PowerView } from "./powerView/powerView";
 import "./powerView/powerView.scss";
-import { updateObject } from "../../store/utility";
+
 
 interface ElementTableState {
   items: Array<ElementObjectType>;
@@ -463,6 +418,16 @@ class ElementTable extends React.Component<
   private addSuccessToast = (message: string) => {
     this.addToast({ message: message, intent: Intent.PRIMARY });
   };
+  private addWarnToast = (message: string) => {
+    this.addToast({
+      message: message,
+      intent: Intent.WARNING,
+      action: {
+        onClick: () => this.setState({ isEditFormOpen: true }),
+        text: "Edit values"
+      }
+    });
+  };
   private addErrorToast = (message: string) => {
     this.addToast({ message: message, intent: Intent.DANGER });
   };
@@ -621,7 +586,11 @@ class ElementTable extends React.Component<
     this.handleEditFormClose();
     this.addSuccessToast("Successfuly modified");
   }
-
+  successfulModifcationWithWarning = (warning: string) => {
+    this.updateTableData();
+    this.handleEditFormClose();
+    this.addWarnToast(warning);
+  };
   handleEditFormSubmit = (values: ElementObjectType, headers: any) => {
     if (isModelObject(values)) {
       modifyModel(values, headers).then(res => {
@@ -629,7 +598,12 @@ class ElementTable extends React.Component<
       });
     } else if (isAssetObject(values)) {
       modifyAsset(values, headers).then(res => {
-        this.successfulModification();
+        console.log("RESPONSE", res);
+        if (res.data.warning_message) {
+          this.successfulModifcationWithWarning(res.data.warning_message);
+        } else {
+          this.successfulModification();
+        }
       });
     } else if (isDatacenterObject(values)) {
       modifyDatacenter(values, headers).then(res => {

@@ -32,6 +32,8 @@ import {
 import RackView from "./detailedView/rackView/rackView";
 import { ALL_DATACENTERS } from "./elementTabContainer";
 import RackSelectView from "./rackSelectView";
+import { RouteComponentProps, withRouter } from "react-router";
+import { Link } from "react-router-dom";
 
 interface RackTabState {
   isOpen: boolean;
@@ -51,7 +53,10 @@ interface RackTabProps {
   currDatacenter: DatacenterObject;
   onDatacenterSelect(datacenter: DatacenterObject): void;
 }
-class RackTab extends React.Component<RackTabProps, RackTabState> {
+class RackTab extends React.Component<
+  RackTabProps & RouteComponentProps,
+  RackTabState
+> {
   state = {
     isOpen: false,
     isDeleteOpen: false,
@@ -228,7 +233,6 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
   render() {
     return (
       <div className="rack-tab">
-        {/* <div className="do-not-print"> */}
         <Toaster
           autoFocus={false}
           canEscapeKeyClear={true}
@@ -291,7 +295,6 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
         >
           <p>Are you sure you want to delete?</p>
         </Alert>
-
         {this.props.currDatacenter &&
         this.props.currDatacenter.name !== ALL_DATACENTERS.name ? (
           <div>
@@ -335,9 +338,26 @@ class RackTab extends React.Component<RackTabProps, RackTabState> {
             <em>Please select a datacenter to view rack information</em>
           </Callout>
         )}
-        <RackView racks={this.state.racks} loading={this.state.loading} />
+        {this.state.racks.length !== 0 ? (
+          <Link
+            target="_blank"
+            to={{ pathname: "/rack-print", state: this.state.racks }}
+          >
+            <Button
+              className="print-racks"
+              text="Print Racks Page"
+              onClick={(e: any) => {
+                console.log("storing racks");
+                localStorage.setItem("racks", JSON.stringify(this.state.racks));
+              }}
+            />
+          </Link>
+        ) : null}
+
+        <div id="rack-view-print">
+          <RackView racks={this.state.racks} loading={this.state.loading} />
+        </div>
       </div>
-      // </div>
     );
   }
 }
@@ -348,4 +368,4 @@ const mapStatetoProps = (state: any) => {
     isAdmin: state.admin
   };
 };
-export default connect(mapStatetoProps)(RackTab);
+export default connect(mapStatetoProps)(withRouter(RackTab));

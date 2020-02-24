@@ -28,10 +28,13 @@ export interface NavigationState {
 }
 
 type NavigationPropsAll = NavigationProps & RouteComponentProps;
-export class Navigation extends React.Component<NavigationPropsAll, NavigationState> {
+export class Navigation extends React.Component<
+  NavigationPropsAll,
+  NavigationState
+> {
   public state = {
     username: undefined
-  }
+  };
   getUsername(token: string) {
     const headers = {
       headers: {
@@ -41,20 +44,20 @@ export class Navigation extends React.Component<NavigationPropsAll, NavigationSt
     axios
       .get(API_ROOT + "api/users/who-am-i", headers)
       .then(res => {
-        this.setState({ username: res.data.username })
+        this.setState({ username: res.data.username });
       })
       .catch(err => {
         console.log(err);
       });
   }
   clearUsernameAndLogout() {
-    this.setState({ username: undefined })
-    this.props.logout()
+    this.setState({ username: undefined });
+    this.props.logout();
   }
 
   public render() {
     if (this.props.isAuthenticated && !this.state.username) {
-      this.getUsername(this.props.token)
+      this.getUsername(this.props.token);
     }
 
     return (
@@ -90,8 +93,8 @@ export class Navigation extends React.Component<NavigationPropsAll, NavigationSt
                   />
                 </div>
               ) : (
-                  <p></p>
-                )}
+                <p></p>
+              )}
             </NavbarGroup>
 
             <NavbarGroup align={Alignment.RIGHT}>
@@ -121,14 +124,14 @@ export class Navigation extends React.Component<NavigationPropsAll, NavigationSt
                   />
                 </div>
               ) : (
-                  <AnchorButton
-                    onClick={() => this.props.history.push("/login")}
-                    className="nav-bar-button"
-                    icon="user"
-                    text="Login"
-                    minimal
-                  />
-                )}
+                <AnchorButton
+                  onClick={() => this.props.history.push("/login")}
+                  className="nav-bar-button"
+                  icon="user"
+                  text="Login"
+                  minimal
+                />
+              )}
             </NavbarGroup>
           </Navbar>
         </div>
@@ -141,7 +144,7 @@ const mapStateToProps = (state: any) => {
   return {
     isAuthenticated: state.token !== null,
     isAdmin: state.admin,
-    token: state.token,
+    token: state.token
   };
 };
 

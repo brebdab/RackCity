@@ -53,8 +53,6 @@ function getData(assetkey: string, token: string) {
 
 interface AssetViewState {
   asset: AssetObject;
-  // columns: Array<string>;
-  // fields: Array<string>;
   isFormOpen: boolean;
   isDeleteOpen: boolean;
   isAlertOpen: boolean;
@@ -77,16 +75,20 @@ export class AssetView extends React.PureComponent<
     let params: any;
     params = this.props.match.params;
     return modifyAsset(asset, headers).then(res => {
-      console.log("success");
+      if (res.data.warning_message) {
+        this.addWarnToast(res.data.warning_message);
+      } else {
+        this.addSuccessToast("Successfuly modified asset");
+      }
+
       getData(params.rid, this.props.token).then(result => {
         this.setState({
           asset: result,
           powerShouldUpdate: true
         });
       });
-      console.log(this.state.asset);
+
       this.handleFormClose();
-      console.log(this.state.isFormOpen);
     });
   };
   private toaster: Toaster = {} as Toaster;
@@ -99,6 +101,22 @@ export class AssetView extends React.PureComponent<
     toaster: (ref: Toaster) => (this.toaster = ref)
   };
 
+  private addSuccessToast = (message: string) => {
+    this.addToast({ message: message, intent: Intent.PRIMARY });
+  };
+  private addWarnToast = (message: string) => {
+    this.addToast({
+      message: message,
+      intent: Intent.WARNING,
+      action: {
+        onClick: () => this.setState({ isFormOpen: true }),
+        text: "Edit values"
+      }
+    });
+  };
+  private addErrorToast = (message: string) => {
+    this.addToast({ message: message, intent: Intent.DANGER });
+  };
   public updateAssetData = (rid: string) => {
     getData(rid, this.props.token).then(result => {
       this.setState({
@@ -198,7 +216,7 @@ export class AssetView extends React.PureComponent<
                               className="asset-link"
                               onClick={(e: any) => {
                                 const id = this.getAssetIdFromHostname(
-                                  connection!.destination_hostname
+                                  connection!.destination_hostname!
                                 );
                                 if (id) {
                                   this.redirectToAsset(id);
@@ -207,12 +225,7 @@ export class AssetView extends React.PureComponent<
                             >
                               {connection.destination_hostname}
                             </td>
-                          ) : (
-                              <td> </td>
-                            )}
-                          <td>
-                            {connection ? connection.destination_port : " "}
-                          </td>
+                          ) : (<td></td>)}
                         </tr>
                       );
                     })}

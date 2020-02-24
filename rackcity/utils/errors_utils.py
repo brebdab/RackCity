@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from enum import Enum
 
 
@@ -7,24 +8,21 @@ class Status(Enum):
     CREATE_ERROR = "CREATE ERROR: "
     DELETE_ERROR = "DELETE ERROR: "
     MODIFY_ERROR = "MODIFY ERROR: "
+    INVALID_INPUT = "INVALID INPUT: "
 
 
 class GenericFailure(Enum):
-    UNKNOWN = "Unknown internal error"
-    DOES_NOT_EXIST = " does not exist"
-    FILTER = "Invalid filter applied"
-    SORT = "Invalid sort applied"
-    INVALID_DATA = "Required values are missing or invalid"
+    UNKNOWN = "Unknown internal error."
+    DOES_NOT_EXIST = " does not exist."
+    FILTER = "Invalid filter applied."
+    SORT = "Invalid sort applied."
+    INVALID_DATA = "Required values are missing or invalid."
 
 
 class UserFailure(Enum):
     DELETE = "Cannot delete user"
     NETID_LOGIN = \
         "The Duke NetID login credentials you have provided are invalid."
-
-
-class RackFailure(Enum):
-    RANGE = "Invalid rack range requested"
 
 
 def get_rack_failure_message(range_serializer, action):
@@ -76,3 +74,25 @@ def get_rack_list(racks):
     return ", ".join(
         [str(rack.row_letter) + str(rack.rack_num) for rack in racks]
     )
+
+
+def parse_serializer_errors(errors):
+    failure_messages = []
+    error_num = 0
+    for field in errors:
+        error_num += 1
+        field_errors = [str(error) for error in errors[field]]
+        failure_messages.append(
+            "(" + str(error_num) + ") " + field + ": " + " ".join(field_errors)
+        )
+    return " ".join(failure_messages)
+
+
+def parse_validation_error(error):
+    failure_detail = ""
+    if isinstance(error, ValidationError):
+        for err in error:
+            failure_detail += err
+    else:
+        failure_detail = GenericFailure.UNKNOWN.value
+    return failure_detail

@@ -18,6 +18,7 @@ from rackcity.utils.log_utils import (
 from rackcity.utils.errors_utils import (
     GenericFailure,
     Status,
+    parse_serializer_errors
 )
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -68,8 +69,8 @@ def model_add(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.CREATE_ERROR.value +
-                    GenericFailure.INVALID_DATA.value,
+                    Status.INVALID_INPUT.value +
+                    parse_serializer_errors(serializer.errors),
                 "errors": str(serializer.errors)
             },
             status=HTTPStatus.BAD_REQUEST
