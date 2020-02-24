@@ -30,16 +30,20 @@ interface AlertState {
   uploadFileIsOpen: boolean;
   modelAlterationsIsOpen: boolean;
   assetAlterationsIsOpen: boolean;
+  networkAlterationsIsOpen: boolean;
   selectedFile?: File;
   encodedFile?: string;
   loadedModels: any;
   loadedAssets: any;
   modifiedModels?: Array<any>;
   modifiedAssets?: Array<any>;
+  modifiedNetwork?: Array<any>;
   ignoredModels?: number;
   ignoredAssets?: number;
+  ignoredNetwork?: number;
   addedModels?: number;
   addedAssets?: number;
+  addedNetwork?: number;
   uploading: boolean;
   notify: boolean;
   assetUploadType: string;
@@ -65,6 +69,7 @@ export class BulkImport extends React.PureComponent<
     uploadFileIsOpen: false,
     modelAlterationsIsOpen: false,
     assetAlterationsIsOpen: false,
+    networkAlterationsIsOpen: false,
     loadedModels: [],
     loadedAssets: [],
     uploading: false,
@@ -232,6 +237,35 @@ export class BulkImport extends React.PureComponent<
             />
           </Dialog>
         </div>
+        <div>
+          <Dialog
+            isOpen={this.state.networkAlterationsIsOpen}
+            onClose={() =>
+              this.setState({
+                networkAlterationsIsOpen: false,
+                modifiedNetwork: undefined
+              })
+            }
+            className={"modify-table"}
+            usePortal={true}
+            isCloseButtonShown={true}
+            title={"Network Connections Alterations Menu"}
+          >
+            <Modifier
+              {...this.props}
+              modelsModified={this.state.modifiedNetwork}
+              modelsAdded={this.state.addedNetwork}
+              modelsIgnored={this.state.ignoredNetwork}
+              callback={() => {
+                this.setState({
+                  networkAlterationsIsOpen: false,
+                  modifiedNetwork: undefined,
+                });
+              }}
+              operation={"network"}
+            />
+          </Dialog>
+        </div>
         <Instructions />
       </div>
     );
@@ -337,7 +371,7 @@ export class BulkImport extends React.PureComponent<
       ).then(
         res => {
           if (res.modifications.length !== 0) {
-            if (params.resourceType === "models") {
+            if (uploadType === "models") {
               this.setState({
                 modelAlterationsIsOpen: true,
                 uploading: false,
@@ -345,13 +379,21 @@ export class BulkImport extends React.PureComponent<
                 ignoredModels: res.ignored,
                 addedModels: res.added
               });
-            } else {
+            } else if (uploadType === "assets") {
               this.setState({
                 assetAlterationsIsOpen: true,
                 uploading: false,
                 modifiedAssets: res.modifications,
                 ignoredAssets: res.ignored,
                 addedAssets: res.added
+              });
+            } else {
+              this.setState({
+                networkAlterationsIsOpen: true,
+                uploading: false,
+                modifiedNetwork: res.modifications,
+                ignoredNetwork: res.ignored,
+                addedNetwork: res.added
               });
             }
           } else {
