@@ -151,7 +151,7 @@ def power_on(request):
         asset,
     )
     return JsonResponse(
-        {"success_message": Status.SUCCESS.value + "Power turned on"},
+        {"success_message": Status.SUCCESS.value + "Power turned on."},
         status=HTTPStatus.OK
     )
 
@@ -215,7 +215,7 @@ def power_off(request):
         asset,
     )
     return JsonResponse(
-        {"success_message": Status.SUCCESS.value + "Power turned off"},
+        {"success_message": Status.SUCCESS.value + "Power turned off."},
         status=HTTPStatus.OK
     )
 
