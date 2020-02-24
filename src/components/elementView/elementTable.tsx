@@ -1,4 +1,15 @@
-import { Alert, AnchorButton, Classes, Dialog, HTMLSelect, Icon, Intent, IToastProps, Position, Toaster } from "@blueprintjs/core";
+import {
+  Alert,
+  AnchorButton,
+  Classes,
+  Dialog,
+  HTMLSelect,
+  Icon,
+  Intent,
+  IToastProps,
+  Position,
+  Toaster
+} from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { IconNames } from "@blueprintjs/icons";
 import "@blueprintjs/icons/lib/css/blueprint-icons.css";
@@ -10,14 +21,47 @@ import FormPopup from "../../forms/formPopup";
 import { FormTypes } from "../../forms/formUtils";
 import { updateObject } from "../../store/utility";
 import { API_ROOT } from "../../utils/api-config";
-import { AssetObject, DatacenterObject, ElementObjectType, ElementType, getHeaders, isAssetObject, isDatacenterObject, isModelObject, isObject, isRackObject, isRackRangeFields, isUserObject, RackRangeFields, SortFilterBody, UserInfoObject } from "../../utils/utils";
+import {
+  AssetObject,
+  DatacenterObject,
+  ElementObjectType,
+  ElementType,
+  getHeaders,
+  isAssetObject,
+  isDatacenterObject,
+  isModelObject,
+  isObject,
+  isRackObject,
+  isRackRangeFields,
+  isUserObject,
+  RackRangeFields,
+  SortFilterBody,
+  UserInfoObject
+} from "../../utils/utils";
 import DragDropList from "./dragDropList";
-import { deleteAsset, deleteDatacenter, deleteModel, deleteUser, ElementTableOpenAlert, FilterTypes, IFilter, ITableSort, modifyAsset, modifyDatacenter, modifyModel, NumericFilter, PagingTypes, renderNumericFilterItem, renderRackRangeFilterItem, renderTextFilterItem, TextFilter } from "./elementUtils";
+import {
+  deleteAsset,
+  deleteDatacenter,
+  deleteModel,
+  deleteUser,
+  ElementTableOpenAlert,
+  FilterTypes,
+  IFilter,
+  ITableSort,
+  modifyAsset,
+  modifyDatacenter,
+  modifyModel,
+  NumericFilter,
+  PagingTypes,
+  renderNumericFilterItem,
+  renderRackRangeFilterItem,
+  renderTextFilterItem,
+  TextFilter
+} from "./elementUtils";
 import "./elementView.scss";
 import FilterSelect from "./filterSelect";
 import { PowerView } from "./powerView/powerView";
 import "./powerView/powerView.scss";
-
 
 interface ElementTableState {
   items: Array<ElementObjectType>;
@@ -45,6 +89,7 @@ interface ElementTableProps {
   disableSorting?: boolean;
   disableFiltering?: boolean;
   currDatacenter?: DatacenterObject;
+  datacenters?: Array<DatacenterObject>;
   getData?(
     type: string,
     page_num: number,
