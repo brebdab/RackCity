@@ -1127,6 +1127,7 @@ def asset_fields(request):
     )
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def asset_number(request):
     """
     Get a suggest asset number for Asset creation
