@@ -28,20 +28,20 @@ import {
 import { updateObject } from "../store/utility";
 import { API_ROOT } from "../utils/api-config";
 import {
+  AssetFormLabels,
   AssetObject,
   DatacenterObject,
   ElementObjectType,
   ElementType,
   getHeaders,
   isAssetObject,
-  PowerConnection,
   ModelObject,
   NetworkConnection,
+  PowerConnection,
   PowerPortAvailability,
   PowerSide,
   RackObject,
-  ShallowAssetObject,
-  AssetFormLabels
+  ShallowAssetObject
 } from "../utils/utils";
 import Field from "./field";
 import "./forms.scss";
@@ -87,6 +87,8 @@ interface AssetFormState {
   power_ports: PowerPortAvailability;
   power_ports_default: { [port: string]: boolean };
   assets: Array<AssetObject>;
+  left_ports: Array<string>;
+  right_ports: Array<string>;
 }
 // var console: any = {};
 // console.log = function() {};
@@ -127,20 +129,32 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     errors: [],
     users: [],
     assets: [],
+    left_ports: [],
+    right_ports: [],
     //TODO, call endpoint, don't hard code
-    power_ports: {
-      left_suggest: "12",
-      left_available: ["1", "2", "12"],
-      right_suggest: "12",
-      right_available: ["1", "2", "12", "13"]
-    },
+    power_ports: {} as PowerPortAvailability,
+    // power_ports: {
+    //   left_suggest: "12",
+    //   left_available: ["1", "2", "12"],
+    //   right_suggest: "12",
+    //   right_available: ["1", "2", "12", "13"]
+    // },
     power_ports_default: {} as { [port: string]: boolean }
   };
-  headers = {
-    headers: {
-      Authorization: "Token " + this.props.token
-    }
-  };
+
+  getPowerPortAvailability(rack: RackObject) {
+    const params = { id: rack.id };
+    const config = {
+      headers: {
+        Authorization: "Token " + this.props.token
+      },
+
+      params: params
+    };
+    axios.get(API_ROOT + "api/power/availability", config).then(res => {
+      this.setState({ power_ports: res.data });
+    });
+  }
 
   private getElementData(
     path: string,
@@ -174,9 +188,25 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         return items;
       });
   }
-
+  getAssetNumber() {
+    axios
+      .get(API_ROOT + "api/assets/asset-number", getHeaders(this.props.token))
+      .then((res: any) => {
+        this.setState({
+          values: updateObject(this.state.values, {
+            asset_number: res.data.asset_number
+          })
+        });
+      });
+  }
   componentDidMount() {
     this.setPowerPortInputState();
+    if (!this.state.values.asset_number && !this.props.initialValues) {
+      this.getAssetNumber();
+    }
+    if (this.state.values.rack) {
+      this.getPowerPortAvailability(this.state.values.rack);
+    }
 
     let values = this.state.values;
     if (!this.props.initialValues) {
@@ -247,7 +277,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       if (this.state.errors.length === 0) {
         const resp = this.props.submitForm(
           this.mapAssetObject(this.state.values),
-          this.headers
+          getHeaders(this.props.token)
         );
         if (resp) {
           resp.catch(err => {
@@ -411,19 +441,24 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   };
   getPortsForSide = (port: number) => {
     let side;
+    console.log(this.state.values.power_connections, this.state.power_ports);
     if (
       this.state.values.power_connections &&
       this.state.values.power_connections[port]
     ) {
       const portString = (port as unknown) as string;
       side = this.state.values.power_connections[portString].left_right;
-    }
+      console.log(side);
 
-    if (side === PowerSide.LEFT) {
-      return this.state.power_ports.left_available;
-    } else {
-      return this.state.power_ports.right_available;
+      if (side === PowerSide.LEFT) {
+        console.log(this.state.power_ports.left_available);
+
+        return this.state.power_ports.left_available.map(String);
+      } else {
+        return this.state.power_ports.right_available.map(String);
+      }
     }
+    return [];
   };
   setDefaultPortValues = (port: number, status: boolean) => {
     const power_connections = this.state.values.power_connections;
@@ -771,6 +806,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     if (this.state.users.length === 0) {
       this.getUsers();
     }
+
     if (
       this.state.currDatacenter &&
       this.state.currDatacenter !== ALL_DATACENTERS &&
@@ -787,7 +823,23 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
           return <Callout intent={Intent.DANGER}>{err}</Callout>;
         })}
         <form onSubmit={this.handleSubmit} className="create-form ">
-          <FormGroup label={AssetFormLabels.asset_number} inline={false}>
+          <FormGroup
+            label={
+              <div className="text-with-tooltip">
+                {" "}
+                {AssetFormLabels.asset_number}{" "}
+                <Tooltip
+                  className="tooltip-icon"
+                  content={
+                    "If no asset number provided, will be autogenerated on creation"
+                  }
+                >
+                  <Icon icon={IconNames.INFO_SIGN} />
+                </Tooltip>{" "}
+              </div>
+            }
+            inline={false}
+          >
             <Field
               placeholder="asset_number"
               onChange={this.handleChange}
@@ -837,11 +889,12 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                   usePortal: true
                 }}
                 items={this.state.racks}
-                onItemSelect={(rack: RackObject) =>
+                onItemSelect={(rack: RackObject) => {
                   this.setState({
                     values: updateObject(values, { rack: rack })
-                  })
-                }
+                  });
+                  this.getPowerPortAvailability(rack);
+                }}
                 itemRenderer={renderRackItem}
                 itemPredicate={filterRack}
                 noResults={<MenuItem disabled={true} text="No results." />}
