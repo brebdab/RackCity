@@ -80,12 +80,6 @@ def power_on(request):
             {"failure_message": failure_message},
             status=HTTPStatus.BAD_REQUEST
         )
-    elif 'power_port_number' not in data.keys():
-        failure_message = "No asset power port given"
-        return JsonResponse(
-            {"failure_message": failure_message},
-            status=HTTPStatus.BAD_REQUEST
-        )
     try:
         asset = Asset.objects.get(id=data['id'])
     except Asset.DoesNotExist:
@@ -95,38 +89,28 @@ def power_on(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     power_connections = serialize_power_connections(asset)
-    if data['power_port_number'] not in power_connections:
-        failure_message = "Power port does not exist"
-        return JsonResponse(
-            {"failure_message": failure_message},
-            status=HTTPStatus.BAD_REQUEST
-        )
     # Check power is off
-    html = requests.get(
-        pdu_url + get_pdu + get_pdu_status_ext(
-            asset,
-            str(power_connections[data['power_port_number']]['left_right'])
+    for connection in power_connections:
+        html = requests.get(
+            pdu_url + get_pdu + get_pdu_status_ext(
+                asset,
+                str(power_connections[connection]['left_right'])
+            )
         )
-    )
-    power_status = regex_power_status(
-        html.text,
-        power_connections[data['power_port_number']]['port_number']
-    )[0]
-    if power_status == "ON":
-        return JsonResponse(
-            {"warning_message": "Port is already on"},
-            status=HTTPStatus.OK
-        )
-    toggle_power(asset, data['power_port_number'], "on")
-    log_power_action(
-        request.user,
-        PowerAction.ON,
-        asset,
-        data['power_port_number'],
-    )
+        power_status = regex_power_status(
+            html.text,
+            power_connections[connection]['port_number']
+        )[0]
+        if power_status != "ON":
+            toggle_power(asset, connection, "on")
+    # log_power_action(
+    #     request.user,
+    #     PowerAction.ON,
+    #     asset,
+    #     data['power_port_number'],
+    # )
     return JsonResponse(
-        {"success_message": "Power successfully turned on for port " +
-            data['power_port_number']},
+        {"success_message": "Power successfully turned on"},
         status=HTTPStatus.OK
     )
 
@@ -144,12 +128,6 @@ def power_off(request):
             {"failure_message": failure_message},
             status=HTTPStatus.BAD_REQUEST
         )
-    elif 'power_port_number' not in data:
-        failure_message = "No asset power port given"
-        return JsonResponse(
-            {"failure_message": failure_message},
-            status=HTTPStatus.BAD_REQUEST
-        )
     try:
         asset = Asset.objects.get(id=data['id'])
     except Asset.DoesNotExist:
@@ -159,36 +137,28 @@ def power_off(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     power_connections = serialize_power_connections(asset)
-    if data['power_port_number'] not in power_connections:
-        failure_message = "Power port does not exist"
-        return JsonResponse(
-            {"failure_message": failure_message},
-            status=HTTPStatus.BAD_REQUEST
-        )
     # Check power is off
-    html = requests.get(
-        pdu_url + get_pdu + get_pdu_status_ext(
-            asset,
-            str(power_connections[data['power_port_number']]['left_right'])
+    for connection in power_connections:
+        html = requests.get(
+            pdu_url + get_pdu + get_pdu_status_ext(
+                asset,
+                str(power_connections[connection]['left_right'])
+            )
         )
-    )
-    power_status = regex_power_status(
-        html.text, power_connections[data['power_port_number']]['port_number'])[0]
-    if power_status == "OFF":
-        return JsonResponse(
-            {"warning_message": "Port is already off"},
-            status=HTTPStatus.OK
-        )
-    toggle_power(asset, data['power_port_number'], "off")
-    log_power_action(
-        request.user,
-        PowerAction.OFF,
-        asset,
-        data['power_port_number'],
-    )
+        power_status = regex_power_status(
+            html.text,
+            power_connections[connection]['port_number']
+        )[0]
+        if power_status == "ON":
+            toggle_power(asset, connection, "off")
+    # log_power_action(
+    #     request.user,
+    #     PowerAction.ON,
+    #     asset,
+    #     data['power_port_number'],
+    # )
     return JsonResponse(
-        {"success_message": "Power successfully turned off for port " +
-            data['power_port_number']},
+        {"success_message": "Power successfully turned off"},
         status=HTTPStatus.OK
     )
 

@@ -97,54 +97,6 @@ export class PowerView extends React.PureComponent<
                                         </h3>
                                         <Divider />
                                         <h3 className={"column-power"}>{this.state.powerStatus[port]}</h3>
-                                        <Divider />
-                                        <AnchorButton
-                                            className={"column-power"}
-                                            intent={this.state.powerStatus[port] === "OFF" ? "primary" : "danger"}
-                                            minimal
-                                            text={this.state.powerStatus[port] === "OFF" ?
-                                                "Turn on" : "Turn off"
-                                            }
-                                            icon="power"
-                                            onClick={this.state.powerStatus[port] === "OFF" ?
-                                                () => {
-                                                    this.setState({
-                                                        statusLoaded: !this.state.statusLoaded
-                                                    })
-                                                    axios.post(
-                                                        API_ROOT + "api/power/mask-on",
-                                                        { id: this.props.asset!.id, power_port_number: port },
-                                                        getHeaders(this.props.token)
-                                                    ).then(res => {
-                                                        this.setState({
-                                                            alertOpen: true,
-                                                            confirmationMessage: res.data.success_message
-                                                        })
-                                                        this.componentDidMount()
-                                                    }).catch(err => {
-
-                                                    })
-                                                } :
-                                                () => {
-                                                    this.setState({
-                                                        statusLoaded: !this.state.statusLoaded
-                                                    })
-                                                    axios.post(
-                                                        API_ROOT + "api/power/mask-off",
-                                                        { id: this.props.asset!.id, power_port_number: port },
-                                                        getHeaders(this.props.token)
-                                                    ).then(res => {
-                                                        this.setState({
-                                                            alertOpen: true,
-                                                            confirmationMessage: res.data.success_message
-                                                        })
-                                                        this.componentDidMount()
-                                                    }).catch(err => {
-
-                                                    })
-                                                }
-                                            }
-                                        />
                                     </div>
                                 </Card>
                             )
@@ -152,6 +104,53 @@ export class PowerView extends React.PureComponent<
                     <Spinner />
                 }
                 <div className={"row-power"}>
+                    {this.state.powerStatus ? <AnchorButton
+                        className={"power-close"}
+                        intent={this.state.powerStatus[1] === "OFF" ? "primary" : "danger"}
+                        minimal
+                        text={this.state.powerStatus[1] === "OFF" ?
+                            "Turn on" : "Turn off"
+                        }
+                        icon="power"
+                        onClick={this.state.powerStatus[1] === "OFF" ?
+                            () => {
+                                this.setState({
+                                    statusLoaded: !this.state.statusLoaded
+                                })
+                                axios.post(
+                                    API_ROOT + "api/power/mask-on",
+                                    { id: this.props.asset!.id },
+                                    getHeaders(this.props.token)
+                                ).then(res => {
+                                    this.setState({
+                                        alertOpen: true,
+                                        confirmationMessage: res.data.success_message
+                                    })
+                                    this.componentDidMount()
+                                }).catch(err => {
+
+                                })
+                            } :
+                            () => {
+                                this.setState({
+                                    statusLoaded: !this.state.statusLoaded
+                                })
+                                axios.post(
+                                    API_ROOT + "api/power/mask-off",
+                                    { id: this.props.asset!.id },
+                                    getHeaders(this.props.token)
+                                ).then(res => {
+                                    this.setState({
+                                        alertOpen: true,
+                                        confirmationMessage: res.data.success_message
+                                    })
+                                    this.componentDidMount()
+                                }).catch(err => {
+
+                                })
+                            }
+                        }
+                    /> : null}
                     <AnchorButton
                         className={"power-close"}
                         minimal
