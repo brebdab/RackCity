@@ -18,8 +18,8 @@ export enum PowerSide {
 export interface AssetObjectOld extends ElementObject {
   hostname: string;
   rack_position: string;
-  model: ModelObject;
-  rack: RackObject;
+  model?: ModelObject;
+  rack?: RackObject;
   network_connections: {};
   owner?: string;
   comment?: string;

@@ -116,6 +116,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     }
     return power_ports_default;
   };
+  initialGetRacks = false;
 
   public state = {
     values: this.initialState,
@@ -339,6 +340,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         .get(API_ROOT + "api/racks/summary", config)
         .then(res => {
           console.log(res.data.racks);
+          this.initialGetRacks = true;
           this.setState({
             racks: res.data.racks as Array<RackObject>
           });
@@ -650,6 +652,10 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     this.setState({
       currDatacenter: datacenter
     });
+
+    this.setState({
+      values: updateObject(this.state.values, { rack: undefined })
+    });
     this.getValidAssets(datacenter);
     this.getRacks(datacenter);
   }
@@ -794,7 +800,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     if (
       this.state.currDatacenter &&
       this.state.currDatacenter !== ALL_DATACENTERS &&
-      this.state.racks.length === 0
+      !this.initialGetRacks
     ) {
       this.getRacks(this.state.currDatacenter);
     }
