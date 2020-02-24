@@ -177,7 +177,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   getAssetNumber() {
     axios
       .get(
-        API_ROOT + "api/" + "assets/asset-number",
+        API_ROOT + "api/assets/asset-number",
         getHeaders(this.props.token)
       )
       .then((res: any) => {
