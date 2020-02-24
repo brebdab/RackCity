@@ -97,7 +97,7 @@ export class BulkImport extends React.PureComponent<
         <div className={"row"}>
           <div className={"column-third-import"}>
             {resourceType === "assets" ? (
-              <ButtonGroup fill={false} style={{ marginTop: 10 }}>
+              <ButtonGroup fill={false} style={{ marginTop: 20, marginBottom: 0 }}>
                 <Button
                   active={this.state.assetUploadType === "assets"}
                   text="assets"
@@ -125,6 +125,7 @@ export class BulkImport extends React.PureComponent<
               icon="import"
               text={selectButtonText}
               onClick={this.handleFilepickerOpen}
+              style={{ marginBottom: 40 }}
             />
             <Alert
               cancelButtonText="Cancel"
@@ -156,7 +157,7 @@ export class BulkImport extends React.PureComponent<
           <div className={"column-third-import"}>
             <Tag
               minimal
-              style={{ marginBottom: 5 }}
+              style={{ marginTop: 5, marginBottom: 20 }}
             >
               <p>
                 Selected file:{" "}
