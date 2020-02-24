@@ -6,23 +6,24 @@ import {
   Classes,
   Collapse,
   FormGroup,
+  Icon,
   InputGroup,
   Intent,
   MenuItem,
-  Tooltip,
-  Icon
+  Tooltip
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
+import { IconNames } from "@blueprintjs/icons";
 import axios from "axios";
 import * as React from "react";
 import { connect } from "react-redux";
 import { isNullOrUndefined } from "util";
 import { ALL_DATACENTERS } from "../components/elementView/elementTabContainer";
 import {
-  PagingTypes,
   FilterTypes,
-  TextFilterTypes,
-  IFilter
+  IFilter,
+  PagingTypes,
+  TextFilterTypes
 } from "../components/elementView/elementUtils";
 import { updateObject } from "../store/utility";
 import { API_ROOT } from "../utils/api-config";
@@ -30,39 +31,39 @@ import {
   AssetObject,
   DatacenterObject,
   ElementObjectType,
+  ElementType,
   getHeaders,
+  isAssetObject,
   ModelObject,
+  NetworkConnection,
   PowerPortAvailability,
   PowerSide,
   RackObject,
   ShallowAssetObject,
-  ElementType,
-  NetworkConnection,
-  isAssetObject
+  AssetFormLabels
 } from "../utils/utils";
 import Field from "./field";
 import "./forms.scss";
 import {
+  AssetSelect,
   DatacenterSelect,
+  filterAsset,
   filterDatacenter,
   filterModel,
   filterRack,
   filterString,
   FormTypes,
+  isMacAddressValid,
+  macAddressInfo,
   ModelSelect,
   RackSelect,
+  renderAssetItem,
   renderDatacenterItem,
   renderModelItem,
   renderRackItem,
   renderStringItem,
-  StringSelect,
-  AssetSelect,
-  renderAssetItem,
-  filterAsset,
-  isMacAddressValid,
-  macAddressInfo
+  StringSelect
 } from "./formUtils";
-import { IconNames } from "@blueprintjs/icons";
 
 //TO DO : add validation of types!!!
 
@@ -85,7 +86,6 @@ interface AssetFormState {
   power_ports: PowerPortAvailability;
   power_ports_default: { [port: string]: boolean };
   assets: Array<AssetObject>;
-  networkConnectedHostnames: { [port: string]: string };
 }
 // var console: any = {};
 // console.log = function() {};
@@ -133,8 +133,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       right_suggest: "12",
       right_available: ["1", "2", "12", "13"]
     },
-    power_ports_default: {} as { [port: string]: boolean },
-    networkConnectedHostnames: {} as { [port: string]: string }
+    power_ports_default: {} as { [port: string]: boolean }
   };
   headers = {
     headers: {
@@ -177,7 +176,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
   componentDidMount() {
     this.setPowerPortInputState();
-    this.setInitialNetworkConnectedAssets();
+
     let values = this.state.values;
     if (!this.props.initialValues) {
       values = updateObject(values, {
@@ -191,8 +190,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     this.getValidAssets(this.state.currDatacenter!);
   }
   private mapAssetObject = (asset: AssetObject): ShallowAssetObject => {
-    console.log(asset);
-
     const {
       asset_number,
       hostname,
@@ -219,7 +216,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       network_connections,
       power_connections
     };
-    console.log(valuesToSend);
 
     return valuesToSend;
   };
@@ -253,7 +249,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         );
         if (resp) {
           resp.catch(err => {
-            console.log(err.response.data.failure_message);
             let errors: Array<string> = this.state.errors;
             errors.push(err.response.data.failure_message as string);
             this.setState({
@@ -360,7 +355,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         body = updateObject(body, { filters });
       }
     }
-    console.log(body);
+
     this.getElementData(
       ElementType.ASSET,
       1,
@@ -378,14 +373,13 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         }
         return true;
       });
-      console.log("NEW ASSERTS", assetsWithHostname, body);
+
       this.setState({
         assets: assetsWithHostname as Array<AssetObject>
       });
     });
   };
   getPowerButtonStatus = (side: PowerSide, port: number) => {
-    console.log(this.state.values.power_connections);
     if (
       this.state.values.power_connections &&
       this.state.values.power_connections[port]
@@ -472,16 +466,19 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       power_ports_default: power_ports_default
     });
   };
-  getPowerPortFields = () => {
-    console.log("powerpowerfields", this.state.values.model);
-    if (this.state.values.model && this.state.values.model.num_power_ports) {
-      console.log(
-        "POWERPORTFIELDS",
-        this.state.values.model.num_power_ports,
-        parseInt(this.state.values.model.num_power_ports!, 10)
-      );
-    }
 
+  clearPowerSelection = (port: number) => {
+    this.changeCheckBoxState(port, false);
+    const power_connections = this.state.values.power_connections;
+    delete power_connections[port];
+
+    this.setState({
+      values: updateObject(this.state.values, {
+        power_connections
+      })
+    });
+  };
+  getPowerPortFields = () => {
     if (
       this.state.values.model &&
       this.state.values.model.num_power_ports &&
@@ -505,10 +502,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                     checked={this.state.power_ports_default[i]}
                     label="Use Suggested Values "
                     onChange={(event: any) => {
-                      console.log(
-                        "setting staus to ",
-                        !this.state.power_ports_default[i]
-                      );
                       this.setDefaultPortValues(
                         i,
                         !this.state.power_ports_default[i]
@@ -533,7 +526,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                   active={this.getPowerButtonStatus(PowerSide.LEFT, i)}
                   text="Left"
                   onClick={(e: any) => {
-                    console.log("Left Button");
                     const power_connections = this.state.values
                       .power_connections;
                     power_connections[i] = updateObject(power_connections[i], {
@@ -553,7 +545,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                   active={this.getPowerButtonStatus(PowerSide.RIGHT, i)}
                   text="Right"
                   onClick={(e: any) => {
-                    console.log("Right Button ");
                     const power_connections = this.state.values
                       .power_connections;
                     power_connections[i] = updateObject(power_connections[i], {
@@ -579,12 +570,16 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                   disabled={this.shouldDisablePowerPort(i)}
                   items={this.getPortsForSide(i)}
                   onItemSelect={(port: string) => {
-                    console.log(port);
                     this.changeCheckBoxState(i, false);
                     const power_connections = this.state.values
                       .power_connections;
                     power_connections[i] = updateObject(power_connections[i], {
                       port_number: port
+                    });
+                    this.setState({
+                      values: updateObject(this.state.values, {
+                        power_connections
+                      })
                     });
                   }}
                   itemRenderer={renderStringItem}
@@ -602,6 +597,13 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                     }
                   />
                 </StringSelect>
+                <Button
+                  icon={IconNames.DELETE}
+                  minimal
+                  onClick={() => {
+                    this.clearPowerSelection(i);
+                  }}
+                />
               </ButtonGroup>
             </div>
           </div>
@@ -625,14 +627,18 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     this.getValidAssets(datacenter);
     this.getRacks(datacenter);
   }
-  handleNetworkConnectionSelection(
+  handleNetworkConnectionAssetSelection(
     source_port: string,
-    destination_port: string
+    destination_hostname: string | undefined
   ) {
-    const networkConnection: NetworkConnection = {
+    console.log(
+      "network connection asset selected",
       source_port,
-      destination_hostname: this.state.networkConnectedHostnames[source_port],
-      destination_port
+      destination_hostname
+    );
+    const newNetworkConnection: NetworkConnection = {
+      source_port,
+      destination_hostname
     };
     let modification = false;
     let networkConnections: Array<NetworkConnection> = [];
@@ -642,8 +648,11 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       networkConnections = networkConnections.map(
         (connection: NetworkConnection) => {
           if (connection.source_port === source_port) {
+            console.log("updating network connection");
             modification = true;
-            return networkConnection;
+            return updateObject(connection, {
+              destination_hostname: destination_hostname
+            });
           } else {
             return connection;
           }
@@ -653,48 +662,84 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       networkConnections = [] as Array<NetworkConnection>;
     }
     if (!modification) {
-      networkConnections.push(networkConnection);
+      //add a new network connection
+      networkConnections.push(newNetworkConnection);
     }
+    console.log("new network connections", networkConnections);
     this.setState({
       values: updateObject(this.state.values, {
         network_connections: networkConnections
       })
     });
-    console.log("UPDSTED NETWORK CONNECTIONS", networkConnections);
+  }
+  clearNetworkConnectionSelection(source_port: string) {
+    let networkConnections: Array<NetworkConnection> = [];
+    if (this.state.values.network_connections) {
+      networkConnections = this.state.values.network_connections.slice();
+
+      networkConnections = networkConnections.filter(
+        (connection: NetworkConnection) => {
+          return connection.source_port !== source_port;
+        }
+      );
+    } else {
+      networkConnections = [] as Array<NetworkConnection>;
+    }
+
+    this.setState({
+      values: updateObject(this.state.values, {
+        network_connections: networkConnections
+      })
+    });
+  }
+  handleNetworkConnectionPortSelection(
+    source_port: string,
+    destination_port: string | undefined
+  ) {
+    let networkConnections: Array<NetworkConnection> = [];
+    if (this.state.values.network_connections) {
+      networkConnections = this.state.values.network_connections.slice();
+
+      networkConnections = networkConnections.map(
+        (connection: NetworkConnection) => {
+          if (connection.source_port === source_port) {
+            return updateObject(connection, { destination_port });
+          } else {
+            return connection;
+          }
+        }
+      );
+    } else {
+      networkConnections = [] as Array<NetworkConnection>;
+    }
+
+    this.setState({
+      values: updateObject(this.state.values, {
+        network_connections: networkConnections
+      })
+    });
   }
   getSelectedPort = (source_port: string) => {
-    console.log(source_port, this.state.values);
     if (this.state.values.network_connections) {
       const connection = this.state.values.network_connections.find(
         (connection: NetworkConnection) =>
           connection.source_port === source_port
       );
       if (connection) {
-        console.log("found port", connection);
         return connection.destination_port;
       }
     }
   };
-  setInitialNetworkConnectedAssets() {
-    if (this.props.initialValues) {
-      let networkConnectedHostnames = this.state.networkConnectedHostnames;
-      this.state.values.network_connections.forEach(
-        (connection: NetworkConnection) => {
-          networkConnectedHostnames[connection.source_port] =
-            connection.destination_hostname;
-        }
+  getSelectedNetworkConnectionAsset(source_port: string) {
+    if (this.state.values.network_connections) {
+      const connection = this.state.values.network_connections.find(
+        (connection: NetworkConnection) =>
+          connection.source_port === source_port
       );
-      console.log(this.state.values.network_connections);
+      if (connection) {
+        return connection.destination_hostname;
+      }
     }
-  }
-
-  updateNetworkConnectedAssets(source_port: string, asset: AssetObject) {
-    const networkConnectedHostnames = this.state.networkConnectedHostnames;
-    networkConnectedHostnames[source_port] = asset.hostname!;
-    this.setState({
-      networkConnectedHostnames
-    });
-    console.log("ASSETS", networkConnectedHostnames);
   }
 
   getAssetObjectFromHostname(hostname: string): AssetObject | void {
@@ -705,6 +750,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
   getPortsFromHostname(hostname: string) {
     const asset = this.getAssetObjectFromHostname(hostname);
+    console.log("getting ports for " + hostname);
     if (isAssetObject(asset)) {
       return asset.model.network_ports ? asset.model.network_ports : [];
     } else {
@@ -713,7 +759,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   }
 
   render() {
-    console.log("CURR_STATE", this.state.values,this.props.initialValues);
     if (this.state.models.length === 0) {
       this.getModels();
     }
@@ -721,6 +766,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       this.getUsers();
     }
 
+    console.log(this.state.values.network_connections);
     const { values } = this.state;
     return (
       <div className={Classes.DARK + " login-container"}>
@@ -728,7 +774,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
           return <Callout intent={Intent.DANGER}>{err}</Callout>;
         })}
         <form onSubmit={this.handleSubmit} className="create-form ">
-          <FormGroup label="Asset number" inline={false}>
+          <FormGroup label={AssetFormLabels.asset_number} inline={false}>
             <Field
               placeholder="asset_number"
               onChange={this.handleChange}
@@ -736,7 +782,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
               field="asset_number"
             />
           </FormGroup>
-          <FormGroup label="Hostname " inline={false}>
+          <FormGroup label={AssetFormLabels.hostname} inline={false}>
             <Field
               placeholder="hostname"
               onChange={this.handleChange}
@@ -744,7 +790,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
               field="hostname"
             />
           </FormGroup>
-          <FormGroup label="Datacenter (required)" inline={false}>
+          <FormGroup label={AssetFormLabels.datacenter} inline={false}>
             <DatacenterSelect
               popoverProps={{
                 minimal: true,
@@ -770,7 +816,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
             </DatacenterSelect>
           </FormGroup>
           <Collapse isOpen={!isNullOrUndefined(this.state.currDatacenter)}>
-            <FormGroup label="Rack (required)" inline={false}>
+            <FormGroup label={AssetFormLabels.rack} inline={false}>
               <RackSelect
                 popoverProps={{
                   minimal: true,
@@ -799,7 +845,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                 />
               </RackSelect>
             </FormGroup>
-            <FormGroup label="Rack position (required)" inline={false}>
+            <FormGroup label={AssetFormLabels.rack_position} inline={false}>
               <Field
                 field="rack_position"
                 placeholder="rack_position"
@@ -808,7 +854,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
               />
             </FormGroup>
 
-            <FormGroup label="Model (required)" inline={false}>
+            <FormGroup label={AssetFormLabels.model} inline={false}>
               <ModelSelect
                 className="select"
                 popoverProps={{
@@ -852,7 +898,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                 values.model.network_ports &&
                 values.model.network_ports.length !== 0
               ) ? null : (
-                <FormGroup label="Network Ports" inline={false}>
+                <FormGroup label={AssetFormLabels.network_ports} inline={false}>
                   {values.model.network_ports.map((port, index) => {
                     return (
                       <div className="power-form-container">
@@ -898,7 +944,10 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                             }}
                             items={this.state.assets}
                             onItemSelect={(asset: AssetObject) => {
-                              this.updateNetworkConnectedAssets(port, asset);
+                              this.handleNetworkConnectionAssetSelection(
+                                port,
+                                asset.hostname
+                              );
                             }}
                             itemRenderer={renderAssetItem}
                             itemPredicate={filterAsset}
@@ -909,8 +958,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                             <Button
                               rightIcon="caret-down"
                               text={
-                                this.state.networkConnectedHostnames[port]
-                                  ? this.state.networkConnectedHostnames[port]
+                                this.getSelectedNetworkConnectionAsset(port)
+                                  ? this.getSelectedNetworkConnectionAsset(port)
                                   : "Select Asset"
                               }
                             />
@@ -923,19 +972,21 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                               usePortal: true
                             }}
                             disabled={
-                              this.state.networkConnectedHostnames[port]
+                              this.getSelectedNetworkConnectionAsset(port)
                                 ? false
                                 : true
                             }
                             items={
-                              this.state.networkConnectedHostnames[port]
+                              this.getSelectedNetworkConnectionAsset(port)
                                 ? this.getPortsFromHostname(
-                                    this.state.networkConnectedHostnames[port]
+                                    this.getSelectedNetworkConnectionAsset(
+                                      port
+                                    )!
                                   )
                                 : []
                             }
                             onItemSelect={(dest_port: string) => {
-                              this.handleNetworkConnectionSelection(
+                              this.handleNetworkConnectionPortSelection(
                                 port,
                                 dest_port
                               );
@@ -948,7 +999,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                           >
                             <Button
                               disabled={
-                                this.state.networkConnectedHostnames[port]
+                                this.getSelectedNetworkConnectionAsset(port)
                                   ? false
                                   : true
                               }
@@ -960,6 +1011,13 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                               }
                             />
                           </StringSelect>
+                          <Button
+                            icon={IconNames.DELETE}
+                            minimal
+                            onClick={() => {
+                              this.clearNetworkConnectionSelection(port);
+                            }}
+                          />
                         </FormGroup>
                       </div>
                     );
@@ -977,14 +1035,14 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
               {this.state.values.model &&
               this.state.values.model.num_power_ports &&
               parseInt(this.state.values.model.num_power_ports, 10) > 0 ? (
-                <FormGroup label="Power Connections " inline={false}>
+                <FormGroup label={AssetFormLabels.power_connections} inline={false}>
                   {this.getPowerPortFields()}
                 </FormGroup>
               ) : null}
             </Collapse>
           </Collapse>
 
-          <FormGroup label="Owner" inline={false}>
+          <FormGroup label={AssetFormLabels.owner}inline={false}>
             <StringSelect
               popoverProps={{
                 minimal: true,
@@ -1011,7 +1069,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
               />
             </StringSelect>
           </FormGroup>
-          <FormGroup label="Comment" inline={false}>
+          <FormGroup label={AssetFormLabels.comment} inline={false}>
             <textarea
               className={Classes.INPUT}
               placeholder="comment"
