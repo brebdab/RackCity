@@ -17,6 +17,7 @@ from http import HTTPStatus
 import re
 import requests
 import time
+from requests.exceptions import ConnectionError
 
 pdu_url = 'http://hyposoft-mgt.colab.duke.edu:8005/'
 # Need to specify rack + side in request, e.g. for A1 left, use A01L
@@ -48,11 +49,19 @@ def power_status(request, id):
     rack_str = rack_str + str(asset.rack.rack_num)
 
     power_status = dict()
-    for power_connection in power_connections:
-        html = requests.get(pdu_url + get_pdu + rack_str +
-                            str(power_connections[power_connection]['left_right']))
-        power_status[power_connection] = regex_power_status(
-            html.text, power_connections[power_connection]['port_number'])[0]
+    if asset.rack.is_network_controlled:
+        for power_connection in power_connections:
+            try:
+                html = requests.get(pdu_url + get_pdu + rack_str +
+                            str(power_connections[power_connection]['left_right']),
+                            timeout=5)
+            except ConnectionError:
+                return JsonResponse(
+                    {"failure_message": "Unable to contact PDU controller. Please try again later"},
+                    status=HTTPStatus.REQUEST_TIMEOUT
+                )
+            power_status[power_connection] = regex_power_status(
+                html.text, power_connections[power_connection]['port_number'])[0]
 
     return JsonResponse(
         {
@@ -68,7 +77,7 @@ TODO check that power is in opposite state when performing a toggle
 TODO validate if ports exist/are connected
 """
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def power_on(request):
     """
     Turn on power to specified port
@@ -80,12 +89,6 @@ def power_on(request):
             {"failure_message": failure_message},
             status=HTTPStatus.BAD_REQUEST
         )
-    elif 'power_port_number' not in data.keys():
-        failure_message = "No asset power port given"
-        return JsonResponse(
-            {"failure_message": failure_message},
-            status=HTTPStatus.BAD_REQUEST
-        )
     try:
         asset = Asset.objects.get(id=data['id'])
     except Asset.DoesNotExist:
@@ -95,44 +98,40 @@ def power_on(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     power_connections = serialize_power_connections(asset)
-    if data['power_port_number'] not in power_connections:
-        failure_message = "Power port does not exist"
-        return JsonResponse(
-            {"failure_message": failure_message},
-            status=HTTPStatus.BAD_REQUEST
-        )
     # Check power is off
-    html = requests.get(
-        pdu_url + get_pdu + get_pdu_status_ext(
-            asset,
-            str(power_connections[data['power_port_number']]['left_right'])
-        )
-    )
-    power_status = regex_power_status(
-        html.text,
-        power_connections[data['power_port_number']]['port_number']
-    )[0]
-    if power_status == "ON":
-        return JsonResponse(
-            {"warning_message": "Port is already on"},
-            status=HTTPStatus.OK
-        )
-    toggle_power(asset, data['power_port_number'], "on")
-    log_power_action(
-        request.user,
-        PowerAction.ON,
-        asset,
-        data['power_port_number'],
-    )
+    for connection in power_connections:
+        try:
+            html = requests.get(
+                pdu_url + get_pdu + get_pdu_status_ext(
+                    asset,
+                    str(power_connections[connection]['left_right'])
+                )
+            )
+        except ConnectionError:
+            return JsonResponse(
+                {"failure_message": "Unable to contact PDU controller. Please try again later"},
+                status=HTTPStatus.REQUEST_TIMEOUT
+            )
+        power_status = regex_power_status(
+            html.text,
+            power_connections[connection]['port_number']
+        )[0]
+        if power_status != "ON":
+            toggle_power(asset, connection, "on")
+    # log_power_action(
+    #     request.user,
+    #     PowerAction.ON,
+    #     asset,
+    #     data['power_port_number'],
+    # )
     return JsonResponse(
-        {"success_message": "Power successfully turned on for port " +
-            data['power_port_number']},
+        {"success_message": "Power successfully turned on"},
         status=HTTPStatus.OK
     )
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def power_off(request):
     """
     Turn on power to specified port
@@ -144,12 +143,6 @@ def power_off(request):
             {"failure_message": failure_message},
             status=HTTPStatus.BAD_REQUEST
         )
-    elif 'power_port_number' not in data:
-        failure_message = "No asset power port given"
-        return JsonResponse(
-            {"failure_message": failure_message},
-            status=HTTPStatus.BAD_REQUEST
-        )
     try:
         asset = Asset.objects.get(id=data['id'])
     except Asset.DoesNotExist:
@@ -159,42 +152,40 @@ def power_off(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     power_connections = serialize_power_connections(asset)
-    if data['power_port_number'] not in power_connections:
-        failure_message = "Power port does not exist"
-        return JsonResponse(
-            {"failure_message": failure_message},
-            status=HTTPStatus.BAD_REQUEST
-        )
     # Check power is off
-    html = requests.get(
-        pdu_url + get_pdu + get_pdu_status_ext(
-            asset,
-            str(power_connections[data['power_port_number']]['left_right'])
-        )
-    )
-    power_status = regex_power_status(
-        html.text, power_connections[data['power_port_number']]['port_number'])[0]
-    if power_status == "OFF":
-        return JsonResponse(
-            {"warning_message": "Port is already off"},
-            status=HTTPStatus.OK
-        )
-    toggle_power(asset, data['power_port_number'], "off")
-    log_power_action(
-        request.user,
-        PowerAction.OFF,
-        asset,
-        data['power_port_number'],
-    )
+    for connection in power_connections:
+        try:
+            html = requests.get(
+                pdu_url + get_pdu + get_pdu_status_ext(
+                    asset,
+                    str(power_connections[connection]['left_right'])
+                )
+            )
+        except ConnectionError:
+            return JsonResponse(
+                {"failure_message": "Unable to contact PDU controller. Please try again later"},
+                status=HTTPStatus.REQUEST_TIMEOUT
+            )
+        power_status = regex_power_status(
+            html.text,
+            power_connections[connection]['port_number']
+        )[0]
+        if power_status == "ON":
+            toggle_power(asset, connection, "off")
+    # log_power_action(
+    #     request.user,
+    #     PowerAction.ON,
+    #     asset,
+    #     data['power_port_number'],
+    # )
     return JsonResponse(
-        {"success_message": "Power successfully turned off for port " +
-            data['power_port_number']},
+        {"success_message": "Power successfully turned off"},
         status=HTTPStatus.OK
     )
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def power_cycle(request):
     data = JSONParser().parse(request)
     if 'id' not in data.keys():
@@ -308,8 +299,14 @@ def toggle_power(asset, asset_port_number, goal_state):
     pdu = 'hpdu-rtp1-' + \
         get_pdu_status_ext(asset, str(
             power_connections[asset_port_number]['left_right']))
-    requests.post(
-        pdu_url + toggle_pdu,
-        {"pdu": pdu, "port": pdu_port, "v": goal_state}
-    )
+    try:
+        requests.post(
+            pdu_url + toggle_pdu,
+            {"pdu": pdu, "port": pdu_port, "v": goal_state}
+        )
+    except ConnectionError:
+            return JsonResponse(
+                {"failure_message": "Unable to contact PDU controller. Please try again later"},
+                status=HTTPStatus.REQUEST_TIMEOUT
+            )
     return
