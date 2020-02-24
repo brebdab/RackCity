@@ -431,15 +431,13 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     console.log(this.state.values.power_connections, this.state.power_ports);
     if (
       this.state.values.power_connections &&
-      this.state.values.power_connections[port]
+      this.state.values.power_connections[port] &&
+      Object.keys(this.state.power_ports).length > 0
     ) {
       const portString = (port as unknown) as string;
       side = this.state.values.power_connections[portString].left_right;
-      console.log(side);
 
       if (side === PowerSide.LEFT) {
-        console.log(this.state.power_ports.left_available);
-
         return this.state.power_ports.left_available.map(String);
       } else {
         return this.state.power_ports.right_available.map(String);
