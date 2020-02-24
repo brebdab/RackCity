@@ -27,6 +27,11 @@ from rackcity.utils.log_utils import (
     Action,
     ElementType,
 )
+from rackcity.utils.errors_utils import (
+    Status,
+    GenericFailure,
+    parse_serializer_errors
+)
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.parsers import JSONParser
@@ -73,7 +78,7 @@ def asset_many(request):
     size must also be specified, and a page of assets will be returned.
     """
 
-    failure_message = ""
+    errors = []
 
     should_paginate = not(
         request.query_params.get('page') is None
@@ -82,18 +87,22 @@ def asset_many(request):
 
     if should_paginate:
         if not request.query_params.get('page'):
-            failure_message += "Must specify field 'page' on " + \
-                "paginated requests. "
+            errors.append("Must specify field 'page' on " +
+                          "paginated requests.")
         elif not request.query_params.get('page_size'):
-            failure_message += "Must specify field 'page_size' on " + \
-                "paginated requests. "
+            errors.append("Must specify field 'page_size' on " +
+                          "paginated requests.")
         elif int(request.query_params.get('page_size')) <= 0:
-            failure_message += "Field 'page_size' must be an integer " + \
-                "greater than 0. "
+            errors.append("Field 'page_size' must be an integer " +
+                          "greater than 0.")
 
-    if failure_message != "":
+    if len(errors) > 0:
         return JsonResponse(
-            {"failure_message": failure_message},
+            {
+                "failure_message":
+                    Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                "errors": " ".join(errors)
+            },
             status=HTTPStatus.BAD_REQUEST,
         )
 
@@ -103,7 +112,11 @@ def asset_many(request):
         filter_args = get_filter_arguments(request.data)
     except Exception as error:
         return JsonResponse(
-            {"failure_message": "Filter error: " + str(error)},
+            {
+                "failure_message":
+                    Status.ERROR.value + GenericFailure.FILTER.value,
+                "errors": str(error)
+            },
             status=HTTPStatus.BAD_REQUEST
         )
     for filter_arg in filter_args:
@@ -113,7 +126,11 @@ def asset_many(request):
         sort_args = get_sort_arguments(request.data)
     except Exception as error:
         return JsonResponse(
-            {"failure_message": "Sort error: " + str(error)},
+            {
+                "failure_message":
+                    Status.ERROR.value + GenericFailure.SORT.value,
+                "errors": str(error)
+            },
             status=HTTPStatus.BAD_REQUEST
         )
     assets = assets_query.order_by(*sort_args)
@@ -124,9 +141,12 @@ def asset_many(request):
         try:
             page_of_assets = paginator.paginate_queryset(assets, request)
         except Exception as error:
-            failure_message += "Invalid page requested: " + str(error)
             return JsonResponse(
-                {"failure_message": failure_message},
+                {
+                    "failure_message":
+                        Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                    "errors": str(error)
+                },
                 status=HTTPStatus.BAD_REQUEST,
             )
         assets_to_serialize = page_of_assets
@@ -154,12 +174,15 @@ def asset_detail(request, id):
     try:
         asset = Asset.objects.get(id=id)
     except Asset.DoesNotExist:
-        failure_message = "No model exists with id=" + str(id)
         return JsonResponse(
-            {"failure_message": failure_message},
-            status=HTTPStatus.BAD_REQUEST,
+            {
+                "failure_message":
+                    Status.ERROR.value +
+                    "Asset" + GenericFailure.DOES_NOT_EXIST.value,
+                "errors": "No existing asset with id="+str(id)
+            },
+            status=HTTPStatus.BAD_REQUEST
         )
-
     serializer = RecursiveAssetSerializer(asset)
     return JsonResponse(serializer.data, status=HTTPStatus.OK)
 
@@ -172,19 +195,25 @@ def asset_add(request):
     Add a new asset.
     """
     data = JSONParser().parse(request)
-    failure_message = ""
     if 'id' in data:
-        failure_message += "Don't include id when adding an asset. "
         return JsonResponse(
-            {"failure_message": failure_message},
-            status=HTTPStatus.BAD_REQUEST,
+            {
+                "failure_message":
+                    Status.CREATE_ERROR.value + GenericFailure.UNKNOWN.value,
+                "errors": "Don't include 'id' when creating an asset"
+            },
+            status=HTTPStatus.BAD_REQUEST
         )
     serializer = AssetSerializer(data=data)
     if not serializer.is_valid(raise_exception=False):
-        failure_message += str(serializer.errors)
         return JsonResponse(
-            {"failure_message": failure_message},
-            status=HTTPStatus.BAD_REQUEST,
+            {
+                "failure_message":
+                    Status.INVALID_INPUT.value +
+                    parse_serializer_errors(serializer.errors),
+                "errors": str(serializer.errors)
+            },
+            status=HTTPStatus.BAD_REQUEST
         )
     rack_id = serializer.validated_data['rack'].id
     rack_position = serializer.validated_data['rack_position']
@@ -192,18 +221,20 @@ def asset_add(request):
     try:
         validate_asset_location(rack_id, rack_position, height)
     except LocationException as error:
-        failure_message += str(error)
         return JsonResponse(
-            {"failure_message": failure_message},
-            status=HTTPStatus.BAD_REQUEST,
+            {"failure_message": Status.CREATE_ERROR.value + str(error)},
+            status=HTTPStatus.BAD_REQUEST
         )
     try:
         asset = serializer.save()
     except Exception as error:
-        failure_message += str(error)
         return JsonResponse(
-            {"failure_message": failure_message},
-            status=HTTPStatus.BAD_REQUEST,
+            {
+                "failure_message":
+                    Status.CREATE_ERROR.value + GenericFailure.UNKNOWN.value,
+                "errors": str(error)
+            },
+            status=HTTPStatus.BAD_REQUEST
         )
     warning_message = ""
     try:
@@ -239,7 +270,11 @@ def asset_add(request):
     else:
         log_action(request.user, asset, Action.CREATE)
         return JsonResponse(
-            {"success_message": "Asset created succesfully."},
+            {
+                "success_message":
+                    Status.SUCCESS.value +
+                    "Asset " + str(asset.asset_number) + " created"
+            },
             status=HTTPStatus.OK,
         )
 
@@ -265,7 +300,7 @@ def save_mac_addresses(asset_data, asset_id):
             network_port.mac_address = mac_address
             try:
                 network_port.save()
-            except Exception as error:
+            except Exception:
                 failure_message += \
                     "Mac address '" + \
                     mac_address + \
@@ -409,29 +444,37 @@ def asset_modify(request):
     data = JSONParser().parse(request)
     if 'id' not in data:
         return JsonResponse(
-            {"failure_message": "Must include 'id' when modifying an " +
-             "asset. "},
-            status=HTTPStatus.BAD_REQUEST,
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR.value + GenericFailure.UNKNOWN.value,
+                "errors": "Must include 'id' when modifying an asset"
+            },
+            status=HTTPStatus.BAD_REQUEST
         )
-
     id = data['id']
     try:
         existing_asset = Asset.objects.get(id=id)
     except ObjectDoesNotExist:
         return JsonResponse(
-            {"failure_message": "No existing asset with id=" +
-                str(id) + ". "},
-            status=HTTPStatus.BAD_REQUEST,
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR.value +
+                    "Model" + GenericFailure.DOES_NOT_EXIST.value,
+                "errors": "No existing asset with id="+str(id)
+            },
+            status=HTTPStatus.BAD_REQUEST
         )
-
     try:
         validate_location_modification(data, existing_asset)
     except Exception as error:
         return JsonResponse(
-            {"failure_message": "Invalid location change: " + str(error)},
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR +
+                    "Invalid location change. " + str(error)
+            },
             status=HTTPStatus.BAD_REQUEST,
         )
-
     for field in data.keys():
         if field == 'model':
             value = ITModel.objects.get(id=data[field])
@@ -446,8 +489,12 @@ def asset_modify(request):
                 and assets_with_hostname[0].id != id
             ):
                 return JsonResponse(
-                    {"failure_message": "Asset with hostname '" +
-                        data[field].lower() + "' already exists."},
+                    {
+                        "failure_message":
+                            Status.MODIFY_ERROR.value +
+                            "Asset with hostname '" +
+                            data[field].lower() + "' already exists."
+                    },
                     status=HTTPStatus.BAD_REQUEST,
                 )
             value = data[field]
@@ -460,8 +507,12 @@ def asset_modify(request):
                 and assets_with_asset_number[0].id != id
             ):
                 return JsonResponse(
-                    {"failure_message": "Asset with asset number '" +
-                        str(data[field]) + "' already exists."},
+                    {
+                        "failure_message":
+                            Status.MODIFY_ERROR.value +
+                            "Asset with asset number '" +
+                            str(data[field]) + "' already exists."
+                    },
                     status=HTTPStatus.BAD_REQUEST,
                 )
             value = data[field]
@@ -473,8 +524,13 @@ def asset_modify(request):
         existing_asset.save()
     except Exception as error:
         return JsonResponse(
-            {"failure_message": "Invalid updates: " + str(error)},
-            status=HTTPStatus.BAD_REQUEST,
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR.value +
+                    GenericFailure.INVALID_DATA.value,
+                "errors": str(error)
+            },
+            status=HTTPStatus.BAD_REQUEST
         )
     else:
         warning_message = ""
@@ -501,8 +557,8 @@ def asset_modify(request):
             )
             log_network_action(request.user, existing_asset)
         except NetworkConnectionException as error:
-            warning_message += "Some network connections couldn't be saved. " + \
-                str(error)
+            warning_message += \
+                "Some network connections couldn't be saved. " + str(error)
         if warning_message:
             return JsonResponse(
                 {"warning_message": warning_message},
@@ -511,7 +567,12 @@ def asset_modify(request):
         else:
             log_action(request.user, existing_asset, Action.MODIFY)
             return JsonResponse(
-                {"success_message": "Asset succesfully modified"},
+                {
+                    "success_message":
+                        Status.SUCCESS.value +
+                        "Asset " +
+                    str(existing_asset.asset_number) + " modified"
+                },
                 status=HTTPStatus.OK,
             )
 
@@ -524,35 +585,53 @@ def asset_delete(request):
     Delete a single existing asset
     """
     data = JSONParser().parse(request)
-    failure_message = ""
     if 'id' not in data:
-        failure_message += "Must include id when deleting an asset. "
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.DELETE_ERROR.value + GenericFailure.UNKNOWN.value,
+                "errors": "Must include 'id' when deleting an asset"
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    id = data['id']
+    try:
+        existing_asset = Asset.objects.get(id=id)
+    except ObjectDoesNotExist:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.DELETE_ERROR.value +
+                    "Model" + GenericFailure.DOES_NOT_EXIST.value,
+                "errors": "No existing asset with id="+str(id)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    asset_number = existing_asset.asset_number
+    if (existing_asset.hostname):
+        asset_hostname = existing_asset.hostname
+        asset_log_name = str(asset_number) + ' (' + asset_hostname + ')'
     else:
-        id = data['id']
-        try:
-            existing_asset = Asset.objects.get(id=id)
-        except ObjectDoesNotExist:
-            failure_message += "No existing asset with id="+str(id)+". "
-
-    if failure_message == "":
-        try:
-            asset_number = existing_asset.asset_number
-            if (existing_asset.hostname):
-                asset_hostname = existing_asset.hostname
-                asset_log_name = str(asset_number) + ' (' + asset_hostname + ')'
-            else:
-                asset_log_name = str(asset_number)
-            existing_asset.delete()
-            log_delete(request.user, ElementType.ASSET, asset_log_name)
-            return HttpResponse(status=HTTPStatus.OK)
-        except Exception as error:
-            failure_message = failure_message + str(error)
-
-    failure_message = "Request was invalid. " + failure_message
-
+        asset_log_name = str(asset_number)
+    try:
+        existing_asset.delete()
+    except Exception as error:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.DELETE_ERROR.value + GenericFailure.UNKNOWN.value,
+                "errors": str(error)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    log_delete(request.user, ElementType.ASSET, asset_log_name)
     return JsonResponse(
-        {"failure_message": failure_message},
-        status=HTTPStatus.BAD_REQUEST,
+        {
+            "success_message":
+                Status.SUCCESS.value +
+                "Asset " + str(asset_number) + " deleted"
+        },
+        status=HTTPStatus.OK
     )
 
 
@@ -1087,7 +1166,11 @@ def asset_page_count(request):
         or int(request.query_params.get('page_size')) <= 0
     ):
         return JsonResponse(
-            {"failure_message": "Must specify positive integer page_size."},
+            {
+                "failure_message":
+                    Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                "errors": "Must specify positive integer page_size."
+            },
             status=HTTPStatus.BAD_REQUEST,
         )
     page_size = int(request.query_params.get('page_size'))
@@ -1096,7 +1179,11 @@ def asset_page_count(request):
         filter_args = get_filter_arguments(request.data)
     except Exception as error:
         return JsonResponse(
-            {"failure_message": "Filter error: " + str(error)},
+            {
+                "failure_message":
+                    Status.ERROR.value + GenericFailure.FILTER.value,
+                "errors": str(error)
+            },
             status=HTTPStatus.BAD_REQUEST
         )
     for filter_arg in filter_args:
