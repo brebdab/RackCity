@@ -164,7 +164,7 @@ class RackView extends React.PureComponent<
       });
   };
   componentDidMount = () => {
-    if (this.props.location && this.props.location.state) {
+    if (this.props.location.pathname === "/rack-print") {
       console.log(this.props.location);
       window.print();
     }
@@ -172,8 +172,8 @@ class RackView extends React.PureComponent<
 
   public render() {
     const racks =
-      this.props.location && this.props.location.state
-        ? (this.props.location.state as Array<RackResponseObject>)
+      this.props.location.pathname === "/rack-print"
+        ? JSON.parse(localStorage.getItem("racks")!)
         : this.props.racks;
     if (this.props.location && this.props.location.state) {
       console.log(this.props.location);

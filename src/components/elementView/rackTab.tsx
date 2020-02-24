@@ -33,6 +33,7 @@ import RackView from "./detailedView/rackView/rackView";
 import { ALL_DATACENTERS } from "./elementTabContainer";
 import RackSelectView from "./rackSelectView";
 import { RouteComponentProps, withRouter } from "react-router";
+import { Link } from "react-router-dom";
 
 interface RackTabState {
   isOpen: boolean;
@@ -333,16 +334,19 @@ class RackTab extends React.Component<
           </Callout>
         )}
         {this.state.racks.length !== 0 ? (
-          <Button
-            className="print-racks"
-            text="Print Racks Page"
-            onClick={(e: any) => {
-              this.props.history.push({
-                pathname: "/rack-print",
-                state: this.state.racks
-              });
-            }}
-          />
+          <Link
+            target="_blank"
+            to={{ pathname: "/rack-print", state: this.state.racks }}
+          >
+            <Button
+              className="print-racks"
+              text="Print Racks Page"
+              onClick={(e: any) => {
+                console.log("storing racks");
+                localStorage.setItem("racks", JSON.stringify(this.state.racks));
+              }}
+            />
+          </Link>
         ) : null}
 
         <div id="rack-view-print">
