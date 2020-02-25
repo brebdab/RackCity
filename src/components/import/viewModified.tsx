@@ -17,7 +17,7 @@ interface ModifierProps {
   operation: string;
 }
 var console: any = {};
-console.log = function() {};
+console.log = function () { };
 
 export interface AssetObject {
   [key: string]: any;
@@ -57,7 +57,7 @@ interface ModifierState {
 export class Modifier extends React.PureComponent<
   RouteComponentProps & ModifierProps,
   ModifierState
-> {
+  > {
   public state: ModifierState = {
     modifiedModels: []
   };
@@ -213,13 +213,13 @@ export class Modifier extends React.PureComponent<
                     console.log(this.props);
                     alert(
                       "Success! Modified: " +
-                        modified.length +
-                        "; Added: " +
-                        this.props.modelsAdded! +
-                        "; Ignored: " +
-                        (this.props.modelsIgnored! +
-                          this.props.modelsModified!.length -
-                          modified.length)
+                      modified.length +
+                      "; Added: " +
+                      this.props.modelsAdded! +
+                      "; Ignored: " +
+                      (this.props.modelsIgnored! +
+                        this.props.modelsModified!.length -
+                        modified.length)
                     );
                     this.setState({
                       modifiedModels: []
@@ -246,13 +246,13 @@ export class Modifier extends React.PureComponent<
                   res => {
                     alert(
                       "Success! Modified: " +
-                        modified.length +
-                        "; Added: " +
-                        this.props.modelsAdded! +
-                        "; Ignored: " +
-                        (this.props.modelsIgnored! +
-                          this.props.modelsModified!.length -
-                          modified.length)
+                      modified.length +
+                      "; Added: " +
+                      this.props.modelsAdded! +
+                      "; Ignored: " +
+                      (this.props.modelsIgnored! +
+                        this.props.modelsModified!.length -
+                        modified.length)
                     );
                     // alert("Modifications were successful")
                     this.setState({

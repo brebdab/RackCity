@@ -44,8 +44,8 @@ import {
 import { updateObject } from "../../store/utility";
 import { ALL_DATACENTERS } from "./elementTabContainer";
 
-var console: any = {};
-console.log = function() {};
+// var console: any = {};
+// console.log = function () { };
 const fs = require("js-file-download");
 
 interface ElementViewState {
@@ -133,9 +133,9 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       page_type === PagingTypes.ALL
         ? {}
         : {
-            page_size: page_type,
-            page
-          };
+          page_size: page_type,
+          page
+        };
     const config = {
       headers: {
         Authorization: "Token " + token
@@ -281,7 +281,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                     rightIcon="caret-down"
                     text={
                       this.props.currDatacenter &&
-                      this.props.currDatacenter.name
+                        this.props.currDatacenter.name
                         ? this.props.currDatacenter.name
                         : "All datacenters"
                     }
@@ -294,32 +294,36 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
 
         <div className="element-tab-buttons">
           {this.props.element !== ElementType.USER &&
-          this.props.element !== ElementType.DATACENTER ? (
-            <AnchorButton
-              className="add"
-              text="Export Table Data"
-              icon="import"
-              minimal
-              onClick={() => {
-                /* handle data based on state */
-                this.setState({ fileNameIsOpen: true });
-                console.log(this.state.filters);
-              }}
-            />
-          ) : (
-            <p></p>
-          )}
+            this.props.element !== ElementType.DATACENTER ? (
+              <AnchorButton
+                className="add"
+                text="Export Table Data"
+                icon="import"
+                minimal
+                onClick={() => {
+                  /* handle data based on state */
+                  this.setState({ fileNameIsOpen: true });
+                  console.log(this.state.filters);
+                }}
+              />
+            ) : (
+              <p></p>
+            )}
           {this.props.isAdmin &&
-          this.props.element !== ElementType.USER &&
-          this.props.element !== ElementType.DATACENTER ? (
-            <AnchorButton
-              onClick={() => this.props.history.push("/bulk-upload")}
-              className="add"
-              icon="export"
-              text="Add from CSV file"
-              minimal
-            />
-          ) : null}
+            this.props.element !== ElementType.USER &&
+            this.props.element !== ElementType.DATACENTER ? (
+              <AnchorButton
+                onClick={() => {
+                  this.props.history.push("/bulk-upload/" +
+                    (this.props.element === ElementType.MODEL ? "models" : "assets")
+                  )
+                }}
+                className="add"
+                icon="export"
+                text="Add from CSV file"
+                minimal
+              />
+            ) : null}
 
           <Alert
             cancelButtonText="Cancel"
@@ -376,10 +380,10 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               this.props.element === ElementType.MODEL
                 ? this.createModel
                 : this.props.element === ElementType.ASSET
-                ? this.createAsset
-                : this.props.element === ElementType.DATACENTER
-                ? this.createDatacenter
-                : this.createUser
+                  ? this.createAsset
+                  : this.props.element === ElementType.DATACENTER
+                    ? this.createDatacenter
+                    : this.createUser
             }
             isOpen={this.state.isOpen}
             handleClose={this.handleClose}

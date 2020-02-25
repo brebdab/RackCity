@@ -27,7 +27,7 @@ export const ALL_DATACENTERS: DatacenterObject = {
 class ElementTabContainer extends React.Component<
   ElementTabContainerProps & RouteComponentProps,
   ElementTabContainerState
-> {
+  > {
   state = {
     datacenters: [],
     currDatacenter: ALL_DATACENTERS

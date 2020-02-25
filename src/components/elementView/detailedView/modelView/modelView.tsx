@@ -58,7 +58,7 @@ async function getData(modelkey: string, token: string) {
 export class ModelView extends React.PureComponent<
   RouteComponentProps & ModelViewProps,
   ModelViewState
-> {
+  > {
   public state: ModelViewState = {
     assets: [],
     model: {} as ModelObject,
