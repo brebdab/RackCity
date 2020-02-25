@@ -98,8 +98,11 @@
 .test-fields {
   display: inline-flex;
 }
+.test-fields .bp3-label {
+  margin: 1px !important;
+}
 .add-filter {
-  margin-top: 30pt;
+  margin-top: 15pt;
   height: 20pt !important;
   float: left;
   background-color: red;

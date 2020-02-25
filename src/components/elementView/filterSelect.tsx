@@ -1,28 +1,28 @@
 import { Button, FormGroup, HTMLSelect, MenuItem } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
-import { Suggest, Select } from "@blueprintjs/select";
+import { Select } from "@blueprintjs/select";
 import * as React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import Field from "../../forms/field";
 import "../../forms/forms.scss";
-import { renderFieldItem, filterField } from "../../forms/formUtils";
-import { updateObject } from "../../store/utility";
-import "./elementView.scss";
+import { filterField, renderFieldItem } from "../../forms/formUtils";
 import RackRangeForm from "../../forms/rackRangeForm";
+import { updateObject } from "../../store/utility";
 import {
-  RackRangeFields,
+  AssetFieldsTable,
   isRackRangeFields,
-  AssetFieldsTable
+  RackRangeFields
 } from "../../utils/utils";
 import {
-  IFilter,
   FilterTypes,
-  TextFilterTypes,
-  TextFilter,
+  getFilterType,
+  IFilter,
   NumericFilter,
-  getFilterType
+  TextFilter,
+  TextFilterTypes
 } from "./elementUtils";
+import "./elementView.scss";
 
 // var console: any = {};
 // console.log = function() {};
