@@ -37,8 +37,8 @@ from rackcity.views.rackcity_utils import (
     get_sort_arguments,
     get_filter_arguments,
     LocationException,
+    ModelModificationException
 )
-
 
 @api_view(['GET'])
 def model_list(request):  # DEPRECATED!
@@ -140,6 +140,14 @@ def model_modify(request):
             {"failure_message": Status.MODIFY_ERROR.value + location_failure},
             status=HTTPStatus.BAD_REQUEST
         )
+    try:
+        validate_model_change(data, existing_model)
+    except ModelModificationException as error:
+        modification_failure = str(error) + " There are existing assets with this model"
+        return JsonResponse(
+            {"failure_message": Status.MODIFY_ERROR.value + modification_failure},
+            status=HTTPStatus.BAD_REQUEST
+        )
     for field in data.keys():
         setattr(existing_model, field, data[field])
     try:
@@ -164,6 +172,20 @@ def model_modify(request):
         },
         status=HTTPStatus.OK
     )
+
+
+def validate_model_change(new_model_data, existing_model): 
+    if "network_ports" not in new_model_data:
+        return
+    if "num_power_ports" not in new_model_data:
+        return
+    assets = Asset.objects.filter(model=existing_model.id)
+    if len(assets) > 0:
+        if set(new_model_data["network_ports"]) != set(existing_model.network_ports):
+            raise ModelModificationException("Unable to modify network ports.")
+        if int(new_model_data["num_power_ports"]) != existing_model.num_power_ports:
+             raise ModelModificationException("Unable to modify number of power ports.")
+    return
 
 
 def validate_model_height_change(new_model_data, existing_model):
@@ -484,6 +506,18 @@ def model_bulk_upload(request):
                     {"failure_message": failure_message},
                     status=HTTPStatus.NOT_ACCEPTABLE
                 )
+            try:
+                validate_model_change(model_data, existing_model)
+            except ModelModificationException as error:
+                modification_failure = " There are existing assets with this model: " + \
+                    "vendor="+model_data['vendor'] + \
+                    ", model_number="+model_data['model_number'] + \
+                    ". " +  str(error) 
+                return JsonResponse(
+                    {"failure_message": Status.MODIFY_ERROR.value + modification_failure},
+                    status=HTTPStatus.BAD_REQUEST
+                )
+
             potential_modifications.append(
                 {
                     "existing_model": existing_model,
