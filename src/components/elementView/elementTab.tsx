@@ -346,7 +346,10 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             onConfirm={() => {
               if (
                 this.state.fileName === "" ||
-                this.state.networkFileName === ""
+                (this.state.networkFileName === "" &&
+                  this.props.element === ElementType.ASSET) ||
+                (this.state.fileName === "" &&
+                  this.props.element === ElementType.MODEL)
               ) {
                 this.addErrorToast("Please provide filenames for both files");
               } else {
@@ -363,11 +366,17 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                   ? networkExtension[networkExtension.length - 1]
                   : null;
                 console.log(networkExt);
-                if (ext !== "csv" || networkExt !== "csv") {
+                if (
+                  (networkExt && (ext !== "csv" || networkExt !== "csv")) ||
+                  (!networkExt && ext !== "csv")
+                ) {
                   this.addErrorToast("Filenames must end in .csv");
                 } else if (
-                  this.state.fileName.split(".")[0].length === 0 ||
-                  this.state.networkFileName.split(".")[0].length === 0
+                  (networkExt &&
+                    (this.state.fileName.split(".")[0].length === 0 ||
+                      this.state.networkFileName.split(".")[0].length === 0)) ||
+                  (!networkExt &&
+                    this.state.fileName.split(".")[0].length === 0)
                 ) {
                   this.addErrorToast(".csv file must have non-empty name");
                 } else {
