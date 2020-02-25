@@ -242,7 +242,7 @@ def user_delete(request):
     else:
         deleted_user_assets = Asset.objects.filter(owner=username)
         for asset in deleted_user_assets:
-            asset.username = None
+            asset.owner = None
             asset.save()
         return JsonResponse(
             {

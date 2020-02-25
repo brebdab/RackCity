@@ -24,7 +24,7 @@ def validate_hostname(value):
 
 def validate_owner(value):
     if (
-        value != ""
+        value
         and value not in [obj.username for obj in User.objects.all()]
     ):
         raise ValidationError(
@@ -74,8 +74,7 @@ class Asset(models.Model):
     def save(self, *args, **kwargs):
         try:
             validate_hostname(self.hostname)
-            if self.owner is not None:
-                validate_owner(self.owner)
+            validate_owner(self.owner)
         except ValidationError as valid_error:
             raise valid_error
         else:
