@@ -186,8 +186,6 @@ def validate_model_change(new_model_data, existing_model):
     return
 
 
-
-
 def validate_model_height_change(new_model_data, existing_model):
     if 'height' not in new_model_data:
         return
@@ -489,11 +487,10 @@ def model_bulk_upload(request):
             try:
                 validate_model_change(model_data, existing_model)
             except ModelModificationException as error:
-                modification_failure = str(error) + \
-                    " There are existing assets with this model: " + \
+                modification_failure = " There are existing assets with this model: " + \
                     "vendor="+model_data['vendor'] + \
                     ", model_number="+model_data['model_number'] + \
-                    ". "
+                    ". " +  str(error) 
                 return JsonResponse(
                     {"failure_message": Status.MODIFY_ERROR.value + modification_failure},
                     status=HTTPStatus.BAD_REQUEST
