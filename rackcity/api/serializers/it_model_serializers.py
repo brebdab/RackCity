@@ -5,6 +5,12 @@ from rackcity.api.serializers.fields import RCIntegerField
 
 class ITModelSerializer(serializers.ModelSerializer):
 
+    num_network_ports = RCIntegerField(
+        allow_null=True,
+        max_value=2147483647,
+        min_value=0,
+        required=False
+    )
     num_power_ports = RCIntegerField(
         allow_null=True,
         max_value=2147483647,
@@ -110,17 +116,18 @@ class BulkITModelSerializer(serializers.ModelSerializer):
 def normalize_bulk_model_data(bulk_model_data):
     bulk_model_data['num_network_ports'] = bulk_model_data['network_ports']
     network_ports = []
-    for port_number in range(1, int(bulk_model_data['num_network_ports'])+1):
-        if port_number == 1 and bulk_model_data['network_port_name_1']:
-            network_ports.append(bulk_model_data['network_port_name_1'])
-        elif port_number == 2 and bulk_model_data['network_port_name_2']:
-            network_ports.append(bulk_model_data['network_port_name_2'])
-        elif port_number == 3 and bulk_model_data['network_port_name_3']:
-            network_ports.append(bulk_model_data['network_port_name_3'])
-        elif port_number == 4 and bulk_model_data['network_port_name_4']:
-            network_ports.append(bulk_model_data['network_port_name_4'])
-        else:
-            network_ports.append(str(port_number))
+    if bulk_model_data['num_network_ports']:
+        for port_number in range(1, int(bulk_model_data['num_network_ports'])+1):
+            if port_number == 1 and bulk_model_data['network_port_name_1']:
+                network_ports.append(bulk_model_data['network_port_name_1'])
+            elif port_number == 2 and bulk_model_data['network_port_name_2']:
+                network_ports.append(bulk_model_data['network_port_name_2'])
+            elif port_number == 3 and bulk_model_data['network_port_name_3']:
+                network_ports.append(bulk_model_data['network_port_name_3'])
+            elif port_number == 4 and bulk_model_data['network_port_name_4']:
+                network_ports.append(bulk_model_data['network_port_name_4'])
+            else:
+                network_ports.append(str(port_number))
     bulk_model_data['network_ports'] = network_ports
     del bulk_model_data['network_port_name_1']
     del bulk_model_data['network_port_name_2']

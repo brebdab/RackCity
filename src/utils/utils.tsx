@@ -56,7 +56,7 @@ export interface NetworkConnection {
   destination_port: string | null | undefined;
 }
 
-export const AssetFieldsTable = {
+export const AssetFieldsTable: any = {
   asset_number: "Asset Number",
   hostname: "Hostname",
   model__vendor: "Model Vendor",
@@ -64,7 +64,21 @@ export const AssetFieldsTable = {
   rack: "Rack",
   rack__datacenter__name: "Datacenter",
   rack_position: "Rack Position",
-  owner: "Owner"
+  owner: "Owner",
+  comment: "Comment"
+};
+
+export const ModelFieldsTable: any = {
+  vendor: "Vendor",
+  model_number: "Model Number",
+  height: "Height",
+  display_color: "Display Color",
+  num_network_ports: "No. Network Ports",
+  num_power_ports: "No. Power Ports",
+  cpu: "CPU",
+  memory_gb: "Memory (GB)",
+  storage: "Storage",
+  comment: "Comment"
 };
 
 export enum AssetFormLabels {

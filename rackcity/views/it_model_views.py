@@ -40,6 +40,7 @@ from rackcity.views.rackcity_utils import (
     ModelModificationException
 )
 
+
 @api_view(['GET'])
 def model_list(request):  # DEPRECATED!
     """
@@ -143,7 +144,8 @@ def model_modify(request):
     try:
         validate_model_change(data, existing_model)
     except ModelModificationException as error:
-        modification_failure = str(error) + " There are existing assets with this model"
+        modification_failure = str(
+            error) + " There are existing assets with this model"
         return JsonResponse(
             {"failure_message": Status.MODIFY_ERROR.value + modification_failure},
             status=HTTPStatus.BAD_REQUEST
@@ -174,7 +176,7 @@ def model_modify(request):
     )
 
 
-def validate_model_change(new_model_data, existing_model): 
+def validate_model_change(new_model_data, existing_model):
     if "network_ports" not in new_model_data:
         return
     if "num_power_ports" not in new_model_data:
@@ -184,7 +186,8 @@ def validate_model_change(new_model_data, existing_model):
         if set(new_model_data["network_ports"]) != set(existing_model.network_ports):
             raise ModelModificationException("Unable to modify network ports.")
         if int(new_model_data["num_power_ports"]) != existing_model.num_power_ports:
-             raise ModelModificationException("Unable to modify number of power ports.")
+            raise ModelModificationException(
+                "Unable to modify number of power ports.")
     return
 
 
@@ -512,9 +515,10 @@ def model_bulk_upload(request):
                 modification_failure = " There are existing assets with this model: " + \
                     "vendor="+model_data['vendor'] + \
                     ", model_number="+model_data['model_number'] + \
-                    ". " +  str(error) 
+                    ". " + str(error)
                 return JsonResponse(
-                    {"failure_message": Status.MODIFY_ERROR.value + modification_failure},
+                    {"failure_message": Status.MODIFY_ERROR.value +
+                        modification_failure},
                     status=HTTPStatus.BAD_REQUEST
                 )
 

@@ -78,7 +78,7 @@ def datacenter_create(request):
         {
             "success_message":
                 Status.SUCCESS.value +
-                new_datacenter.abbreivation + " created"
+                new_datacenter.abbreviation + " created"
         },
         status=HTTPStatus.CREATED
     )
@@ -127,7 +127,7 @@ def datacenter_delete(request):
         )
     log_delete(request.user, ElementType.DATACENTER, dc_abbreviation)
     return JsonResponse(
-        {Status.SUCCESS.value + dc_abbreviation + " deleted"},
+        {"success_message": Status.SUCCESS.value + dc_abbreviation + " deleted"},
         status=HTTPStatus.OK
     )
 

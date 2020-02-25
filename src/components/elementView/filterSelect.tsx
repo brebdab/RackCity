@@ -1,24 +1,28 @@
 import { Button, FormGroup, HTMLSelect, MenuItem } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
-import { Suggest } from "@blueprintjs/select";
+import { Select } from "@blueprintjs/select";
 import * as React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import Field from "../../forms/field";
 import "../../forms/forms.scss";
-import { filterString, renderStringItem } from "../../forms/formUtils";
-import { updateObject } from "../../store/utility";
-import "./elementView.scss";
+import { filterField, renderFieldItem } from "../../forms/formUtils";
 import RackRangeForm from "../../forms/rackRangeForm";
-import { RackRangeFields, isRackRangeFields } from "../../utils/utils";
+import { updateObject } from "../../store/utility";
 import {
-  IFilter,
+  AssetFieldsTable,
+  isRackRangeFields,
+  RackRangeFields
+} from "../../utils/utils";
+import {
   FilterTypes,
-  TextFilterTypes,
-  TextFilter,
+  getFilterType,
+  IFilter,
   NumericFilter,
-  getFilterType
+  TextFilter,
+  TextFilterTypes
 } from "./elementUtils";
+import "./elementView.scss";
 
 // var console: any = {};
 // console.log = function() {};
@@ -58,9 +62,9 @@ class FilterSelect extends React.Component<
   getRackFilterOptions() {
     console.log(this.state.filter);
     return this.state.filter && isRackRangeFields(this.state.filter) ? (
-      <div className="field">
+      <div>
         <RackRangeForm
-          className="field"
+          className=""
           values={this.state.filter}
           handleChange={this.handleChange}
         />
@@ -69,8 +73,8 @@ class FilterSelect extends React.Component<
   }
   getNumericFilterOptions() {
     return (
-      <div className="field">
-        <FormGroup label="Min" className="field">
+      <div>
+        <FormGroup label="Min">
           <Field
             field="min"
             placeholder="min"
@@ -78,7 +82,7 @@ class FilterSelect extends React.Component<
             onChange={this.handleChange}
           />
         </FormGroup>
-        <FormGroup label="Max" className="field">
+        <FormGroup label="Max">
           <Field
             field="max"
             placeholder="max"
@@ -92,7 +96,7 @@ class FilterSelect extends React.Component<
 
   getTextFilterOptions() {
     return (
-      <div className="field">
+      <div>
         <div className="bp3-select field test-select">
           <HTMLSelect
             onChange={(e: any) =>
@@ -104,7 +108,7 @@ class FilterSelect extends React.Component<
             <option>{TextFilterTypes.EXACT}</option>
           </HTMLSelect>
         </div>
-        <FormGroup label="Query" className="field">
+        <FormGroup label="Query">
           <Field
             field="value"
             placeholder="query"
@@ -173,42 +177,48 @@ class FilterSelect extends React.Component<
     console.log("STATE", this.state);
     return (
       <div className="test-fields">
-        <FormGroup className="field" label="Select Field To Filter ">
+        <FormGroup label="Select Field To Filter ">
           {" "}
-          <FieldSuggest
+          <FieldSelect
             popoverProps={{
               minimal: true,
               popoverClassName: "dropdown",
               usePortal: true
             }}
-            inputValueRenderer={(letter: string) => letter}
-            itemRenderer={renderStringItem}
+            // inputValueRenderer={(letter: string) => letter}
+            itemRenderer={renderFieldItem}
             items={this.props.fields}
             onItemSelect={(field: string) => this.setFilterType(field)}
-            itemPredicate={filterString}
+            itemPredicate={filterField}
             noResults={<MenuItem disabled={true} text="No matching fields" />}
-          />
+          >
+            <Button
+              rightIcon="caret-down"
+              text={
+                this.state.field
+                  ? AssetFieldsTable[this.state.field]
+                  : "Select a Field"
+              }
+            />
+          </FieldSelect>
         </FormGroup>
 
-        {this.state.field ? (
-          <div className="field">
-            {" "}
-            {this.renderFilterOptions(this.state.field)}{" "}
-            <Button
-              className="button"
-              icon="filter"
-              onClick={this.handleSubmit}
-            >
-              Add Filter
-            </Button>{" "}
-          </div>
-        ) : null}
+        {this.state.field
+          ? [
+              this.renderFilterOptions(this.state.field),
+              <div className="add-filter">
+                <Button icon="filter" onClick={this.handleSubmit}>
+                  Add Filter
+                </Button>
+              </div>
+            ]
+          : null}
       </div>
     );
   }
 }
 
-const FieldSuggest = Suggest.ofType<string>();
+const FieldSelect = Select.ofType<string>();
 
 const mapStateToProps = (state: any) => {
   return {
