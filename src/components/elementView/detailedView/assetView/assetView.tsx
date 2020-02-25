@@ -33,7 +33,6 @@ import { ALL_DATACENTERS } from "../../elementTabContainer";
 
 export interface AssetViewProps {
   token: string;
-  rid: any;
   isAdmin: boolean;
 }
 // Given an rid, will perform a GET request of that rid and display info about that instnace
@@ -65,7 +64,7 @@ interface AssetViewState {
 export class AssetView extends React.PureComponent<
   RouteComponentProps & AssetViewProps,
   AssetViewState
-> {
+  > {
   public state: AssetViewState = {
     asset: {} as AssetObject,
     isFormOpen: false,
@@ -134,9 +133,6 @@ export class AssetView extends React.PureComponent<
     return this.state.asset.network_connections.find(
       (connection: NetworkConnection) => connection.source_port === port
     );
-  }
-  componentDidMount() {
-    console.log("asset view mounted");
   }
   getDatacenters = () => {
     const headers = getHeaders(this.props.token);
@@ -218,26 +214,26 @@ export class AssetView extends React.PureComponent<
           <h3>Network Connections</h3>
 
           {this.state.asset.model &&
-          this.state.asset.model.network_ports &&
-          this.state.asset.model.network_ports.length !== 0 ? (
-            <div className="network-connections">
-              <table className="bp3-html-table bp3-html-table-bordered bp3-html-table-striped">
-                <tr>
-                  <th>Network Port</th>
-                  <th>Mac Address</th>
-                  <th>Destination Asset</th>
-                  <th>Destination Port</th>
-                </tr>
-                <tbody>
-                  {this.state.asset.model.network_ports.map((port: string) => {
-                    var connection = this.getNetworkConnectionForPort(port);
-                    return (
-                      <tr>
-                        {" "}
-                        <td>{port}</td>
-                        <td>{this.state.asset.mac_addresses[port]}</td>{" "}
-                        {connection
-                          ? [
+            this.state.asset.model.network_ports &&
+            this.state.asset.model.network_ports.length !== 0 ? (
+              <div className="network-connections">
+                <table className="bp3-html-table bp3-html-table-bordered bp3-html-table-striped">
+                  <tr>
+                    <th>Network Port</th>
+                    <th>Mac Address</th>
+                    <th>Destination Asset</th>
+                    <th>Destination Port</th>
+                  </tr>
+                  <tbody>
+                    {this.state.asset.model.network_ports.map((port: string) => {
+                      var connection = this.getNetworkConnectionForPort(port);
+                      return (
+                        <tr>
+                          {" "}
+                          <td>{port}</td>
+                          <td>{this.state.asset.mac_addresses[port]}</td>{" "}
+                          {connection
+                            ? [
                               <td
                                 className="asset-link"
                                 onClick={(e: any) => {
@@ -253,25 +249,25 @@ export class AssetView extends React.PureComponent<
                               </td>,
                               <td>{connection.destination_port}</td>
                             ]
-                          : [<td></td>, <td></td>]}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                            : [<td></td>, <td></td>]}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
 
-              <NetworkGraph
-                networkGraph={this.state.asset.network_graph}
-                onClickNode={this.redirectToAsset}
-              />
-            </div>
-          ) : (
-            <Callout title="No network ports" intent={Intent.PRIMARY}></Callout>
-          )}
+                <NetworkGraph
+                  networkGraph={this.state.asset.network_graph}
+                  onClickNode={this.redirectToAsset}
+                />
+              </div>
+            ) : (
+              <Callout title="No network ports" intent={Intent.PRIMARY}></Callout>
+            )}
         </div>
 
         {Object.keys(this.state.asset).length !== 0 &&
-        Object.keys(this.state.asset.power_connections).length > 0
+          Object.keys(this.state.asset.power_connections).length > 0
           ? this.renderPower()
           : null}
       </div>
@@ -319,7 +315,6 @@ export class AssetView extends React.PureComponent<
   private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
   private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
   private handleDelete = () => {
-    console.log(this.props.rid);
 
     deleteAsset(this.state.asset!, getHeaders(this.props.token))
       .then(res => {

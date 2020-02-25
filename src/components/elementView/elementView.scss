@@ -31,7 +31,7 @@
   position: relative;
   // float: left;
   width: 100% !important;
-  // overflow-x: scroll;
+  // overflow-x:auto;
   // display: inline-block;
   table-layout: auto;
 }
@@ -63,7 +63,7 @@
 }
 .table-wrapper {
   width: 100%;
-  overflow-x: scroll;
+  overflow-x:auto;
   // display: inline-block;
 }
 .bp3-callout {
@@ -71,7 +71,7 @@
   padding-bottom: 2pt;
 }
 .bp3-tab-panel {
-  overflow: scroll;
+  overflow: auto;
 
   width: 95%;
 }

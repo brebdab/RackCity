@@ -188,6 +188,8 @@ def normalize_bulk_asset_data(bulk_asset_data):
     del bulk_asset_data['power_port_connection_2']
     if not bulk_asset_data['asset_number']:
         del bulk_asset_data['asset_number']
+    if not bulk_asset_data['hostname']:
+        del bulk_asset_data['hostname']
     return bulk_asset_data
 
 
