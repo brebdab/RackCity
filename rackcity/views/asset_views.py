@@ -753,7 +753,7 @@ def asset_bulk_upload(request):
                     status=HTTPStatus.BAD_REQUEST
                 )
         # Check that all hostnames in file are case insensitive unique
-        if asset_data['hostname']:
+        if 'hostname' in asset_data and asset_data['hostname']:
             asset_data_hostname_lower = asset_data['hostname'].lower()
             if asset_data_hostname_lower in hostnames_in_import:
                 failure_message = "Hostname must be unique, but '" + \
