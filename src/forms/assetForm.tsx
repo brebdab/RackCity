@@ -581,6 +581,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                 <div>
                   <Checkbox
                     className="checkbox"
+                    disabled={isNullOrUndefined(this.state.values.rack)}
                     checked={this.state.power_ports_default[i]}
                     label="Use Suggested Values "
                     onChange={(event: any) => {
