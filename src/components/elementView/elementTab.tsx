@@ -9,7 +9,8 @@ import {
   FormGroup,
   MenuItem,
   Button,
-  Callout
+  Callout,
+  Classes
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -43,6 +44,7 @@ import {
 } from "./elementUtils";
 import { updateObject } from "../../store/utility";
 import { ALL_DATACENTERS } from "./elementTabContainer";
+import { IconNames } from "@blueprintjs/icons";
 
 // var console: any = {};
 // console.log = function () { };
@@ -145,9 +147,9 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       page_type === PagingTypes.ALL
         ? {}
         : {
-          page_size: page_type,
-          page
-        };
+            page_size: page_type,
+            page
+          };
     const config = {
       headers: {
         Authorization: "Token " + token
@@ -293,7 +295,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                     rightIcon="caret-down"
                     text={
                       this.props.currDatacenter &&
-                        this.props.currDatacenter.name
+                      this.props.currDatacenter.name
                         ? this.props.currDatacenter.name
                         : "All datacenters"
                     }
@@ -305,60 +307,69 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
         </div>
         <div className="element-tab-buttons">
           {this.props.element !== ElementType.USER &&
-            this.props.element !== ElementType.DATACENTER ? (
-              <AnchorButton
-                className="add"
-                text="Export Table Data"
-                icon="import"
-                minimal
-                onClick={() => {
-                  /* handle data based on state */
-                  this.setState({ fileNameIsOpen: true });
-                  console.log(this.state.filters);
-                }}
-              />
-            ) : (
-              <p></p>
-            )}
+          this.props.element !== ElementType.DATACENTER ? (
+            <AnchorButton
+              className="add"
+              text="Export Table Data"
+              icon="import"
+              minimal
+              onClick={() => {
+                /* handle data based on state */
+                this.setState({ fileNameIsOpen: true });
+                console.log(this.state.filters);
+              }}
+            />
+          ) : (
+            <p></p>
+          )}
           {this.props.isAdmin &&
-            this.props.element !== ElementType.USER &&
-            this.props.element !== ElementType.DATACENTER ? (
-              <AnchorButton
-                onClick={() => this.props.history.push("/bulk-upload")}
-                className="add"
-                icon="export"
-                text="Add from CSV file"
-                minimal
-              />
-            ) : null}
+          this.props.element !== ElementType.USER &&
+          this.props.element !== ElementType.DATACENTER ? (
+            <AnchorButton
+              onClick={() => this.props.history.push("/bulk-upload")}
+              className="add"
+              icon="export"
+              text="Add from CSV file"
+              minimal
+            />
+          ) : null}
 
           <Alert
             cancelButtonText="Cancel"
-            confirmButtonText="Confirm file name(s)"
+            className={Classes.DARK}
+            intent={Intent.PRIMARY}
+            confirmButtonText="Confirm Export"
             isOpen={this.state.fileNameIsOpen}
             onCancel={() => {
               this.setState({ fileNameIsOpen: false });
             }}
             onConfirm={() => {
-              if (this.state.fileName === "" || this.state.networkFileName === "") {
-                alert("Please provide filenames for both files");
+              if (
+                this.state.fileName === "" ||
+                this.state.networkFileName === ""
+              ) {
+                this.addErrorToast("Please provide filenames for both files");
               } else {
                 let fileRegEx = /.*\.(\w+)/;
                 let extension = this.state.fileName.match(fileRegEx);
-                console.log(extension)
+                console.log(extension);
                 let ext = extension ? extension[extension.length - 1] : null;
-                console.log(ext)
-                let networkExtension = this.state.networkFileName.match(fileRegEx);
-                console.log(networkExtension)
-                let networkExt = networkExtension ? networkExtension[networkExtension.length - 1] : null;
-                console.log(networkExt)
+                console.log(ext);
+                let networkExtension = this.state.networkFileName.match(
+                  fileRegEx
+                );
+                console.log(networkExtension);
+                let networkExt = networkExtension
+                  ? networkExtension[networkExtension.length - 1]
+                  : null;
+                console.log(networkExt);
                 if (ext !== "csv" || networkExt !== "csv") {
-                  alert("ERROR: Filenames must be valid and end in .csv");
+                  this.addErrorToast("Filenames must end in .csv");
                 } else if (
-                  this.state.fileName.split(".")[0].length === 0
-                  || this.state.networkFileName.split(".")[0].length === 0
+                  this.state.fileName.split(".")[0].length === 0 ||
+                  this.state.networkFileName.split(".")[0].length === 0
                 ) {
-                  alert("ERROR: .csv file must have non-empty name");
+                  this.addErrorToast(".csv file must have non-empty name");
                 } else {
                   getExportData(
                     this.props.element.slice(0, -1) + "s",
@@ -367,34 +378,41 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                     this.state.fileName,
                     this.state.networkFileName
                   );
-                  console.log("finished both exports")
-                  this.setState({ fileNameIsOpen: false, fileName: "", networkFileName: "" });
+                  console.log("finished both exports");
+                  this.setState({
+                    fileNameIsOpen: false,
+                    fileName: "",
+                    networkFileName: ""
+                  });
                 }
               }
             }}
           >
             <p>
-              Please enter a file name ending in ".csv" for exporting {this.props.element} data:
+              Please enter a filename ending in ".csv" for the following data:
             </p>
-            <InputGroup
-              onChange={(event: any) => {
-                this.setState({ fileName: event.currentTarget.value });
-              }}
-              fill={true}
-              type="text"
-            />
+            <FormGroup label={this.props.element + ":"}>
+              <InputGroup
+                onChange={(event: any) => {
+                  this.setState({ fileName: event.currentTarget.value });
+                }}
+                fill={true}
+                type="text"
+              />
+            </FormGroup>
             {this.props.element === ElementType.ASSET ? (
               <div>
-                <p>
-                  And for exporting network connections data:
-                </p>
-                <InputGroup
-                  onChange={(event: any) => {
-                    this.setState({ networkFileName: event.currentTarget.value });
-                  }}
-                  fill={true}
-                  type="text"
-                />
+                <FormGroup label="network connections:">
+                  <InputGroup
+                    onChange={(event: any) => {
+                      this.setState({
+                        networkFileName: event.currentTarget.value
+                      });
+                    }}
+                    fill={true}
+                    type="text"
+                  />
+                </FormGroup>
               </div>
             ) : null}
           </Alert>
@@ -416,10 +434,10 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               this.props.element === ElementType.MODEL
                 ? this.createModel
                 : this.props.element === ElementType.ASSET
-                  ? this.createAsset
-                  : this.props.element === ElementType.DATACENTER
-                    ? this.createDatacenter
-                    : this.createUser
+                ? this.createAsset
+                : this.props.element === ElementType.DATACENTER
+                ? this.createDatacenter
+                : this.createUser
             }
             isOpen={this.state.isOpen}
             handleClose={this.handleClose}
