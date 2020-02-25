@@ -8,7 +8,8 @@ import {
   Intent,
   IToastProps,
   Position,
-  Toaster
+  Toaster,
+  Spinner
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { IconNames } from "@blueprintjs/icons";
@@ -80,6 +81,7 @@ interface ElementTableState {
   selected_userid?: string;
   isPowerOptionsOpen: boolean;
   assetPower?: AssetObject;
+  addFilterInProgress: boolean;
 }
 // var console: any = {};
 // console.log = function() {};
@@ -130,7 +132,8 @@ class ElementTable extends React.Component<
     editFormValues: {} as ElementObjectType,
     openAlert: ElementTableOpenAlert.NONE,
     selected_userid: undefined,
-    isPowerOptionsOpen: false
+    isPowerOptionsOpen: false,
+    addFilterInProgress: false
   };
 
   //PAGING LOGIC
@@ -216,6 +219,12 @@ class ElementTable extends React.Component<
     } else if (item.filter_type === FilterTypes.RACKRANGE) {
       display = renderRackRangeFilterItem(item.filter as RackRangeFields);
     }
+    let field = item.field;
+    if (this.props.type === ElementType.ASSET) {
+      field = AssetFieldsTable[item.field];
+    } else if (this.props.type === ElementType.MODEL) {
+      field = ModelFieldsTable[item.field];
+    }
     return (
       <div className="drag-drop-text">
         <span>
@@ -226,7 +235,7 @@ class ElementTable extends React.Component<
           />
         </span>
 
-        <span>{`${AssetFieldsTable[item.field]} ${display}
+        <span>{`${field} ${display}
       `}</span>
 
         <span>
@@ -349,16 +358,19 @@ class ElementTable extends React.Component<
     filters_copy.push(filter);
     let resp = this.updateFilterData(filters_copy);
     if (resp) {
-      resp.then(res =>
-        this.setState({
-          filters: filters_copy
+      resp
+        .then(res => {
+          this.setState({
+            filters: filters_copy
+          });
         })
-      );
+        .catch(err => {});
     }
   };
 
   updateFilterData = (items: Array<IFilter>) => {
     console.log(items);
+    this.setState({ addFilterInProgress: true });
     let resp;
     if (this.props.callback! !== undefined) this.props.callback(items);
     this.resetPage();
@@ -387,6 +399,7 @@ class ElementTable extends React.Component<
       );
       resp
         .then(res => {
+          this.setState({ addFilterInProgress: false });
           this.setState({
             items: res
           });
@@ -397,7 +410,7 @@ class ElementTable extends React.Component<
           }
         })
         .catch(err => {
-          console.log("ERROR", err.response.data);
+          this.setState({ addFilterInProgress: false });
           this.addToast({
             message: err.response.data.failure_message,
             intent: Intent.DANGER
@@ -1023,108 +1036,112 @@ class ElementTable extends React.Component<
                 </tr>
               </thead>
               {this.state.items && this.state.items.length > 0 ? (
-                <tbody>
-                  {this.state.items.map((item: ElementObjectType) => {
-                    if (isAssetObject(item)) {
-                      //console.log(item);
-                    }
-                    return (
-                      <tr
-                        onClick={
-                          this.props.type === ElementType.DATACENTER ||
-                          this.props.type === ElementType.USER
-                            ? () => {}
-                            : () => {
-                                console.log("redirecting", item.id);
-                                this.props.history.push(
-                                  "/" + this.props.type + "/" + item.id
-                                );
-                              }
-                        }
-                      >
-                        {Object.entries(item).map(([col, value]) => {
-                          if (isModelObject(value)) {
-                            return [
-                              <td>{value.vendor}</td>,
-                              <td>{value.model_number}</td>
-                            ];
-                          } else if (isRackObject(value)) {
-                            return [
-                              <td>{value.row_letter + value.rack_num}</td>,
-                              <td>{value.datacenter.name}</td>
-                            ];
-                          } else if (col === "display_color") {
-                            console.log(value);
-                            return (
-                              <td
-                                style={{
-                                  backgroundColor: value
-                                }}
-                              ></td>
-                            );
-                          } else if (
-                            col !== "id" &&
-                            col !== "network_ports" &&
-                            col !== "comment" &&
-                            col !== "is_admin" &&
-                            !isObject(value)
-                          ) {
-                            return <td>{value}</td>;
+                !this.state.addFilterInProgress ? (
+                  <tbody>
+                    {this.state.items.map((item: ElementObjectType) => {
+                      if (isAssetObject(item)) {
+                        //console.log(item);
+                      }
+                      return (
+                        <tr
+                          onClick={
+                            this.props.type === ElementType.DATACENTER ||
+                            this.props.type === ElementType.USER
+                              ? () => {}
+                              : () => {
+                                  console.log("redirecting", item.id);
+                                  this.props.history.push(
+                                    "/" + this.props.type + "/" + item.id
+                                  );
+                                }
                           }
+                        >
+                          {Object.entries(item).map(([col, value]) => {
+                            if (isModelObject(value)) {
+                              return [
+                                <td>{value.vendor}</td>,
+                                <td>{value.model_number}</td>
+                              ];
+                            } else if (isRackObject(value)) {
+                              return [
+                                <td>{value.row_letter + value.rack_num}</td>,
+                                <td>{value.datacenter.name}</td>
+                              ];
+                            } else if (col === "display_color") {
+                              console.log(value);
+                              return (
+                                <td
+                                  style={{
+                                    backgroundColor: value
+                                  }}
+                                ></td>
+                              );
+                            } else if (
+                              col !== "id" &&
+                              col !== "network_ports" &&
+                              col !== "comment" &&
+                              col !== "is_admin" &&
+                              !isObject(value)
+                            ) {
+                              return <td>{value}</td>;
+                            }
 
-                          return null;
-                        })}
-                        <td>
-                          {this.props.isAdmin && isUserObject(item) ? (
-                            <div className="inline-buttons grant-admin-button">
-                              {this.renderAdminButton(item)}
-                            </div>
-                          ) : null}
-                          <div className="inline-buttons">
-                            {this.props.type !== ElementType.USER &&
-                            this.props.isAdmin ? (
-                              <AnchorButton
-                                className="button-table"
-                                intent="primary"
-                                icon="edit"
-                                minimal
-                                onClick={(event: any) => {
-                                  this.handleEditButtonClick(item);
-                                  event.stopPropagation();
-                                }}
-                              />
+                            return null;
+                          })}
+                          <td>
+                            {this.props.isAdmin && isUserObject(item) ? (
+                              <div className="inline-buttons grant-admin-button">
+                                {this.renderAdminButton(item)}
+                              </div>
                             ) : null}
-                            {this.props.isAdmin ? (
-                              <AnchorButton
-                                className="button-table"
-                                intent="danger"
-                                minimal
-                                icon="trash"
-                                onClick={(event: any) => {
-                                  this.handleDeleteButtonClick(item);
-                                  event.stopPropagation();
-                                }}
-                              />
-                            ) : null}
-                            {isAssetObject(item) ? (
-                              <AnchorButton
-                                className="button-table"
-                                intent="warning"
-                                minimal
-                                icon="offline"
-                                onClick={(event: any) => {
-                                  this.handlePowerButtonClick(item);
-                                  event.stopPropagation();
-                                }}
-                              />
-                            ) : null}
-                          </div>{" "}
-                          {/* TODO add logic for determining if isOwner for power button */}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
+                            <div className="inline-buttons">
+                              {this.props.type !== ElementType.USER &&
+                              this.props.isAdmin ? (
+                                <AnchorButton
+                                  className="button-table"
+                                  intent="primary"
+                                  icon="edit"
+                                  minimal
+                                  onClick={(event: any) => {
+                                    this.handleEditButtonClick(item);
+                                    event.stopPropagation();
+                                  }}
+                                />
+                              ) : null}
+                              {this.props.isAdmin ? (
+                                <AnchorButton
+                                  className="button-table"
+                                  intent="danger"
+                                  minimal
+                                  icon="trash"
+                                  onClick={(event: any) => {
+                                    this.handleDeleteButtonClick(item);
+                                    event.stopPropagation();
+                                  }}
+                                />
+                              ) : null}
+                              {isAssetObject(item) ? (
+                                <AnchorButton
+                                  className="button-table"
+                                  intent="warning"
+                                  minimal
+                                  icon="offline"
+                                  onClick={(event: any) => {
+                                    this.handlePowerButtonClick(item);
+                                    event.stopPropagation();
+                                  }}
+                                />
+                              ) : null}
+                            </div>{" "}
+                            {/* TODO add logic for determining if isOwner for power button */}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                ) : (
+                  <Spinner size={Spinner.SIZE_STANDARD} />
+                )
               ) : (
                 <h4 className="no-data-text">no {this.props.type} found </h4>
               )}

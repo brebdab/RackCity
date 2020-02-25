@@ -58,8 +58,15 @@
   width: min-content;
   margin: auto;
 }
-.field .bp3-button {
+.test-fields .bp3-button {
   margin: 0pt;
+  // margin-right: 10pt;
+}
+.test-fields .test-select {
+  margin-right: 10pt;
+}
+.field-select {
+  margin-right: 10pt;
 }
 .all-racks {
   height: fit-content;
@@ -105,9 +112,13 @@
   margin-top: 15pt;
   height: 20pt !important;
   float: left;
-  background-color: red;
-}
 
+  margin-left: 10pt;
+  display: inline-flex;
+}
+.range {
+  display: inline-flex;
+}
 .test-select {
   margin-top: 20px !important;
 }
