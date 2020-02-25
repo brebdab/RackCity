@@ -9,6 +9,8 @@ class Status(Enum):
     DELETE_ERROR = "DELETE ERROR: "
     MODIFY_ERROR = "MODIFY ERROR: "
     INVALID_INPUT = "INVALID INPUT: "
+    IMPORT_ERROR = "IMPORT ERROR: "
+    EXPORT_ERROR = "EXPORT ERROR: "
     CONNECTION = "CONNECTION ERROR: "
 
 
@@ -24,6 +26,17 @@ class UserFailure(Enum):
     DELETE = "Cannot delete user"
     NETID_LOGIN = \
         "The Duke NetID login credentials you have provided are invalid."
+
+
+class BulkFailure(Enum):
+    IMPORT_UNKNOWN = \
+        "Unknown error importing file. " + \
+        "See in-app documentation for format specifications."
+    IMPORT_COLUMNS = \
+        "Please provide exactly the expected columns. " + \
+        "See in-app documentation for reference."
+    MODEL_INVALID = "At least one provided model was not valid: "
+    ASSET_INVALID = "At least one provided asset was not valid: "
 
 
 class PowerFailure(Enum):

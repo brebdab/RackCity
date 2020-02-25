@@ -10,7 +10,8 @@ from rackcity.api.serializers import (
 )
 from rackcity.utils.log_utils import (
     log_action,
-    log_bulk_import,
+    log_bulk_upload,
+    log_bulk_approve,
     log_delete,
     Action,
     ElementType,
@@ -18,7 +19,8 @@ from rackcity.utils.log_utils import (
 from rackcity.utils.errors_utils import (
     GenericFailure,
     Status,
-    parse_serializer_errors
+    parse_serializer_errors,
+    BulkFailure
 )
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -392,7 +394,13 @@ def model_bulk_upload(request):
     data = JSONParser().parse(request)
     if 'import_csv' not in data:
         return JsonResponse(
-            {"failure_message": "Bulk upload request should have a parameter 'file'"},
+            {
+                "failure_message":
+                    Status.IMPORT_ERROR.value +
+                    BulkFailure.IMPORT_UNKNOWN.value,
+                "errors":
+                    "Bulk upload request should have a parameter 'file'"
+            },
             status=HTTPStatus.BAD_REQUEST
         )
     base_64_csv = data['import_csv']
@@ -407,10 +415,12 @@ def model_bulk_upload(request):
         len(expected_fields) != len(given_fields)  # check for repeated fields
         or set(expected_fields) != set(given_fields)
     ):
-        failure_message = "Please provide exactly the expected columns. " + \
-            "See in-app documentation for reference. "
         return JsonResponse(
-            {"failure_message": failure_message},
+            {
+                "failure_message":
+                    Status.IMPORT_ERROR.value +
+                    BulkFailure.IMPORT_COLUMNS.value
+            },
             status=HTTPStatus.BAD_REQUEST
         )
     bulk_model_datas = []
@@ -423,14 +433,23 @@ def model_bulk_upload(request):
         model_data = normalize_bulk_model_data(bulk_model_data)
         model_serializer = ITModelSerializer(data=model_data)
         if not model_serializer.is_valid():
-            failure_message = str(model_serializer.errors)
-            failure_message = "At least one provided model was not valid! "+failure_message
             return JsonResponse(
-                {"failure_message": failure_message},
+                {
+                    "failure_message":
+                        Status.IMPORT_ERROR.value +
+                        BulkFailure.MODEL_INVALID.value +
+                        parse_serializer_errors(model_serializer.errors),
+                    "errors": str(model_serializer.errors)
+                },
                 status=HTTPStatus.BAD_REQUEST
             )
-        if (model_data['vendor'], model_data['model_number']) in models_in_import:
-            failure_message = "Vendor+model_number combination must be unique, but " + \
+        if (
+            (model_data['vendor'], model_data['model_number'])
+            in models_in_import
+        ):
+            failure_message = \
+                Status.IMPORT_ERROR.value + \
+                "Vendor+model_number combination must be unique, but " + \
                 "vendor="+model_data['vendor'] + \
                 ", model_number="+model_data['model_number'] + \
                 " appears more than once in import. "
@@ -445,7 +464,9 @@ def model_bulk_upload(request):
             )
         try:
             existing_model = ITModel.objects.get(
-                vendor=model_data['vendor'], model_number=model_data['model_number'])
+                vendor=model_data['vendor'],
+                model_number=model_data['model_number']
+            )
         except ObjectDoesNotExist:
             models_to_add.append(model_serializer)
         else:
@@ -453,6 +474,7 @@ def model_bulk_upload(request):
                 validate_model_height_change(model_data, existing_model)
             except LocationException as error:
                 failure_message = \
+                    Status.IMPORT_ERROR.value + \
                     "Height change of this model causes conflicts: " + \
                     "vendor="+model_data['vendor'] + \
                     ", model_number="+model_data['model_number'] + \
@@ -492,6 +514,13 @@ def model_bulk_upload(request):
                     "modified": new_data
                 }
             )
+    log_bulk_upload(
+        request.user,
+        ElementType.MODEL,
+        records_added,
+        records_ignored,
+        len(modifications_to_approve),
+    )
     return JsonResponse(
         {
             "added": records_added,
@@ -511,7 +540,14 @@ def model_bulk_approve(request):
     data = JSONParser().parse(request)
     if 'approved_modifications' not in data:
         return JsonResponse(
-            {"failure_message": "Bulk approve request should have a parameter 'approved_modifications'"},
+            {
+                "failure_message":
+                    Status.IMPORT_ERROR.value +
+                    BulkFailure.IMPORT_UNKNOWN.value,
+                "errors":
+                    "Bulk approve request should have a parameter " +
+                    "'approved_modifications'"
+            },
             status=HTTPStatus.BAD_REQUEST
         )
     model_datas = data['approved_modifications']
@@ -529,7 +565,7 @@ def model_bulk_approve(request):
         for field in model_data.keys():  # This is assumed to have all fields, and with null values for blank ones. That's how it's returned in bulk-upload
             setattr(existing_model, field, model_data[field])
         existing_model.save()
-    log_bulk_import(request.user, ElementType.MODEL)
+    log_bulk_approve(request.user, ElementType.MODEL, len(model_datas))
     return HttpResponse(status=HTTPStatus.OK)
 
 
@@ -545,7 +581,11 @@ def model_bulk_export(request):
         filter_args = get_filter_arguments(request.data)
     except Exception as error:
         return JsonResponse(
-            {"failure_message": "Filter error: " + str(error)},
+            {
+                "failure_message":
+                    Status.EXPORT_ERROR.value + GenericFailure.FILTER.value,
+                "errors": str(error)
+            },
             status=HTTPStatus.BAD_REQUEST
         )
     for filter_arg in filter_args:
@@ -555,7 +595,11 @@ def model_bulk_export(request):
         sort_args = get_sort_arguments(request.data)
     except Exception as error:
         return JsonResponse(
-            {"failure_message": "Sort error: " + str(error)},
+            {
+                "failure_message":
+                    Status.EXPORT_ERROR.value + GenericFailure.SORT.value,
+                "errors": str(error)
+            },
             status=HTTPStatus.BAD_REQUEST
         )
     models = models_query.order_by(*sort_args)
@@ -614,7 +658,7 @@ def model_page_count(request):
 @api_view(['GET'])
 def model_fields(request):
     """
-    Return all fields on the ITModelSerializer. 
+    Return all fields on the ITModelSerializer.
     """
     return JsonResponse(
         {"fields": [
