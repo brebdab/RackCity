@@ -38,6 +38,25 @@
 .rack-view-options {
   display: inline-block;
   text-align: center;
+  width: 100%;
+}
+.rack-form {
+  text-align: center;
+}
+.rack-tab-panel {
+  display: block;
+}
+
+.rack-tab .bp3-card {
+  background-color: #202b33;
+  // margin: 20pt !important;
+  margin-top: 10pt;
+  margin-bottom: 10pt;
+}
+.rack-range {
+  text-align: center;
+  width: min-content;
+  margin: auto;
 }
 .all-racks {
   height: fit-content;
@@ -112,7 +131,14 @@
 .element-tab-buttons {
   float: right;
 }
-
+.rack-letter {
+  margin: auto;
+}
+.rack-tab-panel .element-tab-buttons {
+  float: right;
+  margin: 10pt;
+  margin-right: 30pt;
+}
 .hostname-text {
   margin-left: 10px !important;
   padding-right: 100px !important;
@@ -167,9 +193,10 @@ input {
 }
 
 .rack-select {
-  float: left;
+  // float: left;
   padding: 0;
   margin: 0;
+  text-align: center;
 }
 .table-control {
   float: right !important;
