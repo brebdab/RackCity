@@ -236,23 +236,24 @@ export class AssetView extends React.PureComponent<
                         {" "}
                         <td>{port}</td>
                         <td>{this.state.asset.mac_addresses[port]}</td>{" "}
-                        {connection ? (
-                          <td
-                            className="asset-link"
-                            onClick={(e: any) => {
-                              const id = this.getAssetIdFromHostname(
-                                connection!.destination_hostname!
-                              );
-                              if (id) {
-                                this.redirectToAsset(id);
-                              }
-                            }}
-                          >
-                            {connection.destination_hostname}
-                          </td>
-                        ) : (
-                          <td></td>
-                        )}
+                        {connection
+                          ? [
+                              <td
+                                className="asset-link"
+                                onClick={(e: any) => {
+                                  const id = this.getAssetIdFromHostname(
+                                    connection!.destination_hostname!
+                                  );
+                                  if (id) {
+                                    this.redirectToAsset(id);
+                                  }
+                                }}
+                              >
+                                {connection.destination_hostname}
+                              </td>,
+                              <td>{connection.destination_port}</td>
+                            ]
+                          : [<td></td>, <td></td>]}
                       </tr>
                     );
                   })}

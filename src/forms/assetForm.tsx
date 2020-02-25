@@ -275,27 +275,23 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     e.preventDefault();
     if (this.state.values) {
       this.validateMacAddresses();
-      console.log(this.state.values.asset_number);
+      let newValues = this.state.values;
+
       if (this.state.values.hostname === "") {
-        this.setState({
-          values: updateObject(this.state.values, { hostname: undefined })
-        });
+        delete newValues.hostname;
       }
       if (this.state.values.asset_number === "") {
-        this.setState({
-          values: updateObject(this.state.values, { asset_number: undefined })
-        });
+        delete newValues.asset_number;
       }
       if (this.props.initialValues) {
-        this.setState({
-          values: updateObject(this.state.values, {
-            id: this.props.initialValues.id
-          })
-        });
+        newValues.id = this.props.initialValues.id;
       }
+      this.setState({
+        values: newValues
+      });
       if (this.state.errors.length === 0) {
         const resp = this.props.submitForm(
-          this.mapAssetObject(this.state.values),
+          this.mapAssetObject(newValues),
           getHeaders(this.props.token)
         );
         if (resp) {
