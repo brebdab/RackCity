@@ -11,6 +11,7 @@ class Status(Enum):
     INVALID_INPUT = "INVALID INPUT: "
     IMPORT_ERROR = "IMPORT ERROR: "
     EXPORT_ERROR = "EXPORT ERROR: "
+    CONNECTION = "CONNECTION ERROR: "
 
 
 class GenericFailure(Enum):
@@ -36,6 +37,10 @@ class BulkFailure(Enum):
         "See in-app documentation for reference."
     MODEL_INVALID = "At least one provided model was not valid: "
     ASSET_INVALID = "At least one provided asset was not valid: "
+
+
+class PowerFailure(Enum):
+    CONNECTION = "Unable to contact PDU controller. Please try again later."
 
 
 def get_rack_failure_message(range_serializer, action):

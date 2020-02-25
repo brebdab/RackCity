@@ -42,7 +42,9 @@ from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
 import math
 import csv
-from io import StringIO
+from base64 import b64decode
+import re
+from io import StringIO, BytesIO
 from rackcity.views.rackcity_utils import (
     validate_asset_location,
     validate_location_modification,
@@ -54,7 +56,6 @@ from rackcity.views.rackcity_utils import (
     MacAddressException,
     PowerConnectionException,
     NetworkConnectionException,
-    close_old_connections_decorator
 )
 from rackcity.models.asset import get_next_available_asset_number
 
@@ -474,7 +475,7 @@ def asset_modify(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.MODIFY_ERROR +
+                    Status.MODIFY_ERROR.value +
                     "Invalid location change. " + str(error)
             },
             status=HTTPStatus.BAD_REQUEST,
@@ -658,8 +659,12 @@ def asset_bulk_upload(request):
             },
             status=HTTPStatus.BAD_REQUEST
         )
-    csv_string = StringIO(data['import_csv'])
-    csvReader = csv.DictReader(csv_string)
+    base_64_csv = data['import_csv']
+    csv_bytes_io = BytesIO(
+        b64decode(re.sub(".*base64,", '', base_64_csv))
+    )
+    csv_string_io = StringIO(csv_bytes_io.read().decode('UTF-8'))
+    csvReader = csv.DictReader(csv_string_io)
     expected_fields = BulkAssetSerializer.Meta.fields
     given_fields = csvReader.fieldnames
     if (
@@ -768,7 +773,7 @@ def asset_bulk_upload(request):
                     status=HTTPStatus.BAD_REQUEST
                 )
         # Check that all hostnames in file are case insensitive unique
-        if asset_data['hostname']:
+        if 'hostname' in asset_data and asset_data['hostname']:
             asset_data_hostname_lower = asset_data['hostname'].lower()
             if asset_data_hostname_lower in hostnames_in_import:
                 failure_message = \
@@ -900,6 +905,7 @@ def asset_bulk_upload(request):
         # macs and connections aren't specified in this file, so ignore them
         del existing_data['mac_addresses']
         del existing_data['network_connections']
+        del existing_data['network_graph']
         if records_are_identical(existing_data, new_data):
             records_ignored += 1
         else:
@@ -1052,8 +1058,12 @@ def network_bulk_upload(request):
             },
             status=HTTPStatus.BAD_REQUEST
         )
-    csv_string = StringIO(data['import_csv'])
-    csvReader = csv.DictReader(csv_string)
+    base_64_csv = data['import_csv']
+    csv_bytes_io = BytesIO(
+        b64decode(re.sub(".*base64,", '', base_64_csv))
+    )
+    csv_string_io = StringIO(csv_bytes_io.read().decode('UTF-8'))
+    csvReader = csv.DictReader(csv_string_io)
     expected_fields = BulkNetworkPortSerializer.Meta.fields
     given_fields = csvReader.fieldnames
     if (

@@ -28,7 +28,9 @@ from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
 import math
 import csv
-from io import StringIO
+from base64 import b64decode
+import re
+from io import StringIO, BytesIO
 from rackcity.views.rackcity_utils import (
     validate_asset_location,
     records_are_identical,
@@ -397,12 +399,16 @@ def model_bulk_upload(request):
                     Status.IMPORT_ERROR.value +
                     BulkFailure.IMPORT_UNKNOWN.value,
                 "errors":
-                    "Bulk upload request should have a parameter 'import_csv'"
+                    "Bulk upload request should have a parameter 'file'"
             },
             status=HTTPStatus.BAD_REQUEST
         )
-    csv_string = StringIO(data['import_csv'])
-    csvReader = csv.DictReader(csv_string)
+    base_64_csv = data['import_csv']
+    csv_bytes_io = BytesIO(
+        b64decode(re.sub(".*base64,", '', base_64_csv))
+    )
+    csv_string_io = StringIO(csv_bytes_io.read().decode('UTF-8'))
+    csvReader = csv.DictReader(csv_string_io)
     expected_fields = BulkITModelSerializer.Meta.fields
     given_fields = csvReader.fieldnames
     if (

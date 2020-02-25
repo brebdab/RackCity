@@ -1,4 +1,4 @@
-from rackcity.models import Asset, ITModel, Rack
+from rackcity.models import Asset, ITModel, Rack, PowerPort, NetworkPort
 from rackcity.api.objects import RackRangeSerializer
 from rackcity.api.serializers import RecursiveAssetSerializer, RackSerializer
 from http import HTTPStatus
@@ -34,6 +34,29 @@ def get_rack_detailed_response(racks):
         {"racks": racks_with_assets},
         status=HTTPStatus.OK
     )
+
+
+def validate_asset_datacenter_move(data, asset):
+    old_datacenter = asset.rack.datacenter
+    if 'rack' not in data:
+        return
+    new_datacenter = Rack.objects.get(id=data['rack']).datacenter
+    if (old_datacenter == new_datacenter):
+        return
+    power_ports = PowerPort.objects.filter(asset=asset.id)
+    for power_port in power_ports:
+        if (power_port.power_connection is not None):
+            raise LocationException(
+                "Cannot move asset with existing power connections " +
+                "to different datacenter."
+            )
+    network_ports = NetworkPort.objects.filter(asset=asset.id)
+    for network_port in network_ports:
+        if (network_port.connected_port is not None):
+            raise LocationException(
+                "Cannot move asset with existing network connections " +
+                "to different datacenter."
+            )
 
 
 def validate_asset_location(
@@ -110,6 +133,8 @@ def records_are_identical(existing_data, new_data):
             key not in new_keys
             and existing_data[key] is not None
             and existing_data[key] != ""
+            and existing_data[key] != []
+            and existing_data[key] != {}
             and key != 'id'
         ):
             return False
@@ -119,7 +144,7 @@ def records_are_identical(existing_data, new_data):
         ):
             if not (
                 int_string_comparison(existing_data[key], new_data[key])
-                or empty_string_null_comparison(existing_data[key], new_data[key])
+                or empty_vs_null_comparison(existing_data[key], new_data[key])
             ):
                 return False
     return True
@@ -133,11 +158,15 @@ def int_string_comparison(existing_value, new_value):
     )
 
 
-def empty_string_null_comparison(existing_value, new_value):
+def empty_vs_null_comparison(existing_value, new_value):
     return (
         (
             isinstance(existing_value, str)
             or isinstance(new_value, str)
+            or isinstance(existing_value, list)
+            or isinstance(new_value, list)
+            or isinstance(existing_value, dict)
+            or isinstance(new_value, dict)
         )
         and not new_value
         and not existing_value
