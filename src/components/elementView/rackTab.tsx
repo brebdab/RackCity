@@ -8,7 +8,8 @@ import {
   IToastProps,
   MenuItem,
   Position,
-  Toaster
+  Toaster,
+  Card
 } from "@blueprintjs/core";
 import axios from "axios";
 import * as React from "react";
@@ -297,7 +298,7 @@ class RackTab extends React.Component<
         </Alert>
         {this.props.currDatacenter &&
         this.props.currDatacenter.name !== ALL_DATACENTERS.name ? (
-          <div>
+          <div className="rack-tab-panel">
             {this.props.isAdmin ? (
               <div className=" element-tab-buttons">
                 <AnchorButton
@@ -318,26 +319,29 @@ class RackTab extends React.Component<
                 />
               </div>
             ) : null}
-            <div className="rack-view-options">
-              <Button
-                className="all-racks"
-                text="View All Racks"
-                onClick={(e: any) =>
-                  this.getAllRacks(this.props.currDatacenter)
-                }
-              />
-              <p className="or">or </p>
-              <RackSelectView
-                currDatacenter={this.props.currDatacenter}
-                submitForm={this.viewRackForm}
-              />
-            </div>
+            <Card>
+              <div className="rack-view-options">
+                <Button
+                  className="all-racks"
+                  text="View All Racks"
+                  onClick={(e: any) =>
+                    this.getAllRacks(this.props.currDatacenter)
+                  }
+                />
+                <p className="or">or </p>
+                <RackSelectView
+                  currDatacenter={this.props.currDatacenter}
+                  submitForm={this.viewRackForm}
+                />
+              </div>
+            </Card>
           </div>
         ) : (
           <Callout title="No Datacenter Delected" intent={Intent.PRIMARY}>
             <em>Please select a datacenter to view rack information</em>
           </Callout>
         )}
+
         {this.state.racks.length !== 0 ? (
           <Link
             target="_blank"

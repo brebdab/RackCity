@@ -388,6 +388,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
 
         <div>
           <ElementTable
+            datacenters={this.props.datacenters}
             updateDatacenters={this.props.updateDatacenters}
             type={this.props.element}
             getData={this.getElementData}

@@ -113,10 +113,7 @@ class RackSelectView extends React.Component<
         {this.state.errors.map((err: string) => {
           return <Callout intent={Intent.DANGER}>{err}</Callout>;
         })}
-        <form
-          onSubmit={this.handleSubmit}
-          className="create-form bp3-form-group"
-        >
+        <form onSubmit={this.handleSubmit} className="rack-form bp3-form-group">
           <div className="rack-select">
             <RackRangeForm
               className="rack-field"
