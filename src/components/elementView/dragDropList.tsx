@@ -5,7 +5,7 @@ import {
   Droppable,
   DropResult
 } from "react-beautiful-dnd";
-import { Callout, Icon } from "@blueprintjs/core";
+import { Callout } from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
 
 // fake data generator
