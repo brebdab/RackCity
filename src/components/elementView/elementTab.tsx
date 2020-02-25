@@ -1,16 +1,16 @@
 import {
   Alert,
   AnchorButton,
+  Button,
+  Callout,
+  Classes,
+  FormGroup,
   InputGroup,
   Intent,
   IToastProps,
-  Position,
-  Toaster,
-  FormGroup,
   MenuItem,
-  Button,
-  Callout,
-  Classes
+  Position,
+  Toaster
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -19,32 +19,31 @@ import { connect } from "react-redux";
 import { RouteComponentProps } from "react-router";
 import FormPopup from "../../forms/formPopup";
 import {
-  FormTypes,
   DatacenterSelect,
-  renderDatacenterItem,
-  filterDatacenter
+  filterDatacenter,
+  FormTypes,
+  renderDatacenterItem
 } from "../../forms/formUtils";
+import { updateObject } from "../../store/utility";
 import { API_ROOT } from "../../utils/api-config";
 import {
-  ShallowAssetObject,
   CreateUserObject,
+  DatacenterObject,
   ElementObjectType,
   ElementType,
   ModelObject,
-  DatacenterObject,
+  ShallowAssetObject,
   SortFilterBody
 } from "../../utils/utils";
+import { ALL_DATACENTERS } from "./elementTabContainer";
 import ElementTable from "./elementTable";
-import "./elementView.scss";
 import {
+  FilterTypes,
   IFilter,
   PagingTypes,
-  FilterTypes,
   TextFilterTypes
 } from "./elementUtils";
-import { updateObject } from "../../store/utility";
-import { ALL_DATACENTERS } from "./elementTabContainer";
-import { IconNames } from "@blueprintjs/icons";
+import "./elementView.scss";
 
 // var console: any = {};
 // console.log = function () { };
