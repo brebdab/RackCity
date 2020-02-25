@@ -480,6 +480,15 @@ def model_bulk_upload(request):
                     {"failure_message": failure_message},
                     status=HTTPStatus.NOT_ACCEPTABLE
                 )
+            try:
+                validate_model_change(model_data, existing_model)
+            except ModelModificationException as error:
+                modification_failure = str(error) + \
+                    " There are existing assets with this model: " + \
+                    "vendor="+model_data['vendor'] + \
+                    ", model_number="+model_data['model_number'] + \
+                    ". " + \
+
             potential_modifications.append(
                 {
                     "existing_model": existing_model,
