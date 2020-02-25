@@ -150,7 +150,7 @@ export class BulkImport extends React.PureComponent<
             className={"modify-table"}
             usePortal={true}
             isCloseButtonShown={true}
-            title={"Model Alterations Menu"}
+            title={"Model Modifications Menu"}
           >
             <Modifier
               {...this.props}
@@ -219,7 +219,7 @@ export class BulkImport extends React.PureComponent<
             className={"modify-table"}
             usePortal={true}
             isCloseButtonShown={true}
-            title={"Network Connections Alterations Menu"}
+            title={"Network Connections Modifications Menu"}
           >
             <Modifier
               {...this.props}
