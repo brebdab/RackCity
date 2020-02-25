@@ -53,6 +53,12 @@ export interface ModelObjectMod {
   network_port_name_4?: string;
 }
 
+export interface NetworkConnection {
+  source_port: string;
+  destination_hostname: string;
+  destination_port: string;
+}
+
 interface Check {
   model: any;
   checked: boolean;
@@ -227,6 +233,12 @@ export class Modifier extends React.PureComponent<
           power_port_connection_1: "Power Port #1 Connection",
           power_port_connection_2: "Power Port #2 Connection"
         };
+      } else if (this.props.operation === "network") {
+        fields = {
+          source_port: "en0",
+          destination_hostname: "Desitnation Hostname",
+          destination_port: "Destination Port"
+        }
       }
 
       return (
@@ -276,9 +288,45 @@ export class Modifier extends React.PureComponent<
                     alert(err.response.data.failure_message);
                   }
                 );
-              } else {
+              } else if (
+                this.state.modifiedModels.length !== 0 &&
+                this.props.operation === "assets"
+              ) {
                 // TODO check this works and refactor
                 let modified: Array<AssetObject>;
+                modified = [];
+                for (i = 0; i < this.state.modifiedModels.length; i++) {
+                  if (this.state.modifiedModels[i].checked)
+                    modified.push(this.state.modifiedModels[i].model);
+                }
+                uploadModified(
+                  modified,
+                  this.props.token,
+                  this.props.operation
+                ).then(
+                  res => {
+                    alert(
+                      "Success! Modified: " +
+                      modified.length +
+                      "; Added: " +
+                      this.props.modelsAdded! +
+                      "; Ignored: " +
+                      (this.props.modelsIgnored! +
+                        this.props.modelsModified!.length -
+                        modified.length)
+                    );
+                    // alert("Modifications were successful")
+                    this.setState({
+                      modifiedModels: []
+                    });
+                    this.props.callback();
+                  },
+                  err => {
+                    alert(err.response.data.failure_message);
+                  }
+                );
+              } else {
+                let modified: Array<NetworkConnection>;
                 modified = [];
                 for (i = 0; i < this.state.modifiedModels.length; i++) {
                   if (this.state.modifiedModels[i].checked)
@@ -334,6 +382,17 @@ async function uploadModified(
       Authorization: "Token " + token
     }
   };
+  if (operation === "network") {
+    return await axios
+      .post(
+        API_ROOT + "api/assets/network-bulk-approve",
+        { approved_modifications: modelList },
+        headers
+      ).then(res => {
+        const data = res.data
+        return data
+      })
+  }
   return await axios
     .post(
       API_ROOT + "api/" + operation + "/bulk-approve",
