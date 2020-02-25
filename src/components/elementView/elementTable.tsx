@@ -41,7 +41,7 @@ import {
   AssetFieldsTable,
   ModelFieldsTable
 } from "../../utils/utils";
-import DragDropList from "./dragDropList";
+import DragDropList, { DragDropListTypes } from "./dragDropList";
 import {
   deleteAsset,
   deleteDatacenter,
@@ -227,14 +227,6 @@ class ElementTable extends React.Component<
     }
     return (
       <div className="drag-drop-text">
-        <span>
-          <Icon
-            className="icon"
-            icon={IconNames.DRAG_HANDLE_VERTICAL}
-            iconSize={Icon.SIZE_STANDARD}
-          />
-        </span>
-
         <span>{`${field} ${display}
       `}</span>
 
@@ -921,8 +913,8 @@ class ElementTable extends React.Component<
                   />
                 </div>,
                 <div className="table-options">
-                  <p>Applied filters:</p>
                   <DragDropList
+                    type={DragDropListTypes.FILTER}
                     items={this.state.filters}
                     renderItem={this.renderFilterItem}
                   />
@@ -930,8 +922,8 @@ class ElementTable extends React.Component<
               ]}
           {this.props.disableSorting ? null : (
             <div className="table-options">
-              <p>Applied sorts:</p>
               <DragDropList
+                type={DragDropListTypes.SORT}
                 items={this.state.sort_by}
                 renderItem={this.renderSortItem}
                 onChange={this.updateSortOrder}

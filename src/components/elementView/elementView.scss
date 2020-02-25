@@ -125,7 +125,22 @@
 .add {
   float: right;
 }
+.table-options .bp3-callout {
+  width: max-content;
+  padding-bottom: 5pt;
 
+  background-color: #30404d;
+  padding-top: 5pt;
+  margin-bottom: 0;
+  min-height: 100%;
+  color: #a7b6c2;
+  background-color: #202b33;
+}
+
+.table-options .callout-icon {
+  padding-right: 0pt !important;
+  margin-right: 3pt;
+}
 // .header-cell {
 //   // cursor: pointer !important;
 //   white-space: nowrap !important;
