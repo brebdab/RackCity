@@ -653,7 +653,7 @@ def asset_bulk_upload(request):
         )
     base_64_csv = data['import_csv']
     csv_bytes_io = BytesIO(
-        b64decode(re.sub("data:text/csv;base64,", '', base_64_csv))
+        b64decode(re.sub(".*base64,", '', base_64_csv))
     )
     csv_string_io = StringIO(csv_bytes_io.read().decode('UTF-8'))
     csvReader = csv.DictReader(csv_string_io)
@@ -1002,7 +1002,7 @@ def network_bulk_upload(request):
         )
     base_64_csv = data['import_csv']
     csv_bytes_io = BytesIO(
-        b64decode(re.sub("data:text/csv;base64,", '', base_64_csv))
+        b64decode(re.sub(".*base64,", '', base_64_csv))
     )
     csv_string_io = StringIO(csv_bytes_io.read().decode('UTF-8'))
     csvReader = csv.DictReader(csv_string_io)
