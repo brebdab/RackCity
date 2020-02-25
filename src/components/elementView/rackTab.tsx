@@ -46,6 +46,7 @@ interface RackTabState {
   loading: boolean;
   selectedRackRange: RackRangeFields;
   viewAll: boolean;
+  submitInProgress: boolean;
 }
 interface RackTabProps {
   token: string;
@@ -67,7 +68,8 @@ class RackTab extends React.Component<
     isConfirmationOpen: false,
     racks: [],
     loading: false,
-    viewAll: false
+    viewAll: false,
+    submitInProgress: false
   };
   private toaster: Toaster = {} as Toaster;
   private addToast(toast: IToastProps) {
@@ -135,6 +137,9 @@ class RackTab extends React.Component<
     this.handleConfirmationOpen();
   };
   actuallyDelete = () => {
+    this.setState({
+      submitInProgress: true
+    });
     return axios
       .post(
         API_ROOT + "api/racks/delete",
@@ -147,7 +152,11 @@ class RackTab extends React.Component<
           intent: Intent.PRIMARY
         });
         this.updateRackData(false);
-        this.setState({ isDeleteOpen: false, isConfirmationOpen: false });
+        this.setState({
+          isDeleteOpen: false,
+          isConfirmationOpen: false,
+          submitInProgress: false
+        });
       })
       .catch(err => {
         console.log(err.response);
@@ -155,7 +164,11 @@ class RackTab extends React.Component<
           message: err.response.data.failure_message,
           intent: Intent.DANGER
         });
-        this.setState({ isDeleteOpen: true, isConfirmationOpen: false });
+        this.setState({
+          isDeleteOpen: true,
+          isConfirmationOpen: false,
+          submitInProgress: false
+        });
       });
   };
 
@@ -179,19 +192,32 @@ class RackTab extends React.Component<
     }
   }
   createRack = (rack: RackRangeFields, headers: any) => {
+    this.setState({
+      submitInProgress: true
+    });
     const rack_new = updateObject(rack, {
       datacenter: this.props.currDatacenter.id
     });
     return axios
       .post(API_ROOT + "api/racks/create", rack_new, headers)
       .then(res => {
-        this.setState({ isOpen: false });
+        this.setState({ isOpen: false, submitInProgress: false });
         this.updateRackData(true);
         this.addToast({
           message: "Created rack(s) successfully",
           intent: Intent.PRIMARY
         });
+      })
+      .catch(err => {
+        this.setState({
+          submitInProgress: false
+        });
+
+        this.addErrorToast("Failed to create rack(s)");
       });
+  };
+  private addErrorToast = (message: string) => {
+    this.addToast({ message: message, intent: Intent.DANGER });
   };
 
   getAllRacks = (datacenter: DatacenterObject) => {
@@ -272,6 +298,7 @@ class RackTab extends React.Component<
 
         <FormPopup
           {...this.props}
+          loading={this.state.submitInProgress}
           type={FormTypes.CREATE}
           elementName={ElementType.RACK}
           submitForm={this.createRack}
@@ -280,6 +307,7 @@ class RackTab extends React.Component<
         />
         <FormPopup
           {...this.props}
+          loading={this.state.submitInProgress}
           type={FormTypes.DELETE}
           elementName={ElementType.RACK}
           submitForm={this.deleteRack}
@@ -337,7 +365,7 @@ class RackTab extends React.Component<
             </Card>
           </div>
         ) : (
-          <Callout title="No Datacenter Delected" intent={Intent.PRIMARY}>
+          <Callout title="No Datacenter Selected">
             <em>Please select a datacenter to view rack information</em>
           </Callout>
         )}
