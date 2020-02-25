@@ -13,7 +13,8 @@ def get_next_available_asset_number():
             Asset.objects.get(asset_number=asset_number)
         except ObjectDoesNotExist:
             return asset_number
-            
+
+
 def validate_hostname(value):
     hostname_pattern = re.compile("[A-Za-z]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?")
     if value and hostname_pattern.fullmatch(value) is None:
@@ -102,10 +103,11 @@ class Asset(models.Model):
         from rackcity.models import PowerPort
         if len(PowerPort.objects.filter(asset=self.id)) == 0:
             model = self.model
-            for port_index in range(model.num_power_ports):
-                port_name = str(port_index+1)
-                power_port = PowerPort(
-                    asset=self,
-                    port_name=port_name,
-                )
-                power_port.save()
+            if model.num_power_ports:
+                for port_index in range(model.num_power_ports):
+                    port_name = str(port_index+1)
+                    power_port = PowerPort(
+                        asset=self,
+                        port_name=port_name,
+                    )
+                    power_port.save()
