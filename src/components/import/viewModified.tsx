@@ -6,7 +6,7 @@ import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import { API_ROOT } from "../../utils/api-config";
 import "./import.scss";
-import { ModelObjectOld, RackObject } from "../../utils/utils";
+import { ModelObject, RackObject, PowerConnection } from "../../utils/utils";
 
 interface ModifierProps {
   token: string;
@@ -23,11 +23,15 @@ export interface AssetObject {
   [key: string]: any;
   hostname: string;
   rack_position: string;
-  model: ModelObjectOld;
+  model: ModelObject;
   rack: RackObject;
   owner?: string;
   comment?: string;
   id: string;
+  asset_number: number;
+  datacenter: string;
+  power_port_connection_1: PowerConnection;
+  power_port_connection_2: PowerConnection
 }
 
 export interface ModelObjectMod {
@@ -36,13 +40,17 @@ export interface ModelObjectMod {
   model_number: string;
   height: string;
   display_color?: string;
-  num_ethernet_ports?: string; //
-  num_power_ports?: string; //
+  network_ports?: string; //
+  power_ports?: string; //
   cpu?: string;
-  memory_gb?: string; //
+  memory?: string; //
   storage?: string;
   comment?: string;
   id: string;
+  network_port_name_1?: string;
+  network_port_name_2?: string;
+  network_port_name_3?: string;
+  network_port_name_4?: string;
 }
 
 interface Check {
@@ -62,6 +70,125 @@ export class Modifier extends React.PureComponent<
     modifiedModels: []
   };
 
+  renderModifications(model: any, fields: any) {
+    for (let i = 0; i < this.props.modelsModified!.length; i++) {
+      let obj = this.props.modelsModified![i]
+      let checkObj: Check;
+      checkObj = { model: obj.modified, checked: false };
+      this.state.modifiedModels.push(checkObj);
+      return (
+        <div>
+          <table className={"bp3-html-table"}>
+            <thead>
+              <tr>
+                <th>Modified or Original?</th>
+                {Object.keys(model).map((item: string) => {
+                  console.log(item)
+                  if (item !== "id") {
+                    if (item === "power_connections") {
+                      return <th></th>
+                    } else
+                      return <th>{fields[item]}</th>;
+                  }
+                  // TODO might need to make separate fields arrays based on this.props.operation
+                  else return <th> </th>;
+                })}
+                {this.props.operation === "assets" ? <th>Power Port 1</th> : null}
+                {this.props.operation === "assets" ? <th>Power Port 2</th> : null}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Existing</td>
+                {Object.keys(model).map((key: string) => {
+                  if (key === "rack")
+                    return (
+                      <td>
+                        {obj.existing.rack.rack_num +
+                          "" +
+                          obj.existing.rack.row_letter}
+                      </td>
+                    );
+                  else if (key === "model")
+                    return (
+                      <td>
+                        {obj.existing.model.vendor +
+                          " " +
+                          obj.existing.model.model_number}
+                      </td>
+                    );
+                  else if (key !== "id") {
+                    if (key !== "power_connections")
+                      return <td>{obj.existing[key]}</td>;
+                    else {
+                      return <td></td>
+                    }
+                  }
+                  else return <td> </td>;
+                })}
+                {this.props.operation === "assets" ? Object.keys(obj.existing.power_connections).map((portNum: string) => {
+                  return <td>{obj.existing.power_connections[portNum].left_right}{obj.existing.power_connections[portNum].port_number}</td>
+                }) : null}
+              </tr>
+              <tr>
+                <td>Modified</td>
+                {Object.keys(model).map((key: string) => {
+                  if (key === "rack")
+                    return (
+                      <td>
+                        {obj.modified.rack.rack_num +
+                          "" +
+                          obj.modified.rack.row_letter}
+                      </td>
+                    );
+                  else if (key === "model")
+                    return (
+                      <td>
+                        {obj.modified.model.vendor +
+                          " " +
+                          obj.modified.model.model_number}
+                      </td>
+                    );
+                  else if (key !== "id") {
+                    if (key !== "power_connections")
+                      return <td>{obj.modified[key]}</td>;
+                    else {
+                      return <td></td>
+                    }
+                  }
+                  else return <td> </td>;
+                })}
+                {this.props.operation === "assets" ? Object.keys(obj.modified.power_connections).map((portNum: string) => {
+                  return <td>{obj.modified.power_connections[portNum].left_right}{obj.modified.power_connections[portNum].port_number}</td>
+                }) : null}
+              </tr>
+            </tbody>
+          </table>
+          <div className={"upload-button"}>
+            <Checks
+              {...this.props}
+              linkedModel={obj.modified}
+              callback={(model: any) => {
+                var index = this.state.modifiedModels.findIndex(
+                  (element: Check) => {
+                    return element.model === model; // TODO might need to make Check type have model: any
+                  }
+                );
+                let check: Array<Check>;
+                check = this.state.modifiedModels;
+                check[index].checked = !check[index].checked;
+                this.setState({
+                  modifiedModels: check
+                });
+                // this.state.modifiedModels[index].checked = !this.state.modifiedModels[index].checked
+              }}
+            />
+          </div>
+        </div>
+      );
+    }
+  }
+
   render() {
     if (this.props.modelsModified !== undefined) {
       console.log(this.props.modelsModified[0]);
@@ -71,121 +198,40 @@ export class Modifier extends React.PureComponent<
       if (this.props.operation === "models") {
         fields = {
           vendor: "Vendor",
-          model_number: "Model #",
+          model_number: "Model Number",
           height: "Height",
           display_color: "Display Color",
-          num_ethernet_ports: "# Ethernet Ports",
-          num_power_ports: "# Power Ports",
+          network_ports: "Network Ports",
+          power_ports: "Power Ports",
           cpu: "CPU",
-          memory_gb: "Memory",
+          memory: "Memory",
           storage: "Storage",
           comment: "Comments",
-          id: ""
+          id: "",
+          network_port_name_1: "Network Port #1 Name",
+          network_port_name_2: "Network Port #2 Name",
+          network_port_name_3: "Network Port #3 Name",
+          network_port_name_4: "Network Port #4 Name"
         };
-      } else {
+      } else if (this.props.operation === "assets") {
         fields = {
+          asset_number: "Asset Number",
           hostname: "Hostname",
+          datacenter: "Datacenter",
           rack_position: "Rack position (U)",
           model: "Model",
           rack: "Rack",
           owner: "Owner",
           comment: "Comments",
-          id: ""
+          id: "",
+          power_port_connection_1: "Power Port #1 Connection",
+          power_port_connection_2: "Power Port #2 Connection"
         };
       }
+
       return (
         <div>
-          {this.props.modelsModified.map((obj: any) => {
-            let checkObj: Check;
-            checkObj = { model: obj.modified, checked: false };
-            this.state.modifiedModels.push(checkObj);
-            return (
-              <div>
-                <table className={"bp3-html-table"}>
-                  <thead>
-                    <tr>
-                      <th>Modified or Original?</th>
-                      {Object.keys(model).map((item: string) => {
-                        if (item !== "id") return <th>{fields[item]}</th>;
-                        // TODO might need to make separate fields arrays based on this.props.operation
-                        else return <th> </th>;
-                      })}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>Existing</td>
-                      {Object.keys(model).map((key: string) => {
-                        if (key === "rack")
-                          return (
-                            <td>
-                              {obj.existing.rack.rack_num +
-                                "" +
-                                obj.existing.rack.row_letter}
-                            </td>
-                          );
-                        else if (key === "model")
-                          return (
-                            <td>
-                              {obj.existing.model.vendor +
-                                " " +
-                                obj.existing.model.model_number}
-                            </td>
-                          );
-                        else if (key !== "id")
-                          return <td>{obj.existing[key]}</td>;
-                        else return <td> </td>;
-                      })}
-                    </tr>
-                    <tr>
-                      <td>Modified</td>
-                      {Object.keys(model).map((key: string) => {
-                        if (key === "rack")
-                          return (
-                            <td>
-                              {obj.modified.rack.rack_num +
-                                "" +
-                                obj.modified.rack.row_letter}
-                            </td>
-                          );
-                        else if (key === "model")
-                          return (
-                            <td>
-                              {obj.modified.model.vendor +
-                                " " +
-                                obj.modified.model.model_number}
-                            </td>
-                          );
-                        else if (key !== "id")
-                          return <td>{obj.modified[key]}</td>;
-                        else return <td> </td>;
-                      })}
-                    </tr>
-                  </tbody>
-                </table>
-                <div className={"upload-button"}>
-                  <Checks
-                    {...this.props}
-                    linkedModel={obj.modified}
-                    callback={(model: any) => {
-                      var index = this.state.modifiedModels.findIndex(
-                        (element: Check) => {
-                          return element.model === model; // TODO might need to make Check type have model: any
-                        }
-                      );
-                      let check: Array<Check>;
-                      check = this.state.modifiedModels;
-                      check[index].checked = !check[index].checked;
-                      this.setState({
-                        modifiedModels: check
-                      });
-                      // this.state.modifiedModels[index].checked = !this.state.modifiedModels[index].checked
-                    }}
-                  />
-                </div>
-              </div>
-            );
-          })}
+          {this.renderModifications(model, fields)}
           <h1> </h1>
           <AnchorButton
             className={"upload-button"}
