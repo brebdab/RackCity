@@ -61,7 +61,7 @@ class ElementTabContainer extends React.Component<
   public render() {
     return (
       <Tabs
-        className={" element-view"}
+        className="element-view"
         animate={true}
         id="ElementViewer"
         key={"vertical"}
