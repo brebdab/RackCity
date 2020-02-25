@@ -1,15 +1,16 @@
 import {
   Alert,
   AnchorButton,
+  Button,
+  Callout,
+  Classes,
+  FormGroup,
   InputGroup,
   Intent,
   IToastProps,
-  Position,
-  Toaster,
-  FormGroup,
   MenuItem,
-  Button,
-  Callout
+  Position,
+  Toaster
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -18,31 +19,31 @@ import { connect } from "react-redux";
 import { RouteComponentProps } from "react-router";
 import FormPopup from "../../forms/formPopup";
 import {
-  FormTypes,
   DatacenterSelect,
-  renderDatacenterItem,
-  filterDatacenter
+  filterDatacenter,
+  FormTypes,
+  renderDatacenterItem
 } from "../../forms/formUtils";
+import { updateObject } from "../../store/utility";
 import { API_ROOT } from "../../utils/api-config";
 import {
-  ShallowAssetObject,
   CreateUserObject,
+  DatacenterObject,
   ElementObjectType,
   ElementType,
   ModelObject,
-  DatacenterObject,
+  ShallowAssetObject,
   SortFilterBody
 } from "../../utils/utils";
+import { ALL_DATACENTERS } from "./elementTabContainer";
 import ElementTable from "./elementTable";
-import "./elementView.scss";
 import {
+  FilterTypes,
   IFilter,
   PagingTypes,
-  FilterTypes,
   TextFilterTypes
 } from "./elementUtils";
-import { updateObject } from "../../store/utility";
-import { ALL_DATACENTERS } from "./elementTabContainer";
+import "./elementView.scss";
 
 // var console: any = {};
 // console.log = function () { };
@@ -53,6 +54,7 @@ interface ElementViewState {
   filters: Array<any>;
   fileNameIsOpen: boolean;
   fileName: string;
+  networkFileName: string;
   updateTable: boolean;
 }
 interface ElementViewProps {
@@ -90,7 +92,8 @@ async function getExportData(
   path: string,
   filters: Array<any>,
   token: string,
-  file: string
+  file: string,
+  networkFile: string
 ) {
   const config = {
     headers: {
@@ -101,6 +104,15 @@ async function getExportData(
     sort_by: [],
     filters: filters
   };
+  if (path === "assets") {
+    axios
+      .post(API_ROOT + "api/" + path + "/network-bulk-export", params, config)
+      .then(res => {
+        console.log(res.data);
+        fs(res.data.export_csv, networkFile);
+        return 0;
+      });
+  }
   return axios
     .post(API_ROOT + "api/" + path + "/bulk-export", params, config)
     .then(res => {
@@ -117,6 +129,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     filters: [],
     fileNameIsOpen: false,
     fileName: "",
+    networkFileName: "",
     updateTable: false
   };
   getElementData = (
@@ -291,7 +304,6 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             </Callout>
           ) : null}
         </div>
-
         <div className="element-tab-buttons">
           {this.props.element !== ElementType.USER &&
             this.props.element !== ElementType.DATACENTER ? (
@@ -327,40 +339,94 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
 
           <Alert
             cancelButtonText="Cancel"
-            confirmButtonText="Confirm file name"
+            className={Classes.DARK}
+            intent={Intent.PRIMARY}
+            confirmButtonText="Confirm Export"
             isOpen={this.state.fileNameIsOpen}
             onCancel={() => {
               this.setState({ fileNameIsOpen: false });
             }}
             onConfirm={() => {
-              if (this.state.fileName === "") {
-                alert("need file name");
-              } else if (this.state.fileName.split(".")[1] !== "csv") {
-                alert("ERROR: Must be csv file");
-              } else if (this.state.fileName.split(".")[0].length === 0) {
-                alert("ERROR: .csv file must have non-empty name");
+              if (
+                this.state.fileName === "" ||
+                (this.state.networkFileName === "" &&
+                  this.props.element === ElementType.ASSET) ||
+                (this.state.fileName === "" &&
+                  this.props.element === ElementType.MODEL)
+              ) {
+                this.addErrorToast("Please provide filenames for both files");
               } else {
-                getExportData(
-                  this.props.element.slice(0, -1) + "s",
-                  this.state.filters,
-                  this.props.token,
-                  this.state.fileName
+                let fileRegEx = /.*\.(\w+)/;
+                let extension = this.state.fileName.match(fileRegEx);
+                console.log(extension);
+                let ext = extension ? extension[extension.length - 1] : null;
+                console.log(ext);
+                let networkExtension = this.state.networkFileName.match(
+                  fileRegEx
                 );
-                this.setState({ fileNameIsOpen: false, fileName: "" });
+                console.log(networkExtension);
+                let networkExt = networkExtension
+                  ? networkExtension[networkExtension.length - 1]
+                  : null;
+                console.log(networkExt);
+                if (
+                  (networkExt && (ext !== "csv" || networkExt !== "csv")) ||
+                  (!networkExt && ext !== "csv")
+                ) {
+                  this.addErrorToast("Filenames must end in .csv");
+                } else if (
+                  (networkExt &&
+                    (this.state.fileName.split(".")[0].length === 0 ||
+                      this.state.networkFileName.split(".")[0].length === 0)) ||
+                  (!networkExt &&
+                    this.state.fileName.split(".")[0].length === 0)
+                ) {
+                  this.addErrorToast(".csv file must have non-empty name");
+                } else {
+                  getExportData(
+                    this.props.element.slice(0, -1) + "s",
+                    this.state.filters,
+                    this.props.token,
+                    this.state.fileName,
+                    this.state.networkFileName
+                  );
+                  console.log("finished both exports");
+                  this.setState({
+                    fileNameIsOpen: false,
+                    fileName: "",
+                    networkFileName: ""
+                  });
+                }
               }
             }}
           >
             <p>
-              Please enter a file name ending in ".csv" under which to export
-              this data
+              Please enter a filename ending in ".csv" for the following data:
             </p>
-            <InputGroup
-              onChange={(event: any) => {
-                this.setState({ fileName: event.currentTarget.value });
-              }}
-              fill={true}
-              type="text"
-            />
+            <FormGroup label={this.props.element + ":"}>
+              <InputGroup
+                onChange={(event: any) => {
+                  this.setState({ fileName: event.currentTarget.value });
+                }}
+                fill={true}
+                type="text"
+              />
+            </FormGroup>
+            {this.props.element === ElementType.ASSET ? (
+              <div>
+                <FormGroup label="network connections:">
+                  <InputGroup
+                    onChange={(event: any) => {
+                      this.setState({
+                        networkFileName: event.currentTarget.value
+                      });
+                    }}
+                    fill={true}
+                    type="text"
+                  />
+                </FormGroup>
+              </div>
+            ) : null}
           </Alert>
           {this.props.isAdmin ? (
             <AnchorButton
