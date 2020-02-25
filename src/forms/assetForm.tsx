@@ -1,4 +1,5 @@
 import {
+  Alert,
   Button,
   ButtonGroup,
   Callout,
@@ -10,7 +11,9 @@ import {
   InputGroup,
   Intent,
   MenuItem,
-  Tooltip
+  Spinner,
+  Tooltip,
+  Card
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { IconNames } from "@blueprintjs/icons";
@@ -35,6 +38,8 @@ import {
   ElementType,
   getHeaders,
   isAssetObject,
+  isDatacenterObject,
+  isRackObject,
   ModelObject,
   NetworkConnection,
   PowerConnection,
@@ -89,6 +94,9 @@ interface AssetFormState {
   assets: Array<AssetObject>;
   left_ports: Array<string>;
   right_ports: Array<string>;
+  isAlertOpen: boolean;
+  warningMessage: string;
+  selectedValue: any;
 }
 // var console: any = {};
 // console.log = function() {};
@@ -116,6 +124,10 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     }
     return power_ports_default;
   };
+  initialGetRacks = false;
+  gettingAssetsInProgress = false;
+  gettingRacksInProgress = false;
+  gettingPowerPortsInProgress = false;
 
   public state = {
     values: this.initialState,
@@ -139,10 +151,14 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     //   right_suggest: "12",
     //   right_available: ["1", "2", "12", "13"]
     // },
-    power_ports_default: {} as { [port: string]: boolean }
+    power_ports_default: {} as { [port: string]: boolean },
+    isAlertOpen: false,
+    warningMessage: "",
+    selectedValue: undefined
   };
 
   getPowerPortAvailability(rack: RackObject) {
+    this.gettingPowerPortsInProgress = true;
     const params = { id: rack.id };
     const config = {
       headers: {
@@ -152,6 +168,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       params: params
     };
     axios.get(API_ROOT + "api/power/availability", config).then(res => {
+      this.gettingPowerPortsInProgress = false;
       this.setState({ power_ports: res.data });
     });
   }
@@ -233,8 +250,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       power_connections,
       comment
     } = asset;
-    const model = asset.model ? asset.model.id : undefined;
-    const rack = asset.rack ? asset.rack.id : undefined;
+    const model = asset.model ? asset.model.id : null;
+    const rack = asset.rack ? asset.rack.id : null;
     let valuesToSend: ShallowAssetObject = {
       asset_number,
       model,
@@ -258,25 +275,23 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     e.preventDefault();
     if (this.state.values) {
       this.validateMacAddresses();
+      let newValues = this.state.values;
+
       if (this.state.values.hostname === "") {
-        this.setState({
-          values: updateObject(this.state.values, { hostname: undefined })
-        });
-      } else if (this.state.values.asset_number === "") {
-        this.setState({
-          values: updateObject(this.state.values, { asset_number: undefined })
-        });
+        delete newValues.hostname;
+      }
+      if (this.state.values.asset_number === "") {
+        delete newValues.asset_number;
       }
       if (this.props.initialValues) {
-        this.setState({
-          values: updateObject(this.state.values, {
-            id: this.props.initialValues.id
-          })
-        });
+        newValues.id = this.props.initialValues.id;
       }
+      this.setState({
+        values: newValues
+      });
       if (this.state.errors.length === 0) {
         const resp = this.props.submitForm(
-          this.mapAssetObject(this.state.values),
+          this.mapAssetObject(newValues),
           getHeaders(this.props.token)
         );
         if (resp) {
@@ -338,7 +353,9 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       });
   };
   getRacks = (datacenter: DatacenterObject) => {
+    console.log("GETTING RACKS for ", datacenter);
     if (datacenter) {
+      this.gettingRacksInProgress = true;
       const config = {
         headers: {
           Authorization: "Token " + this.props.token
@@ -352,6 +369,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         .get(API_ROOT + "api/racks/summary", config)
         .then(res => {
           console.log(res.data.racks);
+          this.initialGetRacks = true;
+          this.gettingRacksInProgress = false;
           this.setState({
             racks: res.data.racks as Array<RackObject>
           });
@@ -375,6 +394,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     });
   };
   getValidAssets = (currDatacenter: DatacenterObject) => {
+    this.gettingAssetsInProgress = true;
     console.log("getting assets from this datacenter", currDatacenter);
     let body = {};
     const filters: Array<IFilter> = [];
@@ -399,6 +419,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       body,
       this.props.token
     ).then(res => {
+      console.log(res);
       let assetsWithHostname: Array<AssetObject> = res as Array<AssetObject>;
       assetsWithHostname = assetsWithHostname.filter(asset => {
         if (
@@ -409,10 +430,12 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         }
         return true;
       });
+      console.log("got assets", assetsWithHostname);
 
       this.setState({
         assets: assetsWithHostname as Array<AssetObject>
       });
+      this.gettingAssetsInProgress = false;
     });
   };
   getPowerButtonStatus = (side: PowerSide, port: number) => {
@@ -430,29 +453,26 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   };
 
   shouldDisablePowerPort = (port: number) => {
-    if (
-      this.state.values.power_connections &&
-      this.state.values.power_connections[port]
-    ) {
-      return false;
-    } else {
+    if (!this.state.values.rack) {
       return true;
     }
+    return !(
+      this.state.values.power_connections &&
+      this.state.values.power_connections[port]
+    );
   };
   getPortsForSide = (port: number) => {
     let side;
-    console.log(this.state.values.power_connections, this.state.power_ports);
+    // console.log(this.state.values.power_connections, this.state.power_ports);
     if (
       this.state.values.power_connections &&
-      this.state.values.power_connections[port]
+      this.state.values.power_connections[port] &&
+      Object.keys(this.state.power_ports).length > 0
     ) {
       const portString = (port as unknown) as string;
       side = this.state.values.power_connections[portString].left_right;
-      console.log(side);
 
       if (side === PowerSide.LEFT) {
-        console.log(this.state.power_ports.left_available);
-
         return this.state.power_ports.left_available.map(String);
       } else {
         return this.state.power_ports.right_available.map(String);
@@ -507,17 +527,38 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       power_ports_default: power_ports_default
     });
   };
+  getClearedPowerSelections() {
+    if (
+      this.state.values.model &&
+      this.state.values.model.num_power_ports &&
+      parseInt(this.state.values.model.num_power_ports, 10) > 0 &&
+      this.state.values.power_connections
+    ) {
+      const num_power_ports = parseInt(
+        this.state.values.model.num_power_ports,
+        10
+      );
+      const power_connections = this.state.values.power_connections;
+      for (let i = 1; i <= num_power_ports; i++) {
+        power_connections[i] = {} as PowerConnection;
+      }
+      return power_connections;
+    }
+  }
 
   clearPowerSelection = (port: number) => {
-    this.changeCheckBoxState(port, false);
     const power_connections = this.state.values.power_connections;
-    power_connections[port] = {} as PowerConnection;
+    if (power_connections && power_connections[port]) {
+      this.changeCheckBoxState(port, false);
 
-    this.setState({
-      values: updateObject(this.state.values, {
-        power_connections
-      })
-    });
+      power_connections[port] = {} as PowerConnection;
+
+      this.setState({
+        values: updateObject(this.state.values, {
+          power_connections
+        })
+      });
+    }
   };
   getPowerPortFields = () => {
     if (
@@ -540,6 +581,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                 <div>
                   <Checkbox
                     className="checkbox"
+                    disabled={isNullOrUndefined(this.state.values.rack)}
                     checked={this.state.power_ports_default[i]}
                     label="Use Suggested Values "
                     onChange={(event: any) => {
@@ -566,6 +608,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                 <Button
                   active={this.getPowerButtonStatus(PowerSide.LEFT, i)}
                   text="Left"
+                  disabled={isNullOrUndefined(this.state.values.rack)}
                   onClick={(e: any) => {
                     const power_connections = this.state.values
                       .power_connections;
@@ -585,6 +628,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                 <Button
                   active={this.getPowerButtonStatus(PowerSide.RIGHT, i)}
                   text="Right"
+                  disabled={isNullOrUndefined(this.state.values.rack)}
                   onClick={(e: any) => {
                     const power_connections = this.state.values
                       .power_connections;
@@ -631,6 +675,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                     disabled={this.shouldDisablePowerPort(i)}
                     rightIcon="caret-down"
                     text={
+                      this.state.values.power_connections &&
                       this.state.values.power_connections[i] &&
                       this.state.values.power_connections[i].port_number
                         ? this.state.values.power_connections[i].port_number
@@ -661,12 +706,35 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   }
 
   handleDatacenterSelect(datacenter: DatacenterObject) {
-    console.log("SELECTER DATACENTER", datacenter);
-    this.setState({
-      currDatacenter: datacenter
+    const clearedNetworkConnections = this.getClearedNetworkConnections();
+    const clearedPowerConnections = this.getClearedPowerSelections();
+    const newValues = updateObject(this.state.values, {
+      rack: undefined,
+      power_connections: clearedPowerConnections,
+      network_connections: clearedNetworkConnections
     });
+    console.log("SELECTER DATACENTER", datacenter, newValues);
+    this.setState({
+      currDatacenter: datacenter,
+      values: newValues
+    });
+
     this.getValidAssets(datacenter);
     this.getRacks(datacenter);
+  }
+
+  handleRackSelect(rack: RackObject) {
+    console.log("SELECTED RACK:", rack);
+
+    const clearedPowerConnections = this.getClearedPowerSelections();
+    this.setState({
+      values: updateObject(this.state.values, {
+        rack: rack,
+        power_connections: clearedPowerConnections
+      })
+    });
+
+    this.getPowerPortAvailability(rack);
   }
   handleNetworkConnectionAssetSelection(
     source_port: string,
@@ -713,14 +781,34 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       })
     });
   }
+
+  getClearedNetworkConnections() {
+    if (this.state.values.network_connections) {
+      return this.state.values.network_connections.map(
+        (connection: NetworkConnection) => {
+          return updateObject(connection, {
+            destination_hostname: null,
+            destination_port: null
+          });
+        }
+      );
+    }
+  }
   clearNetworkConnectionSelection(source_port: string) {
     let networkConnections: Array<NetworkConnection> = [];
     if (this.state.values.network_connections) {
       networkConnections = this.state.values.network_connections.slice();
 
-      networkConnections = networkConnections.filter(
+      networkConnections = networkConnections.map(
         (connection: NetworkConnection) => {
-          return connection.source_port !== source_port;
+          if (connection.source_port === source_port) {
+            return updateObject(connection, {
+              destination_hostname: null,
+              destination_port: null
+            });
+          } else {
+            return connection;
+          }
         }
       );
     } else {
@@ -798,6 +886,51 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       return [];
     }
   }
+  getChangeWarningAlert() {
+    return (
+      <Alert
+        className={Classes.DARK}
+        cancelButtonText="Cancel"
+        confirmButtonText="Change"
+        intent={Intent.WARNING}
+        icon={IconNames.WARNING_SIGN}
+        isOpen={this.state.isAlertOpen}
+        onCancel={this.handleChangeDecline}
+        onConfirm={this.handleChangeAccept}
+      >
+        <p>{this.state.warningMessage}</p>
+      </Alert>
+    );
+  }
+
+  handleChangeDecline = () => {
+    this.setState({
+      isAlertOpen: false
+    });
+  };
+
+  showChangeWarningAlert(warningMessage: string, selectedValue: any) {
+    this.setState({
+      warningMessage,
+      selectedValue,
+      isAlertOpen: true
+    });
+  }
+
+  handleChangeAccept = () => {
+    if (
+      this.state.selectedValue &&
+      isDatacenterObject(this.state.selectedValue)
+    ) {
+      this.handleDatacenterSelect(this.state.selectedValue!);
+    }
+    if (this.state.selectedValue && isRackObject(this.state.selectedValue)) {
+      this.handleRackSelect(this.state.selectedValue!);
+    }
+    this.setState({
+      isAlertOpen: false
+    });
+  };
 
   render() {
     if (this.state.models.length === 0) {
@@ -810,148 +943,174 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     if (
       this.state.currDatacenter &&
       this.state.currDatacenter !== ALL_DATACENTERS &&
-      this.state.racks.length === 0
+      !this.initialGetRacks
     ) {
       this.getRacks(this.state.currDatacenter);
     }
 
-    console.log(this.state.values.network_connections);
+    console.log(this.state.values);
     const { values } = this.state;
     return (
       <div className={Classes.DARK + " login-container"}>
+        {this.getChangeWarningAlert()}
         {this.state.errors.map((err: string) => {
           return <Callout intent={Intent.DANGER}>{err}</Callout>;
         })}
         <form onSubmit={this.handleSubmit} className="create-form ">
-          <FormGroup
-            label={
-              <div className="text-with-tooltip">
-                {" "}
-                {AssetFormLabels.asset_number}{" "}
-                <Tooltip
-                  className="tooltip-icon"
-                  content={
-                    "If no asset number provided, will be autogenerated on creation"
+          <Card>
+            <FormGroup
+              label={
+                <div className="text-with-tooltip">
+                  {" "}
+                  {AssetFormLabels.asset_number}{" "}
+                  <Tooltip
+                    className="tooltip-icon"
+                    content={
+                      "If no asset number provided, will be autogenerated on creation"
+                    }
+                  >
+                    <Icon icon={IconNames.INFO_SIGN} />
+                  </Tooltip>{" "}
+                </div>
+              }
+              inline={false}
+            >
+              <Field
+                placeholder="asset_number"
+                onChange={this.handleChange}
+                value={values.asset_number}
+                field="asset_number"
+              />
+            </FormGroup>
+            <FormGroup label={AssetFormLabels.hostname} inline={false}>
+              <Field
+                placeholder="hostname"
+                onChange={this.handleChange}
+                value={values.hostname}
+                field="hostname"
+              />
+            </FormGroup>
+          </Card>
+          <Card>
+            <FormGroup label={AssetFormLabels.datacenter} inline={false}>
+              <DatacenterSelect
+                popoverProps={{
+                  minimal: true,
+                  popoverClassName: "dropdown",
+                  usePortal: true
+                }}
+                items={this.getValidDatacenters()}
+                onItemSelect={(datacenter: DatacenterObject) => {
+                  this.state.currDatacenter
+                    ? this.showChangeWarningAlert(
+                        "Are you sure you want to change datacenter? This will clear all datacenter related properties",
+                        datacenter
+                      )
+                    : this.handleDatacenterSelect(datacenter);
+                }}
+                itemRenderer={renderDatacenterItem}
+                itemPredicate={filterDatacenter}
+                noResults={<MenuItem disabled={true} text="No results." />}
+              >
+                <Button
+                  rightIcon="caret-down"
+                  text={
+                    this.state.currDatacenter && this.state.currDatacenter.name
+                      ? this.state.currDatacenter.name
+                      : "Select a Datacenter"
+                  }
+                />
+              </DatacenterSelect>
+            </FormGroup>
+          </Card>
+          <Collapse
+            isOpen={!isNullOrUndefined(this.state.currDatacenter)}
+            keepChildrenMounted={true}
+          >
+            <Card>
+              <FormGroup label={AssetFormLabels.rack} inline={false}>
+                <RackSelect
+                  popoverProps={{
+                    minimal: true,
+                    popoverClassName: "dropdown",
+                    usePortal: true
+                  }}
+                  items={this.state.racks}
+                  onItemSelect={(rack: RackObject) => {
+                    this.state.values.rack
+                      ? this.showChangeWarningAlert(
+                          "Are you sure you want to change rack? This will clear all rack related fields",
+                          rack
+                        )
+                      : this.handleRackSelect(rack);
+                  }}
+                  itemRenderer={renderRackItem}
+                  itemPredicate={filterRack}
+                  noResults={
+                    this.gettingRacksInProgress ? (
+                      <div>
+                        <Spinner intent="primary" size={Spinner.SIZE_SMALL} />
+                        <MenuItem disabled={true} text="Getting all racks" />
+                      </div>
+                    ) : (
+                      <MenuItem disabled={true} text="No available racks" />
+                    )
                   }
                 >
-                  <Icon icon={IconNames.INFO_SIGN} />
-                </Tooltip>{" "}
-              </div>
-            }
-            inline={false}
-          >
-            <Field
-              placeholder="asset_number"
-              onChange={this.handleChange}
-              value={values.asset_number}
-              field="asset_number"
-            />
-          </FormGroup>
-          <FormGroup label={AssetFormLabels.hostname} inline={false}>
-            <Field
-              placeholder="hostname"
-              onChange={this.handleChange}
-              value={values.hostname}
-              field="hostname"
-            />
-          </FormGroup>
-          <FormGroup label={AssetFormLabels.datacenter} inline={false}>
-            <DatacenterSelect
-              popoverProps={{
-                minimal: true,
-                popoverClassName: "dropdown",
-                usePortal: true
-              }}
-              items={this.getValidDatacenters()}
-              onItemSelect={(datacenter: DatacenterObject) => {
-                this.handleDatacenterSelect(datacenter);
-              }}
-              itemRenderer={renderDatacenterItem}
-              itemPredicate={filterDatacenter}
-              noResults={<MenuItem disabled={true} text="No results." />}
-            >
-              <Button
-                rightIcon="caret-down"
-                text={
-                  this.state.currDatacenter && this.state.currDatacenter.name
-                    ? this.state.currDatacenter.name
-                    : "Select a Datacenter"
-                }
-              />
-            </DatacenterSelect>
-          </FormGroup>
-          <Collapse isOpen={!isNullOrUndefined(this.state.currDatacenter)}>
-            <FormGroup label={AssetFormLabels.rack} inline={false}>
-              <RackSelect
-                popoverProps={{
-                  minimal: true,
-                  popoverClassName: "dropdown",
-                  usePortal: true
-                }}
-                items={this.state.racks}
-                onItemSelect={(rack: RackObject) => {
-                  this.setState({
-                    values: updateObject(values, { rack: rack })
-                  });
-                  this.getPowerPortAvailability(rack);
-                }}
-                itemRenderer={renderRackItem}
-                itemPredicate={filterRack}
-                noResults={<MenuItem disabled={true} text="No results." />}
-              >
-                <Button
-                  rightIcon="caret-down"
-                  text={
-                    this.state.values.rack
-                      ? this.state.values.rack.row_letter +
-                        " " +
-                        this.state.values.rack.rack_num
-                      : "Select a rack"
-                  }
+                  <Button
+                    rightIcon="caret-down"
+                    text={
+                      this.state.values.rack
+                        ? this.state.values.rack.row_letter +
+                          +this.state.values.rack.rack_num
+                        : "Select a rack"
+                    }
+                  />
+                </RackSelect>
+              </FormGroup>
+              <FormGroup label={AssetFormLabels.rack_position} inline={false}>
+                <Field
+                  field="rack_position"
+                  placeholder="rack_position"
+                  value={values.rack_position}
+                  onChange={this.handleChange}
                 />
-              </RackSelect>
-            </FormGroup>
-            <FormGroup label={AssetFormLabels.rack_position} inline={false}>
-              <Field
-                field="rack_position"
-                placeholder="rack_position"
-                value={values.rack_position}
-                onChange={this.handleChange}
-              />
-            </FormGroup>
-
-            <FormGroup label={AssetFormLabels.model} inline={false}>
-              <ModelSelect
-                className="select"
-                popoverProps={{
-                  minimal: true,
-                  popoverClassName: "dropdown",
-                  usePortal: true
-                }}
-                disabled={!isNullOrUndefined(this.initialState.model)}
-                items={this.state.models}
-                onItemSelect={(model: ModelObject) =>
-                  this.setState({
-                    values: updateObject(values, { model: model })
-                  })
-                }
-                itemRenderer={renderModelItem}
-                itemPredicate={filterModel}
-                noResults={<MenuItem disabled={true} text="No results." />}
-              >
-                <Button
-                  rightIcon="caret-down"
+              </FormGroup>
+            </Card>
+            <Card>
+              <FormGroup label={AssetFormLabels.model} inline={false}>
+                <ModelSelect
+                  className="select"
+                  popoverProps={{
+                    minimal: true,
+                    popoverClassName: "dropdown",
+                    usePortal: true
+                  }}
                   disabled={!isNullOrUndefined(this.initialState.model)}
-                  text={
-                    this.state.values.model
-                      ? this.state.values.model.vendor +
-                        " " +
-                        this.state.values.model.model_number
-                      : "Select a model"
+                  items={this.state.models}
+                  onItemSelect={(model: ModelObject) =>
+                    this.setState({
+                      values: updateObject(values, { model: model })
+                    })
                   }
-                />
-              </ModelSelect>
-            </FormGroup>
+                  itemRenderer={renderModelItem}
+                  itemPredicate={filterModel}
+                  noResults={<MenuItem disabled={true} text="No results." />}
+                >
+                  <Button
+                    rightIcon="caret-down"
+                    disabled={!isNullOrUndefined(this.initialState.model)}
+                    text={
+                      this.state.values.model
+                        ? this.state.values.model.vendor +
+                          " " +
+                          this.state.values.model.model_number
+                        : "Select a model"
+                    }
+                  />
+                </ModelSelect>
+              </FormGroup>
+            </Card>
             <Collapse
               isOpen={
                 values.model &&
@@ -964,131 +1123,170 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                 values.model.network_ports &&
                 values.model.network_ports.length !== 0
               ) ? null : (
-                <FormGroup label={AssetFormLabels.network_ports} inline={false}>
-                  {values.model.network_ports.map((port, index) => {
-                    return (
-                      <div className="power-form-container">
-                        <i className="section-title">
-                          {"Network Port: " + port}
-                        </i>
-                        <div>
-                          <div className="text-with-tooltip">
-                            {"Mac Address "}
-                            <Tooltip
-                              className="tooltip-icon"
-                              content={macAddressInfo}
-                            >
-                              <Icon icon={IconNames.INFO_SIGN} />
-                            </Tooltip>
-                          </div>
-                          <InputGroup
-                            value={values.mac_addresses[port]}
-                            type="string"
-                            className="network-name"
-                            onChange={(e: any) => {
-                              const mac_addresses = values.mac_addresses;
-                              mac_addresses[port] = e.currentTarget.value;
+                <Card>
+                  <FormGroup
+                    label={AssetFormLabels.network_ports}
+                    inline={false}
+                  >
+                    {values.model.network_ports.map((port, index) => {
+                      return (
+                        <div className="power-form-container">
+                          <i className="section-title">
+                            {"Network Port: " + port}
+                          </i>
+                          <div>
+                            <div className="text-with-tooltip">
+                              {"Mac Address "}
+                              <Tooltip
+                                className="tooltip-icon"
+                                content={macAddressInfo}
+                              >
+                                <Icon icon={IconNames.INFO_SIGN} />
+                              </Tooltip>
+                            </div>
+                            <InputGroup
+                              value={values.mac_addresses[port]}
+                              type="string"
+                              className="network-name"
+                              onChange={(e: any) => {
+                                const mac_addresses = values.mac_addresses;
+                                mac_addresses[port] = e.currentTarget.value;
 
-                              this.setState({
-                                values: updateObject(this.state.values, {
-                                  mac_addresses
-                                })
-                              });
-                            }}
-                          />
-                        </div>
-                        <FormGroup
-                          label="Add Network Connection"
-                          inline={false}
-                        >
-                          <AssetSelect
-                            className="select"
-                            popoverProps={{
-                              minimal: true,
-                              popoverClassName: "dropdown",
-                              usePortal: true
-                            }}
-                            items={this.state.assets}
-                            onItemSelect={(asset: AssetObject) => {
-                              this.handleNetworkConnectionAssetSelection(
-                                port,
-                                asset.hostname
-                              );
-                            }}
-                            itemRenderer={renderAssetItem}
-                            itemPredicate={filterAsset}
-                            noResults={
-                              <MenuItem disabled={true} text="No results." />
-                            }
-                          >
-                            <Button
-                              rightIcon="caret-down"
-                              text={
-                                this.getSelectedNetworkConnectionAsset(port)
-                                  ? this.getSelectedNetworkConnectionAsset(port)
-                                  : "Select Asset"
-                              }
+                                this.setState({
+                                  values: updateObject(this.state.values, {
+                                    mac_addresses
+                                  })
+                                });
+                              }}
                             />
-                          </AssetSelect>
-
-                          <StringSelect
-                            popoverProps={{
-                              minimal: true,
-                              popoverClassName: "dropdown",
-                              usePortal: true
-                            }}
-                            disabled={
-                              this.getSelectedNetworkConnectionAsset(port)
-                                ? false
-                                : true
-                            }
-                            items={
-                              this.getSelectedNetworkConnectionAsset(port)
-                                ? this.getPortsFromHostname(
-                                    this.getSelectedNetworkConnectionAsset(
-                                      port
-                                    )!
-                                  )
-                                : []
-                            }
-                            onItemSelect={(dest_port: string) => {
-                              this.handleNetworkConnectionPortSelection(
-                                port,
-                                dest_port
-                              );
-                            }}
-                            itemRenderer={renderStringItem}
-                            itemPredicate={filterString}
-                            noResults={
-                              <MenuItem disabled={true} text="No results." />
-                            }
+                          </div>
+                          <FormGroup
+                            label="Add Network Connection"
+                            inline={false}
                           >
-                            <Button
+                            <AssetSelect
+                              className="select"
+                              popoverProps={{
+                                minimal: true,
+                                popoverClassName: "dropdown",
+                                usePortal: true
+                              }}
+                              items={this.state.assets}
+                              onItemSelect={(asset: AssetObject) => {
+                                this.handleNetworkConnectionAssetSelection(
+                                  port,
+                                  asset.hostname
+                                );
+                              }}
+                              itemRenderer={renderAssetItem}
+                              itemPredicate={filterAsset}
+                              noResults={
+                                this.gettingAssetsInProgress ? (
+                                  <div>
+                                    <Spinner
+                                      intent="primary"
+                                      size={Spinner.SIZE_SMALL}
+                                    />
+                                    <MenuItem
+                                      disabled={true}
+                                      text="Getting all available assets"
+                                    />
+                                  </div>
+                                ) : (
+                                  <MenuItem
+                                    disabled={true}
+                                    text="No available assets"
+                                  />
+                                )
+                              }
+                            >
+                              <Button
+                                rightIcon="caret-down"
+                                text={
+                                  this.getSelectedNetworkConnectionAsset(port)
+                                    ? this.getSelectedNetworkConnectionAsset(
+                                        port
+                                      )
+                                    : "Select Asset"
+                                }
+                              />
+                            </AssetSelect>
+
+                            <StringSelect
+                              popoverProps={{
+                                minimal: true,
+                                popoverClassName: "dropdown",
+                                usePortal: true
+                              }}
                               disabled={
                                 this.getSelectedNetworkConnectionAsset(port)
                                   ? false
                                   : true
                               }
-                              rightIcon="caret-down"
-                              text={
-                                this.getSelectedPort(port)
-                                  ? this.getSelectedPort(port)
-                                  : "Select Port"
+                              items={
+                                this.getSelectedNetworkConnectionAsset(port)
+                                  ? this.getPortsFromHostname(
+                                      this.getSelectedNetworkConnectionAsset(
+                                        port
+                                      )!
+                                    )
+                                  : []
                               }
+                              onItemSelect={(dest_port: string) => {
+                                this.handleNetworkConnectionPortSelection(
+                                  port,
+                                  dest_port
+                                );
+                              }}
+                              itemRenderer={renderStringItem}
+                              itemPredicate={filterString}
+                              noResults={
+                                this.gettingPowerPortsInProgress ? (
+                                  <div>
+                                    <Spinner
+                                      intent="primary"
+                                      size={Spinner.SIZE_SMALL}
+                                    />
+                                    <MenuItem
+                                      disabled={true}
+                                      text="Getting available power ports"
+                                    />
+                                  </div>
+                                ) : (
+                                  <MenuItem
+                                    disabled={true}
+                                    text="No available power ports"
+                                  />
+                                )
+                              }
+                            >
+                              <Button
+                                disabled={
+                                  this.getSelectedNetworkConnectionAsset(port)
+                                    ? false
+                                    : true
+                                }
+                                rightIcon="caret-down"
+                                text={
+                                  this.getSelectedPort(port)
+                                    ? this.getSelectedPort(port)
+                                    : "Select Port"
+                                }
+                              />
+                            </StringSelect>
+                            <Button
+                              icon={IconNames.DELETE}
+                              minimal
+                              onClick={() => {
+                                this.clearNetworkConnectionSelection(port);
+                              }}
                             />
-                          </StringSelect>
-                          <Button
-                            icon={IconNames.DELETE}
-                            minimal
-                            onClick={() => {
-                              this.clearNetworkConnectionSelection(port);
-                            }}
-                          />
-                        </FormGroup>
-                      </div>
-                    );
-                  })}
-                </FormGroup>
+                          </FormGroup>
+                        </div>
+                      );
+                    })}
+                  </FormGroup>
+                </Card>
               )}
             </Collapse>
 
@@ -1101,53 +1299,57 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
               {this.state.values.model &&
               this.state.values.model.num_power_ports &&
               parseInt(this.state.values.model.num_power_ports, 10) > 0 ? (
-                <FormGroup
-                  label={AssetFormLabels.power_connections}
-                  inline={false}
-                >
-                  {this.getPowerPortFields()}
-                </FormGroup>
+                <Card>
+                  <FormGroup
+                    label={AssetFormLabels.power_connections}
+                    inline={false}
+                  >
+                    {this.getPowerPortFields()}
+                  </FormGroup>
+                </Card>
               ) : null}
             </Collapse>
           </Collapse>
 
-          <FormGroup label={AssetFormLabels.owner} inline={false}>
-            <StringSelect
-              popoverProps={{
-                minimal: true,
-                popoverClassName: "dropdown",
-                usePortal: true
-              }}
-              items={this.state.users}
-              onItemSelect={(owner: string) =>
-                this.setState({
-                  values: updateObject(values, { owner: owner })
-                })
-              }
-              itemRenderer={renderStringItem}
-              itemPredicate={filterString}
-              noResults={<MenuItem disabled={true} text="No results." />}
-            >
-              <Button
-                rightIcon="caret-down"
-                text={
-                  this.state.values.owner
-                    ? this.state.values.owner
-                    : "Select an owner"
+          <Card>
+            <FormGroup label={AssetFormLabels.owner} inline={false}>
+              <StringSelect
+                popoverProps={{
+                  minimal: true,
+                  popoverClassName: "dropdown",
+                  usePortal: true
+                }}
+                items={this.state.users}
+                onItemSelect={(owner: string) =>
+                  this.setState({
+                    values: updateObject(values, { owner: owner })
+                  })
                 }
-              />
-            </StringSelect>
-          </FormGroup>
-          <FormGroup label={AssetFormLabels.comment} inline={false}>
-            <textarea
-              className={Classes.INPUT}
-              placeholder="comment"
-              value={values.comment}
-              onChange={(e: any) =>
-                this.handleChange({ comment: e.currentTarget.value })
-              }
-            ></textarea>
-          </FormGroup>
+                itemRenderer={renderStringItem}
+                itemPredicate={filterString}
+                noResults={<MenuItem disabled={true} text="No results." />}
+              >
+                <Button
+                  rightIcon="caret-down"
+                  text={
+                    this.state.values.owner
+                      ? this.state.values.owner
+                      : "Select an owner"
+                  }
+                />
+              </StringSelect>
+            </FormGroup>
+            <FormGroup label={AssetFormLabels.comment} inline={false}>
+              <textarea
+                className={Classes.INPUT}
+                placeholder="comment"
+                value={values.comment}
+                onChange={(e: any) =>
+                  this.handleChange({ comment: e.currentTarget.value })
+                }
+              ></textarea>
+            </FormGroup>
+          </Card>
           <Button className="login-button" type="submit">
             Submit
           </Button>

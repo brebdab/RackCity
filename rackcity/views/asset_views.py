@@ -46,6 +46,7 @@ from io import StringIO, BytesIO
 from rackcity.views.rackcity_utils import (
     validate_asset_location,
     validate_location_modification,
+    validate_asset_datacenter_move,
     no_infile_location_conflicts,
     records_are_identical,
     get_sort_arguments,
@@ -468,12 +469,23 @@ def asset_modify(request):
             status=HTTPStatus.BAD_REQUEST
         )
     try:
+        validate_asset_datacenter_move(data, existing_asset)
+    except Exception as error:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR.value +
+                    "Invalid datacenter change. " + str(error)
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    try:
         validate_location_modification(data, existing_asset)
     except Exception as error:
         return JsonResponse(
             {
                 "failure_message":
-                    Status.MODIFY_ERROR +
+                    Status.MODIFY_ERROR.value +
                     "Invalid location change. " + str(error)
             },
             status=HTTPStatus.BAD_REQUEST,
@@ -753,7 +765,7 @@ def asset_bulk_upload(request):
                     status=HTTPStatus.BAD_REQUEST
                 )
         # Check that all hostnames in file are case insensitive unique
-        if asset_data['hostname']:
+        if 'hostname' in asset_data and asset_data['hostname']:
             asset_data_hostname_lower = asset_data['hostname'].lower()
             if asset_data_hostname_lower in hostnames_in_import:
                 failure_message = "Hostname must be unique, but '" + \

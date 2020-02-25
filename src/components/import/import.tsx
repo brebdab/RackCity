@@ -59,7 +59,6 @@ interface AlertState {
 //   comment: string;
 // }
 
-const c2j = require("csvtojson");
 
 export class BulkImport extends React.PureComponent<
   RouteComponentProps & ImportProps,
