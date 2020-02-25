@@ -16,9 +16,9 @@ class PermissionAction(Enum):
 
 
 class PowerAction(Enum):
-    ON = "turned on power to port"
-    OFF = "turned off power to port"
-    CYCLE = "cycled power to all ports"
+    ON = "turned on power"
+    OFF = "turned off power"
+    CYCLE = "cycled power"
 
 
 class ElementType(Enum):
@@ -143,7 +143,7 @@ def log_user_permission_action(user, permission_action, username):
     log.save()
 
 
-def log_power_action(user, power_action, related_asset, port_num=None):
+def log_power_action(user, power_action, related_asset):
     """
     Specified power_action should be PowerAction enum.
     """
@@ -156,8 +156,6 @@ def log_power_action(user, power_action, related_asset, port_num=None):
         user.username,
         power_action.value,
     ])
-    if (port_num):
-        log_content += " " + str(port_num)
     log = Log(
         date=date,
         log_content=log_content,
