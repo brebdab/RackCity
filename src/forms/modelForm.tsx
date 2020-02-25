@@ -124,6 +124,10 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
       let num_network_ports = field["num_network_ports"];
       console.log(num_network_ports, network_ports);
       let index = network_ports.length;
+      if (!isNaN(num_network_ports) && num_network_ports < 0) {
+        num_network_ports = 0;
+      }
+
       while (network_ports.length < num_network_ports) {
         console.log(index, this.state.networkPortsTemp.length);
         if (index < this.state.networkPortsTemp.length) {
@@ -143,12 +147,14 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
       });
       network_ports = [];
     }
+
     this.setState({
       values: updateObject(this.state.values, {
         ...field,
         network_ports
       })
     });
+
     console.log(this.props.initialValues);
     console.log(this.state.values);
   };
@@ -247,7 +253,6 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
           <FormGroup label="Number of Network Ports " inline={false}>
             <Field
               field="num_network_ports"
-              type="string"
               value={values.num_network_ports}
               onChange={this.handleChange}
             />
