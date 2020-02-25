@@ -1,4 +1,10 @@
-import { Button, FormGroup, HTMLSelect, MenuItem } from "@blueprintjs/core";
+import {
+  Button,
+  FormGroup,
+  HTMLSelect,
+  MenuItem,
+  Spinner
+} from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { Select } from "@blueprintjs/select";
 import * as React from "react";
@@ -6,13 +12,21 @@ import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import Field from "../../forms/field";
 import "../../forms/forms.scss";
-import { filterField, renderFieldItem } from "../../forms/formUtils";
+import {
+  filterAssetField,
+  renderAssetFieldItem,
+  renderModelFieldItem,
+  renderStringItem,
+  filterModelField,
+  filterString
+} from "../../forms/formUtils";
 import RackRangeForm from "../../forms/rackRangeForm";
 import { updateObject } from "../../store/utility";
 import {
   AssetFieldsTable,
   isRackRangeFields,
-  RackRangeFields
+  RackRangeFields,
+  ModelFieldsTable
 } from "../../utils/utils";
 import {
   FilterTypes,
@@ -73,7 +87,7 @@ class FilterSelect extends React.Component<
   }
   getNumericFilterOptions() {
     return (
-      <div>
+      <div className="range">
         <FormGroup label="Min">
           <Field
             field="min"
@@ -173,46 +187,74 @@ class FilterSelect extends React.Component<
 
     this.props.handleAddFilter(filter);
   };
+
+  getItemRenderer() {
+    if (this.props.fields.includes("asset_number")) {
+      return renderAssetFieldItem;
+    } else if (this.props.fields.includes("vendor")) {
+      return renderModelFieldItem;
+    }
+    return renderStringItem;
+  }
+
+  getItemFilterer() {
+    if (this.props.fields.includes("asset_number")) {
+      return filterAssetField;
+    } else if (this.props.fields.includes("vendor")) {
+      return filterModelField;
+    }
+    return filterString;
+  }
+
+  getButtonText(field: string) {
+    if (AssetFieldsTable[field]) {
+      return AssetFieldsTable[field];
+    } else if (ModelFieldsTable[field]) {
+      return ModelFieldsTable[field];
+    }
+    return field;
+  }
   render() {
-    console.log("STATE", this.state);
     return (
       <div className="test-fields">
-        <FormGroup label="Select Field To Filter ">
-          {" "}
-          <FieldSelect
-            popoverProps={{
-              minimal: true,
-              popoverClassName: "dropdown",
-              usePortal: true
-            }}
-            // inputValueRenderer={(letter: string) => letter}
-            itemRenderer={renderFieldItem}
-            items={this.props.fields}
-            onItemSelect={(field: string) => this.setFilterType(field)}
-            itemPredicate={filterField}
-            noResults={<MenuItem disabled={true} text="No matching fields" />}
-          >
-            <Button
-              rightIcon="caret-down"
-              text={
-                this.state.field
-                  ? AssetFieldsTable[this.state.field]
-                  : "Select a Field"
-              }
-            />
-          </FieldSelect>
-        </FormGroup>
+        <form onSubmit={this.handleSubmit}>
+          <FormGroup className="field-select" label="Select Field To Filter ">
+            {" "}
+            <FieldSelect
+              popoverProps={{
+                minimal: true,
+                popoverClassName: "dropdown",
+                usePortal: true
+              }}
+              // inputValueRenderer={(letter: string) => letter}
+              itemRenderer={this.getItemRenderer()}
+              items={this.props.fields}
+              onItemSelect={(field: string) => this.setFilterType(field)}
+              itemPredicate={this.getItemFilterer()}
+              noResults={<MenuItem disabled={true} text="No matching fields" />}
+            >
+              <Button
+                rightIcon="caret-down"
+                text={
+                  this.state.field
+                    ? this.getButtonText(this.state.field)
+                    : "Select a Field"
+                }
+              />
+            </FieldSelect>
+          </FormGroup>
 
-        {this.state.field
-          ? [
-              this.renderFilterOptions(this.state.field),
-              <div className="add-filter">
-                <Button icon="filter" onClick={this.handleSubmit}>
-                  Add Filter
-                </Button>
-              </div>
-            ]
-          : null}
+          {this.state.field
+            ? [
+                this.renderFilterOptions(this.state.field),
+                <div className="add-filter">
+                  <Button icon="filter" type="submit">
+                    Add Filter
+                  </Button>
+                </div>
+              ]
+            : null}
+        </form>
       </div>
     );
   }
