@@ -33,11 +33,11 @@ interface RegistrationFormState {
 
 class RegistrationForm extends React.Component<
   RegistrationFormProps &
-    FormComponentProps &
-    RegistrationFormSubmitProps &
-    RouteComponentProps,
+  FormComponentProps &
+  RegistrationFormSubmitProps &
+  RouteComponentProps,
   RegistrationFormState
-> {
+  > {
   public state = {
     confirmDirty: false,
     errors: []
@@ -116,21 +116,21 @@ class RegistrationForm extends React.Component<
           className="login-form .bp3-form-group"
         >
           <h2>Add a new user</h2>
-          <FormItem label="Username (required) ">
+          <FormItem label="Username*">
             {getFieldDecorator("userName", {
               rules: [
                 { required: true, message: "Please input your username!" }
               ]
             })(<InputGroup placeholder="Username" />)}
           </FormItem>
-          <FormItem label="First Name (required)">
+          <FormItem label="First Name*">
             {getFieldDecorator("firstName", {
               rules: [
                 { required: true, message: "Please input your first name!" }
               ]
             })(<InputGroup placeholder="first name" />)}
           </FormItem>
-          <FormItem label="Last Name (required)">
+          <FormItem label="Last Name*">
             {getFieldDecorator("lastName", {
               rules: [
                 { required: true, message: "Please input your last name!" }
@@ -138,7 +138,7 @@ class RegistrationForm extends React.Component<
             })(<InputGroup placeholder="last name" />)}
           </FormItem>
 
-          <FormItem label="Email (required)">
+          <FormItem label="Email*">
             {getFieldDecorator("email", {
               rules: [
                 {
@@ -153,7 +153,7 @@ class RegistrationForm extends React.Component<
             })(<InputGroup placeholder="email" />)}
           </FormItem>
 
-          <FormItem label="Password (required) ">
+          <FormItem label="Password*">
             {getFieldDecorator("password", {
               rules: [
                 {
@@ -167,7 +167,7 @@ class RegistrationForm extends React.Component<
             })(<InputGroup type="password" placeholder="Password" />)}
           </FormItem>
 
-          <FormItem label="Password Confirmation (required) ">
+          <FormItem label="Password Confirmation*">
             {getFieldDecorator("confirm", {
               rules: [
                 {

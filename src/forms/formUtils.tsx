@@ -10,7 +10,8 @@ import {
   ModelObject,
   RackObject,
   DatacenterObject,
-  AssetObject
+  AssetObject,
+  AssetFieldsTable
 } from "../utils/utils";
 
 export enum FormTypes {
@@ -47,6 +48,28 @@ export const filterNumber: ItemPredicate<string> = (
     return query === value;
   }
   return normalizedQuery === normalizedValue;
+};
+
+export const filterField: ItemPredicate<string> = (
+  query,
+  field,
+  _index,
+  exactMatch
+) => {
+  console.log(AssetFieldsTable[field], field);
+  let normalizedTitle;
+  if (AssetFieldsTable[field]) {
+    normalizedTitle = AssetFieldsTable[field].toLowerCase();
+  } else {
+    normalizedTitle = field.toLowerCase();
+  }
+  const normalizedQuery = query.toLowerCase();
+
+  if (exactMatch) {
+    return normalizedTitle === normalizedQuery;
+  } else {
+    return normalizedTitle.indexOf(normalizedQuery) >= 0;
+  }
 };
 export const filterString: ItemPredicate<string> = (
   query,
@@ -169,6 +192,24 @@ function highlightText(text: string, query: string) {
   }
   return tokens;
 }
+
+export const renderFieldItem: ItemRenderer<string> = (
+  field,
+  { handleClick, modifiers, query }
+) => {
+  if (!modifiers.matchesPredicate) {
+    return null;
+  }
+  const text = AssetFieldsTable[field];
+  return (
+    <MenuItem
+      active={modifiers.active}
+      text={highlightText(text, query)}
+      onClick={handleClick}
+    />
+  );
+};
+
 export const renderStringItem: ItemRenderer<string> = (
   vendor,
   { handleClick, modifiers, query }
