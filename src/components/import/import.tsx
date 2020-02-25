@@ -372,25 +372,6 @@ async function uploadBulk(encodedFile: string, token: string, type: string) {
   });
 }
 
-// /*
-//  * Reads file to string
-//  */
-// async function parse(file: File) {
-//   return new Promise((resolve, reject) => {
-//     let content = '';
-//     const reader = new FileReader();
-//     reader.onloadend = function (e: any) {
-//       content = e.target.result;
-//       const result = content//.split(/\r\n|\n/);
-//       resolve(result);
-//     };
-//     reader.onerror = function (e: any) {
-//       reject(e);
-//     };
-//     reader.readAsText(file)
-//   });
-// }
-
 async function getBase64(file: File) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();

@@ -51,9 +51,9 @@ export interface RackRangeFields {
 }
 
 export interface NetworkConnection {
-  source_port?: string;
-  destination_hostname?: string;
-  destination_port?: string;
+  source_port: string | null | undefined;
+  destination_hostname: string | null | undefined;
+  destination_port: string | null | undefined;
 }
 
 export const AssetFieldsTable = {

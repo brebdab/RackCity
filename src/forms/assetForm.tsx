@@ -544,6 +544,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       }
       return power_connections;
     }
+    return {};
   }
 
   clearPowerSelection = (port: number) => {
@@ -612,16 +613,21 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                   onClick={(e: any) => {
                     const power_connections = this.state.values
                       .power_connections;
-                    power_connections[i] = updateObject(power_connections[i], {
-                      left_right: PowerSide.LEFT,
-                      port_number: undefined
-                    });
-                    this.changeCheckBoxState(i, false);
-                    this.setState({
-                      values: updateObject(this.state.values, {
-                        power_connections
-                      })
-                    });
+                    if (power_connections) {
+                      power_connections[i] = updateObject(
+                        power_connections[i],
+                        {
+                          left_right: PowerSide.LEFT,
+                          port_number: null
+                        }
+                      );
+                      this.changeCheckBoxState(i, false);
+                      this.setState({
+                        values: updateObject(this.state.values, {
+                          power_connections
+                        })
+                      });
+                    }
                   }}
                 />
 
@@ -634,7 +640,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                       .power_connections;
                     power_connections[i] = updateObject(power_connections[i], {
                       left_right: PowerSide.RIGHT,
-                      port_number: undefined
+                      port_number: null
                     });
                     this.changeCheckBoxState(i, false);
                     this.setState({
@@ -747,7 +753,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     );
     const newNetworkConnection: NetworkConnection = {
       source_port,
-      destination_hostname
+      destination_hostname,
+      destination_port: null
     };
     let modification = false;
     let networkConnections: Array<NetworkConnection> = [];
@@ -760,7 +767,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
             console.log("updating network connection");
             modification = true;
             return updateObject(connection, {
-              destination_hostname: destination_hostname
+              destination_hostname: destination_hostname,
+              destination_port: null
             });
           } else {
             return connection;
@@ -770,6 +778,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     } else {
       networkConnections = [] as Array<NetworkConnection>;
     }
+    console.log("UPDADTING NEWORK CONNECTIONS", networkConnections);
     if (!modification) {
       //add a new network connection
       networkConnections.push(newNetworkConnection);
@@ -793,6 +802,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         }
       );
     }
+    return [];
   }
   clearNetworkConnectionSelection(source_port: string) {
     let networkConnections: Array<NetworkConnection> = [];
