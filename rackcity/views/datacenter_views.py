@@ -78,7 +78,7 @@ def datacenter_create(request):
         {
             "success_message":
                 Status.SUCCESS.value +
-                new_datacenter.abbreivation + " created"
+                new_datacenter.abbreviation + " created"
         },
         status=HTTPStatus.CREATED
     )

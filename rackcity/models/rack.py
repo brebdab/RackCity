@@ -39,7 +39,7 @@ class Rack(models.Model):
 
     def save(self, *args, **kwargs):
         my_dc = self.datacenter
-        correct_dc = my_dc.abbreviation == "rtp1"
+        correct_dc = (my_dc.abbreviation.lower() == "rtp1")
         correct_row = self.row_letter.lower() in self.char_range('a', 'e')
         correct_rack_num = int(self.rack_num) > 0 and int(self.rack_num) < 20
         self.is_network_controlled = correct_dc and correct_row and correct_rack_num
