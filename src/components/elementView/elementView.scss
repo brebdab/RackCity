@@ -58,12 +58,15 @@
   width: min-content;
   margin: auto;
 }
+.field .bp3-button {
+  margin: 0pt;
+}
 .all-racks {
   height: fit-content;
 }
 .table-wrapper {
   width: 100%;
-  overflow-x:auto;
+  overflow-x: auto;
   // display: inline-block;
 }
 .bp3-callout {
@@ -93,10 +96,10 @@
   margin: 0;
 }
 .test-fields {
-  display: inline-block;
+  display: flex;
 }
 .test-fields button {
-  margin-top: 20px;
+  // margin-top: 20px;
 }
 .test-select {
   margin-top: 20px !important;
