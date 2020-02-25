@@ -144,41 +144,43 @@ export class ModelView extends React.PureComponent<
           ref={this.refHandlers.toaster}
         />
         {this.props.isAdmin ? (
-          <div className={"detail-buttons"}>
-            <AnchorButton
-              className="button-add"
-              intent="primary"
-              icon="edit"
-              text="Edit"
-              minimal
-              onClick={() => this.handleFormOpen()}
-            />
-            <FormPopup
-              isOpen={this.state.isFormOpen}
-              initialValues={this.state.model}
-              type={FormTypes.MODIFY}
-              elementName={ElementType.MODEL}
-              handleClose={this.handleFormClose}
-              submitForm={this.updateModel}
-            />
-            <AnchorButton
-              className="button-add"
-              intent="danger"
-              icon="trash"
-              text="Delete"
-              minimal
-              onClick={this.handleDeleteOpen}
-            />
-            <Alert
-              cancelButtonText="Cancel"
-              confirmButtonText="Delete"
-              intent="danger"
-              isOpen={this.state.isDeleteOpen}
-              onCancel={this.handleDeleteCancel}
-              onConfirm={this.handleDelete}
-            >
-              <p>Are you sure you want to delete?</p>
-            </Alert>
+          <div className="detail-buttons-wrapper">
+            <div className={"detail-buttons"}>
+              <AnchorButton
+                className="button-add"
+                intent="primary"
+                icon="edit"
+                text="Edit"
+                minimal
+                onClick={() => this.handleFormOpen()}
+              />
+              <FormPopup
+                isOpen={this.state.isFormOpen}
+                initialValues={this.state.model}
+                type={FormTypes.MODIFY}
+                elementName={ElementType.MODEL}
+                handleClose={this.handleFormClose}
+                submitForm={this.updateModel}
+              />
+              <AnchorButton
+                className="button-add"
+                intent="danger"
+                icon="trash"
+                text="Delete"
+                minimal
+                onClick={this.handleDeleteOpen}
+              />
+              <Alert
+                cancelButtonText="Cancel"
+                confirmButtonText="Delete"
+                intent="danger"
+                isOpen={this.state.isDeleteOpen}
+                onCancel={this.handleDeleteCancel}
+                onConfirm={this.handleDelete}
+              >
+                <p>Are you sure you want to delete?</p>
+              </Alert>
+            </div>
           </div>
         ) : null}
 
