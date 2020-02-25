@@ -96,11 +96,15 @@
   margin: 0;
 }
 .test-fields {
-  display: flex;
+  display: inline-flex;
 }
-.test-fields button {
-  // margin-top: 20px;
+.add-filter {
+  margin-top: 30pt;
+  height: 20pt !important;
+  float: left;
+  background-color: red;
 }
+
 .test-select {
   margin-top: 20px !important;
 }

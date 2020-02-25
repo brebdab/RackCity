@@ -62,9 +62,9 @@ class FilterSelect extends React.Component<
   getRackFilterOptions() {
     console.log(this.state.filter);
     return this.state.filter && isRackRangeFields(this.state.filter) ? (
-      <div className="field">
+      <div>
         <RackRangeForm
-          className="field"
+          className=""
           values={this.state.filter}
           handleChange={this.handleChange}
         />
@@ -73,8 +73,8 @@ class FilterSelect extends React.Component<
   }
   getNumericFilterOptions() {
     return (
-      <div className="field">
-        <FormGroup label="Min" className="field">
+      <div>
+        <FormGroup label="Min">
           <Field
             field="min"
             placeholder="min"
@@ -82,7 +82,7 @@ class FilterSelect extends React.Component<
             onChange={this.handleChange}
           />
         </FormGroup>
-        <FormGroup label="Max" className="field">
+        <FormGroup label="Max">
           <Field
             field="max"
             placeholder="max"
@@ -96,7 +96,7 @@ class FilterSelect extends React.Component<
 
   getTextFilterOptions() {
     return (
-      <div className="field">
+      <div>
         <div className="bp3-select field test-select">
           <HTMLSelect
             onChange={(e: any) =>
@@ -108,7 +108,7 @@ class FilterSelect extends React.Component<
             <option>{TextFilterTypes.EXACT}</option>
           </HTMLSelect>
         </div>
-        <FormGroup label="Query" className="field">
+        <FormGroup label="Query">
           <Field
             field="value"
             placeholder="query"
@@ -203,19 +203,16 @@ class FilterSelect extends React.Component<
           </FieldSelect>
         </FormGroup>
 
-        {this.state.field ? (
-          <div>
-            {" "}
-            {this.renderFilterOptions(this.state.field)}{" "}
-            <Button
-              className="button"
-              icon="filter"
-              onClick={this.handleSubmit}
-            >
-              Add Filter
-            </Button>{" "}
-          </div>
-        ) : null}
+        {this.state.field
+          ? [
+              this.renderFilterOptions(this.state.field),
+              <div className="add-filter">
+                <Button icon="filter" onClick={this.handleSubmit}>
+                  Add Filter
+                </Button>
+              </div>
+            ]
+          : null}
       </div>
     );
   }
