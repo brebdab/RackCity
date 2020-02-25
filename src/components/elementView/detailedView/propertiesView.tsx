@@ -3,7 +3,14 @@ import "@blueprintjs/core/lib/css/blueprint.css";
 // import axios from "axios";
 import * as React from "react";
 import { RouteComponentProps, withRouter } from "react-router";
-import { ElementObjectType, isObject } from "../../../utils/utils";
+import {
+  ElementObjectType,
+  isObject,
+  isAssetObject,
+  AssetFieldsTable,
+  isModelObject,
+  ModelFieldsTable
+} from "../../../utils/utils";
 import "./propertiesView.scss";
 
 export interface AlertState {
@@ -80,16 +87,38 @@ class PropertiesView extends React.PureComponent<
         //TO DO: decide how to render dicts
         dat = <p>{data[item]}</p>;
       }
+      if (isAssetObject(this.props.data)) {
+        return (
+          <tr>
+            <td key={item}>
+              <p className="label">{AssetFieldsTable[item]}:</p>
+            </td>
 
-      return (
-        <tr>
-          <td key={item}>
-            <p className="label">{item}:</p>
-          </td>
+            <td>{dat}</td>
+          </tr>
+        );
+      }
+      if (isModelObject(this.props.data)) {
+        return (
+          <tr>
+            <td key={item}>
+              <p className="label">{ModelFieldsTable[item]}:</p>
+            </td>
 
-          <td>{dat}</td>
-        </tr>
-      );
+            <td>{dat}</td>
+          </tr>
+        );
+      } else {
+        return (
+          <tr>
+            <td key={item}>
+              <p className="label">{item}:</p>
+            </td>
+
+            <td>{dat}</td>
+          </tr>
+        );
+      }
     });
   }
 
