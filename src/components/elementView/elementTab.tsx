@@ -198,9 +198,19 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     return axios.post(API_ROOT + "api/assets/add", asset, headers).then(res => {
       this.handleDataUpdate(true);
       this.handleClose();
-      this.addSuccessToast("Successfully created asset!");
+      if (res.data.warning_message) {
+        this.addWarnToast("Created asset. " + res.data.warning_message);
+      } else {
+        this.addSuccessToast("Successfuly modified asset");
+      }
 
       console.log(this.state.isOpen);
+    });
+  };
+  private addWarnToast = (message: string) => {
+    this.addToast({
+      message: message,
+      intent: Intent.WARNING
     });
   };
 
