@@ -18,8 +18,8 @@ export enum PowerSide {
 export interface AssetObjectOld extends ElementObject {
   hostname: string;
   rack_position: string;
-  model: ModelObject;
-  rack: RackObject;
+  model?: ModelObject;
+  rack?: RackObject;
   network_connections: {};
   owner?: string;
   comment?: string;
@@ -41,10 +41,7 @@ interface ParentAssetObject extends ElementObject {
   owner: string;
   comment: string;
 }
-export interface ShallowAssetObject extends ParentAssetObject {
-  model?: string;
-  rack?: string;
-}
+
 export interface RackRangeFields {
   datacenter: string;
   letter_start: string;
@@ -100,8 +97,8 @@ export interface PowerConnection {
   port_number: string;
 }
 export interface ShallowAssetObject extends ParentAssetObject {
-  model?: string;
-  rack?: string;
+  model: string | null | undefined;
+  rack: string | null | undefined;
 }
 
 export interface SortFilterBody {

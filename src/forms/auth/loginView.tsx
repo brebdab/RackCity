@@ -1,7 +1,7 @@
 import * as React from "react";
 import { RouteComponentProps, withRouter } from "react-router";
 import WrappedNormalLoginForm from "./login";
-import { Classes, AnchorButton } from "@blueprintjs/core";
+import { Classes, AnchorButton, Card, Elevation } from "@blueprintjs/core";
 import { connect } from "react-redux";
 import "./loginView.scss";
 import * as QueryString from "query-string"
@@ -27,8 +27,13 @@ export class LoginView extends React.PureComponent<RouteComponentProps & LoginVi
     public render() {
         return (
             <div className={Classes.DARK + " login-container"}>
-                <WrappedNormalLoginForm />
-                <AnchorButton onClick={this.handleSSOClick}>SSO Login</AnchorButton>
+                <h2>Login</h2>
+                <Card className="login-card" elevation={Elevation.ZERO}>
+                    <WrappedNormalLoginForm />
+                </Card>
+                <Card className="login-card" elevation={Elevation.ZERO}>
+                    <AnchorButton onClick={this.handleSSOClick} rightIcon="log-in">Duke SSO Login</AnchorButton>
+                </Card>
             </div >
         )
     };

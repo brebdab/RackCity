@@ -7,7 +7,7 @@
 }
 .login-form {
   display: inline-block;
-  padding: 20pt;
+  padding: 10pt;
 }
 .login-container {
   text-align: center;
@@ -50,10 +50,35 @@ textarea:focus {
   color: red;
   padding: 0pt;
 }
+.comment {
+  white-space: pre-wrap !important;
+}
 .create-form {
   padding: 10pt !important;
+  width: 80%;
+  text-align: center;
+}
+.create-form .bp3-input-group {
+  width: 50%;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: inline-block;
+}
+.bp3-label .text-with-tooltip {
+  margin: 5pt;
+  word-wrap: none;
+  display: inline-flex;
+}
+.create-form .bp3-card {
+  background-color: #202b33;
+  margin: 8pt !important;
 }
 
+.create-form .bp3-collapse {
+  padding: 0pt;
+  margin-top: 0pt;
+  margin-bottom: 0pt;
+}
 .power-form-container {
   display: block;
   align-items: center;
@@ -62,7 +87,6 @@ textarea:focus {
 .text-with-tooltip {
   margin: 5pt;
   word-wrap: none;
-  display: inline-flex !important;
 }
 .port-table {
   max-height: 100pt;

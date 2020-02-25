@@ -21,13 +21,15 @@ import {
   ElementType,
   getHeaders,
   NetworkConnection,
-  Node
+  Node,
+  DatacenterObject
 } from "../../../../utils/utils";
 import { deleteAsset, modifyAsset } from "../../elementUtils";
 import PropertiesView from "../propertiesView";
 import "./assetView.scss";
 import NetworkGraph from "./graph";
 import PowerView from "../../powerView/powerView";
+import { ALL_DATACENTERS } from "../../elementTabContainer";
 
 export interface AssetViewProps {
   token: string;
@@ -55,6 +57,7 @@ interface AssetViewState {
   isFormOpen: boolean;
   isDeleteOpen: boolean;
   isAlertOpen: boolean;
+  datacenters: Array<DatacenterObject>;
   powerShouldUpdate: boolean;
 }
 
@@ -67,6 +70,7 @@ export class AssetView extends React.PureComponent<
     isFormOpen: false,
     isDeleteOpen: false,
     isAlertOpen: false,
+    datacenters: [],
     powerShouldUpdate: false
   };
   private updateAsset = (asset: AssetObject, headers: any): Promise<any> => {
@@ -130,13 +134,32 @@ export class AssetView extends React.PureComponent<
       (connection: NetworkConnection) => connection.source_port === port
     );
   }
-
+  getDatacenters = () => {
+    const headers = getHeaders(this.props.token);
+    // console.log(API_ROOT + "api/datacenters/get-all");
+    axios
+      .post(API_ROOT + "api/datacenters/get-many", {}, headers)
+      .then(res => {
+        console.log(res.data.datacenters);
+        const datacenters = res.data.datacenters as Array<DatacenterObject>;
+        datacenters.push(ALL_DATACENTERS);
+        this.setState({
+          datacenters
+        });
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  };
   public render() {
     console.log(this.state.asset);
     if (Object.keys(this.state.asset).length === 0) {
       let params: any;
       params = this.props.match.params;
       this.updateAssetData(params.rid);
+    }
+    if (this.state.datacenters.length === 0) {
+      this.getDatacenters();
     }
 
     return (
@@ -158,6 +181,7 @@ export class AssetView extends React.PureComponent<
                 onClick={() => this.handleFormOpen()}
               />
               <FormPopup
+                datacenters={this.state.datacenters}
                 isOpen={this.state.isFormOpen}
                 initialValues={this.state.asset}
                 type={FormTypes.MODIFY}
@@ -208,21 +232,24 @@ export class AssetView extends React.PureComponent<
                           {" "}
                           <td>{port}</td>
                           <td>{this.state.asset.mac_addresses[port]}</td>{" "}
-                          {connection ? (
-                            <td
-                              className="asset-link"
-                              onClick={(e: any) => {
-                                const id = this.getAssetIdFromHostname(
-                                  connection!.destination_hostname!
-                                );
-                                if (id) {
-                                  this.redirectToAsset(id);
-                                }
-                              }}
-                            >
-                              {connection.destination_hostname}
-                            </td>
-                          ) : (<td></td>)}
+                          {connection
+                            ? [
+                              <td
+                                className="asset-link"
+                                onClick={(e: any) => {
+                                  const id = this.getAssetIdFromHostname(
+                                    connection!.destination_hostname!
+                                  );
+                                  if (id) {
+                                    this.redirectToAsset(id);
+                                  }
+                                }}
+                              >
+                                {connection.destination_hostname}
+                              </td>,
+                              <td>{connection.destination_port}</td>
+                            ]
+                            : [<td></td>, <td></td>]}
                         </tr>
                       );
                     })}
@@ -261,8 +288,16 @@ export class AssetView extends React.PureComponent<
   };
 
   private renderPower() {
-    return <PowerView {...this.props} asset={this.state.asset} shouldUpdate={this.state.powerShouldUpdate}
-      updated={() => { this.setState({ powerShouldUpdate: false }) }} />;
+    return (
+      <PowerView
+        {...this.props}
+        asset={this.state.asset}
+        shouldUpdate={this.state.powerShouldUpdate}
+        updated={() => {
+          this.setState({ powerShouldUpdate: false });
+        }}
+      />
+    );
   }
 
   private handleFormOpen = () => {
