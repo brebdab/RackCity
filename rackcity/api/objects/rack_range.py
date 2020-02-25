@@ -1,8 +1,14 @@
 from rest_framework import serializers
 from rackcity.models.rack import validate_row_letter
+from rackcity.models import Datacenter
 
 
 class RackRangeSerializer(serializers.Serializer):
+    datacenter = serializers.PrimaryKeyRelatedField(
+        label='datacenter',
+        queryset=Datacenter.objects.all(),
+        required=False
+    )
     letter_start = serializers.CharField(required=True, max_length=1)
     letter_end = serializers.CharField(required=False, max_length=1)
     num_start = serializers.IntegerField(required=True)
@@ -55,6 +61,10 @@ class RackRangeSerializer(serializers.Serializer):
         else:
             num_col = 1
         return num_row * num_col
+
+    def get_range_as_string(self):
+        return "{" + self.get_row_range_as_string() + "}{" + \
+            self.get_number_range_as_string() + "}"
 
     def get_row_range(self):
         """
@@ -121,3 +131,8 @@ class RackRangeSerializer(serializers.Serializer):
     def get_number_range_as_string(self):
         number_range = self.get_number_range()
         return str(number_range[0]) + "-" + str(number_range[1])
+
+    def get_datacenter(self):
+        if 'datacenter' in self.validated_data:
+            return self.validated_data['datacenter']
+        return None

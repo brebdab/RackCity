@@ -1,7 +1,18 @@
 from django.contrib import admin
+from .models import (
+    Asset,
+    ITModel,
+    Rack,
+    PowerPort,
+    PDUPort,
+    NetworkPort,
+    Log
+)
 
-from .models import ITInstance, ITModel, Rack
-
-admin.site.register(ITInstance)
+admin.site.register(Asset)
+admin.site.register(Log)
 admin.site.register(ITModel)
 admin.site.register(Rack)
+admin.site.register(PowerPort)
+admin.site.register(PDUPort)
+admin.site.register(NetworkPort)

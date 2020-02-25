@@ -1,6 +1,9 @@
 import axios from "axios";
-import { API_ROOT } from "../../api-config";
+import { API_ROOT } from "../../utils/api-config";
 import * as actionTypes from "./actionTypes";
+
+export const DUKE_OAUTH_URI = "https://oauth.oit.duke.edu/oauth/authorize.php?client_id=hyposoft-rack-city&response_type=token&state=1129&scope=basic&redirect_uri="
+
 export const authStart = () => {
   return {
     type: actionTypes.AUTH_START
@@ -8,7 +11,7 @@ export const authStart = () => {
 };
 
 var console: any = {};
-console.log = function() {};
+console.log = function () { };
 export const authSuccess = (token: string) => {
   return {
     type: actionTypes.AUTH_SUCCESS,
@@ -42,13 +45,13 @@ export const logout = () => {
     type: actionTypes.AUTH_LOGOUT
   };
 };
-export const checkAuthTimeout = (expirationTime: number) => {
-  return (dispatch: any) => {
-    setTimeout(() => {
-      dispatch(logout());
-    }, expirationTime * 1000);
-  };
-};
+// export const checkAuthTimeout = (expirationTime: number) => {
+//   return (dispatch: any) => {
+//     setTimeout(() => {
+//       dispatch(logout());
+//     }, expirationTime * 1000);
+//   };
+// };
 // function getCookie(name: string) {
 //   var cookieValue = null;
 //   if (document.cookie && document.cookie !== "") {
@@ -78,6 +81,25 @@ export const authLogin = (username: string, password: string) => {
       .post(API_ROOT + "rest-auth/login/", {
         username: username,
         password: password
+      })
+      .then(res => {
+        console.log(res);
+        loginHelper(res, dispatch);
+      })
+      .catch(err => {
+        console.log("login failed", err);
+        dispatch(authFail(err));
+      });
+  };
+};
+
+export const netidAuthLogin = (access_token: string) => {
+  return (dispatch: any) => {
+    dispatch(authStart());
+    console.log(API_ROOT + "api/users/netid-login");
+    axios
+      .post(API_ROOT + "api/users/netid-login", {
+        access_token: access_token
       })
       .then(res => {
         console.log(res);
@@ -143,7 +165,7 @@ export const loginHelper = (res: any, dispatch: any) => {
 
   dispatch(authSuccess(token));
   dispatch(checkAdmin(token));
-  dispatch(checkAuthTimeout(3600));
+  // dispatch(checkAuthTimeout(3600));
 };
 
 export const authCheckState = () => {
@@ -158,11 +180,11 @@ export const authCheckState = () => {
       } else {
         dispatch(authSuccess(token!));
         dispatch(checkAdmin(token!));
-        dispatch(
-          checkAuthTimeout(
-            (expirationDate.getTime() - new Date().getTime()) / 1000
-          )
-        );
+        // dispatch(
+        //   checkAuthTimeout(
+        //     (expirationDate.getTime() - new Date().getTime()) / 1000
+        //   )
+        // );
       }
     }
   };

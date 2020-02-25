@@ -1,18 +1,16 @@
 {
+  "editor.codeActionsOnSave": {
+    "source.fixAll.tslint": true
+  },
+  "editor.formatOnSave": true,
 
-    "editor.codeActionsOnSave" : {
-        "source.fixAll.tslint": true
-    },
-    "editor.formatOnSave": true,
-    
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "[javascript]": {
-          "editor.defaultFormatter": "esbenp.prettier-vscode"
-        },
-      
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
 
-    "python.linting.enabled": true,
-    "python.linting.flake8Enabled": true,
-    "python.pythonPath": "env/bin/python3"
-
+  "python.linting.enabled": true,
+  "python.linting.lintOnSave": true,
+  "python.linting.flake8Enabled": true,
+  "python.pythonPath": "env/bin/python3"
 }

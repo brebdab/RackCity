@@ -1,51 +1,108 @@
-from rackcity.models import ITInstance, ITModel, Rack
+from rackcity.models import Asset, ITModel, Rack, PowerPort, NetworkPort
 from rackcity.api.objects import RackRangeSerializer
+from rackcity.api.serializers import RecursiveAssetSerializer, RackSerializer
+from http import HTTPStatus
+from django.http import JsonResponse
+import functools
+from django.db import close_old_connections
 
 
-def validate_instance_location(
+def get_rack_detailed_response(racks):
+    if racks.count() == 0:
+        return JsonResponse(
+            {"failure_message": "There are no existing racks within this range. "},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+
+    racks_with_assets = []
+    for rack in racks:
+        rack_serializer = RackSerializer(rack)
+        assets = Asset.objects \
+            .filter(rack=rack.id) \
+            .order_by("rack_position")
+        assets_serializer = RecursiveAssetSerializer(
+            assets,
+            many=True
+        )
+        rack_detail = {
+            "rack": rack_serializer.data,
+            "assets": assets_serializer.data,
+        }
+        racks_with_assets.append(rack_detail)
+
+    return JsonResponse(
+        {"racks": racks_with_assets},
+        status=HTTPStatus.OK
+    )
+
+
+def validate_asset_datacenter_move(data, asset):
+    old_datacenter = asset.rack.datacenter
+    if 'rack' not in data:
+        return
+    new_datacenter = Rack.objects.get(id=data['rack']).datacenter
+    if (old_datacenter == new_datacenter):
+        return
+    power_ports = PowerPort.objects.filter(asset=asset.id)
+    for power_port in power_ports:
+        if (power_port.power_connection is not None):
+            raise LocationException(
+                "Cannot move asset with existing power connections " +
+                "to different datacenter."
+            )
+    network_ports = NetworkPort.objects.filter(asset=asset.id)
+    for network_port in network_ports:
+        if (network_port.connected_port is not None):
+            raise LocationException(
+                "Cannot move asset with existing network connections " +
+                "to different datacenter."
+            )
+
+
+def validate_asset_location(
     rack_id,
-    instance_elevation,
-    instance_height,
-    instance_id=None,
+    asset_rack_position,
+    asset_height,
+    asset_id=None,
 ):
-    new_instance_location_range = [
-        instance_elevation + i for i in range(instance_height)
+    new_asset_location_range = [
+        asset_rack_position + i for i in range(asset_height)
     ]
     rack_height = Rack.objects.get(id=rack_id).height
-    for location in new_instance_location_range:
+    for location in new_asset_location_range:
         if location <= 0 or location > rack_height:
-            raise LocationException("Cannot place instance outside of rack. ")
-    instances_in_rack = ITInstance.objects.filter(rack=rack_id)
-    for instance_in_rack in instances_in_rack:
-        # Ignore if instance being modified conflicts with its old location
-        if (instance_id is None or instance_in_rack.id != instance_id):
+            raise LocationException("Cannot place asset outside of rack. ")
+    assets_in_rack = Asset.objects.filter(rack=rack_id)
+    for asset_in_rack in assets_in_rack:
+        # Ignore if asset being modified conflicts with its old location
+        if (asset_id is None or asset_in_rack.id != asset_id):
             for occupied_location in [
-                instance_in_rack.elevation + i for i
-                    in range(instance_in_rack.model.height)
+                asset_in_rack.rack_position + i for i
+                    in range(asset_in_rack.model.height)
             ]:
-                if occupied_location in new_instance_location_range:
+                if occupied_location in new_asset_location_range:
                     raise LocationException(
-                        "Instance location conflicts with another instance: '" +
-                        instance_in_rack.hostname +
+                        "Asset location conflicts with another asset: '" +
+                        str(asset_in_rack.asset_number) +
                         "'. "
                     )
 
 
-def validate_location_modification(data, existing_instance):
-    instance_id = existing_instance.id
-    rack_id = existing_instance.rack.id
-    instance_elevation = existing_instance.elevation
-    instance_height = existing_instance.model.height
+def validate_location_modification(data, existing_asset):
+    asset_id = existing_asset.id
+    rack_id = existing_asset.rack.id
+    asset_rack_position = existing_asset.rack_position
+    asset_height = existing_asset.model.height
 
-    if 'elevation' in data:
+    if 'rack_position' in data:
         try:
-            instance_elevation = int(data['elevation'])
+            asset_rack_position = int(data['rack_position'])
         except ValueError:
-            raise Exception("Field 'elevation' must be of type int.")
+            raise Exception("Field 'rack_position' must be of type int.")
 
     if 'model' in data:
         try:
-            instance_height = ITModel.objects.get(id=data['model']).height
+            asset_height = ITModel.objects.get(id=data['model']).height
         except Exception:
             raise Exception("No existing model with id=" +
                             str(data['model']) + ".")
@@ -58,11 +115,11 @@ def validate_location_modification(data, existing_instance):
                             str(data['rack']) + ".")
 
     try:
-        validate_instance_location(
+        validate_asset_location(
             rack_id,
-            instance_elevation,
-            instance_height,
-            instance_id=instance_id,
+            asset_rack_position,
+            asset_height,
+            asset_id=asset_id,
         )
     except LocationException as error:
         raise error
@@ -76,6 +133,8 @@ def records_are_identical(existing_data, new_data):
             key not in new_keys
             and existing_data[key] is not None
             and existing_data[key] != ""
+            and existing_data[key] != []
+            and existing_data[key] != {}
             and key != 'id'
         ):
             return False
@@ -85,7 +144,7 @@ def records_are_identical(existing_data, new_data):
         ):
             if not (
                 int_string_comparison(existing_data[key], new_data[key])
-                or empty_string_null_comparison(existing_data[key], new_data[key])
+                or empty_vs_null_comparison(existing_data[key], new_data[key])
             ):
                 return False
     return True
@@ -99,42 +158,72 @@ def int_string_comparison(existing_value, new_value):
     )
 
 
-def empty_string_null_comparison(existing_value, new_value):
+def empty_vs_null_comparison(existing_value, new_value):
     return (
         (
             isinstance(existing_value, str)
             or isinstance(new_value, str)
+            or isinstance(existing_value, list)
+            or isinstance(new_value, list)
+            or isinstance(existing_value, dict)
+            or isinstance(new_value, dict)
         )
         and not new_value
         and not existing_value
     )
 
 
-def no_infile_location_conflicts(instance_datas):
+def no_infile_location_conflicts(asset_datas):
     location_occupied_by = {}
-    for instance_data in instance_datas:
-        rack = instance_data['rack']
-        height = ITModel.objects.get(id=instance_data['model']).height
-        elevation = int(instance_data['elevation'])
-        instance_location_range = [  # THIS IS REPEATED! FACTOR OUT.
-            elevation + i for i in range(height)
+    unnamed_asset_count = 0
+    for asset_data in asset_datas:
+        rack = asset_data['rack']
+        height = ITModel.objects.get(id=asset_data['model']).height
+        rack_position = int(asset_data['rack_position'])
+        asset_location_range = [  # THIS IS REPEATED! FACTOR OUT.
+            rack_position + i for i in range(height)
         ]
         if rack not in location_occupied_by:
             location_occupied_by[rack] = {}
-        for location in instance_location_range:
+        for location in asset_location_range:
             if location in location_occupied_by[rack]:
                 raise LocationException(
-                    "Instance '" +
-                    instance_data['hostname'] +
-                    "' conflicts with instance '" +
+                    "Asset '" +
+                    str(asset_data['asset_number']) +
+                    "' conflicts with asset '" +
                     location_occupied_by[rack][location] +
                     "'. ")
             else:
-                location_occupied_by[rack][location] = instance_data['hostname']
+                if 'asset_number' in asset_data and asset_data['asset_number']:
+                    asset_name = asset_data['asset_number']
+                elif 'hostname' in asset_data and asset_data['hostname']:
+                    asset_name = asset_data['hostname']
+                else:
+                    asset_name = "unnamed_asset_"+str(unnamed_asset_count)
+                    unnamed_asset_count += 1
+                location_occupied_by[rack][location] = asset_name
     return
 
 
 class LocationException(Exception):
+    def __init__(self, *args, **kwargs):
+        Exception.__init__(self, *args, **kwargs)
+
+class ModelModificationException(Exception):
+    def __init__(self, *args, **kwargs):
+        Exception.__init__(self, *args, **kwargs)
+
+class MacAddressException(Exception):
+    def __init__(self, *args, **kwargs):
+        Exception.__init__(self, *args, **kwargs)
+
+
+class PowerConnectionException(Exception):
+    def __init__(self, *args, **kwargs):
+        Exception.__init__(self, *args, **kwargs)
+
+
+class NetworkConnectionException(Exception):
     def __init__(self, *args, **kwargs):
         Exception.__init__(self, *args, **kwargs)
 
@@ -268,3 +357,13 @@ def get_filter_arguments(data):
                 )
 
     return filter_args
+
+
+def close_old_connections_decorator(func):
+    @functools.wraps(func)
+    def wrapper_decorator(*args, **kwargs):
+        close_old_connections()
+        value = func(*args, **kwargs)
+        close_old_connections()
+        return value
+    return wrapper_decorator

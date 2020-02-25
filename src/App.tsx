@@ -4,24 +4,27 @@ import "normalize.css/normalize.css";
 import React from "react";
 import { connect } from "react-redux";
 import { BrowserRouter, Redirect, Route, Switch } from "react-router-dom";
-import InstanceView from "./components/detailedView/instanceView/instanceView";
-import ModelView from "./components/detailedView/modelView/modelView";
-import RackView from "./components/detailedView/rackView/rackView";
-import Notfound from "./components/fallback"; // 404 page
-import LandingView from "./components/landingView/landingView";
-import WrappedNormalLoginForm from "./components/login/login";
-import WrappedNormalRegistrationForm from "./components/login/register";
-import Navigation from "./components/navigation/navigation";
+import AssetView from "./components/elementView/detailedView/assetView/assetView";
+import ModelView from "./components/elementView/detailedView/modelView/modelView";
 import BulkImport from "./components/import/import";
+import LandingView from "./components/landingView/landingView";
+import Navigation from "./components/navigation/navigation";
+import Report from "./components/report/report";
+import User from "./components/userView/user";
+import LoginView from "./forms/auth/loginView";
+import Logs from "./components/logs/logs";
+import RackView from "./components/elementView/detailedView/rackView/rackView";
 // import BulkExport from "./components/export/export";
-
 import "./index.scss";
 import * as actions from "./store/actions/auth";
-
-import Report from "./components/report/report";
+import {
+  NotAuthorized,
+  NotFound,
+  NotAuthorizedAdmin
+} from "./components/fallback";
 
 var console: any = {};
-console.log = function() {};
+console.log = function () { };
 export interface AppProps {
   isAuthenticated?: boolean;
   onTryAutoSignup: any;
@@ -39,17 +42,32 @@ class App extends React.Component<AppProps> {
     return this.props.isAuthenticated ? (
       <Route {...rest} />
     ) : (
-      <Route {...rest}>
-        <Redirect to="/login" />
-      </Route>
-    );
+        <Route {...rest}>
+          <Redirect to="/login" />
+        </Route>
+      );
   };
 
   PrivateRoute = ({ path, component, ...rest }: any) => {
     return (
       <Route
         path={path}
-        component={this.props.isAuthenticated ? component : Notfound}
+        component={this.props.isAuthenticated ? component : NotAuthorized}
+      />
+    );
+  };
+
+  AdminRoute = ({ path, component, ...rest }: any) => {
+    return (
+      <Route
+        path={path}
+        component={
+          this.props.isAuthenticated
+            ? this.props.isAdmin
+              ? component
+              : NotAuthorizedAdmin
+            : NotAuthorized
+        }
       />
     );
   };
@@ -59,31 +77,20 @@ class App extends React.Component<AppProps> {
       <BrowserRouter basename="/">
         <div>
           <Navigation {...this.props} />
+
           <Switch>
             <this.RedirectRoute exact path="/" component={LandingView} />
-            <Route path="/login" component={WrappedNormalLoginForm} />
-
-            {/*<Route path="/bulk-export" component={BulkExport} />*/}
-
-            <this.PrivateRoute path="/racks" component={RackView} />
-            {/* <Route path="/models/:rid" component={ModelView} /> */}
+            <Route path="/login" component={LoginView} />
             <this.PrivateRoute path="/models/:rid" component={ModelView} />
-            <this.PrivateRoute
-              path="/instances/:rid"
-              component={InstanceView}
-            />
+            <this.PrivateRoute path="/assets/:rid" component={AssetView} />
             <this.PrivateRoute path="/report" component={Report} />
+            <this.PrivateRoute path="/logs" component={Logs} />
+            <this.PrivateRoute path="/rack-print" component={RackView} />
+
             {/* admin paths */}
-            <this.PrivateRoute
-              path="/register"
-              component={
-                this.props.isAdmin ? WrappedNormalRegistrationForm : Notfound
-              }
-            />
-            <this.PrivateRoute
-              path="/bulk-upload"
-              component={this.props.isAdmin ? BulkImport : Notfound}
-            />
+            <this.AdminRoute path="/users" component={User} />
+            <this.AdminRoute path="/bulk-upload/:resourceType" component={BulkImport} />
+            <Route path="/*" component={NotFound} />
           </Switch>
         </div>
       </BrowserRouter>

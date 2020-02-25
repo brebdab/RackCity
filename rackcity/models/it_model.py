@@ -2,6 +2,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from rackcity.models.fields import RCPositiveIntegerField
 import re
+from django.contrib.postgres.fields import ArrayField
 
 
 def validate_display_color(value):
@@ -19,7 +20,13 @@ class ITModel(models.Model):
         default='#394B59',
         validators=[validate_display_color],
     )
-    num_ethernet_ports = RCPositiveIntegerField(null=True, blank=True)
+
+    network_ports = ArrayField(
+        models.CharField(max_length=150),
+        null=True,
+        blank=True,
+    )
+    num_network_ports = RCPositiveIntegerField(null=True, blank=True)
     num_power_ports = RCPositiveIntegerField(null=True, blank=True)
     cpu = models.CharField(max_length=150, null=True, blank=True)
     memory_gb = RCPositiveIntegerField(null=True, blank=True)
@@ -41,4 +48,6 @@ class ITModel(models.Model):
         except ValidationError as valid_error:
             raise valid_error
         else:
+            if (self.network_ports):
+                self.num_network_ports = len(self.network_ports)
             super(ITModel, self).save(*args, **kwargs)

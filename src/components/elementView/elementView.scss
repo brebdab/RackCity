@@ -1,31 +1,92 @@
-.rowC {
-  display: flex;
-  flex-direction: row;
+.tab {
+  width: 100%;
+  padding: 5pt;
+  display: inline-block;
 }
 .tab:focus {
   outline: none;
 }
 
-.table-nav-bar {
-  padding-top: 20pt;
-}
-.loading-container {
-  text-align: center;
-  display: block;
-}
-.center {
+// .table-nav-bar {
+//   padding-top: 20pt;
+// }
+.inline-buttons {
   display: inline-block;
-  padding: 10px;
+  white-space: nowrap;
+  overflow: auto;
+}
+
+.no-data-text {
+  padding: 30px;
+}
+.grant-admin-button {
+  width: 135px !important;
+}
+
+.rack-tab .element-tab {
+  display: block;
+  margin: 10pt;
 }
 .element-table {
   position: relative;
   // float: left;
-  width: 100%;
-  overflow: scroll;
-  display: inline-block;
+  width: 100% !important;
+  // overflow-x:auto;
+  // display: inline-block;
+  table-layout: auto;
 }
+.rack-view-options {
+  display: inline-block;
+  text-align: center;
+  width: 100%;
+}
+.rack-form {
+  text-align: center;
+}
+.rack-tab-panel {
+  display: block;
+}
+
+.rack-tab .bp3-card {
+  background-color: #202b33;
+  // margin: 20pt !important;
+  margin-top: 10pt;
+  margin-bottom: 10pt;
+}
+.rack-range {
+  text-align: center;
+  width: min-content;
+  margin: auto;
+}
+.all-racks {
+  height: fit-content;
+}
+.table-wrapper {
+  width: 100%;
+  overflow-x:auto;
+  // display: inline-block;
+}
+.bp3-callout {
+  margin-bottom: 5pt;
+  padding-bottom: 2pt;
+}
+.bp3-tab-panel {
+  overflow: auto;
+
+  width: 95%;
+}
+.element-view {
+  margin: 10pt;
+}
+
 .filter-select {
   margin: 0 !important;
+  // float: left;
+}
+.filter-sort-panel {
+  float: left;
+  display: block;
+  width: 100%;
 }
 .field {
   float: left !important;
@@ -43,51 +104,48 @@
 .add {
   float: right;
 }
-// .table {
-//   margin-top: 0px;
-//   // display: inline-block;
-//   overflow: scroll;
-//   max-height: 500px;
-//   float: left;
-// }
 
-// .table-control span {
-//   float: left;
+// .header-cell {
+//   // cursor: pointer !important;
+//   white-space: nowrap !important;
+//   overflow: visible;
+//   width: max-content !important;
 // }
-.header-cell {
-  // cursor: pointer !important;
-  white-space: nowrap !important;
-  overflow: visible;
-  width: max-content !important;
-}
 .header-text {
   white-space: nowrap !important;
-  overflow: scroll;
+  overflow: auto;
   width: max-content !important;
   display: inline-block;
 }
-// .header-text span ~ span {
-//   padding-left: 30px !important;
-//   display: inline-block;
-// }
+
 .drag-drop-text span ~ span {
   padding-left: 5px !important;
 }
-.header-text span {
-  padding-right: 20px !important;
-  margin-right: 20px !important;
+.header-text span ~ span {
+  padding-right: 0px !important;
+  margin-left: 5px !important;
 }
 .modelname-text {
   margin-right: 10px;
 }
-
+.element-tab-buttons {
+  float: right;
+}
+.rack-letter {
+  margin: auto;
+}
+.rack-tab-panel .element-tab-buttons {
+  float: right;
+  margin: 10pt;
+  margin-right: 30pt;
+}
 .hostname-text {
   margin-left: 10px !important;
   padding-right: 100px !important;
 }
 .table-options {
   margin: none !important;
-  float: none !important;
+  padding: none !important;
 }
 .badge {
   background-color: #9ae6b4;
@@ -99,17 +157,23 @@
   font-weight: bold;
   text-transform: uppercase;
 }
-.rack-field {
-  float: left;
+.or {
+  margin-top: 10pt;
 }
 
+.tab {
+  width: 100%;
+}
 // .table-options {
 //   margin-top: 120px;
 // }
-.rack-field .button {
-  float: left;
-  margin-top: 20px;
+.element-tab table {
+  width: 100%;
 }
+.print-racks {
+  float: right;
+}
+
 .header-text icon {
   float: right;
 }
@@ -129,8 +193,11 @@ input {
 }
 
 .rack-select {
-  float: left;
+  // float: left;
+  padding: 0;
+  margin: 0;
+  text-align: center;
 }
 .table-control {
-  float: right;
+  float: right !important;
 }

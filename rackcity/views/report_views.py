@@ -1,6 +1,6 @@
 from django.http import JsonResponse
 from http import HTTPStatus
-from rackcity.models import Rack, ITInstance
+from rackcity.models import Rack, Asset
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
 
@@ -9,11 +9,27 @@ from rest_framework.permissions import IsAuthenticated
 @permission_classes([IsAuthenticated])
 def report_rack_usage(request):
     """
-    Get summary of rack usage: the percentage of rackspace free versus used,
+    Get summary of rack usage across ALL DATACENTERs: the percentage of rackspace free versus used,
     allocated per vendor, allocated per model, and allocated per owner.
     """
-    total_num_rack_slots = 0
     racks = Rack.objects.all()
+    return compute_report_given_racks(racks)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def rack_report_datacenter(request, id):
+    """
+    Get summary of rack usage for ONE DATACENTER: the percentage of rackspace free versus used,
+    allocated per vendor, allocated per model, and allocated per owner.
+    """
+    datacenter_id = id
+    racks = Rack.objects.filter(datacenter=datacenter_id)
+    return compute_report_given_racks(racks)
+
+
+def compute_report_given_racks(racks):
+    total_num_rack_slots = 0
     for rack in racks:
         total_num_rack_slots += rack.height
 
@@ -27,12 +43,12 @@ def report_rack_usage(request):
     vendor_allocation = {}
     owner_allocation = {}
     num_full_rack_slots = 0
-    instances = ITInstance.objects.all()
-    for instance in instances:
-        vendor = instance.model.vendor
-        model = instance.model
-        height = instance.model.height
-        owner = instance.owner
+    assets = Asset.objects.all()
+    for asset in assets:
+        vendor = asset.model.vendor
+        model = asset.model
+        height = asset.model.height
+        owner = asset.owner
         num_full_rack_slots += height
         if vendor not in vendor_allocation:
             vendor_allocation[vendor] = 0

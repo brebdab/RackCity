@@ -1,7 +1,17 @@
-import { ItemPredicate, ItemRenderer, Suggest } from "@blueprintjs/select";
+import {
+  ItemPredicate,
+  ItemRenderer,
+  Suggest,
+  Select
+} from "@blueprintjs/select";
 import React from "react";
 import { MenuItem } from "@blueprintjs/core";
-import { ModelObject, RackObject } from "../components/utils";
+import {
+  ModelObject,
+  RackObject,
+  DatacenterObject,
+  AssetObject
+} from "../utils/utils";
 
 export enum FormTypes {
   CREATE = "create",
@@ -12,6 +22,32 @@ export function escapeRegExpChars(text: string) {
   // eslint-disable-next-line
   return text.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
 }
+export function isMacAddressValid(text: string) {
+  const regex = new RegExp(
+    "^([0-9A-Fa-f]{2}[-_:.,;]){5}([0-9A-Fa-f]{2})$|^[A-Fa-f0-9]{12}$"
+  );
+  if (regex.exec(text)) {
+    return true;
+  }
+  return false;
+}
+
+export const macAddressInfo = (
+  <p>6-byte hexadecimal string with optional delimiters</p>
+);
+export const filterNumber: ItemPredicate<string> = (
+  query,
+  value,
+  _index,
+  exactMatch
+) => {
+  const normalizedQuery = query.toLowerCase();
+  const normalizedValue = value.toString().toLowerCase();
+  if (exactMatch) {
+    return query === value;
+  }
+  return normalizedQuery === normalizedValue;
+};
 export const filterString: ItemPredicate<string> = (
   query,
   vendor,
@@ -43,6 +79,22 @@ export const filterRack: ItemPredicate<RackObject> = (
     return (rowLetter + rackNum).indexOf(normalizedQuery) >= 0;
   }
 };
+export const filterDatacenter: ItemPredicate<DatacenterObject> = (
+  query,
+  datacenter,
+  _index,
+  exactMatch
+) => {
+  const name = datacenter.name.toLowerCase();
+  const abbreviation = datacenter.abbreviation.toLowerCase();
+  const normalizedQuery = query.toLowerCase();
+
+  if (exactMatch) {
+    return name === normalizedQuery || abbreviation === normalizedQuery;
+  } else {
+    return (abbreviation + name).indexOf(normalizedQuery) >= 0;
+  }
+};
 export const filterModel: ItemPredicate<ModelObject> = (
   query,
   model,
@@ -62,6 +114,27 @@ export const filterModel: ItemPredicate<ModelObject> = (
     return (
       `. ${normalizedVendor} ${normalizedModel}`.indexOf(normalizedQuery) >= 0
     );
+  }
+};
+
+export const filterAsset: ItemPredicate<AssetObject> = (
+  query,
+  asset,
+  _index,
+  exactMatch
+) => {
+  if (asset.hostname) {
+    const normalizedHostname = asset.hostname.toLowerCase();
+
+    const normalizedQuery = query.toLowerCase();
+
+    if (exactMatch) {
+      return normalizedHostname === normalizedQuery;
+    } else {
+      return `. ${normalizedHostname}`.indexOf(normalizedQuery) >= 0;
+    }
+  } else {
+    return false;
   }
 };
 
@@ -129,6 +202,24 @@ export const renderRackItem: ItemRenderer<RackObject> = (
   );
 };
 
+export const renderDatacenterItem: ItemRenderer<DatacenterObject> = (
+  datacenter: DatacenterObject,
+  { handleClick, modifiers, query }
+) => {
+  if (!modifiers.matchesPredicate) {
+    return null;
+  }
+  const text = datacenter.name;
+  return (
+    <MenuItem
+      active={modifiers.active}
+      label={datacenter.abbreviation}
+      text={highlightText(text, query)}
+      onClick={handleClick}
+    />
+  );
+};
+
 export const renderModelItem: ItemRenderer<ModelObject> = (
   model: ModelObject,
   { handleClick, modifiers, query }
@@ -146,6 +237,27 @@ export const renderModelItem: ItemRenderer<ModelObject> = (
     />
   );
 };
+
+export const renderAssetItem: ItemRenderer<AssetObject> = (
+  asset: AssetObject,
+  { handleClick, modifiers, query }
+) => {
+  if (!modifiers.matchesPredicate) {
+    return null;
+  }
+  const text = asset.hostname;
+  if (text) {
+    return (
+      <MenuItem
+        active={modifiers.active}
+        label={asset.model.vendor + " " + asset.model.model_number}
+        text={highlightText(text, query)}
+        onClick={handleClick}
+      />
+    );
+  }
+  return null;
+};
 export const renderCreateItemOption = (
   query: string,
   active: boolean,
@@ -153,13 +265,15 @@ export const renderCreateItemOption = (
 ) => (
   <MenuItem
     icon="add"
-    text={`Use"${query}"`}
+    text={`Use "${query}"`}
     active={active}
     onClick={handleClick}
     shouldDismissPopover={false}
   />
 );
-
+export const StringSelect = Select.ofType<string>();
 export const StringSuggest = Suggest.ofType<string>();
-export const ModelSuggest = Suggest.ofType<ModelObject>();
-export const RackSuggest = Suggest.ofType<RackObject>();
+export const ModelSelect = Select.ofType<ModelObject>();
+export const RackSelect = Select.ofType<RackObject>();
+export const DatacenterSelect = Select.ofType<DatacenterObject>();
+export const AssetSelect = Select.ofType<AssetObject>();

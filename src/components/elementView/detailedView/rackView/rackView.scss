@@ -1,0 +1,144 @@
+$row-height: 6px;
+@import "~@blueprintjs/core/lib/scss/variables";
+
+@media screen {
+  .rack-container {
+    padding-left: 20px;
+    display: inline-block;
+    overflow: auto;
+
+    width: 100%;
+  }
+}
+
+.rack {
+  border-style: solid;
+  border-width: 6pt;
+  border-color: #202b33;
+  display: inline-block;
+  margin: left 10px;
+}
+
+.rack-table {
+  float: left;
+  table-layout: fixed !important;
+}
+.loc-table {
+  padding-left: 0px !important;
+}
+
+.header {
+  padding: 5px !important;
+  font-size: 10px;
+  background-color: grey;
+}
+
+.cell {
+  text-align: center !important;
+  padding: 0 !important;
+
+  margin: 0 !important;
+  font-size: 2 * $row-height !important;
+}
+
+.rack-table .cell {
+  max-width: 200px;
+  min-width: 200px;
+  display: block;
+  overflow-x: auto;
+  overflow-y:hidden;
+  position: relative !important;
+  white-space: nowrap !important;
+  padding-left: 0px !important;
+  margin: 0px !important;
+  // text-shadow: 1px 1px 0 #333, -1px -1px 0 #333, 1px -1px 0 #333,
+  //   -1px 1px 0 #333;
+  -webkit-text-stroke-width: 0.2px;
+  -webkit-text-stroke-color: black;
+}
+
+.rack-table .cell span {
+  white-space: nowrap;
+  margin: 0px !important;
+  float: left;
+}
+
+.rack-container tr {
+  outline: 1px solid #202b33;
+}
+
+.empty {
+  padding-top: $row-height !important;
+  padding-bottom: $row-height !important;
+}
+
+* {
+  box-sizing: border-box;
+}
+.rack-parent {
+  margin: 10pt !important;
+  float: left;
+}
+
+// .flex-grid {
+//   margin: 0 10pt 0 0;
+// }
+
+@media print {
+  .rack-container {
+    overflow-y: visible !important;
+  }
+
+  .bp3-navbar {
+    display: none;
+  }
+  .nav-bar-button {
+    display: none;
+  }
+
+  .bp3-tab-indicator-wrapper {
+    display: none;
+  }
+  @page {
+    margin-top: 2cm;
+  }
+  body {
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    display: block !important;
+    height: auto !important;
+  }
+  div {
+    overflow: visible !important;
+  }
+
+  .rack-table .cell {
+    max-width: none !important;
+    width: fit-content !important;
+  }
+
+  .rack-row {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  .header,
+  .unit {
+    color: black !important;
+  }
+
+  // .rack-view-select {
+  //   display: none;
+  // }
+  .do-not-print {
+    display: none;
+  }
+  .bp3-tab {
+    color: transparent !important;
+    max-width: 1pt;
+  }
+
+  .delete-rack {
+    display: none;
+  }
+}

@@ -13,39 +13,70 @@ import { BrowserRouter as Router, withRouter } from "react-router-dom";
 import "./navigation.scss";
 import * as actions from "../../store/actions/auth";
 import { connect } from "react-redux";
+import axios from "axios";
+import { API_ROOT } from "../../utils/api-config";
 
 export interface NavigationProps {
   isAuthenticated: boolean;
   logout(): any;
   isAdmin: boolean;
+  token: string;
+}
+
+export interface NavigationState {
+  username?: string;
 }
 
 type NavigationPropsAll = NavigationProps & RouteComponentProps;
-export class Navigation extends React.Component<NavigationPropsAll> {
+export class Navigation extends React.Component<
+  NavigationPropsAll,
+  NavigationState
+> {
+  public state = {
+    username: undefined
+  };
+  getUsername(token: string) {
+    const headers = {
+      headers: {
+        Authorization: "Token " + token
+      }
+    };
+    axios
+      .get(API_ROOT + "api/users/who-am-i", headers)
+      .then(res => {
+        this.setState({ username: res.data.username });
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  }
+  clearUsernameAndLogout() {
+    this.setState({ username: undefined });
+    this.props.logout();
+  }
+
   public render() {
+    if (this.props.isAuthenticated && !this.state.username) {
+      this.getUsername(this.props.token);
+    }
+
     return (
       <Router>
         <div>
           <Navbar className={Classes.DARK + " nav-bar"}>
             <NavbarGroup>
-              <NavbarHeading>HypoSoft</NavbarHeading>
+              <NavbarHeading onClick={() => this.props.history.push("/")}>
+                <AnchorButton
+                  onClick={() => this.props.history.push("/")}
+                  className="nav-bar-button"
+                  icon="home"
+                  text="HypoSoft"
+                  minimal
+                />
+              </NavbarHeading>
               <NavbarDivider />
               {this.props.isAuthenticated ? (
                 <div>
-                  <AnchorButton
-                    onClick={() => this.props.history.push("/")}
-                    className="nav-bar-button"
-                    icon="home"
-                    text="Home"
-                    minimal
-                  />
-                  {/*<AnchorButton
-                    onClick={() => this.props.history.push("/bulk-export")}
-                    className="nav-bar-button"
-                    icon="import"
-                    text="Export"
-                    minimal
-                  />*/}
                   <AnchorButton
                     onClick={() => this.props.history.push("/report")}
                     className="nav-bar-button"
@@ -53,17 +84,11 @@ export class Navigation extends React.Component<NavigationPropsAll> {
                     text="View Report"
                     minimal
                   />
-                </div>
-              ) : (
-                <p></p>
-              )}
-              {this.props.isAdmin ? (
-                <div>
                   <AnchorButton
-                    onClick={() => this.props.history.push("/bulk-upload")}
+                    onClick={() => this.props.history.push("/logs")}
                     className="nav-bar-button"
-                    icon="export"
-                    text="Upload File"
+                    icon="history"
+                    text="View Logs"
                     minimal
                   />
                 </div>
@@ -75,17 +100,23 @@ export class Navigation extends React.Component<NavigationPropsAll> {
             <NavbarGroup align={Alignment.RIGHT}>
               {this.props.isAuthenticated ? (
                 <div>
-                  {this.props.isAdmin ? (
+                  {this.state.username ? (
                     <AnchorButton
-                      icon="user"
-                      onClick={() => this.props.history.push("/register")}
-                      text="Add new user"
+                      className="nav-bar-non-button nav-bar-button"
+                      text={"Welcome, " + this.state.username}
                       minimal
                     />
                   ) : null}
-
+                  {this.props.isAdmin ? (
+                    <AnchorButton
+                      icon="user"
+                      onClick={() => this.props.history.push("/users")}
+                      text="Manage Users"
+                      minimal
+                    />
+                  ) : null}
                   <AnchorButton
-                    onClick={this.props.logout}
+                    onClick={() => this.clearUsernameAndLogout()}
                     className="nav-bar-button"
                     icon="user"
                     text="Logout"
@@ -112,7 +143,8 @@ export class Navigation extends React.Component<NavigationPropsAll> {
 const mapStateToProps = (state: any) => {
   return {
     isAuthenticated: state.token !== null,
-    isAdmin: state.admin
+    isAdmin: state.admin,
+    token: state.token
   };
 };
 

@@ -1,11 +1,26 @@
 from rest_framework.parsers import JSONParser
 from django.http import HttpResponse, JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
-from rackcity.models import ITModel, ITInstance
+from rackcity.models import ITModel, Asset
 from rackcity.api.serializers import (
-    RecursiveITInstanceSerializer,
+    RecursiveAssetSerializer,
     ITModelSerializer,
-    BulkITModelSerializer
+    BulkITModelSerializer,
+    normalize_bulk_model_data
+)
+from rackcity.utils.log_utils import (
+    log_action,
+    log_bulk_upload,
+    log_bulk_approve,
+    log_delete,
+    Action,
+    ElementType,
+)
+from rackcity.utils.errors_utils import (
+    GenericFailure,
+    Status,
+    parse_serializer_errors,
+    BulkFailure
 )
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -13,15 +28,17 @@ from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
 import math
 import csv
-from io import StringIO
+from base64 import b64decode
+import re
+from io import StringIO, BytesIO
 from rackcity.views.rackcity_utils import (
-    validate_instance_location,
+    validate_asset_location,
     records_are_identical,
     get_sort_arguments,
     get_filter_arguments,
     LocationException,
+    ModelModificationException
 )
-
 
 @api_view(['GET'])
 def model_list(request):  # DEPRECATED!
@@ -42,24 +59,46 @@ def model_add(request):
     Add a new model
     """
     data = JSONParser().parse(request)
-    failure_message = ""
     if 'id' in data:
-        failure_message = failure_message + "Don't include id when adding a model. "
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.CREATE_ERROR.value + GenericFailure.UNKNOWN.value,
+                "errors": "Don't include 'id' when creating a model"
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
     serializer = ITModelSerializer(data=data)
     if not serializer.is_valid(raise_exception=False):
-        failure_message = failure_message + str(serializer.errors)
-    if failure_message == "":
-        try:
-            serializer.save()
-            return HttpResponse(status=HTTPStatus.CREATED)
-        except Exception as error:
-            failure_message = failure_message + str(error)
-
-    failure_message = "Request was invalid. " + failure_message
-    return JsonResponse({
-        "failure_message": failure_message
-    },
-        status=HTTPStatus.NOT_ACCEPTABLE
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.INVALID_INPUT.value +
+                    parse_serializer_errors(serializer.errors),
+                "errors": str(serializer.errors)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    try:
+        new_model = serializer.save()
+    except Exception as error:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.CREATE_ERROR.value + GenericFailure.UNKNOWN.value,
+                "errors": str(error)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    log_action(request.user, new_model, Action.CREATE)
+    return JsonResponse(
+        {
+            "success_message":
+                Status.SUCCESS.value +
+                new_model.vendor + " " + new_model.model_number +
+                " created"
+        },
+        status=HTTPStatus.CREATED
     )
 
 
@@ -70,38 +109,83 @@ def model_modify(request):
     Modify an existing model
     """
     data = JSONParser().parse(request)
-    failure_message = ""
     if 'id' not in data:
-        failure_message += "Must include id when modifying a model. "
-    else:
-        id = data['id']
-        try:
-            existing_model = ITModel.objects.get(id=id)
-        except ObjectDoesNotExist:
-            failure_message += "No existing model with id="+str(id)+". "
-        else:
-            try:
-                validate_model_height_change(data, existing_model)
-            except LocationException as error:
-                failure_message = "Height change of model causes conflicts. " + \
-                    str(error)
-                return JsonResponse(
-                    {"failure_message": failure_message},
-                    status=HTTPStatus.NOT_ACCEPTABLE
-                )
-            for field in data.keys():
-                setattr(existing_model, field, data[field])
-            try:
-                existing_model.save()
-                return HttpResponse(status=HTTPStatus.OK)
-            except Exception as error:
-                failure_message = failure_message + str(error)
-    failure_message = "Request was invalid. " + failure_message
-    return JsonResponse({
-        "failure_message": failure_message
-    },
-        status=HTTPStatus.NOT_ACCEPTABLE
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR.value + GenericFailure.UNKNOWN.value,
+                "errors": "Must include 'id' when modifying a model"
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    id = data['id']
+    try:
+        existing_model = ITModel.objects.get(id=id)
+    except ObjectDoesNotExist:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR.value +
+                    "Model" + GenericFailure.DOES_NOT_EXIST.value,
+                "errors": "No existing model with id="+str(id)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    try:
+        validate_model_height_change(data, existing_model)
+    except LocationException as error:
+        location_failure = "Height change of model causes conflicts. " + \
+            str(error)
+        return JsonResponse(
+            {"failure_message": Status.MODIFY_ERROR.value + location_failure},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    try:
+        validate_model_change(data, existing_model)
+    except ModelModificationException as error:
+        modification_failure = str(error) + " There are existing assets with this model"
+        return JsonResponse(
+            {"failure_message": Status.MODIFY_ERROR.value + modification_failure},
+            status=HTTPStatus.BAD_REQUEST
+        )
+    for field in data.keys():
+        setattr(existing_model, field, data[field])
+    try:
+        existing_model.save()
+    except Exception as error:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR.value +
+                    GenericFailure.INVALID_DATA.value,
+                "errors": str(error)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    log_action(request.user, existing_model, Action.MODIFY)
+    return JsonResponse(
+        {
+            "success_message":
+                Status.SUCCESS.value +
+                existing_model.vendor + " " + existing_model.model_number +
+                " modified"
+        },
+        status=HTTPStatus.OK
     )
+
+
+def validate_model_change(new_model_data, existing_model): 
+    if "network_ports" not in new_model_data:
+        return
+    if "num_power_ports" not in new_model_data:
+        return
+    assets = Asset.objects.filter(model=existing_model.id)
+    if len(assets) > 0:
+        if set(new_model_data["network_ports"]) != set(existing_model.network_ports):
+            raise ModelModificationException("Unable to modify network ports.")
+        if int(new_model_data["num_power_ports"]) != existing_model.num_power_ports:
+             raise ModelModificationException("Unable to modify number of power ports.")
+    return
 
 
 def validate_model_height_change(new_model_data, existing_model):
@@ -111,14 +195,14 @@ def validate_model_height_change(new_model_data, existing_model):
     if new_model_height <= existing_model.height:
         return
     else:
-        instances = ITInstance.objects.filter(model=existing_model.id)
-        for instance in instances:
+        assets = Asset.objects.filter(model=existing_model.id)
+        for asset in assets:
             try:
-                validate_instance_location(
-                    instance.rack.id,
-                    instance.elevation,
+                validate_asset_location(
+                    asset.rack.id,
+                    asset.rack_position,
                     new_model_height,
-                    instance.id
+                    asset.id
                 )
             except LocationException as error:
                 raise error
@@ -132,30 +216,57 @@ def model_delete(request):
     Delete an existing model
     """
     data = JSONParser().parse(request)
-    failure_message = ""
     if 'id' not in data:
-        failure_message += "Must include id when deleting a model. "
-    else:
-        id = data['id']
-        try:
-            existing_model = ITModel.objects.get(id=id)
-        except ObjectDoesNotExist:
-            failure_message += "No existing model with id="+str(id)+". "
-        else:
-            instances = ITInstance.objects.filter(model=id)
-            if instances:
-                failure_message += "Cannot delete this model because instances of it exist. "
-            if failure_message == "":
-                try:
-                    existing_model.delete()
-                    return HttpResponse(status=HTTPStatus.OK)
-                except Exception as error:
-                    failure_message = failure_message + str(error)
-    failure_message = "Request was invalid. " + failure_message
-    return JsonResponse({
-        "failure_message": failure_message
-    },
-        status=HTTPStatus.NOT_ACCEPTABLE
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.DELETE_ERROR.value + GenericFailure.UNKNOWN.value,
+                "errors": "Must include 'id' when deleting a model"
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    id = data['id']
+    try:
+        existing_model = ITModel.objects.get(id=id)
+    except ObjectDoesNotExist:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.DELETE_ERROR.value +
+                    "Model" + GenericFailure.DOES_NOT_EXIST.value,
+                "errors": "No existing model with id="+str(id)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    assets = Asset.objects.filter(model=id)
+    if assets:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.DELETE_ERROR.value +
+                    "Cannot delete this model because assets of it exist"
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    try:
+        model_name = " ".join([
+            existing_model.vendor,
+            existing_model.model_number
+        ])
+        existing_model.delete()
+    except Exception as error:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.DELETE_ERROR.value + GenericFailure.UNKNOWN.value,
+                "errors": str(error)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    log_delete(request.user, ElementType.MODEL, model_name)
+    return JsonResponse(
+        {"success_message": Status.SUCCESS.value + model_name + " deleted"},
+        status=HTTPStatus.OK
     )
 
 
@@ -168,7 +279,7 @@ def model_many(request):
     size must also be specified, and a page of models will be returned.
     """
 
-    failure_message = ""
+    errors = []
 
     should_paginate = not(
         request.query_params.get('page') is None
@@ -177,18 +288,23 @@ def model_many(request):
 
     if should_paginate:
         if not request.query_params.get('page'):
-            failure_message += "Must specify field 'page' on " + \
-                "paginated requests. "
+            errors.append("Must specify field 'page' on paginated requests")
         elif not request.query_params.get('page_size'):
-            failure_message += "Must specify field 'page_size' on " + \
-                "paginated requests. "
+            errors.append(
+                "Must specify field 'page_size' on paginated requests"
+            )
         elif int(request.query_params.get('page_size')) <= 0:
-            failure_message += "Field 'page_size' must be an integer " + \
-                "greater than 0. "
+            errors.append(
+                "Field 'page_size' must be an integer greater than 0"
+            )
 
-    if failure_message != "":
+    if len(errors) > 0:
         return JsonResponse(
-            {"failure_message": failure_message},
+            {
+                "failure_message":
+                    Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                "errors": " ".join(errors)
+            },
             status=HTTPStatus.BAD_REQUEST,
         )
 
@@ -198,7 +314,11 @@ def model_many(request):
         filter_args = get_filter_arguments(request.data)
     except Exception as error:
         return JsonResponse(
-            {"failure_message": "Filter error: " + str(error)},
+            {
+                "failure_message":
+                    Status.ERROR.value + GenericFailure.FILTER.value,
+                "errors": str(error)
+            },
             status=HTTPStatus.BAD_REQUEST
         )
     for filter_arg in filter_args:
@@ -208,7 +328,11 @@ def model_many(request):
         sort_args = get_sort_arguments(request.data)
     except Exception as error:
         return JsonResponse(
-            {"failure_message": "Sort error: " + str(error)},
+            {
+                "failure_message":
+                    Status.ERROR.value + GenericFailure.SORT.value,
+                "errors": str(error)
+            },
             status=HTTPStatus.BAD_REQUEST
         )
     models = models_query.order_by(*sort_args)
@@ -218,10 +342,13 @@ def model_many(request):
         paginator.page_size = request.query_params.get('page_size')
         try:
             page_of_models = paginator.paginate_queryset(models, request)
-        except Exception:
-            failure_message += "Invalid page requested. "
+        except Exception as error:
             return JsonResponse(
-                {"failure_message": failure_message},
+                {
+                    "failure_message":
+                        Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                    "errors": str(error)
+                },
                 status=HTTPStatus.BAD_REQUEST,
             )
         models_to_serialize = page_of_models
@@ -244,21 +371,25 @@ def model_detail(request, id):
     try:
         model = ITModel.objects.get(id=id)
         model_serializer = ITModelSerializer(model)
-        instances = ITInstance.objects.filter(model=id)
-        instances_serializer = RecursiveITInstanceSerializer(
-            instances,
+        assets = Asset.objects.filter(model=id)
+        assets_serializer = RecursiveAssetSerializer(
+            assets,
             many=True,
         )
         model_detail = {
             "model": model_serializer.data,
-            "instances": instances_serializer.data
+            "assets": assets_serializer.data
         }
         return JsonResponse(model_detail, status=HTTPStatus.OK)
     except ITModel.DoesNotExist:
-        failure_message = "No model exists with id="+str(id)
         return JsonResponse(
-            {"failure_message": failure_message},
-            status=HTTPStatus.NOT_FOUND
+            {
+                "failure_message":
+                    Status.ERROR.value +
+                    "Model" + GenericFailure.DOES_NOT_EXIST.value,
+                "errors": "No existing model with id="+str(id)
+            },
+            status=HTTPStatus.BAD_REQUEST
         )
 
 
@@ -283,26 +414,64 @@ def model_bulk_upload(request):
     Bulk upload many models to add or modify
     """
     data = JSONParser().parse(request)
-    if 'models' not in data:
+    if 'import_csv' not in data:
         return JsonResponse(
-            {"failure_message": "Bulk upload request should have a parameter 'models'"},
+            {
+                "failure_message":
+                    Status.IMPORT_ERROR.value +
+                    BulkFailure.IMPORT_UNKNOWN.value,
+                "errors":
+                    "Bulk upload request should have a parameter 'file'"
+            },
             status=HTTPStatus.BAD_REQUEST
         )
-    model_datas = data['models']
+    base_64_csv = data['import_csv']
+    csv_bytes_io = BytesIO(
+        b64decode(re.sub(".*base64,", '', base_64_csv))
+    )
+    csv_string_io = StringIO(csv_bytes_io.read().decode('UTF-8'))
+    csvReader = csv.DictReader(csv_string_io)
+    expected_fields = BulkITModelSerializer.Meta.fields
+    given_fields = csvReader.fieldnames
+    if (
+        len(expected_fields) != len(given_fields)  # check for repeated fields
+        or set(expected_fields) != set(given_fields)
+    ):
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.IMPORT_ERROR.value +
+                    BulkFailure.IMPORT_COLUMNS.value
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    bulk_model_datas = []
+    for row in csvReader:
+        bulk_model_datas.append(dict(row))
     models_to_add = []
     potential_modifications = []
     models_in_import = set()
-    for model_data in model_datas:
+    for bulk_model_data in bulk_model_datas:
+        model_data = normalize_bulk_model_data(bulk_model_data)
         model_serializer = ITModelSerializer(data=model_data)
         if not model_serializer.is_valid():
-            failure_message = str(model_serializer.errors)
-            failure_message = "At least one provided model was not valid! "+failure_message
             return JsonResponse(
-                {"failure_message": failure_message},
+                {
+                    "failure_message":
+                        Status.IMPORT_ERROR.value +
+                        BulkFailure.MODEL_INVALID.value +
+                        parse_serializer_errors(model_serializer.errors),
+                    "errors": str(model_serializer.errors)
+                },
                 status=HTTPStatus.BAD_REQUEST
             )
-        if (model_data['vendor'], model_data['model_number']) in models_in_import:
-            failure_message = "Vendor+model_number combination must be unique, but " + \
+        if (
+            (model_data['vendor'], model_data['model_number'])
+            in models_in_import
+        ):
+            failure_message = \
+                Status.IMPORT_ERROR.value + \
+                "Vendor+model_number combination must be unique, but " + \
                 "vendor="+model_data['vendor'] + \
                 ", model_number="+model_data['model_number'] + \
                 " appears more than once in import. "
@@ -317,7 +486,9 @@ def model_bulk_upload(request):
             )
         try:
             existing_model = ITModel.objects.get(
-                vendor=model_data['vendor'], model_number=model_data['model_number'])
+                vendor=model_data['vendor'],
+                model_number=model_data['model_number']
+            )
         except ObjectDoesNotExist:
             models_to_add.append(model_serializer)
         else:
@@ -325,6 +496,7 @@ def model_bulk_upload(request):
                 validate_model_height_change(model_data, existing_model)
             except LocationException as error:
                 failure_message = \
+                    Status.IMPORT_ERROR.value + \
                     "Height change of this model causes conflicts: " + \
                     "vendor="+model_data['vendor'] + \
                     ", model_number="+model_data['model_number'] + \
@@ -334,6 +506,18 @@ def model_bulk_upload(request):
                     {"failure_message": failure_message},
                     status=HTTPStatus.NOT_ACCEPTABLE
                 )
+            try:
+                validate_model_change(model_data, existing_model)
+            except ModelModificationException as error:
+                modification_failure = " There are existing assets with this model: " + \
+                    "vendor="+model_data['vendor'] + \
+                    ", model_number="+model_data['model_number'] + \
+                    ". " +  str(error) 
+                return JsonResponse(
+                    {"failure_message": Status.MODIFY_ERROR.value + modification_failure},
+                    status=HTTPStatus.BAD_REQUEST
+                )
+
             potential_modifications.append(
                 {
                     "existing_model": existing_model,
@@ -354,7 +538,7 @@ def model_bulk_upload(request):
         if records_are_identical(existing_data, new_data):
             records_ignored += 1
         else:
-            new_data['id'] = existing_data['id']
+            new_data['id'] = potential_modification['existing_model'].id
             for field in existing_data.keys():
                 if field not in new_data:
                     new_data[field] = None
@@ -364,6 +548,13 @@ def model_bulk_upload(request):
                     "modified": new_data
                 }
             )
+    log_bulk_upload(
+        request.user,
+        ElementType.MODEL,
+        records_added,
+        records_ignored,
+        len(modifications_to_approve),
+    )
     return JsonResponse(
         {
             "added": records_added,
@@ -383,7 +574,14 @@ def model_bulk_approve(request):
     data = JSONParser().parse(request)
     if 'approved_modifications' not in data:
         return JsonResponse(
-            {"failure_message": "Bulk approve request should have a parameter 'approved_modifications'"},
+            {
+                "failure_message":
+                    Status.IMPORT_ERROR.value +
+                    BulkFailure.IMPORT_UNKNOWN.value,
+                "errors":
+                    "Bulk approve request should have a parameter " +
+                    "'approved_modifications'"
+            },
             status=HTTPStatus.BAD_REQUEST
         )
     model_datas = data['approved_modifications']
@@ -401,6 +599,7 @@ def model_bulk_approve(request):
         for field in model_data.keys():  # This is assumed to have all fields, and with null values for blank ones. That's how it's returned in bulk-upload
             setattr(existing_model, field, model_data[field])
         existing_model.save()
+    log_bulk_approve(request.user, ElementType.MODEL, len(model_datas))
     return HttpResponse(status=HTTPStatus.OK)
 
 
@@ -416,7 +615,11 @@ def model_bulk_export(request):
         filter_args = get_filter_arguments(request.data)
     except Exception as error:
         return JsonResponse(
-            {"failure_message": "Filter error: " + str(error)},
+            {
+                "failure_message":
+                    Status.EXPORT_ERROR.value + GenericFailure.FILTER.value,
+                "errors": str(error)
+            },
             status=HTTPStatus.BAD_REQUEST
         )
     for filter_arg in filter_args:
@@ -426,7 +629,11 @@ def model_bulk_export(request):
         sort_args = get_sort_arguments(request.data)
     except Exception as error:
         return JsonResponse(
-            {"failure_message": "Sort error: " + str(error)},
+            {
+                "failure_message":
+                    Status.EXPORT_ERROR.value + GenericFailure.SORT.value,
+                "errors": str(error)
+            },
             status=HTTPStatus.BAD_REQUEST
         )
     models = models_query.order_by(*sort_args)
@@ -450,9 +657,16 @@ def model_page_count(request):
     Return total number of pages according to page size, which must be
     specified as query parameter.
     """
-    if not request.query_params.get('page_size') or int(request.query_params.get('page_size')) <= 0:
+    if (
+        not request.query_params.get('page_size')
+        or int(request.query_params.get('page_size')) <= 0
+    ):
         return JsonResponse(
-            {"failure_message": "Must specify positive integer page_size."},
+            {
+                "failure_message":
+                    Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                "errors": "Must specify positive integer page_size."
+            },
             status=HTTPStatus.BAD_REQUEST,
         )
     page_size = int(request.query_params.get('page_size'))
@@ -461,7 +675,11 @@ def model_page_count(request):
         filter_args = get_filter_arguments(request.data)
     except Exception as error:
         return JsonResponse(
-            {"failure_message": "Filter error: " + str(error)},
+            {
+                "failure_message":
+                    Status.ERROR.value + GenericFailure.FILTER.value,
+                "errors": str(error)
+            },
             status=HTTPStatus.BAD_REQUEST
         )
     for filter_arg in filter_args:
@@ -474,7 +692,7 @@ def model_page_count(request):
 @api_view(['GET'])
 def model_fields(request):
     """
-    Return all fields on the ITModelSerializer. 
+    Return all fields on the ITModelSerializer.
     """
     return JsonResponse(
         {"fields": [
@@ -482,7 +700,8 @@ def model_fields(request):
             'model_number',
             'height',
             'display_color',
-            'num_ethernet_ports',
+            'num_network_ports',
+            'network_ports',
             'num_power_ports',
             'cpu',
             'memory_gb',
@@ -491,15 +710,6 @@ def model_fields(request):
         ]},
         status=HTTPStatus.OK,
     )
-
-
-@api_view(['GET'])
-def i_am_admin(request):
-    print("yeah")
-    if(request.user.is_superuser):
-        return JsonResponse({"is_admin": True})
-    else:
-        return JsonResponse({"is_admin": False})
 
 
 @api_view(['GET'])

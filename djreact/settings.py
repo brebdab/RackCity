@@ -78,7 +78,7 @@ WSGI_APPLICATION = 'djreact.wsgi.application'
 #     }
 # }
 DATABASES = {}
-DATABASES['default'] = dj_database_url.config(conn_max_age=600)
+DATABASES['default'] = dj_database_url.config()
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},  # noqa
@@ -123,3 +123,6 @@ CSRF_COOKIE_NAME = "csrftoken"
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_AUTHENTICATION_METHOD = 'username'
 ACCOUNT_EMAIL_VERIFICATION = 'none'
+
+# SECURE_SSL_REDIRECT = True
+# SECURE_REDIRECT_EXEMPT = ['localhost', '127.0.0.1']

@@ -1,0 +1,37 @@
+.propsview .row-props {
+  display: flex;
+  white-space: pre-line;
+}
+
+.propsview .column-props {
+  text-align: center;
+  flex: 50%;
+}
+
+.model-link:hover {
+  background-color: #394b59 !important;
+  cursor: pointer !important;
+}
+.propsview {
+  margin: 10pt;
+  background-color: #202b33 !important;
+  padding-left: 10pt;
+  padding-right: 10pt;
+  padding-top: 2pt;
+  border-radius: 5pt;
+  padding-bottom: 10pt;
+}
+.propsdetail {
+  overflow: auto;
+  display: flex;
+}
+.propsview .props-column {
+  float: left;
+  flex: 1;
+  padding-right: 30pt;
+}
+.label {
+  color: #bfccd6 !important;
+}
+
+//
