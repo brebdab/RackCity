@@ -95,10 +95,7 @@ export class BulkImport extends React.PureComponent<
         <div className={"row"}>
           <div className={"column-third-import"}>
             {resourceType === "assets" ? (
-              <ButtonGroup
-                fill={false}
-                style={{ marginTop: 20, marginBottom: 0 }}
-              >
+              <ButtonGroup fill={false} style={{ marginTop: 10 }}>
                 <Button
                   active={this.state.assetUploadType === "assets"}
                   text="assets"
@@ -126,7 +123,6 @@ export class BulkImport extends React.PureComponent<
               icon="import"
               text={selectButtonText}
               onClick={this.handleFilepickerOpen}
-              style={{ marginBottom: 40 }}
             />
             <Alert
               cancelButtonText="Cancel"
@@ -156,7 +152,7 @@ export class BulkImport extends React.PureComponent<
         </div>
         <div className={"row"}>
           <div className={"column-third-import"}>
-            <Tag minimal style={{ marginTop: 5, marginBottom: 20 }}>
+            <Tag minimal style={{ marginBottom: 5 }}>
               <p>
                 Selected file:{" "}
                 {this.state.selectedFile === undefined
@@ -367,6 +363,7 @@ export class BulkImport extends React.PureComponent<
       uploadBulk(this.state.encodedFile, this.props.token, uploadType).then(
         res => {
           if (res.modifications.length !== 0) {
+            console.log(res.modifications);
             if (uploadType === "models") {
               this.setState({
                 modelAlterationsIsOpen: true,

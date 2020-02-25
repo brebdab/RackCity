@@ -187,7 +187,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
         })}
         <form
           onSubmit={this.handleSubmit}
-          className="create-form bp3-form-group"
+          className="create-model-form bp3-form-group"
         >
           <FormGroup className="suggest" label="Vendor (required)">
             <StringSuggest
