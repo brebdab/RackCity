@@ -487,7 +487,11 @@ def model_bulk_upload(request):
                     " There are existing assets with this model: " + \
                     "vendor="+model_data['vendor'] + \
                     ", model_number="+model_data['model_number'] + \
-                    ". " + \
+                    ". "
+                return JsonResponse(
+                    {"failure_message": Status.MODIFY_ERROR.value + modification_failure},
+                    status=HTTPStatus.BAD_REQUEST
+                )
 
             potential_modifications.append(
                 {
