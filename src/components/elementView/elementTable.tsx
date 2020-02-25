@@ -343,7 +343,6 @@ class ElementTable extends React.Component<
 
   addFilter = (filter: IFilter) => {
     const filters_copy = this.state.filters.slice();
-    this.setState({ addFilterInProgress: true });
 
     if (isRackRangeFields(filter.filter)) {
       if (this.props.currDatacenter && this.props.currDatacenter.id !== "") {
@@ -361,19 +360,17 @@ class ElementTable extends React.Component<
     if (resp) {
       resp
         .then(res => {
-          this.setState({ addFilterInProgress: false });
           this.setState({
             filters: filters_copy
           });
         })
-        .catch(err => {
-          this.setState({ addFilterInProgress: false });
-        });
+        .catch(err => {});
     }
   };
 
   updateFilterData = (items: Array<IFilter>) => {
     console.log(items);
+    this.setState({ addFilterInProgress: true });
     let resp;
     if (this.props.callback! !== undefined) this.props.callback(items);
     this.resetPage();
@@ -402,6 +399,7 @@ class ElementTable extends React.Component<
       );
       resp
         .then(res => {
+          this.setState({ addFilterInProgress: false });
           this.setState({
             items: res
           });
@@ -1142,7 +1140,7 @@ class ElementTable extends React.Component<
                     })}
                   </tbody>
                 ) : (
-                  <Spinner size={Spinner.SIZE_LARGE} />
+                  <Spinner size={Spinner.SIZE_STANDARD} />
                 )
               ) : (
                 <h4 className="no-data-text">no {this.props.type} found </h4>

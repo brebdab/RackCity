@@ -1,10 +1,4 @@
-import {
-  Button,
-  FormGroup,
-  HTMLSelect,
-  MenuItem,
-  Spinner
-} from "@blueprintjs/core";
+import { Button, FormGroup, HTMLSelect, MenuItem } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { Select } from "@blueprintjs/select";
 import * as React from "react";
