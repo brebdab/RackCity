@@ -1,6 +1,6 @@
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
-import { Tabs, Classes, Tab } from "@blueprintjs/core";
+import { Tabs, Tab } from "@blueprintjs/core";
 import ElementTab from "./elementTab";
 import { RouteComponentProps } from "react-router";
 import "./elementView.scss";
@@ -27,7 +27,7 @@ export const ALL_DATACENTERS: DatacenterObject = {
 class ElementTabContainer extends React.Component<
   ElementTabContainerProps & RouteComponentProps,
   ElementTabContainerState
-> {
+  > {
   state = {
     datacenters: [],
     currDatacenter: ALL_DATACENTERS
@@ -61,7 +61,7 @@ class ElementTabContainer extends React.Component<
   public render() {
     return (
       <Tabs
-        className={Classes.DARK + " element-view"}
+        className="element-view"
         animate={true}
         id="ElementViewer"
         key={"vertical"}
