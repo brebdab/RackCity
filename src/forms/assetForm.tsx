@@ -70,7 +70,7 @@ import {
   renderStringItem,
   StringSelect
 } from "./formUtils";
-
+import $ from "jquery";
 //TO DO : add validation of types!!!
 
 export interface AssetFormProps {
@@ -79,6 +79,7 @@ export interface AssetFormProps {
   initialValues?: AssetObject;
   isOpen: boolean;
   submitForm(Asset: ShallowAssetObject, headers: any): Promise<any> | void;
+  pageScroll?(): void;
   datacenters: Array<DatacenterObject>;
   currDatacenter: DatacenterObject;
 }
@@ -97,19 +98,10 @@ interface AssetFormState {
   isAlertOpen: boolean;
   warningMessage: string;
   selectedValue: any;
+  loading: boolean;
 }
-// var console: any = {};
-// console.log = function() {};
-
-export const required = (
-  values: AssetObject,
-  fieldName: keyof AssetObject
-): string =>
-  values[fieldName] === undefined ||
-  values[fieldName] === null ||
-  values[fieldName] === ""
-    ? "This must be populated"
-    : "";
+var console: any = {};
+console.log = function() {};
 
 class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   initialState: AssetObject = this.props.initialValues
@@ -154,7 +146,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     power_ports_default: {} as { [port: string]: boolean },
     isAlertOpen: false,
     warningMessage: "",
-    selectedValue: undefined
+    selectedValue: undefined,
+    loading: false
   };
 
   getPowerPortAvailability(rack: RackObject) {
@@ -268,12 +261,15 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
     return valuesToSend;
   };
+
   private handleSubmit = (e: any) => {
-    this.setState({
-      errors: []
-    });
     e.preventDefault();
     if (this.state.values) {
+      this.setState({
+        errors: [],
+        loading: true
+      });
+
       this.validateMacAddresses();
       let newValues = this.state.values;
 
@@ -289,20 +285,27 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       this.setState({
         values: newValues
       });
-      if (this.state.errors.length === 0) {
-        const resp = this.props.submitForm(
-          this.mapAssetObject(newValues),
-          getHeaders(this.props.token)
+
+      console.log("submitting form");
+      const resp = this.props.submitForm(
+        this.mapAssetObject(newValues),
+        getHeaders(this.props.token)
+      );
+      if (resp) {
+        resp.then(res =>
+          this.setState({
+            loading: false
+          })
         );
-        if (resp) {
-          resp.catch(err => {
-            let errors: Array<string> = this.state.errors;
-            errors.push(err.response.data.failure_message as string);
-            this.setState({
-              errors: errors
-            });
+        resp.catch(err => {
+          $(".bp3-overlay-scroll-container").scrollTop(0);
+          let errors: Array<string> = this.state.errors;
+          errors.push(err.response.data.failure_message as string);
+          this.setState({
+            errors: errors,
+            loading: false
           });
-        }
+        });
       }
     }
   };
@@ -1361,8 +1364,12 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
             </FormGroup>
           </Card>
           <Button className="login-button" type="submit">
-            Submit
+            {this.state.loading ? "Submitting..." : "Submit"}
           </Button>
+          <div></div>
+          {this.state.loading ? (
+            <Spinner intent="primary" size={Spinner.SIZE_SMALL} />
+          ) : null}
         </form>
       </div>
     );

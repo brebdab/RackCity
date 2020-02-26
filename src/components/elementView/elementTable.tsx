@@ -8,7 +8,9 @@ import {
   Intent,
   IToastProps,
   Position,
-  Toaster
+  Toaster,
+  Spinner,
+  Callout
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { IconNames } from "@blueprintjs/icons";
@@ -40,7 +42,7 @@ import {
   AssetFieldsTable,
   ModelFieldsTable
 } from "../../utils/utils";
-import DragDropList from "./dragDropList";
+import DragDropList, { DragDropListTypes } from "./dragDropList";
 import {
   deleteAsset,
   deleteDatacenter,
@@ -80,9 +82,8 @@ interface ElementTableState {
   selected_userid?: string;
   isPowerOptionsOpen: boolean;
   assetPower?: AssetObject;
+  getDataInProgress: boolean;
 }
-// var console: any = {};
-// console.log = function() {};
 
 interface ElementTableProps {
   callback?: Function;
@@ -113,6 +114,8 @@ interface ElementTableProps {
   updateDatacenters?(): void;
 }
 
+var console: any = {};
+console.log = function() {};
 class ElementTable extends React.Component<
   ElementTableProps & RouteComponentProps,
   ElementTableState
@@ -130,12 +133,12 @@ class ElementTable extends React.Component<
     editFormValues: {} as ElementObjectType,
     openAlert: ElementTableOpenAlert.NONE,
     selected_userid: undefined,
-    isPowerOptionsOpen: false
+    isPowerOptionsOpen: false,
+    getDataInProgress: false
   };
 
   //PAGING LOGIC
   resetPage = () => {
-    console.log("setting currpage to 1");
     this.setState({
       curr_page: 1
     });
@@ -143,57 +146,38 @@ class ElementTable extends React.Component<
   previousPage = () => {
     if (this.state.curr_page > 1 && this.props.getData) {
       const next_page = this.state.curr_page - 1;
-      const { sort_by, filters } = this.state;
-      this.props
-        .getData(
-          this.props.type,
-          next_page,
-          this.state.page_type,
-          { sort_by, filters },
-          this.props.token
-        )
-        .then(res => {
-          this.setState({
-            items: res,
-            curr_page: next_page
-          });
-        });
+      this.setState({
+        curr_page: next_page
+      });
+      this.updatePageData(this.state.page_type, next_page);
     }
   };
   nextPage = () => {
     if (this.state.curr_page < this.state.total_pages && this.props.getData) {
       const next_page = this.state.curr_page + 1;
-      const { sort_by } = this.state;
-      const { filters } = this.state;
-      this.props
-        .getData(
-          this.props.type,
-          next_page,
-          this.state.page_type,
-          { sort_by, filters },
-          this.props.token
-        )
-        .then(res => {
-          this.setState({
-            items: res,
-            curr_page: next_page
-          });
-        });
+      this.setState({
+        curr_page: next_page
+      });
+      this.updatePageData(this.state.page_type, next_page);
     }
   };
   componentWillReceiveProps(
     nextProps: ElementTableProps & RouteComponentProps
   ) {
     if (nextProps.currDatacenter !== this.props.currDatacenter) {
-      this.updateTableData();
+      this.setState({
+        curr_page: 1
+      });
+      this.updatePageData(this.state.page_type, 1);
     }
   }
 
   handlePagingChange = (page: PagingTypes) => {
     this.setState({
-      page_type: page
+      page_type: page,
+      curr_page: 1
     });
-    this.updateData(page);
+    this.updatePageData(page, 1);
   };
   // FILTERING AND SORTING DISPLAY
 
@@ -216,17 +200,15 @@ class ElementTable extends React.Component<
     } else if (item.filter_type === FilterTypes.RACKRANGE) {
       display = renderRackRangeFilterItem(item.filter as RackRangeFields);
     }
+    let field = item.field;
+    if (this.props.type === ElementType.ASSET) {
+      field = AssetFieldsTable[item.field];
+    } else if (this.props.type === ElementType.MODEL) {
+      field = ModelFieldsTable[item.field];
+    }
     return (
       <div className="drag-drop-text">
-        <span>
-          <Icon
-            className="icon"
-            icon={IconNames.DRAG_HANDLE_VERTICAL}
-            iconSize={Icon.SIZE_STANDARD}
-          />
-        </span>
-
-        <span>{`${AssetFieldsTable[item.field]} ${display}
+        <span>{`${field} ${display}
       `}</span>
 
         <span>
@@ -340,25 +322,23 @@ class ElementTable extends React.Component<
         let filter_datacenter = updateObject(filter.filter, {
           datacenter: this.props.currDatacenter!.id
         });
-
-        console.log(filter_datacenter);
         filter = updateObject(filter, { filter: filter_datacenter });
-        console.log(filter);
       }
     }
     filters_copy.push(filter);
     let resp = this.updateFilterData(filters_copy);
     if (resp) {
-      resp.then(res =>
-        this.setState({
-          filters: filters_copy
+      resp
+        .then(res => {
+          this.setState({
+            filters: filters_copy
+          });
         })
-      );
+        .catch(err => {});
     }
   };
 
   updateFilterData = (items: Array<IFilter>) => {
-    console.log(items);
     let resp;
     if (this.props.callback! !== undefined) this.props.callback(items);
     this.resetPage();
@@ -378,6 +358,7 @@ class ElementTable extends React.Component<
         });
     }
     if (this.props.getData) {
+      this.setState({ getDataInProgress: true });
       resp = this.props.getData!(
         this.props.type,
         1,
@@ -387,6 +368,7 @@ class ElementTable extends React.Component<
       );
       resp
         .then(res => {
+          this.setState({ getDataInProgress: false });
           this.setState({
             items: res
           });
@@ -397,7 +379,7 @@ class ElementTable extends React.Component<
           }
         })
         .catch(err => {
-          console.log("ERROR", err.response.data);
+          this.setState({ getDataInProgress: false });
           this.addToast({
             message: err.response.data.failure_message,
             intent: Intent.DANGER
@@ -407,25 +389,31 @@ class ElementTable extends React.Component<
     return resp;
   };
 
-  updateData = (page: PagingTypes) => {
+  updatePageData = (page: PagingTypes, page_num: number) => {
     if (this.props.getData) {
+      this.setState({
+        getDataInProgress: true
+      });
       this.props.getData!(
         this.props.type,
-        this.state.curr_page,
+        page_num,
         page,
         { sort_by: this.state.sort_by, filters: this.state.filters },
         this.props.token
       )
         .then(res => {
           this.setState({
-            items: res
+            items: res,
+            getDataInProgress: false
           });
-          console.log("DATA", res);
         })
         .catch(err => {
           this.addToast({
             message: err.response.data.failure_message,
             intent: Intent.DANGER
+          });
+          this.setState({
+            getDataInProgress: false
           });
         });
     }
@@ -440,19 +428,28 @@ class ElementTable extends React.Component<
     }
   };
   updateSortData = (items: Array<ITableSort>) => {
-    console.log("detected new sorts ", items);
     if (this.props.getData) {
+      this.setState({
+        getDataInProgress: true
+      });
       this.props.getData!(
         this.props.type,
         this.state.curr_page,
         this.state.page_type,
         { sort_by: items, filters: this.state.filters },
         this.props.token
-      ).then(res => {
-        this.setState({
-          items: res
+      )
+        .then(res => {
+          this.setState({
+            items: res,
+            getDataInProgress: false
+          });
+        })
+        .catch(() => {
+          this.setState({
+            getDataInProgress: false
+          });
         });
-      });
     }
   };
 
@@ -485,16 +482,11 @@ class ElementTable extends React.Component<
 
   componentDidUpdate() {
     if (this.props.shouldUpdateData && !this.props.data) {
-      console.log("table updated");
       this.updateTableData();
     }
   }
   componentDidMount() {
-    console.log("table mounted ");
-    console.log(this.props.data);
-
     if (this.props.data) {
-      console.log(this.props.data);
       this.setState({
         items: this.props.data
       });
@@ -505,6 +497,9 @@ class ElementTable extends React.Component<
   }
   updateTableData = () => {
     if (this.props.getData) {
+      this.setState({
+        getDataInProgress: true
+      });
       this.props
         .getData(
           this.props.type,
@@ -515,13 +510,15 @@ class ElementTable extends React.Component<
         )
         .then(res => {
           this.setState({
-            items: res
+            items: res,
+            getDataInProgress: false
           });
-          console.log("DATA", res);
           this.setFieldNames();
         })
         .catch(err => {
-          console.log(err);
+          this.setState({
+            getDataInProgress: false
+          });
         });
     }
     if (this.props.getPages) {
@@ -565,11 +562,8 @@ class ElementTable extends React.Component<
     this.setState({
       fields: fields
     });
-    console.log("COLUMN NAMES", fields);
   };
   setFieldNames = () => {
-    console.log("FIELD NAMES", this.state.items);
-
     if (this.state.items && this.state.items.length > 0) {
       this.setFieldNamesFromData(this.state.items);
     }
@@ -640,12 +634,11 @@ class ElementTable extends React.Component<
   };
   handleEditFormSubmit = (values: ElementObjectType, headers: any) => {
     if (isModelObject(values)) {
-      modifyModel(values, headers).then(res => {
+      return modifyModel(values, headers).then(res => {
         this.successfulModification();
       });
     } else if (isAssetObject(values)) {
-      modifyAsset(values, headers).then(res => {
-        console.log("RESPONSE", res);
+      return modifyAsset(values, headers).then(res => {
         if (res.data.warning_message) {
           this.successfulModifcationWithWarning(res.data.warning_message);
         } else {
@@ -653,7 +646,7 @@ class ElementTable extends React.Component<
         }
       });
     } else if (isDatacenterObject(values)) {
-      modifyDatacenter(values, headers).then(res => {
+      return modifyDatacenter(values, headers).then(res => {
         this.successfulModification();
         if (this.props.updateDatacenters) {
           this.props.updateDatacenters();
@@ -711,7 +704,7 @@ class ElementTable extends React.Component<
     if (resp) {
       resp
         .then(res => {
-          this.addErrorToast("Sucessfully deleted");
+          this.addSuccessToast("Sucessfully deleted");
           this.updateTableData();
           this.handleDeleteCancel();
           if (this.props.updateDatacenters) {
@@ -759,7 +752,6 @@ class ElementTable extends React.Component<
         headers
       )
       .then(res => {
-        console.log(res.data);
         this.addToast({
           message: res.data.success_message,
           intent: Intent.PRIMARY
@@ -767,7 +759,6 @@ class ElementTable extends React.Component<
         this.updateTableData();
       })
       .catch(err => {
-        console.log(err);
         this.addToast({
           message: err.response.data.failure_message,
           intent: Intent.DANGER
@@ -796,7 +787,6 @@ class ElementTable extends React.Component<
         headers
       )
       .then(res => {
-        console.log(res.data);
         this.addToast({
           message: res.data.success_message,
           intent: Intent.PRIMARY
@@ -804,7 +794,6 @@ class ElementTable extends React.Component<
         this.updateTableData();
       })
       .catch(err => {
-        console.log(err);
         this.addToast({
           message: err.response.data.failure_message,
           intent: Intent.DANGER
@@ -839,15 +828,11 @@ class ElementTable extends React.Component<
   };
 
   render() {
-    console.log(this.state.items);
-    // console.log(!(this.state.items && this.state.items.length > 0));
-
     if (
       this.props.data &&
       this.props.data.length !== 0 &&
       this.state.items.length === 0
     ) {
-      console.log("Setting items", this.props.data);
       this.setState({
         items: this.props.data
       });
@@ -908,8 +893,8 @@ class ElementTable extends React.Component<
                   />
                 </div>,
                 <div className="table-options">
-                  <p>Applied filters:</p>
                   <DragDropList
+                    type={DragDropListTypes.FILTER}
                     items={this.state.filters}
                     renderItem={this.renderFilterItem}
                   />
@@ -917,8 +902,8 @@ class ElementTable extends React.Component<
               ]}
           {this.props.disableSorting ? null : (
             <div className="table-options">
-              <p>Applied sorts:</p>
               <DragDropList
+                type={DragDropListTypes.SORT}
                 items={this.state.sort_by}
                 renderItem={this.renderSortItem}
                 onChange={this.updateSortOrder}
@@ -1023,113 +1008,130 @@ class ElementTable extends React.Component<
                 </tr>
               </thead>
               {this.state.items && this.state.items.length > 0 ? (
-                <tbody>
-                  {this.state.items.map((item: ElementObjectType) => {
-                    if (isAssetObject(item)) {
-                      //console.log(item);
-                    }
-                    return (
-                      <tr
-                        onClick={
-                          this.props.type === ElementType.DATACENTER ||
-                          this.props.type === ElementType.USER
-                            ? () => {}
-                            : () => {
-                                console.log("redirecting", item.id);
-                                this.props.history.push(
-                                  "/" + this.props.type + "/" + item.id
-                                );
-                              }
-                        }
-                      >
-                        {Object.entries(item).map(([col, value]) => {
-                          if (isModelObject(value)) {
-                            return [
-                              <td>{value.vendor}</td>,
-                              <td>{value.model_number}</td>
-                            ];
-                          } else if (isRackObject(value)) {
-                            return [
-                              <td>{value.row_letter + value.rack_num}</td>,
-                              <td>{value.datacenter.name}</td>
-                            ];
-                          } else if (col === "display_color") {
-                            console.log(value);
-                            return (
-                              <td
-                                style={{
-                                  backgroundColor: value
-                                }}
-                              ></td>
-                            );
-                          } else if (
-                            col !== "id" &&
-                            col !== "network_ports" &&
-                            col !== "comment" &&
-                            col !== "is_admin" &&
-                            !isObject(value)
-                          ) {
-                            return <td>{value}</td>;
+                !this.state.getDataInProgress ? (
+                  <tbody>
+                    {this.state.items.map((item: ElementObjectType) => {
+                      return (
+                        <tr
+                          onClick={
+                            this.props.type === ElementType.DATACENTER ||
+                            this.props.type === ElementType.USER
+                              ? () => {}
+                              : () => {
+                                  this.props.history.push(
+                                    "/" + this.props.type + "/" + item.id
+                                  );
+                                }
                           }
+                        >
+                          {Object.entries(item).map(([col, value]) => {
+                            if (isModelObject(value)) {
+                              return [
+                                <td>{value.vendor}</td>,
+                                <td>{value.model_number}</td>
+                              ];
+                            } else if (isRackObject(value)) {
+                              return [
+                                <td>{value.row_letter + value.rack_num}</td>,
+                                <td>{value.datacenter.name}</td>
+                              ];
+                            } else if (col === "display_color") {
+                              return (
+                                <td
+                                  style={{
+                                    backgroundColor: value
+                                  }}
+                                ></td>
+                              );
+                            } else if (
+                              col !== "id" &&
+                              col !== "network_ports" &&
+                              col !== "comment" &&
+                              col !== "is_admin" &&
+                              !isObject(value)
+                            ) {
+                              return <td>{value}</td>;
+                            }
 
-                          return null;
-                        })}
-                        <td>
-                          {this.props.isAdmin && isUserObject(item) ? (
-                            <div className="inline-buttons grant-admin-button">
-                              {this.renderAdminButton(item)}
-                            </div>
-                          ) : null}
-                          <div className="inline-buttons">
-                            {this.props.type !== ElementType.USER &&
-                            this.props.isAdmin ? (
-                              <AnchorButton
-                                className="button-table"
-                                intent="primary"
-                                icon="edit"
-                                minimal
-                                onClick={(event: any) => {
-                                  this.handleEditButtonClick(item);
-                                  event.stopPropagation();
-                                }}
-                              />
+                            return null;
+                          })}
+                          <td>
+                            {this.props.isAdmin && isUserObject(item) ? (
+                              <div className="inline-buttons grant-admin-button">
+                                {this.renderAdminButton(item)}
+                              </div>
                             ) : null}
-                            {this.props.isAdmin ? (
-                              <AnchorButton
-                                className="button-table"
-                                intent="danger"
-                                minimal
-                                icon="trash"
-                                onClick={(event: any) => {
-                                  this.handleDeleteButtonClick(item);
-                                  event.stopPropagation();
-                                }}
-                              />
-                            ) : null}
-                            {isAssetObject(item) ? (
-                              <AnchorButton
-                                className="button-table"
-                                intent="warning"
-                                minimal
-                                icon="offline"
-                                onClick={(event: any) => {
-                                  this.handlePowerButtonClick(item);
-                                  event.stopPropagation();
-                                }}
-                              />
-                            ) : null}
-                          </div>{" "}
-                          {/* TODO add logic for determining if isOwner for power button */}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              ) : (
-                <h4 className="no-data-text">no {this.props.type} found </h4>
-              )}
+                            <div className="inline-buttons">
+                              {this.props.type !== ElementType.USER &&
+                              !this.props.data &&
+                              this.props.isAdmin ? (
+                                <AnchorButton
+                                  className="button-table"
+                                  intent="primary"
+                                  icon="edit"
+                                  minimal
+                                  onClick={(event: any) => {
+                                    console.log(
+                                      "SCROLL",
+                                      window.scrollX,
+                                      window.scrollY
+                                    );
+                                    this.handleEditButtonClick(item);
+                                    event.stopPropagation();
+                                  }}
+                                />
+                              ) : null}
+                              {this.props.isAdmin && !this.props.data ? (
+                                <AnchorButton
+                                  className="button-table"
+                                  intent="danger"
+                                  minimal
+                                  icon="trash"
+                                  onClick={(event: any) => {
+                                    this.handleDeleteButtonClick(item);
+                                    event.stopPropagation();
+                                  }}
+                                />
+                              ) : null}
+                              {isAssetObject(item) &&
+                              item.rack.is_network_controlled ? (
+                                <AnchorButton
+                                  className="button-table"
+                                  intent="warning"
+                                  minimal
+                                  icon="offline"
+                                  onClick={(event: any) => {
+                                    this.handlePowerButtonClick(item);
+                                    event.stopPropagation();
+                                  }}
+                                />
+                              ) : null}
+                            </div>{" "}
+                            {/* TODO add logic for determining if isOwner for power button */}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                ) : null
+              ) : null
+              // <Spinner
+              //   className="table-spinner"
+              //   size={Spinner.SIZE_STANDARD}
+              // />
+              // <h4 className="no-data-text">no {this.props.type} found </h4>
+              }
             </table>
           )}
+          {this.state.getDataInProgress ? (
+            <Spinner className="table-spinner" size={Spinner.SIZE_STANDARD} />
+          ) : null}
+          {this.state.items.length === 0 && !this.state.getDataInProgress ? (
+            <Callout
+              icon={IconNames.ERROR}
+              title={"No " + this.props.type}
+            ></Callout>
+          ) : null}
         </div>
       </div>
     );

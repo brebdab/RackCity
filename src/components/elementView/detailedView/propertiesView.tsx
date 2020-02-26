@@ -17,8 +17,8 @@ export interface AlertState {
   isDeleteOpen: boolean;
   fields: Array<string>;
 }
-// var console: any = {};
-// console.log = function() {};
+var console: any = {};
+console.log = function() {};
 
 interface PropertiesViewProps {
   data: ElementObjectType;
@@ -80,13 +80,37 @@ class PropertiesView extends React.PureComponent<
           </p>
         );
       } else if (item === "rack") {
-        dat = <p>{data[item].row_letter + "" + data[item].rack_num}</p>;
+        return [
+          <tr>
+            <td key={item}>
+              <p className="label">{AssetFieldsTable[item]}:</p>
+            </td>
+
+            <td>
+              {" "}
+              <p>{data[item].row_letter + "" + data[item].rack_num}</p>
+            </td>
+          </tr>,
+          <tr>
+            <td key={"datacenter"}>
+              <p className="label">
+                {AssetFieldsTable["rack__datacenter__name"]}:
+              </p>
+            </td>
+
+            <td>
+              {" "}
+              <p>{data[item].datacenter.name}</p>
+            </td>
+          </tr>
+        ];
       } else if (item === "comment") {
         dat = <p className="comment">{data[item]}</p>;
       } else if (!isObject(data[item])) {
         //TO DO: decide how to render dicts
         dat = <p>{data[item]}</p>;
       }
+
       if (isAssetObject(this.props.data)) {
         return (
           <tr>
@@ -175,14 +199,6 @@ class PropertiesView extends React.PureComponent<
       </div>
     );
   }
-
-  private handleEdit = () => alert("Editor here");
-  private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
-  private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
-  private handleDelete = () => {
-    alert("Model was successfully deleted"); // TODO change to real deletion
-    this.setState({ isDeleteOpen: false });
-  };
 }
 
 export default withRouter(PropertiesView);

@@ -1,4 +1,4 @@
-import { Button, Callout, Intent } from "@blueprintjs/core";
+import { Button, Callout, Intent, Spinner } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { handleBooleanChange } from "@blueprintjs/docs-theme";
 import * as React from "react";
@@ -19,12 +19,13 @@ interface RackSelectViewState {
 
   errors: Array<string>;
 }
-// var console: any = {};
-// console.log = function() {};
+var console: any = {};
+console.log = function() {};
 
 interface RackSelectViewProps {
   token: string;
   currDatacenter?: DatacenterObject;
+  loading?: boolean;
 
   submitForm(
     model: RackRangeFields,
@@ -125,6 +126,12 @@ class RackSelectView extends React.Component<
               <Button className="button" type="submit">
                 Submit
               </Button>
+              {this.props.loading ? (
+                <div>
+                  <p>processing request... </p>
+                  <Spinner size={Spinner.SIZE_SMALL} />
+                </div>
+              ) : null}
             </div>
           </div>
         </form>

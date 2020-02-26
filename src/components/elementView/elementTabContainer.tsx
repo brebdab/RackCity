@@ -23,11 +23,13 @@ export const ALL_DATACENTERS: DatacenterObject = {
   name: "All datacenters",
   abbreviation: "ALL"
 };
+var console: any = {};
+console.log = function() {};
 
 class ElementTabContainer extends React.Component<
   ElementTabContainerProps & RouteComponentProps,
   ElementTabContainerState
-  > {
+> {
   state = {
     datacenters: [],
     currDatacenter: ALL_DATACENTERS

@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-from rackcity.models import Datacenter
+from rackcity.models import Datacenter, Rack
 from rackcity.api.serializers import DatacenterSerializer
 from rackcity.utils.log_utils import (
     log_action,
@@ -46,7 +46,7 @@ def datacenter_create(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.CREATE_ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.CREATE_ERROR.value + GenericFailure.INTERNAL.value,
                 "errors": "Don't include 'id' when creating a datacenter"
             },
             status=HTTPStatus.BAD_REQUEST
@@ -68,7 +68,9 @@ def datacenter_create(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.CREATE_ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.CREATE_ERROR.value +
+                    "Datacenter" +
+                    GenericFailure.ON_SAVE.value,
                 "errors": str(error)
             },
             status=HTTPStatus.BAD_REQUEST
@@ -95,12 +97,21 @@ def datacenter_delete(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.DELETE_ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.DELETE_ERROR.value + GenericFailure.INTERNAL.value,
                 "errors": "Must include 'id' when creating a datacenter"
             },
             status=HTTPStatus.BAD_REQUEST
         )
     id = data['id']
+    racks = Rack.objects.filter(datacenter=id)
+    if len(racks) > 0:
+        return JsonResponse(
+            {"failure_message":
+                Status.DELETE_ERROR.value +
+                "Cannot delete datacenter that still contains racks"
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
     try:
         existing_dc = Datacenter.objects.get(id=id)
     except ObjectDoesNotExist:
@@ -108,19 +119,23 @@ def datacenter_delete(request):
             {
                 "failure_message":
                     Status.DELETE_ERROR.value +
-                    "Datacenter" + GenericFailure.DOES_NOT_EXIST.value,
+                    "Datacenter" +
+                    GenericFailure.DOES_NOT_EXIST.value,
                 "errors": "No existing datacenter with id="+str(id)
             },
             status=HTTPStatus.BAD_REQUEST
         )
     dc_abbreviation = existing_dc.abbreviation
+
     try:
         existing_dc.delete()
     except Exception as error:
         return JsonResponse(
             {
                 "failure_message":
-                    Status.DELETE_ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.DELETE_ERROR.value +
+                    "Datacenter" +
+                    GenericFailure.ON_DELETE.value,
                 "errors": str(error)
             },
             status=HTTPStatus.BAD_REQUEST
@@ -146,7 +161,7 @@ def datacenter_page_count(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
                 "errors": "Must specify positive integer page_size."
             },
             status=HTTPStatus.BAD_REQUEST,
@@ -182,7 +197,7 @@ def datacenter_modify(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.MODIFY_ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.MODIFY_ERROR.value + GenericFailure.INTERNAL.value,
                 "errors": "Must include 'id' when modifying a datacenter"
             },
             status=HTTPStatus.BAD_REQUEST
@@ -195,13 +210,23 @@ def datacenter_modify(request):
             {
                 "failure_message":
                     Status.MODIFY_ERROR.value +
-                    "Datacenter" + GenericFailure.DOES_NOT_EXIST.value,
+                    "Datacenter" +
+                    GenericFailure.DOES_NOT_EXIST.value,
                 "errors": "No existing datacenter with id="+str(id)
             },
             status=HTTPStatus.BAD_REQUEST
         )
     for field in data.keys():
         if field != "id":
+            if len(data[field]) == 0:
+                return JsonResponse(
+                    {
+                        "failure_message":
+                            Status.MODIFY_ERROR.value +
+                            "field " + field + " cannot be empty"
+                    },
+                    status=HTTPStatus.BAD_REQUEST
+                )
             if field == "name":
                 dc_with_name = Datacenter.objects.filter(
                     name__iexact=data[field]
@@ -231,7 +256,8 @@ def datacenter_modify(request):
             {
                 "failure_message":
                     Status.MODIFY_ERROR.value +
-                    GenericFailure.INVALID_DATA.value,
+                    "Datacenter" +
+                    GenericFailure.ON_SAVE.value,
                 "errors": str(error)
             },
             status=HTTPStatus.BAD_REQUEST

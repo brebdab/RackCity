@@ -16,11 +16,11 @@ import { RouteComponentProps, withRouter } from "react-router";
 import { API_ROOT } from "../../utils/api-config";
 import { FileSelector } from "../lib/fileSelect";
 import "./import.scss";
-import Instructions from "./importInstructions";
+import InstructionsLite from "./importInstructionsLite";
 import { Modifier } from "./viewModified";
 
-//var console: any = {};
-//console.log = function () { };
+var console: any = {};
+console.log = function() {};
 interface ImportProps {
   token: string;
 }
@@ -81,8 +81,9 @@ export class BulkImport extends React.PureComponent<
         <div className={"row"}>
           <div className={"column-third-import"}>
             {resourceType === "assets" ? (
-              <ButtonGroup fill={false} style={{ marginTop: 10 }}>
+              <ButtonGroup fill={false} style={{ marginTop: 40 }}>
                 <Button
+                  className="import-button"
                   active={this.state.assetUploadType === "assets"}
                   text="assets"
                   onClick={(e: any) => {
@@ -90,6 +91,7 @@ export class BulkImport extends React.PureComponent<
                   }}
                 />
                 <Button
+                  className="import-button"
                   active={this.state.assetUploadType === "network connections"}
                   text="network connections"
                   onClick={(e: any) => {
@@ -104,12 +106,13 @@ export class BulkImport extends React.PureComponent<
           <div className={"column-third-import"}>
             <p> </p>
             <AnchorButton
+              className="import-button"
               large={true}
               intent="primary"
               icon="import"
-              minimal
               text={selectButtonText}
               onClick={this.handleFilepickerOpen}
+              style={{ marginTop: 20, marginBottom: 40 }}
             />
             <Overlay
               isOpen={this.state.uploading}
@@ -147,10 +150,10 @@ export class BulkImport extends React.PureComponent<
                 modifiedModels: undefined
               })
             }
-            className={"modify-table"}
+            className={Classes.DARK + " modify-table"}
             usePortal={true}
             isCloseButtonShown={true}
-            title={"Model Alterations Menu"}
+            title={"Model Modifications Menu"}
           >
             <Modifier
               {...this.props}
@@ -186,7 +189,7 @@ export class BulkImport extends React.PureComponent<
                 modifiedAssets: undefined
               })
             }
-            className={Classes.DARK + "modify-table"}
+            className={Classes.DARK + " modify-table"}
             usePortal={true}
             isCloseButtonShown={true}
             title={"Asset Modifications Menu"}
@@ -216,10 +219,10 @@ export class BulkImport extends React.PureComponent<
                 modifiedNetwork: undefined
               })
             }
-            className={"modify-table"}
+            className={Classes.DARK + " modify-table"}
             usePortal={true}
             isCloseButtonShown={true}
-            title={"Network Connections Alterations Menu"}
+            title={"Network Connections Modifications Menu"}
           >
             <Modifier
               {...this.props}
@@ -236,7 +239,7 @@ export class BulkImport extends React.PureComponent<
             />
           </Dialog>
         </div>
-        <Instructions />
+        <InstructionsLite uploadType={uploadType} />
       </div>
     );
   }

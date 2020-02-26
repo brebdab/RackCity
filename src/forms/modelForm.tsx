@@ -5,7 +5,8 @@ import {
   FormGroup,
   Intent,
   MenuItem,
-  InputGroup
+  InputGroup,
+  Spinner
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -25,8 +26,8 @@ import {
 } from "./formUtils";
 
 //TO DO : add validation of types!!!
-// var console: any = {};
-// console.log = function() {};
+var console: any = {};
+console.log = function() {};
 
 export interface ModelFormProps {
   token: string;
@@ -39,6 +40,7 @@ interface ModelFormState {
   vendors: Array<string>;
   errors: Array<string>;
   networkPortsTemp: Array<string>;
+  loading: boolean;
 }
 
 export const required = (
@@ -59,6 +61,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
   public state = {
     values: this.initialState,
     vendors: [],
+    loading: false,
     errors: [],
     networkPortsTemp: this.initialState.network_ports
       ? this.initialState.network_ports
@@ -71,12 +74,12 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
   };
 
   private handleSubmit = (e: any) => {
-    this.setState({
-      errors: []
-    });
     e.preventDefault();
-    console.log(this.state);
     if (this.state.values) {
+      this.setState({
+        errors: [],
+        loading: true
+      });
       if (this.props.initialValues) {
         console.log(this.props.initialValues);
         this.setState({
@@ -88,12 +91,18 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
 
       const resp = this.props.submitForm(this.state.values, this.headers);
       if (resp) {
+        resp.then(res =>
+          this.setState({
+            loading: false
+          })
+        );
         resp.catch(err => {
-          console.log(err.response.data.failure_message);
+          $(".bp3-overlay-scroll-container").scrollTop(0);
           let errors: Array<string> = this.state.errors;
           errors.push(err.response.data.failure_message as string);
           this.setState({
-            errors: errors
+            errors: errors,
+            loading: false
           });
         });
       }
@@ -124,6 +133,10 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
       let num_network_ports = field["num_network_ports"];
       console.log(num_network_ports, network_ports);
       let index = network_ports.length;
+      if (!isNaN(num_network_ports) && num_network_ports < 0) {
+        num_network_ports = 0;
+      }
+
       while (network_ports.length < num_network_ports) {
         console.log(index, this.state.networkPortsTemp.length);
         if (index < this.state.networkPortsTemp.length) {
@@ -143,12 +156,14 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
       });
       network_ports = [];
     }
+
     this.setState({
       values: updateObject(this.state.values, {
         ...field,
         network_ports
       })
     });
+
     console.log(this.props.initialValues);
     console.log(this.state.values);
   };
@@ -247,7 +262,6 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
           <FormGroup label="Number of Network Ports " inline={false}>
             <Field
               field="num_network_ports"
-              type="string"
               value={values.num_network_ports}
               onChange={this.handleChange}
             />
@@ -335,8 +349,12 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
           </FormGroup>
 
           <Button className="login-button" type="submit">
-            Submit
+            {this.state.loading ? "Submitting..." : "Submit"}
           </Button>
+          <div></div>
+          {this.state.loading ? (
+            <Spinner intent="primary" size={Spinner.SIZE_SMALL} />
+          ) : null}
         </form>
       </div>
     );

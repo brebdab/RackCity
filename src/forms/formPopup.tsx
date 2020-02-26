@@ -16,10 +16,12 @@ import ModelForm from "./modelForm";
 import DatacenterForm from "./datacenterForm";
 import WrappedRegistrationForm from "./auth/register";
 import { FormTypes } from "./formUtils";
+
 interface FormPopupState {}
 interface FormPopupProps {
   isOpen: boolean;
   type: FormTypes;
+  loading?: boolean;
   datacenters?: Array<DatacenterObject>;
   currDatacenter?: DatacenterObject;
   initialValues?: ElementObjectType;
@@ -28,6 +30,8 @@ interface FormPopupProps {
   submitForm(element: FormObjectType, headers: any): Promise<any> | void;
 }
 
+var console: any = {};
+console.log = function() {};
 class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
   render() {
     return (
@@ -71,7 +75,10 @@ class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
           />
         ) : null}
         {this.props.elementName === ElementType.RACK ? (
-          <RackSelectView submitForm={this.props.submitForm} />
+          <RackSelectView
+            loading={this.props.loading}
+            submitForm={this.props.submitForm}
+          />
         ) : null}
         {this.props.elementName === ElementType.USER ? (
           <WrappedRegistrationForm authSignup={this.props.submitForm} />

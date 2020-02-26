@@ -33,7 +33,8 @@ class NetworkGraph extends React.Component<
       physics: false
     },
     interaction: {
-      hover: true
+      hover: true,
+      zoomView: false
     }
   };
 
