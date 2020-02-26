@@ -20,6 +20,7 @@ from rackcity.utils.errors_utils import (
     GenericFailure,
     Status,
     parse_serializer_errors,
+    parse_save_validation_error,
     BulkFailure
 )
 from rest_framework.decorators import permission_classes, api_view
@@ -86,7 +87,8 @@ def model_add(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.CREATE_ERROR.value + GenericFailure.INTERNAL.value,
+                    Status.CREATE_ERROR.value +
+                    parse_save_validation_error(error, "Model"),
                 "errors": str(error)
             },
             status=HTTPStatus.BAD_REQUEST
@@ -159,7 +161,7 @@ def model_modify(request):
             {
                 "failure_message":
                     Status.MODIFY_ERROR.value +
-                    GenericFailure.INVALID_DATA.value,
+                    parse_save_validation_error(error, "Model"),
                 "errors": str(error)
             },
             status=HTTPStatus.BAD_REQUEST
@@ -261,7 +263,9 @@ def model_delete(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.DELETE_ERROR.value + GenericFailure.INTERNAL.value,
+                    Status.DELETE_ERROR.value +
+                    "Model" +
+                    GenericFailure.ON_DELETE.value,
                 "errors": str(error)
             },
             status=HTTPStatus.BAD_REQUEST
@@ -422,7 +426,7 @@ def model_bulk_upload(request):
             {
                 "failure_message":
                     Status.IMPORT_ERROR.value +
-                    BulkFailure.IMPORT_UNKNOWN.value,
+                    BulkFailure.IMPORT.value,
                 "errors":
                     "Bulk upload request should have a parameter 'file'"
             },
@@ -581,7 +585,7 @@ def model_bulk_approve(request):
             {
                 "failure_message":
                     Status.IMPORT_ERROR.value +
-                    BulkFailure.IMPORT_UNKNOWN.value,
+                    BulkFailure.IMPORT.value,
                 "errors":
                     "Bulk approve request should have a parameter " +
                     "'approved_modifications'"

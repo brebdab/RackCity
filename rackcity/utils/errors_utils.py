@@ -31,8 +31,8 @@ class UserFailure(Enum):
 
 
 class BulkFailure(Enum):
-    IMPORT_UNKNOWN = \
-        "Unknown error importing file. " + \
+    IMPORT = \
+        "File import failed. " + \
         "See in-app documentation for format specifications."
     IMPORT_COLUMNS = \
         "Please provide exactly the expected columns. " + \
@@ -108,11 +108,11 @@ def parse_serializer_errors(errors):
     return " ".join(failure_messages)
 
 
-def parse_validation_error(error):
+def parse_save_validation_error(error, object_name):
     failure_detail = ""
     if isinstance(error, ValidationError):
         for err in error:
             failure_detail += err
     else:
-        failure_detail = GenericFailure.INTERNAL.value
+        failure_detail = object_name + GenericFailure.ON_SAVE.value
     return failure_detail
