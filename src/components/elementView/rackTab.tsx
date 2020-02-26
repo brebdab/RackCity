@@ -47,6 +47,7 @@ interface RackTabState {
   loading: boolean;
   selectedRackRange: RackRangeFields;
   viewAll: boolean;
+  submitInProgress: boolean;
 }
 interface RackTabProps {
   token: string;
@@ -58,7 +59,7 @@ interface RackTabProps {
 class RackTab extends React.Component<
   RackTabProps & RouteComponentProps,
   RackTabState
-  > {
+> {
   state = {
     isOpen: false,
     isDeleteOpen: false,
@@ -68,7 +69,8 @@ class RackTab extends React.Component<
     isConfirmationOpen: false,
     racks: [],
     loading: false,
-    viewAll: false
+    viewAll: false,
+    submitInProgress: false
   };
   private toaster: Toaster = {} as Toaster;
   private addToast(toast: IToastProps) {
@@ -136,6 +138,9 @@ class RackTab extends React.Component<
     this.handleConfirmationOpen();
   };
   actuallyDelete = () => {
+    this.setState({
+      submitInProgress: true
+    });
     return axios
       .post(
         API_ROOT + "api/racks/delete",
@@ -148,7 +153,11 @@ class RackTab extends React.Component<
           intent: Intent.PRIMARY
         });
         this.updateRackData(false);
-        this.setState({ isDeleteOpen: false, isConfirmationOpen: false });
+        this.setState({
+          isDeleteOpen: false,
+          isConfirmationOpen: false,
+          submitInProgress: false
+        });
       })
       .catch(err => {
         console.log(err.response);
@@ -156,7 +165,11 @@ class RackTab extends React.Component<
           message: err.response.data.failure_message,
           intent: Intent.DANGER
         });
-        this.setState({ isDeleteOpen: true, isConfirmationOpen: false });
+        this.setState({
+          isDeleteOpen: true,
+          isConfirmationOpen: false,
+          submitInProgress: false
+        });
       });
   };
 
@@ -180,19 +193,32 @@ class RackTab extends React.Component<
     }
   }
   createRack = (rack: RackRangeFields, headers: any) => {
+    this.setState({
+      submitInProgress: true
+    });
     const rack_new = updateObject(rack, {
       datacenter: this.props.currDatacenter.id
     });
     return axios
       .post(API_ROOT + "api/racks/create", rack_new, headers)
       .then(res => {
-        this.setState({ isOpen: false });
+        this.setState({ isOpen: false, submitInProgress: false });
         this.updateRackData(true);
         this.addToast({
           message: "Created rack(s) successfully",
           intent: Intent.PRIMARY
         });
+      })
+      .catch(err => {
+        this.setState({
+          submitInProgress: false
+        });
+
+        this.addErrorToast("Failed to create rack(s)");
       });
+  };
+  private addErrorToast = (message: string) => {
+    this.addToast({ message: message, intent: Intent.DANGER });
   };
 
   getAllRacks = (datacenter: DatacenterObject) => {
@@ -273,6 +299,7 @@ class RackTab extends React.Component<
 
         <FormPopup
           {...this.props}
+          loading={this.state.submitInProgress}
           type={FormTypes.CREATE}
           elementName={ElementType.RACK}
           submitForm={this.createRack}
@@ -281,6 +308,7 @@ class RackTab extends React.Component<
         />
         <FormPopup
           {...this.props}
+          loading={this.state.submitInProgress}
           type={FormTypes.DELETE}
           elementName={ElementType.RACK}
           submitForm={this.deleteRack}
@@ -299,50 +327,50 @@ class RackTab extends React.Component<
           <p>Are you sure you want to delete?</p>
         </Alert>
         {this.props.currDatacenter &&
-          this.props.currDatacenter.name !== ALL_DATACENTERS.name ? (
-            <div className="rack-tab-panel">
-              {this.props.isAdmin ? (
-                <div className=" element-tab-buttons">
-                  <AnchorButton
-                    className="add"
-                    text={"Add Rack(s)"}
-                    icon="add"
-                    minimal
-                    intent={Intent.PRIMARY}
-                    onClick={this.handleOpen}
-                  />
-                  <AnchorButton
-                    className="add "
-                    text={"Delete Rack(s)"}
-                    icon="trash"
-                    minimal
-                    intent={Intent.DANGER}
-                    onClick={this.handleDeleteOpen}
-                  />
-                </div>
-              ) : null}
-              <Card>
-                <div className="rack-view-options">
-                  <Button
-                    className="all-racks"
-                    text="View All Racks"
-                    onClick={(e: any) =>
-                      this.getAllRacks(this.props.currDatacenter)
-                    }
-                  />
-                  <p className="or">or </p>
-                  <RackSelectView
-                    currDatacenter={this.props.currDatacenter}
-                    submitForm={this.viewRackForm}
-                  />
-                </div>
-              </Card>
-            </div>
-          ) : (
-            <Callout title="No Datacenter Delected" intent={Intent.PRIMARY}>
-              <em>Please select a datacenter to view rack information</em>
-            </Callout>
-          )}
+        this.props.currDatacenter.name !== ALL_DATACENTERS.name ? (
+          <div className="rack-tab-panel">
+            {this.props.isAdmin ? (
+              <div className=" element-tab-buttons">
+                <AnchorButton
+                  className="add"
+                  text={"Add Rack(s)"}
+                  icon="add"
+                  minimal
+                  intent={Intent.PRIMARY}
+                  onClick={this.handleOpen}
+                />
+                <AnchorButton
+                  className="add "
+                  text={"Delete Rack(s)"}
+                  icon="trash"
+                  minimal
+                  intent={Intent.DANGER}
+                  onClick={this.handleDeleteOpen}
+                />
+              </div>
+            ) : null}
+            <Card>
+              <div className="rack-view-options">
+                <Button
+                  className="all-racks"
+                  text="View All Racks"
+                  onClick={(e: any) =>
+                    this.getAllRacks(this.props.currDatacenter)
+                  }
+                />
+                <p className="or">or </p>
+                <RackSelectView
+                  currDatacenter={this.props.currDatacenter}
+                  submitForm={this.viewRackForm}
+                />
+              </div>
+            </Card>
+          </div>
+        ) : (
+          <Callout title="No Datacenter Selected">
+            <em>Please select a datacenter to view rack information</em>
+          </Callout>
+        )}
 
         {this.state.racks.length !== 0 ? (
           <Link

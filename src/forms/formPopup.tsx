@@ -21,11 +21,11 @@ interface FormPopupState {}
 interface FormPopupProps {
   isOpen: boolean;
   type: FormTypes;
+  loading?: boolean;
   datacenters?: Array<DatacenterObject>;
   currDatacenter?: DatacenterObject;
   initialValues?: ElementObjectType;
   elementName: ElementType;
-  loading?: boolean;
   handleClose(): void;
   submitForm(element: FormObjectType, headers: any): Promise<any> | void;
 }
@@ -73,7 +73,10 @@ class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
           />
         ) : null}
         {this.props.elementName === ElementType.RACK ? (
-          <RackSelectView submitForm={this.props.submitForm} />
+          <RackSelectView
+            loading={this.props.loading}
+            submitForm={this.props.submitForm}
+          />
         ) : null}
         {this.props.elementName === ElementType.USER ? (
           <WrappedRegistrationForm authSignup={this.props.submitForm} />
