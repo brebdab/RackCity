@@ -49,3 +49,18 @@
   align-items: center;
   text-align: center;
 }
+
+.instructions-card {
+  width: 80%;
+  // align-items: center;
+  margin:auto;
+}
+
+.instructions-div {
+  // align-items: center !important;
+  // text-align: center;
+}
+
+.import-button:focus {
+  outline: none;
+}
