@@ -12,7 +12,7 @@ export class Instructions extends React.PureComponent<insnProps> {
           <div>
             <h2>Upload instructions:</h2>
           </div>
-          <h3>General format:</h3>
+          <h2>General format:</h2>
           <ol className={"bp3-list"}>
             <li>All files should be CSV format in compliance with RFC 4180. Important specifications are outlined as follows:
                 <ul className={"bp3-list"}>
@@ -42,7 +42,7 @@ export class Instructions extends React.PureComponent<insnProps> {
               </ul>
             </li>
           </ol>
-          <h3>Model/Asset-specific fields:</h3>
+          <h1>Model/Asset-specific fields:</h1>
           <Card elevation={Elevation.THREE}>
             <h4>Model upload:</h4>
             <ol className={"bp3-list"}>
