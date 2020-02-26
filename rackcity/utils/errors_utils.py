@@ -1,4 +1,5 @@
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError
 from enum import Enum
 
 
@@ -112,6 +113,9 @@ def parse_save_validation_error(error, object_name):
     failure_detail = ""
     if isinstance(error, ValidationError):
         for err in error:
+            failure_detail += err
+    elif isinstance(error, IntegrityError):
+        for err in error.args:
             failure_detail += err
     else:
         failure_detail = object_name + GenericFailure.ON_SAVE.value
