@@ -59,6 +59,7 @@ export interface NetworkConnection {
 export const AssetFieldsTable: any = {
   asset_number: "Asset Number",
   hostname: "Hostname",
+  model: "Model",
   model__vendor: "Model Vendor",
   model__model_number: "Model Number",
   rack: "Rack",
@@ -74,6 +75,7 @@ export const ModelFieldsTable: any = {
   height: "Height",
   display_color: "Display Color",
   num_network_ports: "No. Network Ports",
+  network_ports: "Network Ports",
   num_power_ports: "No. Power Ports",
   cpu: "CPU",
   memory_gb: "Memory (GB)",

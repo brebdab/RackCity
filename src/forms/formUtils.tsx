@@ -11,7 +11,8 @@ import {
   RackObject,
   DatacenterObject,
   AssetObject,
-  AssetFieldsTable
+  AssetFieldsTable,
+  ModelFieldsTable
 } from "../utils/utils";
 
 export enum FormTypes {
@@ -50,7 +51,7 @@ export const filterNumber: ItemPredicate<string> = (
   return normalizedQuery === normalizedValue;
 };
 
-export const filterField: ItemPredicate<string> = (
+export const filterAssetField: ItemPredicate<string> = (
   query,
   field,
   _index,
@@ -60,6 +61,27 @@ export const filterField: ItemPredicate<string> = (
   let normalizedTitle;
   if (AssetFieldsTable[field]) {
     normalizedTitle = AssetFieldsTable[field].toLowerCase();
+  } else {
+    normalizedTitle = field.toLowerCase();
+  }
+  const normalizedQuery = query.toLowerCase();
+
+  if (exactMatch) {
+    return normalizedTitle === normalizedQuery;
+  } else {
+    return normalizedTitle.indexOf(normalizedQuery) >= 0;
+  }
+};
+
+export const filterModelField: ItemPredicate<string> = (
+  query,
+  field,
+  _index,
+  exactMatch
+) => {
+  let normalizedTitle;
+  if (ModelFieldsTable[field]) {
+    normalizedTitle = ModelFieldsTable[field].toLowerCase();
   } else {
     normalizedTitle = field.toLowerCase();
   }
@@ -193,7 +215,7 @@ function highlightText(text: string, query: string) {
   return tokens;
 }
 
-export const renderFieldItem: ItemRenderer<string> = (
+export const renderAssetFieldItem: ItemRenderer<string> = (
   field,
   { handleClick, modifiers, query }
 ) => {
@@ -201,6 +223,22 @@ export const renderFieldItem: ItemRenderer<string> = (
     return null;
   }
   const text = AssetFieldsTable[field];
+  return (
+    <MenuItem
+      active={modifiers.active}
+      text={highlightText(text, query)}
+      onClick={handleClick}
+    />
+  );
+};
+export const renderModelFieldItem: ItemRenderer<string> = (
+  field,
+  { handleClick, modifiers, query }
+) => {
+  if (!modifiers.matchesPredicate) {
+    return null;
+  }
+  const text = ModelFieldsTable[field];
   return (
     <MenuItem
       active={modifiers.active}
