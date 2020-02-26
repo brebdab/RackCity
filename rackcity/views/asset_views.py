@@ -965,6 +965,7 @@ def asset_bulk_approve(request):
     asset_datas = data['approved_modifications']
     # Don't do any validation here because we know we sent valid assets to the frontend,
     # and they should send the same ones back
+    warning_message = ""
     for asset_data in asset_datas:
         existing_asset = Asset.objects.get(
             id=asset_data['id'])
@@ -977,7 +978,6 @@ def asset_bulk_approve(request):
                 value = asset_data[field]
             setattr(existing_asset, field, value)
         existing_asset.save()
-        warning_message = ""
         try:
             save_power_connections(
                 asset_data=asset_data,

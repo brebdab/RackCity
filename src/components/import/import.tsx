@@ -150,7 +150,7 @@ export class BulkImport extends React.PureComponent<
                 modifiedModels: undefined
               })
             }
-            className={"modify-table"}
+            className={Classes.DARK + " modify-table"}
             usePortal={true}
             isCloseButtonShown={true}
             title={"Model Modifications Menu"}
@@ -189,7 +189,7 @@ export class BulkImport extends React.PureComponent<
                 modifiedAssets: undefined
               })
             }
-            className={Classes.DARK + "modify-table"}
+            className={Classes.DARK + " modify-table"}
             usePortal={true}
             isCloseButtonShown={true}
             title={"Asset Modifications Menu"}
@@ -219,7 +219,7 @@ export class BulkImport extends React.PureComponent<
                 modifiedNetwork: undefined
               })
             }
-            className={"modify-table"}
+            className={Classes.DARK + " modify-table"}
             usePortal={true}
             isCloseButtonShown={true}
             title={"Network Connections Modifications Menu"}
