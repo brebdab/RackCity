@@ -32,7 +32,7 @@ from rackcity.utils.errors_utils import (
     Status,
     GenericFailure,
     parse_serializer_errors,
-    parse_validation_error,
+    parse_save_validation_error,
     BulkFailure
 )
 from rest_framework.decorators import permission_classes, api_view
@@ -105,7 +105,7 @@ def asset_many(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
                 "errors": " ".join(errors)
             },
             status=HTTPStatus.BAD_REQUEST,
@@ -149,7 +149,7 @@ def asset_many(request):
             return JsonResponse(
                 {
                     "failure_message":
-                        Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                        Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
                     "errors": str(error)
                 },
                 status=HTTPStatus.BAD_REQUEST,
@@ -204,7 +204,7 @@ def asset_add(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.CREATE_ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.CREATE_ERROR.value + GenericFailure.INTERNAL.value,
                 "errors": "Don't include 'id' when creating an asset"
             },
             status=HTTPStatus.BAD_REQUEST
@@ -236,7 +236,8 @@ def asset_add(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.CREATE_ERROR.value + parse_validation_error(error),
+                    Status.CREATE_ERROR.value +
+                    parse_save_validation_error(error, "Asset"),
                 "errors": str(error)
             },
             status=HTTPStatus.BAD_REQUEST
@@ -451,7 +452,7 @@ def asset_modify(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.MODIFY_ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.MODIFY_ERROR.value + GenericFailure.INTERNAL.value,
                 "errors": "Must include 'id' when modifying an asset"
             },
             status=HTTPStatus.BAD_REQUEST
@@ -532,7 +533,7 @@ def asset_modify(request):
             {
                 "failure_message":
                     Status.MODIFY_ERROR.value +
-                    parse_validation_error(error),
+                    parse_save_validation_error(error, "Asset"),
                 "errors": str(error)
             },
             status=HTTPStatus.BAD_REQUEST
@@ -594,7 +595,7 @@ def asset_delete(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.DELETE_ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.DELETE_ERROR.value + GenericFailure.INTERNAL.value,
                 "errors": "Must include 'id' when deleting an asset"
             },
             status=HTTPStatus.BAD_REQUEST
@@ -624,7 +625,9 @@ def asset_delete(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.DELETE_ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.DELETE_ERROR.value +
+                    "Asset" +
+                    GenericFailure.ON_DELETE.value,
                 "errors": str(error)
             },
             status=HTTPStatus.BAD_REQUEST
@@ -653,7 +656,7 @@ def asset_bulk_upload(request):
             {
                 "failure_message":
                     Status.IMPORT_ERROR.value +
-                    BulkFailure.IMPORT_UNKNOWN.value,
+                    BulkFailure.IMPORT.value,
                 "errors":
                     "Bulk upload request should have a parameter 'import_csv'"
             },
@@ -952,7 +955,7 @@ def asset_bulk_approve(request):
             {
                 "failure_message":
                     Status.IMPORT_ERROR.value +
-                    BulkFailure.IMPORT_UNKNOWN.value,
+                    BulkFailure.IMPORT.value,
                 "errors":
                     "Bulk approve request should have a parameter " +
                     "'approved_modifications'"
@@ -962,6 +965,7 @@ def asset_bulk_approve(request):
     asset_datas = data['approved_modifications']
     # Don't do any validation here because we know we sent valid assets to the frontend,
     # and they should send the same ones back
+    warning_message = ""
     for asset_data in asset_datas:
         existing_asset = Asset.objects.get(
             id=asset_data['id'])
@@ -974,7 +978,6 @@ def asset_bulk_approve(request):
                 value = asset_data[field]
             setattr(existing_asset, field, value)
         existing_asset.save()
-        warning_message = ""
         try:
             save_power_connections(
                 asset_data=asset_data,
@@ -1052,7 +1055,7 @@ def network_bulk_upload(request):
             {
                 "failure_message":
                     Status.IMPORT_ERROR.value +
-                    BulkFailure.IMPORT_UNKNOWN.value,
+                    BulkFailure.IMPORT.value,
                 "errors":
                     "Bulk upload request should have a parameter 'import_csv'"
             },
@@ -1106,13 +1109,37 @@ def network_bulk_upload(request):
                 {"failure_message": failure_message},
                 status=HTTPStatus.BAD_REQUEST
             )
-        source_asset = Asset.objects.get(
-            hostname=bulk_network_port_data['src_hostname']
-        )
-        existing_port = NetworkPort.objects.get(
-            asset=source_asset,
-            port_name=bulk_network_port_data['src_port']
-        )
+        try:
+            source_asset = Asset.objects.get(
+                hostname=bulk_network_port_data['src_hostname']
+            )
+        except ObjectDoesNotExist:
+            failure_message = \
+                Status.IMPORT_ERROR.value + \
+                "Source asset '" + \
+                bulk_network_port_data['src_hostname'] + \
+                "' does not exist. "
+            return JsonResponse(
+                {"failure_message": failure_message},
+                status=HTTPStatus.BAD_REQUEST
+            )
+        try:
+            existing_port = NetworkPort.objects.get(
+                asset=source_asset,
+                port_name=bulk_network_port_data['src_port']
+            )
+        except ObjectDoesNotExist:
+            failure_message = \
+                Status.IMPORT_ERROR.value + \
+                "Source port '" + \
+                bulk_network_port_data['src_port'] + \
+                "' does not exist on asset '" + \
+                bulk_network_port_data['src_hostname'] + \
+                "'. "
+            return JsonResponse(
+                {"failure_message": failure_message},
+                status=HTTPStatus.BAD_REQUEST
+            )
         existing_port_serializer = BulkNetworkPortSerializer(existing_port)
         if records_are_identical(
             bulk_network_port_data,
@@ -1155,7 +1182,7 @@ def network_bulk_approve(request):
             {
                 "failure_message":
                     Status.IMPORT_ERROR.value +
-                    BulkFailure.IMPORT_UNKNOWN.value,
+                    BulkFailure.IMPORT.value,
                 "errors":
                     "Bulk approve request should have a parameter " +
                     "'approved_modifications'"
@@ -1276,7 +1303,7 @@ def asset_page_count(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
                 "errors": "Must specify positive integer page_size."
             },
             status=HTTPStatus.BAD_REQUEST,

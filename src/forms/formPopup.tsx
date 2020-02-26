@@ -16,6 +16,7 @@ import ModelForm from "./modelForm";
 import DatacenterForm from "./datacenterForm";
 import WrappedRegistrationForm from "./auth/register";
 import { FormTypes } from "./formUtils";
+
 interface FormPopupState {}
 interface FormPopupProps {
   isOpen: boolean;
@@ -25,6 +26,7 @@ interface FormPopupProps {
   currDatacenter?: DatacenterObject;
   initialValues?: ElementObjectType;
   elementName: ElementType;
+  loading?: boolean;
   handleClose(): void;
   submitForm(element: FormObjectType, headers: any): Promise<any> | void;
 }

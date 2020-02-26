@@ -5,10 +5,14 @@ import re
 from django.contrib.postgres.fields import ArrayField
 
 
+DEFAULT_DISPLAY_COLOR = '#394B59'
+
+
 def validate_display_color(value):
-    color_pattern = re.compile("#[A-Fa-f0-9]{6}")
-    if color_pattern.fullmatch(value) is None:
-        raise ValidationError(value + " is not a valid hex color")
+    if value:
+        color_pattern = re.compile("#[A-Fa-f0-9]{6}")
+        if color_pattern.fullmatch(value) is None:
+            raise ValidationError(value + " is not a valid hex color")
 
 
 class ITModel(models.Model):
@@ -20,7 +24,6 @@ class ITModel(models.Model):
         default='#394B59',
         validators=[validate_display_color],
     )
-
     network_ports = ArrayField(
         models.CharField(max_length=150),
         null=True,

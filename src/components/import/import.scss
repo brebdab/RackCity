@@ -36,16 +36,37 @@
 }
 
 .upload-button-import {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  text-align: right;
+  align-items: right;
+  justify-content: right;
 }
 
 .modify-table {
-  width: 90%;
+  width: fit-content;
 }
-
+.bp3-dialog {
+  width: fit-content;
+  padding: 10pt;
+}
+.bp3-dialog td {
+  white-space: pre-wrap;
+}
 .uploading-overlay {
   align-items: center;
   text-align: center;
+}
+
+.instructions-card {
+  width: 80%;
+  // align-items: center;
+  margin:auto;
+}
+
+.instructions-div {
+  // align-items: center !important;
+  // text-align: center;
+}
+
+.import-button:focus {
+  outline: none;
 }
