@@ -632,11 +632,11 @@ class ElementTable extends React.Component<
   };
   handleEditFormSubmit = (values: ElementObjectType, headers: any) => {
     if (isModelObject(values)) {
-      modifyModel(values, headers).then(res => {
+      return modifyModel(values, headers).then(res => {
         this.successfulModification();
       });
     } else if (isAssetObject(values)) {
-      modifyAsset(values, headers).then(res => {
+      return modifyAsset(values, headers).then(res => {
         if (res.data.warning_message) {
           this.successfulModifcationWithWarning(res.data.warning_message);
         } else {
@@ -644,7 +644,7 @@ class ElementTable extends React.Component<
         }
       });
     } else if (isDatacenterObject(values)) {
-      modifyDatacenter(values, headers).then(res => {
+      return modifyDatacenter(values, headers).then(res => {
         this.successfulModification();
         if (this.props.updateDatacenters) {
           this.props.updateDatacenters();
@@ -1085,7 +1085,8 @@ class ElementTable extends React.Component<
                                   }}
                                 />
                               ) : null}
-                              {isAssetObject(item) ? (
+                              {isAssetObject(item) &&
+                              item.rack.is_network_controlled ? (
                                 <AnchorButton
                                   className="button-table"
                                   intent="warning"
