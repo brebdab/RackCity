@@ -16,7 +16,6 @@ import { RouteComponentProps, withRouter } from "react-router";
 import { API_ROOT } from "../../utils/api-config";
 import { FileSelector } from "../lib/fileSelect";
 import "./import.scss";
-import Instructions from "./importInstructions";
 import InstructionsLite from "./importInstructionsLite";
 import { Modifier } from "./viewModified";
 
