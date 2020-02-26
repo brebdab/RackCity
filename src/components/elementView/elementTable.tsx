@@ -1094,6 +1094,11 @@ class ElementTable extends React.Component<
                                   icon="edit"
                                   minimal
                                   onClick={(event: any) => {
+                                    console.log(
+                                      "SCROLL",
+                                      window.scrollX,
+                                      window.scrollY
+                                    );
                                     this.handleEditButtonClick(item);
                                     event.stopPropagation();
                                   }}
