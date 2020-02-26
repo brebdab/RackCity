@@ -9,7 +9,8 @@ import {
   IToastProps,
   Position,
   Toaster,
-  Spinner
+  Spinner,
+  Callout
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { IconNames } from "@blueprintjs/icons";
@@ -81,10 +82,8 @@ interface ElementTableState {
   selected_userid?: string;
   isPowerOptionsOpen: boolean;
   assetPower?: AssetObject;
-  addFilterInProgress: boolean;
+  getDataInProgress: boolean;
 }
-// var console: any = {};
-// console.log = function() {};
 
 interface ElementTableProps {
   callback?: Function;
@@ -133,12 +132,11 @@ class ElementTable extends React.Component<
     openAlert: ElementTableOpenAlert.NONE,
     selected_userid: undefined,
     isPowerOptionsOpen: false,
-    addFilterInProgress: false
+    getDataInProgress: false
   };
 
   //PAGING LOGIC
   resetPage = () => {
-    console.log("setting currpage to 1");
     this.setState({
       curr_page: 1
     });
@@ -146,57 +144,38 @@ class ElementTable extends React.Component<
   previousPage = () => {
     if (this.state.curr_page > 1 && this.props.getData) {
       const next_page = this.state.curr_page - 1;
-      const { sort_by, filters } = this.state;
-      this.props
-        .getData(
-          this.props.type,
-          next_page,
-          this.state.page_type,
-          { sort_by, filters },
-          this.props.token
-        )
-        .then(res => {
-          this.setState({
-            items: res,
-            curr_page: next_page
-          });
-        });
+      this.setState({
+        curr_page: next_page
+      });
+      this.updatePageData(this.state.page_type, next_page);
     }
   };
   nextPage = () => {
     if (this.state.curr_page < this.state.total_pages && this.props.getData) {
       const next_page = this.state.curr_page + 1;
-      const { sort_by } = this.state;
-      const { filters } = this.state;
-      this.props
-        .getData(
-          this.props.type,
-          next_page,
-          this.state.page_type,
-          { sort_by, filters },
-          this.props.token
-        )
-        .then(res => {
-          this.setState({
-            items: res,
-            curr_page: next_page
-          });
-        });
+      this.setState({
+        curr_page: next_page
+      });
+      this.updatePageData(this.state.page_type, next_page);
     }
   };
   componentWillReceiveProps(
     nextProps: ElementTableProps & RouteComponentProps
   ) {
     if (nextProps.currDatacenter !== this.props.currDatacenter) {
-      this.updateTableData();
+      this.setState({
+        curr_page: 1
+      });
+      this.updatePageData(this.state.page_type, 1);
     }
   }
 
   handlePagingChange = (page: PagingTypes) => {
     this.setState({
-      page_type: page
+      page_type: page,
+      curr_page: 1
     });
-    this.updateData(page);
+    this.updatePageData(page, 1);
   };
   // FILTERING AND SORTING DISPLAY
 
@@ -341,10 +320,7 @@ class ElementTable extends React.Component<
         let filter_datacenter = updateObject(filter.filter, {
           datacenter: this.props.currDatacenter!.id
         });
-
-        console.log(filter_datacenter);
         filter = updateObject(filter, { filter: filter_datacenter });
-        console.log(filter);
       }
     }
     filters_copy.push(filter);
@@ -361,8 +337,6 @@ class ElementTable extends React.Component<
   };
 
   updateFilterData = (items: Array<IFilter>) => {
-    console.log(items);
-    this.setState({ addFilterInProgress: true });
     let resp;
     if (this.props.callback! !== undefined) this.props.callback(items);
     this.resetPage();
@@ -382,6 +356,7 @@ class ElementTable extends React.Component<
         });
     }
     if (this.props.getData) {
+      this.setState({ getDataInProgress: true });
       resp = this.props.getData!(
         this.props.type,
         1,
@@ -391,7 +366,7 @@ class ElementTable extends React.Component<
       );
       resp
         .then(res => {
-          this.setState({ addFilterInProgress: false });
+          this.setState({ getDataInProgress: false });
           this.setState({
             items: res
           });
@@ -402,7 +377,7 @@ class ElementTable extends React.Component<
           }
         })
         .catch(err => {
-          this.setState({ addFilterInProgress: false });
+          this.setState({ getDataInProgress: false });
           this.addToast({
             message: err.response.data.failure_message,
             intent: Intent.DANGER
@@ -412,25 +387,31 @@ class ElementTable extends React.Component<
     return resp;
   };
 
-  updateData = (page: PagingTypes) => {
+  updatePageData = (page: PagingTypes, page_num: number) => {
     if (this.props.getData) {
+      this.setState({
+        getDataInProgress: true
+      });
       this.props.getData!(
         this.props.type,
-        this.state.curr_page,
+        page_num,
         page,
         { sort_by: this.state.sort_by, filters: this.state.filters },
         this.props.token
       )
         .then(res => {
           this.setState({
-            items: res
+            items: res,
+            getDataInProgress: false
           });
-          console.log("DATA", res);
         })
         .catch(err => {
           this.addToast({
             message: err.response.data.failure_message,
             intent: Intent.DANGER
+          });
+          this.setState({
+            getDataInProgress: false
           });
         });
     }
@@ -445,19 +426,28 @@ class ElementTable extends React.Component<
     }
   };
   updateSortData = (items: Array<ITableSort>) => {
-    console.log("detected new sorts ", items);
     if (this.props.getData) {
+      this.setState({
+        getDataInProgress: true
+      });
       this.props.getData!(
         this.props.type,
         this.state.curr_page,
         this.state.page_type,
         { sort_by: items, filters: this.state.filters },
         this.props.token
-      ).then(res => {
-        this.setState({
-          items: res
+      )
+        .then(res => {
+          this.setState({
+            items: res,
+            getDataInProgress: false
+          });
+        })
+        .catch(() => {
+          this.setState({
+            getDataInProgress: false
+          });
         });
-      });
     }
   };
 
@@ -490,16 +480,11 @@ class ElementTable extends React.Component<
 
   componentDidUpdate() {
     if (this.props.shouldUpdateData && !this.props.data) {
-      console.log("table updated");
       this.updateTableData();
     }
   }
   componentDidMount() {
-    console.log("table mounted ");
-    console.log(this.props.data);
-
     if (this.props.data) {
-      console.log(this.props.data);
       this.setState({
         items: this.props.data
       });
@@ -510,6 +495,9 @@ class ElementTable extends React.Component<
   }
   updateTableData = () => {
     if (this.props.getData) {
+      this.setState({
+        getDataInProgress: true
+      });
       this.props
         .getData(
           this.props.type,
@@ -520,13 +508,15 @@ class ElementTable extends React.Component<
         )
         .then(res => {
           this.setState({
-            items: res
+            items: res,
+            getDataInProgress: false
           });
-          console.log("DATA", res);
           this.setFieldNames();
         })
         .catch(err => {
-          console.log(err);
+          this.setState({
+            getDataInProgress: false
+          });
         });
     }
     if (this.props.getPages) {
@@ -570,11 +560,8 @@ class ElementTable extends React.Component<
     this.setState({
       fields: fields
     });
-    console.log("COLUMN NAMES", fields);
   };
   setFieldNames = () => {
-    console.log("FIELD NAMES", this.state.items);
-
     if (this.state.items && this.state.items.length > 0) {
       this.setFieldNamesFromData(this.state.items);
     }
@@ -763,7 +750,6 @@ class ElementTable extends React.Component<
         headers
       )
       .then(res => {
-        console.log(res.data);
         this.addToast({
           message: res.data.success_message,
           intent: Intent.PRIMARY
@@ -771,7 +757,6 @@ class ElementTable extends React.Component<
         this.updateTableData();
       })
       .catch(err => {
-        console.log(err);
         this.addToast({
           message: err.response.data.failure_message,
           intent: Intent.DANGER
@@ -800,7 +785,6 @@ class ElementTable extends React.Component<
         headers
       )
       .then(res => {
-        console.log(res.data);
         this.addToast({
           message: res.data.success_message,
           intent: Intent.PRIMARY
@@ -808,7 +792,6 @@ class ElementTable extends React.Component<
         this.updateTableData();
       })
       .catch(err => {
-        console.log(err);
         this.addToast({
           message: err.response.data.failure_message,
           intent: Intent.DANGER
@@ -843,15 +826,11 @@ class ElementTable extends React.Component<
   };
 
   render() {
-    console.log(this.state.items);
-    // console.log(!(this.state.items && this.state.items.length > 0));
-
     if (
       this.props.data &&
       this.props.data.length !== 0 &&
       this.state.items.length === 0
     ) {
-      console.log("Setting items", this.props.data);
       this.setState({
         items: this.props.data
       });
@@ -1027,12 +1006,9 @@ class ElementTable extends React.Component<
                 </tr>
               </thead>
               {this.state.items && this.state.items.length > 0 ? (
-                !this.state.addFilterInProgress ? (
+                !this.state.getDataInProgress ? (
                   <tbody>
                     {this.state.items.map((item: ElementObjectType) => {
-                      if (isAssetObject(item)) {
-                        //console.log(item);
-                      }
                       return (
                         <tr
                           onClick={
@@ -1040,7 +1016,6 @@ class ElementTable extends React.Component<
                             this.props.type === ElementType.USER
                               ? () => {}
                               : () => {
-                                  console.log("redirecting", item.id);
                                   this.props.history.push(
                                     "/" + this.props.type + "/" + item.id
                                   );
@@ -1059,7 +1034,6 @@ class ElementTable extends React.Component<
                                 <td>{value.datacenter.name}</td>
                               ];
                             } else if (col === "display_color") {
-                              console.log(value);
                               return (
                                 <td
                                   style={{
@@ -1131,14 +1105,25 @@ class ElementTable extends React.Component<
                       );
                     })}
                   </tbody>
-                ) : (
-                  <Spinner size={Spinner.SIZE_STANDARD} />
-                )
-              ) : (
-                <h4 className="no-data-text">no {this.props.type} found </h4>
-              )}
+                ) : null
+              ) : null
+              // <Spinner
+              //   className="table-spinner"
+              //   size={Spinner.SIZE_STANDARD}
+              // />
+              // <h4 className="no-data-text">no {this.props.type} found </h4>
+              }
             </table>
           )}
+          {this.state.getDataInProgress ? (
+            <Spinner className="table-spinner" size={Spinner.SIZE_STANDARD} />
+          ) : null}
+          {this.state.items.length === 0 && !this.state.getDataInProgress ? (
+            <Callout
+              icon={IconNames.ERROR}
+              title={"No " + this.props.type}
+            ></Callout>
+          ) : null}
         </div>
       </div>
     );
