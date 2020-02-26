@@ -5,7 +5,8 @@ import {
   FormGroup,
   Intent,
   MenuItem,
-  InputGroup
+  InputGroup,
+  Spinner
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -39,6 +40,7 @@ interface ModelFormState {
   vendors: Array<string>;
   errors: Array<string>;
   networkPortsTemp: Array<string>;
+  loading: boolean;
 }
 
 export const required = (
@@ -59,6 +61,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
   public state = {
     values: this.initialState,
     vendors: [],
+    loading: false,
     errors: [],
     networkPortsTemp: this.initialState.network_ports
       ? this.initialState.network_ports
@@ -71,12 +74,12 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
   };
 
   private handleSubmit = (e: any) => {
-    this.setState({
-      errors: []
-    });
     e.preventDefault();
-    console.log(this.state);
     if (this.state.values) {
+      this.setState({
+        errors: [],
+        loading: true
+      });
       if (this.props.initialValues) {
         console.log(this.props.initialValues);
         this.setState({
@@ -88,12 +91,18 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
 
       const resp = this.props.submitForm(this.state.values, this.headers);
       if (resp) {
+        resp.then(res =>
+          this.setState({
+            loading: false
+          })
+        );
         resp.catch(err => {
-          console.log(err.response.data.failure_message);
+          $(".bp3-overlay-scroll-container").scrollTop(0);
           let errors: Array<string> = this.state.errors;
           errors.push(err.response.data.failure_message as string);
           this.setState({
-            errors: errors
+            errors: errors,
+            loading: false
           });
         });
       }
@@ -340,8 +349,12 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
           </FormGroup>
 
           <Button className="login-button" type="submit">
-            Submit
+            {this.state.loading ? "Submitting..." : "Submit"}
           </Button>
+          <div></div>
+          {this.state.loading ? (
+            <Spinner intent="primary" size={Spinner.SIZE_SMALL} />
+          ) : null}
         </form>
       </div>
     );

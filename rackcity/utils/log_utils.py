@@ -100,7 +100,7 @@ def log_delete(user, element_type, element_name):
     log.save()
 
 
-def log_rack_action(user, action, related_racks):
+def log_rack_action(user, action, related_racks, datacenter):
     """
     Specified action should be Action enum, related_racks should be list of
     rack strings such as ['A1','A2',...]
@@ -113,6 +113,8 @@ def log_rack_action(user, action, related_racks):
         action.value,
         "the following racks:",
         related_racks,
+        "in datacenter",
+        datacenter
     ])
     log = Log(
         date=date,
@@ -203,7 +205,7 @@ def log_bulk_upload(user, element_type, num_approved, num_ignored, num_modified)
         str(num_approved),
         "adds,",
         str(num_ignored),
-        "ignores",
+        "ignores,",
         str(num_modified),
         "potential modifies"
     ])

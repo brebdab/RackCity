@@ -1109,13 +1109,37 @@ def network_bulk_upload(request):
                 {"failure_message": failure_message},
                 status=HTTPStatus.BAD_REQUEST
             )
-        source_asset = Asset.objects.get(
-            hostname=bulk_network_port_data['src_hostname']
-        )
-        existing_port = NetworkPort.objects.get(
-            asset=source_asset,
-            port_name=bulk_network_port_data['src_port']
-        )
+        try:
+            source_asset = Asset.objects.get(
+                hostname=bulk_network_port_data['src_hostname']
+            )
+        except ObjectDoesNotExist:
+            failure_message = \
+                Status.IMPORT_ERROR.value + \
+                "Source asset '" + \
+                bulk_network_port_data['src_hostname'] + \
+                "' does not exist. "
+            return JsonResponse(
+                {"failure_message": failure_message},
+                status=HTTPStatus.BAD_REQUEST
+            )
+        try:
+            existing_port = NetworkPort.objects.get(
+                asset=source_asset,
+                port_name=bulk_network_port_data['src_port']
+            )
+        except ObjectDoesNotExist:
+            failure_message = \
+                Status.IMPORT_ERROR.value + \
+                "Source port '" + \
+                bulk_network_port_data['src_port'] + \
+                "' does not exist on asset '" + \
+                bulk_network_port_data['src_hostname'] + \
+                "'. "
+            return JsonResponse(
+                {"failure_message": failure_message},
+                status=HTTPStatus.BAD_REQUEST
+            )
         existing_port_serializer = BulkNetworkPortSerializer(existing_port)
         if records_are_identical(
             bulk_network_port_data,

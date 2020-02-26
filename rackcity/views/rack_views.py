@@ -117,7 +117,12 @@ def rack_create(request):
             )
             rack.save()
     related_racks = range_serializer.get_range_as_string()
-    log_rack_action(request.user, Action.CREATE, related_racks)
+    log_rack_action(
+        request.user,
+        Action.CREATE,
+        related_racks,
+        range_serializer.get_datacenter().abbreviation
+    )
     return JsonResponse(
         {
             "success_message":
@@ -200,7 +205,12 @@ def rack_delete(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     related_racks = range_serializer.get_range_as_string()
-    log_rack_action(request.user, Action.DELETE, related_racks)
+    log_rack_action(
+        request.user,
+        Action.DELETE,
+        related_racks,
+        range_serializer.get_datacenter().abbreviation
+    )
     return JsonResponse(
         {
             "success_message":

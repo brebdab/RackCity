@@ -16,7 +16,7 @@ import { RouteComponentProps, withRouter } from "react-router";
 import { API_ROOT } from "../../utils/api-config";
 import { FileSelector } from "../lib/fileSelect";
 import "./import.scss";
-import Instructions from "./importInstructions";
+import InstructionsLite from "./importInstructionsLite";
 import { Modifier } from "./viewModified";
 
 //var console: any = {};
@@ -51,7 +51,7 @@ interface AlertState {
 export class BulkImport extends React.PureComponent<
   RouteComponentProps & ImportProps,
   AlertState
-> {
+  > {
   public state: AlertState = {
     uploadFileIsOpen: false,
     modelAlterationsIsOpen: false,
@@ -81,8 +81,9 @@ export class BulkImport extends React.PureComponent<
         <div className={"row"}>
           <div className={"column-third-import"}>
             {resourceType === "assets" ? (
-              <ButtonGroup fill={false} style={{ marginTop: 10 }}>
+              <ButtonGroup fill={false} style={{ marginTop: 40 }}>
                 <Button
+                  className="import-button"
                   active={this.state.assetUploadType === "assets"}
                   text="assets"
                   onClick={(e: any) => {
@@ -90,6 +91,7 @@ export class BulkImport extends React.PureComponent<
                   }}
                 />
                 <Button
+                  className="import-button"
                   active={this.state.assetUploadType === "network connections"}
                   text="network connections"
                   onClick={(e: any) => {
@@ -104,12 +106,13 @@ export class BulkImport extends React.PureComponent<
           <div className={"column-third-import"}>
             <p> </p>
             <AnchorButton
+              className="import-button"
               large={true}
               intent="primary"
               icon="import"
-              minimal
               text={selectButtonText}
               onClick={this.handleFilepickerOpen}
+              style={{ marginTop: 20, marginBottom: 40 }}
             />
             <Overlay
               isOpen={this.state.uploading}
@@ -236,7 +239,9 @@ export class BulkImport extends React.PureComponent<
             />
           </Dialog>
         </div>
-        <Instructions />
+        <InstructionsLite
+          uploadType={uploadType}
+        />
       </div>
     );
   }
@@ -313,9 +318,9 @@ export class BulkImport extends React.PureComponent<
           } else {
             alert(
               "Success! Modified: 0; Added: " +
-                res.added +
-                "; Ignored: " +
-                res.ignored
+              res.added +
+              "; Ignored: " +
+              res.ignored
             );
             if (params.resourceType === "models") {
               this.setState({ uploading: false, loadedModels: undefined });
@@ -376,12 +381,12 @@ async function getBase64(file: File) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     let content = "";
-    reader.onload = function(e: any) {
+    reader.onload = function (e: any) {
       content = e.target.result;
       const result = content;
       resolve(result);
     };
-    reader.onerror = function(e: any) {
+    reader.onerror = function (e: any) {
       reject(e);
     };
     reader.readAsDataURL(file);
