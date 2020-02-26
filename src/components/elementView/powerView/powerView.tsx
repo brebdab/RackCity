@@ -17,6 +17,7 @@ import { RouteComponentProps, withRouter } from "react-router";
 import { connect } from "react-redux";
 import { AssetObject, getHeaders } from "../../../utils/utils";
 import "./powerView.scss";
+import { IconNames } from "@blueprintjs/icons";
 
 interface PowerViewProps {
   token: string;
@@ -113,19 +114,54 @@ export class PowerView extends React.PureComponent<
     this.props.updated();
   }
 
+  getPowerPortRows() {
+    const rows = [];
+    if (this.props.asset) {
+      for (
+        let i = 1;
+        i < ((this.props.asset.model.num_power_ports as unknown) as number) + 1;
+        i++
+      ) {
+        rows.push(
+          <tr>
+            <td>{i}</td>
+            {this.props.asset!.power_connections[i] ? (
+              <td>
+                {this.props.asset!.power_connections[i].port_number}
+                {this.props.asset!.power_connections[i].left_right}
+              </td>
+            ) : (
+              <td></td>
+            )}
+            {this.props.asset!.rack.is_network_controlled ? (
+              this.state.powerStatus ? (
+                <td>{this.state.powerStatus[i]}</td>
+              ) : (
+                <td>Unable to contact PDU controller</td>
+              )
+            ) : (
+              <td>PDU not network controlled</td>
+            )}
+          </tr>
+        );
+      }
+    }
+    return rows;
+  }
+
   render() {
     return (
       <div className={Classes.DARK}>
         {this.state.statusLoaded ? (
           !(
             this.props.asset &&
-            Object.keys(this.props.asset.power_connections).length > 0
+            ((this.props.asset.model.num_power_ports as unknown) as number) > 0
           ) ? (
             <div className="propsview">
               <h3>Power Connections</h3>
               <Callout
-                title="No power connections"
-                intent={Intent.PRIMARY}
+                title="No power ports"
+                icon={IconNames.INFO_SIGN}
               ></Callout>
               {this.props.callback === undefined ? null : (
                 <AnchorButton
@@ -150,41 +186,11 @@ export class PowerView extends React.PureComponent<
               <div className="network-connections">
                 <table className="bp3-html-table bp3-html-table-bordered bp3-html-table-striped">
                   <tr>
-                    <th>Asset Port Number</th>
+                    <th>Power Port Number</th>
                     <th>PDU Port Number</th>
                     <th>Power Status</th>
                   </tr>
-                  <tbody>
-                    {Object.keys(this.props.asset.power_connections).map(
-                      (port: string) => {
-                        return (
-                          <tr>
-                            {" "}
-                            <td>{port}</td>
-                            <td>
-                              {
-                                this.props.asset!.power_connections[port]
-                                  .port_number
-                              }
-                              {
-                                this.props.asset!.power_connections[port]
-                                  .left_right
-                              }
-                            </td>
-                            {this.props.asset!.rack.is_network_controlled ? (
-                              this.state.powerStatus ? (
-                                <td>{this.state.powerStatus[port]}</td>
-                              ) : (
-                                <td>Unable to contact PDU controller</td>
-                              )
-                            ) : (
-                              <td>PDU not network controlled</td>
-                            )}
-                          </tr>
-                        );
-                      }
-                    )}
-                  </tbody>
+                  <tbody>{this.getPowerPortRows()}</tbody>
                 </table>
               </div>
               {this.props.asset!.rack.is_network_controlled &&
