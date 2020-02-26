@@ -17,8 +17,8 @@ export interface AlertState {
   isDeleteOpen: boolean;
   fields: Array<string>;
 }
-// var console: any = {};
-// console.log = function() {};
+var console: any = {};
+console.log = function() {};
 
 interface PropertiesViewProps {
   data: ElementObjectType;

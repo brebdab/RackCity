@@ -26,8 +26,8 @@ import {
 } from "./formUtils";
 
 //TO DO : add validation of types!!!
-// var console: any = {};
-// console.log = function() {};
+var console: any = {};
+console.log = function() {};
 
 export interface ModelFormProps {
   token: string;

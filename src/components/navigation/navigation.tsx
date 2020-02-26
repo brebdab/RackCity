@@ -22,6 +22,8 @@ export interface NavigationProps {
   isAdmin: boolean;
   token: string;
 }
+var console: any = {};
+console.log = function() {};
 
 export interface NavigationState {
   username?: string;

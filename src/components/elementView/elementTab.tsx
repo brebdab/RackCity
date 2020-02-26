@@ -45,8 +45,8 @@ import {
 } from "./elementUtils";
 import "./elementView.scss";
 
-// var console: any = {};
-// console.log = function () { };
+var console: any = {};
+console.log = function() {};
 const fs = require("js-file-download");
 
 interface ElementViewState {

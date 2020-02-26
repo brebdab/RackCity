@@ -11,6 +11,8 @@ interface RackRangeFormState {
   values: RackRangeFields;
 }
 
+var console: any = {};
+console.log = function() {};
 class RackRangeForm extends React.Component<
   RackRangeFormProps,
   RackRangeFormState
