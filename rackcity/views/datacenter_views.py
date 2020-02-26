@@ -212,6 +212,15 @@ def datacenter_modify(request):
         )
     for field in data.keys():
         if field != "id":
+            if len(data[field]) == 0:
+                return JsonResponse(
+                    {
+                        "failure_message":
+                            Status.MODIFY_ERROR.value +
+                            "field " + field + " cannot be empty"
+                    },
+                    status=HTTPStatus.BAD_REQUEST
+                )
             if field == "name":
                 dc_with_name = Datacenter.objects.filter(
                     name__iexact=data[field]
