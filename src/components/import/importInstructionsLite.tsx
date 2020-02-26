@@ -60,7 +60,7 @@ export class InstructionsLite extends React.PureComponent<InstructionsLiteProps>
                             : null
                     }
                     <h3 >
-                        You can find the full technical specification here:<a> </a>
+                        You can find the full technical specification here:&nbsp;
                         <a href="https://d1b10bmlvqabco.cloudfront.net/attach/k4u27qnccr45oo/i515p00jifO/k6wckku7h5ne/ECE458__Bulk_Format_Proposal__v3.2.pdf">
                             HypoSoft Bulk Import Specifications
                         </a>
