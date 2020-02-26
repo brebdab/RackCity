@@ -234,7 +234,9 @@ def user_delete(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.DELETE_ERROR.value + GenericFailure.INTERNAL.value,
+                    Status.DELETE_ERROR.value +
+                    "User" +
+                    GenericFailure.ON_DELETE.value,
                 "errors": str(error),
             },
             status=HTTPStatus.BAD_REQUEST,
@@ -352,7 +354,8 @@ def user_grant_admin(request):
         return JsonResponse(
             {
                 "success_message":
-                    Status.SUCCESS.value + "Admin permission granted to user " +
+                    Status.SUCCESS.value +
+                    "Admin permission granted to user " +
                     user.username
             },
             status=HTTPStatus.OK,
@@ -403,7 +406,8 @@ def user_revoke_admin(request):
             {
                 "failure_message":
                     Status.MODIFY_ERROR.value +
-                    "Cannot revoke admin permission because user " + user.username +
+                    "Cannot revoke admin permission because user " +
+                    user.username +
                     " does not have it"
             },
             status=HTTPStatus.BAD_REQUEST,
