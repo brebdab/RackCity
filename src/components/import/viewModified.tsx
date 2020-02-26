@@ -282,9 +282,10 @@ export class Modifier extends React.PureComponent<
         };
       } else if (this.props.operation === "network") {
         fields = {
-          source_port: "en0",
-          destination_hostname: "Desitnation Hostname",
-          destination_port: "Destination Port"
+          src_hostname: "Source Hostname",
+          src_port: "Source Port",
+          src_mac: "Source MAC",
+          dest_port: "Destination Port"
         };
       }
 
