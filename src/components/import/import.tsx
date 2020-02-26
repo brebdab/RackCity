@@ -158,7 +158,6 @@ export class BulkImport extends React.PureComponent<
               modelsAdded={this.state.addedModels}
               modelsIgnored={this.state.ignoredModels}
               callback={() => {
-                // setTimeout(() => {}, 1000);
                 this.setState({
                   modelAlterationsIsOpen: false,
                   modifiedModels: undefined,
@@ -198,11 +197,10 @@ export class BulkImport extends React.PureComponent<
               modelsAdded={this.state.addedAssets}
               modelsIgnored={this.state.ignoredAssets}
               callback={() => {
-                // setTimeout(() => {}, 1000);
                 this.setState({
-                  modelAlterationsIsOpen: false,
-                  modifiedModels: undefined,
-                  loadedModels: undefined
+                  assetAlterationsIsOpen: false,
+                  modifiedAssets: undefined,
+                  loadedAssets: undefined
                 });
               }}
               operation={"assets"}
@@ -229,11 +227,9 @@ export class BulkImport extends React.PureComponent<
               modelsAdded={this.state.addedNetwork}
               modelsIgnored={this.state.ignoredNetwork}
               callback={() => {
-                // setTimeout(() => {}, 1000);
                 this.setState({
-                  modelAlterationsIsOpen: false,
-                  modifiedModels: undefined,
-                  loadedModels: undefined
+                  networkAlterationsIsOpen: false,
+                  modifiedNetwork: undefined
                 });
               }}
               operation={"network"}

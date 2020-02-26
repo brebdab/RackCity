@@ -128,6 +128,9 @@ export class Modifier extends React.PureComponent<
             <tr>
               <td>Existing</td>
               {Object.keys(model).map((key: string) => {
+                if (!obj.existing[key]) {
+                  return <td> </td>;
+                }
                 if (key === "rack")
                   return (
                     <td>
@@ -145,9 +148,17 @@ export class Modifier extends React.PureComponent<
                     </td>
                   );
                 else if (key !== "id") {
-                  if (key !== "power_connections")
-                    return <td>{obj.existing[key]}</td>;
-                  else {
+                  if (key !== "power_connections") {
+                    if (key === "network_ports" && obj.existing.network_ports) {
+                      let str = "";
+                      for (let i = 0; i < obj.existing[key].length; i++) {
+                        str = str + obj.existing[key][i] + ", ";
+                      }
+                      return <td>{str.substring(0, str.length - 2)}</td>;
+                    } else {
+                      return <td>{obj.existing[key]}</td>;
+                    }
+                  } else {
                     return <td></td>;
                   }
                 } else return <td> </td>;
@@ -185,12 +196,22 @@ export class Modifier extends React.PureComponent<
                     </td>
                   );
                 else if (key !== "id") {
-                  if (key !== "power_connections")
-                    return <td>{obj.modified[key]}</td>;
-                  else {
+                  if (key !== "power_connections") {
+                    if (key === "network_ports" && obj.modified.network_ports) {
+                      let str = "";
+                      for (let i = 0; i < obj.modified[key].length; i++) {
+                        str = str + obj.modified[key][i] + ", ";
+                      }
+                      return <td>{str.substring(0, str.length - 2)}</td>;
+                    } else {
+                      return <td>{obj.modified[key]}</td>;
+                    }
+                  } else {
                     return <td></td>;
                   }
-                } else return <td> </td>;
+                } else {
+                  return <td> </td>;
+                }
               })}
               {this.props.operation === "assets"
                 ? Object.keys(obj.modified.power_connections).map(
@@ -246,7 +267,7 @@ export class Modifier extends React.PureComponent<
   render() {
     if (this.props.modelsModified !== undefined) {
       let model: any;
-      model = this.props.modelsModified[0].existing;
+      model = this.props.modelsModified[0].modified;
       let fields: any;
       if (this.props.operation === "models") {
         fields = {
@@ -285,6 +306,7 @@ export class Modifier extends React.PureComponent<
           src_hostname: "Source Hostname",
           src_port: "Source Port",
           src_mac: "Source MAC",
+          dest_hostname: "Destination Hostname",
           dest_port: "Destination Port"
         };
       }
@@ -323,17 +345,7 @@ export class Modifier extends React.PureComponent<
                 ).then(
                   res => {
                     console.log(this.props);
-                    this.addSuccessToast(
-                      "Success! Modified: " +
-                        modified.length +
-                        "; Added: " +
-                        this.props.modelsAdded! +
-                        "; Ignored: " +
-                        (this.props.modelsIgnored! +
-                          this.props.modelsModified!.length -
-                          modified.length)
-                    );
-                    // alert(
+                    // this.addSuccessToast(
                     //   "Success! Modified: " +
                     //     modified.length +
                     //     "; Added: " +
@@ -343,9 +355,19 @@ export class Modifier extends React.PureComponent<
                     //       this.props.modelsModified!.length -
                     //       modified.length)
                     // );
+                    alert(
+                      "Success! Modified: " +
+                        modified.length +
+                        "; Added: " +
+                        this.props.modelsAdded! +
+                        "; Ignored: " +
+                        (this.props.modelsIgnored! +
+                          this.props.modelsModified!.length -
+                          modified.length)
+                    );
                     if (res.warning_message) {
-                      this.addWarnToast(res.warning_message);
-                      // alert("Warning: " + res.warning_message);
+                      // this.addWarnToast(res.warning_message);
+                      alert("Warning: " + res.warning_message);
                     }
                     this.setState({
                       modifiedModels: []
@@ -353,8 +375,8 @@ export class Modifier extends React.PureComponent<
                     this.props.callback();
                   },
                   err => {
-                    this.addErrorToast(err.response.data.failure_message);
-                    // alert(err.response.data.failure_message);
+                    // this.addErrorToast(err.response.data.failure_message);
+                    alert(err.response.data.failure_message);
                   }
                 );
               } else if (
@@ -374,17 +396,7 @@ export class Modifier extends React.PureComponent<
                   this.props.operation
                 ).then(
                   res => {
-                    this.addSuccessToast(
-                      "Success! Modified: " +
-                        modified.length +
-                        "; Added: " +
-                        this.props.modelsAdded! +
-                        "; Ignored: " +
-                        (this.props.modelsIgnored! +
-                          this.props.modelsModified!.length -
-                          modified.length)
-                    );
-                    // alert(
+                    // this.addSuccessToast(
                     //   "Success! Modified: " +
                     //     modified.length +
                     //     "; Added: " +
@@ -394,9 +406,19 @@ export class Modifier extends React.PureComponent<
                     //       this.props.modelsModified!.length -
                     //       modified.length)
                     // );
+                    alert(
+                      "Success! Modified: " +
+                        modified.length +
+                        "; Added: " +
+                        this.props.modelsAdded! +
+                        "; Ignored: " +
+                        (this.props.modelsIgnored! +
+                          this.props.modelsModified!.length -
+                          modified.length)
+                    );
                     if (res.warning_message) {
-                      this.addWarnToast(res.warning_message);
-                      // alert("Warning: " + res.warning_message);
+                      // this.addWarnToast(res.warning_message);
+                      alert("Warning: " + res.warning_message);
                     }
                     // alert("Modifications were successful")
                     this.setState({
@@ -405,8 +427,8 @@ export class Modifier extends React.PureComponent<
                     this.props.callback();
                   },
                   err => {
-                    this.addErrorToast(err.response.data.failure_message);
-                    // alert(err.response.data.failure_message);
+                    // this.addErrorToast(err.response.data.failure_message);
+                    alert(err.response.data.failure_message);
                   }
                 );
               } else {
@@ -422,17 +444,7 @@ export class Modifier extends React.PureComponent<
                   this.props.operation
                 ).then(
                   res => {
-                    this.addSuccessToast(
-                      "Success! Modified: " +
-                        modified.length +
-                        "; Added: " +
-                        this.props.modelsAdded! +
-                        "; Ignored: " +
-                        (this.props.modelsIgnored! +
-                          this.props.modelsModified!.length -
-                          modified.length)
-                    );
-                    // alert(
+                    // this.addSuccessToast(
                     //   "Success! Modified: " +
                     //     modified.length +
                     //     "; Added: " +
@@ -442,9 +454,19 @@ export class Modifier extends React.PureComponent<
                     //       this.props.modelsModified!.length -
                     //       modified.length)
                     // );
+                    alert(
+                      "Success! Modified: " +
+                        modified.length +
+                        "; Added: " +
+                        this.props.modelsAdded! +
+                        "; Ignored: " +
+                        (this.props.modelsIgnored! +
+                          this.props.modelsModified!.length -
+                          modified.length)
+                    );
                     if (res.warning_message) {
-                      this.addWarnToast(res.warning_message);
-                      // alert("Warning: " + res.warning_message);
+                      // this.addWarnToast(res.warning_message);
+                      alert("Warning: " + res.warning_message);
                     }
                     // alert("Modifications were successful")
                     this.setState({
@@ -453,8 +475,8 @@ export class Modifier extends React.PureComponent<
                     this.props.callback();
                   },
                   err => {
-                    this.addErrorToast(err.response.data.failure_message);
-                    // alert(err.response.data.failure_message);
+                    // this.addErrorToast(err.response.data.failure_message);
+                    alert(err.response.data.failure_message);
                   }
                 );
               }
