@@ -68,7 +68,9 @@ def datacenter_create(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.CREATE_ERROR.value + GenericFailure.INTERNAL.value,
+                    Status.CREATE_ERROR.value +
+                    "Datacenter" +
+                    GenericFailure.ON_SAVE.value,
                 "errors": str(error)
             },
             status=HTTPStatus.BAD_REQUEST
@@ -108,7 +110,8 @@ def datacenter_delete(request):
             {
                 "failure_message":
                     Status.DELETE_ERROR.value +
-                    "Datacenter" + GenericFailure.DOES_NOT_EXIST.value,
+                    "Datacenter" +
+                    GenericFailure.DOES_NOT_EXIST.value,
                 "errors": "No existing datacenter with id="+str(id)
             },
             status=HTTPStatus.BAD_REQUEST
@@ -120,7 +123,9 @@ def datacenter_delete(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.DELETE_ERROR.value + GenericFailure.INTERNAL.value,
+                    Status.DELETE_ERROR.value +
+                    "Datacenter" +
+                    GenericFailure.ON_DELETE.value,
                 "errors": str(error)
             },
             status=HTTPStatus.BAD_REQUEST
@@ -195,7 +200,8 @@ def datacenter_modify(request):
             {
                 "failure_message":
                     Status.MODIFY_ERROR.value +
-                    "Datacenter" + GenericFailure.DOES_NOT_EXIST.value,
+                    "Datacenter" +
+                    GenericFailure.DOES_NOT_EXIST.value,
                 "errors": "No existing datacenter with id="+str(id)
             },
             status=HTTPStatus.BAD_REQUEST
@@ -231,7 +237,8 @@ def datacenter_modify(request):
             {
                 "failure_message":
                     Status.MODIFY_ERROR.value +
-                    GenericFailure.INVALID_DATA.value,
+                    "Datacenter" +
+                    GenericFailure.ON_SAVE.value,
                 "errors": str(error)
             },
             status=HTTPStatus.BAD_REQUEST

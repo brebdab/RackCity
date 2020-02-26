@@ -20,6 +20,8 @@ class GenericFailure(Enum):
     FILTER = "Invalid filter applied."
     SORT = "Invalid sort applied."
     INVALID_DATA = "Required values are missing or invalid."
+    ON_SAVE = " failed to save. Please ensure all input values are valid."
+    ON_DELETE = " failed to delete due to internal error."
 
 
 class UserFailure(Enum):
