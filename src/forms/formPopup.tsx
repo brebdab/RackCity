@@ -16,7 +16,7 @@ import ModelForm from "./modelForm";
 import DatacenterForm from "./datacenterForm";
 import WrappedRegistrationForm from "./auth/register";
 import { FormTypes } from "./formUtils";
-import $ from "jquery";
+
 interface FormPopupState {}
 interface FormPopupProps {
   isOpen: boolean;
