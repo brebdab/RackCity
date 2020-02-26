@@ -19,8 +19,8 @@ import "./import.scss";
 import InstructionsLite from "./importInstructionsLite";
 import { Modifier } from "./viewModified";
 
-//var console: any = {};
-//console.log = function () { };
+var console: any = {};
+console.log = function() {};
 interface ImportProps {
   token: string;
 }
@@ -51,7 +51,7 @@ interface AlertState {
 export class BulkImport extends React.PureComponent<
   RouteComponentProps & ImportProps,
   AlertState
-  > {
+> {
   public state: AlertState = {
     uploadFileIsOpen: false,
     modelAlterationsIsOpen: false,
@@ -239,9 +239,7 @@ export class BulkImport extends React.PureComponent<
             />
           </Dialog>
         </div>
-        <InstructionsLite
-          uploadType={uploadType}
-        />
+        <InstructionsLite uploadType={uploadType} />
       </div>
     );
   }
@@ -318,9 +316,9 @@ export class BulkImport extends React.PureComponent<
           } else {
             alert(
               "Success! Modified: 0; Added: " +
-              res.added +
-              "; Ignored: " +
-              res.ignored
+                res.added +
+                "; Ignored: " +
+                res.ignored
             );
             if (params.resourceType === "models") {
               this.setState({ uploading: false, loadedModels: undefined });
@@ -381,12 +379,12 @@ async function getBase64(file: File) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     let content = "";
-    reader.onload = function (e: any) {
+    reader.onload = function(e: any) {
       content = e.target.result;
       const result = content;
       resolve(result);
     };
-    reader.onerror = function (e: any) {
+    reader.onerror = function(e: any) {
       reject(e);
     };
     reader.readAsDataURL(file);

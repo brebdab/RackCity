@@ -100,8 +100,8 @@ interface AssetFormState {
   selectedValue: any;
   loading: boolean;
 }
-// var console: any = {};
-// console.log = function() {};
+var console: any = {};
+console.log = function() {};
 
 class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   initialState: AssetObject = this.props.initialValues

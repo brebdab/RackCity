@@ -30,9 +30,9 @@ export interface RackViewProps {
 export interface RouteParams {
   rid: string;
 }
-// var console: any = {};
-// console.log = function() {};
-// console.warn = function() {};
+var console: any = {};
+console.log = function() {};
+console.warn = function() {};
 
 export interface RackViewState {
   isDeleteOpen: boolean;

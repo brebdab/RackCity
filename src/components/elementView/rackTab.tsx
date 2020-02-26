@@ -56,6 +56,8 @@ interface RackTabProps {
   currDatacenter: DatacenterObject;
   onDatacenterSelect(datacenter: DatacenterObject): void;
 }
+var console: any = {};
+console.log = function() {};
 class RackTab extends React.Component<
   RackTabProps & RouteComponentProps,
   RackTabState

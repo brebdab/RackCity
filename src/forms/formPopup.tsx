@@ -30,6 +30,8 @@ interface FormPopupProps {
   submitForm(element: FormObjectType, headers: any): Promise<any> | void;
 }
 
+var console: any = {};
+console.log = function() {};
 class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
   render() {
     return (

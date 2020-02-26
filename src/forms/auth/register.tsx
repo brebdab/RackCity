@@ -23,8 +23,8 @@ interface RegistrationFormProps {
 interface RegistrationFormSubmitProps {
   authSignup(user: CreateUserObject, headers: any): Promise<any> | void;
 }
-// var console: any = {};
-// console.log = function() {};
+var console: any = {};
+console.log = function() {};
 
 interface RegistrationFormState {
   errors: Array<string>;
@@ -33,11 +33,11 @@ interface RegistrationFormState {
 
 class RegistrationForm extends React.Component<
   RegistrationFormProps &
-  FormComponentProps &
-  RegistrationFormSubmitProps &
-  RouteComponentProps,
+    FormComponentProps &
+    RegistrationFormSubmitProps &
+    RouteComponentProps,
   RegistrationFormState
-  > {
+> {
   public state = {
     confirmDirty: false,
     errors: []

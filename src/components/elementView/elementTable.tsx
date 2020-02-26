@@ -114,6 +114,8 @@ interface ElementTableProps {
   updateDatacenters?(): void;
 }
 
+var console: any = {};
+console.log = function() {};
 class ElementTable extends React.Component<
   ElementTableProps & RouteComponentProps,
   ElementTableState

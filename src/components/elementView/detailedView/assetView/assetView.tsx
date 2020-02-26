@@ -38,8 +38,8 @@ export interface AssetViewProps {
 }
 // Given an rid, will perform a GET request of that rid and display info about that instnace
 
-// var console: any = {};
-// console.log = function() {};
+var console: any = {};
+console.log = function() {};
 function getData(assetkey: string, token: string) {
   const headers = {
     headers: {

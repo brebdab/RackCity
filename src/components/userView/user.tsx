@@ -11,6 +11,7 @@ import "./user.scss";
 interface UserProps {
   isAdmin: boolean;
 }
+
 class User extends React.Component<UserProps & RouteComponentProps> {
   public render() {
     return (

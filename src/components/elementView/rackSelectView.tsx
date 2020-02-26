@@ -19,8 +19,8 @@ interface RackSelectViewState {
 
   errors: Array<string>;
 }
-// var console: any = {};
-// console.log = function() {};
+var console: any = {};
+console.log = function() {};
 
 interface RackSelectViewProps {
   token: string;
