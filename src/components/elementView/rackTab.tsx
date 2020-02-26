@@ -57,7 +57,7 @@ interface RackTabProps {
 class RackTab extends React.Component<
   RackTabProps & RouteComponentProps,
   RackTabState
-> {
+  > {
   state = {
     isOpen: false,
     isDeleteOpen: false,
@@ -297,50 +297,50 @@ class RackTab extends React.Component<
           <p>Are you sure you want to delete?</p>
         </Alert>
         {this.props.currDatacenter &&
-        this.props.currDatacenter.name !== ALL_DATACENTERS.name ? (
-          <div className="rack-tab-panel">
-            {this.props.isAdmin ? (
-              <div className=" element-tab-buttons">
-                <AnchorButton
-                  className="add"
-                  text={"Add Rack(s)"}
-                  icon="add"
-                  minimal
-                  intent={Intent.PRIMARY}
-                  onClick={this.handleOpen}
-                />
-                <AnchorButton
-                  className="add "
-                  text={"Delete Rack(s)"}
-                  icon="trash"
-                  minimal
-                  intent={Intent.DANGER}
-                  onClick={this.handleDeleteOpen}
-                />
-              </div>
-            ) : null}
-            <Card>
-              <div className="rack-view-options">
-                <Button
-                  className="all-racks"
-                  text="View All Racks"
-                  onClick={(e: any) =>
-                    this.getAllRacks(this.props.currDatacenter)
-                  }
-                />
-                <p className="or">or </p>
-                <RackSelectView
-                  currDatacenter={this.props.currDatacenter}
-                  submitForm={this.viewRackForm}
-                />
-              </div>
-            </Card>
-          </div>
-        ) : (
-          <Callout title="No Datacenter Delected" intent={Intent.PRIMARY}>
-            <em>Please select a datacenter to view rack information</em>
-          </Callout>
-        )}
+          this.props.currDatacenter.name !== ALL_DATACENTERS.name ? (
+            <div className="rack-tab-panel">
+              {this.props.isAdmin ? (
+                <div className=" element-tab-buttons">
+                  <AnchorButton
+                    className="add"
+                    text={"Add Rack(s)"}
+                    icon="add"
+                    minimal
+                    intent={Intent.PRIMARY}
+                    onClick={this.handleOpen}
+                  />
+                  <AnchorButton
+                    className="add "
+                    text={"Delete Rack(s)"}
+                    icon="trash"
+                    minimal
+                    intent={Intent.DANGER}
+                    onClick={this.handleDeleteOpen}
+                  />
+                </div>
+              ) : null}
+              <Card>
+                <div className="rack-view-options">
+                  <Button
+                    className="all-racks"
+                    text="View All Racks"
+                    onClick={(e: any) =>
+                      this.getAllRacks(this.props.currDatacenter)
+                    }
+                  />
+                  <p className="or">or </p>
+                  <RackSelectView
+                    currDatacenter={this.props.currDatacenter}
+                    submitForm={this.viewRackForm}
+                  />
+                </div>
+              </Card>
+            </div>
+          ) : (
+            <Callout title="No Datacenter Delected" intent={Intent.PRIMARY}>
+              <em>Please select a datacenter to view rack information</em>
+            </Callout>
+          )}
 
         {this.state.racks.length !== 0 ? (
           <Link
@@ -349,6 +349,7 @@ class RackTab extends React.Component<
           >
             <Button
               className="print-racks"
+              icon="print"
               text="Print Racks Page"
               onClick={(e: any) => {
                 console.log("storing racks");
