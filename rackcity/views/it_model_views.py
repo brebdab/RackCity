@@ -185,21 +185,25 @@ def validate_model_change(new_model_data, existing_model):
     assets = Asset.objects.filter(model=existing_model.id)
     if len(assets) > 0:
         if (
-            (
-                not new_model_data["network_ports"]
-                and existing_model.network_ports
-            )
-            or (
-                new_model_data["network_ports"]
-                and not existing_model.network_ports
-            )
-            or (
-                set(new_model_data["network_ports"])
-                != set(existing_model.network_ports)
-            )
+            new_model_data["network_ports"]
+            or existing_model.network_ports
         ):
-            raise ModelModificationException(
-                "Unable to modify network ports. ")
+            if (
+                (
+                    not new_model_data["network_ports"]
+                    and existing_model.network_ports
+                )
+                or (
+                    new_model_data["network_ports"]
+                    and not existing_model.network_ports
+                )
+                or (
+                    set(new_model_data["network_ports"])
+                    != set(existing_model.network_ports)
+                )
+            ):
+                raise ModelModificationException(
+                    "Unable to modify network ports. ")
         if (
             (
                 not new_model_data["num_power_ports"]
