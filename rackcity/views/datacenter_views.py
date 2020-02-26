@@ -46,7 +46,7 @@ def datacenter_create(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.CREATE_ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.CREATE_ERROR.value + GenericFailure.INTERNAL.value,
                 "errors": "Don't include 'id' when creating a datacenter"
             },
             status=HTTPStatus.BAD_REQUEST
@@ -68,7 +68,9 @@ def datacenter_create(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.CREATE_ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.CREATE_ERROR.value +
+                    "Datacenter" +
+                    GenericFailure.ON_SAVE.value,
                 "errors": str(error)
             },
             status=HTTPStatus.BAD_REQUEST
@@ -95,8 +97,8 @@ def datacenter_delete(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.DELETE_ERROR.value + GenericFailure.UNKNOWN.value,
-                "errors": "Must include 'id' when deleting a datacenter"
+                    Status.DELETE_ERROR.value + GenericFailure.INTERNAL.value,
+                "errors": "Must include 'id' when creating a datacenter"
             },
             status=HTTPStatus.BAD_REQUEST
         )
@@ -117,7 +119,8 @@ def datacenter_delete(request):
             {
                 "failure_message":
                     Status.DELETE_ERROR.value +
-                    "Datacenter" + GenericFailure.DOES_NOT_EXIST.value,
+                    "Datacenter" +
+                    GenericFailure.DOES_NOT_EXIST.value,
                 "errors": "No existing datacenter with id="+str(id)
             },
             status=HTTPStatus.BAD_REQUEST
@@ -130,7 +133,9 @@ def datacenter_delete(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.DELETE_ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.DELETE_ERROR.value +
+                    "Datacenter" +
+                    GenericFailure.ON_DELETE.value,
                 "errors": str(error)
             },
             status=HTTPStatus.BAD_REQUEST
@@ -156,7 +161,7 @@ def datacenter_page_count(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
                 "errors": "Must specify positive integer page_size."
             },
             status=HTTPStatus.BAD_REQUEST,
@@ -192,7 +197,7 @@ def datacenter_modify(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.MODIFY_ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.MODIFY_ERROR.value + GenericFailure.INTERNAL.value,
                 "errors": "Must include 'id' when modifying a datacenter"
             },
             status=HTTPStatus.BAD_REQUEST
@@ -205,7 +210,8 @@ def datacenter_modify(request):
             {
                 "failure_message":
                     Status.MODIFY_ERROR.value +
-                    "Datacenter" + GenericFailure.DOES_NOT_EXIST.value,
+                    "Datacenter" +
+                    GenericFailure.DOES_NOT_EXIST.value,
                 "errors": "No existing datacenter with id="+str(id)
             },
             status=HTTPStatus.BAD_REQUEST
@@ -250,7 +256,8 @@ def datacenter_modify(request):
             {
                 "failure_message":
                     Status.MODIFY_ERROR.value +
-                    GenericFailure.INVALID_DATA.value,
+                    "Datacenter" +
+                    GenericFailure.ON_SAVE.value,
                 "errors": str(error)
             },
             status=HTTPStatus.BAD_REQUEST

@@ -20,6 +20,7 @@ from rackcity.utils.errors_utils import (
     GenericFailure,
     Status,
     parse_serializer_errors,
+    parse_save_validation_error,
     BulkFailure
 )
 from rest_framework.decorators import permission_classes, api_view
@@ -64,7 +65,7 @@ def model_add(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.CREATE_ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.CREATE_ERROR.value + GenericFailure.INTERNAL.value,
                 "errors": "Don't include 'id' when creating a model"
             },
             status=HTTPStatus.BAD_REQUEST
@@ -86,7 +87,8 @@ def model_add(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.CREATE_ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.CREATE_ERROR.value +
+                    parse_save_validation_error(error, "Model"),
                 "errors": str(error)
             },
             status=HTTPStatus.BAD_REQUEST
@@ -114,7 +116,7 @@ def model_modify(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.MODIFY_ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.MODIFY_ERROR.value + GenericFailure.INTERNAL.value,
                 "errors": "Must include 'id' when modifying a model"
             },
             status=HTTPStatus.BAD_REQUEST
@@ -159,7 +161,7 @@ def model_modify(request):
             {
                 "failure_message":
                     Status.MODIFY_ERROR.value +
-                    GenericFailure.INVALID_DATA.value,
+                    parse_save_validation_error(error, "Model"),
                 "errors": str(error)
             },
             status=HTTPStatus.BAD_REQUEST
@@ -255,7 +257,7 @@ def model_delete(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.DELETE_ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.DELETE_ERROR.value + GenericFailure.INTERNAL.value,
                 "errors": "Must include 'id' when deleting a model"
             },
             status=HTTPStatus.BAD_REQUEST
@@ -293,7 +295,9 @@ def model_delete(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.DELETE_ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.DELETE_ERROR.value +
+                    "Model" +
+                    GenericFailure.ON_DELETE.value,
                 "errors": str(error)
             },
             status=HTTPStatus.BAD_REQUEST
@@ -337,7 +341,7 @@ def model_many(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
                 "errors": " ".join(errors)
             },
             status=HTTPStatus.BAD_REQUEST,
@@ -381,7 +385,7 @@ def model_many(request):
             return JsonResponse(
                 {
                     "failure_message":
-                        Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                        Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
                     "errors": str(error)
                 },
                 status=HTTPStatus.BAD_REQUEST,
@@ -454,7 +458,7 @@ def model_bulk_upload(request):
             {
                 "failure_message":
                     Status.IMPORT_ERROR.value +
-                    BulkFailure.IMPORT_UNKNOWN.value,
+                    BulkFailure.IMPORT.value,
                 "errors":
                     "Bulk upload request should have a parameter 'file'"
             },
@@ -611,7 +615,7 @@ def model_bulk_approve(request):
             {
                 "failure_message":
                     Status.IMPORT_ERROR.value +
-                    BulkFailure.IMPORT_UNKNOWN.value,
+                    BulkFailure.IMPORT.value,
                 "errors":
                     "Bulk approve request should have a parameter " +
                     "'approved_modifications'"
@@ -698,7 +702,7 @@ def model_page_count(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
                 "errors": "Must specify positive integer page_size."
             },
             status=HTTPStatus.BAD_REQUEST,

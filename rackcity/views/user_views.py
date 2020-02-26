@@ -114,7 +114,7 @@ def user_many(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
                 "errors": " ".join(errors)
             },
             status=HTTPStatus.BAD_REQUEST,
@@ -160,7 +160,7 @@ def user_many(request):
             return JsonResponse(
                 {
                     "failure_message":
-                        Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                        Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
                     "errors": str(error)
                 },
                 status=HTTPStatus.BAD_REQUEST,
@@ -191,7 +191,7 @@ def user_delete(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.DELETE_ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.DELETE_ERROR.value + GenericFailure.INTERNAL.value,
                 "errors": "Must include user id when deleting a user",
             },
             status=HTTPStatus.BAD_REQUEST,
@@ -234,7 +234,9 @@ def user_delete(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.DELETE_ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.DELETE_ERROR.value +
+                    "User" +
+                    GenericFailure.ON_DELETE.value,
                 "errors": str(error),
             },
             status=HTTPStatus.BAD_REQUEST,
@@ -267,7 +269,7 @@ def user_page_count(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
                 "errors": "Must specify positive integer page_size."
             },
             status=HTTPStatus.BAD_REQUEST,
@@ -312,7 +314,7 @@ def user_grant_admin(request):
             {
                 "failure_message":
                     Status.MODIFY_ERROR.value +
-                    GenericFailure.UNKNOWN.value,
+                    GenericFailure.INTERNAL.value,
                 "errors":
                     "Must specify user id on grant admin permission"
             },
@@ -352,7 +354,8 @@ def user_grant_admin(request):
         return JsonResponse(
             {
                 "success_message":
-                    Status.SUCCESS.value + "Admin permission granted to user " +
+                    Status.SUCCESS.value +
+                    "Admin permission granted to user " +
                     user.username
             },
             status=HTTPStatus.OK,
@@ -371,7 +374,7 @@ def user_revoke_admin(request):
             {
                 "failure_message":
                     Status.MODIFY_ERROR.value +
-                    GenericFailure.UNKNOWN.value,
+                    GenericFailure.INTERNAL.value,
                 "errors": "Must specify user id on admin permission revoke"
             },
             status=HTTPStatus.BAD_REQUEST,
@@ -403,7 +406,8 @@ def user_revoke_admin(request):
             {
                 "failure_message":
                     Status.MODIFY_ERROR.value +
-                    "Cannot revoke admin permission because user " + user.username +
+                    "Cannot revoke admin permission because user " +
+                    user.username +
                     " does not have it"
             },
             status=HTTPStatus.BAD_REQUEST,
