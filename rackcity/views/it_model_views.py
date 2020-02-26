@@ -205,17 +205,21 @@ def validate_model_change(new_model_data, existing_model):
                 raise ModelModificationException(
                     "Unable to modify network ports. ")
         if (
-            (
-                not new_model_data["num_power_ports"]
-                and existing_model.num_power_ports
-            )
-            or (
-                int(new_model_data["num_power_ports"])
-                != existing_model.num_power_ports
-            )
+            new_model_data["num_power_ports"]
+            or existing_model.num_power_ports
         ):
-            raise ModelModificationException(
-                "Unable to modify number of power ports. ")
+            if (
+                (
+                    not new_model_data["num_power_ports"]
+                    and existing_model.num_power_ports
+                )
+                or (
+                    int(new_model_data["num_power_ports"])
+                    != existing_model.num_power_ports
+                )
+            ):
+                raise ModelModificationException(
+                    "Unable to modify number of power ports. ")
     return
 
 
