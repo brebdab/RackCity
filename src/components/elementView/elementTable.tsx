@@ -9,7 +9,8 @@ import {
   IToastProps,
   Position,
   Toaster,
-  Spinner
+  Spinner,
+  Callout
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { IconNames } from "@blueprintjs/icons";
@@ -81,7 +82,7 @@ interface ElementTableState {
   selected_userid?: string;
   isPowerOptionsOpen: boolean;
   assetPower?: AssetObject;
-  addFilterInProgress: boolean;
+  getDataInProgress: boolean;
 }
 
 interface ElementTableProps {
@@ -131,7 +132,7 @@ class ElementTable extends React.Component<
     openAlert: ElementTableOpenAlert.NONE,
     selected_userid: undefined,
     isPowerOptionsOpen: false,
-    addFilterInProgress: false
+    getDataInProgress: false
   };
 
   //PAGING LOGIC
@@ -143,42 +144,19 @@ class ElementTable extends React.Component<
   previousPage = () => {
     if (this.state.curr_page > 1 && this.props.getData) {
       const next_page = this.state.curr_page - 1;
-      const { sort_by, filters } = this.state;
-      this.props
-        .getData(
-          this.props.type,
-          next_page,
-          this.state.page_type,
-          { sort_by, filters },
-          this.props.token
-        )
-        .then(res => {
-          this.setState({
-            items: res,
-            curr_page: next_page
-          });
-        });
+      this.setState({
+        curr_page: next_page
+      });
+      this.updatePageData(this.state.page_type, next_page);
     }
   };
   nextPage = () => {
     if (this.state.curr_page < this.state.total_pages && this.props.getData) {
       const next_page = this.state.curr_page + 1;
-      const { sort_by } = this.state;
-      const { filters } = this.state;
-      this.props
-        .getData(
-          this.props.type,
-          next_page,
-          this.state.page_type,
-          { sort_by, filters },
-          this.props.token
-        )
-        .then(res => {
-          this.setState({
-            items: res,
-            curr_page: next_page
-          });
-        });
+      this.setState({
+        curr_page: next_page
+      });
+      this.updatePageData(this.state.page_type, next_page);
     }
   };
   componentWillReceiveProps(
@@ -356,7 +334,6 @@ class ElementTable extends React.Component<
   };
 
   updateFilterData = (items: Array<IFilter>) => {
-    this.setState({ addFilterInProgress: true });
     let resp;
     if (this.props.callback! !== undefined) this.props.callback(items);
     this.resetPage();
@@ -376,6 +353,7 @@ class ElementTable extends React.Component<
         });
     }
     if (this.props.getData) {
+      this.setState({ getDataInProgress: true });
       resp = this.props.getData!(
         this.props.type,
         1,
@@ -385,7 +363,7 @@ class ElementTable extends React.Component<
       );
       resp
         .then(res => {
-          this.setState({ addFilterInProgress: false });
+          this.setState({ getDataInProgress: false });
           this.setState({
             items: res
           });
@@ -396,7 +374,7 @@ class ElementTable extends React.Component<
           }
         })
         .catch(err => {
-          this.setState({ addFilterInProgress: false });
+          this.setState({ getDataInProgress: false });
           this.addToast({
             message: err.response.data.failure_message,
             intent: Intent.DANGER
@@ -408,6 +386,9 @@ class ElementTable extends React.Component<
 
   updatePageData = (page: PagingTypes, page_num: number) => {
     if (this.props.getData) {
+      this.setState({
+        getDataInProgress: true
+      });
       this.props.getData!(
         this.props.type,
         page_num,
@@ -417,13 +398,17 @@ class ElementTable extends React.Component<
       )
         .then(res => {
           this.setState({
-            items: res
+            items: res,
+            getDataInProgress: false
           });
         })
         .catch(err => {
           this.addToast({
             message: err.response.data.failure_message,
             intent: Intent.DANGER
+          });
+          this.setState({
+            getDataInProgress: false
           });
         });
     }
@@ -439,17 +424,27 @@ class ElementTable extends React.Component<
   };
   updateSortData = (items: Array<ITableSort>) => {
     if (this.props.getData) {
+      this.setState({
+        getDataInProgress: true
+      });
       this.props.getData!(
         this.props.type,
         this.state.curr_page,
         this.state.page_type,
         { sort_by: items, filters: this.state.filters },
         this.props.token
-      ).then(res => {
-        this.setState({
-          items: res
+      )
+        .then(res => {
+          this.setState({
+            items: res,
+            getDataInProgress: false
+          });
+        })
+        .catch(() => {
+          this.setState({
+            getDataInProgress: false
+          });
         });
-      });
     }
   };
 
@@ -497,6 +492,9 @@ class ElementTable extends React.Component<
   }
   updateTableData = () => {
     if (this.props.getData) {
+      this.setState({
+        getDataInProgress: true
+      });
       this.props
         .getData(
           this.props.type,
@@ -507,11 +505,16 @@ class ElementTable extends React.Component<
         )
         .then(res => {
           this.setState({
-            items: res
+            items: res,
+            getDataInProgress: false
           });
           this.setFieldNames();
         })
-        .catch(err => {});
+        .catch(err => {
+          this.setState({
+            getDataInProgress: false
+          });
+        });
     }
     if (this.props.getPages) {
       this.props
@@ -1000,7 +1003,7 @@ class ElementTable extends React.Component<
                 </tr>
               </thead>
               {this.state.items && this.state.items.length > 0 ? (
-                !this.state.addFilterInProgress ? (
+                !this.state.getDataInProgress ? (
                   <tbody>
                     {this.state.items.map((item: ElementObjectType) => {
                       return (
@@ -1098,14 +1101,25 @@ class ElementTable extends React.Component<
                       );
                     })}
                   </tbody>
-                ) : (
-                  <Spinner size={Spinner.SIZE_STANDARD} />
-                )
-              ) : (
-                <h4 className="no-data-text">no {this.props.type} found </h4>
-              )}
+                ) : null
+              ) : null
+              // <Spinner
+              //   className="table-spinner"
+              //   size={Spinner.SIZE_STANDARD}
+              // />
+              // <h4 className="no-data-text">no {this.props.type} found </h4>
+              }
             </table>
           )}
+          {this.state.getDataInProgress ? (
+            <Spinner className="table-spinner" size={Spinner.SIZE_STANDARD} />
+          ) : null}
+          {this.state.items.length === 0 && !this.state.getDataInProgress ? (
+            <Callout
+              icon={IconNames.ERROR}
+              title={"No " + this.props.type}
+            ></Callout>
+          ) : null}
         </div>
       </div>
     );
