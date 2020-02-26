@@ -80,7 +80,7 @@ export class AssetView extends React.PureComponent<
     params = this.props.match.params;
     return modifyAsset(asset, headers).then(res => {
       if (res.data.warning_message) {
-        this.addWarnToast("Modifed asset " + res.data.warning_message);
+        this.addWarnToast("Modifed asset. " + res.data.warning_message);
       } else {
         this.addSuccessToast("Successfuly modified asset");
       }

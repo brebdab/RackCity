@@ -9,7 +9,8 @@ import {
   MenuItem,
   Position,
   Toaster,
-  Card
+  Card,
+  Classes
 } from "@blueprintjs/core";
 import axios from "axios";
 import * as React from "react";
@@ -287,6 +288,7 @@ class RackTab extends React.Component<
           handleClose={this.handleDeleteCancel}
         />
         <Alert
+          className={Classes.DARK}
           cancelButtonText="Cancel"
           confirmButtonText="Delete"
           intent="danger"

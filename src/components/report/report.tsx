@@ -1,4 +1,16 @@
-import { Classes, Card, Elevation, AnchorButton, Button, FormGroup, MenuItem, Tab, Tabs, TabId, Alert } from "@blueprintjs/core";
+import {
+  Classes,
+  Card,
+  Elevation,
+  AnchorButton,
+  Button,
+  FormGroup,
+  MenuItem,
+  Tab,
+  Tabs,
+  TabId,
+  Alert
+} from "@blueprintjs/core";
 import * as React from "react";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -6,7 +18,11 @@ import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import { API_ROOT } from "../../utils/api-config";
 import "./report.scss";
-import { DatacenterSelect, filterDatacenter, renderDatacenterItem } from "../../forms/formUtils";
+import {
+  DatacenterSelect,
+  filterDatacenter,
+  renderDatacenterItem
+} from "../../forms/formUtils";
 import { DatacenterObject, getHeaders } from "../../utils/utils";
 
 interface ReportProps {
@@ -40,14 +56,14 @@ interface ReportState {
   datacenter?: DatacenterObject;
   datacenters?: Array<DatacenterObject>;
   selectedTab: string;
-  datacenter_loaded: boolean
+  datacenter_loaded: boolean;
 }
 var console: any = {};
-console.log = function () { };
+console.log = function() {};
 
 export class Report extends React.PureComponent<
   ReportProps & RouteComponentProps
-  > {
+> {
   public state: ReportState = {
     freeRack: 0,
     model_allocation: [],
@@ -76,75 +92,82 @@ export class Report extends React.PureComponent<
   showReport = (field: string) => {
     return (
       <div>
-        {this.state.state_loaded ? <Card elevation={Elevation.TWO}>
-          <h2 className={"report-title"}>{field} Datacenter Report</h2>
-          <h4 className={"report-summary"}>Percent of unused rack space: {(this.state.freeRack * 100).toFixed(2)}%</h4>
-          <h4 className={"report-summary"}>Allocation of used rack space:</h4>
-          <div className={"row"}>
-            <div className={"column-third-report"}>
-              <h5>Used rack space by vendor:</h5>
+        {this.state.state_loaded ? (
+          <Card elevation={Elevation.TWO}>
+            <h2 className={"report-title"}>{field} Datacenter Report</h2>
+            <h4 className={"report-summary"}>
+              Percent of unused rack space:{" "}
+              {(this.state.freeRack * 100).toFixed(2)}%
+            </h4>
+            <h4 className={"report-summary"}>Allocation of used rack space:</h4>
+            <div className={"row"}>
+              <div className={"column-third-report"}>
+                <h5>Used rack space by vendor:</h5>
+              </div>
+              <div className={"column-third-right-report"}>
+                <h5>Used rack space by model:</h5>
+              </div>
+              <div className={"column-third-right-report"}>
+                <h5>Used rack space by owner:</h5>
+              </div>
             </div>
-            <div className={"column-third-right-report"}>
-              <h5>Used rack space by model:</h5>
+            <div className={"row"}>
+              <div className={"column-third-report"}>
+                <Tabular
+                  data={this.state.vendor_allocation}
+                  fields={this.vendorFields}
+                />
+              </div>
+              <div className={"column-third-right-report"}>
+                <Tabular
+                  data={this.state.model_allocation}
+                  fields={this.modelFields}
+                />
+              </div>
+              <div className={"column-third-right-report"}>
+                <Tabular
+                  data={this.state.owner_allocation}
+                  fields={this.ownerFields}
+                />
+              </div>
             </div>
-            <div className={"column-third-right-report"}>
-              <h5>Used rack space by owner:</h5>
-            </div>
-          </div>
-          <div className={"row"}>
-            <div className={"column-third-report"}>
-              <Tabular
-                data={this.state.vendor_allocation}
-                fields={this.vendorFields}
-              />
-            </div>
-            <div className={"column-third-right-report"}>
-              <Tabular
-                data={this.state.model_allocation}
-                fields={this.modelFields}
-              />
-            </div>
-            <div className={"column-third-right-report"}>
-              <Tabular
-                data={this.state.owner_allocation}
-                fields={this.ownerFields}
-              />
-            </div>
-          </div>
-        </Card> : null}
+          </Card>
+        ) : null}
       </div>
-    )
-  }
+    );
+  };
 
   showDatacenterReport = () => {
     return (
       <div>
         <Card elevation={Elevation.TWO} className={"row"}>
-          {this.state.datacenters ? <FormGroup label="" inline={true}>
-            <DatacenterSelect
-              popoverProps={{
-                minimal: true,
-                popoverClassName: "dropdown",
-                usePortal: true
-              }}
-              items={this.state.datacenters!}
-              onItemSelect={(datacenter: DatacenterObject) => {
-                this.onDatacenterSelect(datacenter);
-              }}
-              itemRenderer={renderDatacenterItem}
-              itemPredicate={filterDatacenter}
-              noResults={<MenuItem disabled={true} text="No results." />}
-            >
-              <Button
-                rightIcon="caret-down"
-                text={
-                  this.state.datacenter && this.state.datacenter.name
-                    ? this.state.datacenter.name
-                    : "Select datacenter"
-                }
-              />
-            </DatacenterSelect>
-          </FormGroup> : null}
+          {this.state.datacenters ? (
+            <FormGroup label="" inline={true}>
+              <DatacenterSelect
+                popoverProps={{
+                  minimal: true,
+                  popoverClassName: "dropdown",
+                  usePortal: true
+                }}
+                items={this.state.datacenters!}
+                onItemSelect={(datacenter: DatacenterObject) => {
+                  this.onDatacenterSelect(datacenter);
+                }}
+                itemRenderer={renderDatacenterItem}
+                itemPredicate={filterDatacenter}
+                noResults={<MenuItem disabled={true} text="No results." />}
+              >
+                <Button
+                  rightIcon="caret-down"
+                  text={
+                    this.state.datacenter && this.state.datacenter.name
+                      ? this.state.datacenter.name
+                      : "Select datacenter"
+                  }
+                />
+              </DatacenterSelect>
+            </FormGroup>
+          ) : null}
           <AnchorButton
             small
             text={"View Datacenter Report"}
@@ -152,9 +175,12 @@ export class Report extends React.PureComponent<
               if (!this.state.datacenter) {
                 this.setState({
                   datacenterSelectionAlert: true
-                })
+                });
               } else {
-                getDatacenterReport(this.props.token, this.state.datacenter).then(result => {
+                getDatacenterReport(
+                  this.props.token,
+                  this.state.datacenter
+                ).then(result => {
                   this.setState({
                     freeRack: result.free_rackspace_percent,
                     model_allocation: result.model_allocation,
@@ -162,16 +188,18 @@ export class Report extends React.PureComponent<
                     vendor_allocation: result.vendor_allocation,
                     datacenter_loaded: true,
                     state_loaded: true
-                  })
-                })
+                  });
+                });
               }
             }}
           />
         </Card>
-        {this.state.datacenter_loaded ? this.showReport(this.state.datacenter!.name) : null}
+        {this.state.datacenter_loaded
+          ? this.showReport(this.state.datacenter!.name)
+          : null}
       </div>
-    )
-  }
+    );
+  };
 
   onDatacenterSelect = (datacenter: DatacenterObject) => {
     this.setState({
@@ -180,12 +208,17 @@ export class Report extends React.PureComponent<
   };
 
   componentDidMount() {
-    axios.post(API_ROOT + "api/datacenters/get-many", {}, getHeaders(this.props.token))
+    axios
+      .post(
+        API_ROOT + "api/datacenters/get-many",
+        {},
+        getHeaders(this.props.token)
+      )
       .then(res => {
         const dcs = res.data.datacenters as Array<DatacenterObject>;
         this.setState({
           datacenters: dcs
-        })
+        });
         getGlobalReport(this.props.token).then(result => {
           this.setState({
             freeRack: result.free_rackspace_percent,
@@ -193,9 +226,9 @@ export class Report extends React.PureComponent<
             owner_allocation: result.owner_allocation,
             vendor_allocation: result.vendor_allocation,
             state_loaded: true
-          })
-        })
-      })
+          });
+        });
+      });
   }
 
   render() {
@@ -214,7 +247,7 @@ export class Report extends React.PureComponent<
               vendor_allocation: [],
               state_loaded: false,
               datacenter_loaded: false
-            })
+            });
             if (newTab === "global") {
               getGlobalReport(this.props.token).then(result => {
                 this.setState({
@@ -223,27 +256,38 @@ export class Report extends React.PureComponent<
                   owner_allocation: result.owner_allocation,
                   vendor_allocation: result.vendor_allocation,
                   state_loaded: true
-                })
-              })
+                });
+              });
             } else {
               this.setState({
                 datacenter: undefined,
                 datacenter_loaded: false
-              })
+              });
             }
-            this.setState({ selectedTab: newTab })
+            this.setState({ selectedTab: newTab });
           }}
         >
-          <Tab className={"report-all"} id="global" title="Global Report" panel={this.showReport("Global")} />
-          <Tab className={"report-all"} id="datacenter" title="Datacenter Report" panel={this.showDatacenterReport()} />
+          <Tab
+            className={"report-all"}
+            id="global"
+            title="Global Report"
+            panel={this.showReport("Global")}
+          />
+          <Tab
+            className={"report-all"}
+            id="datacenter"
+            title="Datacenter Report"
+            panel={this.showDatacenterReport()}
+          />
         </Tabs>
         <Alert
+          className={Classes.DARK}
           isOpen={this.state.datacenterSelectionAlert}
           confirmButtonText={"OK"}
           onConfirm={() => {
             this.setState({
               datacenterSelectionAlert: false
-            })
+            });
           }}
         >
           <p>Error: must select a datacenter</p>
@@ -305,15 +349,20 @@ async function getGlobalReport(token: string) {
   });
 }
 
-async function getDatacenterReport(token: string, datacenter: DatacenterObject) {
+async function getDatacenterReport(
+  token: string,
+  datacenter: DatacenterObject
+) {
   const headers = {
     headers: {
       Authorization: "Token " + token
     }
   };
-  return await axios.get(API_ROOT + "api/report/datacenter/" + datacenter.id, headers).then(res => {
-    return res.data;
-  })
+  return await axios
+    .get(API_ROOT + "api/report/datacenter/" + datacenter.id, headers)
+    .then(res => {
+      return res.data;
+    });
 }
 
 const mapStatetoProps = (state: any) => {

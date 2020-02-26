@@ -175,6 +175,7 @@ export class ModelView extends React.PureComponent<
                 onClick={this.handleDeleteOpen}
               />
               <Alert
+                className={Classes.DARK}
                 cancelButtonText="Cancel"
                 confirmButtonText="Delete"
                 intent="danger"

@@ -116,7 +116,10 @@ export class Navigation extends React.Component<
                     />
                   ) : null}
                   <AnchorButton
-                    onClick={() => this.clearUsernameAndLogout()}
+                    onClick={() => {
+                      this.clearUsernameAndLogout();
+                      this.props.history.push("/login");
+                    }}
                     className="nav-bar-button"
                     icon="user"
                     text="Logout"

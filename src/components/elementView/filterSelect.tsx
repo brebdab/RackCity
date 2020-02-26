@@ -83,20 +83,10 @@ class FilterSelect extends React.Component<
     return (
       <div className="range">
         <FormGroup label="Min">
-          <Field
-            field="min"
-            placeholder="min"
-            type="number"
-            onChange={this.handleChange}
-          />
+          <Field field="min" placeholder="min" onChange={this.handleChange} />
         </FormGroup>
         <FormGroup label="Max">
-          <Field
-            field="max"
-            placeholder="max"
-            type="number"
-            onChange={this.handleChange}
-          />
+          <Field field="max" placeholder="max" onChange={this.handleChange} />
         </FormGroup>
       </div>
     );
