@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-from rackcity.models import Datacenter
+from rackcity.models import Datacenter, Rack
 from rackcity.api.serializers import DatacenterSerializer
 from rackcity.utils.log_utils import (
     log_action,
@@ -96,11 +96,20 @@ def datacenter_delete(request):
             {
                 "failure_message":
                     Status.DELETE_ERROR.value + GenericFailure.UNKNOWN.value,
-                "errors": "Must include 'id' when creating a datacenter"
+                "errors": "Must include 'id' when deleting a datacenter"
             },
             status=HTTPStatus.BAD_REQUEST
         )
     id = data['id']
+    racks = Rack.objects.filter(datacenter=id)
+    if len(racks) > 0:
+        return JsonResponse(
+            {"failure_message":
+                Status.DELETE_ERROR.value +
+                "Cannot delete datacenter that still contains racks"
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
     try:
         existing_dc = Datacenter.objects.get(id=id)
     except ObjectDoesNotExist:
@@ -114,6 +123,7 @@ def datacenter_delete(request):
             status=HTTPStatus.BAD_REQUEST
         )
     dc_abbreviation = existing_dc.abbreviation
+
     try:
         existing_dc.delete()
     except Exception as error:
@@ -202,6 +212,15 @@ def datacenter_modify(request):
         )
     for field in data.keys():
         if field != "id":
+            if len(data[field]) == 0:
+                return JsonResponse(
+                    {
+                        "failure_message":
+                            Status.MODIFY_ERROR.value +
+                            "field " + field + " cannot be empty"
+                    },
+                    status=HTTPStatus.BAD_REQUEST
+                )
             if field == "name":
                 dc_with_name = Datacenter.objects.filter(
                     name__iexact=data[field]
