@@ -185,8 +185,18 @@ def validate_model_change(new_model_data, existing_model):
     assets = Asset.objects.filter(model=existing_model.id)
     if len(assets) > 0:
         if (
-            set(new_model_data["network_ports"])
-            != set(existing_model.network_ports)
+            (
+                not new_model_data["network_ports"]
+                and existing_model.network_ports
+            )
+            or (
+                new_model_data["network_ports"]
+                and not existing_model.network_ports
+            )
+            or (
+                set(new_model_data["network_ports"])
+                != set(existing_model.network_ports)
+            )
         ):
             raise ModelModificationException(
                 "Unable to modify network ports. ")
@@ -486,8 +496,7 @@ def model_bulk_upload(request):
             (model_data['vendor'], model_data['model_number'])
             in models_in_import
         ):
-            failure_message = \
-                Status.IMPORT_ERROR.value + \
+            failure_message = Status.IMPORT_ERROR.value + \
                 "Vendor+model_number combination must be unique, but " + \
                 "vendor="+model_data['vendor'] + \
                 ", model_number="+model_data['model_number'] + \
@@ -512,8 +521,7 @@ def model_bulk_upload(request):
             try:
                 validate_model_height_change(model_data, existing_model)
             except LocationException as error:
-                failure_message = \
-                    Status.IMPORT_ERROR.value + \
+                failure_message = Status.IMPORT_ERROR.value + \
                     "Height change of this model causes conflicts: " + \
                     "vendor="+model_data['vendor'] + \
                     ", model_number="+model_data['model_number'] + \
