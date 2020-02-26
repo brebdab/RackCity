@@ -702,7 +702,7 @@ class ElementTable extends React.Component<
     if (resp) {
       resp
         .then(res => {
-          this.addErrorToast("Sucessfully deleted");
+          this.addSuccessToast("Sucessfully deleted");
           this.updateTableData();
           this.handleDeleteCancel();
           if (this.props.updateDatacenters) {
@@ -1069,6 +1069,11 @@ class ElementTable extends React.Component<
                                   icon="edit"
                                   minimal
                                   onClick={(event: any) => {
+                                    console.log(
+                                      "SCROLL",
+                                      window.scrollX,
+                                      window.scrollY
+                                    );
                                     this.handleEditButtonClick(item);
                                     event.stopPropagation();
                                   }}

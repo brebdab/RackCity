@@ -199,14 +199,6 @@ class PropertiesView extends React.PureComponent<
       </div>
     );
   }
-
-  private handleEdit = () => alert("Editor here");
-  private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
-  private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
-  private handleDelete = () => {
-    alert("Model was successfully deleted"); // TODO change to real deletion
-    this.setState({ isDeleteOpen: false });
-  };
 }
 
 export default withRouter(PropertiesView);
