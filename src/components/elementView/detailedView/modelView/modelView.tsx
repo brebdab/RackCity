@@ -58,7 +58,7 @@ async function getData(modelkey: string, token: string) {
 export class ModelView extends React.PureComponent<
   RouteComponentProps & ModelViewProps,
   ModelViewState
-  > {
+> {
   public state: ModelViewState = {
     assets: [],
     model: {} as ModelObject,
@@ -109,6 +109,10 @@ export class ModelView extends React.PureComponent<
     deleteModel(this.state.model!, getHeaders(this.props.token))
       .then(res => {
         this.setState({ isDeleteOpen: false });
+        this.addToast({
+          message: "Succesfully Deleted Model",
+          intent: Intent.PRIMARY
+        });
         this.props.history.push("/");
       })
       .catch(err => {

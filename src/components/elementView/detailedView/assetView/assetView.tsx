@@ -319,6 +319,7 @@ export class AssetView extends React.PureComponent<
     deleteAsset(this.state.asset!, getHeaders(this.props.token))
       .then(res => {
         this.setState({ isDeleteOpen: false });
+        this.addSuccessToast("Successfuly Deleted Asset");
         this.props.history.push("/");
       })
       .catch(err => {

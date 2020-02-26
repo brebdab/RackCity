@@ -715,7 +715,7 @@ class ElementTable extends React.Component<
     if (resp) {
       resp
         .then(res => {
-          this.addErrorToast("Sucessfully deleted");
+          this.addSuccessToast("Sucessfully deleted");
           this.updateTableData();
           this.handleDeleteCancel();
           if (this.props.updateDatacenters) {
