@@ -23,6 +23,7 @@ class GenericFailure(Enum):
     INVALID_DATA = "Required values are missing or invalid."
     ON_SAVE = " failed to save. Please ensure all input values are valid."
     ON_DELETE = " failed to delete due to internal error."
+    PAGE_ERROR = "Failed to load this page of data. Please try again."
 
 
 class UserFailure(Enum):

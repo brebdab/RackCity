@@ -105,7 +105,7 @@ def asset_many(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.ERROR.value + GenericFailure.INTERNAL.value,
+                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
                 "errors": " ".join(errors)
             },
             status=HTTPStatus.BAD_REQUEST,
@@ -149,7 +149,7 @@ def asset_many(request):
             return JsonResponse(
                 {
                     "failure_message":
-                        Status.ERROR.value + GenericFailure.INTERNAL.value,
+                        Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
                     "errors": str(error)
                 },
                 status=HTTPStatus.BAD_REQUEST,
@@ -1279,7 +1279,7 @@ def asset_page_count(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.ERROR.value + GenericFailure.INTERNAL.value,
+                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
                 "errors": "Must specify positive integer page_size."
             },
             status=HTTPStatus.BAD_REQUEST,
