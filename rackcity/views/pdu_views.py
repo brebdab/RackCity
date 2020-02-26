@@ -283,7 +283,7 @@ def power_availability(request):
                 "failure_message":
                     Status.ERROR.value +
                     "Rack" + GenericFailure.DOES_NOT_EXIST.value,
-                "errors": "No existing rack with id="+str(data['id'])
+                "errors": "No existing rack with id="+str(rack_id)
             },
             status=HTTPStatus.BAD_REQUEST
         )
