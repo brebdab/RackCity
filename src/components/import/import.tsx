@@ -147,7 +147,7 @@ export class BulkImport extends React.PureComponent<
                 modifiedModels: undefined
               })
             }
-            className={"modify-table"}
+            className={Classes.DARK + " modify-table"}
             usePortal={true}
             isCloseButtonShown={true}
             title={"Model Modifications Menu"}
@@ -158,6 +158,7 @@ export class BulkImport extends React.PureComponent<
               modelsAdded={this.state.addedModels}
               modelsIgnored={this.state.ignoredModels}
               callback={() => {
+                // setTimeout(() => {}, 1000);
                 this.setState({
                   modelAlterationsIsOpen: false,
                   modifiedModels: undefined,
@@ -186,7 +187,7 @@ export class BulkImport extends React.PureComponent<
                 modifiedAssets: undefined
               })
             }
-            className={Classes.DARK + "modify-table"}
+            className={Classes.DARK + " modify-table"}
             usePortal={true}
             isCloseButtonShown={true}
             title={"Asset Modifications Menu"}
@@ -197,10 +198,11 @@ export class BulkImport extends React.PureComponent<
               modelsAdded={this.state.addedAssets}
               modelsIgnored={this.state.ignoredAssets}
               callback={() => {
+                // setTimeout(() => {}, 1000);
                 this.setState({
-                  assetAlterationsIsOpen: false,
-                  modifiedAssets: undefined,
-                  loadedAssets: undefined
+                  modelAlterationsIsOpen: false,
+                  modifiedModels: undefined,
+                  loadedModels: undefined
                 });
               }}
               operation={"assets"}
@@ -216,7 +218,7 @@ export class BulkImport extends React.PureComponent<
                 modifiedNetwork: undefined
               })
             }
-            className={"modify-table"}
+            className={Classes.DARK + " modify-table"}
             usePortal={true}
             isCloseButtonShown={true}
             title={"Network Connections Modifications Menu"}
@@ -227,9 +229,11 @@ export class BulkImport extends React.PureComponent<
               modelsAdded={this.state.addedNetwork}
               modelsIgnored={this.state.ignoredNetwork}
               callback={() => {
+                // setTimeout(() => {}, 1000);
                 this.setState({
-                  networkAlterationsIsOpen: false,
-                  modifiedNetwork: undefined
+                  modelAlterationsIsOpen: false,
+                  modifiedModels: undefined,
+                  loadedModels: undefined
                 });
               }}
               operation={"network"}

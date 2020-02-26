@@ -1,4 +1,10 @@
-import { AnchorButton } from "@blueprintjs/core";
+import {
+  AnchorButton,
+  IToastProps,
+  Toaster,
+  Position,
+  Intent
+} from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
@@ -17,7 +23,7 @@ interface ModifierProps {
   operation: string;
 }
 var console: any = {};
-console.log = function () { };
+console.log = function() {};
 
 export interface AssetObject {
   [key: string]: any;
@@ -31,7 +37,7 @@ export interface AssetObject {
   asset_number: number;
   datacenter: string;
   power_port_connection_1: PowerConnection;
-  power_port_connection_2: PowerConnection
+  power_port_connection_2: PowerConnection;
 }
 
 export interface ModelObjectMod {
@@ -71,133 +77,174 @@ interface ModifierState {
 export class Modifier extends React.PureComponent<
   RouteComponentProps & ModifierProps,
   ModifierState
-  > {
+> {
   public state: ModifierState = {
     modifiedModels: []
   };
 
+  private toaster: Toaster = {} as Toaster;
+  private addSuccessToast(message: string) {
+    this.addToast({ message: message, intent: Intent.PRIMARY });
+  }
+  private addErrorToast(message: string) {
+    this.addToast({ message: message, intent: Intent.DANGER });
+  }
+  private addToast(toast: IToastProps) {
+    toast.timeout = 5000;
+    this.toaster.show(toast);
+  }
+  private addWarnToast = (message: string) => {
+    this.addToast({
+      message: message,
+      intent: Intent.WARNING
+    });
+  };
+  private refHandlers = {
+    toaster: (ref: Toaster) => (this.toaster = ref)
+  };
+
+  renderOneModification(obj: any, fields: any, model: any) {
+    return (
+      <div>
+        <table className={"bp3-html-table"}>
+          <thead>
+            <tr>
+              <th>Modified or Original?</th>
+              {Object.keys(model).map((item: string) => {
+                console.log(item);
+                if (item !== "id") {
+                  if (item === "power_connections") {
+                    return <th></th>;
+                  } else return <th>{fields[item]}</th>;
+                }
+                // TODO might need to make separate fields arrays based on this.props.operation
+                else return <th> </th>;
+              })}
+              {this.props.operation === "assets" ? <th>Power Port 1</th> : null}
+              {this.props.operation === "assets" ? <th>Power Port 2</th> : null}
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Existing</td>
+              {Object.keys(model).map((key: string) => {
+                if (key === "rack")
+                  return (
+                    <td>
+                      {obj.existing.rack.row_letter +
+                        "" +
+                        obj.existing.rack.rack_num}
+                    </td>
+                  );
+                else if (key === "model")
+                  return (
+                    <td>
+                      {obj.existing.model.vendor +
+                        " " +
+                        obj.existing.model.model_number}
+                    </td>
+                  );
+                else if (key !== "id") {
+                  if (key !== "power_connections")
+                    return <td>{obj.existing[key]}</td>;
+                  else {
+                    return <td></td>;
+                  }
+                } else return <td> </td>;
+              })}
+              {this.props.operation === "assets"
+                ? Object.keys(obj.existing.power_connections).map(
+                    (portNum: string) => {
+                      return (
+                        <td>
+                          {obj.existing.power_connections[portNum].left_right}
+                          {obj.existing.power_connections[portNum].port_number}
+                        </td>
+                      );
+                    }
+                  )
+                : null}
+            </tr>
+            <tr>
+              <td>Modified</td>
+              {Object.keys(model).map((key: string) => {
+                if (key === "rack")
+                  return (
+                    <td>
+                      {obj.modified.rack.row_letter +
+                        "" +
+                        obj.modified.rack.rack_num}
+                    </td>
+                  );
+                else if (key === "model")
+                  return (
+                    <td>
+                      {obj.modified.model.vendor +
+                        " " +
+                        obj.modified.model.model_number}
+                    </td>
+                  );
+                else if (key !== "id") {
+                  if (key !== "power_connections")
+                    return <td>{obj.modified[key]}</td>;
+                  else {
+                    return <td></td>;
+                  }
+                } else return <td> </td>;
+              })}
+              {this.props.operation === "assets"
+                ? Object.keys(obj.modified.power_connections).map(
+                    (portNum: string) => {
+                      return (
+                        <td>
+                          {obj.modified.power_connections[portNum].left_right}
+                          {obj.modified.power_connections[portNum].port_number}
+                        </td>
+                      );
+                    }
+                  )
+                : null}
+            </tr>
+          </tbody>
+        </table>
+        <div className={"upload-button"}>
+          <Checks
+            {...this.props}
+            linkedModel={obj.modified}
+            callback={(model: any) => {
+              var index = this.state.modifiedModels.findIndex(
+                (element: Check) => {
+                  return element.model === model;
+                }
+              );
+              let check: Array<Check>;
+              check = this.state.modifiedModels;
+              check[index].checked = !check[index].checked;
+              this.setState({
+                modifiedModels: check
+              });
+              // this.state.modifiedModels[index].checked = !this.state.modifiedModels[index].checked
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
+
   renderModifications(model: any, fields: any) {
+    let mods: Array<any> = [];
     for (let i = 0; i < this.props.modelsModified!.length; i++) {
-      let obj = this.props.modelsModified![i]
+      let obj = this.props.modelsModified![i];
       let checkObj: Check;
       checkObj = { model: obj.modified, checked: false };
       this.state.modifiedModels.push(checkObj);
-      return (
-        <div>
-          <table className={"bp3-html-table"}>
-            <thead>
-              <tr>
-                <th>Modified or Original?</th>
-                {Object.keys(model).map((item: string) => {
-                  console.log(item)
-                  if (item !== "id") {
-                    if (item === "power_connections") {
-                      return <th></th>
-                    } else
-                      return <th>{fields[item]}</th>;
-                  }
-                  // TODO might need to make separate fields arrays based on this.props.operation
-                  else return <th> </th>;
-                })}
-                {this.props.operation === "assets" ? <th>Power Port 1</th> : null}
-                {this.props.operation === "assets" ? <th>Power Port 2</th> : null}
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Existing</td>
-                {Object.keys(model).map((key: string) => {
-                  if (key === "rack")
-                    return (
-                      <td>
-                        {obj.existing.rack.rack_num +
-                          "" +
-                          obj.existing.rack.row_letter}
-                      </td>
-                    );
-                  else if (key === "model")
-                    return (
-                      <td>
-                        {obj.existing.model.vendor +
-                          " " +
-                          obj.existing.model.model_number}
-                      </td>
-                    );
-                  else if (key !== "id") {
-                    if (key !== "power_connections")
-                      return <td>{obj.existing[key]}</td>;
-                    else {
-                      return <td></td>
-                    }
-                  }
-                  else return <td> </td>;
-                })}
-                {this.props.operation === "assets" ? Object.keys(obj.existing.power_connections).map((portNum: string) => {
-                  return <td>{obj.existing.power_connections[portNum].left_right}{obj.existing.power_connections[portNum].port_number}</td>
-                }) : null}
-              </tr>
-              <tr>
-                <td>Modified</td>
-                {Object.keys(model).map((key: string) => {
-                  if (key === "rack")
-                    return (
-                      <td>
-                        {obj.modified.rack.rack_num +
-                          "" +
-                          obj.modified.rack.row_letter}
-                      </td>
-                    );
-                  else if (key === "model")
-                    return (
-                      <td>
-                        {obj.modified.model.vendor +
-                          " " +
-                          obj.modified.model.model_number}
-                      </td>
-                    );
-                  else if (key !== "id") {
-                    if (key !== "power_connections")
-                      return <td>{obj.modified[key]}</td>;
-                    else {
-                      return <td></td>
-                    }
-                  }
-                  else return <td> </td>;
-                })}
-                {this.props.operation === "assets" ? Object.keys(obj.modified.power_connections).map((portNum: string) => {
-                  return <td>{obj.modified.power_connections[portNum].left_right}{obj.modified.power_connections[portNum].port_number}</td>
-                }) : null}
-              </tr>
-            </tbody>
-          </table>
-          <div className={"upload-button"}>
-            <Checks
-              {...this.props}
-              linkedModel={obj.modified}
-              callback={(model: any) => {
-                var index = this.state.modifiedModels.findIndex(
-                  (element: Check) => {
-                    return element.model === model; // TODO might need to make Check type have model: any
-                  }
-                );
-                let check: Array<Check>;
-                check = this.state.modifiedModels;
-                check[index].checked = !check[index].checked;
-                this.setState({
-                  modifiedModels: check
-                });
-                // this.state.modifiedModels[index].checked = !this.state.modifiedModels[index].checked
-              }}
-            />
-          </div>
-        </div>
-      );
+      mods.push(this.renderOneModification(obj, fields, model));
     }
+    return mods;
   }
 
   render() {
     if (this.props.modelsModified !== undefined) {
-      console.log(this.props.modelsModified[0]);
       let model: any;
       model = this.props.modelsModified[0].existing;
       let fields: any;
@@ -238,17 +285,23 @@ export class Modifier extends React.PureComponent<
           source_port: "en0",
           destination_hostname: "Desitnation Hostname",
           destination_port: "Destination Port"
-        }
+        };
       }
 
       return (
         <div>
+          <Toaster
+            autoFocus={false}
+            canEscapeKeyClear={true}
+            position={Position.TOP}
+            ref={this.refHandlers.toaster}
+          />
           {this.renderModifications(model, fields)}
           <h1> </h1>
           <AnchorButton
-            className={"upload-button"}
+            className={"upload-button-import"}
             large={true}
-            intent="success"
+            intent="primary"
             icon="import"
             text="Confirm Changes"
             onClick={() => {
@@ -269,23 +322,38 @@ export class Modifier extends React.PureComponent<
                 ).then(
                   res => {
                     console.log(this.props);
-                    alert(
+                    this.addSuccessToast(
                       "Success! Modified: " +
-                      modified.length +
-                      "; Added: " +
-                      this.props.modelsAdded! +
-                      "; Ignored: " +
-                      (this.props.modelsIgnored! +
-                        this.props.modelsModified!.length -
-                        modified.length)
+                        modified.length +
+                        "; Added: " +
+                        this.props.modelsAdded! +
+                        "; Ignored: " +
+                        (this.props.modelsIgnored! +
+                          this.props.modelsModified!.length -
+                          modified.length)
                     );
+                    // alert(
+                    //   "Success! Modified: " +
+                    //     modified.length +
+                    //     "; Added: " +
+                    //     this.props.modelsAdded! +
+                    //     "; Ignored: " +
+                    //     (this.props.modelsIgnored! +
+                    //       this.props.modelsModified!.length -
+                    //       modified.length)
+                    // );
+                    if (res.warning_message) {
+                      this.addWarnToast(res.warning_message);
+                      // alert("Warning: " + res.warning_message);
+                    }
                     this.setState({
                       modifiedModels: []
                     });
                     this.props.callback();
                   },
                   err => {
-                    alert(err.response.data.failure_message);
+                    this.addErrorToast(err.response.data.failure_message);
+                    // alert(err.response.data.failure_message);
                   }
                 );
               } else if (
@@ -305,16 +373,30 @@ export class Modifier extends React.PureComponent<
                   this.props.operation
                 ).then(
                   res => {
-                    alert(
+                    this.addSuccessToast(
                       "Success! Modified: " +
-                      modified.length +
-                      "; Added: " +
-                      this.props.modelsAdded! +
-                      "; Ignored: " +
-                      (this.props.modelsIgnored! +
-                        this.props.modelsModified!.length -
-                        modified.length)
+                        modified.length +
+                        "; Added: " +
+                        this.props.modelsAdded! +
+                        "; Ignored: " +
+                        (this.props.modelsIgnored! +
+                          this.props.modelsModified!.length -
+                          modified.length)
                     );
+                    // alert(
+                    //   "Success! Modified: " +
+                    //     modified.length +
+                    //     "; Added: " +
+                    //     this.props.modelsAdded! +
+                    //     "; Ignored: " +
+                    //     (this.props.modelsIgnored! +
+                    //       this.props.modelsModified!.length -
+                    //       modified.length)
+                    // );
+                    if (res.warning_message) {
+                      this.addWarnToast(res.warning_message);
+                      // alert("Warning: " + res.warning_message);
+                    }
                     // alert("Modifications were successful")
                     this.setState({
                       modifiedModels: []
@@ -322,7 +404,8 @@ export class Modifier extends React.PureComponent<
                     this.props.callback();
                   },
                   err => {
-                    alert(err.response.data.failure_message);
+                    this.addErrorToast(err.response.data.failure_message);
+                    // alert(err.response.data.failure_message);
                   }
                 );
               } else {
@@ -338,16 +421,30 @@ export class Modifier extends React.PureComponent<
                   this.props.operation
                 ).then(
                   res => {
-                    alert(
+                    this.addSuccessToast(
                       "Success! Modified: " +
-                      modified.length +
-                      "; Added: " +
-                      this.props.modelsAdded! +
-                      "; Ignored: " +
-                      (this.props.modelsIgnored! +
-                        this.props.modelsModified!.length -
-                        modified.length)
+                        modified.length +
+                        "; Added: " +
+                        this.props.modelsAdded! +
+                        "; Ignored: " +
+                        (this.props.modelsIgnored! +
+                          this.props.modelsModified!.length -
+                          modified.length)
                     );
+                    // alert(
+                    //   "Success! Modified: " +
+                    //     modified.length +
+                    //     "; Added: " +
+                    //     this.props.modelsAdded! +
+                    //     "; Ignored: " +
+                    //     (this.props.modelsIgnored! +
+                    //       this.props.modelsModified!.length -
+                    //       modified.length)
+                    // );
+                    if (res.warning_message) {
+                      this.addWarnToast(res.warning_message);
+                      // alert("Warning: " + res.warning_message);
+                    }
                     // alert("Modifications were successful")
                     this.setState({
                       modifiedModels: []
@@ -355,7 +452,8 @@ export class Modifier extends React.PureComponent<
                     this.props.callback();
                   },
                   err => {
-                    alert(err.response.data.failure_message);
+                    this.addErrorToast(err.response.data.failure_message);
+                    // alert(err.response.data.failure_message);
                   }
                 );
               }
@@ -388,10 +486,11 @@ async function uploadModified(
         API_ROOT + "api/assets/network-bulk-approve",
         { approved_modifications: modelList },
         headers
-      ).then(res => {
-        const data = res.data
-        return data
-      })
+      )
+      .then(res => {
+        const data = res.data;
+        return data;
+      });
   }
   return await axios
     .post(
