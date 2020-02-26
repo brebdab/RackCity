@@ -1111,7 +1111,8 @@ class ElementTable extends React.Component<
                                   }}
                                 />
                               ) : null}
-                              {isAssetObject(item) ? (
+                              {isAssetObject(item) &&
+                              item.rack.is_network_controlled ? (
                                 <AnchorButton
                                   className="button-table"
                                   intent="warning"
