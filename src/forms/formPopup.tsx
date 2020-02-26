@@ -26,7 +26,6 @@ interface FormPopupProps {
   currDatacenter?: DatacenterObject;
   initialValues?: ElementObjectType;
   elementName: ElementType;
-  loading?: boolean;
   handleClose(): void;
   submitForm(element: FormObjectType, headers: any): Promise<any> | void;
 }
