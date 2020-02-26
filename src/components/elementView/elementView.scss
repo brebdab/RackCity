@@ -18,6 +18,7 @@
 
 .no-data-text {
   padding: 30px;
+  overflow: clip;
 }
 .grant-admin-button {
   width: 135px !important;
@@ -116,6 +117,10 @@
   margin-left: 10pt;
   display: inline-flex;
 }
+// .table-spinner {
+//   // margin: 50pt;
+//   // margin-left: 500pt;
+// }
 .range {
   display: inline-flex;
 }
