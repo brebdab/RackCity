@@ -159,7 +159,11 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       }
     }
     return axios
-      .post(API_ROOT + "api/" + path + "/pages", { filtersCopy }, config)
+      .post(
+        API_ROOT + "api/" + path + "/pages",
+        { filters: filtersCopy },
+        config
+      )
       .then(res => {
         return res.data.page_count;
       });
