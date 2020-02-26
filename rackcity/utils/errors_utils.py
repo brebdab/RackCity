@@ -15,7 +15,7 @@ class Status(Enum):
 
 
 class GenericFailure(Enum):
-    UNKNOWN = "Unknown internal error."
+    INTERNAL = "Internal error."
     DOES_NOT_EXIST = " does not exist."
     FILTER = "Invalid filter applied."
     SORT = "Invalid sort applied."
@@ -112,5 +112,5 @@ def parse_validation_error(error):
         for err in error:
             failure_detail += err
     else:
-        failure_detail = GenericFailure.UNKNOWN.value
+        failure_detail = GenericFailure.INTERNAL.value
     return failure_detail

@@ -103,7 +103,7 @@ def power_on(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.ERROR.value + GenericFailure.INTERNAL.value,
                 "errors": "No asset 'id' given"
             },
             status=HTTPStatus.BAD_REQUEST
@@ -167,7 +167,7 @@ def power_off(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.ERROR.value + GenericFailure.INTERNAL.value,
                 "errors": "No asset 'id' given"
             },
             status=HTTPStatus.BAD_REQUEST
@@ -228,7 +228,7 @@ def power_cycle(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.ERROR.value + GenericFailure.INTERNAL.value,
                 "errors": "No asset 'id' given"
             },
             status=HTTPStatus.BAD_REQUEST
@@ -270,7 +270,7 @@ def power_availability(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.ERROR.value + GenericFailure.INTERNAL.value,
                 "errors": "Query parameter 'id' is required"
             },
             status=HTTPStatus.BAD_REQUEST

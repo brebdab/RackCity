@@ -46,7 +46,7 @@ def datacenter_create(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.CREATE_ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.CREATE_ERROR.value + GenericFailure.INTERNAL.value,
                 "errors": "Don't include 'id' when creating a datacenter"
             },
             status=HTTPStatus.BAD_REQUEST
@@ -68,7 +68,7 @@ def datacenter_create(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.CREATE_ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.CREATE_ERROR.value + GenericFailure.INTERNAL.value,
                 "errors": str(error)
             },
             status=HTTPStatus.BAD_REQUEST
@@ -95,7 +95,7 @@ def datacenter_delete(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.DELETE_ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.DELETE_ERROR.value + GenericFailure.INTERNAL.value,
                 "errors": "Must include 'id' when creating a datacenter"
             },
             status=HTTPStatus.BAD_REQUEST
@@ -120,7 +120,7 @@ def datacenter_delete(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.DELETE_ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.DELETE_ERROR.value + GenericFailure.INTERNAL.value,
                 "errors": str(error)
             },
             status=HTTPStatus.BAD_REQUEST
@@ -146,7 +146,7 @@ def datacenter_page_count(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.ERROR.value + GenericFailure.INTERNAL.value,
                 "errors": "Must specify positive integer page_size."
             },
             status=HTTPStatus.BAD_REQUEST,
@@ -182,7 +182,7 @@ def datacenter_modify(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.MODIFY_ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.MODIFY_ERROR.value + GenericFailure.INTERNAL.value,
                 "errors": "Must include 'id' when modifying a datacenter"
             },
             status=HTTPStatus.BAD_REQUEST

@@ -192,7 +192,7 @@ def rack_delete(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.DELETE_ERROR.value + GenericFailure.UNKNOWN,
+                    Status.DELETE_ERROR.value + GenericFailure.INTERNAL.value,
                 "errors": str(error)
             },
             status=HTTPStatus.BAD_REQUEST,

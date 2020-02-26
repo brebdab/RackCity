@@ -105,7 +105,7 @@ def asset_many(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.ERROR.value + GenericFailure.INTERNAL.value,
                 "errors": " ".join(errors)
             },
             status=HTTPStatus.BAD_REQUEST,
@@ -149,7 +149,7 @@ def asset_many(request):
             return JsonResponse(
                 {
                     "failure_message":
-                        Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                        Status.ERROR.value + GenericFailure.INTERNAL.value,
                     "errors": str(error)
                 },
                 status=HTTPStatus.BAD_REQUEST,
@@ -204,7 +204,7 @@ def asset_add(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.CREATE_ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.CREATE_ERROR.value + GenericFailure.INTERNAL.value,
                 "errors": "Don't include 'id' when creating an asset"
             },
             status=HTTPStatus.BAD_REQUEST
@@ -451,7 +451,7 @@ def asset_modify(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.MODIFY_ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.MODIFY_ERROR.value + GenericFailure.INTERNAL.value,
                 "errors": "Must include 'id' when modifying an asset"
             },
             status=HTTPStatus.BAD_REQUEST
@@ -594,7 +594,7 @@ def asset_delete(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.DELETE_ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.DELETE_ERROR.value + GenericFailure.INTERNAL.value,
                 "errors": "Must include 'id' when deleting an asset"
             },
             status=HTTPStatus.BAD_REQUEST
@@ -624,7 +624,7 @@ def asset_delete(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.DELETE_ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.DELETE_ERROR.value + GenericFailure.INTERNAL.value,
                 "errors": str(error)
             },
             status=HTTPStatus.BAD_REQUEST
@@ -1276,7 +1276,7 @@ def asset_page_count(request):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.ERROR.value + GenericFailure.UNKNOWN.value,
+                    Status.ERROR.value + GenericFailure.INTERNAL.value,
                 "errors": "Must specify positive integer page_size."
             },
             status=HTTPStatus.BAD_REQUEST,
