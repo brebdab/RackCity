@@ -100,7 +100,7 @@ class DatacenterForm extends React.Component<
           onSubmit={this.handleSubmit}
           className="create-form bp3-form-group"
         >
-          <FormGroup label="Name (*)" inline={false}>
+          <FormGroup label="Name*" inline={false}>
             <Field
               field="name"
               placeholder="name"
@@ -108,10 +108,7 @@ class DatacenterForm extends React.Component<
               onChange={this.handleChange}
             />
           </FormGroup>
-          <FormGroup
-            label="Abbreviation (*) (up to 6 characters)"
-            inline={false}
-          >
+          <FormGroup label="Abbreviation* (up to 6 characters)" inline={false}>
             <Field
               placeholder="abbreviation"
               onChange={this.handleChange}
