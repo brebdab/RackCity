@@ -83,8 +83,6 @@ interface ElementTableState {
   assetPower?: AssetObject;
   addFilterInProgress: boolean;
 }
-// var console: any = {};
-// console.log = function() {};
 
 interface ElementTableProps {
   callback?: Function;
@@ -138,7 +136,6 @@ class ElementTable extends React.Component<
 
   //PAGING LOGIC
   resetPage = () => {
-    console.log("setting currpage to 1");
     this.setState({
       curr_page: 1
     });
@@ -194,9 +191,10 @@ class ElementTable extends React.Component<
 
   handlePagingChange = (page: PagingTypes) => {
     this.setState({
-      page_type: page
+      page_type: page,
+      curr_page: 1
     });
-    this.updateData(page);
+    this.updatePageData(page, 1);
   };
   // FILTERING AND SORTING DISPLAY
 
@@ -341,10 +339,7 @@ class ElementTable extends React.Component<
         let filter_datacenter = updateObject(filter.filter, {
           datacenter: this.props.currDatacenter!.id
         });
-
-        console.log(filter_datacenter);
         filter = updateObject(filter, { filter: filter_datacenter });
-        console.log(filter);
       }
     }
     filters_copy.push(filter);
@@ -361,7 +356,6 @@ class ElementTable extends React.Component<
   };
 
   updateFilterData = (items: Array<IFilter>) => {
-    console.log(items);
     this.setState({ addFilterInProgress: true });
     let resp;
     if (this.props.callback! !== undefined) this.props.callback(items);
@@ -412,11 +406,11 @@ class ElementTable extends React.Component<
     return resp;
   };
 
-  updateData = (page: PagingTypes) => {
+  updatePageData = (page: PagingTypes, page_num: number) => {
     if (this.props.getData) {
       this.props.getData!(
         this.props.type,
-        this.state.curr_page,
+        page_num,
         page,
         { sort_by: this.state.sort_by, filters: this.state.filters },
         this.props.token
@@ -425,7 +419,6 @@ class ElementTable extends React.Component<
           this.setState({
             items: res
           });
-          console.log("DATA", res);
         })
         .catch(err => {
           this.addToast({
@@ -445,7 +438,6 @@ class ElementTable extends React.Component<
     }
   };
   updateSortData = (items: Array<ITableSort>) => {
-    console.log("detected new sorts ", items);
     if (this.props.getData) {
       this.props.getData!(
         this.props.type,
@@ -490,16 +482,11 @@ class ElementTable extends React.Component<
 
   componentDidUpdate() {
     if (this.props.shouldUpdateData && !this.props.data) {
-      console.log("table updated");
       this.updateTableData();
     }
   }
   componentDidMount() {
-    console.log("table mounted ");
-    console.log(this.props.data);
-
     if (this.props.data) {
-      console.log(this.props.data);
       this.setState({
         items: this.props.data
       });
@@ -522,12 +509,9 @@ class ElementTable extends React.Component<
           this.setState({
             items: res
           });
-          console.log("DATA", res);
           this.setFieldNames();
         })
-        .catch(err => {
-          console.log(err);
-        });
+        .catch(err => {});
     }
     if (this.props.getPages) {
       this.props
@@ -570,11 +554,8 @@ class ElementTable extends React.Component<
     this.setState({
       fields: fields
     });
-    console.log("COLUMN NAMES", fields);
   };
   setFieldNames = () => {
-    console.log("FIELD NAMES", this.state.items);
-
     if (this.state.items && this.state.items.length > 0) {
       this.setFieldNamesFromData(this.state.items);
     }
@@ -650,7 +631,6 @@ class ElementTable extends React.Component<
       });
     } else if (isAssetObject(values)) {
       modifyAsset(values, headers).then(res => {
-        console.log("RESPONSE", res);
         if (res.data.warning_message) {
           this.successfulModifcationWithWarning(res.data.warning_message);
         } else {
@@ -764,7 +744,6 @@ class ElementTable extends React.Component<
         headers
       )
       .then(res => {
-        console.log(res.data);
         this.addToast({
           message: res.data.success_message,
           intent: Intent.PRIMARY
@@ -772,7 +751,6 @@ class ElementTable extends React.Component<
         this.updateTableData();
       })
       .catch(err => {
-        console.log(err);
         this.addToast({
           message: err.response.data.failure_message,
           intent: Intent.DANGER
@@ -801,7 +779,6 @@ class ElementTable extends React.Component<
         headers
       )
       .then(res => {
-        console.log(res.data);
         this.addToast({
           message: res.data.success_message,
           intent: Intent.PRIMARY
@@ -809,7 +786,6 @@ class ElementTable extends React.Component<
         this.updateTableData();
       })
       .catch(err => {
-        console.log(err);
         this.addToast({
           message: err.response.data.failure_message,
           intent: Intent.DANGER
@@ -844,15 +820,11 @@ class ElementTable extends React.Component<
   };
 
   render() {
-    console.log(this.state.items);
-    // console.log(!(this.state.items && this.state.items.length > 0));
-
     if (
       this.props.data &&
       this.props.data.length !== 0 &&
       this.state.items.length === 0
     ) {
-      console.log("Setting items", this.props.data);
       this.setState({
         items: this.props.data
       });
@@ -1031,9 +1003,6 @@ class ElementTable extends React.Component<
                 !this.state.addFilterInProgress ? (
                   <tbody>
                     {this.state.items.map((item: ElementObjectType) => {
-                      if (isAssetObject(item)) {
-                        //console.log(item);
-                      }
                       return (
                         <tr
                           onClick={
@@ -1041,7 +1010,6 @@ class ElementTable extends React.Component<
                             this.props.type === ElementType.USER
                               ? () => {}
                               : () => {
-                                  console.log("redirecting", item.id);
                                   this.props.history.push(
                                     "/" + this.props.type + "/" + item.id
                                   );
@@ -1060,7 +1028,6 @@ class ElementTable extends React.Component<
                                 <td>{value.datacenter.name}</td>
                               ];
                             } else if (col === "display_color") {
-                              console.log(value);
                               return (
                                 <td
                                   style={{
