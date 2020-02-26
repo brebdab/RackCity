@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from http import HTTPStatus
 import math
 from rackcity.api.serializers import RegisterNameSerializer, UserSerializer
+from rackcity.models import Asset
 from rackcity.views.rackcity_utils import (
     get_filter_arguments,
     get_sort_arguments,
@@ -239,6 +240,10 @@ def user_delete(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     else:
+        deleted_user_assets = Asset.objects.filter(owner=username)
+        for asset in deleted_user_assets:
+            asset.owner = None
+            asset.save()
         return JsonResponse(
             {
                 "success_message":
