@@ -17,6 +17,7 @@ import { RouteComponentProps, withRouter } from "react-router";
 import { connect } from "react-redux";
 import { AssetObject, getHeaders } from "../../../utils/utils";
 import "./powerView.scss";
+import { IconNames } from "@blueprintjs/icons";
 
 interface PowerViewProps {
   token: string;
@@ -159,8 +160,8 @@ export class PowerView extends React.PureComponent<
             <div className="propsview">
               <h3>Power Connections</h3>
               <Callout
-                title="No power connections"
-                intent={Intent.PRIMARY}
+                title="No power ports"
+                icon={IconNames.INFO_SIGN}
               ></Callout>
               {this.props.callback === undefined ? null : (
                 <AnchorButton
@@ -185,7 +186,7 @@ export class PowerView extends React.PureComponent<
               <div className="network-connections">
                 <table className="bp3-html-table bp3-html-table-bordered bp3-html-table-striped">
                   <tr>
-                    <th>Asset Port Number</th>
+                    <th>Power Port Number</th>
                     <th>PDU Port Number</th>
                     <th>Power Status</th>
                   </tr>

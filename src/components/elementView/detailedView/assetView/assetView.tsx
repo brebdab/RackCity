@@ -30,6 +30,7 @@ import "./assetView.scss";
 import NetworkGraph from "./graph";
 import PowerView from "../../powerView/powerView";
 import { ALL_DATACENTERS } from "../../elementTabContainer";
+import { IconNames } from "@blueprintjs/icons";
 
 export interface AssetViewProps {
   token: string;
@@ -262,7 +263,10 @@ export class AssetView extends React.PureComponent<
               />
             </div>
           ) : (
-            <Callout title="No network ports" intent={Intent.PRIMARY}></Callout>
+            <Callout
+              title="No network ports"
+              icon={IconNames.INFO_SIGN}
+            ></Callout>
           )}
         </div>
 
