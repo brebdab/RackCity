@@ -163,7 +163,10 @@ class ElementTable extends React.Component<
     nextProps: ElementTableProps & RouteComponentProps
   ) {
     if (nextProps.currDatacenter !== this.props.currDatacenter) {
-      this.updateTableData();
+      this.setState({
+        curr_page: 1
+      });
+      this.updatePageData(this.state.page_type, 1);
     }
   }
 

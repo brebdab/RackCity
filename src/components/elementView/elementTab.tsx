@@ -66,27 +66,6 @@ interface ElementViewProps {
   onDatacenterSelect?(datacenter: DatacenterObject): void;
   updateDatacenters?(): void;
 }
-export function getPages(
-  path: string,
-  page_size: number,
-  filters: Array<IFilter>,
-  token: string
-) {
-  const config = {
-    headers: {
-      Authorization: "Token " + token
-    },
-
-    params: {
-      page_size
-    }
-  };
-  return axios
-    .post(API_ROOT + "api/" + path + "/pages", { filters }, config)
-    .then(res => {
-      return res.data.page_count;
-    });
-}
 
 async function getExportData(
   path: string,
@@ -132,6 +111,41 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     networkFileName: "",
     updateTable: false
   };
+
+  getPages = (
+    path: string,
+    page_size: number,
+    filters: Array<IFilter>,
+    token: string
+  ) => {
+    const config = {
+      headers: {
+        Authorization: "Token " + token
+      },
+
+      params: {
+        page_size
+      }
+    };
+
+    let datacenterName;
+    if (this.props.currDatacenter) {
+      if (this.props.currDatacenter.name !== ALL_DATACENTERS.name) {
+        datacenterName = this.props.currDatacenter.name;
+        filters.push({
+          id: "",
+          field: "rack__datacenter__name",
+          filter_type: FilterTypes.TEXT,
+          filter: { value: datacenterName, match_type: TextFilterTypes.EXACT }
+        });
+      }
+    }
+    return axios
+      .post(API_ROOT + "api/" + path + "/pages", { filters }, config)
+      .then(res => {
+        return res.data.page_count;
+      });
+  };
   getElementData = (
     path: string,
     page: number,
@@ -146,9 +160,9 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       page_type === PagingTypes.ALL
         ? {}
         : {
-          page_size: page_type,
-          page
-        };
+            page_size: page_type,
+            page
+          };
     const config = {
       headers: {
         Authorization: "Token " + token
@@ -304,7 +318,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                     rightIcon="caret-down"
                     text={
                       this.props.currDatacenter &&
-                        this.props.currDatacenter.name
+                      this.props.currDatacenter.name
                         ? this.props.currDatacenter.name
                         : "All datacenters"
                     }
@@ -316,36 +330,39 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
         </div>
         <div className="element-tab-buttons">
           {this.props.element !== ElementType.USER &&
-            this.props.element !== ElementType.DATACENTER ? (
-              <AnchorButton
-                className="add"
-                text="Export Table Data"
-                icon="import"
-                minimal
-                onClick={() => {
-                  /* handle data based on state */
-                  this.setState({ fileNameIsOpen: true });
-                  console.log(this.state.filters);
-                }}
-              />
-            ) : (
-              <p></p>
-            )}
+          this.props.element !== ElementType.DATACENTER ? (
+            <AnchorButton
+              className="add"
+              text="Export Table Data"
+              icon="import"
+              minimal
+              onClick={() => {
+                /* handle data based on state */
+                this.setState({ fileNameIsOpen: true });
+                console.log(this.state.filters);
+              }}
+            />
+          ) : (
+            <p></p>
+          )}
           {this.props.isAdmin &&
-            this.props.element !== ElementType.USER &&
-            this.props.element !== ElementType.DATACENTER ? (
-              <AnchorButton
-                onClick={() => {
-                  this.props.history.push("/bulk-upload/" +
-                    (this.props.element === ElementType.MODEL ? "models" : "assets")
-                  )
-                }}
-                className="add"
-                icon="export"
-                text="Add from CSV file"
-                minimal
-              />
-            ) : null}
+          this.props.element !== ElementType.USER &&
+          this.props.element !== ElementType.DATACENTER ? (
+            <AnchorButton
+              onClick={() => {
+                this.props.history.push(
+                  "/bulk-upload/" +
+                    (this.props.element === ElementType.MODEL
+                      ? "models"
+                      : "assets")
+                );
+              }}
+              className="add"
+              icon="export"
+              text="Add from CSV file"
+              minimal
+            />
+          ) : null}
 
           <Alert
             cancelButtonText="Cancel"
@@ -456,10 +473,10 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               this.props.element === ElementType.MODEL
                 ? this.createModel
                 : this.props.element === ElementType.ASSET
-                  ? this.createAsset
-                  : this.props.element === ElementType.DATACENTER
-                    ? this.createDatacenter
-                    : this.createUser
+                ? this.createAsset
+                : this.props.element === ElementType.DATACENTER
+                ? this.createDatacenter
+                : this.createUser
             }
             isOpen={this.state.isOpen}
             handleClose={this.handleClose}
@@ -472,7 +489,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             updateDatacenters={this.props.updateDatacenters}
             type={this.props.element}
             getData={this.getElementData}
-            getPages={getPages}
+            getPages={this.getPages}
             callback={(data: Array<any>) => {
               this.setState({ filters: data });
             }}
