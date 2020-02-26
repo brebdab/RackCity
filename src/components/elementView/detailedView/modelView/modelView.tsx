@@ -58,7 +58,7 @@ async function getData(modelkey: string, token: string) {
 export class ModelView extends React.PureComponent<
   RouteComponentProps & ModelViewProps,
   ModelViewState
-  > {
+> {
   public state: ModelViewState = {
     assets: [],
     model: {} as ModelObject,
@@ -171,6 +171,7 @@ export class ModelView extends React.PureComponent<
                 onClick={this.handleDeleteOpen}
               />
               <Alert
+                className={Classes.DARK}
                 cancelButtonText="Cancel"
                 confirmButtonText="Delete"
                 intent="danger"

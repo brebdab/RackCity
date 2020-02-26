@@ -287,6 +287,7 @@ class RackTab extends React.Component<
           handleClose={this.handleDeleteCancel}
         />
         <Alert
+          className={Classes.DARK}
           cancelButtonText="Cancel"
           confirmButtonText="Delete"
           intent="danger"
