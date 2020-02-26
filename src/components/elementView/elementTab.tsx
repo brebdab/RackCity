@@ -67,40 +67,6 @@ interface ElementViewProps {
   updateDatacenters?(): void;
 }
 
-async function getExportData(
-  path: string,
-  filters: Array<any>,
-  token: string,
-  file: string,
-  networkFile: string
-) {
-  const config = {
-    headers: {
-      Authorization: "Token " + token
-    }
-  };
-  const params = {
-    sort_by: [],
-    filters: filters
-  };
-  if (path === "assets") {
-    axios
-      .post(API_ROOT + "api/" + path + "/network-bulk-export", params, config)
-      .then(res => {
-        console.log(res.data);
-        fs(res.data.export_csv, networkFile);
-        return 0;
-      });
-  }
-  return axios
-    .post(API_ROOT + "api/" + path + "/bulk-export", params, config)
-    .then(res => {
-      console.log(res.data);
-      fs(res.data.export_csv, file);
-      return 0;
-    });
-}
-
 type ElementTabProps = ElementViewProps & RouteComponentProps;
 class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
   public state: ElementViewState = {
@@ -112,6 +78,58 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     updateTable: false
   };
 
+  getExportData = (
+    path: string,
+    filters: Array<any>,
+    token: string,
+    file: string,
+    networkFile: string
+  ) => {
+    const config = {
+      headers: {
+        Authorization: "Token " + token
+      }
+    };
+    let filtersCopy = filters.slice();
+    if (path === "assets") {
+      let datacenterName;
+      if (this.props.currDatacenter) {
+        if (this.props.currDatacenter.name !== ALL_DATACENTERS.name) {
+          datacenterName = this.props.currDatacenter.name;
+          filtersCopy.push({
+            id: "",
+            field: "rack__datacenter__name",
+            filter_type: FilterTypes.TEXT,
+            filter: { value: datacenterName, match_type: TextFilterTypes.EXACT }
+          });
+        }
+      }
+    }
+    const body = {
+      sort_by: [],
+      filters: filtersCopy
+    };
+
+    axios
+      .post(API_ROOT + "api/" + path + "/bulk-export", body, config)
+      .then(res => {
+        console.log(res.data);
+        fs(res.data.export_csv, file);
+        return 0;
+      })
+      .catch(err => this.addErrorToast("Failed to export data to " + file));
+
+    if (path === "assets") {
+      axios
+        .post(API_ROOT + "api/" + path + "/network-bulk-export", body, config)
+        .then(res => {
+          console.log(res.data);
+          fs(res.data.export_csv, networkFile);
+          return 0;
+        })
+        .catch(err => this.addErrorToast("Failed to export data to " + file));
+    }
+  };
   getPages = (
     path: string,
     page_size: number,
@@ -127,12 +145,12 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
         page_size
       }
     };
-
+    const filtersCopy = filters.slice();
     let datacenterName;
     if (this.props.currDatacenter) {
       if (this.props.currDatacenter.name !== ALL_DATACENTERS.name) {
         datacenterName = this.props.currDatacenter.name;
-        filters.push({
+        filtersCopy.push({
           id: "",
           field: "rack__datacenter__name",
           filter_type: FilterTypes.TEXT,
@@ -141,7 +159,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       }
     }
     return axios
-      .post(API_ROOT + "api/" + path + "/pages", { filters }, config)
+      .post(API_ROOT + "api/" + path + "/pages", { filtersCopy }, config)
       .then(res => {
         return res.data.page_count;
       });
@@ -410,7 +428,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                 ) {
                   this.addErrorToast(".csv file must have non-empty name");
                 } else {
-                  getExportData(
+                  this.getExportData(
                     this.props.element.slice(0, -1) + "s",
                     this.state.filters,
                     this.props.token,
