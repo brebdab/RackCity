@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from rackcity.models import ITModel
+from rackcity.models.it_model import DEFAULT_DISPLAY_COLOR
 from rackcity.api.serializers.fields import RCIntegerField
 
 
@@ -137,4 +138,7 @@ def normalize_bulk_model_data(bulk_model_data):
     del bulk_model_data['power_ports']
     bulk_model_data['memory_gb'] = bulk_model_data['memory']
     del bulk_model_data['memory']
+    if not bulk_model_data['display_color']:
+        del bulk_model_data['display_color']
+        bulk_model_data['display_color'] = DEFAULT_DISPLAY_COLOR
     return bulk_model_data
