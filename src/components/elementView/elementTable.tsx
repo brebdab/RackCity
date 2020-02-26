@@ -1087,6 +1087,7 @@ class ElementTable extends React.Component<
                             ) : null}
                             <div className="inline-buttons">
                               {this.props.type !== ElementType.USER &&
+                              !this.props.data &&
                               this.props.isAdmin ? (
                                 <AnchorButton
                                   className="button-table"
@@ -1099,7 +1100,7 @@ class ElementTable extends React.Component<
                                   }}
                                 />
                               ) : null}
-                              {this.props.isAdmin ? (
+                              {this.props.isAdmin && !this.props.data ? (
                                 <AnchorButton
                                   className="button-table"
                                   intent="danger"
