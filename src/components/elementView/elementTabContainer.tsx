@@ -60,6 +60,7 @@ class ElementTabContainer extends React.Component<
   componentDidMount = () => {
     this.getDatacenters();
   };
+
   public render() {
     console.log(this.props.match, this.props.location);
     return (

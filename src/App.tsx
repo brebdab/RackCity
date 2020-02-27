@@ -85,7 +85,6 @@ class App extends React.Component<AppProps> {
         <div>
           <Navigation {...this.props} />
           <Route
-            // exact
             path="/"
             children={(props: RouteComponentProps) => (
               <ElementTabContainer {...props} />

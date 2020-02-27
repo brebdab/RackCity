@@ -136,6 +136,7 @@ class ElementTable extends React.Component<
     isPowerOptionsOpen: false,
     getDataInProgress: false
   };
+  validRequestMadeWithToken = false;
 
   //PAGING LOGIC
   resetPage = () => {
@@ -169,6 +170,9 @@ class ElementTable extends React.Component<
         curr_page: 1
       });
       this.updatePageData(this.state.page_type, 1);
+    }
+    if (nextProps.token !== this.props.token) {
+      this.updateTableData();
     }
   }
 
@@ -484,6 +488,10 @@ class ElementTable extends React.Component<
     if (this.props.shouldUpdateData && !this.props.data) {
       this.updateTableData();
     }
+    if (this.props.token && !this.validRequestMadeWithToken) {
+      this.updateTableData();
+      this.validRequestMadeWithToken = true;
+    }
   }
   componentDidMount() {
     if (this.props.data) {
@@ -496,7 +504,7 @@ class ElementTable extends React.Component<
     }
   }
   updateTableData = () => {
-    if (this.props.getData) {
+    if (this.props.getData && this.props.token) {
       this.setState({
         getDataInProgress: true
       });
@@ -509,6 +517,7 @@ class ElementTable extends React.Component<
           this.props.token
         )
         .then(res => {
+          this.validRequestMadeWithToken = true;
           this.setState({
             items: res,
             getDataInProgress: false
@@ -948,181 +957,180 @@ class ElementTable extends React.Component<
           ) : null}
         </div>
         <div className="table-wrapper">
-          {/* {this.state.fields.length === 0 ? null : ( */}
-            <table
-              className={
-                this.props.type !== ElementType.DATACENTER &&
-                this.props.type !== ElementType.USER
-                  ? "bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered element-table"
-                  : "bp3-html-table bp3-html-table-striped bp3-html-table-bordered element-table"
-              }
-            >
-              <thead>
-                <tr>
-                  {this.state.fields.map((col: string) => {
-                    if (col === "model") {
-                      return [
-                        <th className="header-cell">
-                          <div className="header-text">
-                            <span>model vendor</span>
-                            {this.getScrollIcon("model__vendor")}
-                          </div>
-                        </th>,
-                        <th className="header-cell">
-                          <div className="header-text">
-                            <span>model number</span>
-                            {this.getScrollIcon("model__model_number")}
-                          </div>
-                        </th>
-                      ];
-                    } else if (this.props.type === ElementType.ASSET) {
-                      return (
-                        <th className="header-cell">
-                          <div className="header-text">
-                            <span>{AssetFieldsTable[col]}</span>
-                            {this.getScrollIcon(col)}
-                          </div>
-                        </th>
-                      );
-                    } else if (this.props.type === ElementType.MODEL) {
-                      return (
-                        <th className="header-cell">
-                          <div className="header-text">
-                            <span>{ModelFieldsTable[col]}</span>
-                            {this.getScrollIcon(col)}
-                          </div>
-                        </th>
-                      );
-                    } else {
-                      return (
-                        <th className="header-cell">
-                          <div className="header-text">
-                            <span>{col}</span>
-                            {this.getScrollIcon(col)}
-                          </div>
-                        </th>
-                      );
-                    }
-                  })}
-                  <th></th>
-                </tr>
-              </thead>
-              {this.state.items && this.state.items.length > 0 ? (
-                !this.state.getDataInProgress ? (
-                  <tbody>
-                    {this.state.items.map((item: ElementObjectType) => {
-                      return (
-                        <tr
-                          onClick={
-                            this.props.type === ElementType.DATACENTER ||
-                            this.props.type === ElementType.USER
-                              ? () => {}
-                              : () => {
-                                  this.props.history.push(
-                                    "/" + this.props.type + "/" + item.id
-                                  );
-                                }
+          <table
+            className={
+              this.props.type !== ElementType.DATACENTER &&
+              this.props.type !== ElementType.USER
+                ? "bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered element-table"
+                : "bp3-html-table bp3-html-table-striped bp3-html-table-bordered element-table"
+            }
+          >
+            <thead>
+              <tr>
+                {this.state.fields.map((col: string) => {
+                  if (col === "model") {
+                    return [
+                      <th className="header-cell">
+                        <div className="header-text">
+                          <span>model vendor</span>
+                          {this.getScrollIcon("model__vendor")}
+                        </div>
+                      </th>,
+                      <th className="header-cell">
+                        <div className="header-text">
+                          <span>model number</span>
+                          {this.getScrollIcon("model__model_number")}
+                        </div>
+                      </th>
+                    ];
+                  } else if (this.props.type === ElementType.ASSET) {
+                    return (
+                      <th className="header-cell">
+                        <div className="header-text">
+                          <span>{AssetFieldsTable[col]}</span>
+                          {this.getScrollIcon(col)}
+                        </div>
+                      </th>
+                    );
+                  } else if (this.props.type === ElementType.MODEL) {
+                    return (
+                      <th className="header-cell">
+                        <div className="header-text">
+                          <span>{ModelFieldsTable[col]}</span>
+                          {this.getScrollIcon(col)}
+                        </div>
+                      </th>
+                    );
+                  } else {
+                    return (
+                      <th className="header-cell">
+                        <div className="header-text">
+                          <span>{col}</span>
+                          {this.getScrollIcon(col)}
+                        </div>
+                      </th>
+                    );
+                  }
+                })}
+                <th></th>
+              </tr>
+            </thead>
+            {this.state.items && this.state.items.length > 0 ? (
+              !this.state.getDataInProgress ? (
+                <tbody>
+                  {this.state.items.map((item: ElementObjectType) => {
+                    return (
+                      <tr
+                        onClick={
+                          this.props.type === ElementType.DATACENTER ||
+                          this.props.type === ElementType.USER
+                            ? () => {}
+                            : () => {
+                                this.props.history.push(
+                                  "/" + this.props.type + "/" + item.id
+                                );
+                              }
+                        }
+                      >
+                        {Object.entries(item).map(([col, value]) => {
+                          if (isModelObject(value)) {
+                            return [
+                              <td>{value.vendor}</td>,
+                              <td>{value.model_number}</td>
+                            ];
+                          } else if (isRackObject(value)) {
+                            return [
+                              <td>{value.row_letter + value.rack_num}</td>,
+                              <td>{value.datacenter.name}</td>
+                            ];
+                          } else if (col === "display_color") {
+                            return (
+                              <td
+                                style={{
+                                  backgroundColor: value
+                                }}
+                              ></td>
+                            );
+                          } else if (
+                            col !== "id" &&
+                            col !== "network_ports" &&
+                            col !== "comment" &&
+                            col !== "is_admin" &&
+                            !isObject(value)
+                          ) {
+                            return <td>{value}</td>;
                           }
-                        >
-                          {Object.entries(item).map(([col, value]) => {
-                            if (isModelObject(value)) {
-                              return [
-                                <td>{value.vendor}</td>,
-                                <td>{value.model_number}</td>
-                              ];
-                            } else if (isRackObject(value)) {
-                              return [
-                                <td>{value.row_letter + value.rack_num}</td>,
-                                <td>{value.datacenter.name}</td>
-                              ];
-                            } else if (col === "display_color") {
-                              return (
-                                <td
-                                  style={{
-                                    backgroundColor: value
-                                  }}
-                                ></td>
-                              );
-                            } else if (
-                              col !== "id" &&
-                              col !== "network_ports" &&
-                              col !== "comment" &&
-                              col !== "is_admin" &&
-                              !isObject(value)
-                            ) {
-                              return <td>{value}</td>;
-                            }
 
-                            return null;
-                          })}
-                          <td>
-                            {this.props.isAdmin && isUserObject(item) ? (
-                              <div className="inline-buttons grant-admin-button">
-                                {this.renderAdminButton(item)}
-                              </div>
+                          return null;
+                        })}
+                        <td>
+                          {this.props.isAdmin && isUserObject(item) ? (
+                            <div className="inline-buttons grant-admin-button">
+                              {this.renderAdminButton(item)}
+                            </div>
+                          ) : null}
+                          <div className="inline-buttons">
+                            {this.props.type !== ElementType.USER &&
+                            !this.props.data &&
+                            this.props.isAdmin ? (
+                              <AnchorButton
+                                className="button-table"
+                                intent="primary"
+                                icon="edit"
+                                minimal
+                                onClick={(event: any) => {
+                                  console.log(
+                                    "SCROLL",
+                                    window.scrollX,
+                                    window.scrollY
+                                  );
+                                  this.handleEditButtonClick(item);
+                                  event.stopPropagation();
+                                }}
+                              />
                             ) : null}
-                            <div className="inline-buttons">
-                              {this.props.type !== ElementType.USER &&
-                              !this.props.data &&
-                              this.props.isAdmin ? (
-                                <AnchorButton
-                                  className="button-table"
-                                  intent="primary"
-                                  icon="edit"
-                                  minimal
-                                  onClick={(event: any) => {
-                                    console.log(
-                                      "SCROLL",
-                                      window.scrollX,
-                                      window.scrollY
-                                    );
-                                    this.handleEditButtonClick(item);
-                                    event.stopPropagation();
-                                  }}
-                                />
-                              ) : null}
-                              {this.props.isAdmin && !this.props.data ? (
-                                <AnchorButton
-                                  className="button-table"
-                                  intent="danger"
-                                  minimal
-                                  icon="trash"
-                                  onClick={(event: any) => {
-                                    this.handleDeleteButtonClick(item);
-                                    event.stopPropagation();
-                                  }}
-                                />
-                              ) : null}
-                              {isAssetObject(item) &&
-                              item.rack.is_network_controlled ? (
-                                <AnchorButton
-                                  className="button-table"
-                                  intent="warning"
-                                  minimal
-                                  icon="offline"
-                                  onClick={(event: any) => {
-                                    this.handlePowerButtonClick(item);
-                                    event.stopPropagation();
-                                  }}
-                                />
-                              ) : null}
-                            </div>{" "}
-                            {/* TODO add logic for determining if isOwner for power button */}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                ) : null
+                            {this.props.isAdmin && !this.props.data ? (
+                              <AnchorButton
+                                className="button-table"
+                                intent="danger"
+                                minimal
+                                icon="trash"
+                                onClick={(event: any) => {
+                                  this.handleDeleteButtonClick(item);
+                                  event.stopPropagation();
+                                }}
+                              />
+                            ) : null}
+                            {isAssetObject(item) &&
+                            item.rack.is_network_controlled ? (
+                              <AnchorButton
+                                className="button-table"
+                                intent="warning"
+                                minimal
+                                icon="offline"
+                                onClick={(event: any) => {
+                                  this.handlePowerButtonClick(item);
+                                  event.stopPropagation();
+                                }}
+                              />
+                            ) : null}
+                          </div>{" "}
+                          {/* TODO add logic for determining if isOwner for power button */}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
               ) : null
-              // <Spinner
-              //   className="table-spinner"
-              //   size={Spinner.SIZE_STANDARD}
-              // />
-              // <h4 className="no-data-text">no {this.props.type} found </h4>
-              }
-            </table>
-          // )}
+            ) : null
+            // <Spinner
+            //   className="table-spinner"
+            //   size={Spinner.SIZE_STANDARD}
+            // />
+            // <h4 className="no-data-text">no {this.props.type} found </h4>
+            }
+          </table>
+
           {this.state.getDataInProgress ? (
             <Spinner className="table-spinner" size={Spinner.SIZE_STANDARD} />
           ) : null}
