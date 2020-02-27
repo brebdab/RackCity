@@ -1,10 +1,4 @@
-import {
-  AnchorButton,
-  IToastProps,
-  Toaster,
-  Position,
-  Intent
-} from "@blueprintjs/core";
+import { AnchorButton } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
@@ -19,7 +13,7 @@ interface ModifierProps {
   modelsModified?: Array<any>;
   modelsIgnored?: number;
   modelsAdded?: number;
-  callback: Function;
+  callback: (toasts: Array<string>, types: Array<string>) => void;
   operation: string;
 }
 var console: any = {};
@@ -80,27 +74,6 @@ export class Modifier extends React.PureComponent<
 > {
   public state: ModifierState = {
     modifiedModels: []
-  };
-
-  private toaster: Toaster = {} as Toaster;
-  private addSuccessToast(message: string) {
-    this.addToast({ message: message, intent: Intent.PRIMARY });
-  }
-  private addErrorToast(message: string) {
-    this.addToast({ message: message, intent: Intent.DANGER });
-  }
-  private addToast(toast: IToastProps) {
-    toast.timeout = 5000;
-    this.toaster.show(toast);
-  }
-  private addWarnToast = (message: string) => {
-    this.addToast({
-      message: message,
-      intent: Intent.WARNING
-    });
-  };
-  private refHandlers = {
-    toaster: (ref: Toaster) => (this.toaster = ref)
   };
 
   renderOneModification(obj: any, fields: any, model: any) {
@@ -313,12 +286,6 @@ export class Modifier extends React.PureComponent<
 
       return (
         <div>
-          <Toaster
-            autoFocus={false}
-            canEscapeKeyClear={true}
-            position={Position.TOP}
-            ref={this.refHandlers.toaster}
-          />
           {this.renderModifications(model, fields)}
           <h1> </h1>
           <AnchorButton
@@ -345,17 +312,11 @@ export class Modifier extends React.PureComponent<
                 ).then(
                   res => {
                     console.log(this.props);
-                    // this.addSuccessToast(
-                    //   "Success! Modified: " +
-                    //     modified.length +
-                    //     "; Added: " +
-                    //     this.props.modelsAdded! +
-                    //     "; Ignored: " +
-                    //     (this.props.modelsIgnored! +
-                    //       this.props.modelsModified!.length -
-                    //       modified.length)
-                    // );
-                    alert(
+                    let toasts: Array<string>;
+                    toasts = [];
+                    let types: Array<string>;
+                    types = [];
+                    toasts.push(
                       "Success! Modified: " +
                         modified.length +
                         "; Added: " +
@@ -365,18 +326,21 @@ export class Modifier extends React.PureComponent<
                           this.props.modelsModified!.length -
                           modified.length)
                     );
+                    types.push("success");
                     if (res.warning_message) {
-                      // this.addWarnToast(res.warning_message);
-                      alert("Warning: " + res.warning_message);
+                      toasts.push(res.warning_message);
+                      types.push("warning");
                     }
                     this.setState({
                       modifiedModels: []
                     });
-                    this.props.callback();
+                    this.props.callback(toasts, types);
                   },
                   err => {
-                    // this.addErrorToast(err.response.data.failure_message);
-                    alert(err.response.data.failure_message);
+                    this.props.callback(
+                      [err.response.data.failure_message],
+                      ["error"]
+                    );
                   }
                 );
               } else if (
@@ -396,17 +360,11 @@ export class Modifier extends React.PureComponent<
                   this.props.operation
                 ).then(
                   res => {
-                    // this.addSuccessToast(
-                    //   "Success! Modified: " +
-                    //     modified.length +
-                    //     "; Added: " +
-                    //     this.props.modelsAdded! +
-                    //     "; Ignored: " +
-                    //     (this.props.modelsIgnored! +
-                    //       this.props.modelsModified!.length -
-                    //       modified.length)
-                    // );
-                    alert(
+                    let toasts: Array<string>;
+                    toasts = [];
+                    let types: Array<string>;
+                    types = [];
+                    toasts.push(
                       "Success! Modified: " +
                         modified.length +
                         "; Added: " +
@@ -416,19 +374,21 @@ export class Modifier extends React.PureComponent<
                           this.props.modelsModified!.length -
                           modified.length)
                     );
+                    types.push("success");
                     if (res.warning_message) {
-                      // this.addWarnToast(res.warning_message);
-                      alert("Warning: " + res.warning_message);
+                      toasts.push(res.warning_message);
+                      types.push("warning");
                     }
-                    // alert("Modifications were successful")
                     this.setState({
                       modifiedModels: []
                     });
-                    this.props.callback();
+                    this.props.callback(toasts, types);
                   },
                   err => {
-                    // this.addErrorToast(err.response.data.failure_message);
-                    alert(err.response.data.failure_message);
+                    this.props.callback(
+                      [err.response.data.failure_message],
+                      ["error"]
+                    );
                   }
                 );
               } else {
@@ -454,7 +414,11 @@ export class Modifier extends React.PureComponent<
                     //       this.props.modelsModified!.length -
                     //       modified.length)
                     // );
-                    alert(
+                    let toasts: Array<string>;
+                    toasts = [];
+                    let types: Array<string>;
+                    types = [];
+                    toasts.push(
                       "Success! Modified: " +
                         modified.length +
                         "; Added: " +
@@ -464,19 +428,21 @@ export class Modifier extends React.PureComponent<
                           this.props.modelsModified!.length -
                           modified.length)
                     );
+                    types.push("success");
                     if (res.warning_message) {
-                      // this.addWarnToast(res.warning_message);
-                      alert("Warning: " + res.warning_message);
+                      toasts.push(res.warning_message);
+                      types.push("warning");
                     }
-                    // alert("Modifications were successful")
                     this.setState({
                       modifiedModels: []
                     });
-                    this.props.callback();
+                    this.props.callback(toasts, types);
                   },
                   err => {
-                    // this.addErrorToast(err.response.data.failure_message);
-                    alert(err.response.data.failure_message);
+                    this.props.callback(
+                      [err.response.data.failure_message],
+                      ["error"]
+                    );
                   }
                 );
               }
