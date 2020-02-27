@@ -948,7 +948,7 @@ class ElementTable extends React.Component<
           ) : null}
         </div>
         <div className="table-wrapper">
-          {this.state.fields.length === 0 ? null : (
+          {/* {this.state.fields.length === 0 ? null : ( */}
             <table
               className={
                 this.props.type !== ElementType.DATACENTER &&
@@ -1122,7 +1122,7 @@ class ElementTable extends React.Component<
               // <h4 className="no-data-text">no {this.props.type} found </h4>
               }
             </table>
-          )}
+          // )}
           {this.state.getDataInProgress ? (
             <Spinner className="table-spinner" size={Spinner.SIZE_STANDARD} />
           ) : null}

@@ -1,6 +1,6 @@
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
-import { Tabs, Tab } from "@blueprintjs/core";
+import { Tabs, Tab, Classes } from "@blueprintjs/core";
 import ElementTab from "./elementTab";
 import { RouteComponentProps } from "react-router";
 import "./elementView.scss";
@@ -23,8 +23,8 @@ export const ALL_DATACENTERS: DatacenterObject = {
   name: "All datacenters",
   abbreviation: "ALL"
 };
-var console: any = {};
-console.log = function() {};
+// var console: any = {};
+// console.log = function() {};
 
 class ElementTabContainer extends React.Component<
   ElementTabContainerProps & RouteComponentProps,
@@ -61,67 +61,79 @@ class ElementTabContainer extends React.Component<
     this.getDatacenters();
   };
   public render() {
+    console.log(this.props.match, this.props.location);
     return (
-      <Tabs
-        className="element-view"
-        animate={true}
-        id="ElementViewer"
-        key={"vertical"}
-        renderActiveTabPanelOnly={false}
-        vertical={true}
-        large
-      >
-        <Tab
-          className="tab"
-          id="rack"
-          title="Racks"
-          panel={
-            <RackTab
-              datacenters={this.state.datacenters}
-              currDatacenter={this.state.currDatacenter}
-              onDatacenterSelect={this.onDatacenterSelect}
-            />
-          }
-        />
-        <Tab
-          className="tab do-not-print"
-          id="asset"
-          title="Assets"
-          panel={
-            <ElementTab
-              datacenters={this.state.datacenters}
-              currDatacenter={this.state.currDatacenter}
-              onDatacenterSelect={this.onDatacenterSelect}
-              {...this.props}
-              element={ElementType.ASSET}
-            />
-          }
-        />
-
-        <Tab
-          className="tab do-not-print"
-          id="model"
-          title="Models"
-          panel={<ElementTab {...this.props} element={ElementType.MODEL} />}
-        />
-
-        {this.props.isAdmin ? (
-          <Tab
-            className="tab do-not-print"
-            id="datacenter"
-            title="Datacenters"
-            panel={
-              <ElementTab
-                {...this.props}
-                updateDatacenters={this.getDatacenters}
-                element={ElementType.DATACENTER}
-              />
+      <div>
+        {this.props.match === null ? null : (
+          <Tabs
+            className={Classes.DARK + " element-view "}
+            animate={true}
+            id="ElementViewer"
+            key={"vertical"}
+            selectedTabId={
+              this.props.location.pathname === "/"
+                ? "/racks"
+                : this.props.location.pathname
             }
-          />
-        ) : null}
+            renderActiveTabPanelOnly={false}
+            vertical={true}
+            large
+            onChange={(tab: any) => this.props.history.push(tab)}
+          >
+            <Tab
+              className="tab"
+              id="/racks"
+              title="Racks"
+              panel={
+                <RackTab
+                  datacenters={this.state.datacenters}
+                  currDatacenter={this.state.currDatacenter}
+                  onDatacenterSelect={this.onDatacenterSelect}
+                />
+              }
+            />
+            <Tab
+              className="tab do-not-print"
+              id="/assets"
+              title="Assets"
+              panel={
+                <ElementTab
+                  datacenters={this.state.datacenters}
+                  currDatacenter={this.state.currDatacenter}
+                  onDatacenterSelect={this.onDatacenterSelect}
+                  {...this.props}
+                  element={ElementType.ASSET}
+                  isActive={false}
+                />
+              }
+            />
 
-        <Tabs.Expander />
-      </Tabs>
+            <Tab
+              className="tab do-not-print"
+              id="/models"
+              title="Models"
+              panel={<ElementTab {...this.props} element={ElementType.MODEL} />}
+            />
+
+            {this.props.isAdmin ? (
+              <Tab
+                className="tab do-not-print"
+                id="/datacenters"
+                title="Datacenters"
+                panel={
+                  <ElementTab
+                    {...this.props}
+                    updateDatacenters={this.getDatacenters}
+                    element={ElementType.DATACENTER}
+                  />
+                }
+              />
+            ) : null}
+
+            <Tabs.Expander />
+          </Tabs>
+        )}
+      </div>
     );
   }
 }

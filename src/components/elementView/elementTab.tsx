@@ -65,6 +65,7 @@ interface ElementViewProps {
   currDatacenter?: DatacenterObject;
   onDatacenterSelect?(datacenter: DatacenterObject): void;
   updateDatacenters?(): void;
+  isActive?: boolean;
 }
 
 type ElementTabProps = ElementViewProps & RouteComponentProps;
@@ -77,6 +78,10 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     networkFileName: "",
     updateTable: false
   };
+  componentDidMount() {
+    alert(this.props.element + " Tab mounted");
+    // alert("Tab mounted");
+  }
 
   getExportData = (
     path: string,
