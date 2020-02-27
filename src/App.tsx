@@ -7,29 +7,22 @@ import {
   BrowserRouter,
   Redirect,
   Route,
-  Switch,
   RouteComponentProps
 } from "react-router-dom";
 import AssetView from "./components/elementView/detailedView/assetView/assetView";
 import ModelView from "./components/elementView/detailedView/modelView/modelView";
+import RackView from "./components/elementView/detailedView/rackView/rackView";
+import { NotAuthorized, NotAuthorizedAdmin } from "./components/fallback";
 import BulkImport from "./components/import/import";
-import ElementTabContainer from "./components/elementView/elementTabContainer";
-import ElementTab from "./components/elementView/elementTab";
+import LandingView from "./components/landingView/landingView";
+import Logs from "./components/logs/logs";
 import Navigation from "./components/navigation/navigation";
 import Report from "./components/report/report";
 import User from "./components/userView/user";
 import LoginView from "./forms/auth/loginView";
-import Logs from "./components/logs/logs";
-import RackView from "./components/elementView/detailedView/rackView/rackView";
 // import BulkExport from "./components/export/export";
 import "./index.scss";
 import * as actions from "./store/actions/auth";
-import {
-  NotAuthorized,
-  NotFound,
-  NotAuthorizedAdmin
-} from "./components/fallback";
-import LandingView from "./components/landingView/landingView";
 import { ROUTES } from "./utils/utils";
 
 var console: any = {};
