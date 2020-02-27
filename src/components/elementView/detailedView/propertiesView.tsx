@@ -9,7 +9,8 @@ import {
   isAssetObject,
   AssetFieldsTable,
   isModelObject,
-  ModelFieldsTable
+  ModelFieldsTable,
+  ROUTES
 } from "../../../utils/utils";
 import "./propertiesView.scss";
 
@@ -74,7 +75,9 @@ class PropertiesView extends React.PureComponent<
         dat = (
           <p
             className="model-link"
-            onClick={() => this.props.history.push("/models/" + data[item].id)}
+            onClick={() =>
+              this.props.history.push(ROUTES.MODEL_DETAIL + data[item].id)
+            }
           >
             {data[item].vendor + " " + data[item].model_number}
           </p>

@@ -23,7 +23,11 @@ class LandingView extends React.Component<
   public render() {
     return (
       <div className={Classes.DARK}>
-        <Collapse isOpen={this.showTabs()} keepChildrenMounted={true}>
+        <Collapse
+          isOpen={this.showTabs()}
+          transitionDuration={0}
+          keepChildrenMounted={true}
+        >
           <ElementTabContainer {...this.props} />
         </Collapse>
       </div>

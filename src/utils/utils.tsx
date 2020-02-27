@@ -4,6 +4,18 @@ import { ITableSort, IFilter } from "../components/elementView/elementUtils";
 export interface ElementObject {
   id: string;
 }
+
+export enum ROUTES {
+  LOGIN = "/login",
+  MODEL_DETAIL = "/dashboard/models",
+  ASSET_DETAIL = "/dashboard/assets",
+  DASHBOARD = "/dashboard",
+  REPORT = "/dashboard/report",
+  LOGS = "/dashboard/logs",
+  RACK_PRINT = "/dashboard/rack-print",
+  BULK_IMPORT = "/dashboard/bulk-upload/:resourceType",
+  USERS = "/dashboard/users"
+}
 export enum ElementType {
   RACK = "racks",
   ASSET = "assets",

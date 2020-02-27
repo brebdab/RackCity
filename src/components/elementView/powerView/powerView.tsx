@@ -349,7 +349,7 @@ export class PowerView extends React.PureComponent<
       }
     };
     axios
-      .get(API_ROOT + "api/users/who-am-i", headers)
+      .get(API_ROOT + "api/users/utils", headers)
       .then(res => {
         this.setState({ username: res.data.username });
       })

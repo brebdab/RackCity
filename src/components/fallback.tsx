@@ -1,13 +1,18 @@
-import React from "react";
+import * as React from "react";
 import { Classes, Callout, Intent } from "@blueprintjs/core";
+import { RouteComponentProps } from "react-router";
 
-export const NotFound = () => (
-  <Callout intent={Intent.WARNING}>
-    <h4 className={Classes.DARK}>
-      The page that you are looking for does not exist!
-    </h4>
-  </Callout>
-);
+export class NotFound extends React.Component<RouteComponentProps> {
+  render() {
+    return (
+      <Callout intent={Intent.WARNING}>
+        <h4 className={Classes.DARK}>
+          The page that you are looking for does not exist!
+        </h4>
+      </Callout>
+    );
+  }
+}
 
 export const NotAuthorized = () => (
   <Callout intent={Intent.WARNING}>

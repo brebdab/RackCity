@@ -19,7 +19,8 @@ import {
   AssetObject,
   ElementType,
   getHeaders,
-  ModelObject
+  ModelObject,
+  ROUTES
 } from "../../../../utils/utils";
 import ElementTable from "../../elementTable";
 import { deleteModel, modifyModel } from "../../elementUtils";
@@ -113,7 +114,7 @@ export class ModelView extends React.PureComponent<
           message: "Succesfully Deleted Model",
           intent: Intent.PRIMARY
         });
-        this.props.history.push("/dashboard");
+        this.props.history.push(ROUTES.DASHBOARD);
       })
       .catch(err => {
         console.log("ERROR", err);

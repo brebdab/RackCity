@@ -78,10 +78,6 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     networkFileName: "",
     updateTable: false
   };
-  componentDidMount() {
-    alert(this.props.element + " Tab mounted");
-    // alert("Tab mounted");
-  }
 
   getExportData = (
     path: string,
@@ -378,7 +374,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             <AnchorButton
               onClick={() => {
                 this.props.history.push(
-                  "/bulk-upload/" +
+                  "/dashboard/bulk-upload/" +
                     (this.props.element === ElementType.MODEL
                       ? "models"
                       : "assets")

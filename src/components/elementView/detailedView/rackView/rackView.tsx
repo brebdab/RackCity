@@ -16,7 +16,8 @@ import { API_ROOT } from "../../../../utils/api-config";
 import {
   getHeaders,
   AssetObject,
-  RackResponseObject
+  RackResponseObject,
+  ROUTES
 } from "../../../../utils/utils";
 import "./rackView.scss";
 //export interface ElementViewProps {}
@@ -92,7 +93,9 @@ class RackView extends React.PureComponent<
             >
               <td
                 className="cell"
-                onClick={() => this.props.history.push("/assets/" + id)}
+                onClick={() =>
+                  this.props.history.push(ROUTES.ASSET_DETAIL + id)
+                }
               >
                 {assets[0].model.vendor +
                   " " +

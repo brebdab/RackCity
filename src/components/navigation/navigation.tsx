@@ -15,6 +15,7 @@ import * as actions from "../../store/actions/auth";
 import { connect } from "react-redux";
 import axios from "axios";
 import { API_ROOT } from "../../utils/api-config";
+import { ROUTES } from "../../utils/utils";
 
 export interface NavigationProps {
   isAuthenticated: boolean;
@@ -68,10 +69,10 @@ export class Navigation extends React.Component<
           <Navbar className={Classes.DARK + " nav-bar"}>
             <NavbarGroup>
               <NavbarHeading
-                onClick={() => this.props.history.push("/dashboard")}
+                onClick={() => this.props.history.push(ROUTES.DASHBOARD)}
               >
                 <AnchorButton
-                  onClick={() => this.props.history.push("/")}
+                  onClick={() => this.props.history.push(ROUTES.DASHBOARD)}
                   className="nav-bar-button"
                   icon="home"
                   text="HypoSoft"
@@ -82,14 +83,14 @@ export class Navigation extends React.Component<
               {this.props.isAuthenticated ? (
                 <div>
                   <AnchorButton
-                    onClick={() => this.props.history.push("/dashboard/report")}
+                    onClick={() => this.props.history.push(ROUTES.REPORT)}
                     className="nav-bar-button"
                     icon="numbered-list"
                     text="View Report"
                     minimal
                   />
                   <AnchorButton
-                    onClick={() => this.props.history.push("/dashboard/logs")}
+                    onClick={() => this.props.history.push(ROUTES.LOGS)}
                     className="nav-bar-button"
                     icon="history"
                     text="View Logs"
@@ -114,7 +115,7 @@ export class Navigation extends React.Component<
                   {this.props.isAdmin ? (
                     <AnchorButton
                       icon="user"
-                      onClick={() => this.props.history.push("/users")}
+                      onClick={() => this.props.history.push(ROUTES.USERS)}
                       text="Manage Users"
                       minimal
                     />
@@ -122,7 +123,7 @@ export class Navigation extends React.Component<
                   <AnchorButton
                     onClick={() => {
                       this.clearUsernameAndLogout();
-                      this.props.history.push("/login");
+                      this.props.history.push(ROUTES.LOGIN);
                     }}
                     className="nav-bar-button"
                     icon="user"
@@ -132,7 +133,7 @@ export class Navigation extends React.Component<
                 </div>
               ) : (
                 <AnchorButton
-                  onClick={() => this.props.history.push("/login")}
+                  onClick={() => this.props.history.push(ROUTES.LOGIN)}
                   className="nav-bar-button"
                   icon="user"
                   text="Login"

@@ -40,7 +40,8 @@ import {
   SortFilterBody,
   UserInfoObject,
   AssetFieldsTable,
-  ModelFieldsTable
+  ModelFieldsTable,
+  ROUTES
 } from "../../utils/utils";
 import DragDropList, { DragDropListTypes } from "./dragDropList";
 import {
@@ -1027,7 +1028,7 @@ class ElementTable extends React.Component<
                             ? () => {}
                             : () => {
                                 this.props.history.push(
-                                  "/dashboard/" +
+                                  ROUTES.DASHBOARD +"/" + 
                                     this.props.type +
                                     "/" +
                                     item.id
