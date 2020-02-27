@@ -29,6 +29,7 @@ import {
   NotFound,
   NotAuthorizedAdmin
 } from "./components/fallback";
+import LandingView from "./components/landingView/landingView";
 
 var console: any = {};
 console.log = function() {};
@@ -85,19 +86,23 @@ class App extends React.Component<AppProps> {
         <div>
           <Navigation {...this.props} />
           <Route
-            path="/"
-            children={(props: RouteComponentProps) => (
-              <ElementTabContainer {...props} />
-            )}
+            path="/dashboard"
+            render={(props: RouteComponentProps) => <LandingView {...props} />}
           />
 
           {/* <Switch> */}
           <Route path="/login" component={LoginView} />
 
-          <this.PrivateRoute path="/models/:rid" component={ModelView} />
-          <this.PrivateRoute path="/assets/:rid" component={AssetView} />
-          <this.PrivateRoute path="/report" component={Report} />
-          <this.PrivateRoute path="/logs" component={Logs} />
+          <this.PrivateRoute
+            path="/dashboard/models/:rid"
+            component={ModelView}
+          />
+          <this.PrivateRoute
+            path="/dashboard/assets/:rid"
+            component={AssetView}
+          />
+          <this.PrivateRoute path="/dashboard/report" component={Report} />
+          <this.PrivateRoute path="/dashboard/logs" component={Logs} />
           <this.PrivateRoute path="/rack-print" component={RackView} />
 
           {/* admin paths */}

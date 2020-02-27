@@ -1027,7 +1027,10 @@ class ElementTable extends React.Component<
                             ? () => {}
                             : () => {
                                 this.props.history.push(
-                                  "/" + this.props.type + "/" + item.id
+                                  "/dashboard/" +
+                                    this.props.type +
+                                    "/" +
+                                    item.id
                                 );
                               }
                         }

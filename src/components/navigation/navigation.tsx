@@ -67,7 +67,9 @@ export class Navigation extends React.Component<
         <div>
           <Navbar className={Classes.DARK + " nav-bar"}>
             <NavbarGroup>
-              <NavbarHeading onClick={() => this.props.history.push("/")}>
+              <NavbarHeading
+                onClick={() => this.props.history.push("/dashboard")}
+              >
                 <AnchorButton
                   onClick={() => this.props.history.push("/")}
                   className="nav-bar-button"
@@ -80,14 +82,14 @@ export class Navigation extends React.Component<
               {this.props.isAuthenticated ? (
                 <div>
                   <AnchorButton
-                    onClick={() => this.props.history.push("/report")}
+                    onClick={() => this.props.history.push("/dashboard/report")}
                     className="nav-bar-button"
                     icon="numbered-list"
                     text="View Report"
                     minimal
                   />
                   <AnchorButton
-                    onClick={() => this.props.history.push("/logs")}
+                    onClick={() => this.props.history.push("/dashboard/logs")}
                     className="nav-bar-button"
                     icon="history"
                     text="View Logs"

@@ -113,7 +113,7 @@ export class ModelView extends React.PureComponent<
           message: "Succesfully Deleted Model",
           intent: Intent.PRIMARY
         });
-        this.props.history.push("/");
+        this.props.history.push("/dashboard");
       })
       .catch(err => {
         console.log("ERROR", err);

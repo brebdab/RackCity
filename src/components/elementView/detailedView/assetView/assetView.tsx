@@ -320,7 +320,7 @@ export class AssetView extends React.PureComponent<
       .then(res => {
         this.setState({ isDeleteOpen: false });
         this.addSuccessToast("Successfuly Deleted Asset");
-        this.props.history.push("/");
+        this.props.history.push("/dashboard");
       })
       .catch(err => {
         console.log("ERROR", err);
