@@ -270,7 +270,9 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         loading: true
       });
 
-      this.validateMacAddresses();
+      if (!this.validateMacAddresses()) {
+        return;
+      }
       let newValues = this.state.values;
 
       if (this.state.values.hostname === "") {
@@ -311,12 +313,14 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   };
 
   validateMacAddresses = () => {
+    let valid = true;
     Object.entries(this.state.values.mac_addresses).forEach(
       ([port, mac_address]) => {
         if (mac_address === "") {
           delete this.state.values.mac_addresses[port];
         } else if (!isMacAddressValid(mac_address)) {
           const errors: Array<string> = this.state.errors;
+          valid = false;
           errors.push(
             "Mac Address " +
               '"' +
@@ -334,6 +338,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         }
       }
     );
+    return valid;
   };
   handleChange = (field: { [key: string]: any }) => {
     this.setState({
