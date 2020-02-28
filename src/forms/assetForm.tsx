@@ -271,6 +271,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       });
 
       if (!this.validateMacAddresses()) {
+        $(".bp3-overlay-scroll-container").scrollTop(0);
         return;
       }
       let newValues = this.state.values;
@@ -319,7 +320,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         if (mac_address === "") {
           delete this.state.values.mac_addresses[port];
         } else if (!isMacAddressValid(mac_address)) {
-          const errors: Array<string> = this.state.errors;
+          const errors: Array<string> = [];
           valid = false;
           errors.push(
             "Mac Address " +
@@ -333,7 +334,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
               " is invalid."
           );
           this.setState({
-            errors
+            errors,
+            loading: false
           });
         }
       }
