@@ -85,23 +85,29 @@ class App extends React.Component<AppProps> {
       <BrowserRouter basename="/">
         <div>
           <Navigation {...this.props} />
-          <Route exact path="/">
-            {" "}
-            <Redirect to={ROUTES.DASHBOARD} />
-          </Route>
+
           <Route path={ROUTES.LOGIN} component={LoginView} />
-          <this.PrivateRoute
-            path={ROUTES.DASHBOARD}
-            render={(props: RouteComponentProps) => <LandingView {...props} />}
-          />
-          <this.PrivateRoute
-            path={ROUTES.MODEL_DETAIL + "/:rid"}
-            component={ModelView}
-          />
-          <this.PrivateRoute
-            path={ROUTES.ASSET_DETAIL + "/:rid"}
-            component={AssetView}
-          />
+          <div className="dashboard ">
+            <this.PrivateRoute
+              path={ROUTES.DASHBOARD}
+              render={(props: RouteComponentProps) => (
+                <LandingView {...props} />
+              )}
+            />
+            <Route exact path="/">
+              {" "}
+              <Redirect to={ROUTES.DASHBOARD} />
+            </Route>
+
+            <this.PrivateRoute
+              path={ROUTES.MODEL_DETAIL + "/:rid"}
+              component={ModelView}
+            />
+            <this.PrivateRoute
+              path={ROUTES.ASSET_DETAIL + "/:rid"}
+              component={AssetView}
+            />
+          </div>
           <this.PrivateRoute path={ROUTES.REPORT} component={Report} />
           <this.PrivateRoute path={ROUTES.LOGS} component={Logs} />
           <this.PrivateRoute path={ROUTES.RACK_PRINT} component={RackView} />

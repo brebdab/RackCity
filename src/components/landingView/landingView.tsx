@@ -13,7 +13,7 @@ class LandingView extends React.Component<
 > {
   showTabs() {
     const regex = new RegExp(
-      "^/dashboard/(assets|models|datacenters|racks)$|^/dashboard$"
+      "^/dashboard/(assets|models|datacenters|racks)|^/dashboard$"
     );
     if (regex.exec(this.props.location.pathname)) {
       return true;
@@ -22,7 +22,7 @@ class LandingView extends React.Component<
   }
   public render() {
     return (
-      <div className={Classes.DARK}>
+      <div className={Classes.DARK + " landing-view "}>
         <Collapse
           isOpen={this.showTabs()}
           transitionDuration={0}

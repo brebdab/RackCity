@@ -23,11 +23,13 @@
 .grant-admin-button {
   width: 135px !important;
 }
-
-.rack-tab .element-tab {
-  display: block;
-  margin: 10pt;
+.rack-tab {
+  width: 80vw;
 }
+// .rack-tab .element-tab {
+//   display: block;
+//   margin: 10pt;
+// }
 .element-table {
   position: relative;
   // float: left;
@@ -87,7 +89,7 @@
   width: 95%;
 }
 .element-view {
-  margin: 10pt;
+  width: 100%;
 }
 
 .filter-select {
@@ -205,9 +207,6 @@
   margin-top: 10pt;
 }
 
-.tab {
-  width: 100%;
-}
 // .table-options {
 //   margin-top: 120px;
 // }
