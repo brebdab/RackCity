@@ -62,7 +62,7 @@ class App extends React.Component<AppProps> {
     ) : render ? (
       <Route
         path={path}
-        render={this.props.isAuthenticated ? render : () => NotAuthorized}
+        render={this.props.isAuthenticated ? render : NotAuthorized}
       />
     ) : null;
   };
@@ -97,10 +97,10 @@ class App extends React.Component<AppProps> {
                 <LandingView {...props} />
               )}
             />
-            <Route exact path="/">
+            <this.RedirectToLoginRoute exact path="/">
               {" "}
               <Redirect to={ROUTES.DASHBOARD} />
-            </Route>
+            </this.RedirectToLoginRoute>
             <Route path="/" component={Fallback}></Route>
 
             <this.PrivateRoute

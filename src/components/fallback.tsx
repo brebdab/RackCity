@@ -25,16 +25,22 @@ export const NotFound = (
   </Callout>
 );
 
-export const NotAuthorized = (
-  <Callout intent={Intent.WARNING}>
-    <h4 className={Classes.DARK}>Please log in to see this page</h4>
-  </Callout>
-);
+export const NotAuthorized = () => {
+  return (
+    <Callout intent={Intent.WARNING}>
+      <h4 className={Classes.DARK}>Please log in to see this page</h4>
+    </Callout>
+  );
+};
 
-export const NotAuthorizedAdmin = (
-  <Callout intent={Intent.WARNING}>
-    <h4 className={Classes.DARK}>You are not authorized to view this page.</h4>
-  </Callout>
-);
+export const NotAuthorizedAdmin = () => {
+  return (
+    <Callout intent={Intent.WARNING}>
+      <h4 className={Classes.DARK}>
+        You are not authorized to view this page.
+      </h4>
+    </Callout>
+  );
+};
 
 export default Fallback;
