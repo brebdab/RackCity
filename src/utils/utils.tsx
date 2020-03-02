@@ -12,7 +12,7 @@ export enum ROUTES {
   DASHBOARD = "/dashboard",
   REPORT = "/dashboard/report",
   LOGS = "/dashboard/logs",
-  RACK_PRINT = "/dashboard/rack-print",
+  RACK_PRINT = "/dashboard/racks/print",
   BULK_IMPORT = "/dashboard/bulk-upload/:resourceType",
   USERS = "/dashboard/users"
 }
