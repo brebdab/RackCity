@@ -12,7 +12,10 @@ import {
 import AssetView from "./components/elementView/detailedView/assetView/assetView";
 import ModelView from "./components/elementView/detailedView/modelView/modelView";
 import RackView from "./components/elementView/detailedView/rackView/rackView";
-import { NotAuthorized, NotAuthorizedAdmin } from "./components/fallback";
+import Fallback, {
+  NotAuthorized,
+  NotAuthorizedAdmin
+} from "./components/fallback";
 import BulkImport from "./components/import/import";
 import LandingView from "./components/landingView/landingView";
 import Logs from "./components/logs/logs";
@@ -59,7 +62,7 @@ class App extends React.Component<AppProps> {
     ) : render ? (
       <Route
         path={path}
-        render={this.props.isAuthenticated ? render : () => <NotAuthorized />}
+        render={this.props.isAuthenticated ? render : () => NotAuthorized}
       />
     ) : null;
   };
@@ -98,13 +101,14 @@ class App extends React.Component<AppProps> {
               {" "}
               <Redirect to={ROUTES.DASHBOARD} />
             </Route>
+            <Route path="/" component={Fallback}></Route>
 
             <this.PrivateRoute
-              path={ROUTES.MODEL_DETAIL + "/:rid"}
+              path={ROUTES.MODELS + "/:rid"}
               component={ModelView}
             />
             <this.PrivateRoute
-              path={ROUTES.ASSET_DETAIL + "/:rid"}
+              path={ROUTES.ASSETS + "/:rid"}
               component={AssetView}
             />
           </div>

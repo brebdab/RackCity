@@ -285,7 +285,7 @@ export class AssetView extends React.PureComponent<
     }
   };
   private redirectToAsset = (id: string) => {
-    this.props.history.push(ROUTES.ASSET_DETAIL + id);
+    this.props.history.push(ROUTES.ASSETS + id);
     this.updateAssetData(id);
   };
 

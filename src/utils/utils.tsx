@@ -7,8 +7,10 @@ export interface ElementObject {
 
 export enum ROUTES {
   LOGIN = "/login",
-  MODEL_DETAIL = "/dashboard/models",
-  ASSET_DETAIL = "/dashboard/assets",
+  RACKS = "/dashboard/racks",
+  DATACENTERS = "/dashboard/datacenters",
+  MODELS = "/dashboard/models",
+  ASSETS = "/dashboard/assets",
   DASHBOARD = "/dashboard",
   REPORT = "/dashboard/report",
   LOGS = "/dashboard/logs",

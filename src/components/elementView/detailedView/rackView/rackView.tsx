@@ -93,9 +93,7 @@ class RackView extends React.PureComponent<
             >
               <td
                 className="cell"
-                onClick={() =>
-                  this.props.history.push(ROUTES.ASSET_DETAIL + id)
-                }
+                onClick={() => this.props.history.push(ROUTES.ASSETS + id)}
               >
                 {assets[0].model.vendor +
                   " " +

@@ -1,10 +1,12 @@
-import { Classes, Collapse } from "@blueprintjs/core";
+import { Classes, Collapse, Callout, Intent } from "@blueprintjs/core";
 import * as React from "react";
 import { RouteComponentProps } from "react-router";
 import ElementTabContainer from "../elementView/elementTabContainer";
+import { ROUTES } from "../../utils/utils";
+import { NotFound } from "../fallback";
 
-var console: any = {};
-console.log = function() {};
+// var console: any = {};
+// console.log = function() {};
 interface LandingViewState {}
 interface LandingViewProps {}
 class LandingView extends React.Component<
@@ -20,16 +22,19 @@ class LandingView extends React.Component<
     }
     return false;
   }
+
   public render() {
     return (
-      <div className={Classes.DARK + " landing-view "}>
-        <Collapse
-          isOpen={this.showTabs()}
-          transitionDuration={0}
-          keepChildrenMounted={true}
-        >
-          <ElementTabContainer {...this.props} />
-        </Collapse>
+      <div>
+        <div className={Classes.DARK + " landing-view "}>
+          <Collapse
+            isOpen={this.showTabs()}
+            transitionDuration={0}
+            keepChildrenMounted={true}
+          >
+            <ElementTabContainer {...this.props} />
+          </Collapse>
+        </div>
       </div>
     );
   }

@@ -76,7 +76,7 @@ class PropertiesView extends React.PureComponent<
           <p
             className="model-link"
             onClick={() =>
-              this.props.history.push(ROUTES.MODEL_DETAIL + data[item].id)
+              this.props.history.push(ROUTES.MODELS + data[item].id)
             }
           >
             {data[item].vendor + " " + data[item].model_number}
