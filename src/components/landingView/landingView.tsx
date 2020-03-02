@@ -1,4 +1,4 @@
-import { Classes, Collapse, Callout, Intent } from "@blueprintjs/core";
+import { Classes, Collapse } from "@blueprintjs/core";
 import * as React from "react";
 import { RouteComponentProps } from "react-router";
 import ElementTabContainer from "../elementView/elementTabContainer";
