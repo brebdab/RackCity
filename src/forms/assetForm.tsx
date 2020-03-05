@@ -270,7 +270,10 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         loading: true
       });
 
-      this.validateMacAddresses();
+      if (!this.validateMacAddresses()) {
+        $(".bp3-overlay-scroll-container").scrollTop(0);
+        return;
+      }
       let newValues = this.state.values;
 
       if (this.state.values.hostname === "") {
@@ -311,12 +314,14 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   };
 
   validateMacAddresses = () => {
+    let valid = true;
     Object.entries(this.state.values.mac_addresses).forEach(
       ([port, mac_address]) => {
         if (mac_address === "") {
           delete this.state.values.mac_addresses[port];
         } else if (!isMacAddressValid(mac_address)) {
-          const errors: Array<string> = this.state.errors;
+          const errors: Array<string> = [];
+          valid = false;
           errors.push(
             "Mac Address " +
               '"' +
@@ -329,11 +334,13 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
               " is invalid."
           );
           this.setState({
-            errors
+            errors,
+            loading: false
           });
         }
       }
     );
+    return valid;
   };
   handleChange = (field: { [key: string]: any }) => {
     this.setState({
