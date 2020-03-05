@@ -1,6 +1,6 @@
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
-import { Tabs, Tab } from "@blueprintjs/core";
+import { Tabs, Tab, Classes } from "@blueprintjs/core";
 import ElementTab from "./elementTab";
 import { RouteComponentProps } from "react-router";
 import "./elementView.scss";
@@ -23,8 +23,8 @@ export const ALL_DATACENTERS: DatacenterObject = {
   name: "All datacenters",
   abbreviation: "ALL"
 };
-var console: any = {};
-console.log = function() {};
+// var console: any = {};
+// console.log = function() {};
 
 class ElementTabContainer extends React.Component<
   ElementTabContainerProps & RouteComponentProps,
@@ -58,22 +58,38 @@ class ElementTabContainer extends React.Component<
       });
   };
   componentDidMount = () => {
+    console.log("tab container mounted");
     this.getDatacenters();
   };
+
+  getTabName = (pathname: string) => {
+    if (pathname === "/dashboard") {
+      return "racks";
+    }
+    const regex = new RegExp("(?<=dashboard/).*$");
+    const match = regex.exec(pathname);
+    if (match) {
+      return match[0];
+    }
+  };
+
   public render() {
+    console.log(this.props.match, this.props.location);
     return (
       <Tabs
-        className="element-view"
+        className={Classes.DARK + " element-view "}
         animate={true}
         id="ElementViewer"
         key={"vertical"}
+        selectedTabId={this.getTabName(this.props.location.pathname)}
         renderActiveTabPanelOnly={false}
         vertical={true}
         large
+        onChange={(tab: any) => this.props.history.push("/dashboard/" + tab)}
       >
         <Tab
           className="tab"
-          id="rack"
+          id="racks"
           title="Racks"
           panel={
             <RackTab
@@ -85,7 +101,7 @@ class ElementTabContainer extends React.Component<
         />
         <Tab
           className="tab do-not-print"
-          id="asset"
+          id="assets"
           title="Assets"
           panel={
             <ElementTab
@@ -94,13 +110,14 @@ class ElementTabContainer extends React.Component<
               onDatacenterSelect={this.onDatacenterSelect}
               {...this.props}
               element={ElementType.ASSET}
+              isActive={false}
             />
           }
         />
 
         <Tab
           className="tab do-not-print"
-          id="model"
+          id="models"
           title="Models"
           panel={<ElementTab {...this.props} element={ElementType.MODEL} />}
         />
@@ -108,7 +125,7 @@ class ElementTabContainer extends React.Component<
         {this.props.isAdmin ? (
           <Tab
             className="tab do-not-print"
-            id="datacenter"
+            id="datacenters"
             title="Datacenters"
             panel={
               <ElementTab

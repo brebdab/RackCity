@@ -65,6 +65,7 @@ interface ElementViewProps {
   currDatacenter?: DatacenterObject;
   onDatacenterSelect?(datacenter: DatacenterObject): void;
   updateDatacenters?(): void;
+  isActive?: boolean;
 }
 
 type ElementTabProps = ElementViewProps & RouteComponentProps;
@@ -373,7 +374,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             <AnchorButton
               onClick={() => {
                 this.props.history.push(
-                  "/bulk-upload/" +
+                  "/dashboard/bulk-upload/" +
                     (this.props.element === ElementType.MODEL
                       ? "models"
                       : "assets")

@@ -292,6 +292,7 @@ def who_am_i(request):
 
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def i_am_admin(request):
     """
     Returns whether logged in user is an admin user.

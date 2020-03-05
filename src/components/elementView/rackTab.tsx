@@ -29,7 +29,8 @@ import {
   ElementType,
   RackRangeFields,
   RackResponseObject,
-  getHeaders
+  getHeaders,
+  ROUTES
 } from "../../utils/utils";
 import RackView from "./detailedView/rackView/rackView";
 import { ALL_DATACENTERS } from "./elementTabContainer";
@@ -377,7 +378,7 @@ class RackTab extends React.Component<
         {this.state.racks.length !== 0 ? (
           <Link
             target="_blank"
-            to={{ pathname: "/rack-print", state: this.state.racks }}
+            to={{ pathname: ROUTES.RACK_PRINT, state: this.state.racks }}
           >
             <Button
               className="print-racks"

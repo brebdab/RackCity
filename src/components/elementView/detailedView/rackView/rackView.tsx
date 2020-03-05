@@ -16,7 +16,8 @@ import { API_ROOT } from "../../../../utils/api-config";
 import {
   getHeaders,
   AssetObject,
-  RackResponseObject
+  RackResponseObject,
+  ROUTES
 } from "../../../../utils/utils";
 import "./rackView.scss";
 //export interface ElementViewProps {}
@@ -92,7 +93,7 @@ class RackView extends React.PureComponent<
             >
               <td
                 className="cell"
-                onClick={() => this.props.history.push("/assets/" + id)}
+                onClick={() => this.props.history.push(ROUTES.ASSETS + id)}
               >
                 {assets[0].model.vendor +
                   " " +
@@ -164,7 +165,7 @@ class RackView extends React.PureComponent<
       });
   };
   componentDidMount = () => {
-    if (this.props.location.pathname === "/rack-print") {
+    if (this.props.location.pathname === ROUTES.RACK_PRINT) {
       console.log(this.props.location);
       window.print();
     }
@@ -172,7 +173,7 @@ class RackView extends React.PureComponent<
 
   public render() {
     const racks =
-      this.props.location.pathname === "/rack-print"
+      this.props.location.pathname === ROUTES.RACK_PRINT
         ? JSON.parse(localStorage.getItem("racks")!)
         : this.props.racks;
     if (this.props.location && this.props.location.state) {

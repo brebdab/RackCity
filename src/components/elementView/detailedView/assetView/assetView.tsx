@@ -22,7 +22,8 @@ import {
   getHeaders,
   NetworkConnection,
   Node,
-  DatacenterObject
+  DatacenterObject,
+  ROUTES
 } from "../../../../utils/utils";
 import { deleteAsset, modifyAsset } from "../../elementUtils";
 import PropertiesView from "../propertiesView";
@@ -284,7 +285,7 @@ export class AssetView extends React.PureComponent<
     }
   };
   private redirectToAsset = (id: string) => {
-    this.props.history.push("/assets/" + id);
+    this.props.history.push(ROUTES.ASSETS + id);
     this.updateAssetData(id);
   };
 
@@ -320,7 +321,7 @@ export class AssetView extends React.PureComponent<
       .then(res => {
         this.setState({ isDeleteOpen: false });
         this.addSuccessToast("Successfuly Deleted Asset");
-        this.props.history.push("/");
+        this.props.history.push(ROUTES.DASHBOARD);
       })
       .catch(err => {
         console.log("ERROR", err);
