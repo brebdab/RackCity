@@ -12,7 +12,7 @@ class ChangePlan(models.Model):
     )
 
     class Meta:
-        ordering = 'name'
+        ordering = ['name']
         constraints = [
             models.UniqueConstraint(
                 fields=['name', 'owner'],
