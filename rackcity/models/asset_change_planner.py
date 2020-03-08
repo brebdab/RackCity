@@ -44,12 +44,14 @@ class AssetCP(models.Model):
     rack_position = models.PositiveIntegerField()
     model = models.ForeignKey(
         ITModel,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
         verbose_name="related model",
     )
     rack = models.ForeignKey(
         Rack,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
         verbose_name="related rack",
     )
     owner = models.CharField(
