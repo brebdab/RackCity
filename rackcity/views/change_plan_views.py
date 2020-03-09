@@ -17,6 +17,60 @@ from django.core.exceptions import ObjectDoesNotExist
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+def change_plan_delete(request):
+    """
+    Delete a single existing change plan
+    """
+    data = JSONParser().parse(request)
+    if 'id' not in data:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.DELETE_ERROR.value + GenericFailure.INTERNAL.value,
+                "errors": "Must include 'id' when deleting an asset"
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    id = data['id']
+    try:
+        existing_change_plan = ChangePlan.objects.get(id=id)
+
+    except ObjectDoesNotExist:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR.value +
+                    "Model" + GenericFailure.DOES_NOT_EXIST.value,
+                "errors": "No existing asset with id="+str(id)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    try:
+        existing_change_plan.delete()
+    except Exception as error:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.DELETE_ERROR.value +
+                    "Change Plan" +
+                    GenericFailure.ON_DELETE.value,
+                "errors": str(error)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    return JsonResponse(
+        {
+            "success_message":
+                Status.SUCCESS.value +
+                "Change Plan " + str(existing_change_plan.name) + " deleted"
+        },
+        status=HTTPStatus.OK
+    )
+
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def change_plan_modify(request):
     """
     Modify single existing change plan
@@ -103,17 +157,6 @@ def change_plan_add(request):
         )
     try:
         change_plan = serializer.save()
-        return JsonResponse(
-            {
-                "success_message":
-                    Status.SUCCESS.value +
-                    "Change Plan " +
-                    str(change_plan.name) +
-                    " created",
-                "related_id": str(change_plan.id)
-            },
-            status=HTTPStatus.OK,
-        )
     except Exception as error:
         return JsonResponse(
             {
@@ -124,6 +167,17 @@ def change_plan_add(request):
             },
             status=HTTPStatus.BAD_REQUEST
         )
+    return JsonResponse(
+        {
+            "success_message":
+                Status.SUCCESS.value +
+                "Change Plan " +
+                str(change_plan.name) +
+                " created",
+            "related_id": str(change_plan.id)
+        },
+        status=HTTPStatus.OK,
+    )
 
 
 @api_view(['POST'])
