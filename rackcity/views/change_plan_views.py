@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-from rackcity.api.serializers import ChangePlanSerializer
+from rackcity.api.serializers import AddChangePlanSerializer, GetChangePlanSerializer
 from rackcity.models import ChangePlan
 from rackcity.views.rackcity_utils import get_filter_arguments, get_sort_arguments
 from rackcity.utils.errors_utils import (
@@ -30,8 +30,9 @@ def change_plan_add(request):
             },
             status=HTTPStatus.BAD_REQUEST
         )
-    data["owner"] = request.user
-    serializer = ChangePlanSerializer(data=data)
+    data["owner"] = request.user.id
+    print(data, request.user)
+    serializer = AddChangePlanSerializer(data=data)
     if not serializer.is_valid(raise_exception=False):
         return JsonResponse(
             {
@@ -146,7 +147,7 @@ def change_plan_many(request):
         change_plans_to_serialize = page_of_change_plans
     else:
         change_plans_to_serialize = change_plans
-    serializer = ChangePlanSerializer(change_plans_to_serialize, many=True)
+    serializer = GetChangePlanSerializer(change_plans_to_serialize, many=True)
     return JsonResponse(
         {"change_plans": serializer.data},
         status=HTTPStatus.OK,
