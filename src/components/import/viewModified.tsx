@@ -1,4 +1,4 @@
-import { AnchorButton } from "@blueprintjs/core";
+import { AnchorButton, Intent } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
@@ -326,10 +326,10 @@ export class Modifier extends React.PureComponent<
                           this.props.modelsModified!.length -
                           modified.length)
                     );
-                    types.push("success");
+                    types.push(Intent.SUCCESS);
                     if (res.warning_message) {
                       toasts.push(res.warning_message);
-                      types.push("warning");
+                      types.push(Intent.WARNING);
                     }
                     this.setState({
                       modifiedModels: []
@@ -339,7 +339,7 @@ export class Modifier extends React.PureComponent<
                   err => {
                     this.props.callback(
                       [err.response.data.failure_message],
-                      ["error"]
+                      [Intent.DANGER]
                     );
                   }
                 );
@@ -374,10 +374,10 @@ export class Modifier extends React.PureComponent<
                           this.props.modelsModified!.length -
                           modified.length)
                     );
-                    types.push("success");
+                    types.push(Intent.SUCCESS);
                     if (res.warning_message) {
                       toasts.push(res.warning_message);
-                      types.push("warning");
+                      types.push(Intent.WARNING);
                     }
                     this.setState({
                       modifiedModels: []
@@ -387,7 +387,7 @@ export class Modifier extends React.PureComponent<
                   err => {
                     this.props.callback(
                       [err.response.data.failure_message],
-                      ["error"]
+                      [Intent.DANGER]
                     );
                   }
                 );
@@ -428,10 +428,10 @@ export class Modifier extends React.PureComponent<
                           this.props.modelsModified!.length -
                           modified.length)
                     );
-                    types.push("success");
+                    types.push(Intent.SUCCESS);
                     if (res.warning_message) {
                       toasts.push(res.warning_message);
-                      types.push("warning");
+                      types.push(Intent.WARNING);
                     }
                     this.setState({
                       modifiedModels: []
@@ -441,7 +441,7 @@ export class Modifier extends React.PureComponent<
                   err => {
                     this.props.callback(
                       [err.response.data.failure_message],
-                      ["error"]
+                      [Intent.DANGER]
                     );
                   }
                 );

@@ -91,11 +91,11 @@ export class BulkImport extends React.PureComponent<
 
   private createAlertToasts(toasts: Array<string>, types: Array<string>) {
     for (let i = 0; i < toasts.length; i++) {
-      if (types[i] === "success") {
+      if (types[i] === Intent.SUCCESS) {
         this.addSuccessToast(toasts[i]);
-      } else if (types[i] === "warning") {
+      } else if (types[i] === Intent.WARNING) {
         this.addWarnToast(toasts[i]);
-      } else if (types[i] === "error") {
+      } else if (types[i] === Intent.DANGER) {
         this.addErrorToast(toasts[i]);
       }
     }
