@@ -1,14 +1,15 @@
 import axios from "axios";
 import { API_ROOT } from "../../utils/api-config";
 import * as actionTypes from "./actionTypes";
+import { ChangePlan } from "../../utils/utils";
 
 export const DUKE_OAUTH_URI =
   "https://oauth.oit.duke.edu/oauth/authorize.php?client_id=hyposoft-rack-city&response_type=token&state=1129&scope=basic&redirect_uri=";
 
-export const setChangePlan = (changePlan: string) => {
+export const setChangePlan = (changePlan: ChangePlan) => {
   return {
     type: actionTypes.SWITCH_CHANGE_PLAN,
-    branch: changePlan
+    changePlan: changePlan
   };
 };
 export const authStart = () => {

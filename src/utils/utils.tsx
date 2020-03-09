@@ -5,6 +5,12 @@ export interface ElementObject {
   id: string;
 }
 
+export const CP_NONE: ChangePlan = {
+  id: "",
+  execution_time: "",
+  name: "none"
+};
+
 export enum ROUTES {
   LOGIN = "/login",
   RACKS = "/dashboard/racks",
@@ -28,6 +34,10 @@ export enum ElementType {
 export enum PowerSide {
   LEFT = "L",
   RIGHT = "R"
+}
+export interface ChangePlan extends ElementObject {
+  name: string;
+  execution_time: string;
 }
 export interface AssetObjectOld extends ElementObject {
   hostname: string;
