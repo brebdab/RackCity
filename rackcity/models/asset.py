@@ -32,6 +32,11 @@ def validate_owner(value):
         )
 
 
+# class AbstractAsset(models.Model):
+#     id = models.AutoField(primary_key=True)
+
+
+# class Asset(AbstractAsset):
 class Asset(models.Model):
     asset_number = models.IntegerField(
         unique=True,
