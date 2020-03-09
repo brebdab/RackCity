@@ -1,14 +1,14 @@
 from django.db import models
 from .asset import validate_hostname, validate_owner
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.exceptions import ValidationError
 from .it_model import ITModel
 from .rack import Rack
-from .asset import Asset  # , AbstractAsset
+from .asset import Asset, AbstractAsset
 from .change_plan import ChangePlan
 
 
-# class AssetCP(AbstractAsset):
-class AssetCP(models.Model):
+class AssetCP(AbstractAsset):
     related_asset = models.ForeignKey(
         Asset,
         on_delete=models.SET_NULL,

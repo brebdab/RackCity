@@ -1,4 +1,4 @@
-from .asset import Asset  # , AbstractAsset
+from .asset import Asset, AbstractAsset
 from .log import Log
 from .it_model import ITModel
 from .rack import Rack
