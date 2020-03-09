@@ -18,3 +18,4 @@ from .network_port_serializers import (
     BulkNetworkPortSerializer,
     normalize_bulk_network_data
 )
+from .change_plan_serializers import ChangePlanSerializer

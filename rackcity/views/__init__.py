@@ -73,3 +73,6 @@ from .pdu_views import (
     power_cycle,
     power_availability
 )
+from .change_plan_views import (
+    change_plan_many, change_plan_add
+)
