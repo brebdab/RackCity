@@ -5,11 +5,6 @@ export interface ElementObject {
   id: string;
 }
 
-export const CP_NONE: ChangePlan = {
-  id: "",
-  execution_time: "",
-  name: "none"
-};
 
 export enum ROUTES {
   LOGIN = "/login",

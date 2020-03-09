@@ -1,17 +1,17 @@
 import * as actionTypes from "../actions/actionTypes";
 import { updateObject } from "../utility";
-import { CP_NONE, ChangePlan } from "../../utils/utils";
-interface ReduxState  {
-  token:string|null,
-  error:string|null,
-  loading:boolean,
-  changePlan:ChangePlan
+import { ChangePlan } from "../../utils/utils";
+interface ReduxState {
+  token: string | null;
+  error: string | null;
+  loading: boolean;
+  changePlan: ChangePlan | null;
 }
-const initialState:ReduxState = {
+const initialState: ReduxState = {
   token: null,
   error: null,
   loading: false,
-  changePlan: CP_NONE
+  changePlan: null
 };
 const setChangePlan = (state: any, action: any) => {
   return updateObject(state, {
