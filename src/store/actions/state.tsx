@@ -2,8 +2,15 @@ import axios from "axios";
 import { API_ROOT } from "../../utils/api-config";
 import * as actionTypes from "./actionTypes";
 
-export const DUKE_OAUTH_URI = "https://oauth.oit.duke.edu/oauth/authorize.php?client_id=hyposoft-rack-city&response_type=token&state=1129&scope=basic&redirect_uri="
+export const DUKE_OAUTH_URI =
+  "https://oauth.oit.duke.edu/oauth/authorize.php?client_id=hyposoft-rack-city&response_type=token&state=1129&scope=basic&redirect_uri=";
 
+export const setChangePlan = (changePlan: string) => {
+  return {
+    type: actionTypes.SWITCH_CHANGE_PLAN,
+    branch: changePlan
+  };
+};
 export const authStart = () => {
   return {
     type: actionTypes.AUTH_START
@@ -11,13 +18,15 @@ export const authStart = () => {
 };
 
 var console: any = {};
-console.log = function () { };
+
+console.log = function() {};
 export const authSuccess = (token: string) => {
   return {
     type: actionTypes.AUTH_SUCCESS,
     token: token
   };
 };
+
 export const authAdmin = () => {
   return {
     type: actionTypes.AUTH_ADMIN
@@ -45,35 +54,10 @@ export const logout = () => {
     type: actionTypes.AUTH_LOGOUT
   };
 };
-// export const checkAuthTimeout = (expirationTime: number) => {
-//   return (dispatch: any) => {
-//     setTimeout(() => {
-//       dispatch(logout());
-//     }, expirationTime * 1000);
-//   };
-// };
-// function getCookie(name: string) {
-//   var cookieValue = null;
-//   if (document.cookie && document.cookie !== "") {
-//     var cookies = document.cookie.split(";");
-//     for (var i = 0; i < cookies.length; i++) {
-//       var cookie = jQuery.trim(cookies[i]);
-//       console.log(cookie);
-//       if (cookie.substring(0, name.length + 1) === name + "=") {
-//         cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-//         break;
-//       }
-//     }
-//   }
-//   return cookieValue;
-// }
 
 export const authLogin = (username: string, password: string) => {
   return (dispatch: any) => {
     dispatch(authStart());
-    // axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
-    // axios.defaults.xsrfCookieName = "csrftoken";
-    // var csrf_token = getCookie("csrftoken");
 
     console.log(API_ROOT + "rest-auth/login/");
 
@@ -132,31 +116,6 @@ export const checkAdmin = (token: string) => {
   };
 };
 
-// export const authSignup = (
-//   username: string,
-//   email: string,
-//   displayName: string,
-//   password1: string,
-//   password2: string
-// ) => {
-//   return (dispatch: any) => {
-//     // dispatch(authStart());
-//     axios
-//       .post(API_ROOT + "rest-auth/registration/", {
-//         username: username,
-//         email: email,
-//         displayName: displayName,
-//         password1: password1,
-//         password2: password2
-//       })
-//       .then(res => console.log("Created user")) //loginHelper(res, dispatch))
-//       .catch(err => {
-//         console.log(err);
-//         dispatch(authFail(err));
-//       });
-//   };
-// };
-
 export const loginHelper = (res: any, dispatch: any) => {
   const token = res.data.key;
   const expirationDate = new Date(new Date().getTime() + 3600 * 1000);
@@ -180,11 +139,6 @@ export const authCheckState = () => {
       } else {
         dispatch(authSuccess(token!));
         dispatch(checkAdmin(token!));
-        // dispatch(
-        //   checkAuthTimeout(
-        //     (expirationDate.getTime() - new Date().getTime()) / 1000
-        //   )
-        // );
       }
     }
   };

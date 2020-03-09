@@ -25,7 +25,7 @@ import User from "./components/userView/user";
 import LoginView from "./forms/auth/loginView";
 // import BulkExport from "./components/export/export";
 import "./index.scss";
-import * as actions from "./store/actions/auth";
+import * as actions from "./store/actions/state";
 import { ROUTES } from "./utils/utils";
 
 var console: any = {};

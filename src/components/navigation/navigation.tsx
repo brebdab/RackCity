@@ -11,7 +11,7 @@ import * as React from "react";
 import { RouteComponentProps } from "react-router";
 import { BrowserRouter as Router, withRouter } from "react-router-dom";
 import "./navigation.scss";
-import * as actions from "../../store/actions/auth";
+import * as actions from "../../store/actions/state";
 import { connect } from "react-redux";
 import axios from "axios";
 import { API_ROOT } from "../../utils/api-config";

@@ -6,7 +6,7 @@ import { connect } from "react-redux";
 import "./loginView.scss";
 import * as QueryString from "query-string";
 import { isNullOrUndefined } from "util";
-import * as actions from "../../store/actions/auth";
+import * as actions from "../../store/actions/state";
 
 export interface LoginViewProps {
   token: string;
