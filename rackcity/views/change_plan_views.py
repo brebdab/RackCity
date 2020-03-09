@@ -12,6 +12,65 @@ from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import JSONParser
+from django.core.exceptions import ObjectDoesNotExist
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def change_plan_modify(request):
+    """
+    Modify single existing change plan
+    """
+    data = JSONParser().parse(request)
+    if 'id' not in data:
+        return JsonResponse(
+            {
+                "failure_message":
+                Status.MODIFY_ERROR.value + GenericFailure.INTERNAL.value,
+                    "errors": "Must include 'id' when modifying an asset"
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    id = data['id']
+    try:
+        existing_change_plan = ChangePlan.objects.get(id=id)
+
+    except ObjectDoesNotExist:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR.value +
+                    "Model" + GenericFailure.DOES_NOT_EXIST.value,
+                "errors": "No existing asset with id="+str(id)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    for field in data.keys():
+        value = data[field]
+        setattr(existing_change_plan, field, value)
+    try:
+        existing_change_plan.save()
+        return JsonResponse(
+            {
+                "success_message":
+                    Status.SUCCESS.value +
+                    "Change Plan " +
+                    str(existing_change_plan.name) +
+                    " modified",
+                "related_id": str(existing_change_plan.id)
+            },
+            status=HTTPStatus.OK,
+        )
+    except Exception as error:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR.value +
+                    parse_save_validation_error(error, "Asset"),
+                "errors": str(error)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
 
 
 @api_view(['POST'])
@@ -31,7 +90,6 @@ def change_plan_add(request):
             status=HTTPStatus.BAD_REQUEST
         )
     data["owner"] = request.user.id
-    print(data, request.user)
     serializer = AddChangePlanSerializer(data=data)
     if not serializer.is_valid(raise_exception=False):
         return JsonResponse(
@@ -49,7 +107,10 @@ def change_plan_add(request):
             {
                 "success_message":
                     Status.SUCCESS.value +
-                    "Change Plan " + str(change_plan.name) + " created"
+                    "Change Plan " +
+                    str(change_plan.name) +
+                    " created",
+                "related_id": str(change_plan.id)
             },
             status=HTTPStatus.OK,
         )

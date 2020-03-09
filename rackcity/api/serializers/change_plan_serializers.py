@@ -18,4 +18,5 @@ class GetChangePlanSerializer(serializers.ModelSerializer):
         fields = (
             'name',
             'execution_time',
+            'id'
         )

@@ -61,6 +61,7 @@ urlpatterns = [
     path('power/cycle', views.power_cycle),
     path('power/availability', views.power_availability),
     path('change-plans/get-many', views.change_plan_many),
-    path('change-plans/create', views.change_plan_add),
+    path('change-plans/add', views.change_plan_add),
+    path('change-plans/modify', views.change_plan_modify),
 
 ]
