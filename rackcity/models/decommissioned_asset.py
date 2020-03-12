@@ -5,6 +5,13 @@ from django.contrib.postgres.fields import JSONField
 
 
 class DecommissionedAsset(models.Model):
+    live_id = models.IntegerField()
+    decommissioning_user = models.CharField(  # not unique
+        max_length=150
+    )
+    time_decommissioned = models.DateTimeField(
+        auto_now_add=True, blank=True
+    )
     asset_number = models.IntegerField(  # not unique or blank
         validators=[
             MinValueValidator(100000),
