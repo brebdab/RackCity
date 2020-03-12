@@ -1,14 +1,14 @@
 from django.db import models
 from .asset import validate_hostname, validate_owner
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.core.exceptions import ValidationError
 from .it_model import ITModel
 from .rack import Rack
-from .asset import Asset
+from .asset import Asset, AbstractAsset
 from .change_plan import ChangePlan
 
 
-class AssetCP(models.Model):
+class AssetCP(AbstractAsset):
     related_asset = models.ForeignKey(
         Asset,
         on_delete=models.SET_NULL,
@@ -44,12 +44,14 @@ class AssetCP(models.Model):
     rack_position = models.PositiveIntegerField()
     model = models.ForeignKey(
         ITModel,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
         verbose_name="related model",
     )
     rack = models.ForeignKey(
         Rack,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
         verbose_name="related rack",
     )
     owner = models.CharField(
@@ -62,7 +64,7 @@ class AssetCP(models.Model):
 
     class Meta:
         ordering = ['asset_number']
-        verbose_name = 'asset'
+        verbose_name = 'asset change planner'
 
     def save(self, *args, **kwargs):
         try:
@@ -72,8 +74,4 @@ class AssetCP(models.Model):
             raise valid_error
         else:
             super(AssetCP, self).save(*args, **kwargs)
-            ##TODO: Network ports and power ports 
-
-
-
-
+            # TODO: Network ports and power ports

@@ -211,7 +211,7 @@ def power_off(request):
             toggle_power(asset, connection, "off")
     log_power_action(
         request.user,
-        PowerAction.ON,
+        PowerAction.OFF,
         asset,
     )
     return JsonResponse(
