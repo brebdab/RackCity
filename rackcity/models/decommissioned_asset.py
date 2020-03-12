@@ -1,4 +1,3 @@
-from rackcity.models import Asset
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.contrib.postgres.fields import JSONField
@@ -20,7 +19,6 @@ class DecommissionedAsset(models.Model):
     )
     hostname = models.CharField(  # not unique
         max_length=150,
-        validators=[Asset.validate_hostname],
         null=True,
         blank=True,
     )
