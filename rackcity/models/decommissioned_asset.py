@@ -4,7 +4,7 @@ from django.db import models
 from django.contrib.postgres.fields import JSONField
 
 
-class DecommissionedAsset(Asset):
+class DecommissionedAsset(models.Model):
     asset_number = models.IntegerField(  # not unique or blank
         validators=[
             MinValueValidator(100000),
@@ -25,15 +25,10 @@ class DecommissionedAsset(Asset):
         null=True,
         blank=True,
     )
-
-    # power
-    # network
-    # graph
+    power_connections = JSONField()
+    network_connections = JSONField()
+    network_graph = JSONField()
 
     class Meta:
         ordering = ['asset_number']
         verbose_name = 'asset'
-
-    def save(self, *args, **kwargs):  # TODO: confirm this works
-        super.super(DecommissionedAsset, self).save(
-            *args, **kwargs)  # use Model.save, not Asset.save
