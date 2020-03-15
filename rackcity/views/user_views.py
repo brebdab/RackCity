@@ -24,7 +24,11 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_auth.registration.views import RegisterView
-from rackcity.permissions.groups import get_group, GroupName
+from rackcity.permissions.groups import (
+    add_user_to_group,
+    remove_user_from_group,
+    GroupName,
+)
 
 
 class RegisterNameView(RegisterView):
@@ -476,19 +480,29 @@ def user_set_groups(request):
         )
     if 'model' in data:
         if 'model':
-            user.groups.add(get_group(GroupName.MODEL))
+            add_user_to_group(user, GroupName.MODEL)
+        else:
+            remove_user_from_group(user, GroupName.MODEL)
     if 'asset' in data:
         if 'asset':
-            user.groups.add(get_group(GroupName.ASSET))
+            add_user_to_group(user, GroupName.ASSET)
+        else:
+            remove_user_from_group(user, GroupName.ASSET)
     if 'power' in data:
         if 'power':
-            user.groups.add(get_group(GroupName.POWER))
+            add_user_to_group(user, GroupName.POWER)
+        else:
+            remove_user_from_group(user, GroupName.POWER)
     if 'audit' in data:
         if 'audit':
-            user.groups.add(get_group(GroupName.AUDIT))
+            add_user_to_group(user, GroupName.AUDIT)
+        else:
+            remove_user_from_group(user, GroupName.AUDIT)
     if 'admin' in data:
         if 'admin':
-            user.groups.add(get_group(GroupName.ADMIN))
+            add_user_to_group(user, GroupName.ADMIN)
+        else:
+            remove_user_from_group(admin, GroupName.ADMIN)
     return JsonResponse(
         {},
         status=HTTPStatus.OK,

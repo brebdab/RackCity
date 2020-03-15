@@ -1,4 +1,4 @@
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, User
 from enum import Enum
 from rackcity.permissions.permissions import PermissionName, get_permission
 
@@ -31,7 +31,7 @@ def set_group_permissions(group: Group, group_name: GroupName):
         group.permissions.add(get_permission(PermissionName.USER_WRITE))
 
 
-def get_group(group_name: GroupName) -> Group:
+def get_group(group_name: GroupName) -> Tuple[Group, bool]:
     """
     Returns Django Group belonging to this name. If Group does not yet exist,
     it is created with the correct permissions.
@@ -39,4 +39,20 @@ def get_group(group_name: GroupName) -> Group:
     group, created = Group.objects.get_or_create(name=group_name.value)
     if created:
         set_group_permissions(group, group_name)
-    return group
+    return group, created
+
+
+def add_user_to_group(user: User, group_name: GroupName) -> bool:
+    group, created = get_group(group_name)
+    added = (created or not user.groups.filter(name=group.name).exists())
+    if added:
+        user.groups.add(group)
+    return added
+
+
+def remove_user_from_group(user: User, group_name: GroupName) -> bool:
+    group, _ = get_group(group_name)
+    removed = (user.groups.filter(name=group.name).exists())
+    if removed:
+        user.groups.remove(group)
+    return removed
