@@ -449,7 +449,7 @@ def usernames(request):
 @permission_classes([IsAdminUser])
 def user_set_groups(request):
     """
-    Set groups for a user 
+    Set groups for a user.
     """
     data = JSONParser().parse(request)
     if 'id' not in data:
@@ -491,5 +491,40 @@ def user_set_groups(request):
             user.groups.add(get_group(GroupName.ADMIN))
     return JsonResponse(
         {},
+        status=HTTPStatus.OK,
+    )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def user_get_groups(request):
+    data = JSONParser().parse(request)
+    if 'id' not in data:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR.value +
+                    GenericFailure.INTERNAL.value,
+                "errors": "Must specify user id on admin permission revoke"
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    try:
+        user = User.objects.get(id=data['id'])
+    except ObjectDoesNotExist:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR.value +
+                    "User" + GenericFailure.DOES_NOT_EXIST.value,
+                "errors": "No existing user with id=" + data['id']
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    group_list = []
+    for group in user.groups.all():
+        group_list.append(group.name)
+    return JsonResponse(
+        {"groups": ', '.join(group_list)},
         status=HTTPStatus.OK,
     )
