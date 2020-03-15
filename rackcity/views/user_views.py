@@ -502,7 +502,7 @@ def user_set_groups(request):
         if 'admin':
             add_user_to_group(user, GroupName.ADMIN)
         else:
-            remove_user_from_group(admin, GroupName.ADMIN)
+            remove_user_from_group(user, GroupName.ADMIN)
     return JsonResponse(
         {},
         status=HTTPStatus.OK,
