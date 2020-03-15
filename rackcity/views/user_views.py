@@ -24,6 +24,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_auth.registration.views import RegisterView
+from rackcity.permissions.groups import get_group, GroupName
 
 
 class RegisterNameView(RegisterView):
@@ -440,5 +441,55 @@ def usernames(request):
     usernames = [obj.username for obj in User.objects.all()]
     return JsonResponse(
         {"usernames": usernames},
+        status=HTTPStatus.OK,
+    )
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def user_set_groups(request):
+    """
+    Set groups for a user 
+    """
+    data = JSONParser().parse(request)
+    if 'id' not in data:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR.value +
+                    GenericFailure.INTERNAL.value,
+                "errors": "Must specify user id on admin permission revoke"
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    try:
+        user = User.objects.get(id=data['id'])
+    except ObjectDoesNotExist:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR.value +
+                    "User" + GenericFailure.DOES_NOT_EXIST.value,
+                "errors": "No existing user with id=" + data['id']
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    if 'model' in data:
+        if 'model':
+            user.groups.add(get_group(GroupName.MODEL))
+    if 'asset' in data:
+        if 'asset':
+            user.groups.add(get_group(GroupName.ASSET))
+    if 'power' in data:
+        if 'power':
+            user.groups.add(get_group(GroupName.POWER))
+    if 'audit' in data:
+        if 'audit':
+            user.groups.add(get_group(GroupName.AUDIT))
+    if 'admin' in data:
+        if 'admin':
+            user.groups.add(get_group(GroupName.ADMIN))
+    return JsonResponse(
+        {},
         status=HTTPStatus.OK,
     )
