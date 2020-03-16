@@ -478,31 +478,13 @@ def user_set_groups(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
-    if 'model' in data:
-        if 'model':
-            add_user_to_group(user, GroupName.MODEL)
-        else:
-            remove_user_from_group(user, GroupName.MODEL)
-    if 'asset' in data:
-        if 'asset':
-            add_user_to_group(user, GroupName.ASSET)
-        else:
-            remove_user_from_group(user, GroupName.ASSET)
-    if 'power' in data:
-        if 'power':
-            add_user_to_group(user, GroupName.POWER)
-        else:
-            remove_user_from_group(user, GroupName.POWER)
-    if 'audit' in data:
-        if 'audit':
-            add_user_to_group(user, GroupName.AUDIT)
-        else:
-            remove_user_from_group(user, GroupName.AUDIT)
-    if 'admin' in data:
-        if 'admin':
-            add_user_to_group(user, GroupName.ADMIN)
-        else:
-            remove_user_from_group(user, GroupName.ADMIN)
+    for group in GroupName:
+        group_key = group.value
+        if group_key in data:
+            if data[group_key]:
+                add_user_to_group(user, group)
+            else:
+                remove_user_from_group(user, group)
     return JsonResponse(
         {},
         status=HTTPStatus.OK,

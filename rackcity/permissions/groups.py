@@ -1,6 +1,7 @@
 from django.contrib.auth.models import Group, User
 from enum import Enum
 from rackcity.permissions.permissions import PermissionName, get_permission
+from typing import Tuple
 
 
 class GroupName(Enum):
