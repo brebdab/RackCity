@@ -57,6 +57,7 @@ urlpatterns = [
     path('users/revoke-admin', views.user_revoke_admin),
     path('users/groups/get', views.user_get_groups),
     path('users/groups/set', views.user_set_groups),
+    path('users/groups', views.all_user_groups),
     path('power/get-state/<int:id>', views.power_status),
     path('power/mask-on', views.power_on),
     path('power/mask-off', views.power_off),

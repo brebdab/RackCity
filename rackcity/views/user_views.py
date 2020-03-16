@@ -537,6 +537,18 @@ def user_get_groups(request):
     for group in user.groups.all():
         group_list.append(group.name)
     return JsonResponse(
+        {"user_groups": group_list},
+        status=HTTPStatus.OK,
+    )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def all_user_groups(request):
+    group_list = []
+    for group in GroupName:
+        group_list.append(group.value)
+    return JsonResponse(
         {"groups": group_list},
         status=HTTPStatus.OK,
     )
