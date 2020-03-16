@@ -478,15 +478,31 @@ def user_set_groups(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
+    groups_added = []
+    groups_removed = []
     for group in GroupName:
         group_key = group.value
         if group_key in data:
             if data[group_key]:
-                add_user_to_group(user, group)
+                added = add_user_to_group(user, group)
+                if added:
+                    groups_added.append(group_key)
             else:
-                remove_user_from_group(user, group)
+                removed = remove_user_from_group(user, group)
+                if removed:
+                    groups_removed.append(group_key)
+    success_message = ""
+    if len(groups_added) > 0:
+        success_message += \
+            ("User added to groups: " + ", ".join(groups_added) + ". ")
+    if len(groups_removed) > 0:
+        success_message += \
+            ("User removed from groups: " + ", ".join(groups_removed) + ". ")
+    if len(groups_added) == 0 and len(groups_removed) == 0:
+        success_message += \
+            "User's groups were not changed."
     return JsonResponse(
-        {},
+        {"success_message": Status.SUCCESS.value + success_message},
         status=HTTPStatus.OK,
     )
 
@@ -521,6 +537,6 @@ def user_get_groups(request):
     for group in user.groups.all():
         group_list.append(group.name)
     return JsonResponse(
-        {"groups": ', '.join(group_list)},
+        {"groups": group_list},
         status=HTTPStatus.OK,
     )
