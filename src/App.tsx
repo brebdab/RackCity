@@ -22,6 +22,7 @@ import Logs from "./components/logs/logs";
 import Navigation from "./components/navigation/navigation";
 import Report from "./components/report/report";
 import User from "./components/userView/user";
+import ChangePlannerView from "./components/changePlanner/changePlannerView";
 import LoginView from "./forms/auth/loginView";
 // import BulkExport from "./components/export/export";
 import "./index.scss";
@@ -115,6 +116,10 @@ class App extends React.Component<AppProps> {
           <this.PrivateRoute path={ROUTES.REPORT} component={Report} />
           <this.PrivateRoute path={ROUTES.LOGS} component={Logs} />
           <this.PrivateRoute path={ROUTES.RACK_PRINT} component={RackView} />
+          <this.PrivateRoute
+            path={ROUTES.CHANGE_PLAN}
+            component={ChangePlannerView}
+          />
 
           {/* admin paths */}
           <this.AdminRoute path={ROUTES.USERS} component={User} />

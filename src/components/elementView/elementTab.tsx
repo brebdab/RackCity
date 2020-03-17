@@ -353,7 +353,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
         </div>
         <div className="element-tab-buttons">
           {this.props.element !== ElementType.USER &&
-          this.props.element !== ElementType.DATACENTER ? (
+          this.props.element !== ElementType.DATACENTER &&
+          this.props.element !== ElementType.CHANGEPLANS ? (
             <AnchorButton
               className="add"
               text="Export Table Data"

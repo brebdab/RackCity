@@ -14,5 +14,17 @@
 }
 .nav-bar-non-button:hover {
   cursor: default !important;
-  background-color: #394B59 !important;
+  background-color: #394b59 !important;
+}
+.banner {
+  color: white;
+  background-color: #bf8c0a !important;
+  height: 15pt !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  font-size: 14px !important;
+  font-weight: 1 !important;
+}
+.banner:hover {
+  cursor: pointer !important;
 }

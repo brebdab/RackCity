@@ -1,27 +1,39 @@
 import {
+  Alignment,
   AnchorButton,
+  Button,
   Classes,
+  Menu,
+  MenuItem,
   Navbar,
   NavbarDivider,
   NavbarGroup,
   NavbarHeading,
-  Alignment
+  Popover
 } from "@blueprintjs/core";
+import { IconNames } from "@blueprintjs/icons";
+import axios from "axios";
 import * as React from "react";
+import Banner from "react-js-banner";
+import { connect } from "react-redux";
 import { RouteComponentProps } from "react-router";
 import { BrowserRouter as Router, withRouter } from "react-router-dom";
-import "./navigation.scss";
+import {
+  ChangePlanSelect,
+  filterChangePlan,
+  renderChangePlanItem
+} from "../../forms/formUtils";
 import * as actions from "../../store/actions/state";
-import { connect } from "react-redux";
-import axios from "axios";
 import { API_ROOT } from "../../utils/api-config";
-import { ROUTES } from "../../utils/utils";
-
+import { ChangePlan, ROUTES } from "../../utils/utils";
+import "./navigation.scss";
 export interface NavigationProps {
   isAuthenticated: boolean;
   logout(): any;
+  setChangePlan(changePlan: ChangePlan | null): void;
   isAdmin: boolean;
   token: string;
+  changePlan: ChangePlan;
 }
 
 export interface NavigationState {
@@ -64,6 +76,11 @@ export class Navigation extends React.Component<
     return (
       <Router>
         <div>
+          {this.props.changePlan ? (
+            <div onClick={() => this.props.history.push(ROUTES.CHANGE_PLAN)}>
+              <Banner title={this.props.changePlan.name} />
+            </div>
+          ) : null}
           <Navbar className={Classes.DARK + " nav-bar"}>
             <NavbarGroup>
               <NavbarHeading
@@ -80,20 +97,41 @@ export class Navigation extends React.Component<
               <NavbarDivider />
               {this.props.isAuthenticated ? (
                 <div>
-                  <AnchorButton
-                    onClick={() => this.props.history.push(ROUTES.REPORT)}
-                    className="nav-bar-button"
-                    icon="numbered-list"
-                    text="View Report"
-                    minimal
-                  />
-                  <AnchorButton
-                    onClick={() => this.props.history.push(ROUTES.LOGS)}
-                    className="nav-bar-button"
-                    icon="history"
-                    text="View Logs"
-                    minimal
-                  />
+                  <Popover
+                    content={
+                      <Menu>
+                        <MenuItem
+                          text="View Report"
+                          icon="numbered-list"
+                          onClick={() => this.props.history.push(ROUTES.REPORT)}
+                        />
+                        <MenuItem
+                          onClick={() => this.props.history.push(ROUTES.LOGS)}
+                          icon="history"
+                          text="View Logs"
+                        />
+                        <MenuItem
+                          onClick={() =>
+                            this.props.history.push(ROUTES.CHANGE_PLAN)
+                          }
+                          icon="clipboard"
+                          text="Change Planner"
+                        />
+                        {this.props.isAdmin ? (
+                          <MenuItem
+                            icon="user"
+                            onClick={() =>
+                              this.props.history.push(ROUTES.USERS)
+                            }
+                            text="Manage Users"
+                          />
+                        ) : null}
+                      </Menu>
+                    }
+                    // position={Position.RIGHT_TOP}
+                  >
+                    <Button icon="menu" text="Tools" minimal />
+                  </Popover>
                 </div>
               ) : (
                 <p></p>
@@ -103,6 +141,42 @@ export class Navigation extends React.Component<
             <NavbarGroup align={Alignment.RIGHT}>
               {this.props.isAuthenticated ? (
                 <div>
+                  <ChangePlanSelect
+                    popoverProps={{
+                      minimal: true,
+                      popoverClassName: "dropdown",
+                      usePortal: true
+                    }}
+                    items={[
+                      { name: "cp1", id: "0" },
+                      { name: "cp2", id: "1" }
+                    ]}
+                    onItemSelect={(changePlan: ChangePlan) => {
+                      this.props.setChangePlan(changePlan);
+                    }}
+                    itemRenderer={renderChangePlanItem}
+                    itemPredicate={filterChangePlan}
+                    noResults={<MenuItem disabled={true} text="No results." />}
+                  >
+                    <Button
+                      minimal
+                      rightIcon="caret-down"
+                      text={
+                        this.props.changePlan
+                          ? this.props.changePlan.name
+                          : "Change Plans"
+                      }
+                      icon={IconNames.GIT_BRANCH}
+                    />
+                  </ChangePlanSelect>
+                  {this.props.changePlan ? (
+                    <AnchorButton
+                      minimal
+                      icon={IconNames.DELETE}
+                      onClick={() => this.props.setChangePlan(null)}
+                    />
+                  ) : null}
+
                   {this.state.username ? (
                     <AnchorButton
                       className="nav-bar-non-button nav-bar-button"
@@ -110,14 +184,7 @@ export class Navigation extends React.Component<
                       minimal
                     />
                   ) : null}
-                  {this.props.isAdmin ? (
-                    <AnchorButton
-                      icon="user"
-                      onClick={() => this.props.history.push(ROUTES.USERS)}
-                      text="Manage Users"
-                      minimal
-                    />
-                  ) : null}
+
                   <AnchorButton
                     onClick={() => {
                       this.clearUsernameAndLogout();
@@ -150,13 +217,16 @@ const mapStateToProps = (state: any) => {
   return {
     isAuthenticated: state.token !== null,
     isAdmin: state.admin,
-    token: state.token
+    token: state.token,
+    changePlan: state.changePlan
   };
 };
 
 const mapDispatchToProps = (dispatch: any) => {
   return {
-    logout: () => dispatch(actions.logout())
+    logout: () => dispatch(actions.logout()),
+    setChangePlan: (changePlan: ChangePlan) =>
+      dispatch(actions.setChangePlan(changePlan))
   };
 };
 export default withRouter(

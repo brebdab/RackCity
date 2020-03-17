@@ -5,7 +5,6 @@ export interface ElementObject {
   id: string;
 }
 
-
 export enum ROUTES {
   LOGIN = "/login",
   RACKS = "/dashboard/racks",
@@ -17,14 +16,16 @@ export enum ROUTES {
   LOGS = "/dashboard/logs",
   RACK_PRINT = "/dashboard/rack-print",
   BULK_IMPORT = "/dashboard/bulk-upload/:resourceType",
-  USERS = "/dashboard/users"
+  USERS = "/dashboard/users",
+  CHANGE_PLAN = "/change-plans"
 }
 export enum ElementType {
   RACK = "racks",
   ASSET = "assets",
   MODEL = "models",
   USER = "users",
-  DATACENTER = "datacenters"
+  DATACENTER = "datacenters",
+  CHANGEPLANS = "change-plans"
 }
 export enum PowerSide {
   LEFT = "L",
@@ -32,7 +33,7 @@ export enum PowerSide {
 }
 export interface ChangePlan extends ElementObject {
   name: string;
-  execution_time: string;
+  execution_time?: string;
 }
 export interface AssetObjectOld extends ElementObject {
   hostname: string;
