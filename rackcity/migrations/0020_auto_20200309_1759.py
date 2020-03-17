@@ -14,11 +14,13 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='assetcp',
             name='model',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='rackcity.ITModel', verbose_name='related model'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL,
+                                    to='rackcity.ITModel', verbose_name='related model'),
         ),
         migrations.AlterField(
             model_name='assetcp',
             name='rack',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='rackcity.Rack', verbose_name='related rack'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL,
+                                    to='rackcity.Rack', verbose_name='related rack'),
         ),
     ]
