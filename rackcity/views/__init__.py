@@ -77,5 +77,6 @@ from .change_plan_views import (
     change_plan_many,
     change_plan_add,
     change_plan_modify,
-    change_plan_delete
+    change_plan_delete,
+    change_plan_page_count
 )

@@ -13,7 +13,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import JSONParser
 from django.core.exceptions import ObjectDoesNotExist
-
+import math
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -182,6 +182,31 @@ def change_plan_add(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+def change_plan_page_count(request):
+    """
+    Return total number of pages according to page size, which must be
+    specified as query parameter.
+    """
+    if (
+        not request.query_params.get('page_size')
+        or int(request.query_params.get('page_size')) <= 0
+    ):
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
+                "errors": "Must specify positive integer page_size."
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    page_size = int(request.query_params.get('page_size'))
+    user_count = ChangePlan.objects.all().count()
+    page_count = math.ceil(user_count / page_size)
+    return JsonResponse({"page_count": page_count})
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def change_plan_many(request):
     """
     List many change plans. If page is not specified as a query parameter, all
@@ -264,6 +289,6 @@ def change_plan_many(request):
         change_plans_to_serialize = change_plans
     serializer = GetChangePlanSerializer(change_plans_to_serialize, many=True)
     return JsonResponse(
-        {"change_plans": serializer.data},
+        {"change-plans": serializer.data},
         status=HTTPStatus.OK,
     )
