@@ -19,11 +19,12 @@
 .banner {
   color: white;
   background-color: #bf8c0a !important;
-  height: 15pt !important;
+  height: 30pt !important;
   padding: 0 !important;
   margin: 0 !important;
   font-size: 14px !important;
   font-weight: 1 !important;
+  white-space: pre-line;
 }
 .banner:hover {
   cursor: pointer !important;

@@ -25,7 +25,7 @@ import {
 } from "../../forms/formUtils";
 import * as actions from "../../store/actions/state";
 import { API_ROOT } from "../../utils/api-config";
-import { ChangePlan, ROUTES } from "../../utils/utils";
+import { ChangePlan, ROUTES, getHeaders, ElementType } from "../../utils/utils";
 import "./navigation.scss";
 export interface NavigationProps {
   isAuthenticated: boolean;
@@ -38,7 +38,16 @@ export interface NavigationProps {
 
 export interface NavigationState {
   username?: string;
+  changePlans: Array<ChangePlan>;
 }
+
+const getChangePlanList = (token: string) => {
+  return axios.post(
+    API_ROOT + "api/change-plans/get-many",
+    {},
+    getHeaders(token)
+  );
+};
 
 type NavigationPropsAll = NavigationProps & RouteComponentProps;
 export class Navigation extends React.Component<
@@ -46,8 +55,11 @@ export class Navigation extends React.Component<
   NavigationState
 > {
   public state = {
-    username: undefined
+    username: undefined,
+    changePlans: []
   };
+
+  sucessfulChangePlanRequest = false;
   getUsername(token: string) {
     const headers = {
       headers: {
@@ -72,13 +84,27 @@ export class Navigation extends React.Component<
     if (this.props.isAuthenticated && !this.state.username) {
       this.getUsername(this.props.token);
     }
+    if (!this.sucessfulChangePlanRequest) {
+      getChangePlanList(this.props.token).then(res => {
+        this.sucessfulChangePlanRequest = true;
+        const items = res.data[ElementType.CHANGEPLANS];
+        this.setState({
+          changePlans: items
+        });
+      });
+    }
 
     return (
       <Router>
         <div>
           {this.props.changePlan ? (
             <div onClick={() => this.props.history.push(ROUTES.CHANGE_PLAN)}>
-              <Banner title={this.props.changePlan.name} />
+              <Banner
+                title={
+                  this.props.changePlan.name +
+                  " \nOnly asset changes (create/modify/delete) will be specific to this change plan. All other changes will be LIVE."
+                }
+              />
             </div>
           ) : null}
           <Navbar className={Classes.DARK + " nav-bar"}>
@@ -147,10 +173,7 @@ export class Navigation extends React.Component<
                       popoverClassName: "dropdown",
                       usePortal: true
                     }}
-                    items={[
-                      { name: "cp1", id: "0" },
-                      { name: "cp2", id: "1" }
-                    ]}
+                    items={this.state.changePlans}
                     onItemSelect={(changePlan: ChangePlan) => {
                       this.props.setChangePlan(changePlan);
                     }}
