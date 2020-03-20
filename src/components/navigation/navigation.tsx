@@ -98,7 +98,13 @@ export class Navigation extends React.Component<
       <Router>
         <div>
           {this.props.changePlan ? (
-            <div onClick={() => this.props.history.push(ROUTES.CHANGE_PLAN)}>
+            <div
+              onClick={() =>
+                this.props.history.push(
+                  ROUTES.CHANGE_PLAN + "/" + this.props.changePlan.name
+                )
+              }
+            >
               <Banner
                 title={
                   this.props.changePlan.name +

@@ -58,11 +58,13 @@ class App extends React.Component<AppProps> {
     return component ? (
       <Route
         path={path}
+        {...rest}
         component={this.props.isAuthenticated ? component : NotAuthorized}
       />
     ) : render ? (
       <Route
         path={path}
+        {...rest}
         render={this.props.isAuthenticated ? render : NotAuthorized}
       />
     ) : null;
@@ -117,6 +119,7 @@ class App extends React.Component<AppProps> {
           <this.PrivateRoute path={ROUTES.LOGS} component={Logs} />
           <this.PrivateRoute path={ROUTES.RACK_PRINT} component={RackView} />
           <this.PrivateRoute
+            exact
             path={ROUTES.CHANGE_PLAN}
             component={ChangePlannerView}
           />
