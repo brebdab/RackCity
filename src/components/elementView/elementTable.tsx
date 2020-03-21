@@ -10,7 +10,8 @@ import {
   Position,
   Toaster,
   Spinner,
-  Callout
+  Callout,
+  Checkbox
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { IconNames } from "@blueprintjs/icons";
@@ -84,6 +85,8 @@ interface ElementTableState {
   isPowerOptionsOpen: boolean;
   assetPower?: AssetObject;
   getDataInProgress: boolean;
+  selected: Array<string>;
+  selectedAll: boolean;
 }
 
 interface ElementTableProps {
@@ -115,8 +118,8 @@ interface ElementTableProps {
   updateDatacenters?(): void;
 }
 
-var console: any = {};
-console.log = function() {};
+// var console: any = {};
+// console.log = function() {};
 class ElementTable extends React.Component<
   ElementTableProps & RouteComponentProps,
   ElementTableState
@@ -135,7 +138,9 @@ class ElementTable extends React.Component<
     openAlert: ElementTableOpenAlert.NONE,
     selected_userid: undefined,
     isPowerOptionsOpen: false,
-    getDataInProgress: false
+    getDataInProgress: false,
+    selected: [],
+    selectedAll: false
   };
   validRequestMadeWithToken = false;
 
@@ -968,6 +973,36 @@ class ElementTable extends React.Component<
           >
             <thead>
               <tr>
+                {this.props.type === ElementType.ASSET ? (
+                  <th className="header-cell">
+                    <div className="header-text">
+                      <Checkbox
+                        checked={this.state.selectedAll}
+                        onClick={(event: any) => {
+                          const selected = this.state.selected;
+                          const selectedAll = !this.state.selectedAll;
+
+                          this.state.items.forEach(item => {
+                            if (selected.includes(item.id) && !selectedAll) {
+                              selected.splice(selected.indexOf(item.id), 1);
+                            } else if (
+                              !selected.includes(item.id) &&
+                              selectedAll
+                            ) {
+                              selected.push(item.id);
+                            }
+                          });
+                          console.log(selected);
+
+                          this.setState({
+                            selectedAll,
+                            selected
+                          });
+                        }}
+                      />
+                    </div>
+                  </th>
+                ) : null}
                 {this.state.fields.map((col: string) => {
                   if (col === "model") {
                     return [
@@ -1016,6 +1051,7 @@ class ElementTable extends React.Component<
                 <th></th>
               </tr>
             </thead>
+
             {this.state.items && this.state.items.length > 0 ? (
               !this.state.getDataInProgress ? (
                 <tbody>
@@ -1028,7 +1064,8 @@ class ElementTable extends React.Component<
                             ? () => {}
                             : () => {
                                 this.props.history.push(
-                                  ROUTES.DASHBOARD +"/" + 
+                                  ROUTES.DASHBOARD +
+                                    "/" +
                                     this.props.type +
                                     "/" +
                                     item.id
@@ -1036,6 +1073,37 @@ class ElementTable extends React.Component<
                               }
                         }
                       >
+                        {this.props.type === ElementType.ASSET ? (
+                          <th
+                            onClick={(event: any) => {
+                              event.stopPropagation();
+                            }}
+                          >
+                            <Checkbox
+                              checked={this.state.selected.includes(item.id)}
+                              onClick={(event: any) => {
+                                const selected = this.state.selected;
+                                if (selected.includes(item.id)) {
+                                  console.log("removing", item.id, selected);
+                                  if (this.state.selectedAll) {
+                                    this.setState({
+                                      selectedAll: false
+                                    });
+                                  }
+                                  selected.splice(selected.indexOf(item.id), 1);
+                                } else {
+                                  selected.push(item.id);
+                                  console.log("adding", item.id);
+                                }
+                                this.setState({
+                                  selected
+                                });
+                                console.log(selected);
+                                event.stopPropagation();
+                              }}
+                            />
+                          </th>
+                        ) : null}
                         {Object.entries(item).map(([col, value]) => {
                           if (isModelObject(value)) {
                             return [
