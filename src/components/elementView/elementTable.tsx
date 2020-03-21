@@ -41,7 +41,8 @@ import {
   UserInfoObject,
   AssetFieldsTable,
   ModelFieldsTable,
-  ROUTES
+  ROUTES,
+  isChangePlanObject
 } from "../../utils/utils";
 import DragDropList, { DragDropListTypes } from "./dragDropList";
 import {
@@ -61,7 +62,9 @@ import {
   renderNumericFilterItem,
   renderRackRangeFilterItem,
   renderTextFilterItem,
-  TextFilter
+  TextFilter,
+  modifyChangePlan,
+  deleteChangePlan
 } from "./elementUtils";
 import "./elementView.scss";
 import FilterSelect from "./filterSelect";
@@ -586,6 +589,7 @@ class ElementTable extends React.Component<
       isAssetObject(data) ||
       isModelObject(data) ||
       isDatacenterObject(data) ||
+      isChangePlanObject(data) ||
       isUserObject(data)
     ) {
       this.setState({
@@ -656,6 +660,10 @@ class ElementTable extends React.Component<
           this.successfulModification();
         }
       });
+    } else if (isChangePlanObject(values)) {
+      return modifyChangePlan(values, headers).then(res => {
+        this.successfulModification();
+      });
     } else if (isDatacenterObject(values)) {
       return modifyDatacenter(values, headers).then(res => {
         this.successfulModification();
@@ -708,6 +716,11 @@ class ElementTable extends React.Component<
       );
     } else if (isUserObject(this.state.editFormValues)) {
       resp = deleteUser(
+        this.state.editFormValues,
+        getHeaders(this.props.token)
+      );
+    } else if (isChangePlanObject(this.state.editFormValues)) {
+      resp = deleteChangePlan(
         this.state.editFormValues,
         getHeaders(this.props.token)
       );
@@ -1140,7 +1153,7 @@ class ElementTable extends React.Component<
           {this.state.getDataInProgress ? (
             <Spinner className="table-spinner" size={Spinner.SIZE_STANDARD} />
           ) : null}
-          {(!this.state.items || this.state.items.length === 0 )&&
+          {(!this.state.items || this.state.items.length === 0) &&
           !this.state.getDataInProgress ? (
             <Callout
               icon={IconNames.ERROR}
