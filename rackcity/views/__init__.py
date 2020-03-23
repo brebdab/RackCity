@@ -20,7 +20,6 @@ from .it_model_views import (
 )
 from .asset_views import (
     asset_detail,
-    asset_list,
     asset_add,
     asset_modify,
     asset_delete,

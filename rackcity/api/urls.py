@@ -18,7 +18,6 @@ urlpatterns = [
     path('models/fields', views.model_fields),
     path('models/test-auth', views.model_auth),
     path('models/test-admin', views.model_admin),
-    path('assets', views.asset_list),
     path('assets/get-many', views.asset_many),
     path('assets/<int:id>', views.asset_detail),
     path('assets/add', views.asset_add),

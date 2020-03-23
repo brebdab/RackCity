@@ -46,7 +46,7 @@ def get_metadata_for_permission(
 def get_permission(permission_name: PermissionName) -> Permission:
     codename, content_type = get_metadata_for_permission(permission_name)
     permission, _ = Permission.objects.get_or_create(
-        codename=codename,
+        codename=codename.value,
         name=permission_name.value,
         content_type=content_type,
     )
