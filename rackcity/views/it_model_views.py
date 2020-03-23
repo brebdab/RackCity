@@ -44,18 +44,6 @@ from rackcity.views.rackcity_utils import (
 )
 
 
-@api_view(['GET'])
-def model_list(request):  # DEPRECATED!
-    """
-    List all models.
-    """
-    if request.method == 'GET':
-        # print(request.auth)
-        models = ITModel.objects.all()
-        serializer = ITModelSerializer(models, many=True)
-        return JsonResponse(serializer.data, safe=False)
-
-
 @api_view(['POST'])
 @permission_required(PermissionPath.MODEL_WRITE.value, raise_exception=True)
 def model_add(request):

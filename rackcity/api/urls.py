@@ -4,7 +4,6 @@ from rackcity import views
 urlpatterns = [
     path('logs/get-many', views.log_many),
     path('logs/pages', views.log_page_count),
-    path('models', views.model_list),
     path('models/add', views.model_add),
     path('models/modify', views.model_modify),
     path('models/delete', views.model_delete),
@@ -16,8 +15,6 @@ urlpatterns = [
     path('models/bulk-export', views.model_bulk_export),
     path('models/pages', views.model_page_count),
     path('models/fields', views.model_fields),
-    path('models/test-auth', views.model_auth),
-    path('models/test-admin', views.model_admin),
     path('assets/get-many', views.asset_many),
     path('assets/<int:id>', views.asset_detail),
     path('assets/add', views.asset_add),
