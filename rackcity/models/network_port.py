@@ -1,6 +1,7 @@
 from django.db import models
 from .asset import Asset
 from .asset import AssetCP
+from .change_plan import ChangePlan
 
 
 def format_mac_address(mac_address):
@@ -75,7 +76,10 @@ class AbstractNetworkPort(models.Model):
     def save(self, *args, **kwargs):
         if self.mac_address is not None:
             self.mac_address = format_mac_address(self.mac_address)
-        super(NetworkPort, self).save(*args, **kwargs)
+        super(AbstractNetworkPort, self).save(*args, **kwargs)
+
+    class Meta:
+        abstract = True
 
 
 class NetworkPort(AbstractNetworkPort):
@@ -100,11 +104,15 @@ class NetworkPortCP(AbstractNetworkPort):
         on_delete=models.CASCADE,
         verbose_name="asset",
     )
+    change_plan = models.ForeignKey(
+        ChangePlan,
+        on_delete=models.CASCADE,
+    )
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["asset", "port_name"],
-                name="unique network port names on assets",
+                fields=["asset", "port_name", "change_plan"],
+                name="unique network port names on change plan assets",
             ),
         ]

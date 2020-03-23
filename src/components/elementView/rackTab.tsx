@@ -208,7 +208,7 @@ class RackTab extends React.Component<
         this.setState({ isOpen: false, submitInProgress: false });
         this.updateRackData(true);
         this.addToast({
-          message: "Created rack(s) successfully",
+          message: res.data.success_message,
           intent: Intent.PRIMARY
         });
       })
@@ -217,7 +217,7 @@ class RackTab extends React.Component<
           submitInProgress: false
         });
 
-        this.addErrorToast("Failed to create rack(s)");
+        this.addErrorToast(err.response.data.failure_message);
       });
   };
   private addErrorToast = (message: string) => {
