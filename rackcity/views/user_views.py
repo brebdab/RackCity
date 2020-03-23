@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
@@ -5,6 +6,7 @@ from http import HTTPStatus
 import math
 from rackcity.api.serializers import RegisterNameSerializer, UserSerializer
 from rackcity.models import Asset
+from rackcity.permissions.permissions import PermissionPath
 from rackcity.views.rackcity_utils import (
     get_filter_arguments,
     get_sort_arguments,
@@ -89,7 +91,7 @@ def netid_login(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.USER_WRITE.value, raise_exception=True)
 def user_many(request):
     """
     List many users. If page is not specified as a query parameter, all
@@ -185,7 +187,7 @@ def user_many(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.USER_WRITE.value, raise_exception=True)
 def user_delete(request):
     """
     Delete an existing user. Any assets owned by this user will be updated to
@@ -309,7 +311,7 @@ def i_am_admin(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.USER_WRITE.value, raise_exception=True)
 def user_grant_admin(request):
     """
     Grants admin permission to the specified user.
@@ -369,7 +371,7 @@ def user_grant_admin(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.USER_WRITE.value, raise_exception=True)
 def user_revoke_admin(request):
     """
     Revokes admin permission from the specified user.
@@ -450,7 +452,7 @@ def usernames(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.USER_WRITE.value, raise_exception=True)
 def user_set_groups(request):
     """
     Set groups for a user.
@@ -508,7 +510,7 @@ def user_set_groups(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_required(PermissionPath.USER_WRITE.value, raise_exception=True)
 def user_get_groups(request):
     data = JSONParser().parse(request)
     if 'id' not in data:
@@ -543,7 +545,7 @@ def user_get_groups(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_required(PermissionPath.USER_WRITE.value, raise_exception=True)
 def all_user_groups(request):
     group_list = []
     for group in GroupName:
