@@ -386,7 +386,6 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               minimal
             />
           ) : null}
-
           <Alert
             cancelButtonText="Cancel"
             className={Classes.DARK}
@@ -486,6 +485,15 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               minimal
               intent={Intent.PRIMARY}
               onClick={this.handleOpen}
+            />
+          ) : null}
+          {this.props.element === ElementType.ASSET ? (
+            <AnchorButton
+              className="add"
+              text="Print Barcodes for Selected Assets"
+              icon="barcode"
+              minimal
+              onClick={() => {}}
             />
           ) : null}
           <FormPopup
