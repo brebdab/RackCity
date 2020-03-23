@@ -15,6 +15,7 @@ from rest_framework.parsers import JSONParser
 from django.core.exceptions import ObjectDoesNotExist
 import math
 
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def change_plan_delete(request):
@@ -27,7 +28,7 @@ def change_plan_delete(request):
             {
                 "failure_message":
                     Status.DELETE_ERROR.value + GenericFailure.INTERNAL.value,
-                "errors": "Must include 'id' when deleting an asset"
+                "errors": "Must include 'id' when deleting a Change Plan"
             },
             status=HTTPStatus.BAD_REQUEST
         )
@@ -41,7 +42,7 @@ def change_plan_delete(request):
                 "failure_message":
                     Status.MODIFY_ERROR.value +
                     "Model" + GenericFailure.DOES_NOT_EXIST.value,
-                "errors": "No existing asset with id="+str(id)
+                "errors": "No existing Change Plan with id="+str(id)
             },
             status=HTTPStatus.BAD_REQUEST
         )
@@ -68,7 +69,6 @@ def change_plan_delete(request):
     )
 
 
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def change_plan_modify(request):
@@ -81,7 +81,7 @@ def change_plan_modify(request):
             {
                 "failure_message":
                 Status.MODIFY_ERROR.value + GenericFailure.INTERNAL.value,
-                    "errors": "Must include 'id' when modifying an asset"
+                    "errors": "Must include 'id' when modifying a change plan"
             },
             status=HTTPStatus.BAD_REQUEST
         )
@@ -95,7 +95,7 @@ def change_plan_modify(request):
                 "failure_message":
                     Status.MODIFY_ERROR.value +
                     "Model" + GenericFailure.DOES_NOT_EXIST.value,
-                "errors": "No existing asset with id="+str(id)
+                "errors": "No existing change plan with id="+str(id)
             },
             status=HTTPStatus.BAD_REQUEST
         )
