@@ -1,5 +1,6 @@
 from rest_framework.parsers import JSONParser
 from django.http import HttpResponse, JsonResponse
+from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ObjectDoesNotExist
 from rackcity.models import ITModel, Asset
 from rackcity.api.serializers import (
@@ -23,8 +24,9 @@ from rackcity.utils.errors_utils import (
     parse_save_validation_error,
     BulkFailure
 )
+from rackcity.permissions.permissions import PermissionPath
 from rest_framework.decorators import permission_classes, api_view
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
 import math
@@ -55,7 +57,7 @@ def model_list(request):  # DEPRECATED!
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.MODEL_WRITE.value, raise_exception=True)
 def model_add(request):
     """
     Add a new model
@@ -106,7 +108,7 @@ def model_add(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.MODEL_WRITE.value, raise_exception=True)
 def model_modify(request):
     """
     Modify an existing model
@@ -247,7 +249,7 @@ def validate_model_height_change(new_model_data, existing_model):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.MODEL_WRITE.value, raise_exception=True)
 def model_delete(request):
     """
     Delete an existing model
@@ -447,7 +449,7 @@ def model_vendors(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.MODEL_WRITE.value, raise_exception=True)
 def model_bulk_upload(request):
     """
     Bulk upload many models to add or modify
@@ -604,7 +606,7 @@ def model_bulk_upload(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.MODEL_WRITE.value, raise_exception=True)
 def model_bulk_approve(request):
     """
     Bulk approve many models to modify
@@ -748,29 +750,3 @@ def model_fields(request):
         ]},
         status=HTTPStatus.OK,
     )
-
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def model_auth(request):  # DEPRECATED!
-    """
-    List all models, but requires user authentication in header.
-    (Temporary for auth testing on front end)
-    """
-    if request.method == 'GET':
-        models = ITModel.objects.all()
-        serializer = ITModelSerializer(models, many=True)
-        return JsonResponse(serializer.data, safe=False)
-
-
-@api_view(['GET'])
-@permission_classes([IsAdminUser])
-def model_admin(request):  # DEPRECATED!
-    """
-    List all models, but requires request comes from admin user.
-    (Temporary for auth testing on front end)
-    """
-    if request.method == 'GET':
-        models = ITModel.objects.all()
-        serializer = ITModelSerializer(models, many=True)
-        return JsonResponse(serializer.data, safe=False)
