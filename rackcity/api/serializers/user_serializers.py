@@ -42,11 +42,10 @@ class RackCityUserSerializer(UserDetailsSerializer):
         datacenter_permissions = rackcityuser_data.get(
             'datacenter_permissions'
         )
-
         instance = super(RackCityUserSerializer, self).update(
-            instance, validated_data
+            instance,
+            validated_data,
         )
-
         rackcityuser = instance.rackcityuser
         if rackcityuser_data:
             rackcityuser.datacenter_permissions = datacenter_permissions
