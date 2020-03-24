@@ -1,6 +1,7 @@
 from django.http import JsonResponse
 from rackcity.models import (
     Asset,
+    DecommissionedAsset,
     ITModel,
     Rack,
     NetworkPort,
@@ -8,9 +9,11 @@ from rackcity.models import (
     PDUPort,
     Datacenter,
 )
+from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ObjectDoesNotExist
 from rackcity.api.serializers import (
     AssetSerializer,
+    GetDecommissionedAssetSerializer,
     RecursiveAssetSerializer,
     BulkAssetSerializer,
     BulkNetworkPortSerializer,
@@ -35,8 +38,9 @@ from rackcity.utils.errors_utils import (
     parse_save_validation_error,
     BulkFailure
 )
+from rackcity.permissions.permissions import PermissionPath
 from rest_framework.decorators import permission_classes, api_view
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import JSONParser
 from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
@@ -60,20 +64,6 @@ from rackcity.views.rackcity_utils import (
 from rackcity.models.asset import get_next_available_asset_number
 
 
-# @close_old_connections_decorator
-@api_view(['GET'])  # DEPRECATED !
-@permission_classes([IsAuthenticated])
-def asset_list(request):
-    """
-    List all assets.
-    """
-    if request.method == 'GET':
-        assets = Asset.objects.all()
-        serializer = RecursiveAssetSerializer(assets, many=True)
-        return JsonResponse({"assets": serializer.data})
-
-
-# @close_old_connections_decorator
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def asset_many(request):
@@ -168,7 +158,6 @@ def asset_many(request):
     )
 
 
-# @close_old_connections_decorator
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def asset_detail(request, id):
@@ -179,22 +168,27 @@ def asset_detail(request, id):
     try:
         asset = Asset.objects.get(id=id)
     except Asset.DoesNotExist:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value +
-                    "Asset" + GenericFailure.DOES_NOT_EXIST.value,
-                "errors": "No existing asset with id="+str(id)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    serializer = RecursiveAssetSerializer(asset)
+        try:
+            decommissioned_asset = DecommissionedAsset.objects.get(live_id=id)
+        except DecommissionedAsset.DoesNotExist:
+            return JsonResponse(
+                {
+                    "failure_message":
+                        Status.ERROR.value +
+                        "Asset" + GenericFailure.DOES_NOT_EXIST.value,
+                    "errors": "No existing asset with id="+str(id)
+                },
+                status=HTTPStatus.BAD_REQUEST
+            )
+        else:
+            serializer = GetDecommissionedAssetSerializer(decommissioned_asset)
+    else:
+        serializer = RecursiveAssetSerializer(asset)
     return JsonResponse(serializer.data, status=HTTPStatus.OK)
 
 
-# @close_old_connections_decorator
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
 def asset_add(request):
     """
     Add a new asset.
@@ -440,9 +434,8 @@ def save_power_connections(asset_data, asset_id):
         raise PowerConnectionException(failure_message)
 
 
-# @close_old_connections_decorator
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
 def asset_modify(request):
     """
     Modify a single existing asset
@@ -583,9 +576,8 @@ def asset_modify(request):
             )
 
 
-# @close_old_connections_decorator
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
 def asset_delete(request):
     """
     Delete a single existing asset
@@ -643,9 +635,8 @@ def asset_delete(request):
     )
 
 
-# @close_old_connections_decorator
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
 def asset_bulk_upload(request):
     """
     Bulk upload many assets to add or modify
@@ -942,9 +933,8 @@ def asset_bulk_upload(request):
     )
 
 
-# @close_old_connections_decorator
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
 def asset_bulk_approve(request):
     """
     Bulk approve many assets to modify
@@ -999,7 +989,6 @@ def asset_bulk_approve(request):
         )
 
 
-# @close_old_connections_decorator
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def asset_bulk_export(request):
@@ -1047,7 +1036,7 @@ def asset_bulk_export(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
 def network_bulk_upload(request):
     data = JSONParser().parse(request)
     if 'import_csv' not in data:
@@ -1174,7 +1163,7 @@ def network_bulk_upload(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
 def network_bulk_approve(request):
     data = JSONParser().parse(request)
     if 'approved_modifications' not in data:
@@ -1288,7 +1277,6 @@ def network_bulk_export(request):
     )
 
 
-# @close_old_connections_decorator
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def asset_page_count(request):
@@ -1328,7 +1316,6 @@ def asset_page_count(request):
     return JsonResponse({"page_count": page_count})
 
 
-# @close_old_connections_decorator
 @api_view(['GET'])
 def asset_fields(request):
     """
