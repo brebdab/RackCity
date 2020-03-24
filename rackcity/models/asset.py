@@ -168,6 +168,34 @@ class AssetCP(AbstractAsset):
         ordering = ['asset_number']
         verbose_name = 'asset change planner'
 
+    def add_network_ports(self):
+        from rackcity.models import NetworkPortCP
+        model = self.model
+        if (
+            len(NetworkPortCP.objects.filter(
+                asset=self.id)) == 0  # only new assets (new to change planner)
+            and model.network_ports  # only if the model has ports
+        ):
+            for network_port_name in model.network_ports:
+                network_port = NetworkPort(
+                    asset=self,
+                    port_name=network_port_name,
+                )
+                network_port.save()
+
+    def add_power_ports(self):
+        from rackcity.models import PowerPortCP
+        if len(PowerPortCP.objects.filter(asset=self.id)) == 0:
+            model = self.model
+            if model.num_power_ports:
+                for port_index in range(model.num_power_ports):
+                    port_name = str(port_index+1)
+                    power_port = PowerPort(
+                        asset=self,
+                        port_name=port_name,
+                    )
+                    power_port.save()
+
     def save(self, *args, **kwargs):
         try:
             validate_hostname(self.hostname)
@@ -176,4 +204,5 @@ class AssetCP(AbstractAsset):
             raise valid_error
         else:
             super(AssetCP, self).save(*args, **kwargs)
-            # TODO: Network ports and power ports
+            self.add_network_ports()
+            self.add_power_ports()
