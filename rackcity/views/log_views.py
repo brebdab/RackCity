@@ -5,10 +5,12 @@ from http import HTTPStatus
 from rackcity.api.serializers import LogSerializer
 from rackcity.models import Log
 from rackcity.permissions.permissions import PermissionPath
-from rackcity.utils.query_utils import get_filter_arguments
+from rackcity.utils.query_utils import (
+    get_filter_arguments,
+    get_page_count_response,
+)
 from rest_framework.decorators import api_view
 from rest_framework.pagination import PageNumberPagination
-import math
 
 
 @api_view(['POST'])
@@ -90,27 +92,9 @@ def log_page_count(request):
     Return total number of pages according to page size, which must be
     specified as query parameter.
     """
-    if (
-        not request.query_params.get('page_size')
-        or int(request.query_params.get('page_size')) <= 0
-    ):
-        return JsonResponse(
-            {"failure_message": "Must specify positive integer page_size."},
-            status=HTTPStatus.BAD_REQUEST,
-        )
-    page_size = int(request.query_params.get('page_size'))
-    logs = Log.objects.all()
-    try:
-        filter_args = get_filter_arguments(request.data)
-    except Exception as error:
-        return JsonResponse(
-            {"failure_message": "Filter error: " + str(error)},
-            status=HTTPStatus.BAD_REQUEST)
-    if len(filter_args) > 0:
-        q_objects = Q()
-        for filter_arg in filter_args:
-            q_objects |= Q(**filter_arg)
-        logs = logs.filter(q_objects)
-    log_count = logs.count()
-    page_count = math.ceil(log_count / page_size)
-    return JsonResponse({"page_count": page_count})
+    return get_page_count_response(
+        Log,
+        request.query_params,
+        data_for_filters=request.data,
+        or_filters=True,
+    )

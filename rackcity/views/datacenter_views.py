@@ -17,8 +17,7 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from http import HTTPStatus
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.parsers import JSONParser
-from rackcity.utils.query_utils import get_filter_arguments
-import math
+from rackcity.utils.query_utils import get_page_count_response
 
 
 @api_view(['POST'])
@@ -154,36 +153,11 @@ def datacenter_page_count(request):
     Return total number of pages according to page size, which must be
     specified as query parameter.
     """
-    if (
-        not request.query_params.get('page_size')
-        or int(request.query_params.get('page_size')) <= 0
-    ):
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                "errors": "Must specify positive integer page_size."
-            },
-            status=HTTPStatus.BAD_REQUEST,
-        )
-    page_size = int(request.query_params.get('page_size'))
-    dc_query = Datacenter.objects
-    try:
-        filter_args = get_filter_arguments(request.data)
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.FILTER.value,
-                "errors": str(error)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    for filter_arg in filter_args:
-        dc_query = dc_query.filter(**filter_arg)
-    dc_count = dc_query.count()
-    page_count = math.ceil(dc_count / page_size)
-    return JsonResponse({"page_count": page_count})
+    return get_page_count_response(
+        Datacenter,
+        request.query_params,
+        data_for_filters=request.data,
+    )
 
 
 @api_view(['POST'])

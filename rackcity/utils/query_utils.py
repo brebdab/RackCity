@@ -1,4 +1,10 @@
+from http import HTTPStatus
+import math
+
+from django.db.models import Q
+from django.http import JsonResponse
 from rackcity.api.objects import RackRangeSerializer
+from rackcity.utils.errors_utils import GenericFailure, Status
 
 
 def get_sort_arguments(data):
@@ -130,3 +136,58 @@ def get_filter_arguments(data):
                 )
 
     return filter_args
+
+
+def sort_and_filter_query(data):
+    return
+
+
+def paginate_query(data):
+    return
+
+
+def get_page_count_response(
+    model,
+    query_params,
+    data_for_filters=None,
+    or_filters=False
+):
+    if (
+        not query_params.get('page_size')
+        or int(query_params.get('page_size')) <= 0
+    ):
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
+                "errors": "Must specify positive integer page_size."
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    page_size = int(query_params.get('page_size'))
+    object_query = model.objects.all()
+    if data_for_filters:
+        try:
+            filter_args = get_filter_arguments(data_for_filters)
+        except Exception as error:
+            return JsonResponse(
+                {
+                    "failure_message":
+                        Status.ERROR.value + GenericFailure.FILTER.value,
+                    "errors": str(error)
+                },
+                status=HTTPStatus.BAD_REQUEST
+            )
+        # Apply filters as OR
+        if or_filters and len(filter_args) > 0:
+            q_objects = Q()
+            for filter_arg in filter_args:
+                q_objects |= Q(**filter_arg)
+            object_query = object_query.filter(q_objects)
+        # Apply filters as AND
+        else:
+            for filter_arg in filter_args:
+                object_query = object_query.filter(**filter_arg)
+    count = object_query.count()
+    page_count = math.ceil(count / page_size)
+    return JsonResponse({"page_count": page_count})

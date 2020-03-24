@@ -29,7 +29,6 @@ from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
-import math
 import csv
 from base64 import b64decode
 import re
@@ -37,6 +36,7 @@ from io import StringIO, BytesIO
 from rackcity.utils.query_utils import (
     get_sort_arguments,
     get_filter_arguments,
+    get_page_count_response,
 )
 from rackcity.views.rackcity_utils import (
     validate_asset_location,
@@ -687,36 +687,11 @@ def model_page_count(request):
     Return total number of pages according to page size, which must be
     specified as query parameter.
     """
-    if (
-        not request.query_params.get('page_size')
-        or int(request.query_params.get('page_size')) <= 0
-    ):
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                "errors": "Must specify positive integer page_size."
-            },
-            status=HTTPStatus.BAD_REQUEST,
-        )
-    page_size = int(request.query_params.get('page_size'))
-    models_query = ITModel.objects
-    try:
-        filter_args = get_filter_arguments(request.data)
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.FILTER.value,
-                "errors": str(error)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    for filter_arg in filter_args:
-        models_query = models_query.filter(**filter_arg)
-    model_count = models_query.count()
-    page_count = math.ceil(model_count / page_size)
-    return JsonResponse({"page_count": page_count})
+    return get_page_count_response(
+        ITModel,
+        request.query_params,
+        data_for_filters=request.data,
+    )
 
 
 @api_view(['GET'])

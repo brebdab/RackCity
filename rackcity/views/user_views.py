@@ -3,13 +3,13 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from http import HTTPStatus
-import math
 from rackcity.api.serializers import RegisterNameSerializer, UserSerializer
 from rackcity.models import Asset
 from rackcity.permissions.permissions import PermissionPath
 from rackcity.utils.query_utils import (
     get_sort_arguments,
     get_filter_arguments,
+    get_page_count_response,
 )
 from rackcity.utils.errors_utils import UserFailure, GenericFailure, Status
 from rackcity.utils.user_utils import is_netid_user
@@ -269,22 +269,7 @@ def user_page_count(request):
     Return total number of pages according to page size, which must be
     specified as query parameter.
     """
-    if (
-        not request.query_params.get('page_size')
-        or int(request.query_params.get('page_size')) <= 0
-    ):
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                "errors": "Must specify positive integer page_size."
-            },
-            status=HTTPStatus.BAD_REQUEST,
-        )
-    page_size = int(request.query_params.get('page_size'))
-    user_count = User.objects.all().count()
-    page_count = math.ceil(user_count / page_size)
-    return JsonResponse({"page_count": page_count})
+    return get_page_count_response(User, request.query_params)
 
 
 @api_view(['GET'])
