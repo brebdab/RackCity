@@ -4,3 +4,4 @@ env/
 **/*.pyc
 .env
 startdev
+.mypy_cache/

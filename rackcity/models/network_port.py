@@ -1,5 +1,7 @@
 from django.db import models
 from .asset import Asset
+from .asset import AssetCP
+from .change_plan import ChangePlan
 
 
 def format_mac_address(mac_address):
@@ -13,16 +15,12 @@ def format_mac_address(mac_address):
     mac_address = mac_address.replace(";", ":")
     # if contains no delimiters:
     if (not mac_address.__contains__(":")):
-        mac_address = ':'.join(a+b for a, b in zip(mac_address[::2], mac_address[1::2]))
+        mac_address = ':'.join(
+            a+b for a, b in zip(mac_address[::2], mac_address[1::2]))
     return mac_address
 
 
-class NetworkPort(models.Model):
-    asset = models.ForeignKey(
-        Asset,
-        on_delete=models.CASCADE,
-        verbose_name="asset",
-    )
+class AbstractNetworkPort(models.Model):
     port_name = models.CharField(
         max_length=150
         # electing not to validate this as it is not user entered
@@ -75,6 +73,22 @@ class NetworkPort(models.Model):
             self.save()
             destination_port.save()
 
+    def save(self, *args, **kwargs):
+        if self.mac_address is not None:
+            self.mac_address = format_mac_address(self.mac_address)
+        super(AbstractNetworkPort, self).save(*args, **kwargs)
+
+    class Meta:
+        abstract = True
+
+
+class NetworkPort(AbstractNetworkPort):
+    asset = models.ForeignKey(
+        Asset,
+        on_delete=models.CASCADE,
+        verbose_name="asset",
+    )
+
     class Meta:
         constraints = [
             models.UniqueConstraint(
@@ -83,7 +97,22 @@ class NetworkPort(models.Model):
             ),
         ]
 
-    def save(self, *args, **kwargs):
-        if self.mac_address is not None:
-            self.mac_address = format_mac_address(self.mac_address)
-        super(NetworkPort, self).save(*args, **kwargs)
+
+class NetworkPortCP(AbstractNetworkPort):
+    asset = models.ForeignKey(
+        AssetCP,
+        on_delete=models.CASCADE,
+        verbose_name="asset",
+    )
+    change_plan = models.ForeignKey(
+        ChangePlan,
+        on_delete=models.CASCADE,
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["asset", "port_name", "change_plan"],
+                name="unique network port names on change plan assets",
+            ),
+        ]

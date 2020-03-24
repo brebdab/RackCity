@@ -16,18 +16,24 @@ export enum ROUTES {
   LOGS = "/dashboard/logs",
   RACK_PRINT = "/dashboard/rack-print",
   BULK_IMPORT = "/dashboard/bulk-upload/:resourceType",
-  USERS = "/dashboard/users"
+  USERS = "/dashboard/users",
+  CHANGE_PLAN = "/change-plans"
 }
 export enum ElementType {
   RACK = "racks",
   ASSET = "assets",
   MODEL = "models",
   USER = "users",
-  DATACENTER = "datacenters"
+  DATACENTER = "datacenters",
+  CHANGEPLANS = "change-plans"
 }
 export enum PowerSide {
   LEFT = "L",
   RIGHT = "R"
+}
+export interface ChangePlan extends ElementObject {
+  name: string;
+  execution_time?: string;
 }
 export interface AssetObjectOld extends ElementObject {
   hostname: string;
@@ -220,7 +226,8 @@ export type ElementObjectType =
   | AssetObject
   | ShallowAssetObject
   | UserInfoObject
-  | DatacenterObject;
+  | DatacenterObject
+  | ChangePlan;
 
 export type FormObjectType =
   | ModelObjectOld
@@ -231,7 +238,8 @@ export type FormObjectType =
   | RackRangeFields
   | ShallowAssetObject
   | UserInfoObject
-  | CreateUserObject;
+  | CreateUserObject
+  | ChangePlan;
 
 export function isObject(obj: any) {
   return obj === Object(obj);
@@ -253,6 +261,9 @@ export function isRackRangeFields(obj: any): obj is RackRangeFields {
 }
 export function isUserObject(obj: any): obj is UserInfoObject {
   return obj && obj.username;
+}
+export function isChangePlanObject(obj: any): obj is ChangePlan {
+  return obj && obj.name;
 }
 export const getHeaders = (token: string) => {
   return {

@@ -10,7 +10,8 @@ import {
   Position,
   Toaster,
   Spinner,
-  Callout
+  Callout,
+  Checkbox
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { IconNames } from "@blueprintjs/icons";
@@ -41,7 +42,8 @@ import {
   UserInfoObject,
   AssetFieldsTable,
   ModelFieldsTable,
-  ROUTES
+  ROUTES,
+  isChangePlanObject
 } from "../../utils/utils";
 import DragDropList, { DragDropListTypes } from "./dragDropList";
 import {
@@ -61,7 +63,9 @@ import {
   renderNumericFilterItem,
   renderRackRangeFilterItem,
   renderTextFilterItem,
-  TextFilter
+  TextFilter,
+  modifyChangePlan,
+  deleteChangePlan
 } from "./elementUtils";
 import "./elementView.scss";
 import FilterSelect from "./filterSelect";
@@ -84,6 +88,8 @@ interface ElementTableState {
   isPowerOptionsOpen: boolean;
   assetPower?: AssetObject;
   getDataInProgress: boolean;
+  selected: Array<string>;
+  selectedAll: boolean;
 }
 
 interface ElementTableProps {
@@ -115,8 +121,8 @@ interface ElementTableProps {
   updateDatacenters?(): void;
 }
 
-var console: any = {};
-console.log = function() {};
+// var console: any = {};
+// console.log = function() {};
 class ElementTable extends React.Component<
   ElementTableProps & RouteComponentProps,
   ElementTableState
@@ -135,7 +141,9 @@ class ElementTable extends React.Component<
     openAlert: ElementTableOpenAlert.NONE,
     selected_userid: undefined,
     isPowerOptionsOpen: false,
-    getDataInProgress: false
+    getDataInProgress: false,
+    selected: [],
+    selectedAll: false
   };
   validRequestMadeWithToken = false;
 
@@ -519,6 +527,7 @@ class ElementTable extends React.Component<
         )
         .then(res => {
           this.validRequestMadeWithToken = true;
+          console.log(res);
           this.setState({
             items: res,
             getDataInProgress: false
@@ -585,6 +594,7 @@ class ElementTable extends React.Component<
       isAssetObject(data) ||
       isModelObject(data) ||
       isDatacenterObject(data) ||
+      isChangePlanObject(data) ||
       isUserObject(data)
     ) {
       this.setState({
@@ -655,6 +665,10 @@ class ElementTable extends React.Component<
           this.successfulModification();
         }
       });
+    } else if (isChangePlanObject(values)) {
+      return modifyChangePlan(values, headers).then(res => {
+        this.successfulModification();
+      });
     } else if (isDatacenterObject(values)) {
       return modifyDatacenter(values, headers).then(res => {
         this.successfulModification();
@@ -710,11 +724,16 @@ class ElementTable extends React.Component<
         this.state.editFormValues,
         getHeaders(this.props.token)
       );
+    } else if (isChangePlanObject(this.state.editFormValues)) {
+      resp = deleteChangePlan(
+        this.state.editFormValues,
+        getHeaders(this.props.token)
+      );
     }
     if (resp) {
       resp
         .then(res => {
-          this.addSuccessToast("Sucessfully deleted");
+          this.addSuccessToast(res.data.success_message);
           this.updateTableData();
           this.handleDeleteCancel();
           if (this.props.updateDatacenters) {
@@ -968,6 +987,36 @@ class ElementTable extends React.Component<
           >
             <thead>
               <tr>
+                {this.props.type === ElementType.ASSET ? (
+                  <th className="header-cell">
+                    <div className="header-text">
+                      <Checkbox
+                        checked={this.state.selectedAll}
+                        onClick={(event: any) => {
+                          const selected = this.state.selected;
+                          const selectedAll = !this.state.selectedAll;
+
+                          this.state.items.forEach(item => {
+                            if (selected.includes(item.id) && !selectedAll) {
+                              selected.splice(selected.indexOf(item.id), 1);
+                            } else if (
+                              !selected.includes(item.id) &&
+                              selectedAll
+                            ) {
+                              selected.push(item.id);
+                            }
+                          });
+                          console.log(selected);
+
+                          this.setState({
+                            selectedAll,
+                            selected
+                          });
+                        }}
+                      />
+                    </div>
+                  </th>
+                ) : null}
                 {this.state.fields.map((col: string) => {
                   if (col === "model") {
                     return [
@@ -1016,6 +1065,7 @@ class ElementTable extends React.Component<
                 <th></th>
               </tr>
             </thead>
+
             {this.state.items && this.state.items.length > 0 ? (
               !this.state.getDataInProgress ? (
                 <tbody>
@@ -1028,7 +1078,8 @@ class ElementTable extends React.Component<
                             ? () => {}
                             : () => {
                                 this.props.history.push(
-                                  ROUTES.DASHBOARD +"/" + 
+                                  ROUTES.DASHBOARD +
+                                    "/" +
                                     this.props.type +
                                     "/" +
                                     item.id
@@ -1036,6 +1087,37 @@ class ElementTable extends React.Component<
                               }
                         }
                       >
+                        {this.props.type === ElementType.ASSET ? (
+                          <th
+                            onClick={(event: any) => {
+                              event.stopPropagation();
+                            }}
+                          >
+                            <Checkbox
+                              checked={this.state.selected.includes(item.id)}
+                              onClick={(event: any) => {
+                                const selected = this.state.selected;
+                                if (selected.includes(item.id)) {
+                                  console.log("removing", item.id, selected);
+                                  if (this.state.selectedAll) {
+                                    this.setState({
+                                      selectedAll: false
+                                    });
+                                  }
+                                  selected.splice(selected.indexOf(item.id), 1);
+                                } else {
+                                  selected.push(item.id);
+                                  console.log("adding", item.id);
+                                }
+                                this.setState({
+                                  selected
+                                });
+                                console.log(selected);
+                                event.stopPropagation();
+                              }}
+                            />
+                          </th>
+                        ) : null}
                         {Object.entries(item).map(([col, value]) => {
                           if (isModelObject(value)) {
                             return [
@@ -1138,7 +1220,8 @@ class ElementTable extends React.Component<
           {this.state.getDataInProgress ? (
             <Spinner className="table-spinner" size={Spinner.SIZE_STANDARD} />
           ) : null}
-          {this.state.items.length === 0 && !this.state.getDataInProgress ? (
+          {(!this.state.items || this.state.items.length === 0) &&
+          !this.state.getDataInProgress ? (
             <Callout
               icon={IconNames.ERROR}
               title={"No " + this.props.type}

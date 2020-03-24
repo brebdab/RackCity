@@ -12,8 +12,7 @@ def report_rack_usage(request):
     Get summary of rack usage across ALL DATACENTERs: the percentage of rackspace free versus used,
     allocated per vendor, allocated per model, and allocated per owner.
     """
-    racks = Rack.objects.all()
-    return compute_report_given_racks(racks)
+    return compute_rack_report()
 
 
 @api_view(['GET'])
@@ -23,12 +22,15 @@ def rack_report_datacenter(request, id):
     Get summary of rack usage for ONE DATACENTER: the percentage of rackspace free versus used,
     allocated per vendor, allocated per model, and allocated per owner.
     """
-    datacenter_id = id
-    racks = Rack.objects.filter(datacenter=datacenter_id)
-    return compute_report_given_racks(racks)
+    return compute_rack_report(datacenter_id=id)
 
 
-def compute_report_given_racks(racks):
+def compute_rack_report(datacenter_id=None):
+    racks = Rack.objects.all()
+    assets = Asset.objects.all()
+    if datacenter_id is not None:
+        racks = racks.filter(datacenter=datacenter_id)
+        assets = assets.filter(rack__datacenter=datacenter_id)
     total_num_rack_slots = 0
     for rack in racks:
         total_num_rack_slots += rack.height
@@ -43,7 +45,6 @@ def compute_report_given_racks(racks):
     vendor_allocation = {}
     owner_allocation = {}
     num_full_rack_slots = 0
-    assets = Asset.objects.all()
     for asset in assets:
         vendor = asset.model.vendor
         model = asset.model

@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
@@ -5,6 +6,7 @@ from http import HTTPStatus
 import math
 from rackcity.api.serializers import RegisterNameSerializer, UserSerializer
 from rackcity.models import Asset
+from rackcity.permissions.permissions import PermissionPath
 from rackcity.views.rackcity_utils import (
     get_filter_arguments,
     get_sort_arguments,
@@ -24,6 +26,11 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_auth.registration.views import RegisterView
+from rackcity.permissions.groups import (
+    add_user_to_group,
+    remove_user_from_group,
+    GroupName,
+)
 
 
 class RegisterNameView(RegisterView):
@@ -84,7 +91,7 @@ def netid_login(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.USER_WRITE.value, raise_exception=True)
 def user_many(request):
     """
     List many users. If page is not specified as a query parameter, all
@@ -180,7 +187,7 @@ def user_many(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.USER_WRITE.value, raise_exception=True)
 def user_delete(request):
     """
     Delete an existing user. Any assets owned by this user will be updated to
@@ -304,7 +311,7 @@ def i_am_admin(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.USER_WRITE.value, raise_exception=True)
 def user_grant_admin(request):
     """
     Grants admin permission to the specified user.
@@ -364,7 +371,7 @@ def user_grant_admin(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.USER_WRITE.value, raise_exception=True)
 def user_revoke_admin(request):
     """
     Revokes admin permission from the specified user.
@@ -440,5 +447,117 @@ def usernames(request):
     usernames = [obj.username for obj in User.objects.all()]
     return JsonResponse(
         {"usernames": usernames},
+        status=HTTPStatus.OK,
+    )
+
+
+@api_view(['POST'])
+@permission_required(PermissionPath.USER_WRITE.value, raise_exception=True)
+def user_set_groups(request):
+    """
+    Set groups for a user.
+    """
+    data = JSONParser().parse(request)
+    if 'id' not in data:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR.value +
+                    GenericFailure.INTERNAL.value,
+                "errors": "Must specify user id on admin permission revoke"
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    try:
+        user = User.objects.get(id=data['id'])
+    except ObjectDoesNotExist:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR.value +
+                    "User" + GenericFailure.DOES_NOT_EXIST.value,
+                "errors": "No existing user with id=" + data['id']
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    groups_added = []
+    groups_removed = []
+    for group in GroupName:
+        group_key = group.value
+        if group_key in data:
+            if data[group_key]:
+                added = add_user_to_group(user, group)
+                if added:
+                    groups_added.append(group_key)
+            else:
+                removed = remove_user_from_group(user, group)
+                if removed:
+                    groups_removed.append(group_key)
+    current_groups = [group.name for group in user.groups.all()]
+    success_message = ""
+    if len(groups_added) > 0:
+        success_message += \
+            ("User added to group(s): " + ", ".join(groups_added) + ". ")
+    if len(groups_removed) > 0:
+        success_message += \
+            ("User removed from group(s): " + ", ".join(groups_removed) + ". ")
+    if len(groups_added) == 0 and len(groups_removed) == 0:
+        success_message += \
+            "User's groups were not changed. "
+    if len(current_groups) > 0:
+        success_message += \
+            "User is now in group(s): " + ", ".join(current_groups) + "."
+    else:
+        success_message += \
+            "User is now in no groups."
+    return JsonResponse(
+        {"success_message": Status.SUCCESS.value + success_message},
+        status=HTTPStatus.OK,
+    )
+
+
+@api_view(['POST'])
+@permission_required(PermissionPath.USER_WRITE.value, raise_exception=True)
+def user_get_groups(request):
+    data = JSONParser().parse(request)
+    if 'id' not in data:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR.value +
+                    GenericFailure.INTERNAL.value,
+                "errors": "Must specify user id on admin permission revoke"
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    try:
+        user = User.objects.get(id=data['id'])
+    except ObjectDoesNotExist:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR.value +
+                    "User" + GenericFailure.DOES_NOT_EXIST.value,
+                "errors": "No existing user with id=" + data['id']
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    group_list = []
+    for group in user.groups.all():
+        group_list.append(group.name)
+    return JsonResponse(
+        {"user_groups": group_list},
+        status=HTTPStatus.OK,
+    )
+
+
+@api_view(['GET'])
+@permission_required(PermissionPath.USER_WRITE.value, raise_exception=True)
+def all_user_groups(request):
+    group_list = []
+    for group in GroupName:
+        group_list.append(group.value)
+    return JsonResponse(
+        {"groups": group_list},
         status=HTTPStatus.OK,
     )

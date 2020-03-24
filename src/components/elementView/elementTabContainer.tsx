@@ -66,10 +66,10 @@ class ElementTabContainer extends React.Component<
     if (pathname === "/dashboard") {
       return "racks";
     }
-    const regex = new RegExp("(?<=dashboard/).*$");
+    const regex = new RegExp("dashboard/(.*$)");
     const match = regex.exec(pathname);
     if (match) {
-      return match[0];
+      return match[1];
     }
   };
 

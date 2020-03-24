@@ -7,7 +7,7 @@ import "./index.scss";
 import * as serviceWorker from "./serviceWorker";
 import App from "./App";
 import { createStore, compose, applyMiddleware } from "redux";
-import reducer from "./store/reducers/auth";
+import reducer from "./store/reducers/state";
 import thunk from "redux-thunk";
 import { Provider } from "react-redux";
 

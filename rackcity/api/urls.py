@@ -4,7 +4,6 @@ from rackcity import views
 urlpatterns = [
     path('logs/get-many', views.log_many),
     path('logs/pages', views.log_page_count),
-    path('models', views.model_list),
     path('models/add', views.model_add),
     path('models/modify', views.model_modify),
     path('models/delete', views.model_delete),
@@ -16,9 +15,6 @@ urlpatterns = [
     path('models/bulk-export', views.model_bulk_export),
     path('models/pages', views.model_page_count),
     path('models/fields', views.model_fields),
-    path('models/test-auth', views.model_auth),
-    path('models/test-admin', views.model_admin),
-    path('assets', views.asset_list),
     path('assets/get-many', views.asset_many),
     path('assets/<int:id>', views.asset_detail),
     path('assets/add', views.asset_add),
@@ -33,6 +29,7 @@ urlpatterns = [
     path('assets/pages', views.asset_page_count),
     path('assets/fields', views.asset_fields),
     path('assets/asset-number', views.asset_number),
+    path('assets/decommission', views.decommission_asset),
     path('racks/get', views.rack_get),
     path('racks/get-all', views.rack_get_all),
     path('racks/create', views.rack_create),
@@ -55,9 +52,18 @@ urlpatterns = [
     path('users/pages', views.user_page_count),
     path('users/grant-admin', views.user_grant_admin),
     path('users/revoke-admin', views.user_revoke_admin),
+    path('users/groups/get', views.user_get_groups),
+    path('users/groups/set', views.user_set_groups),
+    path('users/groups', views.all_user_groups),
     path('power/get-state/<int:id>', views.power_status),
     path('power/mask-on', views.power_on),
     path('power/mask-off', views.power_off),
     path('power/cycle', views.power_cycle),
-    path('power/availability', views.power_availability)
+    path('power/availability', views.power_availability),
+    path('change-plans/get-many', views.change_plan_many),
+    path('change-plans/add', views.change_plan_add),
+    path('change-plans/modify', views.change_plan_modify),
+    path('change-plans/delete', views.change_plan_delete),
+    path('change-plans/pages', views.change_plan_page_count)
+
 ]

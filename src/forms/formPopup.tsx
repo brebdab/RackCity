@@ -7,7 +7,8 @@ import {
   isModelObject,
   FormObjectType,
   isDatacenterObject,
-  DatacenterObject
+  DatacenterObject,
+  isChangePlanObject
 } from "../utils/utils";
 import { ALL_DATACENTERS } from "../components/elementView/elementTabContainer";
 import RackSelectView from "../components/elementView/rackSelectView";
@@ -16,6 +17,7 @@ import ModelForm from "./modelForm";
 import DatacenterForm from "./datacenterForm";
 import WrappedRegistrationForm from "./auth/register";
 import { FormTypes } from "./formUtils";
+import ChangePlanForm from "./changePlanForm";
 
 interface FormPopupState {}
 interface FormPopupProps {
@@ -89,6 +91,16 @@ class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
             submitForm={this.props.submitForm}
             initialValues={
               isDatacenterObject(this.props.initialValues)
+                ? this.props.initialValues
+                : undefined
+            }
+          />
+        ) : null}
+        {this.props.elementName === ElementType.CHANGEPLANS ? (
+          <ChangePlanForm
+            submitForm={this.props.submitForm}
+            initialValues={
+              isChangePlanObject(this.props.initialValues)
                 ? this.props.initialValues
                 : undefined
             }
