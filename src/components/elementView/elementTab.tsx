@@ -308,7 +308,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
 
         this.handleDataUpdate(true);
         this.handleClose();
-        this.addSuccessToast("Successfully created ChangePlan!");
+        this.addSuccessToast(res.data.success_message);
         console.log(this.state.isOpen);
       });
   };
