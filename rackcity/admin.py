@@ -8,15 +8,21 @@ from .models import (
     PowerPort,
     PDUPort,
     NetworkPort,
-    Log
+    Log,
+    Datacenter,
+    ChangePlan,
+    RackCityUser,
 )
 
 admin.site.register(AbstractAsset)
 admin.site.register(Asset)
 admin.site.register(AssetCP)
-admin.site.register(Log)
 admin.site.register(ITModel)
 admin.site.register(Rack)
 admin.site.register(PowerPort)
 admin.site.register(PDUPort)
 admin.site.register(NetworkPort)
+admin.site.register(Log)
+admin.site.register(Datacenter)
+admin.site.register(ChangePlan)
+admin.site.register(RackCityUser)
