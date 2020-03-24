@@ -53,7 +53,7 @@ def asset_permission_required():
 
 def power_permission_required():
     def check_power_perm(user, asset, datacenter):
-        if user.has_perms(PermissionPath.POWER_WRITE.value):
+        if user.has_perm(PermissionPath.POWER_WRITE.value):
             return True
         elif user.username == asset.owner:
             return True
