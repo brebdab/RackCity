@@ -46,7 +46,6 @@ from .report_views import (
     report_rack_usage,
     rack_report_datacenter
 )
-
 from .user_views import (
     netid_login,
     RegisterNameView,
@@ -58,6 +57,9 @@ from .user_views import (
     i_am_admin,
     user_grant_admin,
     user_revoke_admin,
+    user_set_groups,
+    user_get_groups,
+    all_user_groups,
 )
 from .datacenter_views import (
     datacenter_all,
