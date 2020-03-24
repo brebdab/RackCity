@@ -505,6 +505,8 @@ def user_set_groups(request):
                 },
                 status=HTTPStatus.BAD_REQUEST,
             )
+    else:
+        current_datacenters = []
 
     success_message = get_user_permission_success(
         groups_added,

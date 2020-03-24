@@ -30,6 +30,8 @@ from .asset_views import (
     asset_page_count,
     asset_fields,
     asset_number,
+    test_asset_permission,
+    test_power_permission,
 )
 from .rack_views import (
     rack_get,

@@ -36,6 +36,10 @@ from rackcity.utils.errors_utils import (
     parse_save_validation_error,
     BulkFailure
 )
+from rackcity.permissions.decorators import (
+    asset_permission_required,
+    power_permission_required,
+)
 from rackcity.permissions.permissions import PermissionPath
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
@@ -1335,4 +1339,20 @@ def asset_number(request):
     """
     return JsonResponse(
         {"asset_number": get_next_available_asset_number()}
+    )
+
+
+@api_view(['GET'])
+@asset_permission_required()
+def test_asset_permission(request):
+    return JsonResponse(
+        {"julia says": "it works!"}
+    )
+
+
+@api_view(['GET'])
+@power_permission_required()
+def test_power_permission(request):
+    return JsonResponse(
+        {"julia says": "it works!"}
     )
