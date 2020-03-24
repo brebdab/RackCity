@@ -641,6 +641,7 @@ def asset_delete(request):
 
 @api_view(['POST'])
 @permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
+# TODO Check all assets for datacenter-level permissions
 def asset_bulk_upload(request):
     """
     Bulk upload many assets to add or modify
@@ -939,6 +940,7 @@ def asset_bulk_upload(request):
 
 @api_view(['POST'])
 @permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
+# TODO Check all assets for datacenter-level permissions
 def asset_bulk_approve(request):
     """
     Bulk approve many assets to modify
@@ -1041,6 +1043,7 @@ def asset_bulk_export(request):
 
 @api_view(['POST'])
 @permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
+# TODO Check all affected assets for datacenter-level permissions
 def network_bulk_upload(request):
     data = JSONParser().parse(request)
     if 'import_csv' not in data:
@@ -1168,6 +1171,7 @@ def network_bulk_upload(request):
 
 @api_view(['POST'])
 @permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
+# TODO Check all assets for datacenter-level permissions
 def network_bulk_approve(request):
     data = JSONParser().parse(request)
     if 'approved_modifications' not in data:
@@ -1348,12 +1352,4 @@ def asset_number(request):
     """
     return JsonResponse(
         {"asset_number": get_next_available_asset_number()}
-    )
-
-
-@api_view(['GET'])
-@power_permission_required()
-def test_power_permission(request):
-    return JsonResponse(
-        {"julia says": "it works!"}
     )
