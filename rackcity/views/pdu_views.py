@@ -16,14 +16,15 @@ from rackcity.utils.log_utils import (
     PowerAction,
 )
 from rackcity.permissions.decorators import power_permission_required
+from rackcity.permissions.permissions import PermissionPath
 from rest_framework.parsers import JSONParser
-from rest_framework.decorators import permission_classes, api_view
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.decorators import api_view
 from http import HTTPStatus
 import re
 import requests
 import time
 from requests.exceptions import ConnectionError
+
 
 pdu_url = 'http://hyposoft-mgt.colab.duke.edu:8005/'
 # Need to specify rack + side in request, e.g. for A1 left, use A01L
@@ -264,7 +265,7 @@ def power_cycle(request):
 
 
 @api_view(['GET'])
-@asset_permission_required()
+@permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
 def power_availability(request):
     rack_id = request.query_params.get('id')
     if not rack_id:
