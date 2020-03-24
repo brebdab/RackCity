@@ -5,7 +5,7 @@ from django.http import JsonResponse
 from http import HTTPStatus
 import math
 from rackcity.api.serializers import RegisterNameSerializer, UserSerializer
-from rackcity.models import Asset
+from rackcity.models import Asset, RackCityPermission
 from rackcity.permissions.permissions import PermissionPath
 from rackcity.views.rackcity_utils import (
     get_filter_arguments,
@@ -547,8 +547,19 @@ def user_get_groups(request):
     group_list = []
     for group in user.groups.all():
         group_list.append(group.name)
+    try:
+        permission = RackCityPermission.objects.get(user=user.id)
+    except ObjectDoesNotExist:
+        datacenter_list = []
+    else:
+        datacenter_list = [
+            dc.abbreviation for dc in permission.datacenter_permissions.all()
+        ]
     return JsonResponse(
-        {"user_groups": group_list},
+        {
+            "user_groups": group_list,
+            "datacenter_permissions": datacenter_list
+        },
         status=HTTPStatus.OK,
     )
 
