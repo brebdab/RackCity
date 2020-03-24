@@ -1,6 +1,7 @@
 from django.http import JsonResponse
 from rackcity.models import (
     Asset,
+    DecommissionedAsset,
     ITModel,
     Rack,
     NetworkPort,
@@ -11,6 +12,7 @@ from rackcity.models import (
 from django.core.exceptions import ObjectDoesNotExist
 from rackcity.api.serializers import (
     AssetSerializer,
+    GetDecommissionedAssetSerializer,
     RecursiveAssetSerializer,
     BulkAssetSerializer,
     BulkNetworkPortSerializer,
@@ -179,16 +181,22 @@ def asset_detail(request, id):
     try:
         asset = Asset.objects.get(id=id)
     except Asset.DoesNotExist:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value +
-                    "Asset" + GenericFailure.DOES_NOT_EXIST.value,
-                "errors": "No existing asset with id="+str(id)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    serializer = RecursiveAssetSerializer(asset)
+        try:
+            decommissioned_asset = DecommissionedAsset.objects.get(live_id=id)
+        except DecommissionedAsset.DoesNotExist:
+            return JsonResponse(
+                {
+                    "failure_message":
+                        Status.ERROR.value +
+                        "Asset" + GenericFailure.DOES_NOT_EXIST.value,
+                    "errors": "No existing asset with id="+str(id)
+                },
+                status=HTTPStatus.BAD_REQUEST
+            )
+        else:
+            serializer = GetDecommissionedAssetSerializer(decommissioned_asset)
+    else:
+        serializer = RecursiveAssetSerializer(asset)
     return JsonResponse(serializer.data, status=HTTPStatus.OK)
 
 

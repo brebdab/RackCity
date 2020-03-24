@@ -30,10 +30,11 @@ class DecommissionedAsset(models.Model):
         null=True,
         blank=True,
     )
+    comment = models.TextField(null=True, blank=True)
     power_connections = JSONField()
     network_connections = JSONField()
     network_graph = JSONField()
 
     class Meta:
         ordering = ['asset_number']
-        verbose_name = 'asset'
+        verbose_name = 'decommissioned asset'

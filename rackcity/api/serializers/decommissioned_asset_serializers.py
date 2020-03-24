@@ -38,8 +38,7 @@ class AddDecommissionedAssetSerializer(serializers.ModelSerializer):
     class Meta:
         model = DecommissionedAsset
         fields = (
-            'decommissioned_id',
-            'id',
+            'live_id',
             'decommissioning_user',
             'time_decommissioned',
             'asset_number',

@@ -35,6 +35,9 @@ from .asset_views import (
     asset_fields,
     asset_number,
 )
+from .decommission_views import (
+    decommission_asset,
+)
 from .rack_views import (
     rack_get,
     rack_get_all,
