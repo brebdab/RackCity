@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from rackcity.api.serializers import DatacenterSerializer
 from rest_auth.registration.serializers import RegisterSerializer
 from rest_auth.serializers import UserDetailsSerializer
 from rest_framework import serializers
@@ -30,12 +31,14 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class RackCityUserSerializer(UserDetailsSerializer):
-    datacenter_permissions = serializers.ManyRelatedField(
-        source='rackcityuser.datacenter_permissions'
+    datacenter_permissions = DatacenterSerializer(
+        many=True,
+        source='rackcityuser.datacenter_permissions',
     )
 
     class Meta(UserDetailsSerializer.Meta):
-        fields = UserDetailsSerializer.Meta.fields + ('datacenter_permissions')
+        fields = UserDetailsSerializer.Meta.fields + \
+            ('datacenter_permissions',)
 
     def update(self, instance, validated_data):
         rackcityuser_data = validated_data.pop('rackcityuser', {})
@@ -47,7 +50,7 @@ class RackCityUserSerializer(UserDetailsSerializer):
             validated_data,
         )
         rackcityuser = instance.rackcityuser
-        if rackcityuser_data:
+        if rackcityuser_data and datacenter_permissions:
             rackcityuser.datacenter_permissions = datacenter_permissions
             rackcityuser.save()
         return instance
