@@ -13,7 +13,8 @@ def format_mac_address(mac_address):
     mac_address = mac_address.replace(";", ":")
     # if contains no delimiters:
     if (not mac_address.__contains__(":")):
-        mac_address = ':'.join(a+b for a, b in zip(mac_address[::2], mac_address[1::2]))
+        mac_address = ':'.join(
+            a+b for a, b in zip(mac_address[::2], mac_address[1::2]))
     return mac_address
 
 

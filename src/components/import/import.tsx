@@ -6,7 +6,11 @@ import {
   Classes,
   Dialog,
   Overlay,
-  Spinner
+  IToastProps,
+  Toaster,
+  Spinner,
+  Intent,
+  Position
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -64,6 +68,39 @@ export class BulkImport extends React.PureComponent<
     assetUploadType: "assets"
   };
 
+  private toaster: Toaster = {} as Toaster;
+  private addSuccessToast(message: string) {
+    this.addToast({ message: message, intent: Intent.PRIMARY });
+  }
+  private addErrorToast(message: string) {
+    this.addToast({ message: message, intent: Intent.DANGER });
+  }
+  private addToast(toast: IToastProps) {
+    toast.timeout = 5000;
+    this.toaster.show(toast);
+  }
+  private addWarnToast = (message: string) => {
+    this.addToast({
+      message: message,
+      intent: Intent.WARNING
+    });
+  };
+  private refHandlers = {
+    toaster: (ref: Toaster) => (this.toaster = ref)
+  };
+
+  private createAlertToasts(toasts: Array<string>, types: Array<string>) {
+    for (let i = 0; i < toasts.length; i++) {
+      if (types[i] === Intent.SUCCESS) {
+        this.addSuccessToast(toasts[i]);
+      } else if (types[i] === Intent.WARNING) {
+        this.addWarnToast(toasts[i]);
+      } else if (types[i] === Intent.DANGER) {
+        this.addErrorToast(toasts[i]);
+      }
+    }
+  }
+
   render() {
     let params: any;
     params = this.props.match.params;
@@ -78,6 +115,12 @@ export class BulkImport extends React.PureComponent<
     const selectButtonText = "Select " + uploadType + " file";
     return (
       <div className={Classes.DARK + " import"}>
+        <Toaster
+          autoFocus={false}
+          canEscapeKeyClear={true}
+          position={Position.TOP}
+          ref={this.refHandlers.toaster}
+        />
         <div className={"row"}>
           <div className={"column-third-import"}>
             {resourceType === "assets" ? (
@@ -160,13 +203,14 @@ export class BulkImport extends React.PureComponent<
               modelsModified={this.state.modifiedModels}
               modelsAdded={this.state.addedModels}
               modelsIgnored={this.state.ignoredModels}
-              callback={() => {
+              callback={(toast: Array<string>, messageType: Array<string>) => {
                 this.setState({
                   modelAlterationsIsOpen: false,
                   modifiedModels: undefined,
                   loadedModels: undefined
                 });
                 console.log(this.state);
+                this.createAlertToasts(toast, messageType);
               }}
               operation={"models"}
             />
@@ -199,12 +243,13 @@ export class BulkImport extends React.PureComponent<
               modelsModified={this.state.modifiedAssets}
               modelsAdded={this.state.addedAssets}
               modelsIgnored={this.state.ignoredAssets}
-              callback={() => {
+              callback={(toast: Array<string>, messageType: Array<string>) => {
                 this.setState({
                   assetAlterationsIsOpen: false,
                   modifiedAssets: undefined,
                   loadedAssets: undefined
                 });
+                this.createAlertToasts(toast, messageType);
               }}
               operation={"assets"}
             />
@@ -229,11 +274,12 @@ export class BulkImport extends React.PureComponent<
               modelsModified={this.state.modifiedNetwork}
               modelsAdded={this.state.addedNetwork}
               modelsIgnored={this.state.ignoredNetwork}
-              callback={() => {
+              callback={(toast: Array<string>, messageType: Array<string>) => {
                 this.setState({
                   networkAlterationsIsOpen: false,
                   modifiedNetwork: undefined
                 });
+                this.createAlertToasts(toast, messageType);
               }}
               operation={"network"}
             />
@@ -265,12 +311,12 @@ export class BulkImport extends React.PureComponent<
           this.handleUpload(res);
         },
         err => {
-          alert(err.response.data.failure_message);
+          this.addErrorToast(err.response.data.failure_message);
         }
       );
       this.setState({ uploadFileIsOpen: false });
     } else {
-      alert("No file selected");
+      this.addErrorToast("No file selected");
     }
   };
 
@@ -314,7 +360,7 @@ export class BulkImport extends React.PureComponent<
               });
             }
           } else {
-            alert(
+            this.addSuccessToast(
               "Success! Modified: 0; Added: " +
                 res.added +
                 "; Ignored: " +
@@ -329,11 +375,11 @@ export class BulkImport extends React.PureComponent<
         },
         err => {
           this.setState({ uploading: false });
-          alert(err.response.data.failure_message);
+          this.addErrorToast(err.response.data.failure_message);
         }
       );
     } else {
-      alert("No data to upload");
+      this.addWarnToast("No data to upload");
     }
     console.log("here, regardless of error or success");
     this.setState({

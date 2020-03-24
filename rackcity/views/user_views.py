@@ -493,16 +493,23 @@ def user_set_groups(request):
                 removed = remove_user_from_group(user, group)
                 if removed:
                     groups_removed.append(group_key)
+    current_groups = [group.name for group in user.groups.all()]
     success_message = ""
     if len(groups_added) > 0:
         success_message += \
-            ("User added to groups: " + ", ".join(groups_added) + ". ")
+            ("User added to group(s): " + ", ".join(groups_added) + ". ")
     if len(groups_removed) > 0:
         success_message += \
-            ("User removed from groups: " + ", ".join(groups_removed) + ". ")
+            ("User removed from group(s): " + ", ".join(groups_removed) + ". ")
     if len(groups_added) == 0 and len(groups_removed) == 0:
         success_message += \
-            "User's groups were not changed."
+            "User's groups were not changed. "
+    if len(current_groups) > 0:
+        success_message += \
+            "User is now in group(s): " + ", ".join(current_groups) + "."
+    else:
+        success_message += \
+            "User is now in no groups."
     return JsonResponse(
         {"success_message": Status.SUCCESS.value + success_message},
         status=HTTPStatus.OK,

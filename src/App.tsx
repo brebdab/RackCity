@@ -22,10 +22,11 @@ import Logs from "./components/logs/logs";
 import Navigation from "./components/navigation/navigation";
 import Report from "./components/report/report";
 import User from "./components/userView/user";
+import ChangePlannerView from "./components/changePlanner/changePlannerView";
 import LoginView from "./forms/auth/loginView";
 // import BulkExport from "./components/export/export";
 import "./index.scss";
-import * as actions from "./store/actions/auth";
+import * as actions from "./store/actions/state";
 import { ROUTES } from "./utils/utils";
 
 var console: any = {};
@@ -57,11 +58,13 @@ class App extends React.Component<AppProps> {
     return component ? (
       <Route
         path={path}
+        {...rest}
         component={this.props.isAuthenticated ? component : NotAuthorized}
       />
     ) : render ? (
       <Route
         path={path}
+        {...rest}
         render={this.props.isAuthenticated ? render : NotAuthorized}
       />
     ) : null;
@@ -115,6 +118,11 @@ class App extends React.Component<AppProps> {
           <this.PrivateRoute path={ROUTES.REPORT} component={Report} />
           <this.PrivateRoute path={ROUTES.LOGS} component={Logs} />
           <this.PrivateRoute path={ROUTES.RACK_PRINT} component={RackView} />
+          <this.PrivateRoute
+            exact
+            path={ROUTES.CHANGE_PLAN}
+            component={ChangePlannerView}
+          />
 
           {/* admin paths */}
           <this.AdminRoute path={ROUTES.USERS} component={User} />

@@ -12,7 +12,7 @@ import { FormComponentProps } from "antd/lib/form/Form";
 import * as React from "react";
 import { connect } from "react-redux";
 import { Redirect, RouteComponentProps } from "react-router";
-import * as actions from "../../store/actions/auth";
+import * as actions from "../../store/actions/state";
 import "./login.scss";
 interface LoginFormProps {
   loading: boolean;
