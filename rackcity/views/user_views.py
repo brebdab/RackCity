@@ -7,9 +7,9 @@ import math
 from rackcity.api.serializers import RegisterNameSerializer, UserSerializer
 from rackcity.models import Asset
 from rackcity.permissions.permissions import PermissionPath
-from rackcity.views.rackcity_utils import (
-    get_filter_arguments,
+from rackcity.utils.query_utils import (
     get_sort_arguments,
+    get_filter_arguments,
 )
 from rackcity.utils.errors_utils import UserFailure, GenericFailure, Status
 from rackcity.utils.user_utils import is_netid_user

@@ -1,7 +1,4 @@
-from rackcity.models import (
-    Asset,
-    AssetCP,
-)
+from rackcity.models import Asset, AssetCP
 
 
 def get_asset_query_for_branch(asset_query, change_plan=None):

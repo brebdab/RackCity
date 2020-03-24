@@ -17,7 +17,7 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from http import HTTPStatus
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.parsers import JSONParser
-from rackcity.views.rackcity_utils import get_filter_arguments
+from rackcity.utils.query_utils import get_filter_arguments
 import math
 
 
@@ -109,7 +109,7 @@ def datacenter_delete(request):
             {"failure_message":
                 Status.DELETE_ERROR.value +
                 "Cannot delete datacenter that still contains racks"
-            },
+             },
             status=HTTPStatus.BAD_REQUEST
         )
     try:

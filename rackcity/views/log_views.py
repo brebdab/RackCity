@@ -5,7 +5,7 @@ from http import HTTPStatus
 from rackcity.api.serializers import LogSerializer
 from rackcity.models import Log
 from rackcity.permissions.permissions import PermissionPath
-from rackcity.views.rackcity_utils import get_filter_arguments
+from rackcity.utils.query_utils import get_filter_arguments
 from rest_framework.decorators import api_view
 from rest_framework.pagination import PageNumberPagination
 import math

@@ -34,11 +34,13 @@ import csv
 from base64 import b64decode
 import re
 from io import StringIO, BytesIO
+from rackcity.utils.query_utils import (
+    get_sort_arguments,
+    get_filter_arguments,
+)
 from rackcity.views.rackcity_utils import (
     validate_asset_location,
     records_are_identical,
-    get_sort_arguments,
-    get_filter_arguments,
     LocationException,
     ModelModificationException
 )

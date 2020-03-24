@@ -1,7 +1,13 @@
 from django.http import JsonResponse
-from rackcity.api.serializers import AddChangePlanSerializer, GetChangePlanSerializer
+from rackcity.api.serializers import (
+    AddChangePlanSerializer,
+    GetChangePlanSerializer,
+)
 from rackcity.models import ChangePlan
-from rackcity.views.rackcity_utils import get_filter_arguments, get_sort_arguments
+from rackcity.utils.query_utils import (
+    get_sort_arguments,
+    get_filter_arguments,
+)
 from rackcity.utils.errors_utils import (
     Status,
     GenericFailure,

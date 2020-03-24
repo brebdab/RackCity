@@ -49,13 +49,15 @@ import csv
 from base64 import b64decode
 import re
 from io import StringIO, BytesIO
+from rackcity.utils.query_utils import (
+    get_sort_arguments,
+    get_filter_arguments,
+)
 from rackcity.views.rackcity_utils import (
     validate_asset_location,
     validate_location_modification,
     no_infile_location_conflicts,
     records_are_identical,
-    get_sort_arguments,
-    get_filter_arguments,
     LocationException,
     MacAddressException,
     PowerConnectionException,
@@ -116,7 +118,7 @@ def asset_many(request):
     for filter_arg in filter_args:
         print(filter_arg)
         assets_query = assets_query.filter(**filter_arg)
-    
+
     try:
         sort_args = get_sort_arguments(request.data)
     except Exception as error:
