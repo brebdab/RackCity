@@ -147,7 +147,7 @@ export class Navigation extends React.Component<
                             this.props.history.push(ROUTES.CHANGE_PLAN)
                           }
                           icon="clipboard"
-                          text="Change Planner"
+                          text="Change Plans"
                         />
                         {this.props.isAdmin ? (
                           <MenuItem

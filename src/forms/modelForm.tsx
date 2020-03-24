@@ -29,7 +29,7 @@ import {
 var console: any = {};
 console.log = function() {};
 
-export interface ModelFormProps {
+interface ModelFormProps {
   token: string;
   type: FormTypes;
   initialValues?: ModelObject;
