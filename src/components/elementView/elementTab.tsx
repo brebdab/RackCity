@@ -45,8 +45,8 @@ import {
 } from "./elementUtils";
 import "./elementView.scss";
 
-var console: any = {};
-console.log = function() {};
+// var console: any = {};
+// console.log = function() {};
 const fs = require("js-file-download");
 
 interface ElementViewState {
@@ -213,6 +213,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       .post(API_ROOT + "api/" + path + "/get-many", bodyCopy, config)
       .then(res => {
         const items = res.data[path];
+        console.log(items);
 
         return items;
       });
@@ -311,6 +312,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
   };
 
   public render() {
+    console.log(this.props);
     return (
       <div className="element-tab">
         <Toaster
@@ -353,7 +355,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
         </div>
         <div className="element-tab-buttons">
           {this.props.element !== ElementType.USER &&
-          this.props.element !== ElementType.DATACENTER ? (
+          this.props.element !== ElementType.DATACENTER &&
+          this.props.element !== ElementType.CHANGEPLANS ? (
             <AnchorButton
               className="add"
               text="Export Table Data"

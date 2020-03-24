@@ -115,8 +115,8 @@ interface ElementTableProps {
   updateDatacenters?(): void;
 }
 
-var console: any = {};
-console.log = function() {};
+// var console: any = {};
+// console.log = function() {};
 class ElementTable extends React.Component<
   ElementTableProps & RouteComponentProps,
   ElementTableState
@@ -519,6 +519,7 @@ class ElementTable extends React.Component<
         )
         .then(res => {
           this.validRequestMadeWithToken = true;
+          console.log(res);
           this.setState({
             items: res,
             getDataInProgress: false
@@ -1139,7 +1140,8 @@ class ElementTable extends React.Component<
           {this.state.getDataInProgress ? (
             <Spinner className="table-spinner" size={Spinner.SIZE_STANDARD} />
           ) : null}
-          {this.state.items.length === 0 && !this.state.getDataInProgress ? (
+          {(!this.state.items || this.state.items.length === 0 )&&
+          !this.state.getDataInProgress ? (
             <Callout
               icon={IconNames.ERROR}
               title={"No " + this.props.type}
