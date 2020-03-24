@@ -14,7 +14,6 @@ from .it_model_serializers import (
 )
 from .rack_serializers import RackSerializer
 from .user_serializers import (
-    RackCityUserSerializer,
     RegisterNameSerializer,
     UserSerializer,
 )

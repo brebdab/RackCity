@@ -124,10 +124,5 @@ ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_AUTHENTICATION_METHOD = 'username'
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 
-REST_AUTH_SERIALIZERS = {
-    'USER_DETAILS_SERIALIZER':
-        'rackcity.api.serializers.RackCityUserSerializer'
-}
-
 # SECURE_SSL_REDIRECT = True
 # SECURE_REDIRECT_EXEMPT = ['localhost', '127.0.0.1']

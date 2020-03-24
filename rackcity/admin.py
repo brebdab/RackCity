@@ -11,7 +11,7 @@ from .models import (
     Log,
     Datacenter,
     ChangePlan,
-    RackCityUser,
+    RackCityPermission,
 )
 
 admin.site.register(AbstractAsset)
@@ -25,4 +25,4 @@ admin.site.register(NetworkPort)
 admin.site.register(Log)
 admin.site.register(Datacenter)
 admin.site.register(ChangePlan)
-admin.site.register(RackCityUser)
+admin.site.register(RackCityPermission)
