@@ -33,8 +33,30 @@ def validate_owner(value):
         )
 
 
-class AbstractAsset(models.Model):
+class AbstractID(models.Model):
     id = models.AutoField(primary_key=True)
+
+
+class AbstractAsset(AbstractID):
+    hostname = models.CharField(
+        max_length=150,
+        unique=True,
+        validators=[validate_hostname],
+        null=True,
+        blank=True,
+    )
+    rack_position = models.PositiveIntegerField()
+
+    owner = models.CharField(
+        max_length=150,
+        null=True,
+        blank=True,
+        validators=[validate_owner]
+    )
+    comment = models.TextField(null=True, blank=True)
+
+    class Meta:
+        abstract = True
 
 
 class Asset(AbstractAsset):
@@ -46,14 +68,6 @@ class Asset(AbstractAsset):
         ],
         blank=True
     )
-    hostname = models.CharField(
-        max_length=150,
-        unique=True,
-        validators=[validate_hostname],
-        null=True,
-        blank=True,
-    )
-    rack_position = models.PositiveIntegerField()
     model = models.ForeignKey(
         ITModel,
         on_delete=models.CASCADE,
@@ -64,13 +78,6 @@ class Asset(AbstractAsset):
         on_delete=models.CASCADE,
         verbose_name="related rack",
     )
-    owner = models.CharField(
-        max_length=150,
-        null=True,
-        blank=True,
-        validators=[validate_owner]
-    )
-    comment = models.TextField(null=True, blank=True)
 
     class Meta:
         ordering = ['asset_number']
@@ -124,7 +131,7 @@ class AssetCP(AbstractAsset):
         null=True,
         blank=True,
     )
-    ## TODO: related_decomissioned_asset
+    # TODO: related_decomissioned_asset
     is_conflict = models.BooleanField(
         default=False,
         blank=True,
@@ -143,14 +150,7 @@ class AssetCP(AbstractAsset):
         # If blank, Asset numbers will be assigned on execution
         null=True,
     )
-    hostname = models.CharField(
-        max_length=150,
-        unique=True,
-        validators=[validate_hostname],
-        null=True,
-        blank=True,
-    )
-    rack_position = models.PositiveIntegerField()
+
     model = models.ForeignKey(
         ITModel,
         on_delete=models.SET_NULL,
@@ -163,13 +163,6 @@ class AssetCP(AbstractAsset):
         null=True,
         verbose_name="related rack",
     )
-    owner = models.CharField(
-        max_length=150,
-        null=True,
-        blank=True,
-        validators=[validate_owner]
-    )
-    comment = models.TextField(null=True, blank=True)
 
     class Meta:
         ordering = ['asset_number']
