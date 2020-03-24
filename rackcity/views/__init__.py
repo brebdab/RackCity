@@ -33,6 +33,9 @@ from .asset_views import (
     test_asset_permission,
     test_power_permission,
 )
+from .decommission_views import (
+    decommission_asset,
+)
 from .rack_views import (
     rack_get,
     rack_get_all,

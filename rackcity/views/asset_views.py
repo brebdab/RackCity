@@ -1,6 +1,7 @@
 from django.http import JsonResponse
 from rackcity.models import (
     Asset,
+    DecommissionedAsset,
     ITModel,
     Rack,
     NetworkPort,
@@ -12,6 +13,7 @@ from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ObjectDoesNotExist
 from rackcity.api.serializers import (
     AssetSerializer,
+    GetDecommissionedAssetSerializer,
     RecursiveAssetSerializer,
     BulkAssetSerializer,
     BulkNetworkPortSerializer,
@@ -104,7 +106,6 @@ def asset_many(request):
         )
 
     assets_query = Asset.objects
-
     try:
         filter_args = get_filter_arguments(request.data)
     except Exception as error:
@@ -117,8 +118,9 @@ def asset_many(request):
             status=HTTPStatus.BAD_REQUEST
         )
     for filter_arg in filter_args:
+        print(filter_arg)
         assets_query = assets_query.filter(**filter_arg)
-
+    
     try:
         sort_args = get_sort_arguments(request.data)
     except Exception as error:
@@ -170,16 +172,22 @@ def asset_detail(request, id):
     try:
         asset = Asset.objects.get(id=id)
     except Asset.DoesNotExist:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value +
-                    "Asset" + GenericFailure.DOES_NOT_EXIST.value,
-                "errors": "No existing asset with id="+str(id)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    serializer = RecursiveAssetSerializer(asset)
+        try:
+            decommissioned_asset = DecommissionedAsset.objects.get(live_id=id)
+        except DecommissionedAsset.DoesNotExist:
+            return JsonResponse(
+                {
+                    "failure_message":
+                        Status.ERROR.value +
+                        "Asset" + GenericFailure.DOES_NOT_EXIST.value,
+                    "errors": "No existing asset with id="+str(id)
+                },
+                status=HTTPStatus.BAD_REQUEST
+            )
+        else:
+            serializer = GetDecommissionedAssetSerializer(decommissioned_asset)
+    else:
+        serializer = RecursiveAssetSerializer(asset)
     return JsonResponse(serializer.data, status=HTTPStatus.OK)
 
 

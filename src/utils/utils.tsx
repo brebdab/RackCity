@@ -226,7 +226,8 @@ export type ElementObjectType =
   | AssetObject
   | ShallowAssetObject
   | UserInfoObject
-  | DatacenterObject;
+  | DatacenterObject
+  | ChangePlan;
 
 export type FormObjectType =
   | ModelObjectOld
@@ -237,7 +238,8 @@ export type FormObjectType =
   | RackRangeFields
   | ShallowAssetObject
   | UserInfoObject
-  | CreateUserObject;
+  | CreateUserObject
+  | ChangePlan;
 
 export function isObject(obj: any) {
   return obj === Object(obj);
@@ -259,6 +261,9 @@ export function isRackRangeFields(obj: any): obj is RackRangeFields {
 }
 export function isUserObject(obj: any): obj is UserInfoObject {
   return obj && obj.username;
+}
+export function isChangePlanObject(obj: any): obj is ChangePlan {
+  return obj && obj.name;
 }
 export const getHeaders = (token: string) => {
   return {

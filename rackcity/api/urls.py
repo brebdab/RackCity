@@ -31,6 +31,7 @@ urlpatterns = [
     path('assets/asset-number', views.asset_number),
     path('assets/test-asset', views.test_asset_permission),
     path('assets/test-power', views.test_power_permission),
+    path('assets/decommission', views.decommission_asset),
     path('racks/get', views.rack_get),
     path('racks/get-all', views.rack_get_all),
     path('racks/create', views.rack_create),
@@ -66,5 +67,4 @@ urlpatterns = [
     path('change-plans/modify', views.change_plan_modify),
     path('change-plans/delete', views.change_plan_delete),
     path('change-plans/pages', views.change_plan_page_count)
-
 ]

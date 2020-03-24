@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
-    AbstractAsset,
     Asset,
+    DecommissionedAsset,
     AssetCP,
     ITModel,
     Rack,
@@ -14,8 +14,8 @@ from .models import (
     RackCityPermission,
 )
 
-admin.site.register(AbstractAsset)
 admin.site.register(Asset)
+admin.site.register(DecommissionedAsset)
 admin.site.register(AssetCP)
 admin.site.register(ITModel)
 admin.site.register(Rack)

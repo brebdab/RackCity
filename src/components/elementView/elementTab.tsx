@@ -33,7 +33,8 @@ import {
   ElementType,
   ModelObject,
   ShallowAssetObject,
-  SortFilterBody
+  SortFilterBody,
+  ChangePlan
 } from "../../utils/utils";
 import { ALL_DATACENTERS } from "./elementTabContainer";
 import ElementTable from "./elementTable";
@@ -236,7 +237,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       console.log("success");
       this.handleDataUpdate(true);
       this.handleClose();
-      this.addSuccessToast("Successfully created model!");
+      this.addSuccessToast(res.data.success_message);
       console.log(this.state.isOpen);
     });
   };
@@ -275,7 +276,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       .then(res => {
         this.handleDataUpdate(true);
         this.handleClose();
-        this.addSuccessToast("Successfully created datacenter!");
+        this.addSuccessToast(res.data.success_message);
         if (this.props.updateDatacenters) {
           this.props.updateDatacenters();
         }
@@ -291,9 +292,25 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
 
       this.handleDataUpdate(true);
       this.handleClose();
-      this.addSuccessToast("Successfully created user!");
+      this.addSuccessToast(res.data.success_message);
       console.log(this.state.isOpen);
     });
+  };
+
+  private createChangePlan = (
+    changePlan: ChangePlan,
+    headers: any
+  ): Promise<any> => {
+    return axios
+      .post(API_ROOT + "api/change-plans/add", changePlan, headers)
+      .then(res => {
+        console.log("success");
+
+        this.handleDataUpdate(true);
+        this.handleClose();
+        this.addSuccessToast(res.data.success_message);
+        console.log(this.state.isOpen);
+      });
   };
   private toaster: Toaster = {} as Toaster;
   private addSuccessToast(message: string) {
@@ -372,8 +389,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             <p></p>
           )}
           {this.props.isAdmin &&
-          this.props.element !== ElementType.USER &&
-          this.props.element !== ElementType.DATACENTER ? (
+          (this.props.element === ElementType.ASSET ||
+            this.props.element === ElementType.MODEL) ? (
             <AnchorButton
               onClick={() => {
                 this.props.history.push(
@@ -389,7 +406,6 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               minimal
             />
           ) : null}
-
           <Alert
             cancelButtonText="Cancel"
             className={Classes.DARK}
@@ -491,6 +507,15 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               onClick={this.handleOpen}
             />
           ) : null}
+          {this.props.element === ElementType.ASSET ? (
+            <AnchorButton
+              className="add"
+              text="Print Barcodes for Selected Assets"
+              icon="barcode"
+              minimal
+              onClick={() => {}}
+            />
+          ) : null}
           <FormPopup
             {...this.props}
             type={FormTypes.CREATE}
@@ -502,6 +527,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                 ? this.createAsset
                 : this.props.element === ElementType.DATACENTER
                 ? this.createDatacenter
+                : this.props.element === ElementType.CHANGEPLANS
+                ? this.createChangePlan
                 : this.createUser
             }
             isOpen={this.state.isOpen}

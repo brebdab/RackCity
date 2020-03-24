@@ -3,7 +3,8 @@ import {
   ModelObject,
   AssetObject,
   DatacenterObject,
-  UserInfoObject
+  UserInfoObject,
+  ChangePlan
 } from "../../utils/utils";
 import { API_ROOT } from "../../utils/api-config";
 import axios from "axios";
@@ -104,6 +105,18 @@ export const deleteAsset = (asset: AssetObject, headers: any) => {
 };
 export const modifyAsset = (asset: AssetObject, headers: any): Promise<any> => {
   return axios.post(API_ROOT + "api/assets/modify", asset, headers);
+};
+export const modifyChangePlan = (
+  changePlan: ChangePlan,
+  headers: any
+): Promise<any> => {
+  return axios.post(API_ROOT + "api/change-plans/modify", changePlan, headers);
+};
+export const deleteChangePlan = (
+  changePlan: ChangePlan,
+  headers: any
+): Promise<any> => {
+  return axios.post(API_ROOT + "api/change-plans/delete", changePlan, headers);
 };
 
 export const deleteDatacenter = (
