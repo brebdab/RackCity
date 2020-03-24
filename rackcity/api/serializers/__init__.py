@@ -13,7 +13,11 @@ from .it_model_serializers import (
     normalize_bulk_model_data,
 )
 from .rack_serializers import RackSerializer
-from .user_serializers import RegisterNameSerializer, UserSerializer
+from .user_serializers import (
+    RackCityUserSerializer,
+    RegisterNameSerializer,
+    UserSerializer,
+)
 from .network_port_serializers import (
     BulkNetworkPortSerializer,
     normalize_bulk_network_data
