@@ -14,13 +14,9 @@ from .it_model_views import (
     model_bulk_export,
     model_page_count,
     model_fields,
-    model_list,
-    model_auth,
-    model_admin,
 )
 from .asset_views import (
     asset_detail,
-    asset_list,
     asset_add,
     asset_modify,
     asset_delete,

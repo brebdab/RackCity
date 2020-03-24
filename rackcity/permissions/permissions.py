@@ -21,6 +21,14 @@ class PermissionCodename(Enum):
     USER_WRITE = 'user_write'
 
 
+class PermissionPath(Enum):
+    MODEL_WRITE = 'rackcity.' + PermissionCodename.MODEL_WRITE.value
+    ASSET_WRITE = 'rackcity.' + PermissionCodename.ASSET_WRITE.value
+    POWER_WRITE = 'rackcity.' + PermissionCodename.POWER_WRITE.value
+    AUDIT_READ = 'rackcity.' + PermissionCodename.AUDIT_READ.value
+    USER_WRITE = 'auth.' + PermissionCodename.USER_WRITE.value
+
+
 def get_metadata_for_permission(
     permission_name: PermissionName
 ) -> Tuple[PermissionCodename, ContentType]:
@@ -46,7 +54,7 @@ def get_metadata_for_permission(
 def get_permission(permission_name: PermissionName) -> Permission:
     codename, content_type = get_metadata_for_permission(permission_name)
     permission, _ = Permission.objects.get_or_create(
-        codename=codename,
+        codename=codename.value,
         name=permission_name.value,
         content_type=content_type,
     )

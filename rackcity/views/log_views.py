@@ -1,17 +1,18 @@
+from django.contrib.auth.decorators import permission_required
 from django.db.models import Q
 from django.http import JsonResponse
 from http import HTTPStatus
 from rackcity.api.serializers import LogSerializer
 from rackcity.models import Log
+from rackcity.permissions.permissions import PermissionPath
 from rackcity.views.rackcity_utils import get_filter_arguments
-from rest_framework.decorators import permission_classes, api_view
+from rest_framework.decorators import api_view
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticated
 import math
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_required(PermissionPath.AUDIT_READ.value, raise_exception=True)
 def log_many(request):
     """
     List many logs. If page is not specified as a query parameter, all
@@ -83,7 +84,7 @@ def log_many(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_required(PermissionPath.AUDIT_READ.value, raise_exception=True)
 def log_page_count(request):
     """
     Return total number of pages according to page size, which must be
