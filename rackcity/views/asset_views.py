@@ -120,7 +120,7 @@ def asset_many(request):
     for filter_arg in filter_args:
         print(filter_arg)
         assets_query = assets_query.filter(**filter_arg)
-    
+
     try:
         sort_args = get_sort_arguments(request.data)
     except Exception as error:
@@ -192,7 +192,7 @@ def asset_detail(request, id):
 
 
 @api_view(['POST'])
-@permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
+@asset_permission_required()
 def asset_add(request):
     """
     Add a new asset.
@@ -439,7 +439,7 @@ def save_power_connections(asset_data, asset_id):
 
 
 @api_view(['POST'])
-@permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
+@asset_permission_required()
 def asset_modify(request):
     """
     Modify a single existing asset
@@ -581,7 +581,7 @@ def asset_modify(request):
 
 
 @api_view(['POST'])
-@permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
+@asset_permission_required()
 def asset_delete(request):
     """
     Delete a single existing asset
@@ -1321,6 +1321,7 @@ def asset_page_count(request):
 
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def asset_fields(request):
     """
     Return all fields on the AssetSerializer.
@@ -1347,14 +1348,6 @@ def asset_number(request):
     """
     return JsonResponse(
         {"asset_number": get_next_available_asset_number()}
-    )
-
-
-@api_view(['GET'])
-@asset_permission_required()
-def test_asset_permission(request):
-    return JsonResponse(
-        {"julia says": "it works!"}
     )
 
 

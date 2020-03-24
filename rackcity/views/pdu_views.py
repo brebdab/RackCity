@@ -15,6 +15,7 @@ from rackcity.utils.log_utils import (
     log_power_action,
     PowerAction,
 )
+from rackcity.permissions.decorators import power_permission_required
 from rest_framework.parsers import JSONParser
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -31,7 +32,7 @@ toggle_pdu = 'power.php'
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@power_permission_required()
 def power_status(request, id):
     """
     Get status of all power ports for an asset in
@@ -93,7 +94,7 @@ TODO check that power is in opposite state when performing a toggle
 TODO validate if ports exist/are connected
 """
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@power_permission_required()
 def power_on(request):
     """
     Turn on power to specified port
@@ -157,7 +158,7 @@ def power_on(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@power_permission_required()
 def power_off(request):
     """
     Turn on power to specified port
@@ -221,7 +222,7 @@ def power_off(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@power_permission_required()
 def power_cycle(request):
     data = JSONParser().parse(request)
     if 'id' not in data.keys():
@@ -263,7 +264,7 @@ def power_cycle(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@asset_permission_required()
 def power_availability(request):
     rack_id = request.query_params.get('id')
     if not rack_id:
