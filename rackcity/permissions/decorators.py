@@ -38,7 +38,7 @@ def user_passes_asset_test(test_func):
 
 def asset_permission_required():
     def check_asset_perm(user, asset, datacenter):
-        if user.has_perms(PermissionPath.ASSET_WRITE.value):
+        if user.has_perm(PermissionPath.ASSET_WRITE.value):
             return True
         try:
             permission = RackCityPermission.objects.get(user=user.id)
