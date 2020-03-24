@@ -37,6 +37,12 @@ def user_passes_asset_test(test_func):
 
 
 def asset_permission_required():
+    """
+    Decorator for views that checks whether the user is able to create, modify,
+    decomission, or delete an asset. User must either have global asset
+    permission or have per-datacenter permission for the datacenter the asset
+    is located in.
+    """
     def check_asset_perm(user, asset, datacenter):
         if user.has_perm(PermissionPath.ASSET_WRITE.value):
             return True
@@ -52,6 +58,11 @@ def asset_permission_required():
 
 
 def power_permission_required():
+    """
+    Decorator for views that checks whether the user is able to control the
+    power of an asset. User must either have power permission or be the owner
+    of the asset.
+    """
     def check_power_perm(user, asset, datacenter):
         if user.has_perm(PermissionPath.POWER_WRITE.value):
             return True

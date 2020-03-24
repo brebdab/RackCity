@@ -16,7 +16,6 @@ from rackcity.utils.log_utils import (
     PowerAction,
 )
 from rackcity.permissions.decorators import power_permission_required
-from rackcity.permissions.permissions import PermissionPath
 from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import permission_classes, api_view
