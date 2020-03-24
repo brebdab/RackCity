@@ -85,13 +85,16 @@ def update_user_datacenter_permissions(user, datacenter_permissions):
     except ObjectDoesNotExist:
         permission = RackCityPermission(user=user)
         permission.save()
+    datacenters_to_add = []
     for datacenter_id in datacenter_permissions:
         try:
             datacenter = Datacenter.objects.get(id=datacenter_id)
         except ObjectDoesNotExist:
             raise ObjectDoesNotExist
         else:
-            permission.datacenter_permissions.add(datacenter)
+            datacenters_to_add.append(datacenter)
+    permission.datacenter_permissions.clear()
+    permission.datacenter_permissions.add(*datacenters_to_add)
     permission.save()
     current_datacenters = [
         dc.abbreviation for dc in permission.datacenter_permissions.all()
