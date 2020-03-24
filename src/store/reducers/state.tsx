@@ -1,12 +1,23 @@
 import * as actionTypes from "../actions/actionTypes";
 import { updateObject } from "../utility";
-
-const initialState = {
+import { ChangePlan } from "../../utils/utils";
+interface ReduxState {
+  token: string | null;
+  error: string | null;
+  loading: boolean;
+  changePlan: ChangePlan | null;
+}
+const initialState: ReduxState = {
   token: null,
   error: null,
-  loading: false
+  loading: false,
+  changePlan: null
 };
-
+const setChangePlan = (state: any, action: any) => {
+  return updateObject(state, {
+    changePlan: action.changePlan
+  });
+};
 const authStart = (state: any, action: any) => {
   return updateObject(state, {
     error: null,
@@ -56,6 +67,8 @@ const reducer = (state = initialState, action: any) => {
       return authLogout(state, action);
     case actionTypes.AUTH_ADMIN:
       return authAdmin(state, action);
+    case actionTypes.SWITCH_CHANGE_PLAN:
+      return setChangePlan(state, action);
     default:
       return state;
   }
