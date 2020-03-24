@@ -9,7 +9,8 @@ import {
   Tab,
   Tabs,
   TabId,
-  Alert
+  Alert,
+  Spinner
 } from "@blueprintjs/core";
 import * as React from "react";
 import "@blueprintjs/core/lib/css/blueprint.css";
@@ -57,6 +58,7 @@ interface ReportState {
   datacenters?: Array<DatacenterObject>;
   selectedTab: string;
   datacenter_loaded: boolean;
+  no_data: boolean;
 }
 var console: any = {};
 console.log = function() {};
@@ -72,7 +74,8 @@ export class Report extends React.PureComponent<
     state_loaded: false,
     selectedTab: "global",
     datacenter_loaded: false,
-    datacenterSelectionAlert: false
+    datacenterSelectionAlert: false,
+    no_data: false
   };
 
   private modelFields = {
@@ -93,46 +96,56 @@ export class Report extends React.PureComponent<
     return (
       <div>
         {this.state.state_loaded ? (
-          <Card elevation={Elevation.TWO}>
-            <h2 className={"report-title"}>{field} Datacenter Report</h2>
-            <h4 className={"report-summary"}>
-              Percent of unused rack space:{" "}
-              {(this.state.freeRack * 100).toFixed(2)}%
-            </h4>
-            <h4 className={"report-summary"}>Allocation of used rack space:</h4>
-            <div className={"row"}>
-              <div className={"column-third-report"}>
-                <h5>Used rack space by vendor:</h5>
+          this.state.no_data ? (
+            <Card elevation={Elevation.TWO}>
+              <h2 className={"report-title"}>No data available</h2>
+            </Card>
+          ) : (
+            <Card elevation={Elevation.TWO}>
+              <h2 className={"report-title"}>{field} Datacenter Report</h2>
+              <h4 className={"report-summary"}>
+                Percent of unused rack space:{" "}
+                {(this.state.freeRack * 100).toFixed(2)}%
+              </h4>
+              <h4 className={"report-summary"}>
+                Allocation of used rack space:
+              </h4>
+              <div className={"row"}>
+                <div className={"column-third-report"}>
+                  <h5>Used rack space by vendor:</h5>
+                </div>
+                <div className={"column-third-right-report"}>
+                  <h5>Used rack space by model:</h5>
+                </div>
+                <div className={"column-third-right-report"}>
+                  <h5>Used rack space by owner:</h5>
+                </div>
               </div>
-              <div className={"column-third-right-report"}>
-                <h5>Used rack space by model:</h5>
+              <div className={"row"}>
+                <div className={"column-third-report"}>
+                  <Tabular
+                    data={this.state.vendor_allocation}
+                    fields={this.vendorFields}
+                  />
+                </div>
+                <div className={"column-third-right-report"}>
+                  <Tabular
+                    data={this.state.model_allocation}
+                    fields={this.modelFields}
+                  />
+                </div>
+                <div className={"column-third-right-report"}>
+                  <Tabular
+                    data={this.state.owner_allocation}
+                    fields={this.ownerFields}
+                  />
+                </div>
               </div>
-              <div className={"column-third-right-report"}>
-                <h5>Used rack space by owner:</h5>
-              </div>
-            </div>
-            <div className={"row"}>
-              <div className={"column-third-report"}>
-                <Tabular
-                  data={this.state.vendor_allocation}
-                  fields={this.vendorFields}
-                />
-              </div>
-              <div className={"column-third-right-report"}>
-                <Tabular
-                  data={this.state.model_allocation}
-                  fields={this.modelFields}
-                />
-              </div>
-              <div className={"column-third-right-report"}>
-                <Tabular
-                  data={this.state.owner_allocation}
-                  fields={this.ownerFields}
-                />
-              </div>
-            </div>
-          </Card>
-        ) : null}
+            </Card>
+          )
+        ) : (
+          <Spinner />
+        )}
       </div>
     );
   };
@@ -177,18 +190,30 @@ export class Report extends React.PureComponent<
                   datacenterSelectionAlert: true
                 });
               } else {
+                this.setState({
+                  datacenter_loaded: true
+                });
                 getDatacenterReport(
                   this.props.token,
                   this.state.datacenter
                 ).then(result => {
-                  this.setState({
-                    freeRack: result.free_rackspace_percent,
-                    model_allocation: result.model_allocation,
-                    owner_allocation: result.owner_allocation,
-                    vendor_allocation: result.vendor_allocation,
-                    datacenter_loaded: true,
-                    state_loaded: true
-                  });
+                  if (
+                    result.free_rackspace_percent === null ||
+                    result.free_rackspace_percent === undefined
+                  ) {
+                    this.setState({
+                      state_loaded: true,
+                      no_data: true
+                    });
+                  } else {
+                    this.setState({
+                      freeRack: result.free_rackspace_percent,
+                      model_allocation: result.model_allocation,
+                      owner_allocation: result.owner_allocation,
+                      vendor_allocation: result.vendor_allocation,
+                      state_loaded: true
+                    });
+                  }
                 });
               }
             }}
@@ -246,17 +271,28 @@ export class Report extends React.PureComponent<
               owner_allocation: [],
               vendor_allocation: [],
               state_loaded: false,
-              datacenter_loaded: false
+              datacenter_loaded: false,
+              no_data: false
             });
             if (newTab === "global") {
               getGlobalReport(this.props.token).then(result => {
-                this.setState({
-                  freeRack: result.free_rackspace_percent,
-                  model_allocation: result.model_allocation,
-                  owner_allocation: result.owner_allocation,
-                  vendor_allocation: result.vendor_allocation,
-                  state_loaded: true
-                });
+                if (
+                  result.free_rackspace_percent === null ||
+                  result.free_rackspace_percent === undefined
+                ) {
+                  this.setState({
+                    state_loaded: true,
+                    no_data: true
+                  });
+                } else {
+                  this.setState({
+                    freeRack: result.free_rackspace_percent,
+                    model_allocation: result.model_allocation,
+                    owner_allocation: result.owner_allocation,
+                    vendor_allocation: result.vendor_allocation,
+                    state_loaded: true
+                  });
+                }
               });
             } else {
               this.setState({
