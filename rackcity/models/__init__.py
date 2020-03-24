@@ -1,11 +1,10 @@
-from .asset import Asset, AbstractAsset
+from .asset import Asset, AbstractAsset, AssetCP
 from .log import Log
 from .it_model import ITModel
 from .rack import Rack
 from .datacenter import Datacenter
-from .network_port import NetworkPort
-from .power_port import PowerPort
+from .network_port import NetworkPort, NetworkPortCP
+from .power_port import PowerPort, PowerPortCP
 from .pdu_port import PDUPort
 from .decommissioned_asset import DecommissionedAsset
-from .asset_change_planner import AssetCP
 from .change_plan import ChangePlan

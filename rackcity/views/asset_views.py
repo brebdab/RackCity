@@ -102,7 +102,6 @@ def asset_many(request):
         )
 
     assets_query = Asset.objects
-
     try:
         filter_args = get_filter_arguments(request.data)
     except Exception as error:
@@ -115,8 +114,9 @@ def asset_many(request):
             status=HTTPStatus.BAD_REQUEST
         )
     for filter_arg in filter_args:
+        print(filter_arg)
         assets_query = assets_query.filter(**filter_arg)
-
+    
     try:
         sort_args = get_sort_arguments(request.data)
     except Exception as error:

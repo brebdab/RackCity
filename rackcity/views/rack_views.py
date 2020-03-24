@@ -127,7 +127,7 @@ def rack_create(request):
         {
             "success_message":
                 Status.SUCCESS.value +
-                "Racks " + related_racks + " were created in datacenter" +
+                "Racks " + related_racks + " were created in datacenter " +
                 range_serializer.get_datacenter().abbreviation
         },
         status=HTTPStatus.OK

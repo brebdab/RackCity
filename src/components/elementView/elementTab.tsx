@@ -237,7 +237,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       console.log("success");
       this.handleDataUpdate(true);
       this.handleClose();
-      this.addSuccessToast("Successfully created model!");
+      this.addSuccessToast(res.data.success_message);
       console.log(this.state.isOpen);
     });
   };
@@ -276,7 +276,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       .then(res => {
         this.handleDataUpdate(true);
         this.handleClose();
-        this.addSuccessToast("Successfully created datacenter!");
+        this.addSuccessToast(res.data.success_message);
         if (this.props.updateDatacenters) {
           this.props.updateDatacenters();
         }
@@ -292,7 +292,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
 
       this.handleDataUpdate(true);
       this.handleClose();
-      this.addSuccessToast("Successfully created user!");
+      this.addSuccessToast(res.data.success_message);
       console.log(this.state.isOpen);
     });
   };
