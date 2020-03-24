@@ -29,6 +29,7 @@ urlpatterns = [
     path('assets/pages', views.asset_page_count),
     path('assets/fields', views.asset_fields),
     path('assets/asset-number', views.asset_number),
+    path('assets/decommission', views.decommission_asset),
     path('racks/get', views.rack_get),
     path('racks/get-all', views.rack_get_all),
     path('racks/create', views.rack_create),
