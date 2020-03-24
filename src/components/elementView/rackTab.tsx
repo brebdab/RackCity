@@ -152,7 +152,7 @@ class RackTab extends React.Component<
       )
       .then(res => {
         this.addToast({
-          message: "Deleted rack(s) successfully",
+          message: res.data.success_message,
           intent: Intent.PRIMARY
         });
         this.updateRackData(false);
@@ -217,7 +217,7 @@ class RackTab extends React.Component<
           submitInProgress: false
         });
 
-        this.addErrorToast(err.response.data.failure_message);
+        this.addErrorToast(err.data.failure_message);
       });
   };
   private addErrorToast = (message: string) => {
