@@ -33,11 +33,11 @@ def validate_owner(value):
         )
 
 
-class AbstractID(models.Model):
+class AssetID(models.Model):
     id = models.AutoField(primary_key=True)
 
 
-class AbstractAsset(AbstractID):
+class AbstractAsset(AssetID):
     hostname = models.CharField(
         max_length=150,
         unique=True,
