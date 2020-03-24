@@ -22,3 +22,4 @@ from .decommissioned_asset_serializers import (
     AddDecommissionedAssetSerializer,
     GetDecommissionedAssetSerializer,
 )
+from .change_plan_serializers import AddChangePlanSerializer, GetChangePlanSerializer

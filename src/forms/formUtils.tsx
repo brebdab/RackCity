@@ -12,7 +12,8 @@ import {
   DatacenterObject,
   AssetObject,
   AssetFieldsTable,
-  ModelFieldsTable
+  ModelFieldsTable,
+  ChangePlan
 } from "../utils/utils";
 
 export enum FormTypes {
@@ -108,6 +109,7 @@ export const filterString: ItemPredicate<string> = (
     return normalizedTitle.indexOf(normalizedQuery) >= 0;
   }
 };
+
 export const filterRack: ItemPredicate<RackObject> = (
   query,
   rack,
@@ -138,6 +140,23 @@ export const filterDatacenter: ItemPredicate<DatacenterObject> = (
     return name === normalizedQuery || abbreviation === normalizedQuery;
   } else {
     return (abbreviation + name).indexOf(normalizedQuery) >= 0;
+  }
+};
+
+export const filterChangePlan: ItemPredicate<ChangePlan> = (
+  query,
+  changePlan,
+  _index,
+  exactMatch
+) => {
+  const name = changePlan.name.toLowerCase();
+
+  const normalizedQuery = query.toLowerCase();
+
+  if (exactMatch) {
+    return name === normalizedQuery;
+  } else {
+    return name.indexOf(normalizedQuery) >= 0;
   }
 };
 export const filterModel: ItemPredicate<ModelObject> = (
@@ -316,6 +335,22 @@ export const renderModelItem: ItemRenderer<ModelObject> = (
     />
   );
 };
+export const renderChangePlanItem: ItemRenderer<ChangePlan> = (
+  changePlan: ChangePlan,
+  { handleClick, modifiers, query }
+) => {
+  if (!modifiers.matchesPredicate) {
+    return null;
+  }
+  const text = changePlan.name;
+  return (
+    <MenuItem
+      active={modifiers.active}
+      text={highlightText(text, query)}
+      onClick={handleClick}
+    />
+  );
+};
 
 export const renderAssetItem: ItemRenderer<AssetObject> = (
   asset: AssetObject,
@@ -356,3 +391,4 @@ export const ModelSelect = Select.ofType<ModelObject>();
 export const RackSelect = Select.ofType<RackObject>();
 export const DatacenterSelect = Select.ofType<DatacenterObject>();
 export const AssetSelect = Select.ofType<AssetObject>();
+export const ChangePlanSelect = Select.ofType<ChangePlan>();
