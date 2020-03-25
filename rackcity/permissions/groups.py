@@ -1,5 +1,7 @@
 from django.contrib.auth.models import Group, User
+from django.core.exceptions import ObjectDoesNotExist
 from enum import Enum
+from rackcity.models import Datacenter, RackCityPermission
 from rackcity.permissions.permissions import PermissionName, get_permission
 from typing import Tuple
 
@@ -57,3 +59,44 @@ def remove_user_from_group(user: User, group_name: GroupName) -> bool:
     if removed:
         user.groups.remove(group)
     return removed
+
+
+def update_user_groups(user, data):
+    groups_added = []
+    groups_removed = []
+    for group in GroupName:
+        group_key = group.value
+        if group_key in data:
+            if data[group_key]:
+                added = add_user_to_group(user, group)
+                if added:
+                    groups_added.append(group_key)
+            else:
+                removed = remove_user_from_group(user, group)
+                if removed:
+                    groups_removed.append(group_key)
+    current_groups = [group.name for group in user.groups.all()]
+    return groups_added, groups_removed, current_groups
+
+
+def update_user_datacenter_permissions(user, datacenter_permissions):
+    try:
+        permission = RackCityPermission.objects.get(user=user.id)
+    except ObjectDoesNotExist:
+        permission = RackCityPermission(user=user)
+        permission.save()
+    datacenters_to_add = []
+    for datacenter_id in datacenter_permissions:
+        try:
+            datacenter = Datacenter.objects.get(id=datacenter_id)
+        except ObjectDoesNotExist:
+            raise ObjectDoesNotExist
+        else:
+            datacenters_to_add.append(datacenter)
+    permission.datacenter_permissions.clear()
+    permission.datacenter_permissions.add(*datacenters_to_add)
+    permission.save()
+    current_datacenters = [
+        dc.abbreviation for dc in permission.datacenter_permissions.all()
+    ]
+    return current_datacenters
