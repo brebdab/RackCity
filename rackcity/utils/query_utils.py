@@ -254,7 +254,7 @@ def get_many_response(
     if page_failure_response:
         return page_failure_response
 
-    if premade_object_query:
+    if premade_object_query is not None:
         object_query = premade_object_query
     else:
         object_query = model.objects.all()
