@@ -2,7 +2,7 @@ from django.db.models import Q
 from rackcity.models import Asset, AssetCP
 
 
-def get_assets_for_branch(change_plan=None):
+def get_assets_for_cp(change_plan=None):
     """
     If a change plan is specified, returns Asset query and AssetCP query,
     where any assets modified in the change plan are in the AssetCP query but
@@ -16,4 +16,5 @@ def get_assets_for_branch(change_plan=None):
     for assetCP in assetsCP:
         if (assetCP.related_asset) and (assetCP.related_asset) in assets:
             assets = assets.filter(~Q(id=assetCP.related_asset.id))
+    # TODO remove any Asset or AssetCP that has been decommissioned in this CP
     return (assets, assetsCP)
