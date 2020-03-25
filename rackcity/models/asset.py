@@ -60,8 +60,6 @@ class AssetID(models.Model):
 
 
 class AbstractAsset(AssetID):
-
-
     rack_position = models.PositiveIntegerField()
 
     owner = models.CharField(
@@ -157,7 +155,7 @@ class AssetCP(AbstractAsset):
     )
     hostname = models.CharField(
         max_length=150,
-        unique=True,
+        unique=False,
         null=True,
         blank=True,
     )
@@ -205,7 +203,7 @@ class AssetCP(AbstractAsset):
 
     class Meta:
         ordering = ['asset_number']
-        verbose_name = 'asset change planner'
+        verbose_name = 'Asset on Change Plan'
 
     def add_network_ports(self):
         from rackcity.models import NetworkPortCP

@@ -27,6 +27,7 @@ class AssetCPSerializer(serializers.ModelSerializer):
             'change_plan',
         )
 
+
 class AssetSerializer(serializers.ModelSerializer):
     """
     Serializes all fields on Asset model, where model and rack fields are

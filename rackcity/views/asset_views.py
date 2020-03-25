@@ -226,6 +226,7 @@ def asset_add(request):
         serializer = AssetCPSerializer(data=data)
     else:
         serializer = AssetSerializer(data=data)
+    print(serializer)
     if not serializer.is_valid(raise_exception=False):
         return JsonResponse(
             {
