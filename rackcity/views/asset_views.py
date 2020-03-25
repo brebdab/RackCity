@@ -13,6 +13,7 @@ from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ObjectDoesNotExist
 from rackcity.api.serializers import (
     AssetSerializer,
+    AssetCPSerializer,
     GetDecommissionedAssetSerializer,
     RecursiveAssetSerializer,
     BulkAssetSerializer,
@@ -203,7 +204,11 @@ def asset_add(request):
             },
             status=HTTPStatus.BAD_REQUEST
         )
-    serializer = AssetSerializer(data=data)
+    change_plan = request.query_params.get("change_plan")
+    if change_plan:
+        serializer = AssetCPSerializer(data=data)
+    else:
+        serializer = AssetSerializer(data=data)
     if not serializer.is_valid(raise_exception=False):
         return JsonResponse(
             {
@@ -217,7 +222,10 @@ def asset_add(request):
     rack_id = serializer.validated_data['rack'].id
     rack_position = serializer.validated_data['rack_position']
     height = serializer.validated_data['model'].height
+
+   
     try:
+        #TO DO: add validation to check assets on change plan
         validate_asset_location(rack_id, rack_position, height)
     except LocationException as error:
         return JsonResponse(

@@ -1,6 +1,7 @@
 from .datacenter_serializers import DatacenterSerializer
 from .asset_serializers import (
     AssetSerializer,
+    AssetCPSerializer,
     RecursiveAssetSerializer,
     BulkAssetSerializer,
     normalize_bulk_asset_data,
