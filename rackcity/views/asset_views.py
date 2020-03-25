@@ -36,13 +36,12 @@ from rackcity.utils.errors_utils import (
     GenericFailure,
     parse_serializer_errors,
     parse_save_validation_error,
-    BulkFailure
+    BulkFailure,
 )
 from rackcity.permissions.permissions import PermissionPath
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import JSONParser
-from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
 import csv
 from base64 import b64decode
@@ -52,6 +51,7 @@ from rackcity.utils.query_utils import (
     get_sort_arguments,
     get_filter_arguments,
     get_page_count_response,
+    get_many_response,
 )
 from rackcity.views.rackcity_utils import (
     validate_asset_location,
@@ -74,89 +74,11 @@ def asset_many(request):
     assets are returned. If page is specified as a query parameter, page
     size must also be specified, and a page of assets will be returned.
     """
-
-    errors = []
-
-    should_paginate = not(
-        request.query_params.get('page') is None
-        and request.query_params.get('page_size') is None
-    )
-
-    if should_paginate:
-        if not request.query_params.get('page'):
-            errors.append("Must specify field 'page' on " +
-                          "paginated requests.")
-        elif not request.query_params.get('page_size'):
-            errors.append("Must specify field 'page_size' on " +
-                          "paginated requests.")
-        elif int(request.query_params.get('page_size')) <= 0:
-            errors.append("Field 'page_size' must be an integer " +
-                          "greater than 0.")
-
-    if len(errors) > 0:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                "errors": " ".join(errors)
-            },
-            status=HTTPStatus.BAD_REQUEST,
-        )
-
-    assets_query = Asset.objects
-    try:
-        filter_args = get_filter_arguments(request.data)
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.FILTER.value,
-                "errors": str(error)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    for filter_arg in filter_args:
-        print(filter_arg)
-        assets_query = assets_query.filter(**filter_arg)
-
-    try:
-        sort_args = get_sort_arguments(request.data)
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.SORT.value,
-                "errors": str(error)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    assets = assets_query.order_by(*sort_args)
-
-    if should_paginate:
-        paginator = PageNumberPagination()
-        paginator.page_size = request.query_params.get('page_size')
-        try:
-            page_of_assets = paginator.paginate_queryset(assets, request)
-        except Exception as error:
-            return JsonResponse(
-                {
-                    "failure_message":
-                        Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                    "errors": str(error)
-                },
-                status=HTTPStatus.BAD_REQUEST,
-            )
-        assets_to_serialize = page_of_assets
-    else:
-        assets_to_serialize = assets
-
-    serializer = RecursiveAssetSerializer(
-        assets_to_serialize,
-        many=True,
-    )
-    return JsonResponse(
-        {"assets": serializer.data},
-        status=HTTPStatus.OK,
+    return get_many_response(
+        Asset,
+        RecursiveAssetSerializer,
+        "assets",
+        request,
     )
 
 

@@ -4,7 +4,12 @@ import math
 from django.db.models import Q
 from django.http import JsonResponse
 from rackcity.api.objects import RackRangeSerializer
-from rackcity.utils.errors_utils import GenericFailure, Status
+from rackcity.utils.errors_utils import (
+    GenericFailure,
+    Status,
+    get_invalid_paginated_request_response,
+)
+from rest_framework.pagination import PageNumberPagination
 
 
 def get_sort_arguments(data):
@@ -138,12 +143,110 @@ def get_filter_arguments(data):
     return filter_args
 
 
-def sort_and_filter_query(data):
-    return
+def get_filtered_query(object_query, data):
+    try:
+        filter_args = get_filter_arguments(data)
+    except Exception as error:
+        return (
+            None,
+            JsonResponse(
+                {
+                    "failure_message":
+                    Status.ERROR.value + GenericFailure.FILTER.value,
+                    "errors": str(error)
+                },
+                status=HTTPStatus.BAD_REQUEST
+            )
+        )
+    for filter_arg in filter_args:
+        object_query = object_query.filter(**filter_arg)
+    return (object_query, None)
 
 
-def paginate_query(data):
-    return
+def get_sorted_query(object_query, data):
+    try:
+        sort_args = get_sort_arguments(data)
+    except Exception as error:
+        return (
+            None,
+            JsonResponse(
+                {
+                    "failure_message":
+                    Status.ERROR.value + GenericFailure.SORT.value,
+                    "errors": str(error)
+                },
+                status=HTTPStatus.BAD_REQUEST
+            )
+        )
+    objects = object_query.order_by(*sort_args)
+    return (objects, None)
+
+
+def get_paginated_query(objects, request):
+    paginator = PageNumberPagination()
+    paginator.page_size = request.query_params.get('page_size')
+    try:
+        page_of_objects = paginator.paginate_queryset(objects, request)
+    except Exception as error:
+        return (
+            None,
+            JsonResponse(
+                {
+                    "failure_message":
+                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
+                    "errors": str(error)
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
+        )
+    return (page_of_objects, None)
+
+
+def should_paginate_query(query_params):
+    return not(
+        query_params.get('page') is None
+        and query_params.get('page_size') is None
+    )
+
+
+def get_many_response(model, model_serializer, response_key, request):
+    should_paginate = should_paginate_query(request.query_params)
+
+    page_failure_response = \
+        get_invalid_paginated_request_response(request.query_params)
+    if page_failure_response:
+        return page_failure_response
+
+    object_query = model.objects.all()
+
+    filtered_query, filter_failure_response = \
+        get_filtered_query(object_query, request.data)
+    if filter_failure_response:
+        return filter_failure_response
+
+    sorted_query, sort_failure_response = \
+        get_sorted_query(filtered_query, request.data)
+    if sort_failure_response:
+        return sort_failure_response
+
+    if should_paginate:
+        paginated_query, page_failure_response = \
+            get_paginated_query(sorted_query, request)
+        if page_failure_response:
+            return page_failure_response
+        objects_to_serialize = paginated_query
+    else:
+        objects_to_serialize = sorted_query
+
+    serializer = model_serializer(
+        objects_to_serialize,
+        many=True,
+    )
+
+    return JsonResponse(
+        {response_key: serializer.data},
+        status=HTTPStatus.OK,
+    )
 
 
 def get_page_count_response(

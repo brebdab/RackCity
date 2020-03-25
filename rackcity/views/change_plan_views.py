@@ -20,7 +20,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import JSONParser
 from django.core.exceptions import ObjectDoesNotExist
-import math
 
 
 @api_view(['POST'])

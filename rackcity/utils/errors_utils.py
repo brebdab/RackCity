@@ -1,6 +1,8 @@
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
+from django.http import JsonResponse
 from enum import Enum
+from http import HTTPStatus
 
 
 class Status(Enum):
@@ -122,3 +124,26 @@ def parse_save_validation_error(error, object_name):
     else:
         failure_detail = object_name + GenericFailure.ON_SAVE.value
     return failure_detail
+
+
+def get_invalid_paginated_request_response(query_params):
+    errors = []
+    if not query_params.get('page'):
+        errors.append("Must specify field 'page' on " +
+                      "paginated requests.")
+    elif not query_params.get('page_size'):
+        errors.append("Must specify field 'page_size' on " +
+                      "paginated requests.")
+    elif int(query_params.get('page_size')) <= 0:
+        errors.append("Field 'page_size' must be an integer " +
+                      "greater than 0.")
+    if len(errors) > 0:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
+                "errors": " ".join(errors)
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    return None
