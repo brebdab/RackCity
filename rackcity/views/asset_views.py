@@ -10,6 +10,7 @@ from rackcity.models import (
     Datacenter,
     ChangePlan
 )
+from rackcity.utils.change_planner_utils import get_assets_for_cp
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ObjectDoesNotExist
 from rackcity.api.serializers import (
@@ -205,8 +206,11 @@ def asset_add(request):
             },
             status=HTTPStatus.BAD_REQUEST
         )
+    change_plan = None
     if request.query_params.get("change_plan"):
-        change_plan = ChangePlan.objects.get(id=request.query_params.get("change_plan"))
+        change_plan = ChangePlan.objects.get(
+            id=request.query_params.get("change_plan")
+            )
         if not change_plan:
             return JsonResponse(
                 {
@@ -239,7 +243,13 @@ def asset_add(request):
    
     try:
         #TO DO: add validation to check assets on change plan
-        validate_asset_location(rack_id, rack_position, height)
+        print(change_plan)
+        validate_asset_location(
+            rack_id,
+            rack_position,
+            height,
+            change_plan=change_plan
+            )
     except LocationException as error:
         return JsonResponse(
             {"failure_message": Status.CREATE_ERROR.value + str(error)},
@@ -260,12 +270,14 @@ def asset_add(request):
     warning_message = ""
     #TODO: CHANGE PLAN save power connections and network connections
     
-    if request.query_params.get("change_plan"):
+    if change_plan:
         return JsonResponse(
             {
                 "success_message":
                     Status.SUCCESS.value +
-                    "Asset created on change plan"
+                    "Asset created on change plan " +
+                    change_plan.name,
+                "related_id": change_plan.id,
             },
             status=HTTPStatus.OK,
         )

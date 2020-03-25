@@ -5,6 +5,7 @@ from http import HTTPStatus
 from django.http import JsonResponse
 import functools
 from django.db import close_old_connections
+from rackcity.utils.change_planner_utils import get_assets_for_cp
 
 
 def get_rack_detailed_response(racks):
@@ -64,6 +65,7 @@ def validate_asset_location(
     asset_rack_position,
     asset_height,
     asset_id=None,
+    change_plan=None,
 ):
     new_asset_location_range = [
         asset_rack_position + i for i in range(asset_height)
@@ -72,20 +74,32 @@ def validate_asset_location(
     for location in new_asset_location_range:
         if location <= 0 or location > rack_height:
             raise LocationException("Cannot place asset outside of rack. ")
-    assets_in_rack = Asset.objects.filter(rack=rack_id)
-    for asset_in_rack in assets_in_rack:
-        # Ignore if asset being modified conflicts with its old location
-        if (asset_id is None or asset_in_rack.id != asset_id):
-            for occupied_location in [
-                asset_in_rack.rack_position + i for i
-                    in range(asset_in_rack.model.height)
-            ]:
-                if occupied_location in new_asset_location_range:
-                    raise LocationException(
-                        "Asset location conflicts with another asset: '" +
-                        str(asset_in_rack.asset_number) +
-                        "'. "
-                    )
+    
+    assets_sets = get_assets_for_cp(change_plan.id)
+
+    for asset_set in assets_sets:
+        if asset_set:
+            for asset_in_rack in asset_set.filter(rack=rack_id):
+                # Ignore if asset being modified conflicts with its old location
+                if (asset_id is None or asset_in_rack.id != asset_id):
+                    for occupied_location in [
+                        asset_in_rack.rack_position + i for i
+                            in range(asset_in_rack.model.height)
+                    ]:
+                        if occupied_location in new_asset_location_range:
+                            if asset_in_rack.asset_number:
+                                raise LocationException(
+                                    "Asset location conflicts with another asset: '" +
+                                    str(asset_in_rack.asset_number) +
+                                    "'. "
+                                )
+                            else:
+                                raise LocationException(
+                                    "Asset location conflicts with another asset."
+                                )
+
+
+
 
 
 def validate_location_modification(data, existing_asset):
