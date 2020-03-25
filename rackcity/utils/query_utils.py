@@ -237,6 +237,15 @@ def get_many_response(
     default_order=None,
     premade_object_query=None,
 ):
+    """
+    Returns response for a get many view, serialized according to inputs.
+    Optional parameters: use or_filters to specify if the filters should be
+    applied as OR (instead of default AND); use default_order to specify the
+    field that the query should be sorted by if no other sort arguments are
+    given in request; use premade_object_query if custom query manipulation
+    needs to be performed before this method (instead of using the default
+    model.objects.all()).
+    """
     should_paginate = should_paginate_query(request.query_params)
 
     page_failure_response = get_invalid_paginated_request_response(
