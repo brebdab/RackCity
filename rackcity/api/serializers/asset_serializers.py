@@ -33,6 +33,7 @@ class AssetCPSerializer(serializers.ModelSerializer):
             'rack_position',
             'owner',
             'comment',
+            'change_plan',
         )
 
 

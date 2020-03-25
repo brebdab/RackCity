@@ -177,9 +177,10 @@ class AssetCP(AbstractAsset):
             and model.network_ports  # only if the model has ports
         ):
             for network_port_name in model.network_ports:
-                network_port = NetworkPort(
+                network_port = NetworkPortCP(
                     asset=self,
                     port_name=network_port_name,
+                    change_plan=self.change_plan
                 )
                 network_port.save()
 
@@ -190,9 +191,10 @@ class AssetCP(AbstractAsset):
             if model.num_power_ports:
                 for port_index in range(model.num_power_ports):
                     port_name = str(port_index+1)
-                    power_port = PowerPort(
+                    power_port = PowerPortCP(
                         asset=self,
                         port_name=port_name,
+                        change_plan=self.change_plan
                     )
                     power_port.save()
 

@@ -8,6 +8,7 @@ from rackcity.models import (
     PowerPort,
     PDUPort,
     Datacenter,
+    ChangePlan
 )
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ObjectDoesNotExist
@@ -204,8 +205,20 @@ def asset_add(request):
             },
             status=HTTPStatus.BAD_REQUEST
         )
-    change_plan = request.query_params.get("change_plan")
-    if change_plan:
+    if request.query_params.get("change_plan"):
+        change_plan = ChangePlan.objects.get(id=request.query_params.get("change_plan"))
+        if not change_plan:
+            return JsonResponse(
+                {
+                    "failure_message":
+                        Status.CREATE_ERROR.value + GenericFailure.INTERNAL.value,
+                    "errors": "Invalid change_plan Parameter"
+                },
+                status=HTTPStatus.BAD_REQUEST
+            )
+            
+        data["change_plan"] = change_plan.id
+        print(data)
         serializer = AssetCPSerializer(data=data)
     else:
         serializer = AssetSerializer(data=data)
@@ -245,6 +258,18 @@ def asset_add(request):
             status=HTTPStatus.BAD_REQUEST
         )
     warning_message = ""
+    #TODO: CHANGE PLAN save power connections and network connections
+    
+    if request.query_params.get("change_plan"):
+        return JsonResponse(
+            {
+                "success_message":
+                    Status.SUCCESS.value +
+                    "Asset created on change plan"
+            },
+            status=HTTPStatus.OK,
+        )
+        
     try:
         save_mac_addresses(
             asset_data=data,
@@ -253,6 +278,7 @@ def asset_add(request):
     except MacAddressException as error:
         warning_message += "Some mac addresses couldn't be saved. " + \
             str(error)
+
     try:
         save_power_connections(
             asset_data=data,
@@ -323,6 +349,7 @@ def save_network_connections(asset_data, asset_id):
         or not asset_data['network_connections']
     ):
         return
+    
     network_connections = asset_data['network_connections']
     failure_message = ""
     for network_connection in network_connections:
