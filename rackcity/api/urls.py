@@ -16,6 +16,7 @@ urlpatterns = [
     path('models/pages', views.model_page_count),
     path('models/fields', views.model_fields),
     path('assets/get-many', views.asset_many),
+    path('assets/get-many-decommissioned', views.decommissioned_asset_many),
     path('assets/<int:id>', views.asset_detail),
     path('assets/add', views.asset_add),
     path('assets/modify', views.asset_modify),
