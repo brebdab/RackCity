@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from .it_model import ITModel
+from .decommissioned_asset import DecommissionedAsset
 from .rack import Rack
 from .change_plan import ChangePlan
 
@@ -22,6 +23,8 @@ def validate_hostname(value):
         raise ValidationError("'" + value + "' is not a valid hostname as " +
                               "it is not compliant with RFC 1034.")
 
+def validate_hostname_uniqueness(value):
+    pass
 
 def validate_owner(value):
     if (
@@ -38,13 +41,7 @@ class AssetID(models.Model):
 
 
 class AbstractAsset(AssetID):
-    hostname = models.CharField(
-        max_length=150,
-        unique=True,
-        validators=[validate_hostname],
-        null=True,
-        blank=True,
-    )
+
     rack_position = models.PositiveIntegerField()
 
     owner = models.CharField(
@@ -60,6 +57,13 @@ class AbstractAsset(AssetID):
 
 
 class Asset(AbstractAsset):
+    hostname = models.CharField(
+        max_length=150,
+        unique=True,
+        validators=[validate_hostname],
+        null=True,
+        blank=True,
+    )
     asset_number = models.IntegerField(
         unique=True,
         validators=[
@@ -125,13 +129,25 @@ class Asset(AbstractAsset):
 
 
 class AssetCP(AbstractAsset):
+    hostname = models.CharField(
+        max_length=150,
+        unique=True,
+        validators=[validate_hostname, validate_hostname_uniqueness],
+        null=True,
+        blank=True,
+    )
     related_asset = models.ForeignKey(
         Asset,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
     )
-    # TODO: related_decomissioned_asset
+    related_decomissioned_asset = models.ForeignKey(
+        DecommissionedAsset,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
     is_conflict = models.BooleanField(
         default=False,
         blank=True,
@@ -139,6 +155,10 @@ class AssetCP(AbstractAsset):
     change_plan = models.ForeignKey(
         ChangePlan,
         on_delete=models.CASCADE,
+    )
+    is_decommissioned = models.BooleanField(
+        default=False,
+        blank=True
     )
     asset_number = models.IntegerField(
         unique=True,

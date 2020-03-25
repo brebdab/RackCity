@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from django.core.exceptions import ObjectDoesNotExist
-from rackcity.models import Asset, PowerPort, NetworkPort,AssetCP
+from rackcity.models import Asset, PowerPort, NetworkPort, AssetCP
 from .it_model_serializers import ITModelSerializer
 from .rack_serializers import RackSerializer
 import copy
@@ -12,15 +12,6 @@ class AssetCPSerializer(serializers.ModelSerializer):
     Serializes all fields on Asset model, where model and rack fields are
     defined by their pk only.
     """
-    hostname = serializers.CharField(validators=[
-        UniqueValidator(
-            queryset=Asset.objects.all(), lookup='iexact'
-        ), 
-        UniqueValidator(
-            queryset=AssetCP.objects.all(), lookup="iexact"
-            )],
-        required=False
-    )
 
     class Meta:
         model = AssetCP
@@ -35,7 +26,6 @@ class AssetCPSerializer(serializers.ModelSerializer):
             'comment',
             'change_plan',
         )
-
 
 class AssetSerializer(serializers.ModelSerializer):
     """
