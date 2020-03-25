@@ -99,6 +99,35 @@ def get_rack_list(racks):
     )
 
 
+def get_user_permission_success(
+    groups_added,
+    groups_removed,
+    current_groups,
+    current_datacenters,
+):
+    success_message = ""
+    if len(groups_added) > 0:
+        success_message += \
+            ("User added to group(s): " + ", ".join(groups_added) + ". ")
+    if len(groups_removed) > 0:
+        success_message += \
+            ("User removed from group(s): " + ", ".join(groups_removed) + ". ")
+    if len(groups_added) == 0 and len(groups_removed) == 0:
+        success_message += \
+            "User's groups were not changed. "
+    if len(current_groups) > 0:
+        success_message += \
+            "User is now in group(s): " + ", ".join(current_groups) + ". "
+    else:
+        success_message += \
+            "User is now in no groups. "
+    if len(current_datacenters) > 0:
+        success_message += \
+            "User now has write access to assets in datacenter(s): " + \
+            ", ".join(current_datacenters) + "."
+    return success_message
+
+
 def parse_serializer_errors(errors):
     failure_messages = []
     error_num = 0

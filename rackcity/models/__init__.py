@@ -8,3 +8,4 @@ from .power_port import PowerPort, PowerPortCP
 from .pdu_port import PDUPort
 from .decommissioned_asset import DecommissionedAsset
 from .change_plan import ChangePlan
+from .permission import RackCityPermission
