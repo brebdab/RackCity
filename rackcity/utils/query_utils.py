@@ -143,7 +143,21 @@ def get_filter_arguments(data):
     return filter_args
 
 
-def get_filtered_query(object_query, data):
+def apply_filters_or(object_query, filter_args):
+    q_objects = Q()
+    for filter_arg in filter_args:
+        q_objects |= Q(**filter_arg)
+    object_query = object_query.filter(q_objects)
+    return object_query
+
+
+def apply_filters_and(object_query, filter_args):
+    for filter_arg in filter_args:
+        object_query = object_query.filter(**filter_arg)
+    return object_query
+
+
+def get_filtered_query(object_query, data, or_filters=False):
     try:
         filter_args = get_filter_arguments(data)
     except Exception as error:
@@ -158,12 +172,14 @@ def get_filtered_query(object_query, data):
                 status=HTTPStatus.BAD_REQUEST
             )
         )
-    for filter_arg in filter_args:
-        object_query = object_query.filter(**filter_arg)
+    if or_filters and len(filter_args) > 0:
+        apply_filters_or(object_query, filter_args)
+    else:
+        apply_filters_and(object_query, filter_args)
     return (object_query, None)
 
 
-def get_sorted_query(object_query, data):
+def get_sorted_query(object_query, data, default_order=None):
     try:
         sort_args = get_sort_arguments(data)
     except Exception as error:
@@ -178,7 +194,10 @@ def get_sorted_query(object_query, data):
                 status=HTTPStatus.BAD_REQUEST
             )
         )
-    objects = object_query.order_by(*sort_args)
+    if (len(sort_args) == 0 and default_order):
+        objects = object_query.order_by(default_order)
+    else:
+        objects = object_query.order_by(*sort_args)
     return (objects, None)
 
 
@@ -209,29 +228,45 @@ def should_paginate_query(query_params):
     )
 
 
-def get_many_response(model, model_serializer, response_key, request):
+def get_many_response(
+    model,
+    model_serializer,
+    response_key,
+    request,
+    or_filters=False,
+    default_order=None,
+):
     should_paginate = should_paginate_query(request.query_params)
 
-    page_failure_response = \
-        get_invalid_paginated_request_response(request.query_params)
+    page_failure_response = get_invalid_paginated_request_response(
+        request.query_params
+    )
     if page_failure_response:
         return page_failure_response
 
     object_query = model.objects.all()
 
-    filtered_query, filter_failure_response = \
-        get_filtered_query(object_query, request.data)
+    filtered_query, filter_failure_response = get_filtered_query(
+        object_query,
+        request.data,
+        or_filters=or_filters
+    )
     if filter_failure_response:
         return filter_failure_response
 
-    sorted_query, sort_failure_response = \
-        get_sorted_query(filtered_query, request.data)
+    sorted_query, sort_failure_response = get_sorted_query(
+        filtered_query,
+        request.data,
+        default_order=default_order
+    )
     if sort_failure_response:
         return sort_failure_response
 
     if should_paginate:
-        paginated_query, page_failure_response = \
-            get_paginated_query(sorted_query, request)
+        paginated_query, page_failure_response = get_paginated_query(
+            sorted_query,
+            request
+        )
         if page_failure_response:
             return page_failure_response
         objects_to_serialize = paginated_query
@@ -270,27 +305,13 @@ def get_page_count_response(
     page_size = int(query_params.get('page_size'))
     object_query = model.objects.all()
     if data_for_filters:
-        try:
-            filter_args = get_filter_arguments(data_for_filters)
-        except Exception as error:
-            return JsonResponse(
-                {
-                    "failure_message":
-                        Status.ERROR.value + GenericFailure.FILTER.value,
-                    "errors": str(error)
-                },
-                status=HTTPStatus.BAD_REQUEST
-            )
-        # Apply filters as OR
-        if or_filters and len(filter_args) > 0:
-            q_objects = Q()
-            for filter_arg in filter_args:
-                q_objects |= Q(**filter_arg)
-            object_query = object_query.filter(q_objects)
-        # Apply filters as AND
-        else:
-            for filter_arg in filter_args:
-                object_query = object_query.filter(**filter_arg)
+        object_query, filter_failure_response = get_filtered_query(
+            object_query,
+            data_for_filters,
+            or_filters=or_filters
+        )
+        if filter_failure_response:
+            return filter_failure_response
     count = object_query.count()
     page_count = math.ceil(count / page_size)
     return JsonResponse({"page_count": page_count})

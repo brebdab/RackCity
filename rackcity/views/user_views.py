@@ -10,6 +10,7 @@ from rackcity.utils.query_utils import (
     get_sort_arguments,
     get_filter_arguments,
     get_page_count_response,
+    get_many_response,
 )
 from rackcity.utils.errors_utils import UserFailure, GenericFailure, Status
 from rackcity.utils.user_utils import is_netid_user
@@ -98,91 +99,12 @@ def user_many(request):
     instances are returned. If page is specified as a query parameter, page
     size must also be specified, and a page of users will be returned.
     """
-
-    errors = []
-
-    should_paginate = not(
-        request.query_params.get('page') is None
-        and request.query_params.get('page_size') is None
-    )
-
-    if should_paginate:
-        if not request.query_params.get('page'):
-            errors.append("Must specify field 'page' on " +
-                          "paginated requests.")
-        elif not request.query_params.get('page_size'):
-            errors.append("Must specify field 'page_size' on " +
-                          "paginated requests.")
-        elif int(request.query_params.get('page_size')) <= 0:
-            errors.append("Field 'page_size' must be an integer " +
-                          "greater than 0.")
-
-    if len(errors) > 0:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                "errors": " ".join(errors)
-            },
-            status=HTTPStatus.BAD_REQUEST,
-        )
-
-    users_query = User.objects
-
-    try:
-        filter_args = get_filter_arguments(request.data)
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.FILTER.value,
-                "errors": str(error)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    for filter_arg in filter_args:
-        users_query = users_query.filter(**filter_arg)
-
-    try:
-        sort_args = get_sort_arguments(request.data)
-        if len(sort_args) == 0:
-            sort_args = ['username']
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.SORT.value,
-                "errors": str(error)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    users = users_query.order_by(*sort_args)
-
-    if should_paginate:
-        paginator = PageNumberPagination()
-        paginator.page_size = request.query_params.get('page_size')
-        try:
-            page_of_users = paginator.paginate_queryset(users, request)
-        except Exception as error:
-            return JsonResponse(
-                {
-                    "failure_message":
-                        Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                    "errors": str(error)
-                },
-                status=HTTPStatus.BAD_REQUEST,
-            )
-        users_to_serialize = page_of_users
-    else:
-        users_to_serialize = users
-
-    serializer = UserSerializer(
-        users_to_serialize,
-        many=True,
-    )
-    return JsonResponse(
-        {"users": serializer.data},
-        status=HTTPStatus.OK,
+    return get_many_response(
+        User,
+        UserSerializer,
+        "users",
+        request,
+        default_order='username',
     )
 
 
