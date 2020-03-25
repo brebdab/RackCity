@@ -235,6 +235,7 @@ def get_many_response(
     request,
     or_filters=False,
     default_order=None,
+    premade_object_query=None,
 ):
     should_paginate = should_paginate_query(request.query_params)
 
@@ -244,7 +245,10 @@ def get_many_response(
     if page_failure_response:
         return page_failure_response
 
-    object_query = model.objects.all()
+    if premade_object_query:
+        object_query = premade_object_query
+    else:
+        object_query = model.objects.all()
 
     filtered_query, filter_failure_response = get_filtered_query(
         object_query,
