@@ -33,7 +33,7 @@ toggle_pdu = 'power.php'
 
 
 @api_view(['GET'])
-@power_permission_required()
+@permission_classes([IsAuthenticated])
 def power_status(request, id):
     """
     Get status of all power ports for an asset in
