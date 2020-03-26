@@ -1,13 +1,16 @@
 from django.http import JsonResponse
 from rackcity.models import (
     Asset,
+    AssetCP,
     DecommissionedAsset,
     ITModel,
     Rack,
     NetworkPort,
     NetworkPortCP,
     PowerPort,
+    PowerPortCP,
     PDUPort,
+    PDUPortCP,
     Datacenter,
     ChangePlan
 )
@@ -189,6 +192,20 @@ def asset_detail(request, id):
     else:
         serializer = RecursiveAssetSerializer(asset)
     return JsonResponse(serializer.data, status=HTTPStatus.OK)
+def get_change_plan(change_plan_id):
+    change_plan = ChangePlan.objects.get(
+        id=request.query_params.get("change_plan")
+        )
+    if not change_plan:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.CREATE_ERROR.value + GenericFailure.INTERNAL.value,
+                "errors": "Invalid change_plan Parameter"
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    return change_plan
 
 
 @api_view(['POST'])
@@ -209,21 +226,8 @@ def asset_add(request):
         )
     change_plan = None
     if request.query_params.get("change_plan"):
-        change_plan = ChangePlan.objects.get(
-            id=request.query_params.get("change_plan")
-            )
-        if not change_plan:
-            return JsonResponse(
-                {
-                    "failure_message":
-                        Status.CREATE_ERROR.value + GenericFailure.INTERNAL.value,
-                    "errors": "Invalid change_plan Parameter"
-                },
-                status=HTTPStatus.BAD_REQUEST
-            )
-            
+        change_plan = get_change_plan(request.query_params.get("change_plan"))
         data["change_plan"] = change_plan.id
-        print(data)
         serializer = AssetCPSerializer(data=data)
     else:
         serializer = AssetSerializer(data=data)
@@ -295,7 +299,8 @@ def asset_add(request):
     try:
         save_power_connections(
             asset_data=data,
-            asset_id=asset.id
+            asset_id=asset.id,
+            change_plan=change_plan
         )
     except PowerConnectionException as error:
         warning_message += "Some power connections couldn't be saved. " + \
@@ -303,7 +308,8 @@ def asset_add(request):
     try:
         save_network_connections(
             asset_data=data,
-            asset_id=asset.id
+            asset_id=asset.id,
+            change_plan=change_plan
         )
         log_network_action(request.user, asset)
     except NetworkConnectionException as error:
@@ -401,8 +407,29 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
                     "' because no destination port was provided."
                 continue
             try:
-                destination_asset = Asset.objects.get(
-                    hostname=network_connection['destination_hostname']
+                if change_plan:
+                    assets, assets_cp = get_assets_for_cp(change_plan.id)
+                    if assets.filter(hostname=network_connection['destination_hostname']).exists():
+                        destination_asset = assets.get(
+                            hostname=network_connection['destination_hostname']
+                        )
+                        asset_cp = AssetCP(
+                            related_asset=destination_asset.id,
+                            change_plan=change_plan.id
+                        )
+                        ## add destination asset to AssetCPTable
+                        for field in destination_asset._meta.fields:
+                            setattr(asset_cp, field.name, getattr(
+                                destination_asset, field.name))
+                        asset_cp.save()
+                    else:
+                        destination_asset = assets_cp.get(
+                            hostname=network_connection['destination_hostname'],
+                            change_plan=change_plan.id,
+                        )
+                else:
+                    destination_asset = Asset.objects.get(
+                        hostname=network_connection['destination_hostname']
                 )
             except ObjectDoesNotExist:
                 failure_message += \
@@ -411,10 +438,17 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
                     "' does not exist. "
             else:
                 try:
-                    destination_port = NetworkPort.objects.get(
-                        asset=destination_asset,
-                        port_name=network_connection['destination_port']
-                    )
+                    if change_plan:
+                        destination_port = NetworkPortCP.objects.get(
+                            asset=destination_asset,
+                            port_name=network_connection['destination_port'],
+                            change_plan=change_plan.id
+                        )
+                    else:
+                        destination_port = NetworkPort.objects.get(
+                            asset=destination_asset,
+                            port_name=network_connection['destination_port']
+                        )
                 except ObjectDoesNotExist:
                     failure_message += \
                         "Destination port '" + \
@@ -423,7 +457,7 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
                         network_connection['destination_port'] + \
                         "' does not exist. "
                 else:
-                    try:
+                    try: 
                         network_port.create_network_connection(
                             destination_port=destination_port
                         )
@@ -437,7 +471,7 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
         raise NetworkConnectionException(failure_message)
 
 
-def save_power_connections(asset_data, asset_id):
+def save_power_connections(asset_data, asset_id,change_plan=None):
     if (
         'power_connections' not in asset_data
         or not asset_data['power_connections']
@@ -447,10 +481,17 @@ def save_power_connections(asset_data, asset_id):
     failure_message = ""
     for port_name in power_connection_assignments.keys():
         try:
-            power_port = PowerPort.objects.get(
-                asset=asset_id,
-                port_name=port_name
-            )
+            if change_plan:
+                power_port = PowerPortCP.objects.get(
+                    asset=asset_id,
+                    port_name=port_name,
+                    change_plan=change_plan.id
+                )
+            else:
+                power_port = PowerPort.objects.get(
+                    asset=asset_id,
+                    port_name=port_name
+                )
         except ObjectDoesNotExist:
             failure_message += "Power port '"+port_name+"' does not exist on this asset. "
         else:
@@ -461,11 +502,29 @@ def save_power_connections(asset_data, asset_id):
                 power_port.save()
                 continue
             try:
-                pdu_port = PDUPort.objects.get(
+                pdu_port_master = PDUPort.objects.get(
                     rack=asset.rack,
                     left_right=power_connection_data['left_right'],
                     port_number=power_connection_data['port_number']
                 )
+                if change_plan:
+                    if PDUPortCP.filter(
+                            rack=asset.rack,
+                            left_right=power_connection_data['left_right'],
+                            port_number=power_connection_data['port_number']
+                        ).exists():
+                        pdu_port = PDUPortCP.get(
+                            rack=asset.rack,
+                            left_right=power_connection_data['left_right'],
+                            port_number=power_connection_data['port_number']
+                        )
+                    else:
+                        pdu_port = PDUPortCP(change_plan=change_plan.id)
+                        for field in pdu_port_master._meta.fields:
+                            setattr(pdu_port, field.name, getattr(
+                                pdu_port_master, field.name))
+                        pdu_port.save()
+                pdu_port = pdu_port_master
             except ObjectDoesNotExist:
                 failure_message += \
                     "PDU port '" + \
@@ -504,6 +563,8 @@ def asset_modify(request):
             status=HTTPStatus.BAD_REQUEST
         )
     id = data['id']
+    if request.query_params.get("change_plan"):
+        change_plan = get_change_plan(request.query_params.get("change_plan"))
     try:
         existing_asset = Asset.objects.get(id=id)
     except ObjectDoesNotExist:
@@ -517,7 +578,7 @@ def asset_modify(request):
             status=HTTPStatus.BAD_REQUEST
         )
     try:
-        validate_location_modification(data, existing_asset)
+        validate_location_modification(data, existing_asset,change_plan=change_plan)
     except Exception as error:
         return JsonResponse(
             {

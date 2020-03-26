@@ -102,7 +102,7 @@ def validate_asset_location(
 
 
 
-def validate_location_modification(data, existing_asset):
+def validate_location_modification(data, existing_asset,change_plan=None):
     asset_id = existing_asset.id
     rack_id = existing_asset.rack.id
     asset_rack_position = existing_asset.rack_position
@@ -134,6 +134,7 @@ def validate_location_modification(data, existing_asset):
             asset_rack_position,
             asset_height,
             asset_id=asset_id,
+            change_plan=change_plan,
         )
     except LocationException as error:
         raise error

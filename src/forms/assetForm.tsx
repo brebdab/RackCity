@@ -1261,7 +1261,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                               itemRenderer={renderStringItem}
                               itemPredicate={filterString}
                               noResults={
-                                this.gettingPowerPortsInProgress ? (
+                                this.gettingAssetsInProgress ? (
                                   <div>
                                     <Spinner
                                       intent="primary"
@@ -1269,13 +1269,13 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                                     />
                                     <MenuItem
                                       disabled={true}
-                                      text="Getting available power ports"
+                                      text="Getting available network ports"
                                     />
                                   </div>
                                 ) : (
                                   <MenuItem
                                     disabled={true}
-                                    text="No available power ports"
+                                    text="No available network ports"
                                   />
                                 )
                               }
