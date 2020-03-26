@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import permission_required
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from http import HTTPStatus
@@ -7,8 +7,6 @@ from rackcity.api.serializers import RegisterNameSerializer, UserSerializer
 from rackcity.models import Asset, RackCityPermission
 from rackcity.permissions.permissions import PermissionPath
 from rackcity.utils.query_utils import (
-    get_sort_arguments,
-    get_filter_arguments,
     get_page_count_response,
     get_many_response,
 )
@@ -28,7 +26,6 @@ from rackcity.utils.log_utils import (
 import requests
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import permission_classes, api_view
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_auth.registration.views import RegisterView
@@ -449,26 +446,30 @@ def user_get_groups(request):
                 "failure_message":
                     Status.MODIFY_ERROR.value +
                     "User" + GenericFailure.DOES_NOT_EXIST.value,
-                "errors": "No existing user with id=" + data['id']
+                "errors": "No existing user with id="+str(data['id'])
             },
             status=HTTPStatus.BAD_REQUEST,
         )
-    group_list = []
-    for group in user.groups.all():
-        group_list.append(group.name)
+    permissions = {}
+    for group_name in GroupName:
+        try:
+            group = Group.objects.get(name=group_name.value)
+        except ObjectDoesNotExist:
+            user_in_group = False
+        else:
+            user_in_group = (group in user.groups.all())
+        permissions[group_name.value] = user_in_group
     try:
         permission = RackCityPermission.objects.get(user=user.id)
     except ObjectDoesNotExist:
         datacenter_list = []
     else:
         datacenter_list = [
-            dc.abbreviation for dc in permission.datacenter_permissions.all()
+            dc.id for dc in permission.datacenter_permissions.all()
         ]
+    permissions['datacenter_permissions'] = datacenter_list
     return JsonResponse(
-        {
-            "user_groups": group_list,
-            "datacenter_permissions": datacenter_list
-        },
+        permissions,
         status=HTTPStatus.OK,
     )
 
