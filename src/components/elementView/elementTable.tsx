@@ -998,13 +998,21 @@ class ElementTable extends React.Component<
                           const selectedAll = !this.state.selectedAll;
 
                           this.state.items.forEach(item => {
-                            if (selected.includes(item.id) && !selectedAll) {
-                              selected.splice(selected.indexOf(item.id), 1);
-                            } else if (
-                              !selected.includes(item.id) &&
-                              selectedAll
-                            ) {
-                              selected.push(item.id);
+                            if (isAssetObject(item)) {
+                              if (
+                                selected.includes(item.asset_number) &&
+                                !selectedAll
+                              ) {
+                                selected.splice(
+                                  selected.indexOf(item.asset_number),
+                                  1
+                                );
+                              } else if (
+                                !selected.includes(item.asset_number) &&
+                                selectedAll
+                              ) {
+                                selected.push(item.asset_number);
+                              }
                             }
                           });
                           console.log(selected);
@@ -1091,27 +1099,37 @@ class ElementTable extends React.Component<
                               }
                         }
                       >
-                        {this.props.type === ElementType.ASSET ? (
+                        {this.props.type === ElementType.ASSET &&
+                        isAssetObject(item) ? (
                           <th
                             onClick={(event: any) => {
                               event.stopPropagation();
                             }}
                           >
                             <Checkbox
-                              checked={this.state.selected.includes(item.id)}
+                              checked={this.state.selected.includes(
+                                item.asset_number
+                              )}
                               onClick={(event: any) => {
                                 const selected = this.state.selected;
-                                if (selected.includes(item.id)) {
-                                  console.log("removing", item.id, selected);
+                                if (selected.includes(item.asset_number)) {
+                                  console.log(
+                                    "removing",
+                                    item.asset_number,
+                                    selected
+                                  );
                                   if (this.state.selectedAll) {
                                     this.setState({
                                       selectedAll: false
                                     });
                                   }
-                                  selected.splice(selected.indexOf(item.id), 1);
+                                  selected.splice(
+                                    selected.indexOf(item.asset_number),
+                                    1
+                                  );
                                 } else {
-                                  selected.push(item.id);
-                                  console.log("adding", item.id);
+                                  selected.push(item.asset_number);
+                                  console.log("adding", item.asset_number);
                                 }
                                 this.setState({
                                   selected

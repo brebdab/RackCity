@@ -59,6 +59,7 @@ interface ElementViewState {
   fileName: string;
   networkFileName: string;
   updateTable: boolean;
+  barcodes: Array<String>;
 }
 interface ElementViewProps {
   element: ElementType;
@@ -79,7 +80,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     fileNameIsOpen: false,
     fileName: "",
     networkFileName: "",
-    updateTable: false
+    updateTable: false,
+    barcodes: []
   };
 
   getExportData = (
@@ -519,7 +521,17 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                 text="Print Barcodes for Selected Assets"
                 icon="barcode"
                 minimal
-                onClick={() => {}}
+                onClick={(e: any) => {
+                  let barcodes: string;
+                  barcodes = "";
+                  for (var i = 0; i < this.state.barcodes.length - 1; i++) {
+                    barcodes = barcodes + this.state.barcodes[i] + ",";
+                  }
+                  barcodes =
+                    barcodes +
+                    this.state.barcodes[this.state.barcodes.length - 1];
+                  localStorage.setItem("barcodes", barcodes);
+                }}
               />
             </Link>
           ) : null}
@@ -551,7 +563,9 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             getData={this.getElementData}
             getPages={this.getPages}
             updateBarcodes={(data: Array<string>) => {
-              console.log(data);
+              this.setState({
+                barcodes: data
+              });
             }}
             callback={(data: Array<any>) => {
               this.setState({ filters: data });

@@ -14,6 +14,7 @@ import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import { API_ROOT } from "../../../../utils/api-config";
 import { getHeaders, ROUTES } from "../../../../utils/utils";
+import Barcode from "react-barcode";
 // import "./barcodeView.scss";
 
 export interface BarcodeViewProps {
@@ -37,7 +38,19 @@ class BarcodeView extends React.PureComponent<
   BarcodeViewState
 > {
   public render() {
-    return <p></p>;
+    const barcodeString = localStorage.getItem("barcodes")!;
+    let barcodes: Array<string>;
+    barcodes = barcodeString.split(",");
+    return barcodes.map((barcode: string) => {
+      return (
+        <Barcode
+          value={barcode}
+          text={"Hyposoft " + barcode}
+          text-align="left"
+          font-size={10}
+        />
+      );
+    });
   }
 }
 
