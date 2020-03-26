@@ -7,8 +7,6 @@ from rackcity.api.serializers import RegisterNameSerializer, UserSerializer
 from rackcity.models import Asset, RackCityPermission
 from rackcity.permissions.permissions import PermissionPath
 from rackcity.utils.query_utils import (
-    get_sort_arguments,
-    get_filter_arguments,
     get_page_count_response,
     get_many_response,
 )
