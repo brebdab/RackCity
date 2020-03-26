@@ -202,18 +202,7 @@ def asset_add(request):
         )
     warning_message = ""
     #TODO: CHANGE PLAN save power connections and network connections
-    
-    if change_plan:
-        return JsonResponse(
-            {
-                "success_message":
-                    Status.SUCCESS.value +
-                    "Asset created on change plan " +
-                    change_plan.name,
-                "related_id": change_plan.id,
-            },
-            status=HTTPStatus.OK,
-        )
+
         
     try:
         save_mac_addresses(
@@ -251,15 +240,27 @@ def asset_add(request):
             status=HTTPStatus.OK,
         )
     else:
-        log_action(request.user, asset, Action.CREATE)
-        return JsonResponse(
-            {
-                "success_message":
-                    Status.SUCCESS.value +
-                    "Asset " + str(asset.asset_number) + " created"
-            },
-            status=HTTPStatus.OK,
-        )
+        if change_plan:
+            return JsonResponse(
+                {
+                    "success_message":
+                        Status.SUCCESS.value +
+                        "Asset created on change plan " +
+                        change_plan.name,
+                    "related_id": change_plan.id,
+                },
+                status=HTTPStatus.OK,
+            )
+        else:
+            log_action(request.user, asset, Action.CREATE)
+            return JsonResponse(
+                {
+                    "success_message":
+                        Status.SUCCESS.value +
+                        "Asset " + str(asset.asset_number) + " created"
+                },
+                status=HTTPStatus.OK,
+            )
 
 
 def save_mac_addresses(asset_data, asset_id, change_plan=None):
@@ -667,15 +668,26 @@ def asset_modify(request):
         else:
             if not change_plan:
                 log_action(request.user, existing_asset, Action.MODIFY)
-            return JsonResponse(
-                {
-                    "success_message":
-                        Status.SUCCESS.value +
-                        "Asset " +
-                    str(existing_asset.asset_number) + " modified"
-                },
-                status=HTTPStatus.OK,
-            )
+                return JsonResponse(
+                    {
+                        "success_message":
+                            Status.SUCCESS.value +
+                            "Asset " +
+                        str(existing_asset.asset_number) + " modified"
+                    },
+                    status=HTTPStatus.OK,
+                )
+            else:
+                return JsonResponse(
+                    {
+                        "success_message":
+                            Status.SUCCESS.value +
+                            "Asset modified on change plan " +
+                            change_plan.name,
+                        "related_id": change_plan.id,
+                    },
+                    status=HTTPStatus.OK,
+                )
 
 
 @api_view(['POST'])
