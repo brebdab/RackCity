@@ -8,6 +8,7 @@ from rackcity.models import (
     PowerPort,
     PDUPort,
     Datacenter,
+    ChangePlan,
 )
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ObjectDoesNotExist
@@ -53,6 +54,7 @@ from rackcity.utils.query_utils import (
     get_page_count_response,
     get_many_response,
 )
+from rackcity.utils.change_planner_utils import get_many_assets_response_for_cp
 from rackcity.views.rackcity_utils import (
     validate_asset_location,
     validate_location_modification,
@@ -74,11 +76,31 @@ def asset_many(request):
     assets are returned. If page is specified as a query parameter, page
     size must also be specified, and a page of assets will be returned.
     """
+    if 'change_plan' in request.data:
+        change_plan_id = request.data['change_plan']
+        try:
+            change_plan = ChangePlan.objects.get(id=change_plan_id)
+        except ObjectDoesNotExist:
+            return JsonResponse(
+                {
+                    "failure_message":
+                        Status.ERROR.value +
+                        "Change Plan" + GenericFailure.DOES_NOT_EXIST.value,
+                    "errors":
+                        "No existing change plan with id="+str(change_plan_id)
+                },
+                status=HTTPStatus.BAD_REQUEST
+            )
+        else:
+            return get_many_assets_response_for_cp(
+                request,
+                change_plan,
+            )
     return get_many_response(
         Asset,
-        RecursiveAssetSerializer,
         "assets",
         request,
+        model_serializer=RecursiveAssetSerializer,
     )
 
 

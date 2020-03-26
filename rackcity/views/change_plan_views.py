@@ -209,8 +209,8 @@ def change_plan_many(request):
     user_change_plans = ChangePlan.objects.filter(owner=user)
     return get_many_response(
         ChangePlan,
-        GetChangePlanSerializer,
         "change-plans",
         request,
+        model_serializer=GetChangePlanSerializer,
         premade_object_query=user_change_plans,
     )

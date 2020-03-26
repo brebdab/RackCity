@@ -1,6 +1,8 @@
 from http import HTTPStatus
+import json
 import math
 
+from django.core import serializers
 from django.db.models import Q
 from django.http import JsonResponse
 from rackcity.api.objects import RackRangeSerializer
@@ -230,9 +232,10 @@ def should_paginate_query(query_params):
 
 def get_many_response(
     model,
-    model_serializer,
     response_key,
     request,
+    model_serializer=None,
+    fields_to_serialize=None,
     or_filters=False,
     default_order=None,
     premade_object_query=None,
@@ -286,13 +289,24 @@ def get_many_response(
     else:
         objects_to_serialize = sorted_query
 
-    serializer = model_serializer(
-        objects_to_serialize,
-        many=True,
-    )
+    if model_serializer is None:
+        data = []
+        for object_to_serialize in objects_to_serialize:
+            object_dict = {}
+            for ind, value in enumerate(object_to_serialize):
+                key = fields_to_serialize[ind]
+                object_dict[key] = value
+            data.append(object_dict)
+
+    else:
+        serializer = model_serializer(
+            objects_to_serialize,
+            many=True,
+        )
+        data = serializer.data
 
     return JsonResponse(
-        {response_key: serializer.data},
+        {response_key: data},
         status=HTTPStatus.OK,
     )
 

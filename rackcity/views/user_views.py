@@ -101,9 +101,9 @@ def user_many(request):
     """
     return get_many_response(
         User,
-        UserSerializer,
         "users",
         request,
+        model_serializer=UserSerializer,
         default_order='username',
     )
 
