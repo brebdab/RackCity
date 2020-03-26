@@ -6,6 +6,7 @@ from rackcity.api.serializers import (
     RecursiveAssetCPSerializer,
 )
 from rackcity.models import Asset, AssetCP
+from rackcity.utils.query_utils import get_filtered_query
 
 
 def get_assets_for_cp(change_plan=None):
@@ -28,18 +29,28 @@ def get_assets_for_cp(change_plan=None):
 
 def get_many_assets_response_for_cp(request, change_plan):
     assets, assetsCP = get_assets_for_cp(change_plan=change_plan)
-    asset_serializer = RecursiveAssetSerializer(
+    filtered_assets, filter_failure_response = get_filtered_query(
         assets,
-        many=True,
+        request.data,
     )
-    asset_data = asset_serializer.data
-    assetCP_serializer = RecursiveAssetCPSerializer(
+    if filter_failure_response:
+        return filter_failure_response
+    filtered_assetsCP, filter_failure_response = get_filtered_query(
         assetsCP,
+        request.data,
+    )
+    if filter_failure_response:
+        return filter_failure_response
+    asset_serializer = RecursiveAssetSerializer(
+        filtered_assets,
         many=True,
     )
-    assetCP_data = assetCP_serializer.data
-    data = asset_data + assetCP_data
+    assetCP_serializer = RecursiveAssetCPSerializer(
+        filtered_assetsCP,
+        many=True,
+    )
+    all_assets = asset_serializer.data + assetCP_serializer.data
     return JsonResponse(
-        {"assets": data},
+        {"assets": all_assets},
         status=HTTPStatus.OK,
     )
