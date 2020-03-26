@@ -290,7 +290,8 @@ def asset_add(request):
     try:
         save_mac_addresses(
             asset_data=data,
-            asset_id=asset.id
+            asset_id=asset.id,
+            change_plan=change_plan
         )
     except MacAddressException as error:
         warning_message += "Some mac addresses couldn't be saved. " + \
@@ -311,7 +312,8 @@ def asset_add(request):
             asset_id=asset.id,
             change_plan=change_plan
         )
-        log_network_action(request.user, asset)
+        if not change_plan:
+            log_network_action(request.user, asset)
     except NetworkConnectionException as error:
         warning_message += "Some network connections couldn't be saved. " + \
             str(error)
@@ -332,7 +334,7 @@ def asset_add(request):
         )
 
 
-def save_mac_addresses(asset_data, asset_id):
+def save_mac_addresses(asset_data, asset_id, change_plan=None):
     if (
         'mac_addresses' not in asset_data
         or not asset_data['mac_addresses']
@@ -342,10 +344,17 @@ def save_mac_addresses(asset_data, asset_id):
     failure_message = ""
     for port_name in mac_address_assignments.keys():
         try:
-            network_port = NetworkPort.objects.get(
-                asset=asset_id,
-                port_name=port_name
-            )
+            if change_plan:
+                network_port = NetworkPortCP.objects.get(
+                    asset=asset_id,
+                    port_name=port_name,
+                    change_plan=change_plan.id
+                )
+            else:
+                network_port = NetworkPort.objects.get(
+                    asset=asset_id,
+                    port_name=port_name
+                )
         except ObjectDoesNotExist:
             failure_message += "Port name '"+port_name+"' is not valid. "
         else:
@@ -546,6 +555,7 @@ def save_power_connections(asset_data, asset_id,change_plan=None):
         raise PowerConnectionException(failure_message)
 
 
+
 @api_view(['POST'])
 @permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
 def asset_modify(request):
@@ -566,7 +576,14 @@ def asset_modify(request):
     if request.query_params.get("change_plan"):
         change_plan = get_change_plan(request.query_params.get("change_plan"))
     try:
-        existing_asset = Asset.objects.get(id=id)
+        if change_plan:
+            assets, assets_cp = get_assets_for_cp(change_plan.id)
+            if assets.filter(id=id).exists():
+                existing_asset = assets.get(id=id)
+            else:
+                existing_asset = assets_cp.get(id=id)
+        else:
+            existing_asset = Asset.objects.get(id=id)
     except ObjectDoesNotExist:
         return JsonResponse(
             {
@@ -578,7 +595,10 @@ def asset_modify(request):
             status=HTTPStatus.BAD_REQUEST
         )
     try:
-        validate_location_modification(data, existing_asset,change_plan=change_plan)
+        validate_location_modification(
+            data,
+            existing_asset,
+            change_plan=change_plan)
     except Exception as error:
         return JsonResponse(
             {
@@ -594,9 +614,22 @@ def asset_modify(request):
         elif field == 'rack':
             value = Rack.objects.get(id=data[field])
         elif field == 'hostname' and data['hostname']:
-            assets_with_hostname = Asset.objects.filter(
-                hostname__iexact=data[field]
-            )
+            if change_plan:
+                assets, assets_cp = get_assets_for_cp(change_plan.id)
+                assets_with_hostname = assets.objects.filter(
+                    hostname__iexact=data[field]
+                )
+                if not (
+                    len(assets_with_hostname) > 0
+                    and assets_with_hostname[0].id != id
+                ):
+                    assets_with_hostname = assets_cp.objects.filter(
+                        hostname__iexact=data[field]
+                    )
+            else:
+                assets_with_hostname = Asset.objects.filter(
+                    hostname__iexact=data[field]
+                )
             if (
                 len(assets_with_hostname) > 0
                 and assets_with_hostname[0].id != id
@@ -612,9 +645,22 @@ def asset_modify(request):
                 )
             value = data[field]
         elif field == 'asset_number':
-            assets_with_asset_number = Asset.objects.filter(
-                asset_number=data[field]
-            )
+            if change_plan:
+                assets, assets_cp = get_assets_for_cp(change_plan.id)
+                assets_with_asset_number = assets.objects.filter(
+                     asset_number=data[field]
+                )
+                if not (
+                    len(assets_with_asset_number) > 0
+                    and assets_with_asset_number[0].id != id
+                ):
+                    assets_with_asset_number = assets_cp.objects.filter(
+                         asset_number=data[field]
+                    )
+            else:
+                assets_with_asset_number = Asset.objects.filter(
+                     asset_number=data[field]
+                )
             if (
                 len(assets_with_asset_number) > 0
                 and assets_with_asset_number[0].id != id
@@ -650,7 +696,8 @@ def asset_modify(request):
         try:
             save_mac_addresses(
                 asset_data=data,
-                asset_id=existing_asset.id
+                asset_id=existing_asset.id,
+                change_plan=change_plan
             )
         except MacAddressException as error:
             warning_message += "Some mac addresses couldn't be saved. " + \
@@ -658,7 +705,8 @@ def asset_modify(request):
         try:
             save_power_connections(
                 asset_data=data,
-                asset_id=existing_asset.id
+                asset_id=existing_asset.id,
+                change_plan=change_plan
             )
         except PowerConnectionException as error:
             warning_message += "Some power connections couldn't be saved. " + \
@@ -666,9 +714,11 @@ def asset_modify(request):
         try:
             save_network_connections(
                 asset_data=data,
-                asset_id=existing_asset.id
+                asset_id=existing_asset.id,
+                change_plan=change_plan
             )
-            log_network_action(request.user, existing_asset)
+            if not change_plan:
+                log_network_action(request.user, existing_asset)
         except NetworkConnectionException as error:
             warning_message += \
                 "Some network connections couldn't be saved. " + str(error)
@@ -678,7 +728,8 @@ def asset_modify(request):
                 status=HTTPStatus.OK,
             )
         else:
-            log_action(request.user, existing_asset, Action.MODIFY)
+            if not change_plan:
+                log_action(request.user, existing_asset, Action.MODIFY)
             return JsonResponse(
                 {
                     "success_message":
