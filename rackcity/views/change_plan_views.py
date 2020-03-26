@@ -5,8 +5,6 @@ from rackcity.api.serializers import (
 )
 from rackcity.models import ChangePlan
 from rackcity.utils.query_utils import (
-    get_sort_arguments,
-    get_filter_arguments,
     get_page_count_response,
     get_many_response,
 )
@@ -18,7 +16,6 @@ from rackcity.utils.errors_utils import (
 from http import HTTPStatus
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import JSONParser
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -213,4 +210,43 @@ def change_plan_many(request):
         "change-plans",
         request,
         premade_object_query=user_change_plans,
+    )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def change_plan_detail(request, id):
+    """
+    Retrieve a single change plan.
+    """
+    try:
+        change_plan = ChangePlan.objects.get(id=id)
+    except ObjectDoesNotExist:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.ERROR.value +
+                    "Change Plan" + GenericFailure.DOES_NOT_EXIST.value,
+                "errors": "No existing change plan with id="+str(id)
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    if request.user != change_plan.owner:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.ERROR.value +
+                    "You do not have access to this change plan.",
+                "errors":
+                    "User " + request.user.username +
+                    "does not own change plan with id="+str(id)
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    change_plan_serializer = GetChangePlanSerializer(change_plan)
+    return JsonResponse(
+        {
+            "change_plan": change_plan_serializer.data,
+        },
+        status=HTTPStatus.OK
     )
