@@ -480,7 +480,7 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
         raise NetworkConnectionException(failure_message)
 
 
-def save_power_connections(asset_data, asset_id,change_plan=None):
+def save_power_connections(asset_data, asset_id, change_plan=None):
     if (
         'power_connections' not in asset_data
         or not asset_data['power_connections']
