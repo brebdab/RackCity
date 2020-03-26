@@ -120,6 +120,8 @@ def asset_detail(request, id):
     else:
         serializer = RecursiveAssetSerializer(asset)
     return JsonResponse(serializer.data, status=HTTPStatus.OK)
+
+    
 def get_change_plan(change_plan_id):
     change_plan = ChangePlan.objects.get(
         id=change_plan_id

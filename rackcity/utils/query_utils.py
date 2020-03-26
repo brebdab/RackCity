@@ -251,7 +251,7 @@ def get_many_response(
     page_failure_response = get_invalid_paginated_request_response(
         request.query_params
     )
-    if page_failure_response:
+    if page_failure_response and should_paginate:
         return page_failure_response
 
     if premade_object_query is not None:
