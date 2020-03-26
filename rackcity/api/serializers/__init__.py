@@ -3,6 +3,7 @@ from .asset_serializers import (
     AssetSerializer,
     RecursiveAssetSerializer,
     BulkAssetSerializer,
+    RecursiveAssetCPSerializer,
     normalize_bulk_asset_data,
     serialize_power_connections,
 )
