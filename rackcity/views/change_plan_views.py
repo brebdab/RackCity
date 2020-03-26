@@ -247,8 +247,7 @@ def change_plan_detail(request, id):
     return JsonResponse(
         {
             "change_plan": change_plan_serializer.data,
-            "actions": [],
-            "conflicts": [],
+            "modifications": [],
         },
         status=HTTPStatus.OK
     )
