@@ -173,9 +173,9 @@ def get_filtered_query(object_query, data, or_filters=False):
             )
         )
     if or_filters and len(filter_args) > 0:
-        apply_filters_or(object_query, filter_args)
+        object_query = apply_filters_or(object_query, filter_args)
     else:
-        apply_filters_and(object_query, filter_args)
+        object_query = apply_filters_and(object_query, filter_args)
     return (object_query, None)
 
 

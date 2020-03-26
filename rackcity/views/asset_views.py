@@ -12,7 +12,7 @@ from rackcity.models import (
     PDUPort,
     PDUPortCP,
     Datacenter,
-    ChangePlan
+    ChangePlan,
 )
 from rackcity.utils.change_planner_utils import get_assets_for_cp
 from django.contrib.auth.decorators import permission_required
@@ -47,7 +47,6 @@ from rackcity.utils.errors_utils import (
 )
 from rackcity.permissions.decorators import (
     asset_permission_required,
-    power_permission_required,
 )
 from rackcity.permissions.permissions import PermissionPath
 from rest_framework.decorators import permission_classes, api_view
@@ -64,6 +63,7 @@ from rackcity.utils.query_utils import (
     get_page_count_response,
     get_many_response,
 )
+from rackcity.utils.change_planner_utils import get_many_assets_response_for_cp
 from rackcity.views.rackcity_utils import (
     validate_asset_location,
     validate_location_modification,
@@ -85,12 +85,33 @@ def asset_many(request):
     assets are returned. If page is specified as a query parameter, page
     size must also be specified, and a page of assets will be returned.
     """
-    return get_many_response(
-        Asset,
-        RecursiveAssetSerializer,
-        "assets",
-        request,
-    )
+    change_plan_id = request.query_params.get('change_plan')
+    if change_plan_id:
+        try:
+            change_plan = ChangePlan.objects.get(id=change_plan_id)
+        except ObjectDoesNotExist:
+            return JsonResponse(
+                {
+                    "failure_message":
+                        Status.ERROR.value +
+                        "Change Plan" + GenericFailure.DOES_NOT_EXIST.value,
+                    "errors":
+                        "No existing change plan with id="+str(change_plan_id)
+                },
+                status=HTTPStatus.BAD_REQUEST
+            )
+        else:
+            return get_many_assets_response_for_cp(
+                request,
+                change_plan,
+            )
+    else:
+        return get_many_response(
+            Asset,
+            RecursiveAssetSerializer,
+            "assets",
+            request,
+        )
 
 
 @api_view(['GET'])
@@ -121,7 +142,7 @@ def asset_detail(request, id):
         serializer = RecursiveAssetSerializer(asset)
     return JsonResponse(serializer.data, status=HTTPStatus.OK)
 
-    
+
 def get_change_plan(change_plan_id):
     change_plan = ChangePlan.objects.get(
         id=change_plan_id
