@@ -85,7 +85,7 @@ export class AssetView extends React.PureComponent<
       if (res.data.warning_message) {
         this.addWarnToast("Modifed asset. " + res.data.warning_message);
       } else {
-        this.addSuccessToast("Successfuly modified asset");
+        this.addSuccessToast(res.data.success_message);
       }
 
       getData(params.rid, this.props.token).then(result => {
@@ -322,7 +322,7 @@ export class AssetView extends React.PureComponent<
     deleteAsset(this.state.asset!, getHeaders(this.props.token))
       .then(res => {
         this.setState({ isDeleteOpen: false });
-        this.addSuccessToast("Successfuly Deleted Asset");
+        this.addSuccessToast(res.data.success_message);
         this.props.history.push(ROUTES.DASHBOARD);
       })
       .catch(err => {

@@ -644,10 +644,10 @@ class ElementTable extends React.Component<
     );
   };
 
-  successfulModification() {
+  successfulModification(message:string) {
     this.updateTableData();
     this.handleEditFormClose();
-    this.addSuccessToast("Successfuly modified");
+    this.addSuccessToast(message);
   }
   successfulModifcationWithWarning = (warning: string) => {
     this.updateTableData();
@@ -657,23 +657,23 @@ class ElementTable extends React.Component<
   handleEditFormSubmit = (values: ElementObjectType, headers: any) => {
     if (isModelObject(values)) {
       return modifyModel(values, headers).then(res => {
-        this.successfulModification();
+        this.successfulModification(res.data.success_message);
       });
     } else if (isAssetObject(values)) {
-      return modifyAsset(values, headers,this.props.changePlan).then(res => {
+      return modifyAsset(values, headers, this.props.changePlan).then(res => {
         if (res.data.warning_message) {
           this.successfulModifcationWithWarning(res.data.warning_message);
         } else {
-          this.successfulModification();
+          this.successfulModification(res.data.success_message);
         }
       });
     } else if (isChangePlanObject(values)) {
       return modifyChangePlan(values, headers).then(res => {
-        this.successfulModification();
+        this.successfulModification(res.data.success_message);
       });
     } else if (isDatacenterObject(values)) {
       return modifyDatacenter(values, headers).then(res => {
-        this.successfulModification();
+        this.successfulModification(res.data.success_message);
         if (this.props.updateDatacenters) {
           this.props.updateDatacenters();
         }
