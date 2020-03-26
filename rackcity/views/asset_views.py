@@ -39,6 +39,10 @@ from rackcity.utils.errors_utils import (
     parse_save_validation_error,
     BulkFailure,
 )
+from rackcity.permissions.decorators import (
+    asset_permission_required,
+    power_permission_required,
+)
 from rackcity.permissions.permissions import PermissionPath
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
@@ -134,7 +138,7 @@ def asset_detail(request, id):
 
 
 @api_view(['POST'])
-@permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
+@asset_permission_required()
 def asset_add(request):
     """
     Add a new asset.
@@ -381,7 +385,7 @@ def save_power_connections(asset_data, asset_id):
 
 
 @api_view(['POST'])
-@permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
+@asset_permission_required()
 def asset_modify(request):
     """
     Modify a single existing asset
@@ -523,7 +527,7 @@ def asset_modify(request):
 
 
 @api_view(['POST'])
-@permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
+@asset_permission_required()
 def asset_delete(request):
     """
     Delete a single existing asset
@@ -583,6 +587,7 @@ def asset_delete(request):
 
 @api_view(['POST'])
 @permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
+# TODO Check all assets for datacenter-level permissions
 def asset_bulk_upload(request):
     """
     Bulk upload many assets to add or modify
@@ -881,6 +886,7 @@ def asset_bulk_upload(request):
 
 @api_view(['POST'])
 @permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
+# TODO Check all assets for datacenter-level permissions
 def asset_bulk_approve(request):
     """
     Bulk approve many assets to modify
@@ -983,6 +989,7 @@ def asset_bulk_export(request):
 
 @api_view(['POST'])
 @permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
+# TODO Check all affected assets for datacenter-level permissions
 def network_bulk_upload(request):
     data = JSONParser().parse(request)
     if 'import_csv' not in data:
@@ -1110,6 +1117,7 @@ def network_bulk_upload(request):
 
 @api_view(['POST'])
 @permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
+# TODO Check all assets for datacenter-level permissions
 def network_bulk_approve(request):
     data = JSONParser().parse(request)
     if 'approved_modifications' not in data:
@@ -1238,6 +1246,7 @@ def asset_page_count(request):
 
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def asset_fields(request):
     """
     Return all fields on the AssetSerializer.
