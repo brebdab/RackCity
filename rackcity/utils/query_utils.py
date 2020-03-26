@@ -1,8 +1,6 @@
 from http import HTTPStatus
-import json
 import math
 
-from django.core import serializers
 from django.db.models import Q
 from django.http import JsonResponse
 from rackcity.api.objects import RackRangeSerializer

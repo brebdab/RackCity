@@ -41,7 +41,6 @@ from rackcity.utils.errors_utils import (
 )
 from rackcity.permissions.decorators import (
     asset_permission_required,
-    power_permission_required,
 )
 from rackcity.permissions.permissions import PermissionPath
 from rest_framework.decorators import permission_classes, api_view

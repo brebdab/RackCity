@@ -1,6 +1,11 @@
 from django.db.models import Q
+from django.http import JsonResponse
+from http import HTTPStatus
+from rackcity.api.serializers import (
+    RecursiveAssetSerializer,
+    RecursiveAssetCPSerializer,
+)
 from rackcity.models import Asset, AssetCP
-from rackcity.utils.query_utils import get_many_response
 
 
 def get_assets_for_cp(change_plan=None):
@@ -23,23 +28,18 @@ def get_assets_for_cp(change_plan=None):
 
 def get_many_assets_response_for_cp(request, change_plan):
     assets, assetsCP = get_assets_for_cp(change_plan=change_plan)
-    values_list = (
-        'id',
-        'hostname',
-        'rack_position',
-        'owner',
-        'comment',
-        'asset_number',
-        'model',
-        'rack',
+    asset_serializer = RecursiveAssetSerializer(
+        assets,
+        many=True,
     )
-    all_assets = assets.values_list(*values_list).union(
-        assetsCP.values_list(*values_list)
+    asset_data = asset_serializer.data
+    assetCP_serializer = RecursiveAssetCPSerializer(
+        assetsCP,
+        many=True,
     )
-    return get_many_response(
-        None,
-        "assets",
-        request,
-        fields_to_serialize=values_list,
-        premade_object_query=all_assets,
+    assetCP_data = assetCP_serializer.data
+    data = asset_data + assetCP_data
+    return JsonResponse(
+        {"assets": data},
+        status=HTTPStatus.OK,
     )
