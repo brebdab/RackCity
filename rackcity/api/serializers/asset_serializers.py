@@ -3,6 +3,7 @@ from rest_framework.validators import UniqueValidator
 from django.core.exceptions import ObjectDoesNotExist
 from rackcity.models import (
     Asset,
+    AssetCP,
     PowerPort,
     PowerPortCP,
     NetworkPort,
