@@ -19,9 +19,9 @@ def log_many(request):
     """
     return get_many_response(
         Log,
+        LogSerializer,
         "logs",
         request,
-        model_serializer=LogSerializer,
         or_filters=True,
         default_order='-date',
     )

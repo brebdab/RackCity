@@ -101,9 +101,9 @@ def asset_many(request):
             )
     return get_many_response(
         Asset,
+        RecursiveAssetSerializer,
         "assets",
         request,
-        model_serializer=RecursiveAssetSerializer,
     )
 
 
