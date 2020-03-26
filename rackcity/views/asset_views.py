@@ -79,8 +79,8 @@ def asset_many(request):
     assets are returned. If page is specified as a query parameter, page
     size must also be specified, and a page of assets will be returned.
     """
-    if 'change_plan' in request.data:
-        change_plan_id = request.data['change_plan']
+    change_plan_id = request.query_params.get('change_plan')
+    if change_plan_id:
         try:
             change_plan = ChangePlan.objects.get(id=change_plan_id)
         except ObjectDoesNotExist:
@@ -99,12 +99,13 @@ def asset_many(request):
                 request,
                 change_plan,
             )
-    return get_many_response(
-        Asset,
-        RecursiveAssetSerializer,
-        "assets",
-        request,
-    )
+    else:
+        return get_many_response(
+            Asset,
+            RecursiveAssetSerializer,
+            "assets",
+            request,
+        )
 
 
 @api_view(['GET'])

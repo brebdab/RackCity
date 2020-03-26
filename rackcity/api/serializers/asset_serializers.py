@@ -11,6 +11,7 @@ from rackcity.models import (
 )
 from .it_model_serializers import ITModelSerializer
 from .rack_serializers import RackSerializer
+from .change_plan_serializers import GetChangePlanSerializer
 import copy
 
 
@@ -163,6 +164,7 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
     """
     model = ITModelSerializer()
     rack = RackSerializer()
+    change_plan = GetChangePlanSerializer()
     mac_addresses = serializers.SerializerMethodField()
     power_connections = serializers.SerializerMethodField()
     network_connections = serializers.SerializerMethodField()
@@ -183,6 +185,7 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
             'network_connections',
             'network_graph',
             'power_connections',
+            'change_plan'
         )
 
     def get_mac_addresses(self, assetCP):
