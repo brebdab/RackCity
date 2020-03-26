@@ -43,26 +43,32 @@ from rackcity.utils.errors_utils import (
     GenericFailure,
     parse_serializer_errors,
     parse_save_validation_error,
-    BulkFailure
+    BulkFailure,
+)
+from rackcity.permissions.decorators import (
+    asset_permission_required,
+    power_permission_required,
 )
 from rackcity.permissions.permissions import PermissionPath
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import JSONParser
-from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
-import math
 import csv
 from base64 import b64decode
 import re
 from io import StringIO, BytesIO
+from rackcity.utils.query_utils import (
+    get_sort_arguments,
+    get_filter_arguments,
+    get_page_count_response,
+    get_many_response,
+)
 from rackcity.views.rackcity_utils import (
     validate_asset_location,
     validate_location_modification,
     no_infile_location_conflicts,
     records_are_identical,
-    get_sort_arguments,
-    get_filter_arguments,
     LocationException,
     MacAddressException,
     PowerConnectionException,
@@ -79,89 +85,11 @@ def asset_many(request):
     assets are returned. If page is specified as a query parameter, page
     size must also be specified, and a page of assets will be returned.
     """
-
-    errors = []
-
-    should_paginate = not(
-        request.query_params.get('page') is None
-        and request.query_params.get('page_size') is None
-    )
-
-    if should_paginate:
-        if not request.query_params.get('page'):
-            errors.append("Must specify field 'page' on " +
-                          "paginated requests.")
-        elif not request.query_params.get('page_size'):
-            errors.append("Must specify field 'page_size' on " +
-                          "paginated requests.")
-        elif int(request.query_params.get('page_size')) <= 0:
-            errors.append("Field 'page_size' must be an integer " +
-                          "greater than 0.")
-
-    if len(errors) > 0:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                "errors": " ".join(errors)
-            },
-            status=HTTPStatus.BAD_REQUEST,
-        )
-
-    assets_query = Asset.objects
-    try:
-        filter_args = get_filter_arguments(request.data)
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.FILTER.value,
-                "errors": str(error)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    for filter_arg in filter_args:
-        print(filter_arg)
-        assets_query = assets_query.filter(**filter_arg)
-    
-    try:
-        sort_args = get_sort_arguments(request.data)
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.SORT.value,
-                "errors": str(error)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    assets = assets_query.order_by(*sort_args)
-
-    if should_paginate:
-        paginator = PageNumberPagination()
-        paginator.page_size = request.query_params.get('page_size')
-        try:
-            page_of_assets = paginator.paginate_queryset(assets, request)
-        except Exception as error:
-            return JsonResponse(
-                {
-                    "failure_message":
-                        Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                    "errors": str(error)
-                },
-                status=HTTPStatus.BAD_REQUEST,
-            )
-        assets_to_serialize = page_of_assets
-    else:
-        assets_to_serialize = assets
-
-    serializer = RecursiveAssetSerializer(
-        assets_to_serialize,
-        many=True,
-    )
-    return JsonResponse(
-        {"assets": serializer.data},
-        status=HTTPStatus.OK,
+    return get_many_response(
+        Asset,
+        RecursiveAssetSerializer,
+        "assets",
+        request,
     )
 
 
@@ -209,7 +137,7 @@ def get_change_plan(change_plan_id):
 
 
 @api_view(['POST'])
-@permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
+@asset_permission_required()
 def asset_add(request):
     """
     Add a new asset.
@@ -557,7 +485,7 @@ def save_power_connections(asset_data, asset_id, change_plan=None):
 
 
 @api_view(['POST'])
-@permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
+@asset_permission_required()
 def asset_modify(request):
     """
     Modify a single existing asset
@@ -751,7 +679,7 @@ def asset_modify(request):
 
 
 @api_view(['POST'])
-@permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
+@asset_permission_required()
 def asset_delete(request):
     """
     Delete a single existing asset
@@ -811,6 +739,7 @@ def asset_delete(request):
 
 @api_view(['POST'])
 @permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
+# TODO Check all assets for datacenter-level permissions
 def asset_bulk_upload(request):
     """
     Bulk upload many assets to add or modify
@@ -1109,6 +1038,7 @@ def asset_bulk_upload(request):
 
 @api_view(['POST'])
 @permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
+# TODO Check all assets for datacenter-level permissions
 def asset_bulk_approve(request):
     """
     Bulk approve many assets to modify
@@ -1211,6 +1141,7 @@ def asset_bulk_export(request):
 
 @api_view(['POST'])
 @permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
+# TODO Check all affected assets for datacenter-level permissions
 def network_bulk_upload(request):
     data = JSONParser().parse(request)
     if 'import_csv' not in data:
@@ -1338,6 +1269,7 @@ def network_bulk_upload(request):
 
 @api_view(['POST'])
 @permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
+# TODO Check all assets for datacenter-level permissions
 def network_bulk_approve(request):
     data = JSONParser().parse(request)
     if 'approved_modifications' not in data:
@@ -1458,39 +1390,15 @@ def asset_page_count(request):
     Return total number of pages according to page size, which must be
     specified as query parameter.
     """
-    if (
-        not request.query_params.get('page_size')
-        or int(request.query_params.get('page_size')) <= 0
-    ):
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                "errors": "Must specify positive integer page_size."
-            },
-            status=HTTPStatus.BAD_REQUEST,
-        )
-    page_size = int(request.query_params.get('page_size'))
-    assets_query = Asset.objects
-    try:
-        filter_args = get_filter_arguments(request.data)
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.FILTER.value,
-                "errors": str(error)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    for filter_arg in filter_args:
-        assets_query = assets_query.filter(**filter_arg)
-    asset_count = assets_query.count()
-    page_count = math.ceil(asset_count / page_size)
-    return JsonResponse({"page_count": page_count})
+    return get_page_count_response(
+        Asset,
+        request.query_params,
+        data_for_filters=request.data,
+    )
 
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def asset_fields(request):
     """
     Return all fields on the AssetSerializer.

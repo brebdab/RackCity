@@ -3,15 +3,21 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from http import HTTPStatus
-import math
 from rackcity.api.serializers import RegisterNameSerializer, UserSerializer
-from rackcity.models import Asset
+from rackcity.models import Asset, RackCityPermission
 from rackcity.permissions.permissions import PermissionPath
-from rackcity.views.rackcity_utils import (
-    get_filter_arguments,
+from rackcity.utils.query_utils import (
     get_sort_arguments,
+    get_filter_arguments,
+    get_page_count_response,
+    get_many_response,
 )
-from rackcity.utils.errors_utils import UserFailure, GenericFailure, Status
+from rackcity.utils.errors_utils import (
+    UserFailure,
+    GenericFailure,
+    Status,
+    get_user_permission_success,
+)
 from rackcity.utils.user_utils import is_netid_user
 from rackcity.utils.log_utils import (
     log_delete,
@@ -27,9 +33,9 @@ from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_auth.registration.views import RegisterView
 from rackcity.permissions.groups import (
-    add_user_to_group,
-    remove_user_from_group,
     GroupName,
+    update_user_groups,
+    update_user_datacenter_permissions,
 )
 
 
@@ -98,91 +104,12 @@ def user_many(request):
     instances are returned. If page is specified as a query parameter, page
     size must also be specified, and a page of users will be returned.
     """
-
-    errors = []
-
-    should_paginate = not(
-        request.query_params.get('page') is None
-        and request.query_params.get('page_size') is None
-    )
-
-    if should_paginate:
-        if not request.query_params.get('page'):
-            errors.append("Must specify field 'page' on " +
-                          "paginated requests.")
-        elif not request.query_params.get('page_size'):
-            errors.append("Must specify field 'page_size' on " +
-                          "paginated requests.")
-        elif int(request.query_params.get('page_size')) <= 0:
-            errors.append("Field 'page_size' must be an integer " +
-                          "greater than 0.")
-
-    if len(errors) > 0:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                "errors": " ".join(errors)
-            },
-            status=HTTPStatus.BAD_REQUEST,
-        )
-
-    users_query = User.objects
-
-    try:
-        filter_args = get_filter_arguments(request.data)
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.FILTER.value,
-                "errors": str(error)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    for filter_arg in filter_args:
-        users_query = users_query.filter(**filter_arg)
-
-    try:
-        sort_args = get_sort_arguments(request.data)
-        if len(sort_args) == 0:
-            sort_args = ['username']
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.SORT.value,
-                "errors": str(error)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    users = users_query.order_by(*sort_args)
-
-    if should_paginate:
-        paginator = PageNumberPagination()
-        paginator.page_size = request.query_params.get('page_size')
-        try:
-            page_of_users = paginator.paginate_queryset(users, request)
-        except Exception as error:
-            return JsonResponse(
-                {
-                    "failure_message":
-                        Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                    "errors": str(error)
-                },
-                status=HTTPStatus.BAD_REQUEST,
-            )
-        users_to_serialize = page_of_users
-    else:
-        users_to_serialize = users
-
-    serializer = UserSerializer(
-        users_to_serialize,
-        many=True,
-    )
-    return JsonResponse(
-        {"users": serializer.data},
-        status=HTTPStatus.OK,
+    return get_many_response(
+        User,
+        UserSerializer,
+        "users",
+        request,
+        default_order='username',
     )
 
 
@@ -269,22 +196,7 @@ def user_page_count(request):
     Return total number of pages according to page size, which must be
     specified as query parameter.
     """
-    if (
-        not request.query_params.get('page_size')
-        or int(request.query_params.get('page_size')) <= 0
-    ):
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                "errors": "Must specify positive integer page_size."
-            },
-            status=HTTPStatus.BAD_REQUEST,
-        )
-    page_size = int(request.query_params.get('page_size'))
-    user_count = User.objects.all().count()
-    page_count = math.ceil(user_count / page_size)
-    return JsonResponse({"page_count": page_count})
+    return get_page_count_response(User, request.query_params)
 
 
 @api_view(['GET'])
@@ -455,7 +367,7 @@ def usernames(request):
 @permission_required(PermissionPath.USER_WRITE.value, raise_exception=True)
 def user_set_groups(request):
     """
-    Set groups for a user.
+    Set groups and permissions for a user.
     """
     data = JSONParser().parse(request)
     if 'id' not in data:
@@ -480,36 +392,35 @@ def user_set_groups(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
-    groups_added = []
-    groups_removed = []
-    for group in GroupName:
-        group_key = group.value
-        if group_key in data:
-            if data[group_key]:
-                added = add_user_to_group(user, group)
-                if added:
-                    groups_added.append(group_key)
-            else:
-                removed = remove_user_from_group(user, group)
-                if removed:
-                    groups_removed.append(group_key)
-    current_groups = [group.name for group in user.groups.all()]
-    success_message = ""
-    if len(groups_added) > 0:
-        success_message += \
-            ("User added to group(s): " + ", ".join(groups_added) + ". ")
-    if len(groups_removed) > 0:
-        success_message += \
-            ("User removed from group(s): " + ", ".join(groups_removed) + ". ")
-    if len(groups_added) == 0 and len(groups_removed) == 0:
-        success_message += \
-            "User's groups were not changed. "
-    if len(current_groups) > 0:
-        success_message += \
-            "User is now in group(s): " + ", ".join(current_groups) + "."
+
+    groups_added, groups_removed, current_groups = \
+        update_user_groups(user, data)
+    if 'datacenter_permissions' in data:
+        try:
+            current_datacenters = \
+                update_user_datacenter_permissions(
+                    user,
+                    data['datacenter_permissions'],
+                )
+        except ObjectDoesNotExist:
+            return JsonResponse(
+                {
+                    "failure_message":
+                    Status.MODIFY_ERROR.value +
+                    "Datacenter" + GenericFailure.DOES_NOT_EXIST.value,
+                    "errors": "No existing datacenter with id"
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
     else:
-        success_message += \
-            "User is now in no groups."
+        current_datacenters = []
+
+    success_message = get_user_permission_success(
+        groups_added,
+        groups_removed,
+        current_groups,
+        current_datacenters,
+    )
     return JsonResponse(
         {"success_message": Status.SUCCESS.value + success_message},
         status=HTTPStatus.OK,
@@ -545,8 +456,19 @@ def user_get_groups(request):
     group_list = []
     for group in user.groups.all():
         group_list.append(group.name)
+    try:
+        permission = RackCityPermission.objects.get(user=user.id)
+    except ObjectDoesNotExist:
+        datacenter_list = []
+    else:
+        datacenter_list = [
+            dc.abbreviation for dc in permission.datacenter_permissions.all()
+        ]
     return JsonResponse(
-        {"user_groups": group_list},
+        {
+            "user_groups": group_list,
+            "datacenter_permissions": datacenter_list
+        },
         status=HTTPStatus.OK,
     )
 
