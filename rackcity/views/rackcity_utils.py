@@ -74,9 +74,10 @@ def validate_asset_location(
     for location in new_asset_location_range:
         if location <= 0 or location > rack_height:
             raise LocationException("Cannot place asset outside of rack. ")
-    
-    assets_sets = get_assets_for_cp(change_plan.id)
-
+    if change_plan:
+        assets_sets = get_assets_for_cp(change_plan.id)
+    else:
+        assets_sets = [Asset.objects.all()]
     for asset_set in assets_sets:
         if asset_set:
             for asset_in_rack in asset_set.filter(rack=rack_id):

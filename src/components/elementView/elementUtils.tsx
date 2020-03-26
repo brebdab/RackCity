@@ -103,8 +103,23 @@ export const deleteAsset = (asset: AssetObject, headers: any) => {
   const data = { id: asset.id };
   return axios.post(API_ROOT + "api/assets/delete", data, headers);
 };
-export const modifyAsset = (asset: AssetObject, headers: any): Promise<any> => {
-  return axios.post(API_ROOT + "api/assets/modify", asset, headers);
+export const modifyAsset = (
+  asset: AssetObject,
+  headers: any,
+  changePlan: ChangePlan
+): Promise<any> => {
+  let config;
+  if (!changePlan) {
+    config = headers;
+  } else {
+    config = {
+      headers: headers["headers"],
+      params: {
+        change_plan: changePlan.id
+      }
+    };
+  }
+  return axios.post(API_ROOT + "api/assets/modify", asset, config);
 };
 export const modifyChangePlan = (
   changePlan: ChangePlan,

@@ -43,7 +43,8 @@ import {
   AssetFieldsTable,
   ModelFieldsTable,
   ROUTES,
-  isChangePlanObject
+  isChangePlanObject,
+  ChangePlan
 } from "../../utils/utils";
 import DragDropList, { DragDropListTypes } from "./dragDropList";
 import {
@@ -119,6 +120,7 @@ interface ElementTableProps {
   shouldUpdateData?: boolean;
   isAdmin: boolean;
   updateDatacenters?(): void;
+  changePlan: ChangePlan;
 }
 
 // var console: any = {};
@@ -658,7 +660,7 @@ class ElementTable extends React.Component<
         this.successfulModification();
       });
     } else if (isAssetObject(values)) {
-      return modifyAsset(values, headers).then(res => {
+      return modifyAsset(values, headers,this.props.changePlan).then(res => {
         if (res.data.warning_message) {
           this.successfulModifcationWithWarning(res.data.warning_message);
         } else {
@@ -1235,7 +1237,8 @@ class ElementTable extends React.Component<
 const mapStateToProps = (state: any) => {
   return {
     token: state.token,
-    isAdmin: state.admin
+    isAdmin: state.admin,
+    changePlan: state.changePlan
   };
 };
 export default connect(mapStateToProps)(withRouter(ElementTable));

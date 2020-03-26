@@ -23,7 +23,8 @@ import {
   NetworkConnection,
   Node,
   DatacenterObject,
-  ROUTES
+  ROUTES,
+  ChangePlan
 } from "../../../../utils/utils";
 import { deleteAsset, modifyAsset } from "../../elementUtils";
 import PropertiesView from "../propertiesView";
@@ -36,6 +37,7 @@ import { IconNames } from "@blueprintjs/icons";
 export interface AssetViewProps {
   token: string;
   isAdmin: boolean;
+  changePlan: ChangePlan;
 }
 // Given an rid, will perform a GET request of that rid and display info about that instnace
 
@@ -79,7 +81,7 @@ export class AssetView extends React.PureComponent<
     console.log("updateAsset");
     let params: any;
     params = this.props.match.params;
-    return modifyAsset(asset, headers).then(res => {
+    return modifyAsset(asset, headers, this.props.changePlan).then(res => {
       if (res.data.warning_message) {
         this.addWarnToast("Modifed asset. " + res.data.warning_message);
       } else {
@@ -336,7 +338,8 @@ export class AssetView extends React.PureComponent<
 const mapStatetoProps = (state: any) => {
   return {
     token: state.token,
-    isAdmin: state.admin
+    isAdmin: state.admin,
+    changePlan: state.changePlan
   };
 };
 

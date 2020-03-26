@@ -7,7 +7,7 @@ from .it_model import ITModel
 from .decommissioned_asset import DecommissionedAsset
 from .rack import Rack
 from .change_plan import ChangePlan
-
+from django.db.models import Q
 
 def get_next_available_asset_number():
     for asset_number in range(100000, 999999):
@@ -33,17 +33,42 @@ def get_assets_for_cp(change_plan=None):
     # TODO remove any Asset or AssetCP that has been decommissioned in this CP
     return (assets, assetsCP)
 
+
 def validate_hostname(value):
     hostname_pattern = re.compile("[A-Za-z]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?")
     if value and hostname_pattern.fullmatch(value) is None:
         raise ValidationError("'" + value + "' is not a valid hostname as " +
                               "it is not compliant with RFC 1034.")
 
-def validate_hostname_uniqueness(value, change_plan):
+
+def validate_hostname_uniqueness(value, asset_id, change_plan):
     assets, assets_cp = get_assets_for_cp(change_plan.id)
-    if assets.filter(hostname=value) or assets_cp.filter(hostname=value):
+    matching_assets = assets_cp.filter(hostname=value)
+
+    if len(matching_assets) > 0 and matching_assets[0].id != asset_id:
+        raise ValidationError("'" + value + "'is not a unique hostname. \
+            A existing asset on this change plan exists with this hostname.")
+
+    matching_assets = assets.filter(hostname=value)
+    if len(matching_assets) > 0 and matching_assets[0].id != asset_id:
         raise ValidationError("'" + value + "'is not a unique hostname. \
             A existing asset exists with this hostname.")
+
+
+def validate_asset_number_uniqueness(value, asset_id, change_plan):
+    assets, assets_cp = get_assets_for_cp(change_plan.id)
+    matching_assets = assets_cp.filter(asset_number=value)
+
+    if len(matching_assets) > 0 and matching_assets[0].id != asset_id:
+        raise ValidationError("'" + value + "'is not a unique asset number. \
+            A existing asset on this change plan exists with this asset number.")
+
+    matching_assets = assets.filter(asset_number=value)
+    if len(matching_assets) > 0 and matching_assets[0].id != asset_id:
+        raise ValidationError("'" + value + "'is not a unique asset number. \
+            A existing asset on exists with this asset number.")
+
+
 
 def validate_owner(value):
     if (
@@ -158,6 +183,7 @@ class AssetCP(AbstractAsset):
         unique=False,
         null=True,
         blank=True,
+        validators=[validate_hostname],
     )
     related_decomissioned_asset = models.ForeignKey(
         DecommissionedAsset,
@@ -178,7 +204,7 @@ class AssetCP(AbstractAsset):
         blank=True
     )
     asset_number = models.IntegerField(
-        unique=True,
+        unique=False,
         validators=[
             MinValueValidator(100000),
             MaxValueValidator(999999)
@@ -244,7 +270,8 @@ class AssetCP(AbstractAsset):
     def save(self, *args, **kwargs):
         try:
             validate_hostname(self.hostname)
-            validate_hostname_uniqueness(self.hostname, self.change_plan)
+            validate_hostname_uniqueness(self.hostname, self.id, self.change_plan)
+            validate_asset_number_uniqueness(self.asset_number, self.id, self.change_plan)
             validate_owner(self.owner)
         except ValidationError as valid_error:
             raise valid_error

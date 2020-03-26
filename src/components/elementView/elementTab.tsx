@@ -67,6 +67,7 @@ interface ElementViewProps {
   onDatacenterSelect?(datacenter: DatacenterObject): void;
   updateDatacenters?(): void;
   isActive?: boolean;
+  changePlan: ChangePlan;
 }
 
 type ElementTabProps = ElementViewProps & RouteComponentProps;
@@ -247,13 +248,25 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     headers: any
   ): Promise<any> => {
     console.log("api/assets/add");
-    return axios.post(API_ROOT + "api/assets/add", asset, headers).then(res => {
+    let config;
+    if (!this.props.changePlan) {
+      config = headers;
+    } else {
+      config = {
+        headers: headers["headers"],
+        params: {
+          change_plan: this.props.changePlan.id
+        }
+      };
+    }
+
+    return axios.post(API_ROOT + "api/assets/add", asset, config).then(res => {
       this.handleDataUpdate(true);
       this.handleClose();
       if (res.data.warning_message) {
         this.addWarnToast("Created asset. " + res.data.warning_message);
       } else {
-        this.addSuccessToast("Successfuly created asset");
+        this.addSuccessToast(res.data.sucess_message);
       }
 
       console.log(this.state.isOpen);
@@ -559,7 +572,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
 const mapStateToProps = (state: any) => {
   return {
     token: state.token,
-    isAdmin: state.admin
+    isAdmin: state.admin,
+    changePlan: state.changePlan
   };
 };
 export default connect(mapStateToProps)(ElementTab);

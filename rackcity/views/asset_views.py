@@ -194,7 +194,7 @@ def asset_detail(request, id):
     return JsonResponse(serializer.data, status=HTTPStatus.OK)
 def get_change_plan(change_plan_id):
     change_plan = ChangePlan.objects.get(
-        id=request.query_params.get("change_plan")
+        id=change_plan_id
         )
     if not change_plan:
         return JsonResponse(
@@ -575,13 +575,22 @@ def asset_modify(request):
     id = data['id']
     if request.query_params.get("change_plan"):
         change_plan = get_change_plan(request.query_params.get("change_plan"))
+    else:
+        change_plan = None
     try:
         if change_plan:
             assets, assets_cp = get_assets_for_cp(change_plan.id)
-            if assets.filter(id=id).exists():
-                existing_asset = assets.get(id=id)
-            else:
+            if assets_cp.filter(id=id).exists():
                 existing_asset = assets_cp.get(id=id)
+            
+            else:
+                ## get asset from master and copy to change_plan
+                existing_asset_master = assets.get(id=id)
+                existing_asset = AssetCP(change_plan=change_plan)
+                for field in existing_asset_master._meta.fields:
+                    setattr(existing_asset, field.name, getattr(
+                        existing_asset_master, field.name))
+                
         else:
             existing_asset = Asset.objects.get(id=id)
     except ObjectDoesNotExist:
@@ -616,14 +625,14 @@ def asset_modify(request):
         elif field == 'hostname' and data['hostname']:
             if change_plan:
                 assets, assets_cp = get_assets_for_cp(change_plan.id)
-                assets_with_hostname = assets.objects.filter(
+                assets_with_hostname = assets.filter(
                     hostname__iexact=data[field]
                 )
                 if not (
                     len(assets_with_hostname) > 0
                     and assets_with_hostname[0].id != id
                 ):
-                    assets_with_hostname = assets_cp.objects.filter(
+                    assets_with_hostname = assets_cp.filter(
                         hostname__iexact=data[field]
                     )
             else:
@@ -647,14 +656,14 @@ def asset_modify(request):
         elif field == 'asset_number':
             if change_plan:
                 assets, assets_cp = get_assets_for_cp(change_plan.id)
-                assets_with_asset_number = assets.objects.filter(
+                assets_with_asset_number = assets.filter(
                      asset_number=data[field]
                 )
                 if not (
                     len(assets_with_asset_number) > 0
                     and assets_with_asset_number[0].id != id
                 ):
-                    assets_with_asset_number = assets_cp.objects.filter(
+                    assets_with_asset_number = assets_cp.filter(
                          asset_number=data[field]
                     )
             else:
