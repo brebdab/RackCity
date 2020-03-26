@@ -94,6 +94,7 @@ interface ElementTableState {
 
 interface ElementTableProps {
   callback?: Function;
+  updateBarcodes?: Function;
   type: ElementType;
   token: string;
   disableSorting?: boolean;
@@ -1012,6 +1013,9 @@ class ElementTable extends React.Component<
                             selectedAll,
                             selected
                           });
+                          if (this.props.updateBarcodes) {
+                            this.props.updateBarcodes(this.state.selected);
+                          }
                         }}
                       />
                     </div>
@@ -1112,6 +1116,11 @@ class ElementTable extends React.Component<
                                 this.setState({
                                   selected
                                 });
+                                if (this.props.updateBarcodes) {
+                                  this.props.updateBarcodes(
+                                    this.state.selected
+                                  );
+                                }
                                 console.log(selected);
                                 event.stopPropagation();
                               }}

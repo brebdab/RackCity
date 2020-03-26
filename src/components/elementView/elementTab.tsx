@@ -34,7 +34,8 @@ import {
   ModelObject,
   ShallowAssetObject,
   SortFilterBody,
-  ChangePlan
+  ChangePlan,
+  ROUTES
 } from "../../utils/utils";
 import { ALL_DATACENTERS } from "./elementTabContainer";
 import ElementTable from "./elementTable";
@@ -45,6 +46,7 @@ import {
   TextFilterTypes
 } from "./elementUtils";
 import "./elementView.scss";
+import { Link } from "react-router-dom";
 
 // var console: any = {};
 // console.log = function() {};
@@ -508,13 +510,18 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             />
           ) : null}
           {this.props.element === ElementType.ASSET ? (
-            <AnchorButton
-              className="add"
-              text="Print Barcodes for Selected Assets"
-              icon="barcode"
-              minimal
-              onClick={() => {}}
-            />
+            <Link
+              target="_blank"
+              to={{ pathname: ROUTES.BARCODE_PRINT, state: null }}
+            >
+              <AnchorButton
+                className="add"
+                text="Print Barcodes for Selected Assets"
+                icon="barcode"
+                minimal
+                onClick={() => {}}
+              />
+            </Link>
           ) : null}
           <FormPopup
             {...this.props}
@@ -543,6 +550,9 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             type={this.props.element}
             getData={this.getElementData}
             getPages={this.getPages}
+            updateBarcodes={(data: Array<string>) => {
+              console.log(data);
+            }}
             callback={(data: Array<any>) => {
               this.setState({ filters: data });
             }}
