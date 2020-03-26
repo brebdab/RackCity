@@ -204,6 +204,12 @@ class AssetCP(AbstractAsset):
     class Meta:
         ordering = ['asset_number']
         verbose_name = 'Asset on Change Plan'
+        constraints = [
+            models.UniqueConstraint(
+                fields=["hostname", "change_plan"],
+                name="unique hostnames in a change plan",
+            ),
+        ]
 
     def add_network_ports(self):
         from rackcity.models import NetworkPortCP

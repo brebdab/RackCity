@@ -5,6 +5,7 @@ from rackcity.models import (
     ITModel,
     Rack,
     NetworkPort,
+    NetworkPortCP,
     PowerPort,
     PDUPort,
     Datacenter,
@@ -226,7 +227,6 @@ def asset_add(request):
         serializer = AssetCPSerializer(data=data)
     else:
         serializer = AssetSerializer(data=data)
-    print(serializer)
     if not serializer.is_valid(raise_exception=False):
         return JsonResponse(
             {
@@ -356,22 +356,27 @@ def save_mac_addresses(asset_data, asset_id):
         raise MacAddressException(failure_message)
 
 
-def save_network_connections(asset_data, asset_id):
+def save_network_connections(asset_data, asset_id, change_plan=None):
     if (
         'network_connections' not in asset_data
         or not asset_data['network_connections']
     ):
         return
-    
     network_connections = asset_data['network_connections']
     failure_message = ""
     for network_connection in network_connections:
         port_name = network_connection['source_port']
         try:
-            network_port = NetworkPort.objects.get(
-                asset=asset_id,
-                port_name=port_name
-            )
+            if change_plan:
+                network_port = NetworkPortCP.objects.get(
+                    asset=asset_id, 
+                    port_name=port_name,
+                    change_plan=change_plan.id)
+            else:
+                network_port = NetworkPort.objects.get(
+                    asset=asset_id,
+                    port_name=port_name
+                )
         except ObjectDoesNotExist:
             failure_message += "Port name '"+port_name+"' is not valid. "
         else:
