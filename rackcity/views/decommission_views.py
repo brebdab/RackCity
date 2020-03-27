@@ -49,6 +49,21 @@ def decommission_asset(request):
             },
             status=HTTPStatus.BAD_REQUEST
         )
+    if not user_has_asset_permission(
+        request.user,
+        asset.rack.datacenter
+    ):
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.AUTH_ERROR.value + AuthFailure.ASSET.value,
+                "errors":
+                    "User " + request.user.username +
+                    " does not have asset permission in datacenter id="
+                    + str(asset.rack.datacenter.id)
+            },
+            status=HTTPStatus.UNAUTHORIZED
+        )
     asset_data = RecursiveAssetSerializer(asset).data
     asset_data['live_id'] = asset_data['id']
     del asset_data['id']

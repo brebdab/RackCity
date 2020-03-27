@@ -37,7 +37,8 @@ class UserFailure(Enum):
 
 
 class AuthFailure(Enum):
-    POWER = "You do not have permission to control the power of this asset."
+    POWER = "You do not have power permission on this asset."
+    ASSET = "You do not have asset permission in this datacenter."
 
 
 class BulkFailure(Enum):
