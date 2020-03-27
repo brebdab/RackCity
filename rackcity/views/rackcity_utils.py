@@ -4,7 +4,7 @@ from http import HTTPStatus
 from django.http import JsonResponse
 import functools
 from django.db import close_old_connections
-from rackcity.utils.change_planner_utils import get_assets_for_cp
+from rackcity.models.asset import get_assets_for_cp
 
 
 def get_rack_detailed_response(racks):
@@ -129,11 +129,12 @@ def validate_location_modification(data, existing_asset, change_plan=None):
     asset_id = existing_asset.id
     rack_id = existing_asset.rack.id
     related_asset_id = None
-    if existing_asset.related_asset:
+    print("before")
+    if hasattr(existing_asset, "related_asset") and existing_asset.related_asset:
         related_asset_id = existing_asset.related_asset.id
     asset_rack_position = existing_asset.rack_position
     asset_height = existing_asset.model.height
-
+    print("after")
     if 'rack_position' in data:
         try:
             asset_rack_position = int(data['rack_position'])

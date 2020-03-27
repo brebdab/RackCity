@@ -14,7 +14,7 @@ from rackcity.models import (
     Datacenter,
     ChangePlan,
 )
-from rackcity.utils.change_planner_utils import get_assets_for_cp
+from rackcity.models.asset import get_assets_for_cp
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from rackcity.api.serializers import (
@@ -178,7 +178,7 @@ def asset_add(request):
     change_plan = None
     if request.query_params.get("change_plan"):
         change_plan = get_change_plan(request.query_params.get("change_plan"))
-        data["change_plan"] = change_plan
+        data["change_plan"] = change_plan.id
         serializer = AssetCPSerializer(data=data)
     else:
         serializer = AssetSerializer(data=data)
@@ -207,6 +207,7 @@ def asset_add(request):
             change_plan=change_plan
             )
     except LocationException as error:
+        print("location exception")
         return JsonResponse(
             {"failure_message": Status.CREATE_ERROR.value + str(error)},
             status=HTTPStatus.BAD_REQUEST
@@ -214,6 +215,7 @@ def asset_add(request):
     try:
         asset = serializer.save()
     except Exception as error:
+        print("serializer save error")
         return JsonResponse(
             {
                 "failure_message":
@@ -384,6 +386,7 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
                                 setattr(asset_cp, field.name, getattr(
                                     destination_asset, field.name))
                         asset_cp.save()
+                        destination_asset = asset_cp
                     else:
                         destination_asset = assets_cp.get(
                             hostname=network_connection['destination_hostname'],
@@ -648,7 +651,7 @@ def asset_modify(request):
                 )
                 if (
                     data[field] and len(assets_with_asset_number) > 0
-                    and assets_with_asset_number[0].id != existing_asset.related_asset.id
+                    and assets_with_asset_number[0].id != existing_asset.id
                 ):
                     return JsonResponse(
                         {

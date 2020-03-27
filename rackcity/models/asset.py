@@ -16,6 +16,7 @@ def get_next_available_asset_number():
         except ObjectDoesNotExist:
             return asset_number
 
+
 def get_assets_for_cp(change_plan=None):
     """
     If a change plan is specified, returns Asset query and AssetCP query,
@@ -48,25 +49,29 @@ def validate_hostname_uniqueness(value, asset_id, change_plan, related_asset):
     if len(matching_assets) > 0 and matching_assets[0].id != asset_id:
         raise ValidationError("'" + value + "'is not a unique hostname. \
             A existing asset on this change plan exists with this hostname.")
+    related_asset_id = None
+    if related_asset:
+        related_asset_id = related_asset.id
 
     matching_assets = assets.filter(hostname=value)
-    if len(matching_assets) > 0 and related_asset and matching_assets[0].id != related_asset.id :
+    if len(matching_assets) > 0 and related_asset and matching_assets[0].id != related_asset_id:
         raise ValidationError("'" + value + "'is not a unique hostname. \
             A existing asset exists with this hostname.")
 
 
 def validate_asset_number_uniqueness(value, asset_id, change_plan, related_asset):
-    print(value, asset_id,change_plan,related_asset.id)
+    print("change plan", change_plan)
     assets, assets_cp = get_assets_for_cp(change_plan.id)
     matching_assets = assets_cp.filter(asset_number=value)
 
     if value and len(matching_assets) > 0 and matching_assets[0].id != asset_id: 
         raise ValidationError("'" + value + "'is not a unique asset number. \
             A existing asset on this change plan exists with this asset number.")
-
+    related_asset_id = None
+    if related_asset:
+        related_asset_id = related_asset.id
     matching_assets = assets.filter(asset_number=value)
-    print(related_asset.id)
-    if len(matching_assets) > 0 and related_asset and matching_assets[0].id != related_asset.id:
+    if len(matching_assets) > 0 and related_asset and matching_assets[0].id != related_asset_id:
         raise ValidationError("'" + value + "'is not a unique asset number. \
             A existing asset on exists with this asset number.")
 
@@ -271,9 +276,13 @@ class AssetCP(AbstractAsset):
 
     def save(self, *args, **kwargs):
         try:
+            print("here1")
             validate_hostname(self.hostname)
+            print("here2")
             validate_hostname_uniqueness(self.hostname, self.id, self.change_plan, self.related_asset)
+            print("here3")
             validate_asset_number_uniqueness(self.asset_number, self.id, self.change_plan, self.related_asset)
+            print("here4")
             validate_owner(self.owner)
         except ValidationError as valid_error:
             raise valid_error
