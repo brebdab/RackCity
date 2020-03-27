@@ -17,7 +17,7 @@ from rackcity.utils.errors_utils import (
     parse_save_validation_error,
     AuthFailure,
 )
-from rackcity.views.rackcity_utils import (
+from rackcity.utils.query_utils import (
     get_sort_arguments,
     get_filter_arguments,
 )
