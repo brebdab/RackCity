@@ -10,7 +10,6 @@ from rackcity.models import (
     Datacenter,
     ChangePlan,
 )
-from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ObjectDoesNotExist
 from rackcity.api.serializers import (
     AssetSerializer,
@@ -38,11 +37,9 @@ from rackcity.utils.errors_utils import (
     parse_serializer_errors,
     parse_save_validation_error,
     BulkFailure,
+    AuthFailure,
 )
-from rackcity.permissions.decorators import (
-    asset_permission_required,
-)
-from rackcity.permissions.permissions import PermissionPath
+from rackcity.permissions.permissions import user_has_asset_permission
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import JSONParser
@@ -114,7 +111,6 @@ def asset_detail(request, id):
     """
     Retrieve a single asset.
     """
-
     try:
         asset = Asset.objects.get(id=id)
     except Asset.DoesNotExist:
@@ -138,7 +134,7 @@ def asset_detail(request, id):
 
 
 @api_view(['POST'])
-@asset_permission_required()
+@permission_classes([IsAuthenticated])
 def asset_add(request):
     """
     Add a new asset.
@@ -165,6 +161,30 @@ def asset_add(request):
             status=HTTPStatus.BAD_REQUEST
         )
     rack_id = serializer.validated_data['rack'].id
+    try:
+        rack = Rack.objects.get(id=rack_id)
+    except ObjectDoesNotExist:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR.value +
+                    "Rack" + GenericFailure.DOES_NOT_EXIST.value,
+                "errors": "No existing rack with id="+str(rack_id)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    if not user_has_asset_permission(request.user, rack.datacenter):
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.AUTH_ERROR.value + AuthFailure.ASSET.value,
+                "errors":
+                    "User " + request.user.username +
+                    " does not have asset permission in datacenter id="
+                    + str(rack.datacenter.id)
+            },
+            status=HTTPStatus.UNAUTHORIZED
+        )
     rack_position = serializer.validated_data['rack_position']
     height = serializer.validated_data['model'].height
     try:
@@ -385,7 +405,7 @@ def save_power_connections(asset_data, asset_id):
 
 
 @api_view(['POST'])
-@asset_permission_required()
+@permission_classes([IsAuthenticated])
 def asset_modify(request):
     """
     Modify a single existing asset
@@ -413,8 +433,23 @@ def asset_modify(request):
             },
             status=HTTPStatus.BAD_REQUEST
         )
+    if not user_has_asset_permission(
+        request.user,
+        existing_asset.rack.datacenter
+    ):
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.AUTH_ERROR.value + AuthFailure.ASSET.value,
+                "errors":
+                    "User " + request.user.username +
+                    " does not have asset permission in datacenter id="
+                    + str(existing_asset.rack.datacenter.id)
+            },
+            status=HTTPStatus.UNAUTHORIZED
+        )
     try:
-        validate_location_modification(data, existing_asset)
+        validate_location_modification(data, existing_asset, request.user)
     except Exception as error:
         return JsonResponse(
             {
@@ -527,7 +562,7 @@ def asset_modify(request):
 
 
 @api_view(['POST'])
-@asset_permission_required()
+@permission_classes([IsAuthenticated])
 def asset_delete(request):
     """
     Delete a single existing asset
@@ -554,6 +589,21 @@ def asset_delete(request):
                 "errors": "No existing asset with id="+str(id)
             },
             status=HTTPStatus.BAD_REQUEST
+        )
+    if not user_has_asset_permission(
+        request.user,
+        existing_asset.rack.datacenter
+    ):
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.AUTH_ERROR.value + AuthFailure.ASSET.value,
+                "errors":
+                    "User " + request.user.username +
+                    " does not have asset permission in datacenter id="
+                    + str(existing_asset.rack.datacenter.id)
+            },
+            status=HTTPStatus.UNAUTHORIZED
         )
     asset_number = existing_asset.asset_number
     if (existing_asset.hostname):
@@ -586,8 +636,7 @@ def asset_delete(request):
 
 
 @api_view(['POST'])
-@permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
-# TODO Check all assets for datacenter-level permissions
+@permission_classes([IsAuthenticated])
 def asset_bulk_upload(request):
     """
     Bulk upload many assets to add or modify
@@ -759,7 +808,11 @@ def asset_bulk_upload(request):
         if asset_exists:
             # asset number specfies existing asset
             try:
-                validate_location_modification(asset_data, existing_asset)
+                validate_location_modification(
+                    asset_data,
+                    existing_asset,
+                    request.user,
+                )
             except Exception:
                 failure_message = \
                     Status.IMPORT_ERROR.value + \
@@ -778,6 +831,19 @@ def asset_bulk_upload(request):
             )
         else:
             # asset number not provided or it is new
+            rack = asset_serializer.validated_data['rack']
+            if not user_has_asset_permission(request.user, rack.datacenter):
+                return JsonResponse(
+                    {
+                        "failure_message":
+                            Status.AUTH_ERROR.value + AuthFailure.ASSET.value,
+                        "errors":
+                            "User " + request.user.username +
+                            " does not have asset permission in datacenter id="
+                            + str(rack.datacenter.id)
+                    },
+                    status=HTTPStatus.UNAUTHORIZED
+                )
             model = ITModel.objects.get(id=asset_data['model'])
             try:
                 validate_asset_location(
@@ -885,8 +951,7 @@ def asset_bulk_upload(request):
 
 
 @api_view(['POST'])
-@permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
-# TODO Check all assets for datacenter-level permissions
+@permission_classes([IsAuthenticated])
 def asset_bulk_approve(request):
     """
     Bulk approve many assets to modify
@@ -988,8 +1053,7 @@ def asset_bulk_export(request):
 
 
 @api_view(['POST'])
-@permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
-# TODO Check all affected assets for datacenter-level permissions
+@permission_classes([IsAuthenticated])
 def network_bulk_upload(request):
     data = JSONParser().parse(request)
     if 'import_csv' not in data:
@@ -1065,6 +1129,21 @@ def network_bulk_upload(request):
                 {"failure_message": failure_message},
                 status=HTTPStatus.BAD_REQUEST
             )
+        if not user_has_asset_permission(
+            request.user, 
+            source_asset.rack.datacenter
+        ):
+            return JsonResponse(
+                {
+                    "failure_message":
+                        Status.AUTH_ERROR.value + AuthFailure.ASSET.value,
+                    "errors":
+                        "User " + request.user.username +
+                        " does not have asset permission in datacenter id="
+                        + str(source_asset.rack.datacenter.id)
+                },
+                status=HTTPStatus.UNAUTHORIZED
+            )
         try:
             existing_port = NetworkPort.objects.get(
                 asset=source_asset,
@@ -1116,8 +1195,7 @@ def network_bulk_upload(request):
 
 
 @api_view(['POST'])
-@permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
-# TODO Check all assets for datacenter-level permissions
+@permission_classes([IsAuthenticated])
 def network_bulk_approve(request):
     data = JSONParser().parse(request)
     if 'approved_modifications' not in data:
