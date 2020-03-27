@@ -45,9 +45,9 @@ export class PowerView extends React.PureComponent<
   private toaster: Toaster = {} as Toaster;
   private addToast = (toast: IToastProps) => {
     toast.timeout = 5000;
-    // if (this.toaster) {
-    //   this.toaster.show(toast);
-    // }
+    if (this.toaster) {
+      this.toaster.show(toast);
+    }
   };
   private addSuccessToast = (message: string) => {
     this.addToast({ message: message, intent: Intent.PRIMARY });
