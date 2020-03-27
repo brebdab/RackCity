@@ -69,13 +69,16 @@ export class PowerView extends React.PureComponent<
   public state: PowerViewState = {
     powerConnections: undefined,
     powerStatus: undefined,
-    statusLoaded: false,
+    statusLoaded: true,
     alertOpen: false,
     confirmationMessage: ""
   };
 
   componentDidMount() {
     if (!this.props.changePlan) {
+      this.setState({
+        statusLoaded: false
+      });
       axios
         .get(
           API_ROOT + "api/power/get-state/" + this.props.asset!.id,

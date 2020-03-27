@@ -1,4 +1,4 @@
-from rackcity.models import Asset, ITModel, Rack, PowerPort, NetworkPort
+from rackcity.models import Asset, ITModel, Rack, PowerPort, NetworkPort, ChangePlan
 from rackcity.api.serializers import RecursiveAssetSerializer, RackSerializer
 from http import HTTPStatus
 from django.http import JsonResponse
@@ -165,6 +165,20 @@ def validate_location_modification(data, existing_asset, change_plan=None):
     except LocationException as error:
         raise error
 
+def get_change_plan(change_plan_id):
+    change_plan = ChangePlan.objects.get(
+        id=change_plan_id
+        )
+    if not change_plan:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.CREATE_ERROR.value + GenericFailure.INTERNAL.value,
+                "errors": "Invalid change_plan Parameter"
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    return change_plan
 
 def records_are_identical(existing_data, new_data):
     existing_keys = existing_data.keys()

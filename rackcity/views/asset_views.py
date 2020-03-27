@@ -74,6 +74,7 @@ from rackcity.views.rackcity_utils import (
     MacAddressException,
     PowerConnectionException,
     NetworkConnectionException,
+    get_change_plan
 )
 from rackcity.models.asset import get_next_available_asset_number, validate_asset_number_uniqueness
 
@@ -156,20 +157,7 @@ def asset_detail(request, id):
     return JsonResponse(serializer.data, status=HTTPStatus.OK)
 
 
-def get_change_plan(change_plan_id):
-    change_plan = ChangePlan.objects.get(
-        id=change_plan_id
-        )
-    if not change_plan:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.CREATE_ERROR.value + GenericFailure.INTERNAL.value,
-                "errors": "Invalid change_plan Parameter"
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    return change_plan
+
 
 
 @api_view(['POST'])
