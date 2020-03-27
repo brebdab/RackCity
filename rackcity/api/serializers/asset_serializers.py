@@ -13,7 +13,7 @@ from .it_model_serializers import ITModelSerializer
 from .rack_serializers import RackSerializer
 from .change_plan_serializers import GetChangePlanSerializer
 import copy
-
+from rackcity.models.asset import get_assets_for_cp
 
 class AssetCPSerializer(serializers.ModelSerializer):
     """
@@ -282,7 +282,8 @@ def serialize_power_connections(power_port_model, asset):
     return power_connections
 
 
-def generate_network_graph(asset):
+
+def generate_network_graph(asset, change_plan=None):
     try:
         nodes = []
         nodes.append({"id": asset.id, "label": asset.hostname})
@@ -308,9 +309,15 @@ def generate_network_graph(asset):
         return
 
 
-def get_neighbor_assets(hostname, id, nodes, edges):
+def get_neighbor_assets(hostname, id, nodes, edges, change_plan=None):
     try:
         source_ports = NetworkPort.objects.filter(asset=id)
+        if change_plan:
+            _, assets_cp = get_assets_for_cp(change_plan.id)
+            if assets_cp.filter(id=id).exists():
+                source_ports = NetworkPortCP.objects.filter(
+                    asset=id, change_plan=change_plan.id
+                    )
         for source_port in source_ports:
             if source_port.connected_port:
                 destination_port_asset = source_port.connected_port.asset
