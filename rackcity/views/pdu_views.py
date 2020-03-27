@@ -51,7 +51,7 @@ def power_status(request, id):
             },
             status=HTTPStatus.BAD_REQUEST
         )
-    power_connections = serialize_power_connections(asset)
+    power_connections = serialize_power_connections(PowerPort, asset)
 
     # get string parameter representing rack number (i.e. A01<L/R>)
     rack_str = str(asset.rack.row_letter)
@@ -122,7 +122,7 @@ def power_on(request):
             },
             status=HTTPStatus.BAD_REQUEST
         )
-    power_connections = serialize_power_connections(asset)
+    power_connections = serialize_power_connections(PowerPort, asset)
     # Check power is off
     for connection in power_connections:
         try:
@@ -186,7 +186,7 @@ def power_off(request):
             },
             status=HTTPStatus.BAD_REQUEST
         )
-    power_connections = serialize_power_connections(asset)
+    power_connections = serialize_power_connections(PowerPort, asset)
     # Check power is off
     for connection in power_connections:
         try:
@@ -247,7 +247,7 @@ def power_cycle(request):
             },
             status=HTTPStatus.BAD_REQUEST
         )
-    power_connections = serialize_power_connections(asset)
+    power_connections = serialize_power_connections(PowerPort, asset)
     for connection in power_connections:
         toggle_power(asset, connection, "off")
     time.sleep(2)
@@ -293,7 +293,7 @@ def power_availability(request):
     availableL = list(range(1, 25))
     availableR = list(range(1, 25))
     for asset in assets:
-        asset_power = serialize_power_connections(asset)
+        asset_power = serialize_power_connections(PowerPort, asset)
         for port_num in asset_power.keys():
             if asset_power[port_num]["left_right"] == "L":
                 try:
@@ -352,7 +352,7 @@ def get_pdu_status_ext(asset, left_right):
 
 
 def toggle_power(asset, asset_port_number, goal_state):
-    power_connections = serialize_power_connections(asset)
+    power_connections = serialize_power_connections(PowerPort, asset)
     pdu_port = power_connections[asset_port_number]['port_number']
     pdu = 'hpdu-rtp1-' + \
         get_pdu_status_ext(asset, str(
