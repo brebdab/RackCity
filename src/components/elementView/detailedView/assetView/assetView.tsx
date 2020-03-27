@@ -160,7 +160,7 @@ export class AssetView extends React.PureComponent<
     if (nextProps.changePlan !== this.props.changePlan) {
       let params: any;
       params = this.props.match.params;
-      this.updateAssetDataCP(params.rid,nextProps.changePlan);
+      this.updateAssetDataCP(params.rid, nextProps.changePlan);
       console.log("new change plan", nextProps.changePlan);
     }
   }

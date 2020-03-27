@@ -190,6 +190,14 @@ class ElementTable extends React.Component<
     if (nextProps.changePlan !== this.props.changePlan) {
       this.updateTableData();
     }
+    if (nextProps.data !== this.props.data) {
+      console.log("NEW TABLE DATA");
+      if (nextProps.data) {
+        this.setState({
+          items: nextProps.data
+        });
+      }
+    }
   }
 
   handlePagingChange = (page: PagingTypes) => {

@@ -5,6 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from rackcity.models import ITModel, Asset
 from rackcity.api.serializers import (
     RecursiveAssetSerializer,
+    RecursiveAssetCPSerializer,
     ITModelSerializer,
     BulkITModelSerializer,
     normalize_bulk_model_data
@@ -24,6 +25,7 @@ from rackcity.utils.errors_utils import (
     parse_save_validation_error,
     BulkFailure
 )
+from rackcity.models.asset import get_assets_for_cp
 from rackcity.permissions.permissions import PermissionPath
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
@@ -42,7 +44,8 @@ from rackcity.views.rackcity_utils import (
     validate_asset_location,
     records_are_identical,
     LocationException,
-    ModelModificationException
+    ModelModificationException,
+    get_change_plan
 )
 
 
@@ -326,14 +329,32 @@ def model_detail(request, id):
     try:
         model = ITModel.objects.get(id=id)
         model_serializer = ITModelSerializer(model)
-        assets = Asset.objects.filter(model=id)
+        assets_cp = []
+        change_plan = None
+        if request.query_params.get("change_plan"):
+            change_plan = get_change_plan(request.query_params.get("change_plan"))
+            assets, assets_cp = get_assets_for_cp(change_plan.id)
+            assets = assets.filter(model=id)
+            assets_cp = assets_cp.filter(model=id, change_plan=change_plan.id)
+            assets_cp_serializer = RecursiveAssetCPSerializer(
+                assets_cp,
+                many=True
+            )
+
+        else:
+            assets = Asset.objects.filter(model=id)
         assets_serializer = RecursiveAssetSerializer(
             assets,
             many=True,
         )
+
+        if change_plan:
+            asset_data = assets_serializer.data + assets_cp_serializer.data
+        else:
+            asset_data = assets_serializer.data 
         model_detail = {
             "model": model_serializer.data,
-            "assets": assets_serializer.data
+            "assets": asset_data
         }
         return JsonResponse(model_detail, status=HTTPStatus.OK)
     except ITModel.DoesNotExist:
