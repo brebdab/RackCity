@@ -1,9 +1,7 @@
 from django.http import JsonResponse
 from rest_framework.parsers import JSONParser
-from rackcity.models import (
-    Asset,
-    DecommissionedAsset,
-)
+from rackcity.models import Asset
+from rackcity.permissions.permissions import user_has_asset_permission
 from rackcity.api.serializers import (
     RecursiveAssetSerializer,
     AddDecommissionedAssetSerializer,
@@ -16,7 +14,7 @@ from rackcity.utils.errors_utils import (
     GenericFailure,
     parse_serializer_errors,
     parse_save_validation_error,
-    BulkFailure
+    AuthFailure,
 )
 
 
