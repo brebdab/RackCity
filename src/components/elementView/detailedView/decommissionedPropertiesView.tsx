@@ -3,12 +3,12 @@ import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
 import { RouteComponentProps, withRouter } from "react-router";
 import {
-    ElementObjectType,
+    AssetObject,
     DecommissionedFieldsTable,
 } from "../../../utils/utils";
 
 interface DecommissionedPropertiesViewProps {
-    data: ElementObjectType;
+    data: AssetObject;
 }
 export interface AlertState {
     isDeleteOpen: boolean;
