@@ -850,6 +850,7 @@ class ElementTable extends React.Component<
           icon="delete"
           minimal
           text="Revoke admin"
+          disabled={this.props.changePlan ? true : false}
           onClick={() => this.handleRevokeAdminOpen(item.id)}
         />
       );
@@ -861,6 +862,7 @@ class ElementTable extends React.Component<
           icon="add"
           minimal
           text="Grant admin"
+          disabled={this.props.changePlan ? true : false}
           onClick={() => this.handleGrantAdminOpen(item.id)}
         />
       );
@@ -1173,7 +1175,11 @@ class ElementTable extends React.Component<
 
                           return null;
                         })}
-                        <td>
+                        <td
+                          onClick={(event: any) => {
+                            event.stopPropagation();
+                          }}
+                        >
                           {this.props.isAdmin && isUserObject(item) ? (
                             <div className="inline-buttons grant-admin-button">
                               {this.renderAdminButton(item)}
@@ -1195,11 +1201,6 @@ class ElementTable extends React.Component<
                                     : false
                                 }
                                 onClick={(event: any) => {
-                                  console.log(
-                                    "SCROLL",
-                                    window.scrollX,
-                                    window.scrollY
-                                  );
                                   this.handleEditButtonClick(item);
                                   event.stopPropagation();
                                 }}
