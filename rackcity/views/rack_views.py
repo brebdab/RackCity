@@ -1,11 +1,7 @@
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from rackcity.models import Rack, Asset
-from rackcity.api.serializers import (
-    RackSerializer,
-    AssetSerializer,
-    RecursiveAssetSerializer,
-)
+from rackcity.api.serializers import RackSerializer
 from rackcity.api.objects import RackRangeSerializer
 from rackcity.utils.log_utils import (
     log_rack_action,

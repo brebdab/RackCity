@@ -173,9 +173,9 @@ def get_filtered_query(object_query, data, or_filters=False):
             )
         )
     if or_filters and len(filter_args) > 0:
-        apply_filters_or(object_query, filter_args)
+        object_query = apply_filters_or(object_query, filter_args)
     else:
-        apply_filters_and(object_query, filter_args)
+        object_query = apply_filters_and(object_query, filter_args)
     return (object_query, None)
 
 
@@ -248,11 +248,12 @@ def get_many_response(
     """
     should_paginate = should_paginate_query(request.query_params)
 
-    page_failure_response = get_invalid_paginated_request_response(
-        request.query_params
-    )
-    if page_failure_response:
-        return page_failure_response
+    if should_paginate:
+        page_failure_response = get_invalid_paginated_request_response(
+            request.query_params
+        )
+        if page_failure_response:
+            return page_failure_response
 
     if premade_object_query is not None:
         object_query = premade_object_query
