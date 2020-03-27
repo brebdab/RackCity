@@ -12,6 +12,7 @@ import {
   Position,
   Toaster,
   Divider,
+  Text,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -58,6 +59,7 @@ interface ElementViewState {
   fileName: string;
   networkFileName: string;
   updateTable: boolean;
+  isDecommissioned: boolean;
 }
 interface ElementViewProps {
   element: ElementType;
@@ -78,7 +80,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     fileNameIsOpen: false,
     fileName: "",
     networkFileName: "",
-    updateTable: false
+    updateTable: false,
+    isDecommissioned: false
   };
 
   getExportData = (
@@ -371,19 +374,20 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             </Callout>
           ) : null}
         </div>
-        {true ? <Callout
-          icon="archive"
+        {this.state.isDecommissioned ? <Callout
+          icon="warning-sign"
         >
-          <h4
-            className="bp3-heading"
-          >
-            Decommissioned
-            </h4>
-          <Button
-            minimal
-          >
-            View Live Assets
+          <FormGroup label="Showing decommissioned assets" inline={true}>
+            <Button
+              onClick={() => {
+                /* handle data based on state */
+                this.setState({ isDecommissioned: false });
+              }}
+            >
+
+              View Live Assets
           </Button>
+          </FormGroup>
         </Callout>
           :
           <div className="element-tab-buttons">
@@ -532,6 +536,15 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                 onClick={() => { }}
               />
             ) : null}
+            <Button
+              onClick={() => {
+                this.setState({ isDecommissioned: true });
+              }}
+              text="View Decommissioned"
+              minimal
+              icon="archive"
+            >
+            </Button>
             <FormPopup
               {...this.props}
               type={FormTypes.CREATE}
