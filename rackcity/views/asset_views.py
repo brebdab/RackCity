@@ -457,7 +457,10 @@ def save_power_connections(asset_data, asset_id, change_plan=None):
             failure_message += "Power port '"+port_name+"' does not exist on this asset. "
         else:
             power_connection_data = power_connection_assignments[port_name]
-            asset = Asset.objects.get(id=asset_id)
+            if change_plan:
+                asset = AssetCP.objects.get(id=asset_id)
+            else:
+                asset = Asset.objects.get(id=asset_id)
             if not power_connection_data:
                 power_port.power_connection = None
                 power_port.save()
@@ -469,18 +472,18 @@ def save_power_connections(asset_data, asset_id, change_plan=None):
                     port_number=power_connection_data['port_number']
                 )
                 if change_plan:
-                    if PDUPortCP.filter(
+                    if PDUPortCP.objects.filter(
                             rack=asset.rack,
                             left_right=power_connection_data['left_right'],
                             port_number=power_connection_data['port_number']
                         ).exists():
-                        pdu_port = PDUPortCP.get(
+                        pdu_port = PDUPortCP.objects.get(
                             rack=asset.rack,
                             left_right=power_connection_data['left_right'],
                             port_number=power_connection_data['port_number']
                         )
                     else:
-                        pdu_port = PDUPortCP(change_plan=change_plan.id)
+                        pdu_port = PDUPortCP(change_plan=change_plan)
                         for field in pdu_port_master._meta.fields:
                             setattr(pdu_port, field.name, getattr(
                                 pdu_port_master, field.name))
@@ -634,7 +637,7 @@ def asset_modify(request):
                      asset_number=data[field]
                 )
             if (
-                len(assets_with_asset_number) > 0
+                data[field] and len(assets_with_asset_number) > 0
                 and assets_with_asset_number[0].id != id
             ):
                 return JsonResponse(

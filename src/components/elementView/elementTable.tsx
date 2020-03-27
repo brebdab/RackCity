@@ -44,7 +44,8 @@ import {
   ModelFieldsTable,
   ROUTES,
   isChangePlanObject,
-  ChangePlan
+  ChangePlan,
+  isAssetCP
 } from "../../utils/utils";
 import DragDropList, { DragDropListTypes } from "./dragDropList";
 import {
@@ -148,7 +149,12 @@ class ElementTable extends React.Component<
     selectedAll: false
   };
   validRequestMadeWithToken = false;
-
+  getChangePlanRowStyle = (item: any) => {
+    return {
+      fontWeight: isAssetCP(item) ? ("bold" as any) : ("none" as any),
+      color: isAssetCP(item) ? "#bf8c0a" : "white"
+    };
+  };
   //PAGING LOGIC
   resetPage = () => {
     this.setState({
@@ -183,6 +189,9 @@ class ElementTable extends React.Component<
       this.updatePageData(this.state.page_type, 1);
     }
     if (nextProps.token !== this.props.token) {
+      this.updateTableData();
+    }
+    if (nextProps.changePlan !== this.props.changePlan) {
       this.updateTableData();
     }
   }
@@ -644,7 +653,7 @@ class ElementTable extends React.Component<
     );
   };
 
-  successfulModification(message:string) {
+  successfulModification(message: string) {
     this.updateTableData();
     this.handleEditFormClose();
     this.addSuccessToast(message);
@@ -1088,6 +1097,7 @@ class ElementTable extends React.Component<
                                 );
                               }
                         }
+                        style={this.getChangePlanRowStyle(item)}
                       >
                         {this.props.type === ElementType.ASSET ? (
                           <th
@@ -1123,13 +1133,21 @@ class ElementTable extends React.Component<
                         {Object.entries(item).map(([col, value]) => {
                           if (isModelObject(value)) {
                             return [
-                              <td>{value.vendor}</td>,
-                              <td>{value.model_number}</td>
+                              <td style={this.getChangePlanRowStyle(item)}>
+                                {value.vendor}
+                              </td>,
+                              <td style={this.getChangePlanRowStyle(item)}>
+                                {value.model_number}
+                              </td>
                             ];
                           } else if (isRackObject(value)) {
                             return [
-                              <td>{value.row_letter + value.rack_num}</td>,
-                              <td>{value.datacenter.name}</td>
+                              <td style={this.getChangePlanRowStyle(item)}>
+                                {value.row_letter + value.rack_num}
+                              </td>,
+                              <td style={this.getChangePlanRowStyle(item)}>
+                                {value.datacenter.name}
+                              </td>
                             ];
                           } else if (col === "display_color") {
                             return (
@@ -1146,7 +1164,11 @@ class ElementTable extends React.Component<
                             col !== "is_admin" &&
                             !isObject(value)
                           ) {
-                            return <td>{value}</td>;
+                            return (
+                              <td style={this.getChangePlanRowStyle(item)}>
+                                {value}
+                              </td>
+                            );
                           }
 
                           return null;

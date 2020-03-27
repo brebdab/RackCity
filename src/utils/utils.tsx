@@ -273,6 +273,10 @@ export const getHeaders = (token: string) => {
   };
 };
 
+export function isAssetCP(obj: any): boolean {
+  return obj && obj.change_plan;
+}
+
 export const isAdmin = (headers: any) => {
   let isAdmin = false;
   axios

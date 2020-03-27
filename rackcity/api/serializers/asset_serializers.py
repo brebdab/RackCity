@@ -207,8 +207,7 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
             'network_graph',
             'power_connections',
             'change_plan',
-            'is_conflict',
-            'related_asset'
+
         )
 
     def get_mac_addresses(self, assetCP):

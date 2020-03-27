@@ -59,7 +59,7 @@ def validate_asset_number_uniqueness(value, asset_id, change_plan):
     assets, assets_cp = get_assets_for_cp(change_plan.id)
     matching_assets = assets_cp.filter(asset_number=value)
 
-    if len(matching_assets) > 0 and matching_assets[0].id != asset_id:
+    if value and len(matching_assets) > 0 and matching_assets[0].id != asset_id:
         raise ValidationError("'" + value + "'is not a unique asset number. \
             A existing asset on this change plan exists with this asset number.")
 

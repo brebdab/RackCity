@@ -181,13 +181,16 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     console.log(API_ROOT + "api/" + path + "/get-many");
     this.handleDataUpdate(false);
 
-    const params =
+    const params:any =
       page_type === PagingTypes.ALL
         ? {}
         : {
             page_size: page_type,
             page
           };
+    if (this.props.changePlan) {
+      params["change_plan"] = this.props.changePlan.id;
+    }
     const config = {
       headers: {
         Authorization: "Token " + token
