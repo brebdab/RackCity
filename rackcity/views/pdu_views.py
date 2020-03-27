@@ -1,7 +1,8 @@
 from django.http import JsonResponse
 from rackcity.models import (
     Rack,
-    Asset
+    Asset,
+    PowerPort,
 )
 from rackcity.api.serializers import (
     serialize_power_connections,
