@@ -1,7 +1,13 @@
 from django.http import JsonResponse
-from rackcity.api.serializers import AddChangePlanSerializer, GetChangePlanSerializer
+from rackcity.api.serializers import (
+    AddChangePlanSerializer,
+    GetChangePlanSerializer,
+)
 from rackcity.models import ChangePlan
-from rackcity.views.rackcity_utils import get_filter_arguments, get_sort_arguments
+from rackcity.utils.query_utils import (
+    get_page_count_response,
+    get_many_response,
+)
 from rackcity.utils.errors_utils import (
     Status,
     GenericFailure,
@@ -10,10 +16,8 @@ from rackcity.utils.errors_utils import (
 from http import HTTPStatus
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import JSONParser
 from django.core.exceptions import ObjectDoesNotExist
-import math
 
 
 @api_view(['POST'])
@@ -187,22 +191,7 @@ def change_plan_page_count(request):
     Return total number of pages according to page size, which must be
     specified as query parameter.
     """
-    if (
-        not request.query_params.get('page_size')
-        or int(request.query_params.get('page_size')) <= 0
-    ):
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                "errors": "Must specify positive integer page_size."
-            },
-            status=HTTPStatus.BAD_REQUEST,
-        )
-    page_size = int(request.query_params.get('page_size'))
-    user_count = ChangePlan.objects.all().count()
-    page_count = math.ceil(user_count / page_size)
-    return JsonResponse({"page_count": page_count})
+    return get_page_count_response(ChangePlan, request.query_params)
 
 
 @api_view(['POST'])
@@ -213,82 +202,12 @@ def change_plan_many(request):
     models are returned. If page is specified as a query parameter, page
     size must also be specified, and a page of models will be returned.
     """
-    errors = []
-    should_paginate = not(
-        request.query_params.get('page') is None
-        and request.query_params.get('page_size') is None
-    )
-    if should_paginate:
-        if not request.query_params.get('page'):
-            errors.append("Must specify field 'page' on paginated requests")
-        elif not request.query_params.get('page_size'):
-            errors.append(
-                "Must specify field 'page_size' on paginated requests"
-            )
-        elif int(request.query_params.get('page_size')) <= 0:
-            errors.append(
-                "Field 'page_size' must be an integer greater than 0"
-            )
-
-    if len(errors) > 0:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                "errors": " ".join(errors)
-            },
-            status=HTTPStatus.BAD_REQUEST,
-        )
-
     user = request.user
-    change_plans_query = ChangePlan.objects.filter(owner=user)
-
-    try:
-        filter_args = get_filter_arguments(request.data)
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.FILTER.value,
-                "errors": str(error)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    for filter_arg in filter_args:
-        change_plans_query = change_plans_query.filter(**filter_arg)
-    try:
-        sort_args = get_sort_arguments(request.data)
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.SORT.value,
-                "errors": str(error)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    change_plans = change_plans_query.order_by(*sort_args)
-
-    if should_paginate:
-        paginator = PageNumberPagination()
-        paginator.page_size = request.query_params.get('page_size')
-        try:
-            page_of_change_plans = paginator.paginate_queryset(
-                change_plans, request)
-        except Exception as error:
-            return JsonResponse(
-                {
-                    "failure_message":
-                        Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                    "errors": str(error)
-                },
-                status=HTTPStatus.BAD_REQUEST,
-            )
-        change_plans_to_serialize = page_of_change_plans
-    else:
-        change_plans_to_serialize = change_plans
-    serializer = GetChangePlanSerializer(change_plans_to_serialize, many=True)
-    return JsonResponse(
-        {"change-plans": serializer.data},
-        status=HTTPStatus.OK,
+    user_change_plans = ChangePlan.objects.filter(owner=user)
+    return get_many_response(
+        ChangePlan,
+        GetChangePlanSerializer,
+        "change-plans",
+        request,
+        premade_object_query=user_change_plans,
     )

@@ -27,18 +27,20 @@ from rackcity.utils.errors_utils import (
 from rackcity.permissions.permissions import PermissionPath
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
-import math
 import csv
 from base64 import b64decode
 import re
 from io import StringIO, BytesIO
+from rackcity.utils.query_utils import (
+    get_sort_arguments,
+    get_filter_arguments,
+    get_page_count_response,
+    get_many_response,
+)
 from rackcity.views.rackcity_utils import (
     validate_asset_location,
     records_are_identical,
-    get_sort_arguments,
-    get_filter_arguments,
     LocationException,
     ModelModificationException
 )
@@ -307,87 +309,11 @@ def model_many(request):
     models are returned. If page is specified as a query parameter, page
     size must also be specified, and a page of models will be returned.
     """
-
-    errors = []
-
-    should_paginate = not(
-        request.query_params.get('page') is None
-        and request.query_params.get('page_size') is None
-    )
-
-    if should_paginate:
-        if not request.query_params.get('page'):
-            errors.append("Must specify field 'page' on paginated requests")
-        elif not request.query_params.get('page_size'):
-            errors.append(
-                "Must specify field 'page_size' on paginated requests"
-            )
-        elif int(request.query_params.get('page_size')) <= 0:
-            errors.append(
-                "Field 'page_size' must be an integer greater than 0"
-            )
-
-    if len(errors) > 0:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                "errors": " ".join(errors)
-            },
-            status=HTTPStatus.BAD_REQUEST,
-        )
-
-    models_query = ITModel.objects
-
-    try:
-        filter_args = get_filter_arguments(request.data)
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.FILTER.value,
-                "errors": str(error)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    for filter_arg in filter_args:
-        models_query = models_query.filter(**filter_arg)
-
-    try:
-        sort_args = get_sort_arguments(request.data)
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.SORT.value,
-                "errors": str(error)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    models = models_query.order_by(*sort_args)
-
-    if should_paginate:
-        paginator = PageNumberPagination()
-        paginator.page_size = request.query_params.get('page_size')
-        try:
-            page_of_models = paginator.paginate_queryset(models, request)
-        except Exception as error:
-            return JsonResponse(
-                {
-                    "failure_message":
-                        Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                    "errors": str(error)
-                },
-                status=HTTPStatus.BAD_REQUEST,
-            )
-        models_to_serialize = page_of_models
-    else:
-        models_to_serialize = models
-
-    serializer = ITModelSerializer(models_to_serialize, many=True)
-    return JsonResponse(
-        {"models": serializer.data},
-        status=HTTPStatus.OK,
+    return get_many_response(
+        ITModel,
+        ITModelSerializer,
+        "models",
+        request,
     )
 
 
@@ -685,36 +611,11 @@ def model_page_count(request):
     Return total number of pages according to page size, which must be
     specified as query parameter.
     """
-    if (
-        not request.query_params.get('page_size')
-        or int(request.query_params.get('page_size')) <= 0
-    ):
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                "errors": "Must specify positive integer page_size."
-            },
-            status=HTTPStatus.BAD_REQUEST,
-        )
-    page_size = int(request.query_params.get('page_size'))
-    models_query = ITModel.objects
-    try:
-        filter_args = get_filter_arguments(request.data)
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.FILTER.value,
-                "errors": str(error)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    for filter_arg in filter_args:
-        models_query = models_query.filter(**filter_arg)
-    model_count = models_query.count()
-    page_count = math.ceil(model_count / page_size)
-    return JsonResponse({"page_count": page_count})
+    return get_page_count_response(
+        ITModel,
+        request.query_params,
+        data_for_filters=request.data,
+    )
 
 
 @api_view(['GET'])

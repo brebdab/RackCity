@@ -1,7 +1,8 @@
 from django.contrib.auth.models import Permission, User
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ObjectDoesNotExist
 from enum import Enum
-from rackcity.models import ITModel, Asset, Log
+from rackcity.models import ITModel, Asset, Log, RackCityPermission
 from typing import Tuple
 
 
@@ -59,3 +60,24 @@ def get_permission(permission_name: PermissionName) -> Permission:
         content_type=content_type,
     )
     return permission
+
+
+def user_has_asset_permission(user, datacenter=None):
+    if user.has_perm(PermissionPath.ASSET_WRITE.value):
+        return True
+    if datacenter:
+        try:
+            permission = RackCityPermission.objects.get(user=user.id)
+        except ObjectDoesNotExist:
+            return False
+        else:
+            if datacenter in permission.datacenter_permissions.all():
+                return True
+    return False
+
+
+def user_has_power_permission(user, asset=None):
+    return (
+        user.has_perm(PermissionPath.POWER_WRITE.value)
+        or (asset and (user.username == asset.owner))
+    )
