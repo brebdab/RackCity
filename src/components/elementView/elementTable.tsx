@@ -569,6 +569,7 @@ class ElementTable extends React.Component<
         fields.push("rack__datacenter__name");
       } else if (
         col !== "id" &&
+        col !== "decommissioned_id" &&
         col !== "network_ports" &&
         col !== "comment" &&
         col !== "power_connections" &&
@@ -1039,30 +1040,32 @@ class ElementTable extends React.Component<
                 {this.props.type === ElementType.ASSET ? (
                   <th className="header-cell">
                     <div className="header-text">
-                      <Checkbox
-                        checked={this.state.selectedAll}
-                        onClick={(event: any) => {
-                          const selected = this.state.selected;
-                          const selectedAll = !this.state.selectedAll;
+                      {this.props.isDecommissioned ? null :
+                        <Checkbox
+                          checked={this.state.selectedAll}
+                          onClick={(event: any) => {
+                            const selected = this.state.selected;
+                            const selectedAll = !this.state.selectedAll;
 
-                          this.state.items.forEach(item => {
-                            if (selected.includes(item.id) && !selectedAll) {
-                              selected.splice(selected.indexOf(item.id), 1);
-                            } else if (
-                              !selected.includes(item.id) &&
-                              selectedAll
-                            ) {
-                              selected.push(item.id);
-                            }
-                          });
-                          console.log(selected);
+                            this.state.items.forEach(item => {
+                              if (selected.includes(item.id) && !selectedAll) {
+                                selected.splice(selected.indexOf(item.id), 1);
+                              } else if (
+                                !selected.includes(item.id) &&
+                                selectedAll
+                              ) {
+                                selected.push(item.id);
+                              }
+                            });
+                            console.log(selected);
 
-                          this.setState({
-                            selectedAll,
-                            selected
-                          });
-                        }}
-                      />
+                            this.setState({
+                              selectedAll,
+                              selected
+                            });
+                          }}
+                        />
+                      }
                     </div>
                   </th>
                 ) : null}
@@ -1142,29 +1145,31 @@ class ElementTable extends React.Component<
                               event.stopPropagation();
                             }}
                           >
-                            <Checkbox
-                              checked={this.state.selected.includes(item.id)}
-                              onClick={(event: any) => {
-                                const selected = this.state.selected;
-                                if (selected.includes(item.id)) {
-                                  console.log("removing", item.id, selected);
-                                  if (this.state.selectedAll) {
-                                    this.setState({
-                                      selectedAll: false
-                                    });
+                            {this.props.isDecommissioned ? null :
+                              <Checkbox
+                                checked={this.state.selected.includes(item.id)}
+                                onClick={(event: any) => {
+                                  const selected = this.state.selected;
+                                  if (selected.includes(item.id)) {
+                                    console.log("removing", item.id, selected);
+                                    if (this.state.selectedAll) {
+                                      this.setState({
+                                        selectedAll: false
+                                      });
+                                    }
+                                    selected.splice(selected.indexOf(item.id), 1);
+                                  } else {
+                                    selected.push(item.id);
+                                    console.log("adding", item.id);
                                   }
-                                  selected.splice(selected.indexOf(item.id), 1);
-                                } else {
-                                  selected.push(item.id);
-                                  console.log("adding", item.id);
-                                }
-                                this.setState({
-                                  selected
-                                });
-                                console.log(selected);
-                                event.stopPropagation();
-                              }}
-                            />
+                                  this.setState({
+                                    selected
+                                  });
+                                  console.log(selected);
+                                  event.stopPropagation();
+                                }}
+                              />
+                            }
                           </th>
                         ) : null}
                         {Object.entries(item).map(([col, value]) => {
@@ -1188,6 +1193,7 @@ class ElementTable extends React.Component<
                             );
                           } else if (
                             col !== "id" &&
+                            col !== "decommissioned_id" &&
                             col !== "network_ports" &&
                             col !== "comment" &&
                             col !== "is_admin" &&
