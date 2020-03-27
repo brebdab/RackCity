@@ -10,7 +10,9 @@ import {
   AssetFieldsTable,
   isModelObject,
   ModelFieldsTable,
-  ROUTES
+  ROUTES,
+  isAssetCP,
+  getChangePlanRowStyle
 } from "../../../utils/utils";
 import "./propertiesView.scss";
 
@@ -89,7 +91,7 @@ class PropertiesView extends React.PureComponent<
               <p className="label">{AssetFieldsTable[item]}:</p>
             </td>
 
-            <td>
+            <td style={getChangePlanRowStyle(data)}>
               {" "}
               <p>{data[item].row_letter + "" + data[item].rack_num}</p>
             </td>
@@ -101,7 +103,7 @@ class PropertiesView extends React.PureComponent<
               </p>
             </td>
 
-            <td>
+            <td style={getChangePlanRowStyle(data)}>
               {" "}
               <p>{data[item].datacenter.name}</p>
             </td>
@@ -121,7 +123,7 @@ class PropertiesView extends React.PureComponent<
               <p className="label">{AssetFieldsTable[item]}:</p>
             </td>
 
-            <td>{dat}</td>
+            <td style={getChangePlanRowStyle(this.props.data)}>{dat}</td>
           </tr>
         );
       }

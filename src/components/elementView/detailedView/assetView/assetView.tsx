@@ -25,7 +25,9 @@ import {
   DatacenterObject,
   ROUTES,
   ChangePlan,
-  AssetCPObject
+  AssetCPObject,
+  isAssetCP,
+  getChangePlanRowStyle
 } from "../../../../utils/utils";
 import { deleteAsset, modifyAsset } from "../../elementUtils";
 import PropertiesView from "../propertiesView";
@@ -135,6 +137,7 @@ export class AssetView extends React.PureComponent<
     this.addToast({ message: message, intent: Intent.DANGER });
   };
   public updateAssetData = (rid: string) => {
+    console.log(this.props.changePlan);
     getData(rid, this.props.token, this.props.changePlan).then(result => {
       console.log(result);
       this.setState({
@@ -143,6 +146,24 @@ export class AssetView extends React.PureComponent<
     });
     console.log(this.state.asset);
   };
+
+  public updateAssetDataCP = (rid: string, changePlan: ChangePlan) => {
+    getData(rid, this.props.token, changePlan).then(result => {
+      console.log(result);
+      this.setState({
+        asset: result
+      });
+    });
+  };
+
+  componentWillReceiveProps(nextProps: AssetViewProps & RouteComponentProps) {
+    if (nextProps.changePlan !== this.props.changePlan) {
+      let params: any;
+      params = this.props.match.params;
+      this.updateAssetDataCP(params.rid,nextProps.changePlan);
+      console.log("new change plan", nextProps.changePlan);
+    }
+  }
 
   getNetworkConnectionForPort(port: string) {
     return this.state.asset.network_connections.find(
@@ -245,11 +266,16 @@ export class AssetView extends React.PureComponent<
                     return (
                       <tr>
                         {" "}
-                        <td>{port}</td>
-                        <td>{this.state.asset.mac_addresses[port]}</td>{" "}
+                        <td style={getChangePlanRowStyle(this.state.asset)}>
+                          {port}
+                        </td>
+                        <td style={getChangePlanRowStyle(this.state.asset)}>
+                          {this.state.asset.mac_addresses[port]}
+                        </td>{" "}
                         {connection
                           ? [
                               <td
+                                style={getChangePlanRowStyle(this.state.asset)}
                                 className="asset-link"
                                 onClick={(e: any) => {
                                   const id = this.getAssetIdFromHostname(
@@ -262,7 +288,11 @@ export class AssetView extends React.PureComponent<
                               >
                                 {connection.destination_hostname}
                               </td>,
-                              <td>{connection.destination_port}</td>
+                              <td
+                                style={getChangePlanRowStyle(this.state.asset)}
+                              >
+                                {connection.destination_port}
+                              </td>
                             ]
                           : [<td></td>, <td></td>]}
                       </tr>
