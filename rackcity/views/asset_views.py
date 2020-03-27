@@ -22,6 +22,7 @@ from rackcity.api.serializers import (
     AssetCPSerializer,
     GetDecommissionedAssetSerializer,
     RecursiveAssetSerializer,
+    RecursiveAssetCPSerializer,
     BulkAssetSerializer,
     BulkNetworkPortSerializer,
     ITModelSerializer,
@@ -73,6 +74,7 @@ from rackcity.views.rackcity_utils import (
     MacAddressException,
     PowerConnectionException,
     NetworkConnectionException,
+    get_change_plan
 )
 from rackcity.models.asset import get_next_available_asset_number, validate_asset_number_uniqueness
 
@@ -123,7 +125,7 @@ def asset_detail(request, id):
     change_plan = None
     serializer = None
     if request.query_params.get("change_plan"):
-        (change_plan,response) = get_change_plan(request.query_params.get("change_plan"))
+        (change_plan, response) = get_change_plan(request.query_params.get("change_plan"))
         if response:
             return response
     try:
@@ -152,25 +154,11 @@ def asset_detail(request, id):
             )
         else:
             serializer = GetDecommissionedAssetSerializer(decommissioned_asset)
-    else:
-        serializer = RecursiveAssetSerializer(asset)
+
     return JsonResponse(serializer.data, status=HTTPStatus.OK)
 
 
-def get_change_plan(change_plan_id):
-    change_plan = ChangePlan.objects.get(
-        id=change_plan_id
-        )
-    if not change_plan:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.CREATE_ERROR.value + GenericFailure.INTERNAL.value,
-                "errors": "Invalid change_plan Parameter"
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    return change_plan
+
 
 
 @api_view(['POST'])
@@ -191,7 +179,7 @@ def asset_add(request):
         )
     change_plan = None
     if request.query_params.get("change_plan"):
-        (change_plan,response) = get_change_plan(request.query_params.get("change_plan"))
+        (change_plan, response) = get_change_plan(request.query_params.get("change_plan"))
         if response:
             return response
         data["change_plan"] = change_plan.id

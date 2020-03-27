@@ -153,7 +153,10 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
   getPowerPortAvailability(rack: RackObject) {
     this.gettingPowerPortsInProgress = true;
-    const params = { id: rack.id };
+    const params: any = { id: rack.id };
+    if (this.props.changePlan) {
+      params["change_plan"] = this.props.changePlan.id;
+    }
     const config = {
       headers: {
         Authorization: "Token " + this.props.token

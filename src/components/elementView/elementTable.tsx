@@ -45,7 +45,7 @@ import {
   ROUTES,
   isChangePlanObject,
   ChangePlan,
-  isAssetCP
+  getChangePlanRowStyle
 } from "../../utils/utils";
 import DragDropList, { DragDropListTypes } from "./dragDropList";
 import {
@@ -149,12 +149,7 @@ class ElementTable extends React.Component<
     selectedAll: false
   };
   validRequestMadeWithToken = false;
-  getChangePlanRowStyle = (item: any) => {
-    return {
-      fontWeight: isAssetCP(item) ? ("bold" as any) : ("none" as any),
-      color: isAssetCP(item) ? "#bf8c0a" : "white"
-    };
-  };
+
   //PAGING LOGIC
   resetPage = () => {
     this.setState({
@@ -193,6 +188,14 @@ class ElementTable extends React.Component<
     }
     if (nextProps.changePlan !== this.props.changePlan) {
       this.updateTableData();
+    }
+    if (nextProps.data !== this.props.data) {
+      console.log("NEW TABLE DATA");
+      if (nextProps.data) {
+        this.setState({
+          items: nextProps.data
+        });
+      }
     }
   }
 
@@ -1101,7 +1104,7 @@ class ElementTable extends React.Component<
                                 );
                               }
                         }
-                        style={this.getChangePlanRowStyle(item)}
+                        style={getChangePlanRowStyle(item)}
                       >
                         {this.props.type === ElementType.ASSET ? (
                           <th
@@ -1137,19 +1140,19 @@ class ElementTable extends React.Component<
                         {Object.entries(item).map(([col, value]) => {
                           if (isModelObject(value)) {
                             return [
-                              <td style={this.getChangePlanRowStyle(item)}>
+                              <td style={getChangePlanRowStyle(item)}>
                                 {value.vendor}
                               </td>,
-                              <td style={this.getChangePlanRowStyle(item)}>
+                              <td style={getChangePlanRowStyle(item)}>
                                 {value.model_number}
                               </td>
                             ];
                           } else if (isRackObject(value)) {
                             return [
-                              <td style={this.getChangePlanRowStyle(item)}>
+                              <td style={getChangePlanRowStyle(item)}>
                                 {value.row_letter + value.rack_num}
                               </td>,
-                              <td style={this.getChangePlanRowStyle(item)}>
+                              <td style={getChangePlanRowStyle(item)}>
                                 {value.datacenter.name}
                               </td>
                             ];
@@ -1169,7 +1172,7 @@ class ElementTable extends React.Component<
                             !isObject(value)
                           ) {
                             return (
-                              <td style={this.getChangePlanRowStyle(item)}>
+                              <td style={getChangePlanRowStyle(item)}>
                                 {value}
                               </td>
                             );

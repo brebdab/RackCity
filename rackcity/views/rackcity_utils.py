@@ -1,4 +1,4 @@
-from rackcity.models import Asset, ITModel, Rack, PowerPort, NetworkPort
+from rackcity.models import Asset, ITModel, Rack, PowerPort, NetworkPort, ChangePlan
 from rackcity.api.serializers import RecursiveAssetSerializer, RackSerializer
 from http import HTTPStatus
 from django.http import JsonResponse
@@ -133,12 +133,10 @@ def validate_location_modification(data, existing_asset, change_plan=None):
     asset_id = existing_asset.id
     rack_id = existing_asset.rack.id
     related_asset_id = None
-    print("before")
     if hasattr(existing_asset, "related_asset") and existing_asset.related_asset:
         related_asset_id = existing_asset.related_asset.id
     asset_rack_position = existing_asset.rack_position
     asset_height = existing_asset.model.height
-    print("after")
     if 'rack_position' in data:
         try:
             asset_rack_position = int(data['rack_position'])
@@ -170,7 +168,6 @@ def validate_location_modification(data, existing_asset, change_plan=None):
         )
     except LocationException as error:
         raise error
-
 
 def get_change_plan(change_plan_id):
     try:

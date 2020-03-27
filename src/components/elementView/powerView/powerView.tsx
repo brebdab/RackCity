@@ -15,7 +15,12 @@ import * as React from "react";
 import { API_ROOT } from "../../../utils/api-config";
 import { RouteComponentProps, withRouter } from "react-router";
 import { connect } from "react-redux";
-import { AssetObject, getHeaders } from "../../../utils/utils";
+import {
+  AssetObject,
+  getHeaders,
+  getChangePlanRowStyle,
+  ChangePlan
+} from "../../../utils/utils";
 import "./powerView.scss";
 import { IconNames } from "@blueprintjs/icons";
 
@@ -26,6 +31,7 @@ interface PowerViewProps {
   shouldUpdate: boolean;
   updated: Function;
   isAdmin: boolean;
+  changePlan: ChangePlan;
 }
 
 interface PowerViewState {
@@ -45,7 +51,9 @@ export class PowerView extends React.PureComponent<
   private toaster: Toaster = {} as Toaster;
   private addToast = (toast: IToastProps) => {
     toast.timeout = 5000;
-    this.toaster.show(toast);
+    if (this.toaster) {
+      this.toaster.show(toast);
+    }
   };
   private addSuccessToast = (message: string) => {
     this.addToast({ message: message, intent: Intent.PRIMARY });
@@ -61,36 +69,40 @@ export class PowerView extends React.PureComponent<
   public state: PowerViewState = {
     powerConnections: undefined,
     powerStatus: undefined,
-    statusLoaded: false,
+    statusLoaded: true,
     alertOpen: false,
     confirmationMessage: ""
   };
 
   componentDidMount() {
-    axios
-      .get(
-        API_ROOT + "api/power/get-state/" + this.props.asset!.id,
-        getHeaders(this.props.token)
-      )
-      .then(res => {
-        this.setState({
-          powerConnections: res.data.power_connections,
-          powerStatus: res.data.power_status,
-          statusLoaded: true
-        });
-      })
-      .catch(err => {
-        this.addErrorToast(err.response.data.failure_message);
-        this.setState({
-          statusLoaded: true
-        });
+    if (!this.props.changePlan) {
+      this.setState({
+        statusLoaded: false
       });
+      axios
+        .get(
+          API_ROOT + "api/power/get-state/" + this.props.asset!.id,
+          getHeaders(this.props.token)
+        )
+        .then(res => {
+          this.setState({
+            powerConnections: res.data.power_connections,
+            powerStatus: res.data.power_status,
+            statusLoaded: true
+          });
+        })
+        .catch(err => {
+          this.addErrorToast(err.response.data.failure_message);
+          this.setState({
+            statusLoaded: true
+          });
+        });
+    }
     this.getUsername(this.props.token);
   }
 
   componentDidUpdate() {
-    console.log("componentDIDUPDST");
-    if (this.props.shouldUpdate) {
+    if (this.props.shouldUpdate && !this.props.changePlan) {
       console.log("here");
       axios
         .get(
@@ -124,23 +136,29 @@ export class PowerView extends React.PureComponent<
       ) {
         rows.push(
           <tr>
-            <td>{i}</td>
+            <td style={getChangePlanRowStyle(this.props.asset)}>{i}</td>
             {this.props.asset!.power_connections[i] ? (
-              <td>
+              <td style={getChangePlanRowStyle(this.props.asset)}>
                 {this.props.asset!.power_connections[i].port_number}
                 {this.props.asset!.power_connections[i].left_right}
               </td>
             ) : (
               <td></td>
             )}
-            {this.props.asset!.rack.is_network_controlled ? (
-              this.state.powerStatus ? (
-                <td>{this.state.powerStatus[i]}</td>
+            {!this.props.changePlan ? (
+              this.props.asset!.rack.is_network_controlled ? (
+                this.state.powerStatus ? (
+                  <td>{this.state.powerStatus[i]}</td>
+                ) : (
+                  <td>Unable to contact PDU controller</td>
+                )
               ) : (
-                <td>Unable to contact PDU controller</td>
+                <td>PDU not network controlled</td>
               )
             ) : (
-              <td>PDU not network controlled</td>
+              <td style={getChangePlanRowStyle(this.props.asset)}>
+                Power Management not available on Change Plan
+              </td>
             )}
           </tr>
         );
@@ -195,7 +213,8 @@ export class PowerView extends React.PureComponent<
               </div>
               {this.props.asset!.rack.is_network_controlled &&
               Object.keys(this.props.asset!.power_connections).length > 0 &&
-              this.state.powerStatus ? (
+              this.state.powerStatus &&
+              !this.props.changePlan ? (
                 <AnchorButton
                   className={"power-close"}
                   intent={
@@ -265,7 +284,8 @@ export class PowerView extends React.PureComponent<
               ) : null}
               {this.props.asset!.rack.is_network_controlled &&
               Object.keys(this.props.asset!.power_connections).length > 0 &&
-              this.state.powerStatus ? (
+              this.state.powerStatus &&
+              !this.props.changePlan ? (
                 <AnchorButton
                   className={"power-close"}
                   minimal
@@ -362,7 +382,8 @@ export class PowerView extends React.PureComponent<
 const mapStatetoProps = (state: any) => {
   return {
     token: state.token,
-    isAdmin: state.admin
+    isAdmin: state.admin,
+    changePlan: state.changePlan
   };
 };
 
