@@ -160,7 +160,7 @@ def get_change_plan(change_plan_id):
 
 
 @api_view(['POST'])
-@asset_permission_required()
+# @asset_permission_required()
 def asset_add(request):
     """
     Add a new asset.
@@ -178,8 +178,8 @@ def asset_add(request):
     change_plan = None
     if request.query_params.get("change_plan"):
         change_plan = get_change_plan(request.query_params.get("change_plan"))
-        data["change_plan"] = change_plan.id
-        serializer = AssetCPSeraclrializer(data=data)
+        data["change_plan"] = change_plan
+        serializer = AssetCPSerializer(data=data)
     else:
         serializer = AssetSerializer(data=data)
     if not serializer.is_valid(raise_exception=False):
@@ -300,7 +300,7 @@ def save_mac_addresses(asset_data, asset_id, change_plan=None):
                 network_port = NetworkPortCP.objects.get(
                     asset=asset_id,
                     port_name=port_name,
-                    change_plan=change_plan.id
+                    change_plan=change_plan
                 )
             else:
                 network_port = NetworkPort.objects.get(
@@ -338,7 +338,7 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
                 network_port = NetworkPortCP.objects.get(
                     asset=asset_id, 
                     port_name=port_name,
-                    change_plan=change_plan.id)
+                    change_plan=change_plan)
             else:
                 network_port = NetworkPort.objects.get(
                     asset=asset_id,
@@ -375,8 +375,8 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
                             hostname=network_connection['destination_hostname']
                         )
                         asset_cp = AssetCP(
-                            related_asset=destination_asset.id,
-                            change_plan=change_plan.id
+                            related_asset=destination_asset,
+                            change_plan=change_plan
                         )
                         ## add destination asset to AssetCPTable
                         for field in destination_asset._meta.fields:
@@ -386,7 +386,7 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
                     else:
                         destination_asset = assets_cp.get(
                             hostname=network_connection['destination_hostname'],
-                            change_plan=change_plan.id,
+                            change_plan=change_plan,
                         )
                 else:
                     destination_asset = Asset.objects.get(
@@ -403,7 +403,7 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
                         destination_port = NetworkPortCP.objects.get(
                             asset=destination_asset,
                             port_name=network_connection['destination_port'],
-                            change_plan=change_plan.id
+                            change_plan=change_plan
                         )
                     else:
                         destination_port = NetworkPort.objects.get(

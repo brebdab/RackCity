@@ -41,30 +41,30 @@ def validate_hostname(value):
                               "it is not compliant with RFC 1034.")
 
 
-def validate_hostname_uniqueness(value, asset_id, change_plan):
+def validate_hostname_uniqueness(value, asset_id, change_plan, related_asset):
+    print(related_asset)
     assets, assets_cp = get_assets_for_cp(change_plan.id)
     matching_assets = assets_cp.filter(hostname=value)
-
     if len(matching_assets) > 0 and matching_assets[0].id != asset_id:
         raise ValidationError("'" + value + "'is not a unique hostname. \
             A existing asset on this change plan exists with this hostname.")
 
     matching_assets = assets.filter(hostname=value)
-    if len(matching_assets) > 0 and matching_assets[0].id != asset_id:
+    if len(matching_assets) > 0 and related_asset and matching_assets[0].id != related_asset.id :
         raise ValidationError("'" + value + "'is not a unique hostname. \
             A existing asset exists with this hostname.")
 
 
-def validate_asset_number_uniqueness(value, asset_id, change_plan):
+def validate_asset_number_uniqueness(value, asset_id, change_plan, related_asset):
     assets, assets_cp = get_assets_for_cp(change_plan.id)
     matching_assets = assets_cp.filter(asset_number=value)
 
-    if value and len(matching_assets) > 0 and matching_assets[0].id != asset_id:
+    if value and len(matching_assets) > 0 and matching_assets[0].id != asset_id: 
         raise ValidationError("'" + value + "'is not a unique asset number. \
             A existing asset on this change plan exists with this asset number.")
 
     matching_assets = assets.filter(asset_number=value)
-    if len(matching_assets) > 0 and matching_assets[0].id != asset_id:
+    if len(matching_assets) > 0 and related_asset and matching_assets[0].id != related_asset.id:
         raise ValidationError("'" + value + "'is not a unique asset number. \
             A existing asset on exists with this asset number.")
 
@@ -270,8 +270,8 @@ class AssetCP(AbstractAsset):
     def save(self, *args, **kwargs):
         try:
             validate_hostname(self.hostname)
-            validate_hostname_uniqueness(self.hostname, self.id, self.change_plan)
-            validate_asset_number_uniqueness(self.asset_number, self.id, self.change_plan)
+            validate_hostname_uniqueness(self.hostname, self.id, self.change_plan, self.related_asset)
+            validate_asset_number_uniqueness(self.asset_number, self.id, self.change_plan, self.related_asset)
             validate_owner(self.owner)
         except ValidationError as valid_error:
             raise valid_error

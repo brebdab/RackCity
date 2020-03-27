@@ -269,7 +269,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       if (res.data.warning_message) {
         this.addWarnToast("Created asset. " + res.data.warning_message);
       } else {
-        this.addSuccessToast(res.data.sucess_message);
+        this.addSuccessToast(res.data.success_message);
       }
 
       console.log(this.state.isOpen);
