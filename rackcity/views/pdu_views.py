@@ -11,13 +11,14 @@ from rackcity.api.serializers import (
 from rackcity.utils.errors_utils import (
     Status,
     GenericFailure,
-    PowerFailure
+    PowerFailure,
+    AuthFailure,
 )
 from rackcity.utils.log_utils import (
     log_power_action,
     PowerAction,
 )
-from rackcity.permissions.decorators import power_permission_required
+from rackcity.permissions.permissions import user_has_power_permission
 from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import permission_classes, api_view
@@ -53,6 +54,7 @@ def power_status(request, id):
             },
             status=HTTPStatus.BAD_REQUEST
         )
+
     power_connections = serialize_power_connections(PowerPort, asset)
 
     # get string parameter representing rack number (i.e. A01<L/R>)
@@ -92,12 +94,8 @@ def power_status(request, id):
     )
 
 
-"""
-TODO check that power is in opposite state when performing a toggle
-TODO validate if ports exist/are connected
-"""
 @api_view(['POST'])
-@power_permission_required()
+@permission_classes([IsAuthenticated])
 def power_on(request):
     """
     Turn on power to specified port
@@ -123,6 +121,18 @@ def power_on(request):
                 "errors": "No existing asset with id="+str(data['id'])
             },
             status=HTTPStatus.BAD_REQUEST
+        )
+    if not user_has_power_permission(request.user, asset=asset):
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.AUTH_ERROR.value + AuthFailure.POWER.value,
+                "errors":
+                    "User " + request.user.username +
+                    " does not have power permission and does not own" +
+                    " asset with id=" + str(data['id'])
+            },
+            status=HTTPStatus.UNAUTHORIZED
         )
     power_connections = serialize_power_connections(PowerPort, asset)
     # Check power is off
@@ -161,7 +171,7 @@ def power_on(request):
 
 
 @api_view(['POST'])
-@power_permission_required()
+@permission_classes([IsAuthenticated])
 def power_off(request):
     """
     Turn on power to specified port
@@ -187,6 +197,18 @@ def power_off(request):
                 "errors": "No existing asset with id="+str(data['id'])
             },
             status=HTTPStatus.BAD_REQUEST
+        )
+    if not user_has_power_permission(request.user, asset=asset):
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.AUTH_ERROR.value + AuthFailure.POWER.value,
+                "errors":
+                    "User " + request.user.username +
+                    " does not have power permission and does not own" +
+                    " asset with id=" + str(data['id'])
+            },
+            status=HTTPStatus.UNAUTHORIZED
         )
     power_connections = serialize_power_connections(PowerPort, asset)
     # Check power is off
@@ -225,7 +247,7 @@ def power_off(request):
 
 
 @api_view(['POST'])
-@power_permission_required()
+@permission_classes([IsAuthenticated])
 def power_cycle(request):
     data = JSONParser().parse(request)
     if 'id' not in data.keys():
@@ -248,6 +270,18 @@ def power_cycle(request):
                 "errors": "No existing asset with id="+str(data['id'])
             },
             status=HTTPStatus.BAD_REQUEST
+        )
+    if not user_has_power_permission(request.user, asset=asset):
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.AUTH_ERROR.value + AuthFailure.POWER.value,
+                "errors":
+                    "User " + request.user.username +
+                    " does not have power permission and does not own" +
+                    " asset with id=" + str(data['id'])
+            },
+            status=HTTPStatus.UNAUTHORIZED
         )
     power_connections = serialize_power_connections(PowerPort, asset)
     for connection in power_connections:

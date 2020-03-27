@@ -1,4 +1,5 @@
 from rackcity.models import Asset, ITModel, Rack, PowerPort, NetworkPort, ChangePlan
+from rackcity.permissions.permissions import user_has_asset_permission
 from rackcity.api.serializers import RecursiveAssetSerializer, RackSerializer
 from http import HTTPStatus
 from django.http import JsonResponse
@@ -125,11 +126,7 @@ def validate_asset_location(
                                 "Asset location conflicts with another asset."
                                     )
 
-
-
-            
-
-def validate_location_modification(data, existing_asset, change_plan=None):
+def validate_location_modification(data, existing_asset, user, change_plan=None):
     asset_id = existing_asset.id
     rack_id = existing_asset.rack.id
     related_asset_id = None
@@ -152,10 +149,17 @@ def validate_location_modification(data, existing_asset, change_plan=None):
 
     if 'rack' in data:
         try:
-            rack_id = Rack.objects.get(id=data['rack']).id
+            rack = Rack.objects.get(id=data['rack'])
+            rack_id = rack.id
         except Exception:
             raise Exception("No existing rack with id=" +
                             str(data['rack']) + ".")
+        else:
+            if not user_has_asset_permission(user, rack.datacenter):
+                raise Exception(
+                    "You do not have permission to move assets to " +
+                    "datacenter " + rack.datacenter.abbreviation + "."
+                )
 
     try:
         validate_asset_location(
@@ -185,6 +189,7 @@ def get_change_plan(change_plan_id):
         ))
     else:
         return (change_plan, None)
+
 
 def records_are_identical(existing_data, new_data):
     existing_keys = existing_data.keys()
