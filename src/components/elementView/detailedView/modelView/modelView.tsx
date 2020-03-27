@@ -33,7 +33,7 @@ export interface ModelViewProps {
 }
 
 var console: any = {};
-console.log = function() {};
+console.log = function () { };
 interface ModelViewState {
   assets: Array<AssetObject>;
   model: ModelObject;
@@ -59,7 +59,7 @@ async function getData(modelkey: string, token: string) {
 export class ModelView extends React.PureComponent<
   RouteComponentProps & ModelViewProps,
   ModelViewState
-> {
+  > {
   public state: ModelViewState = {
     assets: [],
     model: {} as ModelObject,
@@ -198,6 +198,7 @@ export class ModelView extends React.PureComponent<
             data={this.state.assets}
             disableFiltering={true}
             disableSorting={true}
+            isDecommissioned={false}
           />
         </div>
       </div>

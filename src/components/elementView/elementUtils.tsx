@@ -17,6 +17,7 @@ export interface ITableSort {
 export enum ElementTableOpenAlert {
   NONE = "none",
   DELETE = "delete",
+  DECOMMISSION = "decommission",
   GRANT_ADMIN = "grant_admin",
   REVOKE_ADMIN = "revoke_admin"
 }
