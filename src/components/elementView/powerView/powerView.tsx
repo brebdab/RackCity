@@ -68,9 +68,6 @@ export class PowerView extends React.PureComponent<
   };
 
   componentDidMount() {
-    console.log("Component did mount")
-    console.log("this.props.assetIsDecommissioned")
-    console.log(this.props.assetIsDecommissioned)
     if (!this.props.assetIsDecommissioned) {
       axios
         .get(
