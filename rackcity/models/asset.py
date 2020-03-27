@@ -276,13 +276,9 @@ class AssetCP(AbstractAsset):
 
     def save(self, *args, **kwargs):
         try:
-            print("here1")
             validate_hostname(self.hostname)
-            print("here2")
             validate_hostname_uniqueness(self.hostname, self.id, self.change_plan, self.related_asset)
-            print("here3")
             validate_asset_number_uniqueness(self.asset_number, self.id, self.change_plan, self.related_asset)
-            print("here4")
             validate_owner(self.owner)
         except ValidationError as valid_error:
             raise valid_error
