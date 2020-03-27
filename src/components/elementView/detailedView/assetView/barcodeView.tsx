@@ -1,20 +1,13 @@
-import {
-  Alert,
-  Classes,
-  Intent,
-  IToastProps,
-  Position,
-  Toaster,
-  Spinner
-} from "@blueprintjs/core";
+import { Classes, Position } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
-import axios from "axios";
+// import axios from "axios";
 import * as React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
-import { API_ROOT } from "../../../../utils/api-config";
-import { getHeaders, ROUTES } from "../../../../utils/utils";
+// import { API_ROOT } from "../../../../utils/api-config";
+// import { getHeaders, ROUTES } from "../../../../utils/utils";
 import Barcode from "react-barcode";
+import ReactDOMServer from "react-dom/server";
 // import "./barcodeView.scss";
 
 export interface BarcodeViewProps {
@@ -23,13 +16,6 @@ export interface BarcodeViewProps {
   assets_numbers: Array<string>; // Asset numbers to generate barcodes from
   loading: boolean;
 }
-
-/* <Barcode
-              value="100000"
-              text="Hyposoft 100000"
-              text-align="left"
-              font-size={10}
-            /> */
 
 export interface BarcodeViewState {}
 
@@ -41,16 +27,26 @@ class BarcodeView extends React.PureComponent<
     const barcodeString = localStorage.getItem("barcodes")!;
     let barcodes: Array<string>;
     barcodes = barcodeString.split(",");
-    return barcodes.map((barcode: string) => {
-      return (
-        <Barcode
-          value={barcode}
-          text={"Hyposoft " + barcode}
-          text-align="left"
-          font-size={10}
-        />
-      );
-    });
+    const element = <Barcode value={100000} />;
+    console.log(element);
+    return (
+      <div className={Classes.DARK}>
+        {barcodes.map((barcode: string) => {
+          return (
+            <div style={{ width: "1.75in", height: "0.5in" }}>
+              <Barcode
+                value={barcode}
+                text={"Hyposoft " + barcode}
+                text-align="left"
+                height={"15"}
+                // font-size={10}
+                width={"2"}
+              />
+            </div>
+          );
+        })}
+      </div>
+    );
   }
 }
 
