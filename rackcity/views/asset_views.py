@@ -179,7 +179,7 @@ def asset_add(request):
     if request.query_params.get("change_plan"):
         change_plan = get_change_plan(request.query_params.get("change_plan"))
         data["change_plan"] = change_plan.id
-        serializer = AssetCPSerializer(data=data)
+        serializer = AssetCPSeraclrializer(data=data)
     else:
         serializer = AssetSerializer(data=data)
     if not serializer.is_valid(raise_exception=False):
@@ -509,7 +509,7 @@ def save_power_connections(asset_data, asset_id, change_plan=None):
 
 
 @api_view(['POST'])
-@asset_permission_required()
+# @asset_permission_required()
 def asset_modify(request):
     """
     Modify a single existing asset
@@ -533,12 +533,23 @@ def asset_modify(request):
         if change_plan:
             assets, assets_cp = get_assets_for_cp(change_plan.id)
             if assets_cp.filter(id=id).exists():
+                #if asset was created on a change_plan
                 existing_asset = assets_cp.get(id=id)
             
             else:
-                ## get asset from master and copy to change_plan
                 existing_asset_master = assets.get(id=id)
-                existing_asset = AssetCP(change_plan=change_plan)
+                ## if asset has been modified before and exists on cp 
+                if AssetCP.objects.filter(
+                        change_plan=change_plan,
+                        related_asset=existing_asset_master).exists():
+                    existing_asset = AssetCP.objects.get(              
+                        change_plan=change_plan, 
+                        related_asset=existing_asset_master)
+                # if asset has never been modified before get asset from master and copy to change_plan
+                else:
+                    existing_asset = AssetCP(
+                        change_plan=change_plan,
+                        related_asset=existing_asset_master)
                 for field in existing_asset_master._meta.fields:
                     setattr(existing_asset, field.name, getattr(
                         existing_asset_master, field.name))

@@ -37,11 +37,11 @@ def create_asset_cp(sender, **kwargs):
     related_assets_cp = AssetCP.objects.filter(related_asset=instance.id)
     for related_asset in related_assets_cp:
         related_asset.is_conflict = True
-        related_asset.save(updated_fields=['is_conflict'])
+        related_asset.save()
 
     ## asset rack location conflicts with an assetCP
 
-    
+
 def get_many_assets_response_for_cp(request, change_plan):
     assets, assetsCP = get_assets_for_cp(change_plan=change_plan)
     filtered_assets, filter_failure_response = get_filtered_query(
