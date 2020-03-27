@@ -222,10 +222,7 @@ def asset_add(request):
     rack_position = serializer.validated_data['rack_position']
     height = serializer.validated_data['model'].height
 
-   
     try:
-        #TO DO: add validation to check assets on change plan
-        print(change_plan)
         validate_asset_location(
             rack_id,
             rack_position,
@@ -233,7 +230,6 @@ def asset_add(request):
             change_plan=change_plan
             )
     except LocationException as error:
-        print("location exception")
         return JsonResponse(
             {"failure_message": Status.CREATE_ERROR.value + str(error)},
             status=HTTPStatus.BAD_REQUEST
@@ -241,7 +237,6 @@ def asset_add(request):
     try:
         asset = serializer.save()
     except Exception as error:
-        print("serializer save error")
         return JsonResponse(
             {
                 "failure_message":
@@ -590,7 +585,6 @@ def asset_modify(request):
                 related_asset=existing_asset_master)
             for field in existing_asset_master._meta.fields:
                 if not (field.name == "id" or field.name == "assetid_ptr"):
-                    print(field.name)
                     setattr(existing_asset, field.name, getattr(
                         existing_asset_master, field.name))
     else:
@@ -672,7 +666,6 @@ def asset_modify(request):
             value = data[field]
         elif field == 'asset_number':
             if change_plan:
-                print("change_plan")
                 try:
                     validate_asset_number_uniqueness(data[field], id, change_plan, existing_asset.related_asset)
                 except ValidationError:
@@ -687,7 +680,6 @@ def asset_modify(request):
                     )
 
             else:
-                print("not in change plan")
                 assets_with_asset_number = Asset.objects.filter(
                      asset_number=data[field]
                 )
@@ -783,11 +775,7 @@ def asset_modify(request):
 
 
 @api_view(['POST'])
-<<<<<<< HEAD
-# @asset_permission_required()
-=======
 @permission_classes([IsAuthenticated])
->>>>>>> 76348852dbfc0a95782baeada68a68ef9845a3ad
 def asset_delete(request):
     """
     Delete a single existing asset
@@ -1524,7 +1512,6 @@ def network_bulk_export(request):
     serializer = BulkNetworkPortSerializer(all_ports, many=True)
     csv_string = StringIO()
     fields = BulkNetworkPortSerializer.Meta.fields
-    print(fields)
     csv_writer = csv.DictWriter(csv_string, fields)
     csv_writer.writeheader()
     csv_writer.writerows(serializer.data)
