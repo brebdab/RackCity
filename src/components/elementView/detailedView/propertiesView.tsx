@@ -1,6 +1,5 @@
 import { Classes } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
-// import axios from "axios";
 import * as React from "react";
 import { RouteComponentProps, withRouter } from "react-router";
 import {
@@ -28,7 +27,7 @@ interface PropertiesViewProps {
 class PropertiesView extends React.PureComponent<
   RouteComponentProps & PropertiesViewProps,
   AlertState
-> {
+  > {
   setFieldNamesFromData = () => {
     let fields: Array<string> = [];
     Object.keys(this.props.data).forEach((col: string) => {
@@ -37,7 +36,10 @@ class PropertiesView extends React.PureComponent<
         col !== "power_connections" &&
         col !== "mac_addresses" &&
         col !== "network_connections" &&
-        col !== "network_graph"
+        col !== "network_graph" &&
+        col !== "decommissioned_id" &&
+        col !== "decommissioning_user" &&
+        col !== "time_decommissioned"
       ) {
         fields.push(col);
       }
@@ -72,11 +74,13 @@ class PropertiesView extends React.PureComponent<
           dat = <p>{network_ports.toString()}</p>;
         }
       } else if (item === "model") {
+        const isDecommissioned = data["decommissioning_user"];
         dat = (
           <p
-            className="model-link"
-            onClick={() =>
-              this.props.history.push(ROUTES.MODELS + data[item].id)
+            className={isDecommissioned ? undefined
+              : "model-link"}
+            onClick={isDecommissioned ? undefined
+              : () => this.props.history.push(ROUTES.MODELS + "/" + data[item].id)
             }
           >
             {data[item].vendor + " " + data[item].model_number}
