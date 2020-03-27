@@ -1000,7 +1000,9 @@ class ElementTable extends React.Component<
           >
             <thead>
               <tr>
-                {this.props.type === ElementType.ASSET ? (
+                {this.props.type === ElementType.ASSET &&
+                this.state.fields &&
+                this.state.fields.length > 0 ? (
                   <th className="header-cell">
                     <div className="header-text">
                       <Checkbox

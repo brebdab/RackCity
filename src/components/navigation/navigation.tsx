@@ -105,12 +105,7 @@ export class Navigation extends React.Component<
                 )
               }
             >
-              <Banner
-                title={
-                  this.props.changePlan.name +
-                  " \nOnly asset changes (create/modify/delete) will be specific to this change plan. All other changes will be LIVE."
-                }
-              />
+              <Banner title={this.props.changePlan.name} />
             </div>
           ) : null}
           <Navbar className={Classes.DARK + " nav-bar"}>
