@@ -4,15 +4,14 @@ import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
 import { RouteComponentProps, withRouter } from "react-router";
 import {
-  ElementObjectType,
-  isObject,
-  isAssetObject,
   AssetFieldsTable,
+  ElementObjectType,
+  getChangePlanRowStyle,
+  isAssetObject,
   isModelObject,
+  isObject,
   ModelFieldsTable,
-  ROUTES,
-  isAssetCP,
-  getChangePlanRowStyle
+  ROUTES
 } from "../../../utils/utils";
 import "./propertiesView.scss";
 

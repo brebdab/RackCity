@@ -26,7 +26,6 @@ import {
   ROUTES,
   ChangePlan,
   AssetCPObject,
-  isAssetCP,
   getChangePlanRowStyle
 } from "../../../../utils/utils";
 import { deleteAsset, modifyAsset } from "../../elementUtils";

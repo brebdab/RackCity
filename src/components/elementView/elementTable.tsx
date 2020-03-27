@@ -45,7 +45,6 @@ import {
   ROUTES,
   isChangePlanObject,
   ChangePlan,
-  isAssetCP,
   getChangePlanRowStyle
 } from "../../utils/utils";
 import DragDropList, { DragDropListTypes } from "./dragDropList";
