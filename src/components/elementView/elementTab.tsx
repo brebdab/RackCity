@@ -181,7 +181,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     console.log(API_ROOT + "api/" + path + "/get-many");
     this.handleDataUpdate(false);
 
-    const params:any =
+    const params: any =
       page_type === PagingTypes.ALL
         ? {}
         : {
@@ -393,6 +393,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             <AnchorButton
               className="add"
               text="Export Table Data"
+              disabled={this.props.changePlan ? true : false}
               icon="import"
               minimal
               onClick={() => {
@@ -408,6 +409,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
           (this.props.element === ElementType.ASSET ||
             this.props.element === ElementType.MODEL) ? (
             <AnchorButton
+              disabled={this.props.changePlan ? true : false}
               onClick={() => {
                 this.props.history.push(
                   "/dashboard/bulk-upload/" +
@@ -519,6 +521,12 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               text={"Add " + this.props.element.slice(0, -1)}
               icon="add"
               minimal
+              disabled={
+                this.props.element !== ElementType.ASSET &&
+                this.props.changePlan
+                  ? true
+                  : false
+              }
               intent={Intent.PRIMARY}
               onClick={this.handleOpen}
             />

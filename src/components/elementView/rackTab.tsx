@@ -30,7 +30,8 @@ import {
   RackRangeFields,
   RackResponseObject,
   getHeaders,
-  ROUTES
+  ROUTES,
+  ChangePlan
 } from "../../utils/utils";
 import RackView from "./detailedView/rackView/rackView";
 import { ALL_DATACENTERS } from "./elementTabContainer";
@@ -56,6 +57,7 @@ interface RackTabProps {
   datacenters: Array<DatacenterObject>;
   currDatacenter: DatacenterObject;
   onDatacenterSelect(datacenter: DatacenterObject): void;
+  changePlan: ChangePlan;
 }
 var console: any = {};
 console.log = function() {};
@@ -332,6 +334,14 @@ class RackTab extends React.Component<
         {this.props.currDatacenter &&
         this.props.currDatacenter.name !== ALL_DATACENTERS.name ? (
           <div className="rack-tab-panel">
+            {this.props.changePlan && this.props.isAdmin ? (
+              <Callout
+                intent={Intent.WARNING}
+                title="Rack Management on a change plan"
+              >
+                <em>All changes made to racks will be live in the database </em>
+              </Callout>
+            ) : null}
             {this.props.isAdmin ? (
               <div className=" element-tab-buttons">
                 <AnchorButton
@@ -352,6 +362,7 @@ class RackTab extends React.Component<
                 />
               </div>
             ) : null}
+
             <Card>
               <div className="rack-view-options">
                 <Button
@@ -403,7 +414,8 @@ class RackTab extends React.Component<
 const mapStatetoProps = (state: any) => {
   return {
     token: state.token,
-    isAdmin: state.admin
+    isAdmin: state.admin,
+    changePlan: state.changePlan
   };
 };
 export default connect(mapStatetoProps)(withRouter(RackTab));

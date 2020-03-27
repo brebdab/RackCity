@@ -1188,6 +1188,12 @@ class ElementTable extends React.Component<
                                 intent="primary"
                                 icon="edit"
                                 minimal
+                                disabled={
+                                  this.props.changePlan &&
+                                  this.props.type !== ElementType.ASSET
+                                    ? true
+                                    : false
+                                }
                                 onClick={(event: any) => {
                                   console.log(
                                     "SCROLL",
@@ -1205,6 +1211,7 @@ class ElementTable extends React.Component<
                                 intent="danger"
                                 minimal
                                 icon="trash"
+                                disabled={this.props.changePlan ? true : false}
                                 onClick={(event: any) => {
                                   this.handleDeleteButtonClick(item);
                                   event.stopPropagation();
@@ -1218,6 +1225,7 @@ class ElementTable extends React.Component<
                                 intent="warning"
                                 minimal
                                 icon="offline"
+                                disabled={this.props.changePlan ? true : false}
                                 onClick={(event: any) => {
                                   this.handlePowerButtonClick(item);
                                   event.stopPropagation();
