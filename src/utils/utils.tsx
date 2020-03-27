@@ -60,6 +60,8 @@ interface ParentAssetObject extends ElementObject {
   power_connections: { [port: string]: PowerConnection };
   owner: string;
   comment: string;
+  decommissioning_user?: string;
+  time_decommissioned?: string;
 }
 
 export interface RackRangeFields {
@@ -87,6 +89,11 @@ export const AssetFieldsTable: any = {
   rack_position: "Rack Position",
   owner: "Owner",
   comment: "Comment"
+};
+
+export const DecommissionedFieldsTable: any = {
+  decommissioning_user: "User",
+  time_decommissioned: "Time",
 };
 
 export const ModelFieldsTable: any = {

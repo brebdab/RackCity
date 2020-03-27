@@ -26,6 +26,7 @@ interface PowerViewProps {
   shouldUpdate: boolean;
   updated: Function;
   isAdmin: boolean;
+  assetIsDecommissioned?: boolean;
 }
 
 interface PowerViewState {
@@ -40,7 +41,7 @@ interface PowerViewState {
 export class PowerView extends React.PureComponent<
   RouteComponentProps & PowerViewProps,
   PowerViewState
-> {
+  > {
   //TOASTS
   private toaster: Toaster = {} as Toaster;
   private addToast = (toast: IToastProps) => {
@@ -67,31 +68,7 @@ export class PowerView extends React.PureComponent<
   };
 
   componentDidMount() {
-    axios
-      .get(
-        API_ROOT + "api/power/get-state/" + this.props.asset!.id,
-        getHeaders(this.props.token)
-      )
-      .then(res => {
-        this.setState({
-          powerConnections: res.data.power_connections,
-          powerStatus: res.data.power_status,
-          statusLoaded: true
-        });
-      })
-      .catch(err => {
-        this.addErrorToast(err.response.data.failure_message);
-        this.setState({
-          statusLoaded: true
-        });
-      });
-    this.getUsername(this.props.token);
-  }
-
-  componentDidUpdate() {
-    console.log("componentDIDUPDST");
-    if (this.props.shouldUpdate) {
-      console.log("here");
+    if (!this.props.assetIsDecommissioned) {
       axios
         .get(
           API_ROOT + "api/power/get-state/" + this.props.asset!.id,
@@ -110,6 +87,42 @@ export class PowerView extends React.PureComponent<
             statusLoaded: true
           });
         });
+    } else {
+      this.setState({
+        statusLoaded: true
+      });
+    }
+    this.getUsername(this.props.token);
+  }
+
+  componentDidUpdate() {
+    console.log("componentDIDUPDST");
+    if (this.props.shouldUpdate) {
+      console.log("here");
+      if (!this.props.assetIsDecommissioned) {
+        axios
+          .get(
+            API_ROOT + "api/power/get-state/" + this.props.asset!.id,
+            getHeaders(this.props.token)
+          )
+          .then(res => {
+            this.setState({
+              powerConnections: res.data.power_connections,
+              powerStatus: res.data.power_status,
+              statusLoaded: true
+            });
+          })
+          .catch(err => {
+            this.addErrorToast(err.response.data.failure_message);
+            this.setState({
+              statusLoaded: true
+            });
+          });
+      }
+    } else {
+      this.setState({
+        statusLoaded: true
+      });
     }
     this.props.updated();
   }
@@ -131,17 +144,17 @@ export class PowerView extends React.PureComponent<
                 {this.props.asset!.power_connections[i].left_right}
               </td>
             ) : (
-              <td></td>
-            )}
+                <td></td>
+              )}
             {this.props.asset!.rack.is_network_controlled ? (
               this.state.powerStatus ? (
                 <td>{this.state.powerStatus[i]}</td>
               ) : (
-                <td>Unable to contact PDU controller</td>
-              )
+                  <td>Unable to contact PDU controller</td>
+                )
             ) : (
-              <td>PDU not network controlled</td>
-            )}
+                <td>PDU not network controlled</td>
+              )}
           </tr>
         );
       }
@@ -157,164 +170,166 @@ export class PowerView extends React.PureComponent<
             this.props.asset &&
             ((this.props.asset.model.num_power_ports as unknown) as number) > 0
           ) ? (
-            <div className="propsview">
-              <h3>Power Connections</h3>
-              <Callout
-                title="No power ports"
-                icon={IconNames.INFO_SIGN}
-              ></Callout>
-              {this.props.callback === undefined ? null : (
-                <AnchorButton
-                  className={"power-close"}
-                  intent="danger"
-                  minimal
-                  text="Close"
-                  onClick={() => {
-                    this.setState({
-                      powerConnections: undefined,
-                      powerStatus: undefined,
-                      statusLoaded: false
-                    });
-                    this.props.callback!();
-                  }}
-                />
-              )}
-            </div>
-          ) : (
-            <div className="propsview">
-              <h3>Power Connections</h3>
-              <div className="network-connections">
-                <table className="bp3-html-table bp3-html-table-bordered bp3-html-table-striped">
-                  <tr>
-                    <th>Power Port Number</th>
-                    <th>PDU Port Number</th>
-                    <th>Power Status</th>
-                  </tr>
-                  <tbody>{this.getPowerPortRows()}</tbody>
-                </table>
-              </div>
-              {this.props.asset!.rack.is_network_controlled &&
-              Object.keys(this.props.asset!.power_connections).length > 0 &&
-              this.state.powerStatus ? (
-                <AnchorButton
-                  className={"power-close"}
-                  intent={
-                    this.state.powerStatus[
-                      Object.keys(this.state.powerStatus)[0]
-                    ] === "OFF"
-                      ? "primary"
-                      : "danger"
-                  }
-                  minimal
-                  text={
-                    this.state.powerStatus[
-                      Object.keys(this.state.powerStatus)[0]
-                    ] === "OFF"
-                      ? "Turn on"
-                      : "Turn off"
-                  }
-                  icon="power"
-                  onClick={
-                    this.state.powerStatus[
-                      Object.keys(this.state.powerStatus)[0]
-                    ] === "OFF"
-                      ? () => {
-                          this.setState({
-                            statusLoaded: !this.state.statusLoaded
-                          });
-                          axios
-                            .post(
-                              API_ROOT + "api/power/mask-on",
-                              { id: this.props.asset!.id },
-                              getHeaders(this.props.token)
-                            )
-                            .then(res => {
-                              this.setState({
-                                alertOpen: true,
-                                confirmationMessage: res.data.success_message
-                              });
-                              this.componentDidMount();
-                            })
-                            .catch(err => {
-                              alert(err);
-                            });
-                        }
-                      : () => {
-                          this.setState({
-                            statusLoaded: !this.state.statusLoaded
-                          });
-                          axios
-                            .post(
-                              API_ROOT + "api/power/mask-off",
-                              { id: this.props.asset!.id },
-                              getHeaders(this.props.token)
-                            )
-                            .then(res => {
-                              this.setState({
-                                alertOpen: true,
-                                confirmationMessage: res.data.success_message
-                              });
-                              this.componentDidMount();
-                            })
-                            .catch(err => {
-                              alert(err);
-                            });
-                        }
-                  }
-                />
-              ) : null}
-              {this.props.asset!.rack.is_network_controlled &&
-              Object.keys(this.props.asset!.power_connections).length > 0 &&
-              this.state.powerStatus ? (
-                <AnchorButton
-                  className={"power-close"}
-                  minimal
-                  intent="warning"
-                  text={"Cycle Power"}
-                  onClick={() => {
-                    this.setState({
-                      statusLoaded: !this.state.statusLoaded
-                    });
-                    axios
-                      .post(
-                        API_ROOT + "api/power/cycle",
-                        { id: this.props.asset!.id },
-                        getHeaders(this.props.token)
-                      )
-                      .then(res => {
-                        this.setState({
-                          alertOpen: true,
-                          confirmationMessage: res.data.success_message
-                        });
-                        this.componentDidMount();
-                      })
-                      .catch(err => {
-                        alert(err);
+              <div className="propsview">
+                <h3>Power Connections</h3>
+                <Callout
+                  title="No power ports"
+                  icon={IconNames.INFO_SIGN}
+                ></Callout>
+                {this.props.callback === undefined ? null : (
+                  <AnchorButton
+                    className={"power-close"}
+                    intent="danger"
+                    minimal
+                    text="Close"
+                    onClick={() => {
+                      this.setState({
+                        powerConnections: undefined,
+                        powerStatus: undefined,
+                        statusLoaded: false
                       });
-                  }}
-                />
-              ) : null}
-              {this.props.callback === undefined ? null : (
-                <AnchorButton
-                  className={"power-close"}
-                  intent="danger"
-                  minimal
-                  text="Close"
-                  onClick={() => {
-                    this.setState({
-                      powerConnections: undefined,
-                      powerStatus: undefined,
-                      statusLoaded: false
-                    });
-                    this.props.callback!();
-                  }}
-                />
-              )}
-            </div>
-          )
+                      this.props.callback!();
+                    }}
+                  />
+                )}
+              </div>
+            ) : (
+              <div className="propsview">
+                <h3>Power Connections</h3>
+                <div className="network-connections">
+                  <table className="bp3-html-table bp3-html-table-bordered bp3-html-table-striped">
+                    <tr>
+                      <th>Power Port Number</th>
+                      <th>PDU Port Number</th>
+                      <th>Power Status</th>
+                    </tr>
+                    <tbody>{this.getPowerPortRows()}</tbody>
+                  </table>
+                </div>
+                {this.props.asset!.rack.is_network_controlled &&
+                  Object.keys(this.props.asset!.power_connections).length > 0 &&
+                  this.state.powerStatus &&
+                  !this.props.assetIsDecommissioned ? (
+                    <AnchorButton
+                      className={"power-close"}
+                      intent={
+                        this.state.powerStatus[
+                          Object.keys(this.state.powerStatus)[0]
+                        ] === "OFF"
+                          ? "primary"
+                          : "danger"
+                      }
+                      minimal
+                      text={
+                        this.state.powerStatus[
+                          Object.keys(this.state.powerStatus)[0]
+                        ] === "OFF"
+                          ? "Turn on"
+                          : "Turn off"
+                      }
+                      icon="power"
+                      onClick={
+                        this.state.powerStatus[
+                          Object.keys(this.state.powerStatus)[0]
+                        ] === "OFF"
+                          ? () => {
+                            this.setState({
+                              statusLoaded: !this.state.statusLoaded
+                            });
+                            axios
+                              .post(
+                                API_ROOT + "api/power/mask-on",
+                                { id: this.props.asset!.id },
+                                getHeaders(this.props.token)
+                              )
+                              .then(res => {
+                                this.setState({
+                                  alertOpen: true,
+                                  confirmationMessage: res.data.success_message
+                                });
+                                this.componentDidMount();
+                              })
+                              .catch(err => {
+                                alert(err);
+                              });
+                          }
+                          : () => {
+                            this.setState({
+                              statusLoaded: !this.state.statusLoaded
+                            });
+                            axios
+                              .post(
+                                API_ROOT + "api/power/mask-off",
+                                { id: this.props.asset!.id },
+                                getHeaders(this.props.token)
+                              )
+                              .then(res => {
+                                this.setState({
+                                  alertOpen: true,
+                                  confirmationMessage: res.data.success_message
+                                });
+                                this.componentDidMount();
+                              })
+                              .catch(err => {
+                                alert(err);
+                              });
+                          }
+                      }
+                    />
+                  ) : null}
+                {this.props.asset!.rack.is_network_controlled &&
+                  Object.keys(this.props.asset!.power_connections).length > 0 &&
+                  this.state.powerStatus &&
+                  !this.props.assetIsDecommissioned ? (
+                    <AnchorButton
+                      className={"power-close"}
+                      minimal
+                      intent="warning"
+                      text={"Cycle Power"}
+                      onClick={() => {
+                        this.setState({
+                          statusLoaded: !this.state.statusLoaded
+                        });
+                        axios
+                          .post(
+                            API_ROOT + "api/power/cycle",
+                            { id: this.props.asset!.id },
+                            getHeaders(this.props.token)
+                          )
+                          .then(res => {
+                            this.setState({
+                              alertOpen: true,
+                              confirmationMessage: res.data.success_message
+                            });
+                            this.componentDidMount();
+                          })
+                          .catch(err => {
+                            alert(err);
+                          });
+                      }}
+                    />
+                  ) : null}
+                {this.props.callback === undefined ? null : (
+                  <AnchorButton
+                    className={"power-close"}
+                    intent="danger"
+                    minimal
+                    text="Close"
+                    onClick={() => {
+                      this.setState({
+                        powerConnections: undefined,
+                        powerStatus: undefined,
+                        statusLoaded: false
+                      });
+                      this.props.callback!();
+                    }}
+                  />
+                )}
+              </div>
+            )
         ) : (
-          <Spinner />
-        )}
+            <Spinner />
+          )}
         <Alert
           className={Classes.DARK}
           confirmButtonText="Okay"
