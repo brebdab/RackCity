@@ -57,6 +57,20 @@ def get_many_assets_response_for_cp(request, change_plan):
     )
 
 
+def get_changes_on_asset(asset, assetCP):
+    fields = [field.name for field in Asset._meta.get_fields()]
+    changes = []
+    for field in fields:
+        if getattr(asset, field) != getattr(assetCP, field):
+            # TODO will need to serialize field if it's another model
+            changes.append({
+                "field": field,
+                "master": getattr(asset, field),
+                "change_plan": getattr(assetCP, field),
+            })
+    return changes
+
+
 def get_modifications_in_cp(change_plan):
     assetsCP = AssetCP.objects.filter(change_plan=change_plan)
     modifications = []
@@ -71,12 +85,13 @@ def get_modifications_in_cp(change_plan):
             if assetCP.asset_number:
                 title += " " + str(assetCP.asset_number)
             asset_data = {}
-        conflict = AssetCP.is_conflict
+        conflict = assetCP.is_conflict
         modifications.append({
             "title": title,
             "asset": asset_data,
             "assetCP": assetCP_data,
             "conflict": conflict,
+            "changes": get_changes_on_asset(related_asset, assetCP),
         })
-    return json.simplejson.dumps(modifications)
+    return modifications
     # TODO add logic for decommission modification
