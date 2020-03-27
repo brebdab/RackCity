@@ -43,37 +43,37 @@ def validate_hostname(value):
 
 
 def validate_hostname_uniqueness(value, asset_id, change_plan, related_asset):
-    print(related_asset)
     assets, assets_cp = get_assets_for_cp(change_plan.id)
     matching_assets = assets_cp.filter(hostname=value)
     if len(matching_assets) > 0 and matching_assets[0].id != asset_id:
         raise ValidationError("'" + value + "'is not a unique hostname. \
-            A existing asset on this change plan exists with this hostname.")
+            An existing asset on this change plan exists with this hostname.")
     related_asset_id = None
     if related_asset:
         related_asset_id = related_asset.id
 
     matching_assets = assets.filter(hostname=value)
-    if len(matching_assets) > 0 and related_asset and matching_assets[0].id != related_asset_id:
+    if len(matching_assets) > 0 and not(related_asset and matching_assets[0].id == related_asset_id):
         raise ValidationError("'" + value + "'is not a unique hostname. \
-            A existing asset exists with this hostname.")
+            An existing asset exists with this hostname.")
 
 
 def validate_asset_number_uniqueness(value, asset_id, change_plan, related_asset):
-    print("change plan", change_plan)
     assets, assets_cp = get_assets_for_cp(change_plan.id)
     matching_assets = assets_cp.filter(asset_number=value)
-
-    if value and len(matching_assets) > 0 and matching_assets[0].id != asset_id: 
-        raise ValidationError("'" + value + "'is not a unique asset number. \
-            A existing asset on this change plan exists with this asset number.")
+    if value is None:
+        return
+    if len(matching_assets) > 0 and matching_assets[0].id != asset_id: 
+        raise ValidationError("'" + str(value) + "'is not a unique asset number. \
+            An existing asset on this change plan exists with this asset number.")
     related_asset_id = None
     if related_asset:
         related_asset_id = related_asset.id
     matching_assets = assets.filter(asset_number=value)
-    if len(matching_assets) > 0 and related_asset and matching_assets[0].id != related_asset_id:
-        raise ValidationError("'" + value + "'is not a unique asset number. \
-            A existing asset on exists with this asset number.")
+
+    if (len(matching_assets) > 0) and (not (related_asset and matching_assets[0].id == related_asset_id)):
+        raise ValidationError("'" + str(value) + "'is not a unique asset number. \
+            An existing asset on exists with this asset number.")
 
 
 
@@ -187,12 +187,11 @@ class AssetCP(AbstractAsset):
     )
     hostname = models.CharField(
         max_length=150,
-        unique=False,
         null=True,
         blank=True,
         validators=[validate_hostname],
     )
-    related_decomissioned_asset = models.ForeignKey(
+    related_decommissioned_asset = models.ForeignKey(
         DecommissionedAsset,
         on_delete=models.SET_NULL,
         null=True,
@@ -211,7 +210,6 @@ class AssetCP(AbstractAsset):
         blank=True
     )
     asset_number = models.IntegerField(
-        unique=False,
         validators=[
             MinValueValidator(100000),
             MaxValueValidator(999999)
@@ -284,6 +282,7 @@ class AssetCP(AbstractAsset):
             validate_asset_number_uniqueness(self.asset_number, self.id, self.change_plan, self.related_asset)
             print("here4")
             validate_owner(self.owner)
+            self.is_conflict = False
         except ValidationError as valid_error:
             raise valid_error
         else:

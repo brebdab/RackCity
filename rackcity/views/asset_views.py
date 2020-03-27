@@ -120,9 +120,23 @@ def asset_detail(request, id):
     """
     Retrieve a single asset.
     """
-
+    change_plan = None
+    serializer = None
+    if request.query_params.get("change_plan"):
+        (change_plan,response) = get_change_plan(request.query_params.get("change_plan"))
+        if response:
+            return response
     try:
-        asset = Asset.objects.get(id=id)
+        if change_plan:
+            assets, assets_cp = get_assets_for_cp(change_plan.id)
+            if assets_cp.filter(id=id).exists():
+                asset = assets_cp.get(id=id)
+            else:
+                asset = assets.get(id=id)
+            serializer = RecursiveAssetCPSerializer(asset)
+        else:
+            asset = Asset.objects.get(id=id)
+            serializer = RecursiveAssetSerializer(asset)
     except Asset.DoesNotExist:
         try:
             decommissioned_asset = DecommissionedAsset.objects.get(live_id=id)
@@ -177,7 +191,9 @@ def asset_add(request):
         )
     change_plan = None
     if request.query_params.get("change_plan"):
-        change_plan = get_change_plan(request.query_params.get("change_plan"))
+        (change_plan,response) = get_change_plan(request.query_params.get("change_plan"))
+        if response:
+            return response
         data["change_plan"] = change_plan.id
         serializer = AssetCPSerializer(data=data)
     else:
@@ -534,49 +550,52 @@ def asset_modify(request):
         )
     id = data['id']
     if request.query_params.get("change_plan"):
-        change_plan = get_change_plan(request.query_params.get("change_plan"))
+        (change_plan, response) = get_change_plan(request.query_params.get("change_plan"))
+        if response:
+            return response
         del data['id']
     else:
         change_plan = None
-    try:
-        if change_plan:
-            assets, assets_cp = get_assets_for_cp(change_plan.id)
-            if assets_cp.filter(id=id).exists():
-                #if asset was created on a change_plan
-                existing_asset = assets_cp.get(id=id)
-            
-            else:
-                existing_asset_master = assets.get(id=id)
-                ## if asset has been modified before and exists on cp 
-                if AssetCP.objects.filter(
-                        change_plan=change_plan,
-                        related_asset=existing_asset_master).exists():
-                    existing_asset = AssetCP.objects.get(              
-                        change_plan=change_plan, 
-                        related_asset=existing_asset_master)
-                # if asset has never been modified before get asset from master and copy to change_plan
-                else:
-                    existing_asset = AssetCP(
-                        change_plan=change_plan,
-                        related_asset=existing_asset_master)
-                for field in existing_asset_master._meta.fields:
-             
-                    if not (field.name == "id" or field.name == "assetid_ptr"):
-                        print(field.name)
-                        setattr(existing_asset, field.name, getattr(
-                            existing_asset_master, field.name))
+   
+    if change_plan:
+        assets, assets_cp = get_assets_for_cp(change_plan.id)
+        if assets_cp.filter(id=id).exists():
+            #if asset was created on a change_plan
+            existing_asset = assets_cp.get(id=id)
         else:
+            try:
+                existing_asset_master = assets.get(id=id)
+            except ObjectDoesNotExist:
+                return JsonResponse(
+                    {
+                        "failure_message":
+                            Status.MODIFY_ERROR.value +
+                            "Model" + GenericFailure.DOES_NOT_EXIST.value,
+                        "errors": "No existing asset with id="+str(id)
+                    },
+                    status=HTTPStatus.BAD_REQUEST
+                )
+            existing_asset = AssetCP(
+                change_plan=change_plan,
+                related_asset=existing_asset_master)
+            for field in existing_asset_master._meta.fields:
+                if not (field.name == "id" or field.name == "assetid_ptr"):
+                    print(field.name)
+                    setattr(existing_asset, field.name, getattr(
+                        existing_asset_master, field.name))
+    else:
+        try:
             existing_asset = Asset.objects.get(id=id)
-    except ObjectDoesNotExist:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.MODIFY_ERROR.value +
-                    "Model" + GenericFailure.DOES_NOT_EXIST.value,
-                "errors": "No existing asset with id="+str(id)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
+        except ObjectDoesNotExist:
+            return JsonResponse(
+                {
+                    "failure_message":
+                        Status.MODIFY_ERROR.value +
+                        "Model" + GenericFailure.DOES_NOT_EXIST.value,
+                    "errors": "No existing asset with id="+str(id)
+                },
+                status=HTTPStatus.BAD_REQUEST
+            )
     try:
         validate_location_modification(
             data,

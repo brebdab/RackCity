@@ -313,8 +313,7 @@ def get_neighbor_assets(hostname, id, nodes, edges, change_plan=None):
     try:
         source_ports = NetworkPort.objects.filter(asset=id)
         if change_plan:
-            _, assets_cp = get_assets_for_cp(change_plan.id)
-            if assets_cp.filter(id=id).exists():
+            if AssetCP.objects.filter(change_plan=change_plan, id=id).exists():
                 source_ports = NetworkPortCP.objects.filter(
                     asset=id, change_plan=change_plan.id
                     )

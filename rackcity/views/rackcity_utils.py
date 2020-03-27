@@ -5,7 +5,11 @@ from django.http import JsonResponse
 import functools
 from django.db import close_old_connections
 from rackcity.models.asset import get_assets_for_cp
-
+from django.core.exceptions import ObjectDoesNotExist
+from rackcity.utils.errors_utils import (
+    Status,
+    GenericFailure,
+    )
 
 def get_rack_detailed_response(racks):
     if racks.count() == 0:
@@ -167,6 +171,23 @@ def validate_location_modification(data, existing_asset, change_plan=None):
     except LocationException as error:
         raise error
 
+
+def get_change_plan(change_plan_id):
+    try:
+        change_plan = ChangePlan.objects.get(
+            id=change_plan_id
+            )
+    except ObjectDoesNotExist:
+        return (None, JsonResponse(
+            {
+                "failure_message":
+                    Status.CREATE_ERROR.value + GenericFailure.INTERNAL.value,
+                "errors": "Invalid change_plan Parameter"
+            },
+            status=HTTPStatus.BAD_REQUEST
+        ))
+    else:
+        return (change_plan, None)
 
 def records_are_identical(existing_data, new_data):
     existing_keys = existing_data.keys()
