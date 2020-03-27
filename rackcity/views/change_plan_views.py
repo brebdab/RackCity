@@ -4,6 +4,7 @@ from rackcity.api.serializers import (
     GetChangePlanSerializer,
 )
 from rackcity.models import ChangePlan
+from rackcity.utils.change_planner_utils import get_modifications_in_cp
 from rackcity.utils.query_utils import (
     get_page_count_response,
     get_many_response,
@@ -12,7 +13,8 @@ from rackcity.utils.errors_utils import (
     Status,
     GenericFailure,
     parse_serializer_errors,
-    parse_save_validation_error)
+    parse_save_validation_error,
+)
 from http import HTTPStatus
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
@@ -244,10 +246,11 @@ def change_plan_detail(request, id):
             status=HTTPStatus.BAD_REQUEST,
         )
     change_plan_serializer = GetChangePlanSerializer(change_plan)
+    modifications = get_modifications_in_cp(change_plan)
     return JsonResponse(
         {
             "change_plan": change_plan_serializer.data,
-            "modifications": [],
+            "modifications": modifications,
         },
         status=HTTPStatus.OK
     )

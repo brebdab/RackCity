@@ -1,6 +1,7 @@
 from django.db.models import Q
 from django.http import JsonResponse
 from http import HTTPStatus
+import json
 from rackcity.api.serializers import (
     RecursiveAssetSerializer,
     RecursiveAssetCPSerializer,
@@ -54,3 +55,28 @@ def get_many_assets_response_for_cp(request, change_plan):
         {"assets": all_assets},
         status=HTTPStatus.OK,
     )
+
+
+def get_modifications_in_cp(change_plan):
+    assetsCP = AssetCP.objects.filter(change_plan=change_plan)
+    modifications = []
+    for assetCP in assetsCP:
+        assetCP_data = RecursiveAssetCPSerializer(assetCP).data
+        related_asset = assetCP.related_asset
+        if related_asset:
+            title = "Modify asset " + str(assetCP.related_asset.asset_number)
+            asset_data = RecursiveAssetSerializer(related_asset).data
+        else:
+            title = "Create asset"
+            if assetCP.asset_number:
+                title += " " + str(assetCP.asset_number)
+            asset_data = {}
+        conflict = AssetCP.is_conflict
+        modifications.append({
+            "title": title,
+            "asset": asset_data,
+            "assetCP": assetCP_data,
+            "conflict": conflict,
+        })
+    return json.simplejson.dumps(modifications)
+    # TODO add logic for decommission modification
