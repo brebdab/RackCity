@@ -11,8 +11,6 @@ import {
   MenuItem,
   Position,
   Toaster,
-  Divider,
-  Text,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
