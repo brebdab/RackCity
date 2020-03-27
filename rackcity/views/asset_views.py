@@ -192,7 +192,7 @@ def asset_detail(request, id):
 
 
 @api_view(['POST'])
-# @asset_permission_required()
+@asset_permission_required()
 def asset_add(request):
     """
     Add a new asset.
@@ -581,7 +581,7 @@ def asset_modify(request):
 
 
 @api_view(['POST'])
-# @asset_permission_required()
+@asset_permission_required()
 def asset_delete(request):
     """
     Delete a single existing asset
