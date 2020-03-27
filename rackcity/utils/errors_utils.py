@@ -16,6 +16,7 @@ class Status(Enum):
     IMPORT_ERROR = "IMPORT ERROR: "
     EXPORT_ERROR = "EXPORT ERROR: "
     CONNECTION = "CONNECTION ERROR: "
+    AUTH_ERROR = "AUTHORIZATION ERROR: "
 
 
 class GenericFailure(Enum):
@@ -33,6 +34,10 @@ class UserFailure(Enum):
     DELETE = "Cannot delete user"
     NETID_LOGIN = \
         "The Duke NetID login credentials you have provided are invalid."
+
+
+class AuthFailure(Enum):
+    POWER = "You do not have permission to control the power of this asset."
 
 
 class BulkFailure(Enum):
