@@ -1,9 +1,7 @@
 from django.http import JsonResponse
 from rest_framework.parsers import JSONParser
-from rackcity.models import (
-    Asset,
-    DecommissionedAsset,
-)
+from rackcity.models import Asset
+from rackcity.permissions.permissions import user_has_asset_permission
 from rackcity.api.serializers import (
     RecursiveAssetSerializer,
     AddDecommissionedAssetSerializer,
@@ -17,9 +15,9 @@ from rackcity.utils.errors_utils import (
     GenericFailure,
     parse_serializer_errors,
     parse_save_validation_error,
-    BulkFailure
+    AuthFailure,
 )
-from rackcity.views.rackcity_utils import (
+from rackcity.utils.query_utils import (
     get_sort_arguments,
     get_filter_arguments,
 )
@@ -53,6 +51,21 @@ def decommission_asset(request):
                 "errors": "No existing asset with id="+str(id)
             },
             status=HTTPStatus.BAD_REQUEST
+        )
+    if not user_has_asset_permission(
+        request.user,
+        asset.rack.datacenter
+    ):
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.AUTH_ERROR.value + AuthFailure.ASSET.value,
+                "errors":
+                    "User " + request.user.username +
+                    " does not have asset permission in datacenter id="
+                    + str(asset.rack.datacenter.id)
+            },
+            status=HTTPStatus.UNAUTHORIZED
         )
     asset_data = RecursiveAssetSerializer(asset).data
     asset_data['live_id'] = asset_data['id']
