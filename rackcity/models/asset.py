@@ -56,6 +56,7 @@ def validate_hostname_uniqueness(value, asset_id, change_plan, related_asset):
 
 
 def validate_asset_number_uniqueness(value, asset_id, change_plan, related_asset):
+    print(value, asset_id,change_plan,related_asset.id)
     assets, assets_cp = get_assets_for_cp(change_plan.id)
     matching_assets = assets_cp.filter(asset_number=value)
 
@@ -64,6 +65,7 @@ def validate_asset_number_uniqueness(value, asset_id, change_plan, related_asset
             A existing asset on this change plan exists with this asset number.")
 
     matching_assets = assets.filter(asset_number=value)
+    print(related_asset.id)
     if len(matching_assets) > 0 and related_asset and matching_assets[0].id != related_asset.id:
         raise ValidationError("'" + value + "'is not a unique asset number. \
             A existing asset on exists with this asset number.")

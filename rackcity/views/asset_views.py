@@ -16,7 +16,7 @@ from rackcity.models import (
 )
 from rackcity.utils.change_planner_utils import get_assets_for_cp
 from django.contrib.auth.decorators import permission_required
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from rackcity.api.serializers import (
     AssetSerializer,
     AssetCPSerializer,
@@ -74,7 +74,7 @@ from rackcity.views.rackcity_utils import (
     PowerConnectionException,
     NetworkConnectionException,
 )
-from rackcity.models.asset import get_next_available_asset_number
+from rackcity.models.asset import get_next_available_asset_number, validate_asset_number_uniqueness
 
 
 @api_view(['POST'])
@@ -532,6 +532,7 @@ def asset_modify(request):
     id = data['id']
     if request.query_params.get("change_plan"):
         change_plan = get_change_plan(request.query_params.get("change_plan"))
+        del data['id']
     else:
         change_plan = None
     try:
@@ -556,10 +557,11 @@ def asset_modify(request):
                         change_plan=change_plan,
                         related_asset=existing_asset_master)
                 for field in existing_asset_master._meta.fields:
-                    if field != "id":
+             
+                    if not (field.name == "id" or field.name == "assetid_ptr"):
+                        print(field.name)
                         setattr(existing_asset, field.name, getattr(
                             existing_asset_master, field.name))
-                
         else:
             existing_asset = Asset.objects.get(id=id)
     except ObjectDoesNotExist:
@@ -621,37 +623,42 @@ def asset_modify(request):
                     },
                     status=HTTPStatus.BAD_REQUEST,
                 )
+
             value = data[field]
         elif field == 'asset_number':
             if change_plan:
-                assets, assets_cp = get_assets_for_cp(change_plan.id)
-                assets_with_asset_number = assets.filter(
-                     asset_number=data[field]
-                )
-                if not (
-                    len(assets_with_asset_number) > 0
-                    and assets_with_asset_number[0].id != id
-                ):
-                    assets_with_asset_number = assets_cp.filter(
-                         asset_number=data[field]
+                print("change_plan")
+                try:
+                    validate_asset_number_uniqueness(data[field], id, change_plan, existing_asset.related_asset)
+                except ValidationError:
+                    return JsonResponse(
+                        {
+                            "failure_message":
+                                Status.MODIFY_ERROR.value +
+                                "Asset with asset number '" +
+                                str(data[field]) + "' already exists."
+                        },
+                        status=HTTPStatus.BAD_REQUEST,
                     )
+
             else:
+                print("not in change plan")
                 assets_with_asset_number = Asset.objects.filter(
                      asset_number=data[field]
                 )
-            if (
-                data[field] and len(assets_with_asset_number) > 0
-                and assets_with_asset_number[0].id != id
-            ):
-                return JsonResponse(
-                    {
-                        "failure_message":
-                            Status.MODIFY_ERROR.value +
-                            "Asset with asset number '" +
-                            str(data[field]) + "' already exists."
-                    },
-                    status=HTTPStatus.BAD_REQUEST,
-                )
+                if (
+                    data[field] and len(assets_with_asset_number) > 0
+                    and assets_with_asset_number[0].id != existing_asset.related_asset.id
+                ):
+                    return JsonResponse(
+                        {
+                            "failure_message":
+                                Status.MODIFY_ERROR.value +
+                                "Asset with asset number '" +
+                                str(data[field]) + "' already exists."
+                        },
+                        status=HTTPStatus.BAD_REQUEST,
+                    )
             value = data[field]
         else:
             value = data[field]
@@ -731,7 +738,7 @@ def asset_modify(request):
 
 
 @api_view(['POST'])
-@asset_permission_required()
+# @asset_permission_required()
 def asset_delete(request):
     """
     Delete a single existing asset

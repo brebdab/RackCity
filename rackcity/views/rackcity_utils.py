@@ -65,6 +65,7 @@ def validate_asset_location(
     asset_height,
     asset_id=None,
     change_plan=None,
+    related_asset_id=None
 ):
     new_asset_location_range = [
         asset_rack_position + i for i in range(asset_height)
@@ -74,37 +75,62 @@ def validate_asset_location(
         if location <= 0 or location > rack_height:
             raise LocationException("Cannot place asset outside of rack. ")
     if change_plan:
-        assets_sets = get_assets_for_cp(change_plan.id)
+        assets, assets_cp = get_assets_for_cp(change_plan.id)
     else:
-        assets_sets = [Asset.objects.all()]
-    for asset_set in assets_sets:
-        if asset_set:
-            for asset_in_rack in asset_set.filter(rack=rack_id):
-                # Ignore if asset being modified conflicts with its old location
-                if (asset_id is None or asset_in_rack.id != asset_id):
-                    for occupied_location in [
-                        asset_in_rack.rack_position + i for i
-                            in range(asset_in_rack.model.height)
-                    ]:
-                        if occupied_location in new_asset_location_range:
-                            if asset_in_rack.asset_number:
-                                raise LocationException(
-                                    "Asset location conflicts with another asset: '" +
-                                    str(asset_in_rack.asset_number) +
-                                    "'. "
+        assets = Asset.objects.all()
+
+    for asset_in_rack in assets.filter(rack=rack_id):
+        # Ignore if asset being modified conflicts with its old location
+        is_valid_conflict = asset_id is None or asset_in_rack.id != asset_id
+        if change_plan:
+            is_valid_conflict = related_asset_id is not None and asset_in_rack.id != related_asset_id
+  
+        if (is_valid_conflict):
+            for occupied_location in [
+                asset_in_rack.rack_position + i for i
+                    in range(asset_in_rack.model.height)
+            ]:
+                if occupied_location in new_asset_location_range:
+                    if asset_in_rack.asset_number:
+                        raise LocationException(
+                            "Asset location conflicts with another asset: '" +
+                            str(asset_in_rack.asset_number) +
+                            "'. "
+                        )
+                    else:
+                        raise LocationException(
+                            "Asset location conflicts with another asset."
                                 )
-                            else:
-                                raise LocationException(
-                                    "Asset location conflicts with another asset."
-                                )
+    if change_plan:
+        for asset_in_rack in assets_cp.filter(rack=rack_id):
+        # Ignore if asset being modified conflicts with its old location
+            if (asset_id is None or asset_in_rack.id != asset_id):
+                for occupied_location in [
+                    asset_in_rack.rack_position + i for i
+                        in range(asset_in_rack.model.height)
+                ]:
+                    if occupied_location in new_asset_location_range:
+                        if asset_in_rack.asset_number:
+                            raise LocationException(
+                                "Asset location conflicts with another asset: '" +
+                                str(asset_in_rack.asset_number) +
+                                "'. "
+                            )
+                        else:
+                            raise LocationException(
+                                "Asset location conflicts with another asset."
+                                    )
 
 
 
+            
 
-
-def validate_location_modification(data, existing_asset,change_plan=None):
+def validate_location_modification(data, existing_asset, change_plan=None):
     asset_id = existing_asset.id
     rack_id = existing_asset.rack.id
+    related_asset_id = None
+    if existing_asset.related_asset:
+        related_asset_id = existing_asset.related_asset.id
     asset_rack_position = existing_asset.rack_position
     asset_height = existing_asset.model.height
 
@@ -135,6 +161,7 @@ def validate_location_modification(data, existing_asset,change_plan=None):
             asset_height,
             asset_id=asset_id,
             change_plan=change_plan,
+            related_asset_id=related_asset_id,
         )
     except LocationException as error:
         raise error
