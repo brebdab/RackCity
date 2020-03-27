@@ -200,6 +200,6 @@ def decommissioned_asset_many(request):
     )
     # TODO: it may be preferred to make this key "assets" so it's easier to repurpose front end element table code
     return JsonResponse(
-        {"decomissioned_assets": serializer.data},
+        {"assets": serializer.data},
         status=HTTPStatus.OK,
     )
