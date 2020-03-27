@@ -213,9 +213,12 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
         bodyCopy = updateObject(bodyCopy, { filters });
       }
     }
+    let url = this.state.isDecommissioned ?
+      API_ROOT + "api/assets/get-many-decommissioned" :
+      API_ROOT + "api/" + path + "/get-many"
 
     return axios
-      .post(API_ROOT + "api/" + path + "/get-many", bodyCopy, config)
+      .post(url, bodyCopy, config)
       .then(res => {
         const items = res.data[path];
         console.log(items);
@@ -382,6 +385,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               onClick={() => {
                 /* handle data based on state */
                 this.setState({ isDecommissioned: false });
+                this.handleDataUpdate(true);
               }}
             >
 
@@ -539,6 +543,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             <Button
               onClick={() => {
                 this.setState({ isDecommissioned: true });
+                this.handleDataUpdate(true);
               }}
               text="View Decommissioned"
               minimal
@@ -579,6 +584,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             disableSorting={this.props.element === ElementType.DATACENTER}
             disableFiltering={this.props.element === ElementType.DATACENTER}
             currDatacenter={this.props.currDatacenter}
+            isDecommissioned={this.state.isDecommissioned}
           />
         </div>
       </div>

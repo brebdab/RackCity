@@ -17,6 +17,7 @@ export interface ITableSort {
 export enum ElementTableOpenAlert {
   NONE = "none",
   DELETE = "delete",
+  DECOMMISSION = "decommission",
   GRANT_ADMIN = "grant_admin",
   REVOKE_ADMIN = "revoke_admin"
 }
@@ -102,6 +103,11 @@ export const deleteAsset = (asset: AssetObject, headers: any) => {
   console.log("Deleting asset");
   const data = { id: asset.id };
   return axios.post(API_ROOT + "api/assets/delete", data, headers);
+};
+export const decommissionAsset = (asset: AssetObject, headers: any) => {
+  console.log("Decommissioning asset");
+  const data = { id: asset.id };
+  return axios.post(API_ROOT + "api/assets/decommission", data, headers);
 };
 export const modifyAsset = (asset: AssetObject, headers: any): Promise<any> => {
   return axios.post(API_ROOT + "api/assets/modify", asset, headers);

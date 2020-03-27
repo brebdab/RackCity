@@ -48,6 +48,7 @@ import {
 import DragDropList, { DragDropListTypes } from "./dragDropList";
 import {
   deleteAsset,
+  decommissionAsset,
   deleteDatacenter,
   deleteModel,
   deleteUser,
@@ -93,6 +94,7 @@ interface ElementTableState {
 }
 
 interface ElementTableProps {
+  isDecommissioned: boolean;
   callback?: Function;
   type: ElementType;
   token: string;
@@ -126,7 +128,7 @@ interface ElementTableProps {
 class ElementTable extends React.Component<
   ElementTableProps & RouteComponentProps,
   ElementTableState
-> {
+  > {
   public state: ElementTableState = {
     page_type: 10,
     filters: [],
@@ -248,7 +250,7 @@ class ElementTable extends React.Component<
         </span>
         <span>{`${item.field} by ${
           item.ascending ? "ascending" : "descending"
-        }`}</span>
+          }`}</span>
 
         <span>
           <Icon
@@ -347,7 +349,7 @@ class ElementTable extends React.Component<
             filters: filters_copy
           });
         })
-        .catch(err => {});
+        .catch(err => { });
     }
   };
 
@@ -636,7 +638,7 @@ class ElementTable extends React.Component<
           }}
           asset={this.state.assetPower}
           shouldUpdate={false}
-          updated={() => {}}
+          updated={() => { }}
         />
       </Dialog>
     );
@@ -702,6 +704,13 @@ class ElementTable extends React.Component<
   private handleDeleteCancel = () =>
     this.setState({ openAlert: ElementTableOpenAlert.NONE });
 
+  private handleDecommissionOpen = () =>
+    this.setState({ openAlert: ElementTableOpenAlert.DECOMMISSION });
+  private handleDecommissionCancel = () =>
+    this.setState({ openAlert: ElementTableOpenAlert.NONE });
+
+
+
   private handleDelete = () => {
     let resp;
     if (isModelObject(this.state.editFormValues)) {
@@ -747,9 +756,39 @@ class ElementTable extends React.Component<
     }
   };
 
+  private handleDecommission = () => {
+    let resp;
+    if (isAssetObject(this.state.editFormValues)) {
+      resp = decommissionAsset(
+        this.state.editFormValues,
+        getHeaders(this.props.token)
+      );
+    }
+    if (resp) {
+      resp
+        .then(res => {
+          this.addSuccessToast(res.data.success_message);
+          this.updateTableData();
+          this.handleDecommissionCancel();
+          if (this.props.updateDatacenters) {
+            this.props.updateDatacenters();
+          }
+        })
+        .catch(err => {
+          this.addErrorToast(err.response.data.failure_message);
+          this.handleDecommissionCancel();
+        });
+    }
+  };
+
   handleDeleteButtonClick = (data: ElementObjectType) => {
     this.handleInlineButtonClick(data);
     this.handleDeleteOpen();
+  };
+
+  handleDecommissionButtonClick = (data: ElementObjectType) => {
+    this.handleInlineButtonClick(data);
+    this.handleDecommissionOpen();
   };
 
   handlePowerButtonClick = (data: AssetObject) => {
@@ -884,6 +923,16 @@ class ElementTable extends React.Component<
         </Alert>
         <Alert
           cancelButtonText="Cancel"
+          confirmButtonText="Decommission"
+          intent="danger"
+          isOpen={this.state.openAlert === ElementTableOpenAlert.DECOMMISSION}
+          onCancel={this.handleDecommissionCancel}
+          onConfirm={this.handleDecommission}
+        >
+          <p>Are you sure you want to decommission?</p>
+        </Alert>
+        <Alert
+          cancelButtonText="Cancel"
           confirmButtonText="Confirm"
           intent="danger"
           isOpen={this.state.openAlert === ElementTableOpenAlert.GRANT_ADMIN}
@@ -915,20 +964,20 @@ class ElementTable extends React.Component<
           {this.props.disableFiltering
             ? null
             : [
-                <div className="filter-select">
-                  <FilterSelect
-                    handleAddFilter={this.addFilter}
-                    fields={this.state.fields}
-                  />
-                </div>,
-                <div className="table-options">
-                  <DragDropList
-                    type={DragDropListTypes.FILTER}
-                    items={this.state.filters}
-                    renderItem={this.renderFilterItem}
-                  />
-                </div>
-              ]}
+              <div className="filter-select">
+                <FilterSelect
+                  handleAddFilter={this.addFilter}
+                  fields={this.state.fields}
+                />
+              </div>,
+              <div className="table-options">
+                <DragDropList
+                  type={DragDropListTypes.FILTER}
+                  items={this.state.filters}
+                  renderItem={this.renderFilterItem}
+                />
+              </div>
+            ]}
           {this.props.disableSorting ? null : (
             <div className="table-options">
               <DragDropList
@@ -952,26 +1001,26 @@ class ElementTable extends React.Component<
               </HTMLSelect>
               {this.state.page_type !== PagingTypes.ALL
                 ? [
-                    <span>
-                      <Icon
-                        className="icon"
-                        icon={IconNames.CARET_LEFT}
-                        iconSize={Icon.SIZE_LARGE}
-                        onClick={() => this.previousPage()}
-                      />
-                    </span>,
-                    <span>
-                      page {this.state.curr_page} of {this.state.total_pages}
-                    </span>,
-                    <span>
-                      <Icon
-                        className="icon"
-                        icon={IconNames.CARET_RIGHT}
-                        iconSize={Icon.SIZE_LARGE}
-                        onClick={() => this.nextPage()}
-                      />
-                    </span>
-                  ]
+                  <span>
+                    <Icon
+                      className="icon"
+                      icon={IconNames.CARET_LEFT}
+                      iconSize={Icon.SIZE_LARGE}
+                      onClick={() => this.previousPage()}
+                    />
+                  </span>,
+                  <span>
+                    page {this.state.curr_page} of {this.state.total_pages}
+                  </span>,
+                  <span>
+                    <Icon
+                      className="icon"
+                      icon={IconNames.CARET_RIGHT}
+                      iconSize={Icon.SIZE_LARGE}
+                      onClick={() => this.nextPage()}
+                    />
+                  </span>
+                ]
                 : null}
             </div>
           ) : null}
@@ -980,7 +1029,7 @@ class ElementTable extends React.Component<
           <table
             className={
               this.props.type !== ElementType.DATACENTER &&
-              this.props.type !== ElementType.USER
+                this.props.type !== ElementType.USER
                 ? "bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered element-table"
                 : "bp3-html-table bp3-html-table-striped bp3-html-table-bordered element-table"
             }
@@ -1074,17 +1123,17 @@ class ElementTable extends React.Component<
                       <tr
                         onClick={
                           this.props.type === ElementType.DATACENTER ||
-                          this.props.type === ElementType.USER
-                            ? () => {}
+                            this.props.type === ElementType.USER
+                            ? () => { }
                             : () => {
-                                this.props.history.push(
-                                  ROUTES.DASHBOARD +
-                                    "/" +
-                                    this.props.type +
-                                    "/" +
-                                    item.id
-                                );
-                              }
+                              this.props.history.push(
+                                ROUTES.DASHBOARD +
+                                "/" +
+                                this.props.type +
+                                "/" +
+                                item.id
+                              );
+                            }
                         }
                       >
                         {this.props.type === ElementType.ASSET ? (
@@ -1157,49 +1206,56 @@ class ElementTable extends React.Component<
                           ) : null}
                           <div className="inline-buttons">
                             {this.props.type !== ElementType.USER &&
-                            !this.props.data &&
-                            this.props.isAdmin ? (
-                              <AnchorButton
-                                className="button-table"
-                                intent="primary"
-                                icon="edit"
-                                minimal
-                                onClick={(event: any) => {
-                                  console.log(
-                                    "SCROLL",
-                                    window.scrollX,
-                                    window.scrollY
-                                  );
-                                  this.handleEditButtonClick(item);
-                                  event.stopPropagation();
-                                }}
-                              />
-                            ) : null}
-                            {this.props.isAdmin && !this.props.data ? (
+                              !this.props.data &&
+                              this.props.isAdmin &&
+                              !this.props.isDecommissioned ? (
+                                <AnchorButton
+                                  className="button-table"
+                                  intent="primary"
+                                  icon="edit"
+                                  minimal
+                                  onClick={(event: any) => {
+                                    console.log(
+                                      "SCROLL",
+                                      window.scrollX,
+                                      window.scrollY
+                                    );
+                                    this.handleEditButtonClick(item);
+                                    event.stopPropagation();
+                                  }}
+                                />
+                              ) : null}
+                            {this.props.isAdmin && !this.props.data && !this.props.isDecommissioned ? (
                               <AnchorButton
                                 className="button-table"
                                 intent="danger"
                                 minimal
-                                icon="trash"
-                                onClick={(event: any) => {
-                                  this.handleDeleteButtonClick(item);
+                                icon={this.props.type === ElementType.ASSET ? "remove" : "trash"}
+                                onClick={this.props.type === ElementType.ASSET ? (event: any) => {
+                                  this.handleDecommissionButtonClick(item);
                                   event.stopPropagation();
-                                }}
+                                } :
+                                  (event: any) => {
+                                    this.handleDeleteButtonClick(item);
+                                    event.stopPropagation();
+                                  }
+                                }
                               />
                             ) : null}
                             {isAssetObject(item) &&
-                            item.rack.is_network_controlled ? (
-                              <AnchorButton
-                                className="button-table"
-                                intent="warning"
-                                minimal
-                                icon="offline"
-                                onClick={(event: any) => {
-                                  this.handlePowerButtonClick(item);
-                                  event.stopPropagation();
-                                }}
-                              />
-                            ) : null}
+                              item.rack.is_network_controlled &&
+                              !this.props.isDecommissioned ? (
+                                <AnchorButton
+                                  className="button-table"
+                                  intent="warning"
+                                  minimal
+                                  icon="offline"
+                                  onClick={(event: any) => {
+                                    this.handlePowerButtonClick(item);
+                                    event.stopPropagation();
+                                  }}
+                                />
+                              ) : null}
                           </div>{" "}
                           {/* TODO add logic for determining if isOwner for power button */}
                         </td>
@@ -1209,11 +1265,11 @@ class ElementTable extends React.Component<
                 </tbody>
               ) : null
             ) : null
-            // <Spinner
-            //   className="table-spinner"
-            //   size={Spinner.SIZE_STANDARD}
-            // />
-            // <h4 className="no-data-text">no {this.props.type} found </h4>
+              // <Spinner
+              //   className="table-spinner"
+              //   size={Spinner.SIZE_STANDARD}
+              // />
+              // <h4 className="no-data-text">no {this.props.type} found </h4>
             }
           </table>
 
@@ -1221,12 +1277,12 @@ class ElementTable extends React.Component<
             <Spinner className="table-spinner" size={Spinner.SIZE_STANDARD} />
           ) : null}
           {(!this.state.items || this.state.items.length === 0) &&
-          !this.state.getDataInProgress ? (
-            <Callout
-              icon={IconNames.ERROR}
-              title={"No " + this.props.type}
-            ></Callout>
-          ) : null}
+            !this.state.getDataInProgress ? (
+              <Callout
+                icon={IconNames.ERROR}
+                title={"No " + this.props.type}
+              ></Callout>
+            ) : null}
         </div>
       </div>
     );
