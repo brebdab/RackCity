@@ -22,6 +22,7 @@ from rackcity.api.serializers import (
     AssetCPSerializer,
     GetDecommissionedAssetSerializer,
     RecursiveAssetSerializer,
+    RecursiveAssetCPSerializer,
     BulkAssetSerializer,
     BulkNetworkPortSerializer,
     ITModelSerializer,
@@ -120,9 +121,22 @@ def asset_detail(request, id):
     """
     Retrieve a single asset.
     """
-
+    change_plan = None
+    serializer = None
+    if request.query_params.get("change_plan"):
+        change_plan = get_change_plan(request.query_params.get("change_plan"))
     try:
-        asset = Asset.objects.get(id=id)
+        
+        if change_plan:
+            assets, assets_cp = get_assets_for_cp(change_plan.id)
+            if assets_cp.filter(id=id).exists():
+                asset = assets_cp.get(id=id)
+            else:
+                asset = assets.get(id=id)
+            serializer = RecursiveAssetCPSerializer(asset)
+        else:
+            asset = Asset.objects.get(id=id)
+            serializer = RecursiveAssetSerializer(asset)
     except Asset.DoesNotExist:
         try:
             decommissioned_asset = DecommissionedAsset.objects.get(live_id=id)
@@ -138,8 +152,7 @@ def asset_detail(request, id):
             )
         else:
             serializer = GetDecommissionedAssetSerializer(decommissioned_asset)
-    else:
-        serializer = RecursiveAssetSerializer(asset)
+
     return JsonResponse(serializer.data, status=HTTPStatus.OK)
 
 

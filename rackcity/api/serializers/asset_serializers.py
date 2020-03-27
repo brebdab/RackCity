@@ -207,6 +207,7 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
             'network_graph',
             'power_connections',
             'change_plan',
+       
 
         )
 
@@ -214,8 +215,7 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
         return serialize_mac_addresses(NetworkPortCP, assetCP)
 
     def get_network_graph(self, assetCP):
-        # TODO waiting for Claire to implement NetworkPortCP logic
-        return {}
+        return generate_network_graph(assetCP)
 
     def get_power_connections(self, assetCP):
         return serialize_power_connections(PowerPortCP, assetCP)

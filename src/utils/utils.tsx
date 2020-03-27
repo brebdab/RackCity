@@ -50,7 +50,11 @@ export interface AssetObject extends ParentAssetObject {
   rack: RackObject;
   network_graph: NetworkGraphData;
 }
-
+export interface AssetCPObject extends AssetObject {
+  change_plan: ChangePlan;
+  is_conflict: boolean;
+  related_asset: AssetObject;
+}
 interface ParentAssetObject extends ElementObject {
   asset_number: string;
   hostname: string;
