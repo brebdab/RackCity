@@ -199,7 +199,7 @@ def get_cp_modification_conflicts(asset_cp):
     nonresolvable_message = "This conflict cannot be resolved; the change " + \
         "needs to be removed from your change plan."
     conflicting_asset_message_1 = "Due to more recent live changes, " + \
-        "your change planner modification to this asset's "
+        "your change plan version of this asset's "
     conflicting_asset_message_2 = " now conflicts with a live asset. "
     if asset_cp.asset_conflict_hostname:
         conflicts.append({
