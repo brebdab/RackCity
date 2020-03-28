@@ -16,7 +16,7 @@ from rackcity.utils.query_utils import (
     should_paginate_query,
 )
 from rackcity.views.rackcity_utils import validate_asset_location, LocationException
-
+from django.db.models import Q
 
 @receiver(post_save, sender=Asset)
 def detect_conflicts_cp(sender, **kwargs):

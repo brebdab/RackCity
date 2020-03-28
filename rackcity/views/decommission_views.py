@@ -160,7 +160,13 @@ def decommission_asset(request):
             status=HTTPStatus.BAD_REQUEST
         )
     else:
+        
+        for assetcp in AssetCP.objects.filter(related_asset=id):
+            assetcp.related_decomissionned_asset = decommissioned_asset
+            assetcp.save()
+        asset.assetcp_set.clear()   
         asset.delete()
+        
         return JsonResponse(
             {
                 "success_message": "Asset successfully decommissioned. "
