@@ -105,12 +105,7 @@ export class Navigation extends React.Component<
                 )
               }
             >
-              <Banner
-                title={
-                  this.props.changePlan.name +
-                  " \nOnly asset changes (create/modify/delete) will be specific to this change plan. All other changes will be LIVE."
-                }
-              />
+              <Banner title={this.props.changePlan.name} />
             </div>
           ) : null}
           <Navbar className={Classes.DARK + " nav-bar"}>
@@ -133,6 +128,7 @@ export class Navigation extends React.Component<
                     content={
                       <Menu>
                         <MenuItem
+                          disabled={this.props.changePlan ? true : false}
                           text="View Report"
                           icon="numbered-list"
                           onClick={() => this.props.history.push(ROUTES.REPORT)}

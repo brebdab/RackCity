@@ -8,7 +8,8 @@ import {
   IToastProps,
   Checkbox,
   Radio,
-  RadioGroup
+  RadioGroup,
+  Alignment
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
@@ -20,14 +21,13 @@ import {
   DatacenterObject
 } from "../utils/utils";
 import { updateObject } from "../store/utility";
-import Field from "./field";
 import "./forms.scss";
 import { FormTypes } from "./formUtils";
 import { API_ROOT } from "../utils/api-config";
 
 //TO DO : add validation of types!!!
-var console: any = {};
-console.log = function() {};
+// var console: any = {};
+// console.log = function() {};
 
 export interface UserFormProps {
   userId: string;
@@ -139,6 +139,7 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
   }
 
   render() {
+    console.log(this.state);
     return (
       <div className={Classes.DARK + " login-container"}>
         {this.state.errors.map((err: string) => {
@@ -149,8 +150,10 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
           onSubmit={this.handleSubmit}
           className="create-form bp3-form-group"
         >
-          <FormGroup label="Administrator" inline={true}>
+          <FormGroup inline={true}>
             <Checkbox
+              label="Administrator"
+              alignIndicator={Alignment.LEFT}
               checked={this.state.permissions.admin}
               onChange={() => {
                 let updatedPermissions: UserPermissionsObject;
@@ -169,8 +172,10 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
               }}
             ></Checkbox>
           </FormGroup>
-          <FormGroup label="Model Management" inline={true}>
+          <FormGroup inline={true}>
             <Checkbox
+              label="Model Management"
+              alignIndicator={Alignment.LEFT}
               checked={
                 this.state.permissions.admin
                   ? true
@@ -184,8 +189,10 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
               }}
             ></Checkbox>
           </FormGroup>
-          <FormGroup label="Power Control" inline={true}>
+          <FormGroup inline={true}>
             <Checkbox
+              label="Power Control"
+              alignIndicator={Alignment.LEFT}
               checked={
                 this.state.permissions.admin
                   ? true
@@ -193,20 +200,21 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
               }
               disabled={this.state.permissions.admin}
               onChange={() => {
-                console.log("hello");
                 this.setState({
                   permissions: this.updateBooleanPermissions("power_control")
                 });
               }}
             ></Checkbox>
           </FormGroup>
-          <FormGroup label="Audit Log" inline={true}>
+          <FormGroup inline={true}>
             <Checkbox
+              label="Audit Log"
               checked={
                 this.state.permissions.admin
                   ? true
                   : this.state.permissions.audit_read
               }
+              alignIndicator={Alignment.LEFT}
               disabled={this.state.permissions.admin}
               onChange={() => {
                 this.setState({
@@ -216,8 +224,11 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
             ></Checkbox>
           </FormGroup>
           <RadioGroup
-            label="Datacenters"
+            inline={true}
+            label="Datacenter permissions"
             onChange={() => {
+              console.log("changing datacenter");
+              console.log(this.state);
               var updatedPermissions = this.state.permissions;
               if (this.state.datacenter_selection === "Global") {
                 let permissions: Array<string>;
@@ -265,12 +276,10 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
 
   private renderDatacenter(datacenter: DatacenterObject) {
     return (
-      <FormGroup
-        key={datacenter.name}
-        label={datacenter.name.toString}
-        inline={true}
-      >
+      <FormGroup key={datacenter.name} inline={true}>
         <Checkbox
+          label={datacenter.name}
+          alignIndicator={Alignment.LEFT}
           checked={this.state.permissions.datacenter_permissions.includes(
             datacenter.id
           )}
@@ -323,7 +332,7 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
         getHeaders(this.props.token)
       )
       .then(res => {
-        console.log(res);
+        console.log(res.data);
         this.setState({
           initialValues: res.data,
           permissions: res.data

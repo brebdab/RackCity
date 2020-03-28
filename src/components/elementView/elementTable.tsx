@@ -43,7 +43,9 @@ import {
   AssetFieldsTable,
   ModelFieldsTable,
   ROUTES,
-  isChangePlanObject
+  isChangePlanObject,
+  ChangePlan,
+  getChangePlanRowStyle
 } from "../../utils/utils";
 import DragDropList, { DragDropListTypes } from "./dragDropList";
 import {
@@ -120,6 +122,7 @@ interface ElementTableProps {
   shouldUpdateData?: boolean;
   isAdmin: boolean;
   updateDatacenters?(): void;
+  changePlan: ChangePlan;
 }
 
 // var console: any = {};
@@ -184,6 +187,17 @@ class ElementTable extends React.Component<
     }
     if (nextProps.token !== this.props.token) {
       this.updateTableData();
+    }
+    // if (nextProps.changePlan !== this.props.changePlan) {
+    //   this.updateTableData();
+    // }
+    if (nextProps.data !== this.props.data) {
+      console.log("NEW TABLE DATA");
+      if (nextProps.data) {
+        this.setState({
+          items: nextProps.data
+        });
+      }
     }
   }
 
@@ -514,6 +528,7 @@ class ElementTable extends React.Component<
       this.updateTableData();
     }
   }
+
   updateTableData = () => {
     if (this.props.getData && this.props.token) {
       this.setState({
@@ -662,10 +677,10 @@ class ElementTable extends React.Component<
     );
   };
 
-  successfulModification() {
+  successfulModification(message: string) {
     this.updateTableData();
     this.handleEditFormClose();
-    this.addSuccessToast("Successfuly modified");
+    this.addSuccessToast(message);
   }
   successfulModifcationWithWarning = (warning: string) => {
     this.updateTableData();
@@ -675,23 +690,23 @@ class ElementTable extends React.Component<
   handleEditFormSubmit = (values: ElementObjectType, headers: any) => {
     if (isModelObject(values)) {
       return modifyModel(values, headers).then(res => {
-        this.successfulModification();
+        this.successfulModification(res.data.success_message);
       });
     } else if (isAssetObject(values)) {
-      return modifyAsset(values, headers).then(res => {
+      return modifyAsset(values, headers, this.props.changePlan).then(res => {
         if (res.data.warning_message) {
           this.successfulModifcationWithWarning(res.data.warning_message);
         } else {
-          this.successfulModification();
+          this.successfulModification(res.data.success_message);
         }
       });
     } else if (isChangePlanObject(values)) {
       return modifyChangePlan(values, headers).then(res => {
-        this.successfulModification();
+        this.successfulModification(res.data.success_message);
       });
     } else if (isDatacenterObject(values)) {
       return modifyDatacenter(values, headers).then(res => {
-        this.successfulModification();
+        this.successfulModification(res.data.success_message);
         if (this.props.updateDatacenters) {
           this.props.updateDatacenters();
         }
@@ -908,7 +923,9 @@ class ElementTable extends React.Component<
           >
             <thead>
               <tr>
-                {this.props.type === ElementType.ASSET ? (
+                {this.props.type === ElementType.ASSET &&
+                this.state.fields &&
+                this.state.fields.length > 0 ? (
                   <th className="header-cell">
                     <div className="header-text">
                       <Checkbox
@@ -1008,6 +1025,7 @@ class ElementTable extends React.Component<
                                 );
                               }
                         }
+                        style={getChangePlanRowStyle(item)}
                       >
                         {this.props.type === ElementType.ASSET ? (
                           <th
@@ -1043,13 +1061,21 @@ class ElementTable extends React.Component<
                         {Object.entries(item).map(([col, value]) => {
                           if (isModelObject(value)) {
                             return [
-                              <td>{value.vendor}</td>,
-                              <td>{value.model_number}</td>
+                              <td style={getChangePlanRowStyle(item)}>
+                                {value.vendor}
+                              </td>,
+                              <td style={getChangePlanRowStyle(item)}>
+                                {value.model_number}
+                              </td>
                             ];
                           } else if (isRackObject(value)) {
                             return [
-                              <td>{value.row_letter + value.rack_num}</td>,
-                              <td>{value.datacenter.name}</td>
+                              <td style={getChangePlanRowStyle(item)}>
+                                {value.row_letter + value.rack_num}
+                              </td>,
+                              <td style={getChangePlanRowStyle(item)}>
+                                {value.datacenter.name}
+                              </td>
                             ];
                           } else if (col === "display_color") {
                             return (
@@ -1066,12 +1092,20 @@ class ElementTable extends React.Component<
                             col !== "is_admin" &&
                             !isObject(value)
                           ) {
-                            return <td>{value}</td>;
+                            return (
+                              <td style={getChangePlanRowStyle(item)}>
+                                {value}
+                              </td>
+                            );
                           }
 
                           return null;
                         })}
-                        <td>
+                        <td
+                          onClick={(event: any) => {
+                            event.stopPropagation();
+                          }}
+                        >
                           {this.props.isAdmin && isUserObject(item) ? (
                             <div className="inline-buttons grant-admin-button">
                               {" "}
@@ -1088,12 +1122,13 @@ class ElementTable extends React.Component<
                                 intent="primary"
                                 icon="edit"
                                 minimal
+                                disabled={
+                                  this.props.changePlan &&
+                                  this.props.type !== ElementType.ASSET
+                                    ? true
+                                    : false
+                                }
                                 onClick={(event: any) => {
-                                  console.log(
-                                    "SCROLL",
-                                    window.scrollX,
-                                    window.scrollY
-                                  );
                                   this.handleEditButtonClick(item);
                                   event.stopPropagation();
                                 }}
@@ -1105,6 +1140,7 @@ class ElementTable extends React.Component<
                                 intent="danger"
                                 minimal
                                 icon="trash"
+                                disabled={this.props.changePlan ? true : false}
                                 onClick={(event: any) => {
                                   this.handleDeleteButtonClick(item);
                                   event.stopPropagation();
@@ -1118,6 +1154,7 @@ class ElementTable extends React.Component<
                                 intent="warning"
                                 minimal
                                 icon="offline"
+                                disabled={this.props.changePlan ? true : false}
                                 onClick={(event: any) => {
                                   this.handlePowerButtonClick(item);
                                   event.stopPropagation();
@@ -1159,7 +1196,8 @@ class ElementTable extends React.Component<
 const mapStateToProps = (state: any) => {
   return {
     token: state.token,
-    isAdmin: state.admin
+    isAdmin: state.admin,
+    changePlan: state.changePlan
   };
 };
 export default connect(mapStateToProps)(withRouter(ElementTable));

@@ -50,7 +50,11 @@ export interface AssetObject extends ParentAssetObject {
   rack: RackObject;
   network_graph: NetworkGraphData;
 }
-
+export interface AssetCPObject extends AssetObject {
+  change_plan: ChangePlan;
+  is_conflict: boolean;
+  related_asset: AssetObject;
+}
 interface ParentAssetObject extends ElementObject {
   asset_number: string;
   hostname: string;
@@ -60,6 +64,8 @@ interface ParentAssetObject extends ElementObject {
   power_connections: { [port: string]: PowerConnection };
   owner: string;
   comment: string;
+  decommissioning_user?: string;
+  time_decommissioned?: string;
 }
 
 export interface RackRangeFields {
@@ -87,6 +93,11 @@ export const AssetFieldsTable: any = {
   rack_position: "Rack Position",
   owner: "Owner",
   comment: "Comment"
+};
+
+export const DecommissionedFieldsTable: any = {
+  decommissioning_user: "User",
+  time_decommissioned: "Time",
 };
 
 export const ModelFieldsTable: any = {
@@ -284,6 +295,17 @@ export const getHeaders = (token: string) => {
     }
   };
 };
+
+export const getChangePlanRowStyle = (item: any) => {
+  return {
+    fontWeight: isAssetCP(item) ? ("bold" as any) : ("none" as any),
+    color: isAssetCP(item) ? "#bf8c0a" : "white"
+  };
+};
+
+export function isAssetCP(obj: any): boolean {
+  return obj && obj.change_plan;
+}
 
 export const isAdmin = (headers: any) => {
   let isAdmin = false;
