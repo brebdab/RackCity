@@ -186,6 +186,9 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
     """
     model = ITModelSerializer()
     rack = RackSerializer()
+    asset_conflict_hostname = AssetSerializer()
+    asset_conflict_location = AssetSerializer()
+    asset_conflict_asset_number = AssetSerializer()
     change_plan = GetChangePlanSerializer()
     mac_addresses = serializers.SerializerMethodField()
     power_connections = serializers.SerializerMethodField()
@@ -208,6 +211,10 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
             'network_graph',
             'power_connections',
             'change_plan',
+            'is_conflict',
+            'asset_conflict_hostname',
+            'asset_conflict_location',
+            'asset_conflict_asset_number',
        
 
         )
