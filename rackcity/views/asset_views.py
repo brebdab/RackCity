@@ -131,9 +131,10 @@ def asset_detail(request, id):
             assets, assets_cp = get_assets_for_cp(change_plan.id)
             if assets_cp.filter(id=id).exists():
                 asset = assets_cp.get(id=id)
+                serializer = RecursiveAssetCPSerializer(asset)
             else:
                 asset = assets.get(id=id)
-            serializer = RecursiveAssetCPSerializer(asset)
+                serializer = RecursiveAssetSerializer(asset)
         else:
             asset = Asset.objects.get(id=id)
             serializer = RecursiveAssetSerializer(asset)
