@@ -113,6 +113,7 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
   componentDidMount() {
     this.getDatacenters().then(res => {
       var data = res.datacenters as Array<DatacenterObject>;
+      data.sort(this.compare);
       this.setState({
         datacenters: data
       });
@@ -215,7 +216,7 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
               </FormGroup>
               <RadioGroup
                 inline={true}
-                label="Datacenter permissions"
+                label="Asset permissions"
                 onChange={() => {
                   console.log("changing datacenter");
                   console.log(this.state);
@@ -257,6 +258,16 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
     );
   }
 
+  private compare(a: DatacenterObject, b: DatacenterObject) {
+    if (a.name < b.name) {
+      return -1;
+    }
+    if (a.name > b.name) {
+      return 1;
+    }
+    return 0;
+  }
+
   private renderDatacenterChecks() {
     var checks: Array<any>;
     checks = [];
@@ -279,15 +290,23 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
             datacenter.id
           )}
           onChange={() => {
+            console.log(datacenter);
+            var updatedPermissions = this.state.permissions;
             if (
               this.state.permissions.datacenter_permissions.includes(
                 datacenter.id
               )
             ) {
+              const index = this.state.permissions.datacenter_permissions.indexOf(
+                datacenter.id
+              );
+              updatedPermissions.datacenter_permissions.splice(index, 1);
             } else {
-              this.state.permissions.datacenter_permissions.push(datacenter.id);
+              updatedPermissions.datacenter_permissions.push(datacenter.id);
             }
-            this.setState({});
+            this.setState({
+              permissions: updatedPermissions
+            });
           }}
         ></Checkbox>
       </FormGroup>

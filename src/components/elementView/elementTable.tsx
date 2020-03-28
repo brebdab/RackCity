@@ -840,11 +840,11 @@ class ElementTable extends React.Component<
   renderPermissionsButton = (item: UserInfoObject) => {
     return (
       <AnchorButton
-        className="button-table"
+        className="button-table permissions-button"
         intent="primary"
         icon="edit"
         minimal
-        text="Edit User"
+        text="Edit Permissions"
         onClick={() => {
           this.setState({
             editUserFormOpen: true,
@@ -1168,7 +1168,7 @@ class ElementTable extends React.Component<
                           }}
                         >
                           {this.props.isAdmin && isUserObject(item) ? (
-                            <div className="inline-buttons grant-admin-button">
+                            <div className="inline-buttons-user grant-admin-button permissions-button">
                               {" "}
                               {/* TODO change grant-admin-button to change-permissions*/}
                               {this.renderPermissionsButton(item)}
