@@ -267,8 +267,6 @@ class FilterSelect extends React.Component<
 
 const FieldSelect = Select.ofType<string>();
 
-private handleRangeChange = (range: DateRange) => this.setState({ range });
-
 const mapStateToProps = (state: any) => {
   return {
     token: state.token,
