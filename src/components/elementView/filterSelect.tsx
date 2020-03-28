@@ -1,5 +1,5 @@
 import { Button, FormGroup, HTMLSelect, MenuItem, Popover } from "@blueprintjs/core";
-import { DateRangePicker } from "@blueprintjs/datetime";
+import { DateRangeInput } from "@blueprintjs/datetime";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { Select } from "@blueprintjs/select";
 import * as React from "react";
@@ -29,7 +29,8 @@ import {
   IFilter,
   NumericFilter,
   TextFilter,
-  TextFilterTypes
+  TextFilterTypes,
+  DatetimeFilter
 } from "./elementUtils";
 import "./elementView.scss";
 
@@ -49,7 +50,7 @@ class FilterSelect extends React.Component<
   state = {
     id: "",
     field: "",
-    filter: {} as TextFilter | NumericFilter | RackRangeFields,
+    filter: {} as TextFilter | NumericFilter | RackRangeFields | DatetimeFilter,
     filter_type: FilterTypes.TEXT
   };
   renderFilterOptions(field: string | undefined) {
@@ -85,14 +86,18 @@ class FilterSelect extends React.Component<
   }
   getDatetimeFilterOptions() {
     return (
-      <Popover
-        content={
-          <DateRangePicker>
-          </DateRangePicker>
-        }
-      >
-        <Button icon="calendar" text="Choose Date Range" minimal />
-      </Popover>
+      <FormGroup label="Date range">
+        <DateRangeInput
+          formatDate={(date: Date) => date.toLocaleString()}
+          onChange={undefined}
+          parseDate={(str: string) => new Date(str)}
+          allowSingleDayRange={true}
+          shortcuts={true}
+          singleMonthOnly={true}
+          closeOnSelection={false}
+          timePrecision="minute"
+        />
+      </FormGroup>
     );
   }
   getNumericFilterOptions() {
@@ -261,6 +266,8 @@ class FilterSelect extends React.Component<
 }
 
 const FieldSelect = Select.ofType<string>();
+
+private handleRangeChange = (range: DateRange) => this.setState({ range });
 
 const mapStateToProps = (state: any) => {
   return {

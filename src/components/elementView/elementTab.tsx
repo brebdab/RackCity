@@ -376,16 +376,6 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             </Callout>
           ) : null}
         </div>
-        {/* <DateRangeInput
-          allowSingleDayRange={true}
-          closeOnSelection={false}
-          contiguousCalendarMonths={true}
-          disabled={false}
-          reverseMonthAndYearMenus={false}
-          selectAllOnFocus={false}
-          shortcuts={true}
-          singleMonthOnly={false}
-        /> */}
         {this.state.isDecommissioned ? <Callout
           icon="warning-sign"
         >
