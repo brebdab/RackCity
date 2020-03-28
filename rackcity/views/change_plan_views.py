@@ -6,17 +6,18 @@ from rackcity.api.serializers import (
 )
 from rackcity.models import (
     ChangePlan,
-    Asset,
     AssetCP,
-    DecommissionedAsset,
-    NetworkPort,
-    NetworkPortCP,
-    PDUPort,
-    PDUPortCP,
-    PowerPort,
-    PowerPortCP,
 )
-from rackcity.utils.change_planner_utils import get_modifications_in_cp
+from rackcity.utils.change_planner_utils import (
+    get_modifications_in_cp,
+    asset_cp_has_conflicts,
+)
+from rackcity.utils.execute_change_planner_utils import (
+    update_network_ports,
+    update_power_ports,
+    decommission_asset_cp,
+    get_updated_asset,
+)
 from rackcity.utils.query_utils import (
     get_page_count_response,
     get_many_response,
@@ -266,7 +267,7 @@ def change_plan_detail(request, id):
         },
         status=HTTPStatus.OK
     )
-  
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -311,15 +312,7 @@ def change_plan_execute(request):
         )
     assets_cp = AssetCP.objects.filter(change_plan=change_plan)
     for asset_cp in assets_cp:
-        if (
-            asset_cp.is_conflict
-            or asset_cp.asset_conflict_hostname
-            or asset_cp.asset_conflict_asset_number
-            or asset_cp.asset_conflict_location
-            or asset_cp.related_decommissioned_asset
-            or asset_cp.model is None
-            or asset_cp.rack is None
-        ):
+        if asset_cp_has_conflicts(asset_cp):
             return JsonResponse(
                 {
                     "failure_message":
@@ -334,58 +327,30 @@ def change_plan_execute(request):
     num_created = 0
     num_modified = 0
     num_decommissioned = 0
+    updated_asset_mappings = {}
     for asset_cp in assets_cp:
-        # Update asset
-        related_asset = asset_cp.related_asset
-        if related_asset:
-            updated_asset = related_asset
-            num_modified += 1
-        else:
-            updated_asset = Asset()
+        updated_asset, created = get_updated_asset(asset_cp)
+        updated_asset_mappings[asset_cp] = updated_asset
+        if created:
             num_created += 1
-        for field in Asset._meta.fields:
-            if field != 'id':
-                setattr(
-                    updated_asset,
-                    field.name,
-                    getattr(asset_cp, field.name)
-                )
-        # Assigns asset number, creates network & power ports on save
-        updated_asset.save()
+        else:
+            num_modified += 1
+        update_network_ports(updated_asset, asset_cp, change_plan)
+        update_power_ports(updated_asset, asset_cp, change_plan)
 
-        # Update network ports
-        network_ports_cp = NetworkPortCP.objects.filter(
-            change_plan=change_plan,
-            asset=asset_cp,
-        )
-
-        # Update power ports
-        power_ports_cp = PowerPortCP.objects.filter(
-            change_plan=change_plan,
-            asset=asset_cp,
-        )
-        for power_port_cp in power_ports_cp:
-            pdu_port_cp = power_port_cp.power_connection
-            pdu_port_to_connect = PDUPort.objects.get(
-                rack=pdu_port_cp.rack,
-                left_right=pdu_port_cp.left_right,
-                port_number=pdu_port_cp.port_number,
-            )
-            power_port_to_connect = PowerPort.objects.get(
-                asset=updated_asset,
-                port_name=power_port_cp.port_name,
-            )
-            power_port_to_connect.power_connection = pdu_port_to_connect
-            power_port_to_connect.save()
-
-        # Decommission asset
+    for asset_cp in assets_cp:
+        # Decommission only after all changes have been made to all CP assets
+        updated_asset = updated_asset_mappings[asset_cp]
         if asset_cp.is_decommissioned:
-            decommissioned_asset = DecommissionedAsset()
-            # update fields
-            decommissioned_asset.save()
+            failure_response = decommission_asset_cp(
+                updated_asset,
+                asset_cp,
+                change_plan,
+            )
+            if failure_response:
+                return failure_response
             num_decommissioned += 1
 
-    # Mark change plan as executed
     change_plan.execution_time = datetime.now()
     change_plan.save()
 
@@ -398,4 +363,3 @@ def change_plan_execute(request):
          },
         status=HTTPStatus.OK,
     )
-
