@@ -10,7 +10,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from rackcity.utils.query_utils import get_filtered_query
 from rackcity.models.asset import get_assets_for_cp
-
+from rackcity.views.rackcity_utils import validate_asset_location, LocationException
 
 @receiver(post_save, sender=Asset)
 def create_asset_cp(sender, **kwargs):
@@ -21,12 +21,34 @@ def create_asset_cp(sender, **kwargs):
     for related_asset in related_assets_cp:
         related_asset.is_conflict = True
         related_asset.save()
-    # assets_hostname = AssetCP.objects.filter(hostname=instance.hostname)
-    # for asset in assets_hostname:
-    #     asset.is_conflict=True
-    #     asset.asset_wi
+    # hostname conflicts with hostnames on assetcps
+    instance.hostname_conflict.clear()
+    AssetCP.objects.filter(
+        Q(hostname=instance.hostname) & ~Q(related_asset_id=instance.id)
+        ).update(asset_conflict_hostname=instance)
 
-    ## asset rack location conflicts with an assetCP
+    # asset rack location conflicts with an assetCP
+
+    instance.location_conflict.clear()
+    for assetcp in AssetCP.objects.filter(rack=instance.rack_id):
+        try: 
+            validate_asset_location(
+                instance.rack_id,
+                assetcp.rack_position,
+                assetcp.model.height,
+                asset_id=assetcp.id
+            )
+        except LocationException:
+            assetcp.asset_conflict_location = instance
+            AssetCP.objects.filter(id=assetcp.id).update(asset_conflict_location=instance)
+           
+
+    # asset number conflict
+    instance.asset_number_conflict.clear()
+    AssetCP.objects.filter(
+        Q(asset_number=instance.asset_number) & ~Q(related_asset_id=instance.id)
+        ).update(asset_conflict_asset_number=instance)
+
 
 
 def get_many_assets_response_for_cp(request, change_plan):

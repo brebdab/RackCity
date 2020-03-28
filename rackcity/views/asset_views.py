@@ -617,7 +617,7 @@ def asset_modify(request):
             status=HTTPStatus.UNAUTHORIZED
         )
     try:
-        validate_location_modification(data, existing_asset, request.user)
+        validate_location_modification(data, existing_asset, request.user,change_plan=change_plan)
     except Exception as error:
         return JsonResponse(
             {

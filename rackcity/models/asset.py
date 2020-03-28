@@ -76,7 +76,6 @@ def validate_asset_number_uniqueness(value, asset_id, change_plan, related_asset
             An existing asset on exists with this asset number.")
 
 
-
 def validate_owner(value):
     if (
         value
@@ -184,7 +183,6 @@ class AssetCP(AbstractAsset):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="related_asset"
     )
     hostname = models.CharField(
         max_length=150,
