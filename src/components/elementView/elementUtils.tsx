@@ -17,6 +17,7 @@ export interface ITableSort {
 export enum ElementTableOpenAlert {
   NONE = "none",
   DELETE = "delete",
+  DECOMMISSION = "decommission",
   GRANT_ADMIN = "grant_admin",
   REVOKE_ADMIN = "revoke_admin"
 }
@@ -24,7 +25,8 @@ export enum ElementTableOpenAlert {
 export enum FilterTypes {
   TEXT = "text",
   NUMERIC = "numeric",
-  RACKRANGE = "rack_range"
+  RACKRANGE = "rack_range",
+  DATETIME = "datetime"
 }
 
 export enum PagingTypes {
@@ -41,7 +43,7 @@ export interface IFilter {
   id: string;
   field: string;
   filter_type?: FilterTypes;
-  filter?: TextFilter | NumericFilter | RackRangeFields;
+  filter?: TextFilter | NumericFilter | RackRangeFields | DatetimeFilter;
 }
 const numberFields = [
   "rack_position",
@@ -56,6 +58,8 @@ export function getFilterType(field: string | undefined) {
   if (field) {
     if (field === "rack") {
       return FilterTypes.RACKRANGE;
+    } else if (field === "time_decommissioned") {
+      return FilterTypes.DATETIME;
     } else if (numberFields.includes(field)) {
       return FilterTypes.NUMERIC;
     }
@@ -71,6 +75,10 @@ export interface TextFilter {
   value?: string;
   match_type: string;
 }
+export interface DatetimeFilter {
+  after?: string;
+  before?: string;
+}
 
 export const renderTextFilterItem = (item: TextFilter) => {
   return `${item.match_type} ${item.value}`;
@@ -79,6 +87,7 @@ export const renderTextFilterItem = (item: TextFilter) => {
 export const renderNumericFilterItem = (item: NumericFilter) => {
   return `between ${item.min} - ${item.max}`;
 };
+
 export const renderRackRangeFilterItem = (item: RackRangeFields) => {
   if (item.letter_end && item.num_end) {
     return `rows  ${item.letter_start} - ${item.letter_end} & letters ${item.num_start} - ${item.num_end}`;
@@ -89,6 +98,10 @@ export const renderRackRangeFilterItem = (item: RackRangeFields) => {
   } else {
     return ` ${item.letter_start}${item.num_start} `;
   }
+};
+
+export const renderDatetimeFilterItem = (item: DatetimeFilter) => {
+  return `from ${item.after} - ${item.before}`;
 };
 
 export const modifyModel = (model: ModelObject, headers: any) => {

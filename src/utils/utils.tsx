@@ -95,7 +95,9 @@ export const AssetFieldsTable: any = {
   rack__datacenter__name: "Datacenter",
   rack_position: "Rack Position",
   owner: "Owner",
-  comment: "Comment"
+  comment: "Comment",
+  decommissioning_user: "Decommissioning User",
+  time_decommissioned: "Time Decommissioned",
 };
 
 export const DecommissionedFieldsTable: any = {

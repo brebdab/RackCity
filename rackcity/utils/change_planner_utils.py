@@ -1,27 +1,37 @@
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from django.http import JsonResponse
-from http import HTTPStatus
-import math
-from rackcity.api.serializers import (
-    RecursiveAssetSerializer,
-    RecursiveAssetCPSerializer,
+from enum import Enum
+from rackcity.views.rackcity_utils import (
+    validate_asset_location,
+    LocationException,
 )
-from rackcity.models import Asset, AssetCP
-from rackcity.models.asset import get_assets_for_cp
-from rackcity.utils.errors_utils import Status, GenericFailure
 from rackcity.utils.query_utils import (
     get_filtered_query,
     get_invalid_paginated_request_response,
     should_paginate_query,
 )
-from rackcity.views.rackcity_utils import validate_asset_location, LocationException
+from rackcity.utils.errors_utils import Status, GenericFailure
+from rackcity.models.asset import get_assets_for_cp
+from rackcity.models import Asset, AssetCP
+from rackcity.api.serializers import (
+    RecursiveAssetSerializer,
+    RecursiveAssetCPSerializer,
+)
+import math
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.http import JsonResponse
+from http import HTTPStatus
+
+
+class ModificationType(Enum):
+    MODIFY = 'Modify'
+    CREATE = 'Create'
+    DECOMMISSION = 'Decommission'
 
 
 @receiver(post_save, sender=Asset)
 def detect_conflicts_cp(sender, **kwargs):
-    #fields: sender, instance, created, raw, using, update_fields
-    ## asset is a related asset of assetCP
+    # fields: sender, instance, created, raw, using, update_fields
+    # asset is a related asset of assetCP
     asset = kwargs.get("instance")
     related_assets_cp = AssetCP.objects.filter(related_asset=asset.id)
     for related_asset_cp in related_assets_cp:
@@ -31,13 +41,13 @@ def detect_conflicts_cp(sender, **kwargs):
     asset.hostname_conflict.clear()
     AssetCP.objects.filter(
         Q(hostname=asset.hostname) & ~Q(related_asset=asset.id)
-        ).update(asset_conflict_hostname=asset)
+    ).update(asset_conflict_hostname=asset)
 
     # asset rack location conflicts with an assetCP
 
     asset.location_conflict.clear()
     for assetcp in AssetCP.objects.filter(rack=asset.rack_id):
-        try: 
+        try:
             validate_asset_location(
                 asset.rack_id,
                 assetcp.rack_position,
@@ -46,15 +56,14 @@ def detect_conflicts_cp(sender, **kwargs):
             )
         except LocationException:
             assetcp.asset_conflict_location = asset
-            AssetCP.objects.filter(id=assetcp.id).update(asset_conflict_location=asset)
-           
+            AssetCP.objects.filter(id=assetcp.id).update(
+                asset_conflict_location=asset)
 
     # asset number conflict
     asset.asset_number_conflict.clear()
     AssetCP.objects.filter(
         Q(asset_number=asset.asset_number) & ~Q(related_asset_id=asset.id)
-        ).update(asset_conflict_asset_number=asset)
-
+    ).update(asset_conflict_asset_number=asset)
 
 
 def get_filtered_assets_for_cp(change_plan, data):
@@ -178,3 +187,138 @@ def get_page_count_response_for_cp(request, change_plan):
     count = assets.count() + assetsCP.count()
     page_count = math.ceil(count / page_size)
     return JsonResponse({"page_count": page_count})
+
+
+def get_changes_on_asset(asset, assetCP):
+    fields = [field.name for field in Asset._meta.fields]
+    changes = []
+    for field in fields:
+        if getattr(asset, field) != getattr(assetCP, field):
+            changes.append(field)
+    # TODO check if network & power connections have changed
+    return changes
+
+
+def get_cp_modification_conflicts(asset_cp):
+    conflicts = []
+    nonresolvable_message = "This conflict cannot be resolved; the " + \
+        "related changes need to be removed from your change plan."
+    conflicting_asset_message_1 = "Due to more recent live changes, " + \
+        "your change plan version of this asset's "
+    conflicting_asset_message_2 = " now conflicts with a live asset. "
+    if asset_cp.is_conflict and asset_cp.related_asset is None:
+        conflicts.append({
+            "conflict_message":
+                "This asset has been deleted live. " + nonresolvable_message
+        })
+    if asset_cp.asset_conflict_hostname:
+        conflicts.append({
+            "conflict_message":
+                conflicting_asset_message_1 + "hostname" +
+                conflicting_asset_message_2 + nonresolvable_message,
+            "conflicting_asset": asset_cp.asset_conflict_hostname.id,
+            "conflict_resolvable": False,
+        })
+    if asset_cp.asset_conflict_asset_number:
+        conflicts.append({
+            "conflict_message":
+                conflicting_asset_message_1 + "asset number" +
+                conflicting_asset_message_2 + nonresolvable_message,
+            "conflicting_asset": asset_cp.asset_conflict_asset_number.id,
+            "conflict_resolvable": False,
+        })
+    if asset_cp.asset_conflict_location:
+        conflicts.append({
+            "conflict_message":
+                conflicting_asset_message_1 + "rack location" +
+                conflicting_asset_message_2 + nonresolvable_message,
+            "conflicting_asset": asset_cp.asset_conflict_location.id,
+            "conflict_resolvable": False,
+        })
+    deleted_relation_message = " associated with this asset has been deleted. "
+    if asset_cp.model is None:
+        conflicts.append({
+            "conflict_message":
+                "The model" + deleted_relation_message + nonresolvable_message,
+            "conflicting_asset": None,
+            "conflict_resolvable": False,
+        })
+    if asset_cp.rack is None:
+        conflicts.append({
+            "conflict_message":
+                "The rack" + deleted_relation_message + nonresolvable_message,
+            "conflicting_asset": None,
+            "conflict_resolvable": False,
+        })
+    if asset_cp.related_decommissioned_asset:
+        conflicts.append({
+            "conflict_message":
+                "This asset has been decommissioned in a live change. " +
+                nonresolvable_message,
+            "conflicting_asset": None,
+            "conflict_resolvable": False,
+        })
+    if len(conflicts) == 0:
+        if asset_cp.is_conflict:
+            conflicts.append({
+                "conflict_message":
+                    "Live changes have been made to this asset since your " +
+                    "latest change planner modification. This conflict " +
+                    "needs to be resolved. Please select which version " +
+                    "you would like to keep.",
+                "conflicting_asset": None,
+                "conflict_resolvable": True,
+            })
+    if len(conflicts) == 0:
+        return None
+    else:
+        return conflicts
+
+
+def get_location_detail(asset):
+    return " at rack " + asset.rack.datacenter.abbreviation + " " + \
+        asset.rack.row_letter + str(asset.rack.rack_num) + ", " + \
+        str(asset.rack_position) + "U"
+
+
+def get_modifications_in_cp(change_plan):
+    assets_cp = AssetCP.objects.filter(change_plan=change_plan)
+    modifications = []
+    for asset_cp in assets_cp:
+        assetCP_data = RecursiveAssetCPSerializer(asset_cp).data
+        related_asset = asset_cp.related_asset
+        if related_asset:
+            asset_data = RecursiveAssetSerializer(related_asset).data
+            changes = get_changes_on_asset(related_asset, asset_cp)
+        else:
+            asset_data = None
+            changes = None
+        if asset_cp.is_decommissioned:
+            modification_type = ModificationType.DECOMMISSION
+            title = "Decommission asset"
+            if asset_cp.asset_number:
+                title += " " + str(asset_cp.asset_number)
+            if asset_cp.rack:
+                title += get_location_detail(asset_cp)
+        elif related_asset:
+            modification_type = ModificationType.MODIFY
+            title = "Modify asset " + str(related_asset.asset_number) + \
+                get_location_detail(related_asset)
+        else:
+            modification_type = ModificationType.CREATE
+            title = "Create asset"
+            if asset_cp.asset_number:
+                title += " " + str(asset_cp.asset_number)
+            if asset_cp.rack:
+                title += get_location_detail(asset_cp)
+            asset_data = None
+        modifications.append({
+            "title": title,
+            "type": modification_type.value,
+            "asset": asset_data,
+            "asset_cp": assetCP_data,
+            "conflicts": get_cp_modification_conflicts(asset_cp),
+            "changes": changes,
+        })
+    return modifications
+    # TODO add logic for decommission modification
