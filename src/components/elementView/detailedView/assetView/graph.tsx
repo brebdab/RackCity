@@ -6,11 +6,12 @@ import { NetworkGraphData } from "../../../../utils/utils";
 interface NetworkGraphProps {
   onClickNode(id: string): any;
   networkGraph: NetworkGraphData;
+  isDecommissioned: boolean;
 }
 
 class NetworkGraph extends React.Component<
   NetworkGraphProps & RouteComponentProps
-> {
+  > {
   options = {
     layout: {},
     edges: {
@@ -33,14 +34,14 @@ class NetworkGraph extends React.Component<
       physics: false
     },
     interaction: {
-      hover: true,
+      hover: !this.props.isDecommissioned,
       zoomView: false
     }
   };
 
   onClickNode = (event: any) => {
     var { nodes } = event;
-    if (nodes.length > 0) {
+    if (nodes.length > 0 && !this.props.isDecommissioned) {
       this.props.onClickNode(nodes[0]);
     }
   };

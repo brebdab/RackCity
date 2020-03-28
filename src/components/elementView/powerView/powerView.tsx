@@ -32,6 +32,7 @@ interface PowerViewProps {
   updated: Function;
   isAdmin: boolean;
   changePlan: ChangePlan;
+  assetIsDecommissioned?: boolean;
 }
 
 interface PowerViewState {
@@ -75,9 +76,9 @@ export class PowerView extends React.PureComponent<
   };
 
   componentDidMount() {
-    if (!this.props.changePlan) {
+    if (!this.props.assetIsDecommissioned && !this.props.changePlan) {
       this.setState({
-        statusLoaded: false
+        statusLoaded: true
       });
       axios
         .get(
@@ -97,31 +98,42 @@ export class PowerView extends React.PureComponent<
             statusLoaded: true
           });
         });
+    } else {
+      this.setState({
+        statusLoaded: true
+      });
     }
     this.getUsername(this.props.token);
   }
 
   componentDidUpdate() {
-    if (this.props.shouldUpdate && !this.props.changePlan) {
+    console.log("componentDIDUPDST");
+    if (this.props.shouldUpdate) {
       console.log("here");
-      axios
-        .get(
-          API_ROOT + "api/power/get-state/" + this.props.asset!.id,
-          getHeaders(this.props.token)
-        )
-        .then(res => {
-          this.setState({
-            powerConnections: res.data.power_connections,
-            powerStatus: res.data.power_status,
-            statusLoaded: true
+      if (!this.props.assetIsDecommissioned) {
+        axios
+          .get(
+            API_ROOT + "api/power/get-state/" + this.props.asset!.id,
+            getHeaders(this.props.token)
+          )
+          .then(res => {
+            this.setState({
+              powerConnections: res.data.power_connections,
+              powerStatus: res.data.power_status,
+              statusLoaded: true
+            });
+          })
+          .catch(err => {
+            this.addErrorToast(err.response.data.failure_message);
+            this.setState({
+              statusLoaded: true
+            });
           });
-        })
-        .catch(err => {
-          this.addErrorToast(err.response.data.failure_message);
-          this.setState({
-            statusLoaded: true
-          });
-        });
+      }
+    } else {
+      this.setState({
+        statusLoaded: true
+      });
     }
     this.props.updated();
   }
@@ -145,20 +157,14 @@ export class PowerView extends React.PureComponent<
             ) : (
               <td></td>
             )}
-            {!this.props.changePlan ? (
-              this.props.asset!.rack.is_network_controlled ? (
-                this.state.powerStatus ? (
-                  <td>{this.state.powerStatus[i]}</td>
-                ) : (
-                  <td>Unable to contact PDU controller</td>
-                )
+            {this.props.asset!.rack.is_network_controlled ? (
+              this.state.powerStatus ? (
+                <td>{this.state.powerStatus[i]}</td>
               ) : (
-                <td>PDU not network controlled</td>
+                <td>Unable to contact PDU controller</td>
               )
             ) : (
-              <td style={getChangePlanRowStyle(this.props.asset)}>
-                Power Management not available on Change Plan
-              </td>
+              <td>PDU not network controlled</td>
             )}
           </tr>
         );
@@ -214,6 +220,7 @@ export class PowerView extends React.PureComponent<
               {this.props.asset!.rack.is_network_controlled &&
               Object.keys(this.props.asset!.power_connections).length > 0 &&
               this.state.powerStatus &&
+              !this.props.assetIsDecommissioned &&
               !this.props.changePlan ? (
                 <AnchorButton
                   className={"power-close"}
@@ -285,6 +292,7 @@ export class PowerView extends React.PureComponent<
               {this.props.asset!.rack.is_network_controlled &&
               Object.keys(this.props.asset!.power_connections).length > 0 &&
               this.state.powerStatus &&
+              !this.props.assetIsDecommissioned &&
               !this.props.changePlan ? (
                 <AnchorButton
                   className={"power-close"}

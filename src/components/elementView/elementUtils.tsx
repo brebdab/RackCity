@@ -121,6 +121,12 @@ export const modifyAsset = (
   }
   return axios.post(API_ROOT + "api/assets/modify", asset, config);
 };
+export const decommissionAsset = (asset: AssetObject, headers: any) => {
+  console.log("Decommissioning asset");
+  const data = { id: asset.id };
+  return axios.post(API_ROOT + "api/assets/decommission", data, headers);
+};
+
 export const modifyChangePlan = (
   changePlan: ChangePlan,
   headers: any

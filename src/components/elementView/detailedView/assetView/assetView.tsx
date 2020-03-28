@@ -28,8 +28,13 @@ import {
   AssetCPObject,
   getChangePlanRowStyle
 } from "../../../../utils/utils";
-import { deleteAsset, modifyAsset } from "../../elementUtils";
+import {
+  deleteAsset,
+  decommissionAsset,
+  modifyAsset
+} from "../../elementUtils";
 import PropertiesView from "../propertiesView";
+import DecommissionedPropertiesView from "../decommissionedPropertiesView";
 import "./assetView.scss";
 import NetworkGraph from "./graph";
 import PowerView from "../../powerView/powerView";
@@ -69,6 +74,7 @@ interface AssetViewState {
   asset: AssetObject | AssetCPObject;
   isFormOpen: boolean;
   isDeleteOpen: boolean;
+  isDecommissionOpen: boolean;
   isAlertOpen: boolean;
   datacenters: Array<DatacenterObject>;
   powerShouldUpdate: boolean;
@@ -82,6 +88,7 @@ export class AssetView extends React.PureComponent<
     asset: {} as AssetObject,
     isFormOpen: false,
     isDeleteOpen: false,
+    isDecommissionOpen: false,
     isAlertOpen: false,
     datacenters: [],
     powerShouldUpdate: false
@@ -205,7 +212,7 @@ export class AssetView extends React.PureComponent<
           position={Position.TOP}
           ref={this.refHandlers.toaster}
         />
-        {this.props.isAdmin ? (
+        {this.props.isAdmin && !this.state.asset.decommissioning_user ? (
           <div className="detail-buttons-wrapper">
             <div className={"detail-buttons"}>
               <AnchorButton
@@ -227,6 +234,26 @@ export class AssetView extends React.PureComponent<
               <AnchorButton
                 minimal
                 intent="danger"
+                icon="remove"
+                text="Decommission"
+                onClick={this.handleDecommissionOpen}
+              />
+              <Alert
+                cancelButtonText="Cancel"
+                confirmButtonText="Decommission"
+                intent="danger"
+                isOpen={this.state.isDecommissionOpen}
+                onCancel={this.handleDecommissionCancel}
+                onConfirm={this.handleDecommission}
+              >
+                <p>
+                  Are you sure you want to decommission this asset? This action
+                  cannot be undone.
+                </p>
+              </Alert>
+              <AnchorButton
+                minimal
+                intent="danger"
                 icon="trash"
                 text="Delete"
                 onClick={this.handleDeleteOpen}
@@ -235,14 +262,21 @@ export class AssetView extends React.PureComponent<
                 cancelButtonText="Cancel"
                 confirmButtonText="Delete"
                 intent="danger"
+                icon="warning-sign"
                 isOpen={this.state.isDeleteOpen}
                 onCancel={this.handleDeleteCancel}
                 onConfirm={this.handleDelete}
               >
-                <p>Are you sure you want to delete?</p>
+                <p>
+                  Are you sure you want to <b>delete</b> this asset? Unless it
+                  was created in error, consider <b>decommissioning</b> instead.
+                </p>
               </Alert>
             </div>
           </div>
+        ) : null}
+        {this.state.asset.decommissioning_user ? (
+          <DecommissionedPropertiesView data={this.state.asset} />
         ) : null}
         <PropertiesView data={this.state.asset} />
         <div className="propsview">
@@ -269,21 +303,31 @@ export class AssetView extends React.PureComponent<
                           {port}
                         </td>
                         <td style={getChangePlanRowStyle(this.state.asset)}>
-                          {this.state.asset.mac_addresses[port]}
+                          {this.state.asset.mac_addresses
+                            ? this.state.asset.mac_addresses[port]
+                            : null}
                         </td>{" "}
                         {connection
                           ? [
                               <td
                                 style={getChangePlanRowStyle(this.state.asset)}
-                                className="asset-link"
-                                onClick={(e: any) => {
-                                  const id = this.getAssetIdFromHostname(
-                                    connection!.destination_hostname!
-                                  );
-                                  if (id) {
-                                    this.redirectToAsset(id);
-                                  }
-                                }}
+                                className={
+                                  this.state.asset.decommissioning_user
+                                    ? undefined
+                                    : "asset-link"
+                                }
+                                onClick={
+                                  this.state.asset.decommissioning_user
+                                    ? undefined
+                                    : (e: any) => {
+                                        const id = this.getAssetIdFromHostname(
+                                          connection!.destination_hostname!
+                                        );
+                                        if (id) {
+                                          this.redirectToAsset(id);
+                                        }
+                                      }
+                                }
                               >
                                 {connection.destination_hostname}
                               </td>,
@@ -303,6 +347,9 @@ export class AssetView extends React.PureComponent<
               <NetworkGraph
                 networkGraph={this.state.asset.network_graph}
                 onClickNode={this.redirectToAsset}
+                isDecommissioned={
+                  this.state.asset.decommissioning_user !== null
+                }
               />
             </div>
           ) : (
@@ -327,7 +374,7 @@ export class AssetView extends React.PureComponent<
     }
   };
   private redirectToAsset = (id: string) => {
-    this.props.history.push(ROUTES.ASSETS + id);
+    this.props.history.push(ROUTES.ASSETS + "/" + id);
     this.updateAssetData(id);
   };
 
@@ -340,6 +387,7 @@ export class AssetView extends React.PureComponent<
         updated={() => {
           this.setState({ powerShouldUpdate: false });
         }}
+        assetIsDecommissioned={this.state.asset.decommissioning_user !== null}
       />
     );
   }
@@ -364,6 +412,27 @@ export class AssetView extends React.PureComponent<
         this.setState({ isDeleteOpen: false });
         this.addSuccessToast(res.data.success_message);
         this.props.history.push(ROUTES.DASHBOARD);
+      })
+      .catch(err => {
+        console.log("ERROR", err);
+        this.addToast({
+          message: err.response.data.failure_message,
+          intent: Intent.DANGER
+        });
+      });
+  };
+  private handleDecommissionCancel = () =>
+    this.setState({ isDecommissionOpen: false });
+  private handleDecommissionOpen = () =>
+    this.setState({ isDecommissionOpen: true });
+  private handleDecommission = () => {
+    decommissionAsset(this.state.asset!, getHeaders(this.props.token))
+      .then(res => {
+        this.setState({ isDecommissionOpen: false });
+        this.addSuccessToast("Successfuly Decommissioned Asset");
+        let params: any;
+        params = this.props.match.params;
+        this.updateAssetData(params.rid);
       })
       .catch(err => {
         console.log("ERROR", err);
