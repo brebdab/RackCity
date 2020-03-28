@@ -18,6 +18,7 @@ import DatacenterForm from "./datacenterForm";
 import WrappedRegistrationForm from "./auth/register";
 import { FormTypes } from "./formUtils";
 import ChangePlanForm from "./changePlanForm";
+import UserForm from "./userForm";
 
 interface FormPopupState {}
 interface FormPopupProps {
@@ -27,6 +28,7 @@ interface FormPopupProps {
   datacenters?: Array<DatacenterObject>;
   currDatacenter?: DatacenterObject;
   initialValues?: ElementObjectType;
+  userId?: string;
   elementName: ElementType;
   handleClose(): void;
   submitForm(element: FormObjectType, headers: any): Promise<any> | void;
@@ -82,7 +84,7 @@ class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
             submitForm={this.props.submitForm}
           />
         ) : null}
-        {this.props.elementName === ElementType.USER ? (
+        {this.props.elementName === ElementType.USER && !this.props.userId ? (
           <WrappedRegistrationForm authSignup={this.props.submitForm} />
         ) : null}
         {this.props.elementName === ElementType.DATACENTER ? (
@@ -104,6 +106,12 @@ class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
                 ? this.props.initialValues
                 : undefined
             }
+          />
+        ) : null}
+        {this.props.elementName === ElementType.USER && this.props.userId ? (
+          <UserForm
+            userId={this.props.userId} // change to dynamic id
+            submitForm={this.props.submitForm}
           />
         ) : null}
       </Dialog>
