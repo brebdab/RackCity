@@ -9,7 +9,8 @@ import {
   Checkbox,
   Radio,
   RadioGroup,
-  Alignment
+  Alignment,
+  Spinner
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
@@ -41,6 +42,7 @@ interface UserFormState {
   permissions: UserPermissionsObject;
   datacenters: Array<DatacenterObject>;
   datacenter_selection: string;
+  loading: boolean;
 }
 
 // export const required = (
@@ -83,7 +85,8 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
       datacenter_permissions: [""] as Array<string>
     },
     datacenters: [] as Array<DatacenterObject>,
-    datacenter_selection: "Global"
+    datacenter_selection: "Global",
+    loading: true
   };
 
   private handleSubmit = (e: any) => {
@@ -129,138 +132,148 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
   selectText = (event: any) => event.target.select();
 
   componentDidMount() {
-    this.getUserPermissions(this.props.userId);
     this.getDatacenters().then(res => {
       var data = res.datacenters as Array<DatacenterObject>;
       this.setState({
         datacenters: data
       });
+      this.getUserPermissions(this.props.userId);
     });
   }
 
   render() {
     console.log(this.state);
     return (
-      <div className={Classes.DARK + " login-container"}>
-        {this.state.errors.map((err: string) => {
-          return <Callout intent={Intent.DANGER}>{err}</Callout>;
-        })}
-        <h2>Select permissions to grant this user</h2>
-        <form
-          onSubmit={this.handleSubmit}
-          className="create-form bp3-form-group"
-        >
-          <FormGroup inline={true}>
-            <Checkbox
-              label="Administrator"
-              alignIndicator={Alignment.LEFT}
-              checked={this.state.permissions.admin}
-              onChange={() => {
-                let updatedPermissions: UserPermissionsObject;
-                updatedPermissions = {
-                  model_management: this.state.permissions.model_management,
-                  asset_management: this.state.permissions.asset_management,
-                  power_control: this.state.permissions.power_control,
-                  audit_read: this.state.permissions.audit_read,
-                  admin: !this.state.permissions.admin,
-                  datacenter_permissions: this.state.permissions
-                    .datacenter_permissions
-                };
-                this.setState({
-                  permissions: updatedPermissions
-                });
-              }}
-            ></Checkbox>
-          </FormGroup>
-          <FormGroup inline={true}>
-            <Checkbox
-              label="Model Management"
-              alignIndicator={Alignment.LEFT}
-              checked={
-                this.state.permissions.admin
-                  ? true
-                  : this.state.permissions.model_management
-              }
-              disabled={this.state.permissions.admin}
-              onChange={() => {
-                this.setState({
-                  permissions: this.updateBooleanPermissions("model_management")
-                });
-              }}
-            ></Checkbox>
-          </FormGroup>
-          <FormGroup inline={true}>
-            <Checkbox
-              label="Power Control"
-              alignIndicator={Alignment.LEFT}
-              checked={
-                this.state.permissions.admin
-                  ? true
-                  : this.state.permissions.power_control
-              }
-              disabled={this.state.permissions.admin}
-              onChange={() => {
-                this.setState({
-                  permissions: this.updateBooleanPermissions("power_control")
-                });
-              }}
-            ></Checkbox>
-          </FormGroup>
-          <FormGroup inline={true}>
-            <Checkbox
-              label="Audit Log"
-              checked={
-                this.state.permissions.admin
-                  ? true
-                  : this.state.permissions.audit_read
-              }
-              alignIndicator={Alignment.LEFT}
-              disabled={this.state.permissions.admin}
-              onChange={() => {
-                this.setState({
-                  permissions: this.updateBooleanPermissions("audit_read")
-                });
-              }}
-            ></Checkbox>
-          </FormGroup>
-          <RadioGroup
-            inline={true}
-            label="Datacenter permissions"
-            onChange={() => {
-              console.log("changing datacenter");
-              console.log(this.state);
-              var updatedPermissions = this.state.permissions;
-              if (this.state.datacenter_selection === "Global") {
-                let permissions: Array<string>;
-                permissions = [];
-                for (var i = 0; i < this.state.datacenters.length; i++) {
-                  permissions.push(this.state.datacenters[i].id);
-                }
-                updatedPermissions.datacenter_permissions = permissions;
-                this.setState({
-                  datacenter_selection: "Per Datacenter",
-                  permissions: updatedPermissions
-                });
-              } else {
-                updatedPermissions.datacenter_permissions = this.state.initialValues.datacenter_permissions;
-                this.setState({
-                  datacenter_selection: "Global",
-                  permissions: updatedPermissions
-                });
-              }
-            }}
-            selectedValue={this.state.datacenter_selection}
-          >
-            <Radio label="Global" value="Global" />
-            <Radio label="Per Datacenter" value="Per Datacenter" />
-          </RadioGroup>
-          {this.state.datacenter_selection === "Global"
-            ? null
-            : this.renderDatacenterChecks()}
-          <Button className="login-button" type="submit">
-            Submit
-          </Button>
-        </form>
+      <div>
+        {this.state.loading ? (
+          <Spinner />
+        ) : (
+          <div className={Classes.DARK + " login-container"}>
+            {this.state.errors.map((err: string) => {
+              return <Callout intent={Intent.DANGER}>{err}</Callout>;
+            })}
+            <h2>Select permissions to grant this user</h2>
+            <form
+              onSubmit={this.handleSubmit}
+              className="create-form bp3-form-group"
+            >
+              <FormGroup inline={true}>
+                <Checkbox
+                  label="Administrator"
+                  alignIndicator={Alignment.LEFT}
+                  checked={this.state.permissions.admin}
+                  onChange={() => {
+                    let updatedPermissions: UserPermissionsObject;
+                    updatedPermissions = {
+                      model_management: this.state.permissions.model_management,
+                      asset_management: this.state.permissions.asset_management,
+                      power_control: this.state.permissions.power_control,
+                      audit_read: this.state.permissions.audit_read,
+                      admin: !this.state.permissions.admin,
+                      datacenter_permissions: this.state.permissions
+                        .datacenter_permissions
+                    };
+                    this.setState({
+                      permissions: updatedPermissions
+                    });
+                  }}
+                ></Checkbox>
+              </FormGroup>
+              <FormGroup inline={true}>
+                <Checkbox
+                  label="Model Management"
+                  alignIndicator={Alignment.LEFT}
+                  checked={
+                    this.state.permissions.admin
+                      ? true
+                      : this.state.permissions.model_management
+                  }
+                  disabled={this.state.permissions.admin}
+                  onChange={() => {
+                    this.setState({
+                      permissions: this.updateBooleanPermissions(
+                        "model_management"
+                      )
+                    });
+                  }}
+                ></Checkbox>
+              </FormGroup>
+              <FormGroup inline={true}>
+                <Checkbox
+                  label="Power Control"
+                  alignIndicator={Alignment.LEFT}
+                  checked={
+                    this.state.permissions.admin
+                      ? true
+                      : this.state.permissions.power_control
+                  }
+                  disabled={this.state.permissions.admin}
+                  onChange={() => {
+                    this.setState({
+                      permissions: this.updateBooleanPermissions(
+                        "power_control"
+                      )
+                    });
+                  }}
+                ></Checkbox>
+              </FormGroup>
+              <FormGroup inline={true}>
+                <Checkbox
+                  label="Audit Log"
+                  checked={
+                    this.state.permissions.admin
+                      ? true
+                      : this.state.permissions.audit_read
+                  }
+                  alignIndicator={Alignment.LEFT}
+                  disabled={this.state.permissions.admin}
+                  onChange={() => {
+                    this.setState({
+                      permissions: this.updateBooleanPermissions("audit_read")
+                    });
+                  }}
+                ></Checkbox>
+              </FormGroup>
+              <RadioGroup
+                inline={true}
+                label="Datacenter permissions"
+                onChange={() => {
+                  console.log("changing datacenter");
+                  console.log(this.state);
+                  var updatedPermissions = this.state.permissions;
+                  if (this.state.datacenter_selection === "Global") {
+                    let permissions: Array<string>;
+                    permissions = [];
+                    for (var i = 0; i < this.state.datacenters.length; i++) {
+                      permissions.push(this.state.datacenters[i].id);
+                    }
+                    updatedPermissions.datacenter_permissions = permissions;
+                    this.setState({
+                      datacenter_selection: "Per Datacenter",
+                      permissions: updatedPermissions
+                    });
+                  } else {
+                    updatedPermissions.datacenter_permissions = this.state.initialValues.datacenter_permissions;
+                    this.setState({
+                      datacenter_selection: "Global",
+                      permissions: updatedPermissions
+                    });
+                  }
+                }}
+                selectedValue={this.state.datacenter_selection}
+              >
+                <Radio label="Global" value="Global" />
+                <Radio label="Per Datacenter" value="Per Datacenter" />
+              </RadioGroup>
+              {this.state.datacenter_selection === "Global"
+                ? null
+                : this.renderDatacenterChecks()}
+              <Button className="login-button" type="submit">
+                Submit
+              </Button>
+            </form>
+          </div>
+        )}
       </div>
     );
   }
@@ -275,6 +288,9 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
   }
 
   private renderDatacenter(datacenter: DatacenterObject) {
+    console.log(
+      this.state.permissions.datacenter_permissions.includes(datacenter.id)
+    );
     return (
       <FormGroup key={datacenter.name} inline={true}>
         <Checkbox
@@ -336,6 +352,21 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
         this.setState({
           initialValues: res.data,
           permissions: res.data
+        });
+        if (
+          res.data.datacenter_permissions.length ===
+          this.state.datacenters.length
+        ) {
+          this.setState({
+            datacenter_selection: "Global"
+          });
+        } else {
+          this.setState({
+            datacenter_selection: "Per Datacenter"
+          });
+        }
+        this.setState({
+          loading: false
         });
       })
       .catch(err => {
