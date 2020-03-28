@@ -54,7 +54,10 @@ from rackcity.utils.query_utils import (
     get_page_count_response,
     get_many_response,
 )
-from rackcity.utils.change_planner_utils import get_many_assets_response_for_cp
+from rackcity.utils.change_planner_utils import (
+    get_many_assets_response_for_cp,
+    get_page_count_response_for_cp,
+)
 from rackcity.views.rackcity_utils import (
     validate_asset_location,
     validate_location_modification,
@@ -1130,7 +1133,7 @@ def network_bulk_upload(request):
                 status=HTTPStatus.BAD_REQUEST
             )
         if not user_has_asset_permission(
-            request.user, 
+            request.user,
             source_asset.rack.datacenter
         ):
             return JsonResponse(
