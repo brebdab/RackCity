@@ -56,6 +56,7 @@ urlpatterns = [
     path('users/permissions/get', views.user_get_groups),
     path('users/permissions/set', views.user_set_groups),
     path('users/groups', views.all_user_groups),
+    path('users/permissions/mine', views.user_get_my_groups),
     path('power/get-state/<int:id>', views.power_status),
     path('power/mask-on', views.power_on),
     path('power/mask-off', views.power_off),

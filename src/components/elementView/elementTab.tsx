@@ -34,7 +34,8 @@ import {
   ModelObject,
   ShallowAssetObject,
   SortFilterBody,
-  ChangePlan
+  ChangePlan,
+  PermissionState
 } from "../../utils/utils";
 import { ALL_DATACENTERS } from "./elementTabContainer";
 import ElementTable from "./elementTable";
@@ -69,6 +70,7 @@ interface ElementViewProps {
   updateDatacenters?(): void;
   isActive?: boolean;
   changePlan: ChangePlan;
+  permissionState: PermissionState;
 }
 
 type ElementTabProps = ElementViewProps & RouteComponentProps;
@@ -434,11 +436,16 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               ) : (
                 <p></p>
               )}
-            {this.props.isAdmin &&
-              (this.props.element === ElementType.ASSET ||
-                this.props.element === ElementType.MODEL) ? (
+            {(this.props.element === ElementType.ASSET ||
+              this.props.element === ElementType.MODEL) ? (
                 <AnchorButton
-                  disabled={this.props.changePlan ? true : false}
+                  disabled={this.props.changePlan ? true :
+                    !(
+                      this.props.permissionState.admin
+                      || (this.props.permissionState.model_management && this.props.element === ElementType.MODEL)
+                      || (this.props.permissionState.asset_management && this.props.element === ElementType.ASSET)
+                    )
+                  }
                   onClick={() => {
                     this.props.history.push(
                       "/dashboard/bulk-upload/" +
@@ -624,6 +631,7 @@ const mapStateToProps = (state: any) => {
   return {
     token: state.token,
     isAdmin: state.admin,
+    permissionState: state.permissionState,
     changePlan: state.changePlan
   };
 };

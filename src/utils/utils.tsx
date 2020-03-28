@@ -35,6 +35,14 @@ export interface ChangePlan extends ElementObject {
   name: string;
   execution_time?: string;
 }
+export interface PermissionState {
+  model_management: boolean;
+  asset_management: boolean;
+  power_control: boolean;
+  audit_read: boolean;
+  admin: boolean;
+  datacenter_permissions: Array<number>;
+}
 export interface AssetObjectOld extends ElementObject {
   hostname: string;
   rack_position: string;

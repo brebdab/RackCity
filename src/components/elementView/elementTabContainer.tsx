@@ -5,13 +5,14 @@ import ElementTab from "./elementTab";
 import { RouteComponentProps } from "react-router";
 import "./elementView.scss";
 import { connect } from "react-redux";
-import { ElementType, DatacenterObject, getHeaders } from "../../utils/utils";
+import { ElementType, DatacenterObject, getHeaders, PermissionState } from "../../utils/utils";
 import RackTab from "./rackTab";
 import { API_ROOT } from "../../utils/api-config";
 import axios from "axios";
 
 interface ElementTabContainerProps {
   isAdmin: boolean;
+  permissionState: PermissionState;
   token: string;
 }
 interface ElementTabContainerState {
@@ -29,7 +30,7 @@ export const ALL_DATACENTERS: DatacenterObject = {
 class ElementTabContainer extends React.Component<
   ElementTabContainerProps & RouteComponentProps,
   ElementTabContainerState
-> {
+  > {
   state = {
     datacenters: [],
     currDatacenter: ALL_DATACENTERS
@@ -146,6 +147,7 @@ class ElementTabContainer extends React.Component<
 const mapStateToProps = (state: any) => {
   return {
     isAdmin: state.admin,
+    permissionState: state.permission,
     token: state.token
   };
 };

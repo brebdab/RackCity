@@ -450,6 +450,25 @@ def user_get_groups(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
+    permissions = get_permissions(user)
+    return JsonResponse(
+        permissions,
+        status=HTTPStatus.OK,
+    )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_get_my_groups(request):
+    user = request.user
+    permissions = get_permissions(user)
+    return JsonResponse(
+        permissions,
+        status=HTTPStatus.OK,
+    )
+
+
+def get_permissions(user):
     permissions = {}
     for group_name in GroupName:
         try:
@@ -468,10 +487,7 @@ def user_get_groups(request):
             dc.id for dc in permission.datacenter_permissions.all()
         ]
     permissions['datacenter_permissions'] = datacenter_list
-    return JsonResponse(
-        permissions,
-        status=HTTPStatus.OK,
-    )
+    return permissions
 
 
 @api_view(['GET'])

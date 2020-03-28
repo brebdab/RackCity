@@ -60,6 +60,7 @@ from .user_views import (
     user_set_groups,
     user_get_groups,
     all_user_groups,
+    user_get_my_groups,
 )
 from .datacenter_views import (
     datacenter_all,
