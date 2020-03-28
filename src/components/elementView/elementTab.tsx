@@ -12,6 +12,7 @@ import {
   Position,
   Toaster,
 } from "@blueprintjs/core";
+import { DateRangeInput } from "@blueprintjs/datetime";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
@@ -375,6 +376,16 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             </Callout>
           ) : null}
         </div>
+        {/* <DateRangeInput
+          allowSingleDayRange={true}
+          closeOnSelection={false}
+          contiguousCalendarMonths={true}
+          disabled={false}
+          reverseMonthAndYearMenus={false}
+          selectAllOnFocus={false}
+          shortcuts={true}
+          singleMonthOnly={false}
+        /> */}
         {this.state.isDecommissioned ? <Callout
           icon="warning-sign"
         >

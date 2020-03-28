@@ -1,4 +1,5 @@
-import { Button, FormGroup, HTMLSelect, MenuItem } from "@blueprintjs/core";
+import { Button, FormGroup, HTMLSelect, MenuItem, Popover } from "@blueprintjs/core";
+import { DateRangePicker } from "@blueprintjs/datetime";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { Select } from "@blueprintjs/select";
 import * as React from "react";
@@ -33,7 +34,7 @@ import {
 import "./elementView.scss";
 
 var console: any = {};
-console.log = function() {};
+console.log = function () { };
 
 interface FilterSelectProps {
   token: string;
@@ -44,7 +45,7 @@ interface FilterSelectProps {
 class FilterSelect extends React.Component<
   FilterSelectProps & RouteComponentProps,
   IFilter
-> {
+  > {
   state = {
     id: "",
     field: "",
@@ -62,6 +63,9 @@ class FilterSelect extends React.Component<
     if (type === FilterTypes.RACKRANGE) {
       return this.getRackFilterOptions();
     }
+    if (type === FilterTypes.DATETIME) {
+      return this.getDatetimeFilterOptions();
+    }
     return null;
   }
   setTextFilterType(type: TextFilterTypes) {
@@ -78,6 +82,18 @@ class FilterSelect extends React.Component<
         />
       </div>
     ) : null;
+  }
+  getDatetimeFilterOptions() {
+    return (
+      <Popover
+        content={
+          <DateRangePicker>
+          </DateRangePicker>
+        }
+      >
+        <Button icon="calendar" text="Choose Date Range" minimal />
+      </Popover>
+    );
   }
   getNumericFilterOptions() {
     return (
@@ -230,13 +246,13 @@ class FilterSelect extends React.Component<
 
           {this.state.field
             ? [
-                this.renderFilterOptions(this.state.field),
-                <div className="add-filter">
-                  <Button icon="filter" type="submit">
-                    Add Filter
+              this.renderFilterOptions(this.state.field),
+              <div className="add-filter">
+                <Button icon="filter" type="submit">
+                  Add Filter
                   </Button>
-                </div>
-              ]
+              </div>
+            ]
             : null}
         </form>
       </div>

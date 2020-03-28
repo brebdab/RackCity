@@ -60,10 +60,12 @@ import {
   modifyDatacenter,
   modifyModel,
   NumericFilter,
+  DatetimeFilter,
   PagingTypes,
   renderNumericFilterItem,
   renderRackRangeFilterItem,
   renderTextFilterItem,
+  renderDatetimeFilterItem,
   TextFilter,
   modifyChangePlan,
   deleteChangePlan
@@ -214,6 +216,8 @@ class ElementTable extends React.Component<
       display = renderNumericFilterItem(item.filter! as NumericFilter);
     } else if (item.filter_type === FilterTypes.RACKRANGE) {
       display = renderRackRangeFilterItem(item.filter as RackRangeFields);
+    } else if (item.filter_type === FilterTypes.DATETIME) {
+      display = renderDatetimeFilterItem(item.filter as DatetimeFilter);
     }
     let field = item.field;
     if (this.props.type === ElementType.ASSET) {
