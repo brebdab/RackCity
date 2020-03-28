@@ -67,4 +67,5 @@ urlpatterns = [
     path('change-plans/delete', views.change_plan_delete),
     path('change-plans/pages', views.change_plan_page_count),
     path('change-plans/execute', views.change_plan_execute),
+    path('change-plans/<int:id>', views.change_plan_detail),
 ]
