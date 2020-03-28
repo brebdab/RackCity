@@ -1,4 +1,4 @@
-import { Button, FormGroup, HTMLSelect, MenuItem, Popover } from "@blueprintjs/core";
+import { Button, FormGroup, HTMLSelect, MenuItem } from "@blueprintjs/core";
 import { DateRangeInput } from "@blueprintjs/datetime";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { Select } from "@blueprintjs/select";
