@@ -145,7 +145,7 @@ def decommission_asset(request):
             status=HTTPStatus.BAD_REQUEST
         )
     try:
-        decommissioned_asset.save()
+        decommissioned_asset_object = decommissioned_asset.save()
     except Exception as error:
         return JsonResponse(
             {
@@ -162,9 +162,9 @@ def decommission_asset(request):
     else:
         
         for assetcp in AssetCP.objects.filter(related_asset=id):
-            assetcp.related_decomissionned_asset = decommissioned_asset
+            print(assetcp)
+            assetcp.related_decommissioned_asset = decommissioned_asset_object
             assetcp.save()
-        asset.assetcp_set.clear()   
         asset.delete()
         
         return JsonResponse(
