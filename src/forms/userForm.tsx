@@ -21,10 +21,10 @@ import {
   UserPermissionsObject,
   DatacenterObject
 } from "../utils/utils";
-import { updateObject } from "../store/utility";
 import "./forms.scss";
 import { FormTypes } from "./formUtils";
 import { API_ROOT } from "../utils/api-config";
+import { modifyUser } from "../components/elementView/elementUtils";
 
 //TO DO : add validation of types!!!
 // var console: any = {};
@@ -34,7 +34,8 @@ export interface UserFormProps {
   userId: string;
   token: string;
   type?: FormTypes;
-  submitForm(model: UserPermissionsObject, headers: any): Promise<any> | void;
+  // submitForm(model: UserPermissionsObject, headers: any): Promise<any> | void;
+  submitForm: Function;
 }
 interface UserFormState {
   initialValues: UserPermissionsObject;
@@ -44,16 +45,6 @@ interface UserFormState {
   datacenter_selection: string;
   loading: boolean;
 }
-
-// export const required = (
-//   values: DatacenterObject,
-//   fieldName: keyof DatacenterObject
-// ): string =>
-//   values[fieldName] === undefined ||
-//   values[fieldName] === null ||
-//   values[fieldName] === ""
-//     ? "This must be populated"
-//     : "";
 
 class UserForm extends React.Component<UserFormProps, UserFormState> {
   private toaster: Toaster = {} as Toaster;
@@ -94,42 +85,30 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
       errors: []
     });
     e.preventDefault();
+    console.log("submitting");
     console.log(this.state);
-    if (this.state.initialValues) {
-      if (this.state.permissions) {
-        console.log(this.state.permissions);
-        // this.setState({
-        //   values: updateObject(this.state.values, {
-        //     id: this.props.initialValues.id
-        //   })
-        // });
-      }
-
-      const resp = this.props.submitForm(
-        this.state.initialValues,
-        getHeaders(this.props.token)
-      );
-      if (resp) {
-        resp.catch(err => {
-          console.log(err.response.data.failure_message);
-          let errors: Array<string> = this.state.errors;
-          errors.push(err.response.data.failure_message as string);
-          this.setState({
-            errors: errors
-          });
+    const body = {
+      id: this.props.userId,
+      model_management: this.state.permissions.model_management,
+      asset_management: this.state.permissions.asset_management,
+      power_control: this.state.permissions.power_control,
+      audit_read: this.state.permissions.audit_read,
+      admin: this.state.permissions.admin,
+      datacenter_permissions: this.state.permissions.datacenter_permissions
+    };
+    const resp = modifyUser(body, getHeaders(this.props.token));
+    if (resp) {
+      resp.catch(err => {
+        console.log(err.response.data.failure_message);
+        let errors: Array<string> = this.state.errors;
+        errors.push(err.response.data.failure_message as string);
+        this.setState({
+          errors: errors
         });
-      }
+      });
     }
+    this.props.submitForm();
   };
-
-  handleChange = (field: { [key: string]: any }) => {
-    this.setState({
-      initialValues: updateObject(this.state.initialValues, {
-        ...field
-      })
-    });
-  };
-  selectText = (event: any) => event.target.select();
 
   componentDidMount() {
     this.getDatacenters().then(res => {

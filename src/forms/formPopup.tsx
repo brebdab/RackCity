@@ -111,7 +111,9 @@ class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
         {this.props.elementName === ElementType.USER && this.props.userId ? (
           <UserForm
             userId={this.props.userId} // change to dynamic id
-            submitForm={this.props.submitForm}
+            submitForm={() => {
+              this.props.submitForm({} as FormObjectType, {});
+            }}
           />
         ) : null}
       </Dialog>

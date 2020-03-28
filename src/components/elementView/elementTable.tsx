@@ -16,14 +16,12 @@ import {
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { IconNames } from "@blueprintjs/icons";
 import "@blueprintjs/icons/lib/css/blueprint-icons.css";
-import axios from "axios";
 import React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import FormPopup from "../../forms/formPopup";
 import { FormTypes } from "../../forms/formUtils";
 import { updateObject } from "../../store/utility";
-import { API_ROOT } from "../../utils/api-config";
 import {
   AssetObject,
   DatacenterObject,
@@ -647,7 +645,10 @@ class ElementTable extends React.Component<
         handleClose={() => {
           this.setState({ editUserFormOpen: false });
         }}
-        submitForm={() => {}}
+        submitForm={() => {
+          this.setState({ editUserFormOpen: false });
+          this.successfulModification("User permissions successfully updated");
+        }}
         // submitForm={this.getSubmitFormFunction(FormTypes.MODIFY)}
       />
     );
