@@ -201,11 +201,16 @@ def get_changes_on_asset(asset, assetCP):
 
 def get_cp_modification_conflicts(asset_cp):
     conflicts = []
-    nonresolvable_message = "This conflict cannot be resolved; the change " + \
-        "needs to be removed from your change plan."
+    nonresolvable_message = "This conflict cannot be resolved; the " + \
+        "related changes need to be removed from your change plan."
     conflicting_asset_message_1 = "Due to more recent live changes, " + \
         "your change plan version of this asset's "
     conflicting_asset_message_2 = " now conflicts with a live asset. "
+    if asset_cp.is_conflict and asset_cp.related_asset is None:
+        conflicts.append({
+            "conflict_message":
+                "This asset has been deleted live. " + nonresolvable_message
+        })
     if asset_cp.asset_conflict_hostname:
         conflicts.append({
             "conflict_message":
