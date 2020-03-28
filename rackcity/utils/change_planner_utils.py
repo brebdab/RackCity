@@ -196,21 +196,11 @@ def get_changes_on_asset(asset, assetCP):
 
 def get_cp_modification_conflicts(asset_cp):
     conflicts = []
-    if asset_cp.is_conflict:
-        conflicts.append({
-            "conflict_message":
-                "Live changes have been made to this asset since your " +
-                "latest change planner modification. This conflict needs to " +
-                "be resolved. Please select which version you would like to " +
-                "keep.",
-            "conflicting_asset": None,
-            "conflict_resolvable": False,
-        })
+    nonresolvable_message = "This conflict cannot be resolved; the change " + \
+        "needs to be removed from your change plan."
     conflicting_asset_message_1 = "Due to more recent live changes, " + \
         "your change planner modification to this asset's "
     conflicting_asset_message_2 = " now conflicts with a live asset. "
-    nonresolvable_message = "This conflict cannot be resolved; the change " + \
-        "needs to be removed from your change plan."
     if asset_cp.asset_conflict_hostname:
         conflicts.append({
             "conflict_message":
@@ -250,6 +240,25 @@ def get_cp_modification_conflicts(asset_cp):
             "conflicting_asset": None,
             "conflict_resolvable": False,
         })
+    if asset_cp.related_decommissioned_asset:
+        conflicts.append({
+            "conflict_message":
+                "This asset has been decommissioned in a live change. " +
+                nonresolvable_message,
+            "conflicting_asset": None,
+            "conflict_resolvable": False,
+        })
+    if len(conflicts) == 0:
+        if asset_cp.is_conflict:
+            conflicts.append({
+                "conflict_message":
+                    "Live changes have been made to this asset since your " +
+                    "latest change planner modification. This conflict " +
+                    "needs to be resolved. Please select which version " +
+                    "you would like to keep.",
+                "conflicting_asset": None,
+                "conflict_resolvable": True,
+            })
     if len(conflicts) == 0:
         return None
     else:
@@ -262,7 +271,12 @@ def get_modifications_in_cp(change_plan):
     for asset_cp in assets_cp:
         assetCP_data = RecursiveAssetCPSerializer(asset_cp).data
         related_asset = asset_cp.related_asset
-        if related_asset:
+        if asset_cp.is_decommissioned:
+            title = "Decommission asset"
+            if asset_cp.asset_number:
+                title += " " + str(asset_cp.asset_number)
+            asset_data = None
+        elif related_asset:
             title = "Modify asset " + str(asset_cp.related_asset.asset_number)
             asset_data = RecursiveAssetSerializer(related_asset).data
         else:
