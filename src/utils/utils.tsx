@@ -293,10 +293,11 @@ export const getHeaders = (token: string) => {
   };
 };
 
-export const getChangePlanRowStyle = (item: any) => {
+export const getChangePlanRowStyle = (item: any, changePlan: ChangePlan) => {
   return {
-    fontWeight: isAssetCP(item) ? ("bold" as any) : ("none" as any),
-    color: isAssetCP(item) ? "#bf8c0a" : "white"
+    fontWeight:
+      isAssetCP(item) && changePlan ? ("bold" as any) : ("normal" as any),
+    color: isAssetCP(item) && changePlan ? "#bf8c0a" : "white"
   };
 };
 

@@ -10,9 +10,11 @@ import {
   isModelObject,
   isObject,
   ModelFieldsTable,
-  ROUTES
+  ROUTES,
+  ChangePlan
 } from "../../../utils/utils";
 import "./propertiesView.scss";
+import { connect } from "react-redux";
 
 export interface AlertState {
   isDeleteOpen: boolean;
@@ -23,6 +25,7 @@ export interface AlertState {
 
 interface PropertiesViewProps {
   data: ElementObjectType;
+  changePlan: ChangePlan;
 }
 
 class PropertiesView extends React.PureComponent<
@@ -96,7 +99,7 @@ class PropertiesView extends React.PureComponent<
               <p className="label">{AssetFieldsTable[item]}:</p>
             </td>
 
-            <td style={getChangePlanRowStyle(data)}>
+            <td style={getChangePlanRowStyle(data, this.props.changePlan)}>
               {" "}
               <p>{data[item].row_letter + "" + data[item].rack_num}</p>
             </td>
@@ -108,7 +111,7 @@ class PropertiesView extends React.PureComponent<
               </p>
             </td>
 
-            <td style={getChangePlanRowStyle(data)}>
+            <td style={getChangePlanRowStyle(data, this.props.changePlan)}>
               {" "}
               <p>{data[item].datacenter.name}</p>
             </td>
@@ -128,7 +131,14 @@ class PropertiesView extends React.PureComponent<
               <p className="label">{AssetFieldsTable[item]}:</p>
             </td>
 
-            <td style={getChangePlanRowStyle(this.props.data)}>{dat}</td>
+            <td
+              style={getChangePlanRowStyle(
+                this.props.data,
+                this.props.changePlan
+              )}
+            >
+              {dat}
+            </td>
           </tr>
         ) : null;
       }
@@ -210,5 +220,9 @@ class PropertiesView extends React.PureComponent<
     );
   }
 }
-
-export default withRouter(PropertiesView);
+const mapStateToProps = (state: any) => {
+  return {
+    changePlan: state.changePlan
+  };
+};
+export default connect(mapStateToProps)(withRouter(PropertiesView));

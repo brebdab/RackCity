@@ -148,9 +148,9 @@ export class PowerView extends React.PureComponent<
       ) {
         rows.push(
           <tr>
-            <td style={getChangePlanRowStyle(this.props.asset)}>{i}</td>
+            <td style={getChangePlanRowStyle(this.props.asset,this.props.changePlan)}>{i}</td>
             {this.props.asset!.power_connections[i] ? (
-              <td style={getChangePlanRowStyle(this.props.asset)}>
+              <td style={getChangePlanRowStyle(this.props.asset,this.props.changePlan)}>
                 {this.props.asset!.power_connections[i].port_number}
                 {this.props.asset!.power_connections[i].left_right}
               </td>
