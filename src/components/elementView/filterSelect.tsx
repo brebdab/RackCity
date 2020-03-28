@@ -1,4 +1,5 @@
 import { Button, FormGroup, HTMLSelect, MenuItem } from "@blueprintjs/core";
+import { DateRangeInput } from "@blueprintjs/datetime";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { Select } from "@blueprintjs/select";
 import * as React from "react";
@@ -28,12 +29,13 @@ import {
   IFilter,
   NumericFilter,
   TextFilter,
-  TextFilterTypes
+  TextFilterTypes,
+  DatetimeFilter
 } from "./elementUtils";
 import "./elementView.scss";
 
 var console: any = {};
-console.log = function() {};
+console.log = function () { };
 
 interface FilterSelectProps {
   token: string;
@@ -44,11 +46,11 @@ interface FilterSelectProps {
 class FilterSelect extends React.Component<
   FilterSelectProps & RouteComponentProps,
   IFilter
-> {
+  > {
   state = {
     id: "",
     field: "",
-    filter: {} as TextFilter | NumericFilter | RackRangeFields,
+    filter: {} as TextFilter | NumericFilter | RackRangeFields | DatetimeFilter,
     filter_type: FilterTypes.TEXT
   };
   renderFilterOptions(field: string | undefined) {
@@ -61,6 +63,9 @@ class FilterSelect extends React.Component<
     }
     if (type === FilterTypes.RACKRANGE) {
       return this.getRackFilterOptions();
+    }
+    if (type === FilterTypes.DATETIME) {
+      return this.getDatetimeFilterOptions();
     }
     return null;
   }
@@ -78,6 +83,22 @@ class FilterSelect extends React.Component<
         />
       </div>
     ) : null;
+  }
+  getDatetimeFilterOptions() {
+    return (
+      <FormGroup label="Date range">
+        <DateRangeInput
+          formatDate={(date: Date) => date.toLocaleString()}
+          onChange={undefined}
+          parseDate={(str: string) => new Date(str)}
+          allowSingleDayRange={true}
+          shortcuts={true}
+          singleMonthOnly={true}
+          closeOnSelection={false}
+          timePrecision="minute"
+        />
+      </FormGroup>
+    );
   }
   getNumericFilterOptions() {
     return (
@@ -230,13 +251,13 @@ class FilterSelect extends React.Component<
 
           {this.state.field
             ? [
-                this.renderFilterOptions(this.state.field),
-                <div className="add-filter">
-                  <Button icon="filter" type="submit">
-                    Add Filter
+              this.renderFilterOptions(this.state.field),
+              <div className="add-filter">
+                <Button icon="filter" type="submit">
+                  Add Filter
                   </Button>
-                </div>
-              ]
+              </div>
+            ]
             : null}
         </form>
       </div>
