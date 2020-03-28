@@ -11,6 +11,8 @@ from rackcity.models import (
     DecommissionedAsset,
     NetworkPort,
     NetworkPortCP,
+    PDUPort,
+    PDUPortCP,
     PowerPort,
     PowerPortCP,
 )
@@ -291,20 +293,22 @@ def change_plan_execute(request):
     num_decommissioned = 0
     for asset_cp in assets_cp:
         # Update asset
-        if asset_cp.related_asset:
-            asset_to_update = asset_cp.related_asset
+        related_asset = asset_cp.related_asset
+        if related_asset:
+            updated_asset = related_asset
             num_modified += 1
         else:
-            asset_to_update = Asset()
+            updated_asset = Asset()
             num_created += 1
         for field in Asset._meta.fields:
             if field != 'id':
                 setattr(
-                    asset_to_update,
+                    updated_asset,
                     field.name,
                     getattr(asset_cp, field.name)
                 )
-        asset_to_update.save()
+        # Assigns asset number, creates network & power ports on save
+        updated_asset.save()
 
         # Update network ports
         network_ports_cp = NetworkPortCP.objects.filter(
@@ -317,6 +321,19 @@ def change_plan_execute(request):
             change_plan=change_plan,
             asset=asset_cp,
         )
+        for power_port_cp in power_ports_cp:
+            pdu_port_cp = power_port_cp.power_connection
+            pdu_port_to_connect = PDUPort.objects.get(
+                rack=pdu_port_cp.rack,
+                left_right=pdu_port_cp.left_right,
+                port_number=pdu_port_cp.port_number,
+            )
+            power_port_to_connect = PowerPort.objects.get(
+                asset=updated_asset,
+                port_name=power_port_cp.port_name,
+            )
+            power_port_to_connect.power_connection = pdu_port_to_connect
+            power_port_to_connect.save()
 
         # Decommission asset
         if asset_cp.is_decommissioned:
