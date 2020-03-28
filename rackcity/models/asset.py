@@ -184,7 +184,7 @@ class AssetCP(AbstractAsset):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="related asset"
+        related_name="related_asset"
     )
     hostname = models.CharField(
         max_length=150,
@@ -202,12 +202,26 @@ class AssetCP(AbstractAsset):
         default=False,
         blank=True,
     )
-    conflict_with_asset = models.ForeignKey(
+    asset_conflict_hostname = models.ForeignKey(
         Asset,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="assets with conflict"
+        related_name="hostname_conflict"
+    )
+    asset_conflict_asset_number = models.ForeignKey(
+        Asset,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="asset_number_conflict"
+    )
+    asset_conflict_location = models.ForeignKey(
+        Asset,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="location_conflict"
     )
     change_plan = models.ForeignKey(
         ChangePlan,
