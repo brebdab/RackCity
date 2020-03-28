@@ -26,7 +26,8 @@ import {
   ROUTES,
   ChangePlan,
   AssetCPObject,
-  getChangePlanRowStyle
+  getChangePlanRowStyle,
+  isAssetCPObject
 } from "../../../../utils/utils";
 import {
   deleteAsset,
@@ -40,7 +41,7 @@ import NetworkGraph from "./graph";
 import PowerView from "../../powerView/powerView";
 import { ALL_DATACENTERS } from "../../elementTabContainer";
 import { IconNames } from "@blueprintjs/icons";
-
+import { isNullOrUndefined } from "util";
 export interface AssetViewProps {
   token: string;
   isAdmin: boolean;
@@ -176,6 +177,14 @@ export class AssetView extends React.PureComponent<
       (connection: NetworkConnection) => connection.source_port === port
     );
   }
+  detectConflict(assetcp: AssetCPObject) {
+    return (
+      assetcp.is_conflict ||
+      !isNullOrUndefined(assetcp.asset_conflict_location) ||
+      !isNullOrUndefined(assetcp.asset_conflict_asset_name) ||
+      !isNullOrUndefined(assetcp.asset_conflict_hostname)
+    );
+  }
   getDatacenters = () => {
     const headers = getHeaders(this.props.token);
     // console.log(API_ROOT + "api/datacenters/get-all");
@@ -277,6 +286,16 @@ export class AssetView extends React.PureComponent<
         ) : null}
         {this.state.asset.decommissioning_user ? (
           <DecommissionedPropertiesView data={this.state.asset} />
+        ) : null}
+        {isAssetCPObject(this.state.asset) &&
+        this.detectConflict(this.state.asset) ? (
+          <Callout
+            className="propsview"
+            intent={Intent.DANGER}
+            title="This asset has conflicts "
+          >
+            Please go to change plan detail view for more details
+          </Callout>
         ) : null}
         <PropertiesView data={this.state.asset} />
         <div className="propsview">

@@ -53,9 +53,9 @@ export interface AssetObject extends ParentAssetObject {
 export interface AssetCPObject extends AssetObject {
   change_plan: ChangePlan;
   is_conflict: boolean;
-  hostname_conflict: AssetObject;
-  asset_name_conflict: AssetObject;
-  location_conflict: AssetObject;
+  asset_conflict_hostname: AssetObject;
+  asset_conflict_asset_name: AssetObject;
+  asset_conflict_location: AssetObject;
   related_asset: AssetObject;
 }
 interface ParentAssetObject extends ElementObject {
@@ -278,6 +278,9 @@ export function isUserObject(obj: any): obj is UserInfoObject {
 }
 export function isChangePlanObject(obj: any): obj is ChangePlan {
   return obj && obj.name;
+}
+export function isAssetCPObject(obj: any): obj is AssetCPObject {
+  return obj && obj.change_plan;
 }
 export const getHeaders = (token: string) => {
   return {

@@ -105,7 +105,12 @@ export class Navigation extends React.Component<
                 )
               }
             >
-              <Banner title={this.props.changePlan.name} />
+              <Banner
+                title={
+                  this.props.changePlan.name +
+                  "\n Click here to go to change plan summary"
+                }
+              />
             </div>
           ) : null}
           <Navbar className={Classes.DARK + " nav-bar"}>
