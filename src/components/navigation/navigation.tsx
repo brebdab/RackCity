@@ -101,7 +101,7 @@ export class Navigation extends React.Component<
             <div
               onClick={() =>
                 this.props.history.push(
-                  ROUTES.CHANGE_PLAN + "/" + this.props.changePlan.name
+                  ROUTES.CHANGE_PLAN + "/" + this.props.changePlan.id
                 )
               }
             >

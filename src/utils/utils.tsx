@@ -17,7 +17,7 @@ export enum ROUTES {
   RACK_PRINT = "/dashboard/rack-print",
   BULK_IMPORT = "/dashboard/bulk-upload/:resourceType",
   USERS = "/dashboard/users",
-  CHANGE_PLAN = "/change-plans"
+  CHANGE_PLAN = "/dashboard/change-plans"
 }
 export enum ElementType {
   RACK = "racks",
@@ -97,7 +97,7 @@ export const AssetFieldsTable: any = {
 
 export const DecommissionedFieldsTable: any = {
   decommissioning_user: "User",
-  time_decommissioned: "Time",
+  time_decommissioned: "Time"
 };
 
 export const ModelFieldsTable: any = {
