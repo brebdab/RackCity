@@ -10,7 +10,8 @@ import {
   Radio,
   RadioGroup,
   Alignment,
-  Spinner
+  Spinner,
+  Position
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
@@ -43,6 +44,7 @@ interface UserFormState {
   permissions: UserPermissionsObject;
   datacenters: Array<DatacenterObject>;
   datacenter_selection: string;
+  show_asset_options: boolean;
   loading: boolean;
 }
 
@@ -77,7 +79,8 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
     },
     datacenters: [] as Array<DatacenterObject>,
     datacenter_selection: "Global",
-    loading: true
+    loading: true,
+    show_asset_options: false
   };
 
   private handleSubmit = (e: any) => {
@@ -96,9 +99,9 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
       admin: this.state.permissions.admin,
       datacenter_permissions: this.state.permissions.datacenter_permissions
     };
-    const resp = modifyUser(body, getHeaders(this.props.token));
-    if (resp) {
-      resp.catch(err => {
+    modifyUser(body, getHeaders(this.props.token))
+      .then(this.props.submitForm())
+      .catch(err => {
         console.log(err.response.data.failure_message);
         let errors: Array<string> = this.state.errors;
         errors.push(err.response.data.failure_message as string);
@@ -106,25 +109,39 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
           errors: errors
         });
       });
-    }
-    this.props.submitForm();
   };
 
   componentDidMount() {
-    this.getDatacenters().then(res => {
-      var data = res.datacenters as Array<DatacenterObject>;
-      data.sort(this.compare);
-      this.setState({
-        datacenters: data
+    this.getDatacenters()
+      .then(res => {
+        var data = res.datacenters as Array<DatacenterObject>;
+        data.sort(this.compare);
+        this.setState({
+          datacenters: data,
+          show_asset_options:
+            this.state.permissions.asset_management ||
+            this.state.permissions.datacenter_permissions.length > 0
+        });
+        this.getUserPermissions(this.props.userId);
+      })
+      .catch(err => {
+        this.addToast({
+          message: err.response.data.failure_message,
+          intent: Intent.DANGER
+        });
       });
-      this.getUserPermissions(this.props.userId);
-    });
   }
 
   render() {
     console.log(this.state);
     return (
       <div>
+        <Toaster
+          autoFocus={false}
+          canEscapeKeyClear={true}
+          position={Position.TOP}
+          ref={this.refHandlers.toaster}
+        />
         {this.state.loading ? (
           <Spinner />
         ) : (
@@ -214,40 +231,62 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
                   }}
                 ></Checkbox>
               </FormGroup>
-              <RadioGroup
-                inline={true}
-                label="Asset permissions"
-                onChange={() => {
-                  console.log("changing datacenter");
-                  console.log(this.state);
-                  var updatedPermissions = this.state.permissions;
-                  if (this.state.datacenter_selection === "Global") {
-                    let permissions: Array<string>;
-                    permissions = [];
-                    for (var i = 0; i < this.state.datacenters.length; i++) {
-                      permissions.push(this.state.datacenters[i].id);
-                    }
-                    updatedPermissions.datacenter_permissions = permissions;
-                    this.setState({
-                      datacenter_selection: "Per Datacenter",
-                      permissions: updatedPermissions
-                    });
-                  } else {
-                    updatedPermissions.datacenter_permissions = this.state.initialValues.datacenter_permissions;
-                    this.setState({
-                      datacenter_selection: "Global",
-                      permissions: updatedPermissions
-                    });
+              <FormGroup inline={true}>
+                <Checkbox
+                  label="Asset Management"
+                  checked={
+                    this.state.permissions.admin
+                      ? true
+                      : this.state.show_asset_options
                   }
-                }}
-                selectedValue={this.state.datacenter_selection}
-              >
-                <Radio label="Global" value="Global" />
-                <Radio label="Per Datacenter" value="Per Datacenter" />
-              </RadioGroup>
-              {this.state.datacenter_selection === "Global"
-                ? null
-                : this.renderDatacenterChecks()}
+                  alignIndicator={Alignment.LEFT}
+                  disabled={this.state.permissions.admin}
+                  onChange={() => {
+                    this.setState({
+                      show_asset_options: !this.state.show_asset_options
+                    });
+                  }}
+                ></Checkbox>
+              </FormGroup>
+              {this.state.show_asset_options ? (
+                <RadioGroup
+                  inline={true}
+                  label="Asset permissions"
+                  onChange={() => {
+                    console.log("changing datacenter");
+                    console.log(this.state);
+                    var updatedPermissions = this.state.permissions;
+                    if (this.state.datacenter_selection === "Global") {
+                      updatedPermissions.datacenter_permissions = this.state.initialValues.datacenter_permissions;
+                      updatedPermissions.asset_management = false;
+                      this.setState({
+                        datacenter_selection: "Per Datacenter",
+                        permissions: updatedPermissions
+                      });
+                    } else {
+                      let permissions: Array<string>;
+                      permissions = [];
+                      for (var i = 0; i < this.state.datacenters.length; i++) {
+                        permissions.push(this.state.datacenters[i].id);
+                      }
+                      updatedPermissions.datacenter_permissions = permissions;
+                      updatedPermissions.asset_management = this.state.show_asset_options;
+                      this.setState({
+                        datacenter_selection: "Global",
+                        permissions: updatedPermissions
+                      });
+                    }
+                  }}
+                  selectedValue={this.state.datacenter_selection}
+                >
+                  <Radio label="Global" value="Global" />
+                  <Radio label="Per Datacenter" value="Per Datacenter" />
+                </RadioGroup>
+              ) : null}
+              {this.state.show_asset_options &&
+              this.state.datacenter_selection === "Per Datacenter"
+                ? this.renderDatacenterChecks()
+                : null}
               <Button className="login-button" type="submit">
                 Submit
               </Button>
