@@ -20,6 +20,42 @@ from rest_framework.parsers import JSONParser
 from django.core.exceptions import ObjectDoesNotExist
 
 
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def change_plan_remove_asset(request, id):
+    """
+    Remove a single assetCP from a change plan
+    """
+    (change_plan, response) = get_change_plan(id)
+    if response:
+        return response
+    data = JSONParser().parse(request)
+    if 'asset_cp' not in data:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.ERROR.value + GenericFailure.INTERNAL.value,
+                "errors": "Must include 'asset_cp' when removing an asset from change plan"
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    asset_cp=data['asset_cp']
+    
+    try:
+        AssetCP.objects.get(id=asset_cp).delete()
+    except ObjectDoesNotExist:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.ERROR.value +
+                    "AssetCP" + GenericFailure.DOES_NOT_EXIST.value,
+                "errors": "No existing Asset CP with id="+str(asset_cp)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def change_plan_delete(request):
