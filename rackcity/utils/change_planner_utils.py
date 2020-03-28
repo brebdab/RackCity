@@ -17,9 +17,6 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.http import JsonResponse
 from http import HTTPStatus
-<< << << < HEAD
-== == == =
->>>>>> > c233f6c8e9196bfb54df96cee47975a4d285e6df
 
 
 @receiver(post_save, sender=Asset)
@@ -183,46 +180,101 @@ def get_page_count_response_for_cp(request, change_plan):
     return JsonResponse({"page_count": page_count})
 
 
-# def get_changes_on_asset(asset, assetCP):
-#     fields = [field.name for field in Asset._meta.get_fields()]
-#     changes = []
-#     for field in fields:
-#         if getattr(asset, field) != getattr(assetCP, field):
-#             # TODO will need to serialize field if it's another model
-#             changes.append({
-#                 "field": field,
-#                 # "master": getattr(asset, field),
-#                 # "change_plan": getattr(assetCP, field),
-#             })
-#     return changes
+def get_changes_on_asset(asset, assetCP):
+    fields = [field.name for field in Asset._meta.fields]
+    changes = []
+    for field in fields:
+        if getattr(asset, field) != getattr(assetCP, field):
+            # TODO will need to serialize field if it's another model
+            changes.append({
+                "field": field,
+                "live": getattr(asset, field),
+                "change_plan": getattr(assetCP, field),
+            })
+    return changes
+
+
+def get_cp_modification_conflicts(asset_cp):
+    conflicts = []
+    if asset_cp.is_conflict:
+        conflicts.append({
+            "conflict_message":
+                "Live changes have been made to this asset since your " +
+                "latest change planner modification. This conflict needs to " +
+                "be resolved. Please select which version you would like to " +
+                "keep.",
+            "conflicting_asset": None,
+            "conflict_resolvable": False,
+        })
+    conflicting_asset_message_1 = "Due to more recent live changes, " + \
+        "your change planner modification to this asset's "
+    conflicting_asset_message_2 = " now conflicts with a live asset. "
+    nonresolvable_message = "This conflict cannot be resolved; the change " + \
+        "needs to be removed from your change plan."
+    if asset_cp.asset_conflict_hostname:
+        conflicts.append({
+            "conflict_message":
+                conflicting_asset_message_1 + "hostname" +
+                conflicting_asset_message_2 + nonresolvable_message,
+            "conflicting_asset": asset_cp.asset_conflict_hostname.id,
+            "conflict_resolvable": False,
+        })
+    if asset_cp.asset_conflict_asset_number:
+        conflicts.append({
+            "conflict_message":
+                conflicting_asset_message_1 + "asset number" +
+                conflicting_asset_message_2 + nonresolvable_message,
+            "conflicting_asset": asset_cp.asset_conflict_asset_number.id,
+            "conflict_resolvable": False,
+        })
+    if asset_cp.asset_conflict_location:
+        conflicts.append({
+            "conflict_message":
+                conflicting_asset_message_1 + "rack location" +
+                conflicting_asset_message_2 + nonresolvable_message,
+            "conflicting_asset": asset_cp.asset_conflict_location.id,
+            "conflict_resolvable": False,
+        })
+    deleted_relation_message = " associated with this asset has been deleted. "
+    if asset_cp.model is None:
+        conflicts.append({
+            "conflict_message":
+                "The model" + deleted_relation_message + nonresolvable_message,
+            "conflicting_asset": None,
+            "conflict_resolvable": False,
+        })
+    if asset_cp.rack is None:
+        conflicts.append({
+            "conflict_message":
+                "The rack" + deleted_relation_message + nonresolvable_message,
+            "conflicting_asset": None,
+            "conflict_resolvable": False,
+        })
+    if len(conflicts) == 0:
+        return None
+    else:
+        return conflicts
 
 
 def get_modifications_in_cp(change_plan):
-    assetsCP = AssetCP.objects.filter(change_plan=change_plan)
+    assets_cp = AssetCP.objects.filter(change_plan=change_plan)
     modifications = []
-    for assetCP in assetsCP:
-        assetCP_data = RecursiveAssetCPSerializer(assetCP).data
-        related_asset = assetCP.related_asset
+    for asset_cp in assets_cp:
+        assetCP_data = RecursiveAssetCPSerializer(asset_cp).data
+        related_asset = asset_cp.related_asset
         if related_asset:
-            title = "Modify asset " + str(assetCP.related_asset.asset_number)
+            title = "Modify asset " + str(asset_cp.related_asset.asset_number)
             asset_data = RecursiveAssetSerializer(related_asset).data
         else:
             title = "Create asset"
-            if assetCP.asset_number:
-                title += " " + str(assetCP.asset_number)
+            if asset_cp.asset_number:
+                title += " " + str(asset_cp.asset_number)
             asset_data = None
-
-        modification = {
+        modifications.append({
             "title": title,
             "asset": asset_data,
-            "assetCP": assetCP_data,
-        }
-        # check for conflicts
-        if assetCP.is_conflict:
-            modification["conflict_message"] = ""
-            modification["conflicting_asset"] = ""
-
-        modifications.append(modification)
-
+            "asset_cp": assetCP_data,
+            "conflicts": get_cp_modification_conflicts(asset_cp)
+        })
     return modifications
     # TODO add logic for decommission modification
