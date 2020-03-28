@@ -265,24 +265,37 @@ def get_cp_modification_conflicts(asset_cp):
         return conflicts
 
 
+def get_location_detail(asset):
+    return " at rack " + asset.rack.datacenter.abbreviation + " " + \
+        asset.rack.row_letter + str(asset.rack.rack_num) + ", " + \
+        str(asset.rack_position) + "U"
+
+
 def get_modifications_in_cp(change_plan):
     assets_cp = AssetCP.objects.filter(change_plan=change_plan)
     modifications = []
     for asset_cp in assets_cp:
         assetCP_data = RecursiveAssetCPSerializer(asset_cp).data
         related_asset = asset_cp.related_asset
+        if related_asset:
+            asset_data = RecursiveAssetSerializer(related_asset).data
+        else:
+            asset_data = None
         if asset_cp.is_decommissioned:
             title = "Decommission asset"
             if asset_cp.asset_number:
                 title += " " + str(asset_cp.asset_number)
-            asset_data = None
+            if asset_cp.rack:
+                title += get_location_detail(asset_cp)
         elif related_asset:
-            title = "Modify asset " + str(asset_cp.related_asset.asset_number)
-            asset_data = RecursiveAssetSerializer(related_asset).data
+            title = "Modify asset " + str(related_asset.asset_number) + \
+                get_location_detail(related_asset)
         else:
             title = "Create asset"
             if asset_cp.asset_number:
                 title += " " + str(asset_cp.asset_number)
+            if asset_cp.rack:
+                title += get_location_detail(asset_cp)
             asset_data = None
         modifications.append({
             "title": title,
