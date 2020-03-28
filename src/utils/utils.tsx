@@ -53,6 +53,9 @@ export interface AssetObject extends ParentAssetObject {
 export interface AssetCPObject extends AssetObject {
   change_plan: ChangePlan;
   is_conflict: boolean;
+  hostname_conflict: AssetObject;
+  asset_name_conflict: AssetObject;
+  location_conflict: AssetObject;
   related_asset: AssetObject;
 }
 interface ParentAssetObject extends ElementObject {

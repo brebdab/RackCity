@@ -527,8 +527,6 @@ class ElementTable extends React.Component<
     }
   }
 
-    
-  
   updateTableData = () => {
     if (this.props.getData && this.props.token) {
       this.setState({
@@ -713,7 +711,18 @@ class ElementTable extends React.Component<
   };
 
   //DELETE LOGIC
-
+  private shouldShowColumn = (item: any, col: string) => {
+    if (isAssetObject(item)) {
+      return AssetFieldsTable[col] && col !== "comment";
+    }
+    return (
+      col !== "id" &&
+      col !== "network_ports" &&
+      col !== "comment" &&
+      col !== "is_admin" &&
+      !isObject(item[col])
+    );
+  };
   private handleDeleteOpen = () =>
     this.setState({ openAlert: ElementTableOpenAlert.DELETE });
   private handleDeleteCancel = () =>
@@ -1167,13 +1176,7 @@ class ElementTable extends React.Component<
                                 }}
                               ></td>
                             );
-                          } else if (
-                            col !== "id" &&
-                            col !== "network_ports" &&
-                            col !== "comment" &&
-                            col !== "is_admin" &&
-                            !isObject(value)
-                          ) {
+                          } else if (this.shouldShowColumn(item, col)) {
                             return (
                               <td style={getChangePlanRowStyle(item)}>
                                 {value}

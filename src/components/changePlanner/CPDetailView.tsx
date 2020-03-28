@@ -1,13 +1,21 @@
 import { RouteComponentProps } from "react-router";
 import { connect } from "react-redux";
 import * as React from "react";
-import { Classes, AnchorButton } from "@blueprintjs/core";
+import {
+  Classes,
+  AnchorButton,
+  Pre,
+  Collapse,
+  Callout
+} from "@blueprintjs/core";
 import { withRouter } from "react-router-dom";
-
+import "./changePlanner.scss";
 interface CPDetailViewProps {
   token: string;
 }
-interface CPDetailViewState {}
+interface CPDetailViewState {
+  isOpen: Array<boolean>;
+}
 class CPDetailView extends React.Component<
   CPDetailViewProps & RouteComponentProps,
   CPDetailViewState
@@ -19,6 +27,17 @@ class CPDetailView extends React.Component<
   getConflictWarning = () => {
     return <div></div>;
   };
+  public state = {
+    isOpen: [false, false]
+  };
+  items = ["a", "b"];
+  toggleCollapse(index: number) {
+    const isOpen = this.state.isOpen;
+    isOpen[index] = !isOpen[index];
+    this.setState({
+      isOpen
+    });
+  }
   public render() {
     return (
       <div className={Classes.DARK + " asset-view"}>
@@ -32,7 +51,26 @@ class CPDetailView extends React.Component<
               text="Generate Work Order"
             />
           </div>
+
+          <ul className="bp3-list-unstyled">
+            {this.items.map((item: string, index: number) => {
+              return (
+                <li>
+                  <Callout
+                    className="change-plan-item"
+                    onClick={e => this.toggleCollapse(index)}
+                  >
+                    {item}{" "}
+                  </Callout>
+                  <Collapse isOpen={this.state.isOpen[index]}>
+                    <Pre>{"hi julia"}</Pre>
+                  </Collapse>
+                </li>
+              );
+            })}
+          </ul>
         </div>
+
         <AnchorButton intent="primary" icon="build" text="Execute Work Order" />
       </div>
     );
