@@ -76,7 +76,6 @@ def validate_asset_number_uniqueness(value, asset_id, change_plan, related_asset
             An existing asset on exists with this asset number.")
 
 
-
 def validate_owner(value):
     if (
         value
@@ -201,6 +200,27 @@ class AssetCP(AbstractAsset):
         default=False,
         blank=True,
     )
+    asset_conflict_hostname = models.ForeignKey(
+        Asset,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="hostname_conflict"
+    )
+    asset_conflict_asset_number = models.ForeignKey(
+        Asset,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="asset_number_conflict"
+    )
+    asset_conflict_location = models.ForeignKey(
+        Asset,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="location_conflict"
+    )
     change_plan = models.ForeignKey(
         ChangePlan,
         on_delete=models.CASCADE,
@@ -278,7 +298,6 @@ class AssetCP(AbstractAsset):
             validate_hostname_uniqueness(self.hostname, self.id, self.change_plan, self.related_asset)
             validate_asset_number_uniqueness(self.asset_number, self.id, self.change_plan, self.related_asset)
             validate_owner(self.owner)
-            self.is_conflict = False
         except ValidationError as valid_error:
             raise valid_error
         else:

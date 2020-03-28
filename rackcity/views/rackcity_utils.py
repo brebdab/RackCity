@@ -128,10 +128,13 @@ def validate_asset_location(
 
 def validate_location_modification(data, existing_asset, user, change_plan=None):
     asset_id = existing_asset.id
-    rack_id = existing_asset.rack.id
+    rack_id = existing_asset.rack_id
     related_asset_id = None
+    print(existing_asset)
     if hasattr(existing_asset, "related_asset") and existing_asset.related_asset:
+        print(existing_asset.related_asset)
         related_asset_id = existing_asset.related_asset.id
+    print("here")
     asset_rack_position = existing_asset.rack_position
     asset_height = existing_asset.model.height
     if 'rack_position' in data:

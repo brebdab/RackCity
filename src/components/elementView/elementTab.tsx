@@ -283,6 +283,11 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       intent: Intent.WARNING
     });
   };
+  componentWillReceiveProps(nextProps: ElementTabProps & RouteComponentProps) {
+    if (nextProps.changePlan !== this.props.changePlan) {
+      this.handleDataUpdate(true);
+    }
+  }
 
   private createDatacenter = (
     dc: DatacenterObject,

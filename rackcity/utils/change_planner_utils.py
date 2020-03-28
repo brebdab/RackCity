@@ -15,19 +15,46 @@ from rackcity.utils.query_utils import (
     get_invalid_paginated_request_response,
     should_paginate_query,
 )
+from rackcity.views.rackcity_utils import validate_asset_location, LocationException
 
 
 @receiver(post_save, sender=Asset)
-def create_asset_cp(sender, **kwargs):
-    # fields: sender, instance, created, raw, using, update_fields
-    # asset is a related asset of assetCP
-    instance = kwargs.get("instance")
-    related_assets_cp = AssetCP.objects.filter(related_asset=instance.id)
-    for related_asset in related_assets_cp:
-        related_asset.is_conflict = True
-        related_asset.save()
+def detect_conflicts_cp(sender, **kwargs):
+    #fields: sender, instance, created, raw, using, update_fields
+    ## asset is a related asset of assetCP
+    asset = kwargs.get("instance")
+    related_assets_cp = AssetCP.objects.filter(related_asset=asset.id)
+    for related_asset_cp in related_assets_cp:
+        related_asset_cp.is_conflict = True
+        related_asset_cp.save()
+    # hostname conflicts with hostnames on assetcps
+    asset.hostname_conflict.clear()
+    AssetCP.objects.filter(
+        Q(hostname=asset.hostname) & ~Q(related_asset=asset.id)
+        ).update(asset_conflict_hostname=asset)
 
     # asset rack location conflicts with an assetCP
+
+    asset.location_conflict.clear()
+    for assetcp in AssetCP.objects.filter(rack=asset.rack_id):
+        try: 
+            validate_asset_location(
+                asset.rack_id,
+                assetcp.rack_position,
+                assetcp.model.height,
+                asset_id=assetcp.id
+            )
+        except LocationException:
+            assetcp.asset_conflict_location = asset
+            AssetCP.objects.filter(id=assetcp.id).update(asset_conflict_location=asset)
+           
+
+    # asset number conflict
+    asset.asset_number_conflict.clear()
+    AssetCP.objects.filter(
+        Q(asset_number=asset.asset_number) & ~Q(related_asset_id=asset.id)
+        ).update(asset_conflict_asset_number=asset)
+
 
 
 def get_filtered_assets_for_cp(change_plan, data):
