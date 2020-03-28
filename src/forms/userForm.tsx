@@ -84,6 +84,14 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
   };
 
   private handleSubmit = (e: any) => {
+    if (!this.state.show_asset_options) {
+      var updatedPermissions = this.state.permissions;
+      updatedPermissions.asset_management = false;
+      updatedPermissions.datacenter_permissions = [] as Array<string>;
+      this.setState({
+        permissions: updatedPermissions
+      });
+    }
     this.setState({
       errors: []
     });
@@ -117,10 +125,7 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
         var data = res.datacenters as Array<DatacenterObject>;
         data.sort(this.compare);
         this.setState({
-          datacenters: data,
-          show_asset_options:
-            this.state.permissions.asset_management ||
-            this.state.permissions.datacenter_permissions.length > 0
+          datacenters: data
         });
         this.getUserPermissions(this.props.userId);
       })
@@ -171,7 +176,8 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
                         .datacenter_permissions
                     };
                     this.setState({
-                      permissions: updatedPermissions
+                      permissions: updatedPermissions,
+                      show_asset_options: false
                     });
                   }}
                 ></Checkbox>
@@ -403,7 +409,10 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
           });
         }
         this.setState({
-          loading: false
+          loading: false,
+          show_asset_options:
+            this.state.permissions.asset_management ||
+            this.state.permissions.datacenter_permissions.length > 0
         });
       })
       .catch(err => {
