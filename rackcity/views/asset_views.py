@@ -15,7 +15,6 @@ from rackcity.models import (
     ChangePlan,
 )
 from rackcity.models.asset import get_assets_for_cp
-from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from rackcity.api.serializers import (
     AssetSerializer,
@@ -62,7 +61,10 @@ from rackcity.utils.query_utils import (
     get_page_count_response,
     get_many_response,
 )
-from rackcity.utils.change_planner_utils import get_many_assets_response_for_cp
+from rackcity.utils.change_planner_utils import (
+    get_many_assets_response_for_cp,
+    get_page_count_response_for_cp,
+)
 from rackcity.views.rackcity_utils import (
     validate_asset_location,
     validate_location_modification,
@@ -1344,7 +1346,7 @@ def network_bulk_upload(request):
                 status=HTTPStatus.BAD_REQUEST
             )
         if not user_has_asset_permission(
-            request.user, 
+            request.user,
             source_asset.rack.datacenter
         ):
             return JsonResponse(
@@ -1529,11 +1531,21 @@ def asset_page_count(request):
     Return total number of pages according to page size, which must be
     specified as query parameter.
     """
-    return get_page_count_response(
-        Asset,
-        request.query_params,
-        data_for_filters=request.data,
-    )
+    change_plan = None
+    if request.query_params.get("change_plan"):
+        (change_plan, response) = get_change_plan(
+            request.query_params.get("change_plan")
+        )
+        if response:
+            return response
+    if change_plan:
+        return get_page_count_response_for_cp(request, change_plan)
+    else:
+        return get_page_count_response(
+            Asset,
+            request.query_params,
+            data_for_filters=request.data,
+        )
 
 
 @api_view(['GET'])
