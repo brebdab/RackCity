@@ -1,4 +1,8 @@
-from rackcity.views.rackcity_utils import validate_asset_location, LocationException
+from enum import Enum
+from rackcity.views.rackcity_utils import (
+    validate_asset_location,
+    LocationException,
+)
 from rackcity.utils.query_utils import (
     get_filtered_query,
     get_invalid_paginated_request_response,
@@ -12,11 +16,16 @@ from rackcity.api.serializers import (
     RecursiveAssetCPSerializer,
 )
 import math
-import json
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.http import JsonResponse
 from http import HTTPStatus
+
+
+class ModificationType(Enum):
+    MODIFY = 'Modify'
+    CREATE = 'Create'
+    DECOMMISSION = 'Decommission'
 
 
 @receiver(post_save, sender=Asset)
@@ -185,12 +194,8 @@ def get_changes_on_asset(asset, assetCP):
     changes = []
     for field in fields:
         if getattr(asset, field) != getattr(assetCP, field):
-            # TODO will need to serialize field if it's another model
-            changes.append({
-                "field": field,
-                "live": getattr(asset, field),
-                "change_plan": getattr(assetCP, field),
-            })
+            changes.append(field)
+    # TODO check if network & power connections have changed
     return changes
 
 
@@ -279,18 +284,23 @@ def get_modifications_in_cp(change_plan):
         related_asset = asset_cp.related_asset
         if related_asset:
             asset_data = RecursiveAssetSerializer(related_asset).data
+            changes = get_changes_on_asset(related_asset, asset_cp)
         else:
             asset_data = None
+            changes = None
         if asset_cp.is_decommissioned:
+            modification_type = ModificationType.DECOMMISSION
             title = "Decommission asset"
             if asset_cp.asset_number:
                 title += " " + str(asset_cp.asset_number)
             if asset_cp.rack:
                 title += get_location_detail(asset_cp)
         elif related_asset:
+            modification_type = ModificationType.MODIFY
             title = "Modify asset " + str(related_asset.asset_number) + \
                 get_location_detail(related_asset)
         else:
+            modification_type = ModificationType.CREATE
             title = "Create asset"
             if asset_cp.asset_number:
                 title += " " + str(asset_cp.asset_number)
@@ -299,9 +309,11 @@ def get_modifications_in_cp(change_plan):
             asset_data = None
         modifications.append({
             "title": title,
+            "type": modification_type.value,
             "asset": asset_data,
             "asset_cp": assetCP_data,
-            "conflicts": get_cp_modification_conflicts(asset_cp)
+            "conflicts": get_cp_modification_conflicts(asset_cp),
+            "changes": changes,
         })
     return modifications
     # TODO add logic for decommission modification

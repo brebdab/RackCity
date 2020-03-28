@@ -241,7 +241,7 @@ def change_plan_detail(request, id):
                     "You do not have access to this change plan.",
                 "errors":
                     "User " + request.user.username +
-                    "does not own change plan with id="+str(id)
+                    " does not own change plan with id="+str(id)
             },
             status=HTTPStatus.BAD_REQUEST,
         )
