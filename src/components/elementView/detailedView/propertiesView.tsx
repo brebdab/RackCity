@@ -3,11 +3,12 @@ import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
 import { RouteComponentProps, withRouter } from "react-router";
 import {
-  ElementObjectType,
-  isObject,
-  isAssetObject,
   AssetFieldsTable,
+  ElementObjectType,
+  getChangePlanRowStyle,
+  isAssetObject,
   isModelObject,
+  isObject,
   ModelFieldsTable,
   ROUTES
 } from "../../../utils/utils";
@@ -93,7 +94,7 @@ class PropertiesView extends React.PureComponent<
               <p className="label">{AssetFieldsTable[item]}:</p>
             </td>
 
-            <td>
+            <td style={getChangePlanRowStyle(data)}>
               {" "}
               <p>{data[item].row_letter + "" + data[item].rack_num}</p>
             </td>
@@ -105,7 +106,7 @@ class PropertiesView extends React.PureComponent<
               </p>
             </td>
 
-            <td>
+            <td style={getChangePlanRowStyle(data)}>
               {" "}
               <p>{data[item].datacenter.name}</p>
             </td>
@@ -125,7 +126,7 @@ class PropertiesView extends React.PureComponent<
               <p className="label">{AssetFieldsTable[item]}:</p>
             </td>
 
-            <td>{dat}</td>
+            <td style={getChangePlanRowStyle(this.props.data)}>{dat}</td>
           </tr>
         );
       }

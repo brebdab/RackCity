@@ -3,6 +3,7 @@ from rackcity.models import (
     Rack,
     Asset,
     PowerPort,
+    PowerPortCP
 )
 from rackcity.api.serializers import (
     serialize_power_connections,
@@ -26,8 +27,8 @@ import re
 import requests
 import time
 from requests.exceptions import ConnectionError
-
-
+from rackcity.models.asset import get_assets_for_cp
+from rackcity.views.rackcity_utils import get_change_plan
 pdu_url = 'http://hyposoft-mgt.colab.duke.edu:8005/'
 # Need to specify rack + side in request, e.g. for A1 left, use A01L
 get_pdu = 'pdu.php?pdu=hpdu-rtp1-'
@@ -324,7 +325,15 @@ def power_availability(request):
             },
             status=HTTPStatus.BAD_REQUEST
         )
-    assets = Asset.objects.filter(rack=rack.id)
+    change_plan = None
+    
+    if request.query_params.get("change_plan"):
+        (change_plan, response) = get_change_plan(request.query_params.get("change_plan"))
+        if response:
+            return response
+        assets, assets_cp = get_assets_for_cp(change_plan.id)
+    else:
+        assets = Asset.objects.filter(rack=rack.id)
     availableL = list(range(1, 25))
     availableR = list(range(1, 25))
     for asset in assets:
@@ -356,6 +365,37 @@ def power_availability(request):
                         {"failure_message": failure_message},
                         status=HTTPStatus.BAD_REQUEST
                     )
+    if change_plan:
+        for assetcp in assets_cp:
+            asset_power = serialize_power_connections(PowerPortCP, assetcp)
+            for port_num in asset_power.keys():
+                if asset_power[port_num]["left_right"] == "L":
+                    try:
+                        availableL.remove(asset_power[port_num]["port_number"])
+                    except ValueError:
+                        failure_message = \
+                            Status.ERROR.value + \
+                            "Port " + \
+                            asset_power[port_num]["port_number"] + \
+                            " does not exist on PDU"
+                        return JsonResponse(
+                            {"failure_message": failure_message},
+                            status=HTTPStatus.BAD_REQUEST
+                        )
+                else:
+                    try:
+                        availableR.remove(asset_power[port_num]["port_number"])
+                    except ValueError:
+                        failure_message = \
+                            Status.ERROR.value + \
+                            "Port " + \
+                            asset_power[port_num]["port_number"] + \
+                            " does not exist on PDU"
+                        return JsonResponse(
+                            {"failure_message": failure_message},
+                            status=HTTPStatus.BAD_REQUEST
+                        )
+
     for index in availableL:
         if index in availableR:
             suggest = index
