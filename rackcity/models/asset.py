@@ -17,7 +17,7 @@ def get_next_available_asset_number():
             return asset_number
 
 
-def get_assets_for_cp(change_plan=None):
+def get_assets_for_cp(change_plan, show_decommissioned=False):
     """
     If a change plan is specified, returns Asset query and AssetCP query,
     where any assets modified in the change plan are in the AssetCP query but
@@ -31,7 +31,8 @@ def get_assets_for_cp(change_plan=None):
     for assetCP in assetsCP:
         if (assetCP.related_asset) and (assetCP.related_asset) in assets:
             assets = assets.filter(~Q(id=assetCP.related_asset.id))
-    assetsCP = AssetCP.objects.filter(change_plan=change_plan, is_decommissioned=False)
+    if not show_decommissioned:
+        assetsCP = AssetCP.objects.filter(change_plan=change_plan, is_decommissioned=False)
     return (assets, assetsCP)
 
 

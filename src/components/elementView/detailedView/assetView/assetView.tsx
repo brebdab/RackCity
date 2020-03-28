@@ -229,6 +229,10 @@ export class AssetView extends React.PureComponent<
                 icon="edit"
                 text="Edit"
                 minimal
+                disabled={
+                  isAssetCPObject(this.state.asset) &&
+                  this.state.asset.is_decommissioned
+                }
                 onClick={() => this.handleFormOpen()}
               />
               <FormPopup
@@ -243,6 +247,10 @@ export class AssetView extends React.PureComponent<
               <AnchorButton
                 minimal
                 intent="danger"
+                disabled={
+                  isAssetCPObject(this.state.asset) &&
+                  this.state.asset.is_decommissioned
+                }
                 icon="remove"
                 text="Decommission"
                 onClick={this.handleDecommissionOpen}
@@ -265,6 +273,7 @@ export class AssetView extends React.PureComponent<
                 intent="danger"
                 icon="trash"
                 text="Delete"
+                disabled={isAssetCPObject(this.state.asset)}
                 onClick={this.handleDeleteOpen}
               />
               <Alert
@@ -286,6 +295,17 @@ export class AssetView extends React.PureComponent<
         ) : null}
         {this.state.asset.decommissioning_user ? (
           <DecommissionedPropertiesView data={this.state.asset} />
+        ) : null}
+        {isAssetCPObject(this.state.asset) &&
+        this.state.asset.is_decommissioned ? (
+          <Callout
+            className="propsview"
+            intent={Intent.WARNING}
+            title="This asset has been marked as decomissioned on this change plan. "
+          >
+            This asset will actually become decomissioned at the time of change
+            plan execution, but no more modifications can be made to this asset.
+          </Callout>
         ) : null}
         {isAssetCPObject(this.state.asset) &&
         this.detectConflict(this.state.asset) ? (
