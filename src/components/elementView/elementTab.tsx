@@ -67,6 +67,7 @@ interface ElementViewProps {
   onDatacenterSelect?(datacenter: DatacenterObject): void;
   updateDatacenters?(): void;
   isActive?: boolean;
+  changePlan: ChangePlan;
 }
 
 type ElementTabProps = ElementViewProps & RouteComponentProps;
@@ -138,14 +139,16 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     filters: Array<IFilter>,
     token: string
   ) => {
+    const params: any = { page_size };
+    if (this.props.changePlan) {
+      params["change_plan"] = this.props.changePlan.id;
+    }
     const config = {
       headers: {
         Authorization: "Token " + token
       },
 
-      params: {
-        page_size
-      }
+      params: params
     };
     const filtersCopy = filters.slice();
     let datacenterName;
@@ -180,13 +183,16 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     console.log(API_ROOT + "api/" + path + "/get-many");
     this.handleDataUpdate(false);
 
-    const params =
+    const params: any =
       page_type === PagingTypes.ALL
         ? {}
         : {
-            page_size: page_type,
-            page
-          };
+          page_size: page_type,
+          page
+        };
+    if (this.props.changePlan) {
+      params["change_plan"] = this.props.changePlan.id;
+    }
     const config = {
       headers: {
         Authorization: "Token " + token
@@ -247,13 +253,25 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     headers: any
   ): Promise<any> => {
     console.log("api/assets/add");
-    return axios.post(API_ROOT + "api/assets/add", asset, headers).then(res => {
+    let config;
+    if (!this.props.changePlan) {
+      config = headers;
+    } else {
+      config = {
+        headers: headers["headers"],
+        params: {
+          change_plan: this.props.changePlan.id
+        }
+      };
+    }
+
+    return axios.post(API_ROOT + "api/assets/add", asset, config).then(res => {
       this.handleDataUpdate(true);
       this.handleClose();
       if (res.data.warning_message) {
         this.addWarnToast("Created asset. " + res.data.warning_message);
       } else {
-        this.addSuccessToast("Successfuly created asset");
+        this.addSuccessToast(res.data.success_message);
       }
 
       console.log(this.state.isOpen);
@@ -265,6 +283,11 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       intent: Intent.WARNING
     });
   };
+  componentWillReceiveProps(nextProps: ElementTabProps & RouteComponentProps) {
+    if (nextProps.changePlan !== this.props.changePlan) {
+      this.handleDataUpdate(true);
+    }
+  }
 
   private createDatacenter = (
     dc: DatacenterObject,
@@ -360,7 +383,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                     rightIcon="caret-down"
                     text={
                       this.props.currDatacenter &&
-                      this.props.currDatacenter.name
+                        this.props.currDatacenter.name
                         ? this.props.currDatacenter.name
                         : "All datacenters"
                     }
@@ -372,40 +395,42 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
         </div>
         <div className="element-tab-buttons">
           {this.props.element !== ElementType.USER &&
-          this.props.element !== ElementType.DATACENTER &&
-          this.props.element !== ElementType.CHANGEPLANS ? (
-            <AnchorButton
-              className="add"
-              text="Export Table Data"
-              icon="import"
-              minimal
-              onClick={() => {
-                /* handle data based on state */
-                this.setState({ fileNameIsOpen: true });
-                console.log(this.state.filters);
-              }}
-            />
-          ) : (
-            <p></p>
-          )}
+            this.props.element !== ElementType.DATACENTER &&
+            this.props.element !== ElementType.CHANGEPLANS ? (
+              <AnchorButton
+                className="add"
+                text="Export Table Data"
+                disabled={this.props.changePlan ? true : false}
+                icon="import"
+                minimal
+                onClick={() => {
+                  /* handle data based on state */
+                  this.setState({ fileNameIsOpen: true });
+                  console.log(this.state.filters);
+                }}
+              />
+            ) : (
+              <p></p>
+            )}
           {this.props.isAdmin &&
-          (this.props.element === ElementType.ASSET ||
-            this.props.element === ElementType.MODEL) ? (
-            <AnchorButton
-              onClick={() => {
-                this.props.history.push(
-                  "/dashboard/bulk-upload/" +
+            (this.props.element === ElementType.ASSET ||
+              this.props.element === ElementType.MODEL) ? (
+              <AnchorButton
+                disabled={this.props.changePlan ? true : false}
+                onClick={() => {
+                  this.props.history.push(
+                    "/dashboard/bulk-upload/" +
                     (this.props.element === ElementType.MODEL
                       ? "models"
                       : "assets")
-                );
-              }}
-              className="add"
-              icon="export"
-              text="Add from CSV file"
-              minimal
-            />
-          ) : null}
+                  );
+                }}
+                className="add"
+                icon="export"
+                text="Add from CSV file"
+                minimal
+              />
+            ) : null}
           <Alert
             cancelButtonText="Cancel"
             className={Classes.DARK}
@@ -503,6 +528,12 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               text={"Add " + this.props.element.slice(0, -1)}
               icon="add"
               minimal
+              disabled={
+                this.props.element !== ElementType.ASSET &&
+                  this.props.changePlan
+                  ? true
+                  : false
+              }
               intent={Intent.PRIMARY}
               onClick={this.handleOpen}
             />
@@ -513,7 +544,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               text="Print Barcodes for Selected Assets"
               icon="barcode"
               minimal
-              onClick={() => {}}
+              onClick={() => { }}
             />
           ) : null}
           <FormPopup
@@ -524,12 +555,12 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               this.props.element === ElementType.MODEL
                 ? this.createModel
                 : this.props.element === ElementType.ASSET
-                ? this.createAsset
-                : this.props.element === ElementType.DATACENTER
-                ? this.createDatacenter
-                : this.props.element === ElementType.CHANGEPLANS
-                ? this.createChangePlan
-                : this.createUser
+                  ? this.createAsset
+                  : this.props.element === ElementType.DATACENTER
+                    ? this.createDatacenter
+                    : this.props.element === ElementType.CHANGEPLANS
+                      ? this.createChangePlan
+                      : this.createUser
             }
             isOpen={this.state.isOpen}
             handleClose={this.handleClose}
@@ -559,7 +590,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
 const mapStateToProps = (state: any) => {
   return {
     token: state.token,
-    isAdmin: state.admin
+    isAdmin: state.admin,
+    changePlan: state.changePlan
   };
 };
 export default connect(mapStateToProps)(ElementTab);

@@ -33,6 +33,7 @@ from .asset_views import (
 )
 from .decommission_views import (
     decommission_asset,
+    decommissioned_asset_many,
 )
 from .rack_views import (
     rack_get,
