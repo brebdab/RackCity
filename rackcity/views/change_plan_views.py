@@ -20,6 +20,7 @@ from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import JSONParser
 from django.core.exceptions import ObjectDoesNotExist
+from rackcity.views.rackcity_utils import get_change_plan
 
 
 
@@ -42,7 +43,7 @@ def change_plan_remove_asset(request, id):
             },
             status=HTTPStatus.BAD_REQUEST
         )
-    asset_cp=data['asset_cp']
+    asset_cp = data['asset_cp']
     
     try:
         AssetCP.objects.get(id=asset_cp).delete()
@@ -56,6 +57,15 @@ def change_plan_remove_asset(request, id):
             },
             status=HTTPStatus.BAD_REQUEST
         )
+    return JsonResponse(
+        {
+            "success_message":
+                Status.SUCCESS.value +
+                "Asset successfuly removed from change plan"
+        },
+        status=HTTPStatus.OK
+    )
+
 
 
 @api_view(['POST'])
