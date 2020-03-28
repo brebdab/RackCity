@@ -9,6 +9,9 @@ class GetDecommissionedAssetSerializer(serializers.ModelSerializer):
 
     id = serializers.IntegerField(source='live_id')
     decommissioned_id = serializers.IntegerField(source='id')
+    time_decommissioned = serializers.DateTimeField(
+        format='%m/%d/%Y %I:%M:%S %p'
+    )
 
     class Meta:
         model = DecommissionedAsset
