@@ -16,6 +16,9 @@ class CPDetailView extends React.Component<
   getData = () => {
     //TODO call backend endpoint
   };
+  getConflictWarning = () => {
+    return <div></div>;
+  };
   public render() {
     return (
       <div className={Classes.DARK + " asset-view"}>
