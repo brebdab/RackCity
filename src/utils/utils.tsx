@@ -54,6 +54,7 @@ export interface AssetCPObject extends AssetObject {
   change_plan: ChangePlan;
   is_conflict: boolean;
   related_asset: AssetObject;
+  is_decommissioned: boolean;
 }
 interface ParentAssetObject extends ElementObject {
   asset_number: string;
@@ -94,12 +95,12 @@ export const AssetFieldsTable: any = {
   owner: "Owner",
   comment: "Comment",
   decommissioning_user: "Decommissioning User",
-  time_decommissioned: "Time Decommissioned",
+  time_decommissioned: "Time Decommissioned"
 };
 
 export const DecommissionedFieldsTable: any = {
   decommissioning_user: "User",
-  time_decommissioned: "Time",
+  time_decommissioned: "Time"
 };
 
 export const ModelFieldsTable: any = {

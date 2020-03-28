@@ -426,7 +426,11 @@ export class AssetView extends React.PureComponent<
   private handleDecommissionOpen = () =>
     this.setState({ isDecommissionOpen: true });
   private handleDecommission = () => {
-    decommissionAsset(this.state.asset!, getHeaders(this.props.token))
+    decommissionAsset(
+      this.state.asset!,
+      getHeaders(this.props.token),
+      this.props.changePlan
+    )
       .then(res => {
         this.setState({ isDecommissionOpen: false });
         this.addSuccessToast("Successfuly Decommissioned Asset");
