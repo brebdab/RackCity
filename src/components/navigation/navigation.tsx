@@ -128,6 +128,7 @@ export class Navigation extends React.Component<
                     content={
                       <Menu>
                         <MenuItem
+                          disabled={this.props.changePlan ? true : false}
                           text="View Report"
                           icon="numbered-list"
                           onClick={() => this.props.history.push(ROUTES.REPORT)}
