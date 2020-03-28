@@ -20,7 +20,8 @@ import {
   ElementType,
   getHeaders,
   ModelObject,
-  ROUTES
+  ROUTES,
+  ChangePlan
 } from "../../../../utils/utils";
 import ElementTable from "../../elementTable";
 import { deleteModel, modifyModel } from "../../elementUtils";
@@ -30,10 +31,11 @@ export interface ModelViewProps {
   token: string;
   rid: any;
   isAdmin: boolean;
+  changePlan: ChangePlan;
 }
 
-var console: any = {};
-console.log = function() {};
+// var console: any = {};
+// console.log = function() {};
 interface ModelViewState {
   assets: Array<AssetObject>;
   model: ModelObject;
@@ -41,15 +43,25 @@ interface ModelViewState {
   isDeleteOpen: boolean;
 }
 
-async function getData(modelkey: string, token: string) {
+async function getData(
+  modelkey: string,
+  token: string,
+  changePlan: ChangePlan
+) {
   console.log(API_ROOT + "api/models/" + modelkey);
-  const headers = {
+  const params: any = {};
+  if (changePlan) {
+    params["change_plan"] = changePlan.id;
+  }
+  const config = {
     headers: {
       Authorization: "Token " + token
-    }
+    },
+    params
   };
+  console.log(config);
   return await axios
-    .get(API_ROOT + "api/models/" + modelkey, headers)
+    .get(API_ROOT + "api/models/" + modelkey, config)
     .then(res => {
       const data = res.data;
       return data;
@@ -72,13 +84,15 @@ export class ModelView extends React.PureComponent<
       console.log("success");
       let params: any;
       params = this.props.match.params;
-      getData(params.rid, this.props.token).then(result => {
-        console.log("result", result);
-        this.setState({
-          model: result.model,
-          assets: result.assets
-        });
-      });
+      getData(params.rid, this.props.token, this.props.changePlan).then(
+        result => {
+          console.log("result", result);
+          this.setState({
+            model: result.model,
+            assets: result.assets
+          });
+        }
+      );
       this.handleFormClose();
       console.log(this.state.isFormOpen);
     });
@@ -126,18 +140,37 @@ export class ModelView extends React.PureComponent<
       });
   };
 
+  componentWillReceiveProps(nextProps: ModelViewProps & RouteComponentProps) {
+    console.log("new change plan", nextProps.changePlan);
+    if (nextProps.changePlan !== this.props.changePlan) {
+      let params: any;
+      params = this.props.match.params;
+      console.log("new change plan", nextProps.changePlan);
+      getData(params.rid, this.props.token, nextProps.changePlan).then(
+        result => {
+          console.log("result", result);
+          this.setState({
+            model: result.model,
+            assets: result.assets
+          });
+        }
+      );
+    }
+  }
   public render() {
     console.log(this.state.assets);
     let params: any;
     params = this.props.match.params;
     if (Object.keys(this.state.model).length === 0) {
-      getData(params.rid, this.props.token).then(result => {
-        console.log("result", result);
-        this.setState({
-          model: result.model,
-          assets: result.assets
-        });
-      });
+      getData(params.rid, this.props.token, this.props.changePlan).then(
+        result => {
+          console.log("result", result);
+          this.setState({
+            model: result.model,
+            assets: result.assets
+          });
+        }
+      );
     }
 
     return (
@@ -208,7 +241,8 @@ export class ModelView extends React.PureComponent<
 const mapStatetoProps = (state: any) => {
   return {
     token: state.token,
-    isAdmin: state.admin
+    isAdmin: state.admin,
+    changePlan: state.changePlan
   };
 };
 

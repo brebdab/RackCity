@@ -67,6 +67,7 @@ interface ElementViewProps {
   onDatacenterSelect?(datacenter: DatacenterObject): void;
   updateDatacenters?(): void;
   isActive?: boolean;
+  changePlan: ChangePlan;
 }
 
 type ElementTabProps = ElementViewProps & RouteComponentProps;
@@ -180,13 +181,16 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     console.log(API_ROOT + "api/" + path + "/get-many");
     this.handleDataUpdate(false);
 
-    const params =
+    const params: any =
       page_type === PagingTypes.ALL
         ? {}
         : {
             page_size: page_type,
             page
           };
+    if (this.props.changePlan) {
+      params["change_plan"] = this.props.changePlan.id;
+    }
     const config = {
       headers: {
         Authorization: "Token " + token
@@ -247,13 +251,25 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     headers: any
   ): Promise<any> => {
     console.log("api/assets/add");
-    return axios.post(API_ROOT + "api/assets/add", asset, headers).then(res => {
+    let config;
+    if (!this.props.changePlan) {
+      config = headers;
+    } else {
+      config = {
+        headers: headers["headers"],
+        params: {
+          change_plan: this.props.changePlan.id
+        }
+      };
+    }
+
+    return axios.post(API_ROOT + "api/assets/add", asset, config).then(res => {
       this.handleDataUpdate(true);
       this.handleClose();
       if (res.data.warning_message) {
         this.addWarnToast("Created asset. " + res.data.warning_message);
       } else {
-        this.addSuccessToast("Successfuly created asset");
+        this.addSuccessToast(res.data.success_message);
       }
 
       console.log(this.state.isOpen);
@@ -377,6 +393,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             <AnchorButton
               className="add"
               text="Export Table Data"
+              disabled={this.props.changePlan ? true : false}
               icon="import"
               minimal
               onClick={() => {
@@ -392,6 +409,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
           (this.props.element === ElementType.ASSET ||
             this.props.element === ElementType.MODEL) ? (
             <AnchorButton
+              disabled={this.props.changePlan ? true : false}
               onClick={() => {
                 this.props.history.push(
                   "/dashboard/bulk-upload/" +
@@ -503,6 +521,12 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               text={"Add " + this.props.element.slice(0, -1)}
               icon="add"
               minimal
+              disabled={
+                this.props.element !== ElementType.ASSET &&
+                this.props.changePlan
+                  ? true
+                  : false
+              }
               intent={Intent.PRIMARY}
               onClick={this.handleOpen}
             />
@@ -559,7 +583,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
 const mapStateToProps = (state: any) => {
   return {
     token: state.token,
-    isAdmin: state.admin
+    isAdmin: state.admin,
+    changePlan: state.changePlan
   };
 };
 export default connect(mapStateToProps)(ElementTab);

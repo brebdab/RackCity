@@ -4,9 +4,10 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from .it_model import ITModel
+from .decommissioned_asset import DecommissionedAsset
 from .rack import Rack
 from .change_plan import ChangePlan
-
+from django.db.models import Q
 
 def get_next_available_asset_number():
     for asset_number in range(100000, 999999):
@@ -16,11 +17,64 @@ def get_next_available_asset_number():
             return asset_number
 
 
+def get_assets_for_cp(change_plan=None):
+    """
+    If a change plan is specified, returns Asset query and AssetCP query,
+    where any assets modified in the change plan are in the AssetCP query but
+    removed from the Asset query. If no change plan is specified, returns
+    Asset query of all assets on master.
+    """
+    assets = Asset.objects.all()
+    if change_plan is None:
+        return (assets, None)
+    assetsCP = AssetCP.objects.filter(change_plan=change_plan)
+    for assetCP in assetsCP:
+        if (assetCP.related_asset) and (assetCP.related_asset) in assets:
+            assets = assets.filter(~Q(id=assetCP.related_asset.id))
+    # TODO remove any Asset or AssetCP that has been decommissioned in this CP
+    return (assets, assetsCP)
+
+
 def validate_hostname(value):
     hostname_pattern = re.compile("[A-Za-z]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?")
     if value and hostname_pattern.fullmatch(value) is None:
         raise ValidationError("'" + value + "' is not a valid hostname as " +
                               "it is not compliant with RFC 1034.")
+
+
+def validate_hostname_uniqueness(value, asset_id, change_plan, related_asset):
+    assets, assets_cp = get_assets_for_cp(change_plan.id)
+    matching_assets = assets_cp.filter(hostname=value)
+    if len(matching_assets) > 0 and matching_assets[0].id != asset_id:
+        raise ValidationError("'" + value + "'is not a unique hostname. \
+            An existing asset on this change plan exists with this hostname.")
+    related_asset_id = None
+    if related_asset:
+        related_asset_id = related_asset.id
+
+    matching_assets = assets.filter(hostname=value)
+    if len(matching_assets) > 0 and not(related_asset and matching_assets[0].id == related_asset_id):
+        raise ValidationError("'" + value + "'is not a unique hostname. \
+            An existing asset exists with this hostname.")
+
+
+def validate_asset_number_uniqueness(value, asset_id, change_plan, related_asset):
+    assets, assets_cp = get_assets_for_cp(change_plan.id)
+    matching_assets = assets_cp.filter(asset_number=value)
+    if value is None:
+        return
+    if len(matching_assets) > 0 and matching_assets[0].id != asset_id: 
+        raise ValidationError("'" + str(value) + "'is not a unique asset number. \
+            An existing asset on this change plan exists with this asset number.")
+    related_asset_id = None
+    if related_asset:
+        related_asset_id = related_asset.id
+    matching_assets = assets.filter(asset_number=value)
+
+    if (len(matching_assets) > 0) and (not (related_asset and matching_assets[0].id == related_asset_id)):
+        raise ValidationError("'" + str(value) + "'is not a unique asset number. \
+            An existing asset on exists with this asset number.")
+
 
 
 def validate_owner(value):
@@ -38,13 +92,6 @@ class AssetID(models.Model):
 
 
 class AbstractAsset(AssetID):
-    hostname = models.CharField(
-        max_length=150,
-        unique=True,
-        validators=[validate_hostname],
-        null=True,
-        blank=True,
-    )
     rack_position = models.PositiveIntegerField()
 
     owner = models.CharField(
@@ -60,6 +107,13 @@ class AbstractAsset(AssetID):
 
 
 class Asset(AbstractAsset):
+    hostname = models.CharField(
+        max_length=150,
+        unique=True,
+        validators=[validate_hostname],
+        null=True,
+        blank=True,
+    )
     asset_number = models.IntegerField(
         unique=True,
         validators=[
@@ -131,7 +185,18 @@ class AssetCP(AbstractAsset):
         null=True,
         blank=True,
     )
-    # TODO: related_decomissioned_asset
+    hostname = models.CharField(
+        max_length=150,
+        null=True,
+        blank=True,
+        validators=[validate_hostname],
+    )
+    related_decommissioned_asset = models.ForeignKey(
+        DecommissionedAsset,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
     is_conflict = models.BooleanField(
         default=False,
         blank=True,
@@ -140,8 +205,11 @@ class AssetCP(AbstractAsset):
         ChangePlan,
         on_delete=models.CASCADE,
     )
+    is_decommissioned = models.BooleanField(
+        default=False,
+        blank=True
+    )
     asset_number = models.IntegerField(
-        unique=True,
         validators=[
             MinValueValidator(100000),
             MaxValueValidator(999999)
@@ -166,7 +234,13 @@ class AssetCP(AbstractAsset):
 
     class Meta:
         ordering = ['asset_number']
-        verbose_name = 'asset change planner'
+        verbose_name = 'Asset on Change Plan'
+        constraints = [
+            models.UniqueConstraint(
+                fields=["hostname", "change_plan"],
+                name="unique hostnames in a change plan",
+            ),
+        ]
 
     def add_network_ports(self):
         from rackcity.models import NetworkPortCP
@@ -177,9 +251,10 @@ class AssetCP(AbstractAsset):
             and model.network_ports  # only if the model has ports
         ):
             for network_port_name in model.network_ports:
-                network_port = NetworkPort(
+                network_port = NetworkPortCP(
                     asset=self,
                     port_name=network_port_name,
+                    change_plan=self.change_plan
                 )
                 network_port.save()
 
@@ -190,16 +265,20 @@ class AssetCP(AbstractAsset):
             if model.num_power_ports:
                 for port_index in range(model.num_power_ports):
                     port_name = str(port_index+1)
-                    power_port = PowerPort(
+                    power_port = PowerPortCP(
                         asset=self,
                         port_name=port_name,
+                        change_plan=self.change_plan
                     )
                     power_port.save()
 
     def save(self, *args, **kwargs):
         try:
             validate_hostname(self.hostname)
+            validate_hostname_uniqueness(self.hostname, self.id, self.change_plan, self.related_asset)
+            validate_asset_number_uniqueness(self.asset_number, self.id, self.change_plan, self.related_asset)
             validate_owner(self.owner)
+            self.is_conflict = False
         except ValidationError as valid_error:
             raise valid_error
         else:
