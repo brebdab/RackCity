@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.http import JsonResponse
 from rackcity.api.serializers import (
     AddChangePlanSerializer,
@@ -7,6 +8,7 @@ from rackcity.models import (
     ChangePlan,
     Asset,
     AssetCP,
+    DecommissionedAsset,
     NetworkPort,
     NetworkPortCP,
     PowerPort,
@@ -228,12 +230,12 @@ def change_plan_execute(request):
     Execute all changes associated with a change plan.
     """
     data = JSONParser().parse(request)
-    if 'id' in data:
+    if 'id' not in data:
         return JsonResponse(
             {
                 "failure_message":
-                    Status.ERROR.value + GenericFailure.INTERNAL.value,
-                "errors": "Don't include 'id' when creating a change planner"
+                    Status.DELETE_ERROR.value + GenericFailure.INTERNAL.value,
+                "errors": "Must include 'id' when deleting a Change Plan"
             },
             status=HTTPStatus.BAD_REQUEST
         )
@@ -284,7 +286,26 @@ def change_plan_execute(request):
                 },
                 status=HTTPStatus.BAD_REQUEST,
             )
+    num_created = 0
+    num_modified = 0
+    num_decommissioned = 0
     for asset_cp in assets_cp:
+        # Update asset
+        if asset_cp.related_asset:
+            asset_to_update = asset_cp.related_asset
+            num_modified += 1
+        else:
+            asset_to_update = Asset()
+            num_created += 1
+        for field in Asset._meta.fields:
+            if field != 'id':
+                setattr(
+                    asset_to_update,
+                    field.name,
+                    getattr(asset_cp, field.name)
+                )
+        asset_to_update.save()
+
         # Update network ports
         network_ports_cp = NetworkPortCP.objects.filter(
             change_plan=change_plan,
@@ -297,12 +318,23 @@ def change_plan_execute(request):
             asset=asset_cp,
         )
 
-        # Update asset
-        if asset_cp.related_asset:
-            related_asset = asset_cp.related_asset
+        # Decommission asset
+        if asset_cp.is_decommissioned:
+            decommissioned_asset = DecommissionedAsset()
             # update fields
-            related_asset.save()
-        else:
-            new_asset = Asset()
-            # update fields
-            new_asset.save()
+            decommissioned_asset.save()
+            num_decommissioned += 1
+
+    # Mark change plan as executed
+    change_plan.execution_time = datetime.now()
+    change_plan.save()
+
+    return JsonResponse(
+        {"success_message":
+            "Change Plan '" + change_plan.name + "' executed: " +
+            str(num_created) + " assets created, " +
+            str(num_modified) + " assets modified, " +
+            str(num_decommissioned) + " assets decommissioned."
+         },
+        status=HTTPStatus.OK,
+    )
