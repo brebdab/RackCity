@@ -184,6 +184,7 @@ class AssetCP(AbstractAsset):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
+        related_name="related asset"
     )
     hostname = models.CharField(
         max_length=150,
@@ -200,6 +201,13 @@ class AssetCP(AbstractAsset):
     is_conflict = models.BooleanField(
         default=False,
         blank=True,
+    )
+    conflict_with_asset = models.ForeignKey(
+        Asset,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="assets with conflict"
     )
     change_plan = models.ForeignKey(
         ChangePlan,
@@ -278,7 +286,6 @@ class AssetCP(AbstractAsset):
             validate_hostname_uniqueness(self.hostname, self.id, self.change_plan, self.related_asset)
             validate_asset_number_uniqueness(self.asset_number, self.id, self.change_plan, self.related_asset)
             validate_owner(self.owner)
-            self.is_conflict = False
         except ValidationError as valid_error:
             raise valid_error
         else:

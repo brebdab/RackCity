@@ -21,6 +21,10 @@ def create_asset_cp(sender, **kwargs):
     for related_asset in related_assets_cp:
         related_asset.is_conflict = True
         related_asset.save()
+    # assets_hostname = AssetCP.objects.filter(hostname=instance.hostname)
+    # for asset in assets_hostname:
+    #     asset.is_conflict=True
+    #     asset.asset_wi
 
     ## asset rack location conflicts with an assetCP
 
