@@ -3,7 +3,15 @@ from rackcity.api.serializers import (
     AddChangePlanSerializer,
     GetChangePlanSerializer,
 )
-from rackcity.models import ChangePlan
+from rackcity.models import (
+    ChangePlan,
+    Asset,
+    AssetCP,
+    NetworkPort,
+    NetworkPortCP,
+    PowerPort,
+    PowerPortCP,
+)
 from rackcity.utils.query_utils import (
     get_page_count_response,
     get_many_response,
@@ -45,7 +53,7 @@ def change_plan_delete(request):
             {
                 "failure_message":
                     Status.MODIFY_ERROR.value +
-                    "Model" + GenericFailure.DOES_NOT_EXIST.value,
+                    "Change plan" + GenericFailure.DOES_NOT_EXIST.value,
                 "errors": "No existing Change Plan with id="+str(id)
             },
             status=HTTPStatus.BAD_REQUEST
@@ -98,7 +106,7 @@ def change_plan_modify(request):
             {
                 "failure_message":
                     Status.MODIFY_ERROR.value +
-                    "Model" + GenericFailure.DOES_NOT_EXIST.value,
+                    "Change plan" + GenericFailure.DOES_NOT_EXIST.value,
                 "errors": "No existing change plan with id="+str(id)
             },
             status=HTTPStatus.BAD_REQUEST
@@ -211,3 +219,90 @@ def change_plan_many(request):
         request,
         premade_object_query=user_change_plans,
     )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def change_plan_execute(request):
+    """
+    Execute all changes associated with a change plan.
+    """
+    data = JSONParser().parse(request)
+    if 'id' in data:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.ERROR.value + GenericFailure.INTERNAL.value,
+                "errors": "Don't include 'id' when creating a change planner"
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    id = data['id']
+    try:
+        change_plan = ChangePlan.objects.get(id=id)
+    except ObjectDoesNotExist:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.ERROR.value +
+                    "Change plan" + GenericFailure.DOES_NOT_EXIST.value,
+                "errors": "No existing change plan with id="+str(id)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    if request.user != change_plan.owner:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.ERROR.value +
+                    "You do not have access to execute this change plan.",
+                "errors":
+                    "User " + request.user.username +
+                    "does not own change plan with id="+str(id)
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    assets_cp = AssetCP.objects.filter(change_plan=change_plan)
+    for asset_cp in assets_cp:
+        if (
+            asset_cp.is_conflict
+            or asset_cp.asset_conflict_hostname
+            or asset_cp.asset_conflict_asset_number
+            or asset_cp.asset_conflict_location
+            or asset_cp.related_decommissioned_asset
+            or asset_cp.model is None
+            or asset_cp.rack is None
+        ):
+            return JsonResponse(
+                {
+                    "failure_message":
+                        Status.ERROR.value +
+                        "All conflicts must be resolved before a change " +
+                        "plan can be executed.",
+                    "errors":
+                        "Conflict found on AssetCP with id=" + str(asset_cp.id)
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
+    for asset_cp in assets_cp:
+        # Update network ports
+        network_ports_cp = NetworkPortCP.objects.filter(
+            change_plan=change_plan,
+            asset=asset_cp,
+        )
+
+        # Update power ports
+        power_ports_cp = PowerPortCP.objects.filter(
+            change_plan=change_plan,
+            asset=asset_cp,
+        )
+
+        # Update asset
+        if asset_cp.related_asset:
+            related_asset = asset_cp.related_asset
+            # update fields
+            related_asset.save()
+        else:
+            new_asset = Asset()
+            # update fields
+            new_asset.save()
