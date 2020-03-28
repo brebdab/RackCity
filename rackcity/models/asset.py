@@ -17,12 +17,12 @@ def get_next_available_asset_number():
             return asset_number
 
 
-def get_assets_for_cp(change_plan=None):
+def get_assets_for_cp(change_plan, show_decommissioned=False):
     """
     If a change plan is specified, returns Asset query and AssetCP query,
     where any assets modified in the change plan are in the AssetCP query but
     removed from the Asset query. If no change plan is specified, returns
-    Asset query of all assets on master.
+    Asset query of all assets on master. Does not return decomissioned AssetCPs
     """
     assets = Asset.objects.all()
     if change_plan is None:
@@ -31,7 +31,8 @@ def get_assets_for_cp(change_plan=None):
     for assetCP in assetsCP:
         if (assetCP.related_asset) and (assetCP.related_asset) in assets:
             assets = assets.filter(~Q(id=assetCP.related_asset.id))
-    # TODO remove any Asset or AssetCP that has been decommissioned in this CP
+    if not show_decommissioned:
+        assetsCP = AssetCP.objects.filter(change_plan=change_plan, is_decommissioned=False)
     return (assets, assetsCP)
 
 
@@ -44,8 +45,9 @@ def validate_hostname(value):
 
 def validate_hostname_uniqueness(value, asset_id, change_plan, related_asset):
     assets, assets_cp = get_assets_for_cp(change_plan.id)
-    matching_assets = assets_cp.filter(hostname=value)
-    if len(matching_assets) > 0 and matching_assets[0].id != asset_id:
+    matching_assets = assets_cp.filter(hostname=value, change_plan=change_plan)
+    if len(matching_assets) > 0 and matching_assets[0].id != asset_id and not matching_assets[0].is_decommissioned:
+        print(matching_assets.values())
         raise ValidationError("'" + value + "'is not a unique hostname. \
             An existing asset on this change plan exists with this hostname.")
     related_asset_id = None
@@ -60,10 +62,11 @@ def validate_hostname_uniqueness(value, asset_id, change_plan, related_asset):
 
 def validate_asset_number_uniqueness(value, asset_id, change_plan, related_asset):
     assets, assets_cp = get_assets_for_cp(change_plan.id)
-    matching_assets = assets_cp.filter(asset_number=value)
+    matching_assets = assets_cp.filter(asset_number=value,change_plan=change_plan)
     if value is None:
         return
-    if len(matching_assets) > 0 and matching_assets[0].id != asset_id: 
+    if len(matching_assets) > 0 and matching_assets[0].id != asset_id and not matching_assets[0].is_decommissioned:
+        print(matching_assets.values())
         raise ValidationError("'" + str(value) + "'is not a unique asset number. \
             An existing asset on this change plan exists with this asset number.")
     related_asset_id = None
@@ -255,12 +258,6 @@ class AssetCP(AbstractAsset):
     class Meta:
         ordering = ['asset_number']
         verbose_name = 'Asset on Change Plan'
-        constraints = [
-            models.UniqueConstraint(
-                fields=["hostname", "change_plan"],
-                name="unique hostnames in a change plan",
-            ),
-        ]
 
     def add_network_ports(self):
         from rackcity.models import NetworkPortCP
@@ -294,10 +291,11 @@ class AssetCP(AbstractAsset):
 
     def save(self, *args, **kwargs):
         try:
-            validate_hostname(self.hostname)
-            validate_hostname_uniqueness(self.hostname, self.id, self.change_plan, self.related_asset)
-            validate_asset_number_uniqueness(self.asset_number, self.id, self.change_plan, self.related_asset)
-            validate_owner(self.owner)
+            if not self.is_decommissioned:
+                validate_hostname(self.hostname)
+                validate_hostname_uniqueness(self.hostname, self.id, self.change_plan, self.related_asset)
+                validate_asset_number_uniqueness(self.asset_number, self.id, self.change_plan, self.related_asset)
+                validate_owner(self.owner)
         except ValidationError as valid_error:
             raise valid_error
         else:

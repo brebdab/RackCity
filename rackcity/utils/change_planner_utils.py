@@ -1,4 +1,4 @@
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save,pre_delete
 from django.dispatch import receiver
 from django.http import JsonResponse
 from http import HTTPStatus
@@ -16,13 +16,16 @@ from rackcity.utils.query_utils import (
     should_paginate_query,
 )
 from rackcity.views.rackcity_utils import validate_asset_location, LocationException
+from django.db.models import Q
+@receiver(pre_delete, sender=Asset)
+def mark_delete_conflicts_cp(sender, **kwargs):
+    """
+    Mark conflict for related assets on change plan
+    """
+    deleted_asset = kwargs.get("instance")
+    AssetCP.objects.filter(related_asset=deleted_asset).update(is_conflict=True)
 
-# @receiver(pre_delete, sender=Asset)
-# def mark_delete_conflicts_cp(sender, **kwargs):
-#     """
-#     """
-#     deleted_asset = kwargs.get("instance")
-#     related_assets_cp = AssetCP.objects.filter(related_asset=)
+
 
 @receiver(post_save, sender=Asset)
 def detect_conflicts_cp(sender, **kwargs):

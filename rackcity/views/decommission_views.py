@@ -1,6 +1,6 @@
 from django.http import JsonResponse
 from rest_framework.parsers import JSONParser
-from rackcity.models import Asset, DecommissionedAsset
+from rackcity.models import Asset, DecommissionedAsset, AssetCP
 from rackcity.permissions.permissions import user_has_asset_permission
 from rackcity.api.serializers import (
     RecursiveAssetSerializer,
@@ -22,6 +22,7 @@ from rackcity.utils.query_utils import (
     get_sort_arguments,
     get_filter_arguments,
 )
+from rackcity.views.rackcity_utils import get_change_plan
 
 
 @api_view(['POST'])
@@ -31,6 +32,12 @@ def decommission_asset(request):
     Decommission a live asset
     """
     data = JSONParser().parse(request)
+    change_plan = None
+
+    if request.query_params.get("change_plan"):
+        (change_plan, response) = get_change_plan(request.query_params.get("change_plan"))
+        if response:
+            return response
     if 'id' not in data:
         return JsonResponse(
             {
@@ -41,7 +48,60 @@ def decommission_asset(request):
             status=HTTPStatus.BAD_REQUEST
         )
     id = data['id']
+    if change_plan:
+        if not AssetCP.objects.filter(id=id).exists() and Asset.objects.filter(id=id).exists:
+            print("new")
+            existing_asset = Asset.objects.get(id=id)
+            decommissioned_asset_cp = AssetCP(
+                change_plan=change_plan,
+                related_asset=existing_asset,
+                is_decommissioned=True) 
+            for field in existing_asset._meta.fields:
+                if not (field.name == "id" or field.name == "assetid_ptr"):
+                    setattr(decommissioned_asset_cp, field.name, getattr(
+                        existing_asset, field.name))
+        else:
+            try:
+                print("exists")
+                decommissioned_asset_cp = AssetCP.objects.get(id=id)
+                decommissioned_asset_cp.is_decommissioned=True
+
+            except Asset.DoesNotExist:
+                return JsonResponse(
+                    {
+                        "failure_message":
+                            Status.ERROR.value +
+                            "Asset" + GenericFailure.DOES_NOT_EXIST.value,
+                        "errors": "No existing asse in change plan with id="+str(id)
+                    },
+                    status=HTTPStatus.BAD_REQUEST
+                )
+
+        try:
+            decommissioned_asset_cp.save()
+        except Exception as error:
+            return JsonResponse(
+                {
+                    "failure_message":
+                        Status.DECOMMISSION_ERROR.value +
+                        parse_save_validation_error(
+                            error,
+                            "Decommissioned Asset "
+                        ),
+                    "errors": str(error)
+                },
+                status=HTTPStatus.BAD_REQUEST
+            )
+        
+        return JsonResponse(
+            {
+                "success_message": "Asset successfully decommissioned on change plan: " + change_plan.name
+            },
+            status=HTTPStatus.OK
+        )
+
     try:
+
         asset = Asset.objects.get(id=id)
     except Asset.DoesNotExist:
         return JsonResponse(
@@ -68,6 +128,7 @@ def decommission_asset(request):
             },
             status=HTTPStatus.UNAUTHORIZED
         )
+        
     asset_data = RecursiveAssetSerializer(asset).data
     asset_data['live_id'] = asset_data['id']
     del asset_data['id']
@@ -84,7 +145,7 @@ def decommission_asset(request):
             status=HTTPStatus.BAD_REQUEST
         )
     try:
-        decommissioned_asset.save()
+        decommissioned_asset_object = decommissioned_asset.save()
     except Exception as error:
         return JsonResponse(
             {
@@ -99,7 +160,13 @@ def decommission_asset(request):
             status=HTTPStatus.BAD_REQUEST
         )
     else:
+        
+        for assetcp in AssetCP.objects.filter(related_asset=id):
+            print(assetcp)
+            assetcp.related_decommissioned_asset = decommissioned_asset_object
+            assetcp.save()
         asset.delete()
+        
         return JsonResponse(
             {
                 "success_message": "Asset successfully decommissioned. "
@@ -145,7 +212,7 @@ def decommissioned_asset_many(request):
             status=HTTPStatus.BAD_REQUEST,
         )
 
-    decomissioned_assets_query = DecommissionedAsset.objects
+    decommissioned_assets_query = DecommissionedAsset.objects
     try:
         # TODO: create a date range filter
         filter_args = get_filter_arguments(request.data)
@@ -159,7 +226,7 @@ def decommissioned_asset_many(request):
             status=HTTPStatus.BAD_REQUEST
         )
     for filter_arg in filter_args:
-        decomissioned_assets_query = decomissioned_assets_query.filter(
+        decommissioned_assets_query = decommissioned_assets_query.filter(
             **filter_arg)
 
     try:
@@ -173,14 +240,14 @@ def decommissioned_asset_many(request):
             },
             status=HTTPStatus.BAD_REQUEST
         )
-    decomissioned_assets = decomissioned_assets_query.order_by(*sort_args)
+    decommissioned_assets = decommissioned_assets_query.order_by(*sort_args)
 
     if should_paginate:
         paginator = PageNumberPagination()
         paginator.page_size = request.query_params.get('page_size')
         try:
-            page_of_decomissioned_assets = paginator.paginate_queryset(
-                decomissioned_assets, request)
+            page_of_decommissioned_assets = paginator.paginate_queryset(
+                decommissioned_assets, request)
         except Exception as error:
             return JsonResponse(
                 {
@@ -190,12 +257,12 @@ def decommissioned_asset_many(request):
                 },
                 status=HTTPStatus.BAD_REQUEST,
             )
-        decomissioned_assets_to_serialize = page_of_decomissioned_assets
+        decommissioned_assets_to_serialize = page_of_decommissioned_assets
     else:
-        decomissioned_assets_to_serialize = decomissioned_assets
+        decommissioned_assets_to_serialize = decommissioned_assets
 
     serializer = GetDecommissionedAssetSerializer(
-        decomissioned_assets_to_serialize,
+        decommissioned_assets_to_serialize,
         many=True,
     )
     # TODO: it may be preferred to make this key "assets" so it's easier to repurpose front end element table code
