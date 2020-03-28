@@ -13,41 +13,41 @@ from rackcity.models.asset import get_assets_for_cp
 from rackcity.views.rackcity_utils import validate_asset_location, LocationException
 
 @receiver(post_save, sender=Asset)
-def create_asset_cp(sender, **kwargs):
+def detect_conflicts_cp(sender, **kwargs):
     #fields: sender, instance, created, raw, using, update_fields
     ## asset is a related asset of assetCP
-    instance = kwargs.get("instance")
-    related_assets_cp = AssetCP.objects.filter(related_asset=instance.id)
-    for related_asset in related_assets_cp:
-        related_asset.is_conflict = True
-        related_asset.save()
+    asset = kwargs.get("instance")
+    related_assets_cp = AssetCP.objects.filter(related_asset=asset.id)
+    for related_asset_cp in related_assets_cp:
+        related_asset_cp.is_conflict = True
+        related_asset_cp.save()
     # hostname conflicts with hostnames on assetcps
-    instance.hostname_conflict.clear()
+    asset.hostname_conflict.clear()
     AssetCP.objects.filter(
-        Q(hostname=instance.hostname) & ~Q(related_asset_id=instance.id)
-        ).update(asset_conflict_hostname=instance)
+        Q(hostname=asset.hostname) & ~Q(related_asset=asset.id)
+        ).update(asset_conflict_hostname=asset)
 
     # asset rack location conflicts with an assetCP
 
-    instance.location_conflict.clear()
-    for assetcp in AssetCP.objects.filter(rack=instance.rack_id):
+    asset.location_conflict.clear()
+    for assetcp in AssetCP.objects.filter(rack=asset.rack_id):
         try: 
             validate_asset_location(
-                instance.rack_id,
+                asset.rack_id,
                 assetcp.rack_position,
                 assetcp.model.height,
                 asset_id=assetcp.id
             )
         except LocationException:
-            assetcp.asset_conflict_location = instance
-            AssetCP.objects.filter(id=assetcp.id).update(asset_conflict_location=instance)
+            assetcp.asset_conflict_location = asset
+            AssetCP.objects.filter(id=assetcp.id).update(asset_conflict_location=asset)
            
 
     # asset number conflict
-    instance.asset_number_conflict.clear()
+    asset.asset_number_conflict.clear()
     AssetCP.objects.filter(
-        Q(asset_number=instance.asset_number) & ~Q(related_asset_id=instance.id)
-        ).update(asset_conflict_asset_number=instance)
+        Q(asset_number=asset.asset_number) & ~Q(related_asset_id=asset.id)
+        ).update(asset_conflict_asset_number=asset)
 
 
 
