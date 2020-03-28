@@ -65,5 +65,6 @@ urlpatterns = [
     path('change-plans/add', views.change_plan_add),
     path('change-plans/modify', views.change_plan_modify),
     path('change-plans/delete', views.change_plan_delete),
-    path('change-plans/pages', views.change_plan_page_count)
+    path('change-plans/pages', views.change_plan_page_count),
+    path('change-plans/execute', views.change_plan_execute),
 ]
