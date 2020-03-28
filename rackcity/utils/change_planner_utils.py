@@ -17,6 +17,12 @@ from rackcity.utils.query_utils import (
 )
 from rackcity.views.rackcity_utils import validate_asset_location, LocationException
 
+# @receiver(pre_delete, sender=Asset)
+# def mark_delete_conflicts_cp(sender, **kwargs):
+#     """
+#     """
+#     deleted_asset = kwargs.get("instance")
+#     related_assets_cp = AssetCP.objects.filter(related_asset=)
 
 @receiver(post_save, sender=Asset)
 def detect_conflicts_cp(sender, **kwargs):
