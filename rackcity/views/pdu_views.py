@@ -332,6 +332,7 @@ def power_availability(request):
         if response:
             return response
         assets, assets_cp = get_assets_for_cp(change_plan.id)
+        assets_cp = assets_cp.filter(rack=rack.id)
         assets = assets.filter(rack=rack.id)
     else:
         assets = Asset.objects.filter(rack=rack.id)
