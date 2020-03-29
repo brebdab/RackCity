@@ -283,7 +283,9 @@ class CPDetailView extends React.Component<
                   {AssetFieldsTable[col]}:
                 </td>
 
-                <td>{value.row_letter + "" + value.rack_num}</td>
+                <td style={this.getHighlightStyle(modification, col)}>
+                  {value.row_letter + "" + value.rack_num}
+                </td>
               </tr>,
               <tr>
                 <td
@@ -401,7 +403,10 @@ class CPDetailView extends React.Component<
           onCancel={() => this.handleExecuteCancel()}
           onConfirm={() => this.handleExecute()}
         >
-          <p>Are you sure you want to execute this change plan? You will not be able to generate a work order for this change plan anymore</p>
+          <p>
+            Are you sure you want to execute this change plan? You will not be
+            able to generate a work order for this change plan anymore
+          </p>
         </Alert>
         <Toaster
           autoFocus={false}
