@@ -1,10 +1,16 @@
 from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import User, Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from http import HTTPStatus
 from rackcity.api.serializers import RegisterNameSerializer, UserSerializer
 from rackcity.models import Asset, RackCityPermission
+from rackcity.permissions.groups import (
+    GroupName,
+    update_user_groups,
+    update_user_datacenter_permissions,
+)
 from rackcity.permissions.permissions import PermissionPath
 from rackcity.utils.query_utils import (
     get_page_count_response,
@@ -16,29 +22,25 @@ from rackcity.utils.errors_utils import (
     Status,
     get_user_permission_success,
 )
-from rackcity.utils.user_utils import is_netid_user
 from rackcity.utils.log_utils import (
     log_delete,
     log_user_permission_action,
     ElementType,
     PermissionAction,
 )
+from rackcity.utils.user_utils import is_netid_user
 import requests
+from rest_auth.registration.views import RegisterView
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.parsers import JSONParser
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_auth.registration.views import RegisterView
-from rackcity.permissions.groups import (
-    GroupName,
-    update_user_groups,
-    update_user_datacenter_permissions,
-)
+from rest_framework.permissions import IsAuthenticated
 
 
-class RegisterNameView(RegisterView):
+class RegisterNameView(PermissionRequiredMixin, RegisterView):
     serializer_class = RegisterNameSerializer
-    permission_classes = [IsAdminUser]
+    permission_required = PermissionPath.MODEL_WRITE.value
+    raise_exception = True
 
 
 @api_view(['POST'])
