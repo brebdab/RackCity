@@ -343,8 +343,8 @@ def get_cp_modification_conflicts(asset_cp):
 
 def get_location_detail(asset):
     return " at rack " + asset.rack.datacenter.abbreviation + " " + \
-        asset.rack.row_letter + str(asset.rack.rack_num) + ", " + \
-        str(asset.rack_position) + "U"
+        asset.rack.row_letter + str(asset.rack.rack_num) + ", position " + \
+        str(asset.rack_position)
 
 
 def get_modifications_in_cp(change_plan):
