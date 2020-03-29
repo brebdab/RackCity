@@ -1,9 +1,31 @@
 import axios from "axios";
 import { API_ROOT } from "../../utils/api-config";
 import * as actionTypes from "./actionTypes";
+import { ChangePlan, PermissionState } from "../../utils/utils";
 
-export const DUKE_OAUTH_URI = "https://oauth.oit.duke.edu/oauth/authorize.php?client_id=hyposoft-rack-city&response_type=token&state=1129&scope=basic&redirect_uri="
+export const DUKE_OAUTH_URI =
+  "https://oauth.oit.duke.edu/oauth/authorize.php?client_id=hyposoft-rack-city&response_type=token&state=1129&scope=basic&redirect_uri=";
 
+export const setChangePlan = (changePlan: ChangePlan) => {
+  return {
+    type: actionTypes.SWITCH_CHANGE_PLAN,
+    changePlan: changePlan
+  };
+};
+
+export const updateChangePlans = (status: boolean) => {
+  console.log("setting update changee plans to", status);
+  return {
+    type: actionTypes.UPDATE_CHANGE_PLANS,
+    updateChangePlansBoolean: status
+  };
+};
+export const setPermissionState = (permissionState: PermissionState) => {
+  return {
+    type: actionTypes.SET_PERMISSION_STATE,
+    permissionState: permissionState
+  };
+};
 export const authStart = () => {
   return {
     type: actionTypes.AUTH_START
@@ -11,13 +33,15 @@ export const authStart = () => {
 };
 
 var console: any = {};
-console.log = function () { };
+
+console.log = function() {};
 export const authSuccess = (token: string) => {
   return {
     type: actionTypes.AUTH_SUCCESS,
     token: token
   };
 };
+
 export const authAdmin = () => {
   return {
     type: actionTypes.AUTH_ADMIN
@@ -45,35 +69,10 @@ export const logout = () => {
     type: actionTypes.AUTH_LOGOUT
   };
 };
-// export const checkAuthTimeout = (expirationTime: number) => {
-//   return (dispatch: any) => {
-//     setTimeout(() => {
-//       dispatch(logout());
-//     }, expirationTime * 1000);
-//   };
-// };
-// function getCookie(name: string) {
-//   var cookieValue = null;
-//   if (document.cookie && document.cookie !== "") {
-//     var cookies = document.cookie.split(";");
-//     for (var i = 0; i < cookies.length; i++) {
-//       var cookie = jQuery.trim(cookies[i]);
-//       console.log(cookie);
-//       if (cookie.substring(0, name.length + 1) === name + "=") {
-//         cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-//         break;
-//       }
-//     }
-//   }
-//   return cookieValue;
-// }
 
 export const authLogin = (username: string, password: string) => {
   return (dispatch: any) => {
     dispatch(authStart());
-    // axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
-    // axios.defaults.xsrfCookieName = "csrftoken";
-    // var csrf_token = getCookie("csrftoken");
 
     console.log(API_ROOT + "rest-auth/login/");
 
@@ -132,30 +131,31 @@ export const checkAdmin = (token: string) => {
   };
 };
 
-// export const authSignup = (
-//   username: string,
-//   email: string,
-//   displayName: string,
-//   password1: string,
-//   password2: string
-// ) => {
-//   return (dispatch: any) => {
-//     // dispatch(authStart());
-//     axios
-//       .post(API_ROOT + "rest-auth/registration/", {
-//         username: username,
-//         email: email,
-//         displayName: displayName,
-//         password1: password1,
-//         password2: password2
-//       })
-//       .then(res => console.log("Created user")) //loginHelper(res, dispatch))
-//       .catch(err => {
-//         console.log(err);
-//         dispatch(authFail(err));
-//       });
-//   };
-// };
+export const checkPermissions = (token: string) => {
+  return (dispatch: any) => {
+    const headers = {
+      headers: {
+        Authorization: "Token " + token
+      }
+    };
+    axios
+      .get(API_ROOT + "api/users/permissions/mine", headers)
+      .then(res => {
+        let permissionState: PermissionState = {
+          model_management: res.data.model_management,
+          asset_management: res.data.asset_management,
+          power_control: res.data.power_control,
+          audit_read: res.data.audit_read,
+          admin: res.data.admin,
+          datacenter_permissions: res.data.datacenter_permissions
+        };
+        dispatch(setPermissionState(permissionState));
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  };
+};
 
 export const loginHelper = (res: any, dispatch: any) => {
   const token = res.data.key;
@@ -165,6 +165,7 @@ export const loginHelper = (res: any, dispatch: any) => {
 
   dispatch(authSuccess(token));
   dispatch(checkAdmin(token));
+  dispatch(checkPermissions(token));
   // dispatch(checkAuthTimeout(3600));
 };
 
@@ -180,11 +181,7 @@ export const authCheckState = () => {
       } else {
         dispatch(authSuccess(token!));
         dispatch(checkAdmin(token!));
-        // dispatch(
-        //   checkAuthTimeout(
-        //     (expirationDate.getTime() - new Date().getTime()) / 1000
-        //   )
-        // );
+        dispatch(checkPermissions(token!));
       }
     }
   };

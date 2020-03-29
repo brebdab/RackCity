@@ -46,7 +46,8 @@ import {
   PowerPortAvailability,
   PowerSide,
   RackObject,
-  ShallowAssetObject
+  ShallowAssetObject,
+  ChangePlan
 } from "../utils/utils";
 import Field from "./field";
 import "./forms.scss";
@@ -71,7 +72,6 @@ import {
   StringSelect
 } from "./formUtils";
 import $ from "jquery";
-//TO DO : add validation of types!!!
 
 export interface AssetFormProps {
   token: string;
@@ -82,6 +82,7 @@ export interface AssetFormProps {
   pageScroll?(): void;
   datacenters: Array<DatacenterObject>;
   currDatacenter: DatacenterObject;
+  changePlan: ChangePlan;
 }
 interface AssetFormState {
   values: AssetObject;
@@ -100,8 +101,8 @@ interface AssetFormState {
   selectedValue: any;
   loading: boolean;
 }
-var console: any = {};
-console.log = function() {};
+// var console: any = {};
+// console.log = function() {};
 
 class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   initialState: AssetObject = this.props.initialValues
@@ -152,7 +153,10 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
   getPowerPortAvailability(rack: RackObject) {
     this.gettingPowerPortsInProgress = true;
-    const params = { id: rack.id };
+    const params: any = { id: rack.id };
+    if (this.props.changePlan) {
+      params["change_plan"] = this.props.changePlan.id;
+    }
     const config = {
       headers: {
         Authorization: "Token " + this.props.token
@@ -175,13 +179,17 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   ): Promise<Array<ElementObjectType>> {
     console.log(API_ROOT + "api/" + path + "/get-many");
 
-    const params =
+    const params: any =
       page_type === PagingTypes.ALL
         ? {}
         : {
             page_size: page_type,
             page
           };
+
+    if (this.props.changePlan) {
+      params["change_plan"] = this.props.changePlan.id;
+    }
     const config = {
       headers: {
         Authorization: "Token " + token
@@ -270,7 +278,10 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         loading: true
       });
 
-      this.validateMacAddresses();
+      if (!this.validateMacAddresses()) {
+        $(".bp3-overlay-scroll-container").scrollTop(0);
+        return;
+      }
       let newValues = this.state.values;
 
       if (this.state.values.hostname === "") {
@@ -311,12 +322,14 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   };
 
   validateMacAddresses = () => {
+    let valid = true;
     Object.entries(this.state.values.mac_addresses).forEach(
       ([port, mac_address]) => {
         if (mac_address === "") {
           delete this.state.values.mac_addresses[port];
         } else if (!isMacAddressValid(mac_address)) {
-          const errors: Array<string> = this.state.errors;
+          const errors: Array<string> = [];
+          valid = false;
           errors.push(
             "Mac Address " +
               '"' +
@@ -329,11 +342,13 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
               " is invalid."
           );
           this.setState({
-            errors
+            errors,
+            loading: false
           });
         }
       }
     );
+    return valid;
   };
   handleChange = (field: { [key: string]: any }) => {
     this.setState({
@@ -1254,7 +1269,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                               itemRenderer={renderStringItem}
                               itemPredicate={filterString}
                               noResults={
-                                this.gettingPowerPortsInProgress ? (
+                                this.gettingAssetsInProgress ? (
                                   <div>
                                     <Spinner
                                       intent="primary"
@@ -1262,13 +1277,13 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                                     />
                                     <MenuItem
                                       disabled={true}
-                                      text="Getting available power ports"
+                                      text="Getting available network ports"
                                     />
                                   </div>
                                 ) : (
                                   <MenuItem
                                     disabled={true}
-                                    text="No available power ports"
+                                    text="No available network ports"
                                   />
                                 )
                               }
@@ -1378,7 +1393,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
 const mapStateToProps = (state: any) => {
   return {
-    token: state.token
+    token: state.token,
+    changePlan: state.changePlan
   };
 };
 export default connect(mapStateToProps)(AssetForm);

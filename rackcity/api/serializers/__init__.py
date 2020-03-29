@@ -1,8 +1,10 @@
 from .datacenter_serializers import DatacenterSerializer
 from .asset_serializers import (
     AssetSerializer,
+    AssetCPSerializer,
     RecursiveAssetSerializer,
     BulkAssetSerializer,
+    RecursiveAssetCPSerializer,
     normalize_bulk_asset_data,
     serialize_power_connections,
 )
@@ -18,3 +20,8 @@ from .network_port_serializers import (
     BulkNetworkPortSerializer,
     normalize_bulk_network_data
 )
+from .decommissioned_asset_serializers import (
+    AddDecommissionedAssetSerializer,
+    GetDecommissionedAssetSerializer,
+)
+from .change_plan_serializers import AddChangePlanSerializer, GetChangePlanSerializer

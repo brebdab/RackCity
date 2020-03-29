@@ -1,10 +1,40 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from django.core.exceptions import ObjectDoesNotExist
-from rackcity.models import Asset, PowerPort, NetworkPort
+from rackcity.models import (
+    Asset,
+    AssetCP,
+    PowerPort,
+    PowerPortCP,
+    NetworkPort,
+    NetworkPortCP,
+)
 from .it_model_serializers import ITModelSerializer
 from .rack_serializers import RackSerializer
+from .change_plan_serializers import GetChangePlanSerializer
 import copy
+from django.db import models
+from rackcity.models.asset import get_assets_for_cp
+
+class AssetCPSerializer(serializers.ModelSerializer):
+    """
+    Serializes all fields on Asset model, where model and rack fields are
+    defined by their pk only.
+    """
+
+    class Meta:
+        model = AssetCP
+        fields = (
+            'id',
+            'asset_number',
+            'hostname',
+            'model',
+            'rack',
+            'rack_position',
+            'owner',
+            'comment',
+            'change_plan',
+        )
 
 
 class AssetSerializer(serializers.ModelSerializer):
@@ -63,38 +93,16 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
         )
 
     def get_mac_addresses(self, asset):
-        try:
-            ports = NetworkPort.objects.filter(asset=asset.id)
-        except ObjectDoesNotExist:
-            return
-        mac_addresses = {}
-        for port in ports:
-            if port.mac_address:
-                mac_addresses[port.port_name] = port.mac_address
-        return mac_addresses
+        return serialize_mac_addresses(NetworkPort, asset)
 
     def get_network_graph(self, asset):
         return generate_network_graph(asset)
 
     def get_power_connections(self, asset):
-        return serialize_power_connections(asset)
+        return serialize_power_connections(PowerPort, asset)
 
     def get_network_connections(self, asset):
-        try:
-            source_ports = NetworkPort.objects.filter(asset=asset.id)
-        except ObjectDoesNotExist:
-            return
-        network_connections = []
-        for source_port in source_ports:
-            if source_port.connected_port:
-                destination_port = source_port.connected_port
-                network_connection_serialized = {
-                    "source_port": source_port.port_name,
-                    "destination_hostname": destination_port.asset.hostname,
-                    "destination_port": destination_port.port_name
-                }
-                network_connections.append(network_connection_serialized)
-        return network_connections
+        return serialize_network_connections(NetworkPort, asset)
 
 
 class BulkAssetSerializer(serializers.ModelSerializer):
@@ -171,6 +179,60 @@ class BulkAssetSerializer(serializers.ModelSerializer):
         return pdu_port.left_right+str(pdu_port.port_number)
 
 
+class RecursiveAssetCPSerializer(serializers.ModelSerializer):
+    """
+    Recursively serializes all fields on AssetCP model, where model and
+    rack fields are defined recursively (by all of their respective fields).
+    """
+    model = ITModelSerializer()
+    rack = RackSerializer()
+    asset_conflict_hostname = AssetSerializer()
+    asset_conflict_location = AssetSerializer()
+    asset_conflict_asset_number = AssetSerializer()
+    change_plan = GetChangePlanSerializer()
+    mac_addresses = serializers.SerializerMethodField()
+    power_connections = serializers.SerializerMethodField()
+    network_connections = serializers.SerializerMethodField()
+    network_graph = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AssetCP
+        fields = (
+            'id',
+            'asset_number',
+            'hostname',
+            'model',
+            'rack',
+            'rack_position',
+            'owner',
+            'comment',
+            'mac_addresses',
+            'network_connections',
+            'network_graph',
+            'power_connections',
+            'change_plan',
+            'is_decommissioned',
+            'is_conflict',
+            'asset_conflict_hostname',
+            'asset_conflict_location',
+            'asset_conflict_asset_number',
+       
+
+        )
+
+    def get_mac_addresses(self, assetCP):
+        return serialize_mac_addresses(NetworkPortCP, assetCP)
+
+    def get_network_graph(self, assetCP):
+        return generate_network_graph(assetCP)
+
+    def get_power_connections(self, assetCP):
+        return serialize_power_connections(PowerPortCP, assetCP)
+
+    def get_network_connections(self, assetCP):
+        return serialize_network_connections(NetworkPortCP, assetCP)
+
+
 def normalize_bulk_asset_data(bulk_asset_data):
     power_connections = {}
     if bulk_asset_data['power_port_connection_1']:
@@ -193,11 +255,49 @@ def normalize_bulk_asset_data(bulk_asset_data):
     return bulk_asset_data
 
 
-def serialize_power_connections(asset):
+def serialize_mac_addresses(network_port_model, asset):
     try:
-        ports = PowerPort.objects.filter(asset=asset.id)
-    except ObjectDoesNotExist:
-        return
+        ports = network_port_model.objects.filter(
+            asset=asset.id,
+            change_plan=asset.change_plan.id
+            )
+    except AttributeError:
+        ports = network_port_model.objects.filter(asset=asset.id)
+    mac_addresses = {}
+    for port in ports:
+        if port.mac_address:
+            mac_addresses[port.port_name] = port.mac_address
+    return mac_addresses
+
+
+def serialize_network_connections(network_port_model, asset):
+   
+    try:
+        source_ports = network_port_model.objects.filter(
+            asset=asset.id, change_plan=asset.change_plan.id
+            )
+    except AttributeError:
+        source_ports = network_port_model.objects.filter(asset=asset.id)
+    network_connections = []
+    for source_port in source_ports:
+        if source_port.connected_port:
+            destination_port = source_port.connected_port
+            network_connection_serialized = {
+                "source_port": source_port.port_name,
+                "destination_hostname": destination_port.asset.hostname,
+                "destination_port": destination_port.port_name
+            }
+            network_connections.append(network_connection_serialized)
+    return network_connections
+
+
+def serialize_power_connections(power_port_model, asset):
+    try:
+        ports = power_port_model.objects.filter(
+            asset=asset.id, change_plan=asset.change_plan.id
+            )
+    except AttributeError:
+        ports = power_port_model.objects.filter(asset=asset.id)
     power_connections = {}
     for port in ports:
         if port.power_connection:
@@ -208,17 +308,25 @@ def serialize_power_connections(asset):
     return power_connections
 
 
+
 def generate_network_graph(asset):
     try:
         nodes = []
         nodes.append({"id": asset.id, "label": asset.hostname})
         edges = []
         # neighbors of distance one
+        change_plan = None
+    
+        try:
+            change_plan = asset.change_plan
+        except AttributeError:
+            change_plan = None
         [nodes, edges] = get_neighbor_assets(
             asset.hostname,
             asset.id,
             nodes,
-            edges)
+            edges,
+            change_plan)
         # neighbors of distance two
         nodes_copy = copy.deepcopy(nodes)
         for node in nodes_copy:
@@ -228,15 +336,21 @@ def generate_network_graph(asset):
                     node["label"],
                     node["id"],
                     nodes,
-                    edges)
+                    edges,
+                    change_plan)
         return {"nodes": nodes, "edges": edges}
     except ObjectDoesNotExist:
         return
 
 
-def get_neighbor_assets(hostname, id, nodes, edges):
+def get_neighbor_assets(hostname, id, nodes, edges, change_plan=None):
     try:
         source_ports = NetworkPort.objects.filter(asset=id)
+        if change_plan:
+            if AssetCP.objects.filter(change_plan=change_plan, id=id).exists():
+                source_ports = NetworkPortCP.objects.filter(
+                    asset=id, change_plan=change_plan.id
+                    )
         for source_port in source_ports:
             if source_port.connected_port:
                 destination_port_asset = source_port.connected_port.asset

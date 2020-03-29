@@ -19,7 +19,10 @@ import {
   AssetObject,
   ElementType,
   getHeaders,
-  ModelObject
+  ModelObject,
+  ROUTES,
+  ChangePlan,
+  PermissionState
 } from "../../../../utils/utils";
 import ElementTable from "../../elementTable";
 import { deleteModel, modifyModel } from "../../elementUtils";
@@ -29,10 +32,13 @@ export interface ModelViewProps {
   token: string;
   rid: any;
   isAdmin: boolean;
+  changePlan: ChangePlan;
+  permissionState: PermissionState;
 }
 
-var console: any = {};
-console.log = function() {};
+
+// var console: any = {};
+// console.log = function() {};
 interface ModelViewState {
   assets: Array<AssetObject>;
   model: ModelObject;
@@ -40,15 +46,25 @@ interface ModelViewState {
   isDeleteOpen: boolean;
 }
 
-async function getData(modelkey: string, token: string) {
+async function getData(
+  modelkey: string,
+  token: string,
+  changePlan: ChangePlan
+) {
   console.log(API_ROOT + "api/models/" + modelkey);
-  const headers = {
+  const params: any = {};
+  if (changePlan) {
+    params["change_plan"] = changePlan.id;
+  }
+  const config = {
     headers: {
       Authorization: "Token " + token
-    }
+    },
+    params
   };
+  console.log(config);
   return await axios
-    .get(API_ROOT + "api/models/" + modelkey, headers)
+    .get(API_ROOT + "api/models/" + modelkey, config)
     .then(res => {
       const data = res.data;
       return data;
@@ -58,7 +74,7 @@ async function getData(modelkey: string, token: string) {
 export class ModelView extends React.PureComponent<
   RouteComponentProps & ModelViewProps,
   ModelViewState
-> {
+  > {
   public state: ModelViewState = {
     assets: [],
     model: {} as ModelObject,
@@ -71,13 +87,15 @@ export class ModelView extends React.PureComponent<
       console.log("success");
       let params: any;
       params = this.props.match.params;
-      getData(params.rid, this.props.token).then(result => {
-        console.log("result", result);
-        this.setState({
-          model: result.model,
-          assets: result.assets
-        });
-      });
+      getData(params.rid, this.props.token, this.props.changePlan).then(
+        result => {
+          console.log("result", result);
+          this.setState({
+            model: result.model,
+            assets: result.assets
+          });
+        }
+      );
       this.handleFormClose();
       console.log(this.state.isFormOpen);
     });
@@ -113,7 +131,7 @@ export class ModelView extends React.PureComponent<
           message: "Succesfully Deleted Model",
           intent: Intent.PRIMARY
         });
-        this.props.history.push("/");
+        this.props.history.push(ROUTES.DASHBOARD);
       })
       .catch(err => {
         console.log("ERROR", err);
@@ -125,18 +143,37 @@ export class ModelView extends React.PureComponent<
       });
   };
 
+  componentWillReceiveProps(nextProps: ModelViewProps & RouteComponentProps) {
+    console.log("new change plan", nextProps.changePlan);
+    if (nextProps.changePlan !== this.props.changePlan) {
+      let params: any;
+      params = this.props.match.params;
+      console.log("new change plan", nextProps.changePlan);
+      getData(params.rid, this.props.token, nextProps.changePlan).then(
+        result => {
+          console.log("result", result);
+          this.setState({
+            model: result.model,
+            assets: result.assets
+          });
+        }
+      );
+    }
+  }
   public render() {
     console.log(this.state.assets);
     let params: any;
     params = this.props.match.params;
     if (Object.keys(this.state.model).length === 0) {
-      getData(params.rid, this.props.token).then(result => {
-        console.log("result", result);
-        this.setState({
-          model: result.model,
-          assets: result.assets
-        });
-      });
+      getData(params.rid, this.props.token, this.props.changePlan).then(
+        result => {
+          console.log("result", result);
+          this.setState({
+            model: result.model,
+            assets: result.assets
+          });
+        }
+      );
     }
 
     return (
@@ -147,47 +184,57 @@ export class ModelView extends React.PureComponent<
           position={Position.TOP}
           ref={this.refHandlers.toaster}
         />
-        {this.props.isAdmin ? (
-          <div className="detail-buttons-wrapper">
-            <div className={"detail-buttons"}>
-              <AnchorButton
-                className="button-add"
-                intent="primary"
-                icon="edit"
-                text="Edit"
-                minimal
-                onClick={() => this.handleFormOpen()}
-              />
-              <FormPopup
-                isOpen={this.state.isFormOpen}
-                initialValues={this.state.model}
-                type={FormTypes.MODIFY}
-                elementName={ElementType.MODEL}
-                handleClose={this.handleFormClose}
-                submitForm={this.updateModel}
-              />
-              <AnchorButton
-                className="button-add"
-                intent="danger"
-                icon="trash"
-                text="Delete"
-                minimal
-                onClick={this.handleDeleteOpen}
-              />
-              <Alert
-                className={Classes.DARK}
-                cancelButtonText="Cancel"
-                confirmButtonText="Delete"
-                intent="danger"
-                isOpen={this.state.isDeleteOpen}
-                onCancel={this.handleDeleteCancel}
-                onConfirm={this.handleDelete}
-              >
-                <p>Are you sure you want to delete?</p>
-              </Alert>
-            </div>
+        <div className="detail-buttons-wrapper">
+          <div className={"detail-buttons"}>
+            <AnchorButton
+              className="button-add"
+              intent="primary"
+              icon="edit"
+              text="Edit"
+              minimal
+              onClick={() => this.handleFormOpen()}
+              disabled={
+                !(
+                  this.props.permissionState.admin
+                  || this.props.permissionState.model_management
+                )
+              }
+            />
+            <FormPopup
+              isOpen={this.state.isFormOpen}
+              initialValues={this.state.model}
+              type={FormTypes.MODIFY}
+              elementName={ElementType.MODEL}
+              handleClose={this.handleFormClose}
+              submitForm={this.updateModel}
+            />
+            <AnchorButton
+              className="button-add"
+              intent="danger"
+              icon="trash"
+              text="Delete"
+              minimal
+              onClick={this.handleDeleteOpen}
+              disabled={
+                !(
+                  this.props.permissionState.admin
+                  || this.props.permissionState.model_management
+                )
+              }
+            />
+            <Alert
+              className={Classes.DARK}
+              cancelButtonText="Cancel"
+              confirmButtonText="Delete"
+              intent="danger"
+              isOpen={this.state.isDeleteOpen}
+              onCancel={this.handleDeleteCancel}
+              onConfirm={this.handleDelete}
+            >
+              <p>Are you sure you want to delete?</p>
+            </Alert>
           </div>
-        ) : null}
+        </div>
 
         <PropertiesView data={this.state.model} />
         <div className="propsview">
@@ -197,6 +244,7 @@ export class ModelView extends React.PureComponent<
             data={this.state.assets}
             disableFiltering={true}
             disableSorting={true}
+            isDecommissioned={false}
           />
         </div>
       </div>
@@ -207,7 +255,9 @@ export class ModelView extends React.PureComponent<
 const mapStatetoProps = (state: any) => {
   return {
     token: state.token,
-    isAdmin: state.admin
+    isAdmin: state.admin,
+    changePlan: state.changePlan,
+    permissionState: state.permissionState
   };
 };
 

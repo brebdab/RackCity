@@ -7,13 +7,20 @@
   outline: none;
 }
 
-// .table-nav-bar {
-//   padding-top: 20pt;
-// }
+.permissions-button {
+  overflow: hidden;
+}
+
 .inline-buttons {
   display: inline-block;
   white-space: nowrap;
   overflow: auto;
+}
+
+.inline-buttons-user {
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .no-data-text {
@@ -24,16 +31,11 @@
   width: 135px !important;
 }
 
-.rack-tab .element-tab {
-  display: block;
-  margin: 10pt;
-}
 .element-table {
   position: relative;
-  // float: left;
+
   width: 100% !important;
-  // overflow-x:auto;
-  // display: inline-block;
+
   table-layout: auto;
 }
 .rack-view-options {
@@ -83,11 +85,10 @@
 }
 .bp3-tab-panel {
   overflow: auto;
-
-  width: 95%;
+  width: calc(100vw - 136pt);
 }
 .element-view {
-  margin: 10pt;
+  width: 100%;
 }
 
 .filter-select {
@@ -117,10 +118,7 @@
   margin-left: 10pt;
   display: inline-flex;
 }
-// .table-spinner {
-//   // margin: 50pt;
-//   // margin-left: 500pt;
-// }
+
 .range {
   display: inline-flex;
 }
@@ -149,12 +147,7 @@
   padding-right: 0pt !important;
   margin-right: 3pt;
 }
-// .header-cell {
-//   // cursor: pointer !important;
-//   white-space: nowrap !important;
-//   overflow: visible;
-//   width: max-content !important;
-// }
+
 .header-text {
   white-space: nowrap !important;
   overflow: auto;
@@ -205,12 +198,6 @@
   margin-top: 10pt;
 }
 
-.tab {
-  width: 100%;
-}
-// .table-options {
-//   margin-top: 120px;
-// }
 .element-tab table {
   width: 100%;
 }

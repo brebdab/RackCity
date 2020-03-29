@@ -1,17 +1,18 @@
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
-import { Tabs, Tab } from "@blueprintjs/core";
+import { Tabs, Tab, Classes } from "@blueprintjs/core";
 import ElementTab from "./elementTab";
 import { RouteComponentProps } from "react-router";
 import "./elementView.scss";
 import { connect } from "react-redux";
-import { ElementType, DatacenterObject, getHeaders } from "../../utils/utils";
+import { ElementType, DatacenterObject, getHeaders, PermissionState } from "../../utils/utils";
 import RackTab from "./rackTab";
 import { API_ROOT } from "../../utils/api-config";
 import axios from "axios";
 
 interface ElementTabContainerProps {
   isAdmin: boolean;
+  permissionState: PermissionState;
   token: string;
 }
 interface ElementTabContainerState {
@@ -23,13 +24,13 @@ export const ALL_DATACENTERS: DatacenterObject = {
   name: "All datacenters",
   abbreviation: "ALL"
 };
-var console: any = {};
-console.log = function() {};
+// var console: any = {};
+// console.log = function() {};
 
 class ElementTabContainer extends React.Component<
   ElementTabContainerProps & RouteComponentProps,
   ElementTabContainerState
-> {
+  > {
   state = {
     datacenters: [],
     currDatacenter: ALL_DATACENTERS
@@ -58,22 +59,38 @@ class ElementTabContainer extends React.Component<
       });
   };
   componentDidMount = () => {
+    console.log("tab container mounted");
     this.getDatacenters();
   };
+
+  getTabName = (pathname: string) => {
+    if (pathname === "/dashboard") {
+      return "racks";
+    }
+    const regex = new RegExp("dashboard/(.*$)");
+    const match = regex.exec(pathname);
+    if (match) {
+      return match[1];
+    }
+  };
+
   public render() {
+    console.log(this.props.match, this.props.location);
     return (
       <Tabs
-        className="element-view"
+        className={Classes.DARK + " element-view "}
         animate={true}
         id="ElementViewer"
         key={"vertical"}
+        selectedTabId={this.getTabName(this.props.location.pathname)}
         renderActiveTabPanelOnly={false}
         vertical={true}
         large
+        onChange={(tab: any) => this.props.history.push("/dashboard/" + tab)}
       >
         <Tab
           className="tab"
-          id="rack"
+          id="racks"
           title="Racks"
           panel={
             <RackTab
@@ -85,7 +102,7 @@ class ElementTabContainer extends React.Component<
         />
         <Tab
           className="tab do-not-print"
-          id="asset"
+          id="assets"
           title="Assets"
           panel={
             <ElementTab
@@ -94,31 +111,35 @@ class ElementTabContainer extends React.Component<
               onDatacenterSelect={this.onDatacenterSelect}
               {...this.props}
               element={ElementType.ASSET}
+              isActive={false}
             />
           }
         />
 
         <Tab
           className="tab do-not-print"
-          id="model"
+          id="models"
           title="Models"
           panel={<ElementTab {...this.props} element={ElementType.MODEL} />}
         />
 
-        {this.props.isAdmin ? (
-          <Tab
-            className="tab do-not-print"
-            id="datacenter"
-            title="Datacenters"
-            panel={
-              <ElementTab
-                {...this.props}
-                updateDatacenters={this.getDatacenters}
-                element={ElementType.DATACENTER}
-              />
-            }
-          />
-        ) : null}
+        <Tab
+          className="tab do-not-print"
+          id="datacenters"
+          title="Datacenters"
+          disabled={
+            !(this.props.permissionState.admin
+              || this.props.permissionState.asset_management
+            )
+          }
+          panel={
+            <ElementTab
+              {...this.props}
+              updateDatacenters={this.getDatacenters}
+              element={ElementType.DATACENTER}
+            />
+          }
+        />
 
         <Tabs.Expander />
       </Tabs>
@@ -129,6 +150,7 @@ class ElementTabContainer extends React.Component<
 const mapStateToProps = (state: any) => {
   return {
     isAdmin: state.admin,
+    permissionState: state.permissionState,
     token: state.token
   };
 };

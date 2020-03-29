@@ -10,19 +10,18 @@ import {
   Position,
   Toaster,
   Spinner,
-  Callout
+  Callout,
+  Checkbox
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { IconNames } from "@blueprintjs/icons";
 import "@blueprintjs/icons/lib/css/blueprint-icons.css";
-import axios from "axios";
 import React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import FormPopup from "../../forms/formPopup";
 import { FormTypes } from "../../forms/formUtils";
 import { updateObject } from "../../store/utility";
-import { API_ROOT } from "../../utils/api-config";
 import {
   AssetObject,
   DatacenterObject,
@@ -40,11 +39,17 @@ import {
   SortFilterBody,
   UserInfoObject,
   AssetFieldsTable,
-  ModelFieldsTable
+  ModelFieldsTable,
+  ROUTES,
+  isChangePlanObject,
+  ChangePlan,
+  getChangePlanRowStyle,
+  PermissionState,
 } from "../../utils/utils";
 import DragDropList, { DragDropListTypes } from "./dragDropList";
 import {
   deleteAsset,
+  decommissionAsset,
   deleteDatacenter,
   deleteModel,
   deleteUser,
@@ -56,11 +61,15 @@ import {
   modifyDatacenter,
   modifyModel,
   NumericFilter,
+  DatetimeFilter,
   PagingTypes,
   renderNumericFilterItem,
   renderRackRangeFilterItem,
   renderTextFilterItem,
-  TextFilter
+  renderDatetimeFilterItem,
+  TextFilter,
+  modifyChangePlan,
+  deleteChangePlan
 } from "./elementUtils";
 import "./elementView.scss";
 import FilterSelect from "./filterSelect";
@@ -83,16 +92,22 @@ interface ElementTableState {
   isPowerOptionsOpen: boolean;
   assetPower?: AssetObject;
   getDataInProgress: boolean;
+  selected: Array<string>;
+  selectedAll: boolean;
+  editUserFormOpen: boolean;
 }
 
 interface ElementTableProps {
+  isDecommissioned: boolean;
   callback?: Function;
+  updateBarcodes?: Function;
   type: ElementType;
   token: string;
   disableSorting?: boolean;
   disableFiltering?: boolean;
   currDatacenter?: DatacenterObject;
   datacenters?: Array<DatacenterObject>;
+  permissionState: PermissionState;
   getData?(
     type: string,
     page_num: number,
@@ -112,14 +127,15 @@ interface ElementTableProps {
   shouldUpdateData?: boolean;
   isAdmin: boolean;
   updateDatacenters?(): void;
+  changePlan: ChangePlan;
 }
 
-var console: any = {};
-console.log = function() {};
+// var console: any = {};
+// console.log = function() {};
 class ElementTable extends React.Component<
   ElementTableProps & RouteComponentProps,
   ElementTableState
-> {
+  > {
   public state: ElementTableState = {
     page_type: 10,
     filters: [],
@@ -134,8 +150,12 @@ class ElementTable extends React.Component<
     openAlert: ElementTableOpenAlert.NONE,
     selected_userid: undefined,
     isPowerOptionsOpen: false,
-    getDataInProgress: false
+    getDataInProgress: false,
+    selected: [],
+    selectedAll: false,
+    editUserFormOpen: false
   };
+  validRequestMadeWithToken = false;
 
   //PAGING LOGIC
   resetPage = () => {
@@ -170,6 +190,20 @@ class ElementTable extends React.Component<
       });
       this.updatePageData(this.state.page_type, 1);
     }
+    if (nextProps.token !== this.props.token) {
+      this.updateTableData();
+    }
+    // if (nextProps.changePlan !== this.props.changePlan) {
+    //   this.updateTableData();
+    // }
+    if (nextProps.data !== this.props.data) {
+      console.log("NEW TABLE DATA");
+      if (nextProps.data) {
+        this.setState({
+          items: nextProps.data
+        });
+      }
+    }
   }
 
   handlePagingChange = (page: PagingTypes) => {
@@ -199,6 +233,8 @@ class ElementTable extends React.Component<
       display = renderNumericFilterItem(item.filter! as NumericFilter);
     } else if (item.filter_type === FilterTypes.RACKRANGE) {
       display = renderRackRangeFilterItem(item.filter as RackRangeFields);
+    } else if (item.filter_type === FilterTypes.DATETIME) {
+      display = renderDatetimeFilterItem(item.filter as DatetimeFilter);
     }
     let field = item.field;
     if (this.props.type === ElementType.ASSET) {
@@ -235,7 +271,7 @@ class ElementTable extends React.Component<
         </span>
         <span>{`${item.field} by ${
           item.ascending ? "ascending" : "descending"
-        }`}</span>
+          }`}</span>
 
         <span>
           <Icon
@@ -334,7 +370,7 @@ class ElementTable extends React.Component<
             filters: filters_copy
           });
         })
-        .catch(err => {});
+        .catch(err => { });
     }
   };
 
@@ -484,6 +520,10 @@ class ElementTable extends React.Component<
     if (this.props.shouldUpdateData && !this.props.data) {
       this.updateTableData();
     }
+    if (this.props.token && !this.validRequestMadeWithToken) {
+      this.updateTableData();
+      this.validRequestMadeWithToken = true;
+    }
   }
   componentDidMount() {
     if (this.props.data) {
@@ -495,8 +535,9 @@ class ElementTable extends React.Component<
       this.updateTableData();
     }
   }
+
   updateTableData = () => {
-    if (this.props.getData) {
+    if (this.props.getData && this.props.token) {
       this.setState({
         getDataInProgress: true
       });
@@ -509,6 +550,8 @@ class ElementTable extends React.Component<
           this.props.token
         )
         .then(res => {
+          this.validRequestMadeWithToken = true;
+          console.log(res);
           this.setState({
             items: res,
             getDataInProgress: false
@@ -548,6 +591,7 @@ class ElementTable extends React.Component<
         fields.push("rack__datacenter__name");
       } else if (
         col !== "id" &&
+        col !== "decommissioned_id" &&
         col !== "network_ports" &&
         col !== "comment" &&
         col !== "power_connections" &&
@@ -575,6 +619,7 @@ class ElementTable extends React.Component<
       isAssetObject(data) ||
       isModelObject(data) ||
       isDatacenterObject(data) ||
+      isChangePlanObject(data) ||
       isUserObject(data)
     ) {
       this.setState({
@@ -598,6 +643,27 @@ class ElementTable extends React.Component<
     );
   };
 
+  getUserEditForm = () => {
+    return (
+      <FormPopup
+        {...this.props}
+        isOpen={this.state.editUserFormOpen}
+        userId={this.state.selected_userid}
+        initialValues={this.state.editFormValues}
+        type={FormTypes.MODIFY}
+        elementName={this.props.type}
+        handleClose={() => {
+          this.setState({ editUserFormOpen: false });
+        }}
+        submitForm={() => {
+          this.setState({ editUserFormOpen: false });
+          this.successfulModification("User permissions successfully updated");
+        }}
+      // submitForm={this.getSubmitFormFunction(FormTypes.MODIFY)}
+      />
+    );
+  };
+
   // POWER LOGIC
   getPowerOptions = () => {
     return (
@@ -616,16 +682,17 @@ class ElementTable extends React.Component<
           }}
           asset={this.state.assetPower}
           shouldUpdate={false}
-          updated={() => {}}
+          updated={() => { }}
+          assetIsDecommissioned={this.props.isDecommissioned}
         />
       </Dialog>
     );
   };
 
-  successfulModification() {
+  successfulModification(message: string) {
     this.updateTableData();
     this.handleEditFormClose();
-    this.addSuccessToast("Successfuly modified");
+    this.addSuccessToast(message);
   }
   successfulModifcationWithWarning = (warning: string) => {
     this.updateTableData();
@@ -635,19 +702,23 @@ class ElementTable extends React.Component<
   handleEditFormSubmit = (values: ElementObjectType, headers: any) => {
     if (isModelObject(values)) {
       return modifyModel(values, headers).then(res => {
-        this.successfulModification();
+        this.successfulModification(res.data.success_message);
       });
     } else if (isAssetObject(values)) {
-      return modifyAsset(values, headers).then(res => {
+      return modifyAsset(values, headers, this.props.changePlan).then(res => {
         if (res.data.warning_message) {
           this.successfulModifcationWithWarning(res.data.warning_message);
         } else {
-          this.successfulModification();
+          this.successfulModification(res.data.success_message);
         }
+      });
+    } else if (isChangePlanObject(values)) {
+      return modifyChangePlan(values, headers).then(res => {
+        this.successfulModification(res.data.success_message);
       });
     } else if (isDatacenterObject(values)) {
       return modifyDatacenter(values, headers).then(res => {
-        this.successfulModification();
+        this.successfulModification(res.data.success_message);
         if (this.props.updateDatacenters) {
           this.props.updateDatacenters();
         }
@@ -672,10 +743,27 @@ class ElementTable extends React.Component<
   };
 
   //DELETE LOGIC
-
+  private shouldShowColumn = (item: any, col: string) => {
+    if (isAssetObject(item)) {
+      return AssetFieldsTable[col] && col !== "comment";
+    }
+    return (
+      col !== "id" &&
+      col !== "network_ports" &&
+      col !== "comment" &&
+      col !== "is_admin" &&
+      col !== "decommissioned_id" &&
+      !isObject(item[col])
+    );
+  };
   private handleDeleteOpen = () =>
     this.setState({ openAlert: ElementTableOpenAlert.DELETE });
   private handleDeleteCancel = () =>
+    this.setState({ openAlert: ElementTableOpenAlert.NONE });
+
+  private handleDecommissionOpen = () =>
+    this.setState({ openAlert: ElementTableOpenAlert.DECOMMISSION });
+  private handleDecommissionCancel = () =>
     this.setState({ openAlert: ElementTableOpenAlert.NONE });
 
   private handleDelete = () => {
@@ -700,11 +788,16 @@ class ElementTable extends React.Component<
         this.state.editFormValues,
         getHeaders(this.props.token)
       );
+    } else if (isChangePlanObject(this.state.editFormValues)) {
+      resp = deleteChangePlan(
+        this.state.editFormValues,
+        getHeaders(this.props.token)
+      );
     }
     if (resp) {
       resp
         .then(res => {
-          this.addSuccessToast("Sucessfully deleted");
+          this.addSuccessToast(res.data.success_message);
           this.updateTableData();
           this.handleDeleteCancel();
           if (this.props.updateDatacenters) {
@@ -718,9 +811,40 @@ class ElementTable extends React.Component<
     }
   };
 
+  private handleDecommission = () => {
+    let resp;
+    if (isAssetObject(this.state.editFormValues)) {
+      resp = decommissionAsset(
+        this.state.editFormValues,
+        getHeaders(this.props.token),
+        this.props.changePlan
+      );
+    }
+    if (resp) {
+      resp
+        .then(res => {
+          this.addSuccessToast(res.data.success_message);
+          this.updateTableData();
+          this.handleDecommissionCancel();
+          if (this.props.updateDatacenters) {
+            this.props.updateDatacenters();
+          }
+        })
+        .catch(err => {
+          this.addErrorToast(err.response.data.failure_message);
+          this.handleDecommissionCancel();
+        });
+    }
+  };
+
   handleDeleteButtonClick = (data: ElementObjectType) => {
     this.handleInlineButtonClick(data);
     this.handleDeleteOpen();
+  };
+
+  handleDecommissionButtonClick = (data: ElementObjectType) => {
+    this.handleInlineButtonClick(data);
+    this.handleDecommissionOpen();
   };
 
   handlePowerButtonClick = (data: AssetObject) => {
@@ -730,101 +854,23 @@ class ElementTable extends React.Component<
     });
   };
 
-  //ADMIN BUTTON LOGIC
-  //REVOKE ADMIN BUTTON LOGIC
-  private handleRevokeAdminOpen = (userid: string) =>
-    this.setState({
-      openAlert: ElementTableOpenAlert.REVOKE_ADMIN,
-      selected_userid: userid
-    });
-  private handleRevokeAdminCancel = () =>
-    this.setState({
-      openAlert: ElementTableOpenAlert.NONE,
-      selected_userid: undefined
-    });
-  private handleRevokeAdmin = () => {
-    this.setState({ openAlert: ElementTableOpenAlert.NONE });
-    const headers = getHeaders(this.props.token);
-    axios
-      .post(
-        API_ROOT + "api/users/revoke-admin",
-        { id: this.state.selected_userid },
-        headers
-      )
-      .then(res => {
-        this.addToast({
-          message: res.data.success_message,
-          intent: Intent.PRIMARY
-        });
-        this.updateTableData();
-      })
-      .catch(err => {
-        this.addToast({
-          message: err.response.data.failure_message,
-          intent: Intent.DANGER
-        });
-      });
-  };
-
-  //GRANT ADMIN BUTTON LOGIC
-  private handleGrantAdminOpen = (userid: string) =>
-    this.setState({
-      openAlert: ElementTableOpenAlert.GRANT_ADMIN,
-      selected_userid: userid
-    });
-  private handleGrantAdminCancel = () =>
-    this.setState({
-      openAlert: ElementTableOpenAlert.NONE,
-      selected_userid: undefined
-    });
-  private handleGrantAdmin = () => {
-    this.setState({ openAlert: ElementTableOpenAlert.NONE });
-    const headers = getHeaders(this.props.token);
-    axios
-      .post(
-        API_ROOT + "api/users/grant-admin",
-        { id: this.state.selected_userid },
-        headers
-      )
-      .then(res => {
-        this.addToast({
-          message: res.data.success_message,
-          intent: Intent.PRIMARY
-        });
-        this.updateTableData();
-      })
-      .catch(err => {
-        this.addToast({
-          message: err.response.data.failure_message,
-          intent: Intent.DANGER
-        });
-      });
-  };
-
-  renderAdminButton = (item: UserInfoObject) => {
-    if (item.is_admin) {
-      return (
-        <AnchorButton
-          className="button-table"
-          intent="danger"
-          icon="delete"
-          minimal
-          text="Revoke admin"
-          onClick={() => this.handleRevokeAdminOpen(item.id)}
-        />
-      );
-    } else {
-      return (
-        <AnchorButton
-          className="button-table"
-          intent="primary"
-          icon="add"
-          minimal
-          text="Grant admin"
-          onClick={() => this.handleGrantAdminOpen(item.id)}
-        />
-      );
-    }
+  renderPermissionsButton = (item: UserInfoObject) => {
+    return (
+      <AnchorButton
+        className="button-table permissions-button"
+        intent="primary"
+        icon="edit"
+        minimal
+        text="Edit Permissions"
+        onClick={() => {
+          this.setState({
+            editUserFormOpen: true,
+            selected_userid: item.id,
+            isEditFormOpen: false
+          });
+        }}
+      />
+    );
   };
 
   render() {
@@ -842,6 +888,7 @@ class ElementTable extends React.Component<
     return (
       <div className="tab-panel">
         {this.getEditForm()}
+        {this.getUserEditForm()}
         {this.getPowerOptions()}
         <Alert
           cancelButtonText="Cancel"
@@ -855,25 +902,13 @@ class ElementTable extends React.Component<
         </Alert>
         <Alert
           cancelButtonText="Cancel"
-          confirmButtonText="Confirm"
+          confirmButtonText="Decommission"
           intent="danger"
-          isOpen={this.state.openAlert === ElementTableOpenAlert.GRANT_ADMIN}
-          onCancel={this.handleGrantAdminCancel}
-          onConfirm={this.handleGrantAdmin}
+          isOpen={this.state.openAlert === ElementTableOpenAlert.DECOMMISSION}
+          onCancel={this.handleDecommissionCancel}
+          onConfirm={this.handleDecommission}
         >
-          <p>Are you sure you want to grant admin permission to this user?</p>
-        </Alert>
-        <Alert
-          cancelButtonText="Cancel"
-          confirmButtonText="Confirm"
-          intent="danger"
-          isOpen={this.state.openAlert === ElementTableOpenAlert.REVOKE_ADMIN}
-          onCancel={this.handleRevokeAdminCancel}
-          onConfirm={this.handleRevokeAdmin}
-        >
-          <p>
-            Are you sure you want to revoke admin permission from this user?
-          </p>
+          <p>Are you sure you want to decommission?</p>
         </Alert>
         <Toaster
           autoFocus={false}
@@ -886,20 +921,20 @@ class ElementTable extends React.Component<
           {this.props.disableFiltering
             ? null
             : [
-                <div className="filter-select">
-                  <FilterSelect
-                    handleAddFilter={this.addFilter}
-                    fields={this.state.fields}
-                  />
-                </div>,
-                <div className="table-options">
-                  <DragDropList
-                    type={DragDropListTypes.FILTER}
-                    items={this.state.filters}
-                    renderItem={this.renderFilterItem}
-                  />
-                </div>
-              ]}
+              <div className="filter-select">
+                <FilterSelect
+                  handleAddFilter={this.addFilter}
+                  fields={this.state.fields}
+                />
+              </div>,
+              <div className="table-options">
+                <DragDropList
+                  type={DragDropListTypes.FILTER}
+                  items={this.state.filters}
+                  renderItem={this.renderFilterItem}
+                />
+              </div>
+            ]}
           {this.props.disableSorting ? null : (
             <div className="table-options">
               <DragDropList
@@ -923,153 +958,292 @@ class ElementTable extends React.Component<
               </HTMLSelect>
               {this.state.page_type !== PagingTypes.ALL
                 ? [
-                    <span>
-                      <Icon
-                        className="icon"
-                        icon={IconNames.CARET_LEFT}
-                        iconSize={Icon.SIZE_LARGE}
-                        onClick={() => this.previousPage()}
-                      />
-                    </span>,
-                    <span>
-                      page {this.state.curr_page} of {this.state.total_pages}
-                    </span>,
-                    <span>
-                      <Icon
-                        className="icon"
-                        icon={IconNames.CARET_RIGHT}
-                        iconSize={Icon.SIZE_LARGE}
-                        onClick={() => this.nextPage()}
-                      />
-                    </span>
-                  ]
+                  <span>
+                    <Icon
+                      className="icon"
+                      icon={IconNames.CARET_LEFT}
+                      iconSize={Icon.SIZE_LARGE}
+                      onClick={() => this.previousPage()}
+                    />
+                  </span>,
+                  <span>
+                    page {this.state.curr_page} of {this.state.total_pages}
+                  </span>,
+                  <span>
+                    <Icon
+                      className="icon"
+                      icon={IconNames.CARET_RIGHT}
+                      iconSize={Icon.SIZE_LARGE}
+                      onClick={() => this.nextPage()}
+                    />
+                  </span>
+                ]
                 : null}
             </div>
           ) : null}
         </div>
         <div className="table-wrapper">
-          {this.state.fields.length === 0 ? null : (
-            <table
-              className={
-                this.props.type !== ElementType.DATACENTER &&
+          <table
+            className={
+              this.props.type !== ElementType.DATACENTER &&
                 this.props.type !== ElementType.USER
-                  ? "bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered element-table"
-                  : "bp3-html-table bp3-html-table-striped bp3-html-table-bordered element-table"
-              }
-            >
-              <thead>
-                <tr>
-                  {this.state.fields.map((col: string) => {
-                    if (col === "model") {
-                      return [
-                        <th className="header-cell">
-                          <div className="header-text">
-                            <span>model vendor</span>
-                            {this.getScrollIcon("model__vendor")}
-                          </div>
-                        </th>,
-                        <th className="header-cell">
-                          <div className="header-text">
-                            <span>model number</span>
-                            {this.getScrollIcon("model__model_number")}
-                          </div>
-                        </th>
-                      ];
-                    } else if (this.props.type === ElementType.ASSET) {
-                      return (
-                        <th className="header-cell">
-                          <div className="header-text">
-                            <span>{AssetFieldsTable[col]}</span>
-                            {this.getScrollIcon(col)}
-                          </div>
-                        </th>
-                      );
-                    } else if (this.props.type === ElementType.MODEL) {
-                      return (
-                        <th className="header-cell">
-                          <div className="header-text">
-                            <span>{ModelFieldsTable[col]}</span>
-                            {this.getScrollIcon(col)}
-                          </div>
-                        </th>
-                      );
-                    } else {
-                      return (
-                        <th className="header-cell">
-                          <div className="header-text">
-                            <span>{col}</span>
-                            {this.getScrollIcon(col)}
-                          </div>
-                        </th>
-                      );
-                    }
-                  })}
-                  <th></th>
-                </tr>
-              </thead>
-              {this.state.items && this.state.items.length > 0 ? (
-                !this.state.getDataInProgress ? (
-                  <tbody>
-                    {this.state.items.map((item: ElementObjectType) => {
-                      return (
-                        <tr
-                          onClick={
-                            this.props.type === ElementType.DATACENTER ||
-                            this.props.type === ElementType.USER
-                              ? () => {}
-                              : () => {
-                                  this.props.history.push(
-                                    "/" + this.props.type + "/" + item.id
-                                  );
+                ? "bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered element-table"
+                : "bp3-html-table bp3-html-table-striped bp3-html-table-bordered element-table"
+            }
+          >
+            <thead>
+              <tr>
+                {this.props.type === ElementType.ASSET &&
+                  this.state.fields &&
+                  this.state.fields.length > 0 ? (
+                    <th className="header-cell">
+                      <div className="header-text">
+                        {this.props.isDecommissioned ? null : (
+                          <Checkbox
+                            checked={this.state.selectedAll}
+                            onClick={(event: any) => {
+                              const selected = this.state.selected;
+                              const selectedAll = !this.state.selectedAll;
+                              this.state.items.forEach(item => {
+                                if (isAssetObject(item)) {
+                                  if (
+                                    selected.includes(item.asset_number) &&
+                                    !selectedAll
+                                  ) {
+                                    selected.splice(
+                                      selected.indexOf(item.asset_number),
+                                      1
+                                    );
+                                  } else if (
+                                    !selected.includes(item.asset_number) &&
+                                    selectedAll
+                                  ) {
+                                    selected.push(item.asset_number);
+                                  }
                                 }
-                          }
-                        >
-                          {Object.entries(item).map(([col, value]) => {
-                            if (isModelObject(value)) {
-                              return [
-                                <td>{value.vendor}</td>,
-                                <td>{value.model_number}</td>
-                              ];
-                            } else if (isRackObject(value)) {
-                              return [
-                                <td>{value.row_letter + value.rack_num}</td>,
-                                <td>{value.datacenter.name}</td>
-                              ];
-                            } else if (col === "display_color") {
-                              return (
-                                <td
-                                  style={{
-                                    backgroundColor: value
-                                  }}
-                                ></td>
-                              );
-                            } else if (
-                              col !== "id" &&
-                              col !== "network_ports" &&
-                              col !== "comment" &&
-                              col !== "is_admin" &&
-                              !isObject(value)
-                            ) {
-                              return <td>{value}</td>;
-                            }
+                              });
+                              console.log(selected);
 
-                            return null;
-                          })}
-                          <td>
-                            {this.props.isAdmin && isUserObject(item) ? (
-                              <div className="inline-buttons grant-admin-button">
-                                {this.renderAdminButton(item)}
-                              </div>
-                            ) : null}
-                            <div className="inline-buttons">
-                              {this.props.type !== ElementType.USER &&
+                              this.setState({
+                                selectedAll,
+                                selected
+                              });
+                              if (this.props.updateBarcodes) {
+                                this.props.updateBarcodes(this.state.selected);
+                              }
+                            }}
+                          />
+                        )}
+                      </div>
+                    </th>
+                  ) : null}
+                {this.state.fields.map((col: string) => {
+                  if (col === "model") {
+                    return [
+                      <th className="header-cell">
+                        <div className="header-text">
+                          <span>model vendor</span>
+                          {this.getScrollIcon("model__vendor")}
+                        </div>
+                      </th>,
+                      <th className="header-cell">
+                        <div className="header-text">
+                          <span>model number</span>
+                          {this.getScrollIcon("model__model_number")}
+                        </div>
+                      </th>
+                    ];
+                  } else if (this.props.type === ElementType.ASSET) {
+                    return (
+                      <th className="header-cell">
+                        <div className="header-text">
+                          <span>{AssetFieldsTable[col]}</span>
+                          {this.getScrollIcon(col)}
+                        </div>
+                      </th>
+                    );
+                  } else if (this.props.type === ElementType.MODEL) {
+                    return (
+                      <th className="header-cell">
+                        <div className="header-text">
+                          <span>{ModelFieldsTable[col]}</span>
+                          {this.getScrollIcon(col)}
+                        </div>
+                      </th>
+                    );
+                  } else {
+                    return (
+                      <th className="header-cell">
+                        <div className="header-text">
+                          <span>{col}</span>
+                          {this.getScrollIcon(col)}
+                        </div>
+                      </th>
+                    );
+                  }
+                })}
+                <th></th>
+              </tr>
+            </thead>
+
+            {this.state.items && this.state.items.length > 0 ? (
+              !this.state.getDataInProgress ? (
+                <tbody>
+                  {this.state.items.map((item: ElementObjectType) => {
+                    return (
+                      <tr
+                        key={item.id}
+                        onClick={
+                          this.props.type === ElementType.DATACENTER ||
+                            this.props.type === ElementType.USER
+                            ? () => { }
+                            : () => {
+                              this.props.history.push(
+                                ROUTES.DASHBOARD +
+                                "/" +
+                                this.props.type +
+                                "/" +
+                                item.id
+                              );
+                            }
+                        }
+                        style={getChangePlanRowStyle(item)}
+                      >
+                        {this.props.type === ElementType.ASSET &&
+                          isAssetObject(item) ? (
+                            <th
+                              onClick={(event: any) => {
+                                event.stopPropagation();
+                              }}
+                            >
+                              {this.props.isDecommissioned ? null : (
+                                <Checkbox
+                                  checked={this.state.selected.includes(
+                                    item.asset_number
+                                  )}
+                                  onClick={(event: any) => {
+                                    const selected = this.state.selected;
+                                    if (selected.includes(item.asset_number)) {
+                                      console.log(
+                                        "removing",
+                                        item.asset_number,
+                                        selected
+                                      );
+                                      if (this.state.selectedAll) {
+                                        this.setState({
+                                          selectedAll: false
+                                        });
+                                      }
+                                      selected.splice(
+                                        selected.indexOf(item.asset_number),
+                                        1
+                                      );
+                                    } else {
+                                      selected.push(item.asset_number);
+                                      console.log("adding", item.asset_number);
+                                    }
+                                    this.setState({
+                                      selected
+                                    });
+                                    if (this.props.updateBarcodes) {
+                                      this.props.updateBarcodes(
+                                        this.state.selected
+                                      );
+                                    }
+                                    console.log(selected);
+                                    event.stopPropagation();
+                                  }}
+                                />
+                              )}
+                            </th>
+                          ) : null}
+                        {Object.entries(item).map(([col, value]) => {
+                          if (isModelObject(value)) {
+                            return [
+                              <td style={getChangePlanRowStyle(item)}>
+                                {value.vendor}
+                              </td>,
+                              <td style={getChangePlanRowStyle(item)}>
+                                {value.model_number}
+                              </td>
+                            ];
+                          } else if (isRackObject(value)) {
+                            return [
+                              <td style={getChangePlanRowStyle(item)}>
+                                {value.row_letter + value.rack_num}
+                              </td>,
+                              <td style={getChangePlanRowStyle(item)}>
+                                {value.datacenter.name}
+                              </td>
+                            ];
+                          } else if (col === "display_color") {
+                            return (
+                              <td
+                                style={{
+                                  backgroundColor: value
+                                }}
+                              ></td>
+                            );
+                          } else if (this.shouldShowColumn(item, col)) {
+                            return (
+                              <td style={getChangePlanRowStyle(item)}>
+                                {value}
+                              </td>
+                            );
+                          }
+
+                          return null;
+                        })}
+                        <td
+                          onClick={(event: any) => {
+                            event.stopPropagation();
+                          }}
+                        >
+                          {this.props.permissionState.admin && isUserObject(item) ? (
+                            <div className="inline-buttons-user grant-admin-button permissions-button">
+                              {" "}
+                              {/* TODO change grant-admin-button to change-permissions*/}
+                              {this.renderPermissionsButton(item)}
+                            </div>
+                          ) : null}
+                          <div className="inline-buttons">
+                            {this.props.type !== ElementType.USER &&
                               !this.props.data &&
-                              this.props.isAdmin ? (
+                              !this.props.isDecommissioned ? (
                                 <AnchorButton
                                   className="button-table"
                                   intent="primary"
-                                  icon="edit"
                                   minimal
+                                  icon="edit"
+                                  disabled={
+                                    (this.props.changePlan &&
+                                      this.props.type !== ElementType.ASSET) ||  (this.props.type ===
+                                        ElementType.CHANGEPLANS &&
+                                        isChangePlanObject(item) &&
+                                        item.execution_time)
+                                      ? true
+                                      : !(
+                                        this.props.permissionState.admin ||
+                                        (this.props.type ===
+                                          ElementType.DATACENTER &&
+                                          this.props.permissionState
+                                            .asset_management) ||
+                                        (this.props.type ===
+                                          ElementType.MODEL &&
+                                          this.props.permissionState
+                                            .model_management) ||
+                                        (this.props.type ===
+                                          ElementType.ASSET &&
+                                          this.props.permissionState
+                                            .asset_management) ||
+                                        (this.props.type ===
+                                          ElementType.ASSET &&
+                                          isAssetObject(item) &&
+                                          this.props.permissionState.datacenter_permissions.includes(
+                                            +item.rack.datacenter.id
+                                          ))
+                                      )
+                                  }
                                   onClick={(event: any) => {
                                     console.log(
                                       "SCROLL",
@@ -1081,57 +1255,103 @@ class ElementTable extends React.Component<
                                   }}
                                 />
                               ) : null}
-                              {this.props.isAdmin && !this.props.data ? (
+                            {!this.props.data &&
+                              !this.props.isDecommissioned ? (
                                 <AnchorButton
                                   className="button-table"
                                   intent="danger"
                                   minimal
-                                  icon="trash"
-                                  onClick={(event: any) => {
-                                    this.handleDeleteButtonClick(item);
-                                    event.stopPropagation();
-                                  }}
+                                  icon={
+                                    this.props.type === ElementType.ASSET
+                                      ? "remove"
+                                      : "trash"
+                                  }
+                                  disabled={
+                                    (this.props.changePlan &&
+                                      this.props.type !== ElementType.ASSET) ||  (this.props.type ===
+                                        ElementType.CHANGEPLANS &&
+                                        isChangePlanObject(item) &&
+                                        item.execution_time)
+                                      ? true
+                                      : !(
+                                        this.props.permissionState.admin ||
+                                        (this.props.type ===
+                                          ElementType.DATACENTER &&
+                                          this.props.permissionState
+                                            .asset_management) ||
+                                        (this.props.type ===
+                                          ElementType.MODEL &&
+                                          this.props.permissionState
+                                            .model_management) ||
+                                        (this.props.type ===
+                                          ElementType.ASSET &&
+                                          this.props.permissionState
+                                            .asset_management) ||
+                                        (this.props.type ===
+                                          ElementType.ASSET &&
+                                          isAssetObject(item) &&
+                                          this.props.permissionState.datacenter_permissions.includes(
+                                            +item.rack.datacenter.id
+                                          ))
+                                      )
+                                  }
+                                  onClick={
+                                    this.props.type === ElementType.ASSET
+                                      ? (event: any) => {
+                                        this.handleDecommissionButtonClick(
+                                          item
+                                        );
+                                        event.stopPropagation();
+                                      }
+                                      : (event: any) => {
+                                        this.handleDeleteButtonClick(item);
+                                        event.stopPropagation();
+                                      }
+                                  }
                                 />
                               ) : null}
-                              {isAssetObject(item) &&
-                              item.rack.is_network_controlled ? (
+                            {isAssetObject(item) &&
+                              item.rack.is_network_controlled &&
+                              !this.props.isDecommissioned ? (
                                 <AnchorButton
                                   className="button-table"
                                   intent="warning"
                                   minimal
                                   icon="offline"
+                                  disabled={this.props.changePlan ? true : false}
                                   onClick={(event: any) => {
                                     this.handlePowerButtonClick(item);
                                     event.stopPropagation();
                                   }}
                                 />
                               ) : null}
-                            </div>{" "}
-                            {/* TODO add logic for determining if isOwner for power button */}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                ) : null
+                          </div>{" "}
+                          {/* TODO add logic for determining if isOwner for power button */}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
               ) : null
+            ) : null
               // <Spinner
               //   className="table-spinner"
               //   size={Spinner.SIZE_STANDARD}
               // />
               // <h4 className="no-data-text">no {this.props.type} found </h4>
-              }
-            </table>
-          )}
+            }
+          </table>
+
           {this.state.getDataInProgress ? (
             <Spinner className="table-spinner" size={Spinner.SIZE_STANDARD} />
           ) : null}
-          {this.state.items.length === 0 && !this.state.getDataInProgress ? (
-            <Callout
-              icon={IconNames.ERROR}
-              title={"No " + this.props.type}
-            ></Callout>
-          ) : null}
+          {(!this.state.items || this.state.items.length === 0) &&
+            !this.state.getDataInProgress ? (
+              <Callout
+                icon={IconNames.ERROR}
+                title={"No " + this.props.type}
+              ></Callout>
+            ) : null}
         </div>
       </div>
     );
@@ -1140,7 +1360,9 @@ class ElementTable extends React.Component<
 const mapStateToProps = (state: any) => {
   return {
     token: state.token,
-    isAdmin: state.admin
+    isAdmin: state.admin,
+    changePlan: state.changePlan,
+    permissionState: state.permissionState
   };
 };
 export default connect(mapStateToProps)(withRouter(ElementTable));

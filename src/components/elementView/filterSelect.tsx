@@ -1,4 +1,5 @@
 import { Button, FormGroup, HTMLSelect, MenuItem } from "@blueprintjs/core";
+import { DateRangeInput, DateRange } from "@blueprintjs/datetime";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { Select } from "@blueprintjs/select";
 import * as React from "react";
@@ -28,12 +29,13 @@ import {
   IFilter,
   NumericFilter,
   TextFilter,
-  TextFilterTypes
+  TextFilterTypes,
+  DatetimeFilter
 } from "./elementUtils";
 import "./elementView.scss";
 
-var console: any = {};
-console.log = function() {};
+// var console: any = {};
+// console.log = function () { };
 
 interface FilterSelectProps {
   token: string;
@@ -44,11 +46,11 @@ interface FilterSelectProps {
 class FilterSelect extends React.Component<
   FilterSelectProps & RouteComponentProps,
   IFilter
-> {
+  > {
   state = {
     id: "",
     field: "",
-    filter: {} as TextFilter | NumericFilter | RackRangeFields,
+    filter: {} as TextFilter | NumericFilter | RackRangeFields | DatetimeFilter,
     filter_type: FilterTypes.TEXT
   };
   renderFilterOptions(field: string | undefined) {
@@ -61,6 +63,9 @@ class FilterSelect extends React.Component<
     }
     if (type === FilterTypes.RACKRANGE) {
       return this.getRackFilterOptions();
+    }
+    if (type === FilterTypes.DATETIME) {
+      return this.getDatetimeFilterOptions();
     }
     return null;
   }
@@ -78,6 +83,22 @@ class FilterSelect extends React.Component<
         />
       </div>
     ) : null;
+  }
+  getDatetimeFilterOptions() {
+    return (
+      <FormGroup label="Date range">
+        <DateRangeInput
+          formatDate={(date: Date) => date.toLocaleString()}
+          onChange={this.handleDatetimeChange}
+          parseDate={(str: string) => new Date(str)}
+          allowSingleDayRange={true}
+          shortcuts={true}
+          singleMonthOnly={true}
+          closeOnSelection={false}
+          timePrecision="minute"
+        />
+      </FormGroup>
+    );
   }
   getNumericFilterOptions() {
     return (
@@ -144,6 +165,13 @@ class FilterSelect extends React.Component<
         filter: filter
       });
     }
+    if (type === FilterTypes.DATETIME) {
+      console.log("set type to datetime")
+      const filter: DatetimeFilter = {};
+      this.setState({
+        filter: filter
+      });
+    }
   }
   handleChange = (field: { [key: string]: any }) => {
     const test = updateObject(this.state.filter, {
@@ -158,6 +186,16 @@ class FilterSelect extends React.Component<
       filter: test
     });
   };
+  handleDatetimeChange = (range: DateRange) => {
+    console.log("handling datetime change")
+    let filter: DatetimeFilter = {
+      after: range[0] ? range[0].toISOString() : undefined,
+      before: range[1] ? range[1].toISOString() : undefined,
+    }
+    this.setState({ filter: filter })
+    console.log("datetime filter: ")
+    console.log(this.state.filter)
+  }
   handleSubmit = (e: any) => {
     e.preventDefault();
     console.log("test");
@@ -230,13 +268,13 @@ class FilterSelect extends React.Component<
 
           {this.state.field
             ? [
-                this.renderFilterOptions(this.state.field),
-                <div className="add-filter">
-                  <Button icon="filter" type="submit">
-                    Add Filter
+              this.renderFilterOptions(this.state.field),
+              <div className="add-filter">
+                <Button icon="filter" type="submit">
+                  Add Filter
                   </Button>
-                </div>
-              ]
+              </div>
+            ]
             : null}
         </form>
       </div>

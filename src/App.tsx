@@ -3,25 +3,33 @@ import "@blueprintjs/icons/lib/css/blueprint-icons.css";
 import "normalize.css/normalize.css";
 import React from "react";
 import { connect } from "react-redux";
-import { BrowserRouter, Redirect, Route, Switch } from "react-router-dom";
+import {
+  BrowserRouter,
+  Redirect,
+  Route,
+  RouteComponentProps
+} from "react-router-dom";
 import AssetView from "./components/elementView/detailedView/assetView/assetView";
 import ModelView from "./components/elementView/detailedView/modelView/modelView";
+import RackView from "./components/elementView/detailedView/rackView/rackView";
+import BarcodeView from "./components/elementView/detailedView/assetView/barcodeView";
+import Fallback, {
+  NotAuthorized,
+  NotAuthorizedAdmin
+} from "./components/fallback";
 import BulkImport from "./components/import/import";
 import LandingView from "./components/landingView/landingView";
+import Logs from "./components/logs/logs";
 import Navigation from "./components/navigation/navigation";
 import Report from "./components/report/report";
 import User from "./components/userView/user";
+import ChangePlannerView from "./components/changePlanner/changePlannerView";
 import LoginView from "./forms/auth/loginView";
-import Logs from "./components/logs/logs";
-import RackView from "./components/elementView/detailedView/rackView/rackView";
 // import BulkExport from "./components/export/export";
 import "./index.scss";
-import * as actions from "./store/actions/auth";
-import {
-  NotAuthorized,
-  NotFound,
-  NotAuthorizedAdmin
-} from "./components/fallback";
+import * as actions from "./store/actions/state";
+import { ROUTES, PermissionState } from "./utils/utils";
+import CPDetailView from "./components/changePlanner/CPDetailView";
 
 var console: any = {};
 console.log = function () { };
@@ -30,6 +38,7 @@ export interface AppProps {
   onTryAutoSignup: any;
   isAdmin: boolean;
   loading: boolean;
+  permissionState: PermissionState;
 }
 
 class App extends React.Component<AppProps> {
@@ -38,23 +47,30 @@ class App extends React.Component<AppProps> {
     this.props.onTryAutoSignup();
   }
 
-  RedirectRoute = ({ ...rest }: any) => {
+  RedirectToLoginRoute = ({ ...rest }: any) => {
     return this.props.isAuthenticated ? (
       <Route {...rest} />
     ) : (
         <Route {...rest}>
-          <Redirect to="/login" />
+          <Redirect to={ROUTES.LOGIN} />
         </Route>
       );
   };
 
-  PrivateRoute = ({ path, component, ...rest }: any) => {
-    return (
+  PrivateRoute = ({ path, component, render, ...rest }: any) => {
+    return component ? (
       <Route
         path={path}
+        {...rest}
         component={this.props.isAuthenticated ? component : NotAuthorized}
       />
-    );
+    ) : render ? (
+      <Route
+        path={path}
+        {...rest}
+        render={this.props.isAuthenticated ? render : NotAuthorized}
+      />
+    ) : null;
   };
 
   AdminRoute = ({ path, component, ...rest }: any) => {
@@ -63,11 +79,12 @@ class App extends React.Component<AppProps> {
         path={path}
         component={
           this.props.isAuthenticated
-            ? this.props.isAdmin
+            ? this.props.permissionState.admin
               ? component
               : NotAuthorizedAdmin
             : NotAuthorized
         }
+        {...rest}
       />
     );
   };
@@ -78,20 +95,49 @@ class App extends React.Component<AppProps> {
         <div>
           <Navigation {...this.props} />
 
-          <Switch>
-            <this.RedirectRoute exact path="/" component={LandingView} />
-            <Route path="/login" component={LoginView} />
-            <this.PrivateRoute path="/models/:rid" component={ModelView} />
-            <this.PrivateRoute path="/assets/:rid" component={AssetView} />
-            <this.PrivateRoute path="/report" component={Report} />
-            <this.PrivateRoute path="/logs" component={Logs} />
-            <this.PrivateRoute path="/rack-print" component={RackView} />
+          <Route path={ROUTES.LOGIN} component={LoginView} />
+          <div className="dashboard ">
+            <this.PrivateRoute
+              path={ROUTES.DASHBOARD}
+              render={(props: RouteComponentProps) => (
+                <LandingView {...props} />
+              )}
+            />
+            <this.RedirectToLoginRoute exact path="/">
+              {" "}
+              <Redirect to={ROUTES.DASHBOARD} />
+            </this.RedirectToLoginRoute>
+            <Route path="/" component={Fallback}></Route>
 
-            {/* admin paths */}
-            <this.AdminRoute path="/users" component={User} />
-            <this.AdminRoute path="/bulk-upload/:resourceType" component={BulkImport} />
-            <Route path="/*" component={NotFound} />
-          </Switch>
+            <this.PrivateRoute
+              path={ROUTES.MODELS + "/:rid"}
+              component={ModelView}
+            />
+            <this.PrivateRoute
+              path={ROUTES.ASSETS + "/:rid"}
+              component={AssetView}
+            />
+            <this.PrivateRoute
+              path={ROUTES.CHANGE_PLAN + "/:id"}
+              component={CPDetailView}
+            />
+          </div>
+          <this.PrivateRoute path={ROUTES.REPORT} component={Report} />
+          <this.PrivateRoute path={ROUTES.LOGS} component={Logs} />
+          <this.PrivateRoute path={ROUTES.RACK_PRINT} component={RackView} />
+          <this.PrivateRoute
+            path={ROUTES.BARCODE_PRINT}
+            component={BarcodeView}
+          />
+          <this.PrivateRoute
+            exact
+            path={ROUTES.CHANGE_PLAN}
+            component={ChangePlannerView}
+          />
+
+          {/* admin paths */}
+          <this.AdminRoute path={ROUTES.USERS} component={User} />
+          <this.AdminRoute path={ROUTES.BULK_IMPORT} component={BulkImport} />
         </div>
       </BrowserRouter>
     );
@@ -102,6 +148,7 @@ const mapStateToProps = (state: any) => {
   return {
     isAuthenticated: state.token !== null,
     isAdmin: state.admin,
+    permissionState: state.permissionState,
     loading: state.loading
   };
 };

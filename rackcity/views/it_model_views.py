@@ -1,9 +1,11 @@
 from rest_framework.parsers import JSONParser
 from django.http import HttpResponse, JsonResponse
+from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ObjectDoesNotExist
 from rackcity.models import ITModel, Asset
 from rackcity.api.serializers import (
     RecursiveAssetSerializer,
+    RecursiveAssetCPSerializer,
     ITModelSerializer,
     BulkITModelSerializer,
     normalize_bulk_model_data
@@ -23,39 +25,32 @@ from rackcity.utils.errors_utils import (
     parse_save_validation_error,
     BulkFailure
 )
+from rackcity.models.asset import get_assets_for_cp
+from rackcity.permissions.permissions import PermissionPath
 from rest_framework.decorators import permission_classes, api_view
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
 from http import HTTPStatus
-import math
 import csv
 from base64 import b64decode
 import re
 from io import StringIO, BytesIO
+from rackcity.utils.query_utils import (
+    get_sort_arguments,
+    get_filter_arguments,
+    get_page_count_response,
+    get_many_response,
+)
 from rackcity.views.rackcity_utils import (
     validate_asset_location,
     records_are_identical,
-    get_sort_arguments,
-    get_filter_arguments,
     LocationException,
-    ModelModificationException
+    ModelModificationException,
+    get_change_plan
 )
 
 
-@api_view(['GET'])
-def model_list(request):  # DEPRECATED!
-    """
-    List all models.
-    """
-    if request.method == 'GET':
-        # print(request.auth)
-        models = ITModel.objects.all()
-        serializer = ITModelSerializer(models, many=True)
-        return JsonResponse(serializer.data, safe=False)
-
-
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.MODEL_WRITE.value, raise_exception=True)
 def model_add(request):
     """
     Add a new model
@@ -106,7 +101,7 @@ def model_add(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.MODEL_WRITE.value, raise_exception=True)
 def model_modify(request):
     """
     Modify an existing model
@@ -247,7 +242,7 @@ def validate_model_height_change(new_model_data, existing_model):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.MODEL_WRITE.value, raise_exception=True)
 def model_delete(request):
     """
     Delete an existing model
@@ -317,87 +312,11 @@ def model_many(request):
     models are returned. If page is specified as a query parameter, page
     size must also be specified, and a page of models will be returned.
     """
-
-    errors = []
-
-    should_paginate = not(
-        request.query_params.get('page') is None
-        and request.query_params.get('page_size') is None
-    )
-
-    if should_paginate:
-        if not request.query_params.get('page'):
-            errors.append("Must specify field 'page' on paginated requests")
-        elif not request.query_params.get('page_size'):
-            errors.append(
-                "Must specify field 'page_size' on paginated requests"
-            )
-        elif int(request.query_params.get('page_size')) <= 0:
-            errors.append(
-                "Field 'page_size' must be an integer greater than 0"
-            )
-
-    if len(errors) > 0:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                "errors": " ".join(errors)
-            },
-            status=HTTPStatus.BAD_REQUEST,
-        )
-
-    models_query = ITModel.objects
-
-    try:
-        filter_args = get_filter_arguments(request.data)
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.FILTER.value,
-                "errors": str(error)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    for filter_arg in filter_args:
-        models_query = models_query.filter(**filter_arg)
-
-    try:
-        sort_args = get_sort_arguments(request.data)
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.SORT.value,
-                "errors": str(error)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    models = models_query.order_by(*sort_args)
-
-    if should_paginate:
-        paginator = PageNumberPagination()
-        paginator.page_size = request.query_params.get('page_size')
-        try:
-            page_of_models = paginator.paginate_queryset(models, request)
-        except Exception as error:
-            return JsonResponse(
-                {
-                    "failure_message":
-                        Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                    "errors": str(error)
-                },
-                status=HTTPStatus.BAD_REQUEST,
-            )
-        models_to_serialize = page_of_models
-    else:
-        models_to_serialize = models
-
-    serializer = ITModelSerializer(models_to_serialize, many=True)
-    return JsonResponse(
-        {"models": serializer.data},
-        status=HTTPStatus.OK,
+    return get_many_response(
+        ITModel,
+        ITModelSerializer,
+        "models",
+        request,
     )
 
 
@@ -410,14 +329,34 @@ def model_detail(request, id):
     try:
         model = ITModel.objects.get(id=id)
         model_serializer = ITModelSerializer(model)
-        assets = Asset.objects.filter(model=id)
+        assets_cp = []
+        change_plan = None
+        if request.query_params.get("change_plan"):
+            (change_plan, response) = get_change_plan(request.query_params.get("change_plan"))
+            if response:
+                return response
+            assets, assets_cp = get_assets_for_cp(change_plan.id)
+            assets = assets.filter(model=id)
+            assets_cp = assets_cp.filter(model=id, change_plan=change_plan.id)
+            assets_cp_serializer = RecursiveAssetCPSerializer(
+                assets_cp,
+                many=True
+            )
+
+        else:
+            assets = Asset.objects.filter(model=id)
         assets_serializer = RecursiveAssetSerializer(
             assets,
             many=True,
         )
+
+        if change_plan:
+            asset_data = assets_serializer.data + assets_cp_serializer.data
+        else:
+            asset_data = assets_serializer.data 
         model_detail = {
             "model": model_serializer.data,
-            "assets": assets_serializer.data
+            "assets": asset_data
         }
         return JsonResponse(model_detail, status=HTTPStatus.OK)
     except ITModel.DoesNotExist:
@@ -447,7 +386,7 @@ def model_vendors(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.MODEL_WRITE.value, raise_exception=True)
 def model_bulk_upload(request):
     """
     Bulk upload many models to add or modify
@@ -468,7 +407,7 @@ def model_bulk_upload(request):
     csv_bytes_io = BytesIO(
         b64decode(re.sub(".*base64,", '', base_64_csv))
     )
-    csv_string_io = StringIO(csv_bytes_io.read().decode('UTF-8'))
+    csv_string_io = StringIO(csv_bytes_io.read().decode('UTF-8-SIG'))
     csvReader = csv.DictReader(csv_string_io)
     expected_fields = BulkITModelSerializer.Meta.fields
     given_fields = csvReader.fieldnames
@@ -604,7 +543,7 @@ def model_bulk_upload(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.MODEL_WRITE.value, raise_exception=True)
 def model_bulk_approve(request):
     """
     Bulk approve many models to modify
@@ -695,36 +634,11 @@ def model_page_count(request):
     Return total number of pages according to page size, which must be
     specified as query parameter.
     """
-    if (
-        not request.query_params.get('page_size')
-        or int(request.query_params.get('page_size')) <= 0
-    ):
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                "errors": "Must specify positive integer page_size."
-            },
-            status=HTTPStatus.BAD_REQUEST,
-        )
-    page_size = int(request.query_params.get('page_size'))
-    models_query = ITModel.objects
-    try:
-        filter_args = get_filter_arguments(request.data)
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.FILTER.value,
-                "errors": str(error)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    for filter_arg in filter_args:
-        models_query = models_query.filter(**filter_arg)
-    model_count = models_query.count()
-    page_count = math.ceil(model_count / page_size)
-    return JsonResponse({"page_count": page_count})
+    return get_page_count_response(
+        ITModel,
+        request.query_params,
+        data_for_filters=request.data,
+    )
 
 
 @api_view(['GET'])
@@ -748,29 +662,3 @@ def model_fields(request):
         ]},
         status=HTTPStatus.OK,
     )
-
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def model_auth(request):  # DEPRECATED!
-    """
-    List all models, but requires user authentication in header.
-    (Temporary for auth testing on front end)
-    """
-    if request.method == 'GET':
-        models = ITModel.objects.all()
-        serializer = ITModelSerializer(models, many=True)
-        return JsonResponse(serializer.data, safe=False)
-
-
-@api_view(['GET'])
-@permission_classes([IsAdminUser])
-def model_admin(request):  # DEPRECATED!
-    """
-    List all models, but requires request comes from admin user.
-    (Temporary for auth testing on front end)
-    """
-    if request.method == 'GET':
-        models = ITModel.objects.all()
-        serializer = ITModelSerializer(models, many=True)
-        return JsonResponse(serializer.data, safe=False)

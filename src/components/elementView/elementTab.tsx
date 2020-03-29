@@ -12,6 +12,7 @@ import {
   Position,
   Toaster
 } from "@blueprintjs/core";
+import * as actions from "../../store/actions/state";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
@@ -33,7 +34,10 @@ import {
   ElementType,
   ModelObject,
   ShallowAssetObject,
-  SortFilterBody
+  SortFilterBody,
+  ChangePlan,
+  PermissionState,
+  ROUTES,
 } from "../../utils/utils";
 import { ALL_DATACENTERS } from "./elementTabContainer";
 import ElementTable from "./elementTable";
@@ -44,9 +48,10 @@ import {
   TextFilterTypes
 } from "./elementUtils";
 import "./elementView.scss";
+import { Link } from "react-router-dom";
 
-var console: any = {};
-console.log = function() {};
+// var console: any = {};
+// console.log = function() {};
 const fs = require("js-file-download");
 
 interface ElementViewState {
@@ -56,6 +61,8 @@ interface ElementViewState {
   fileName: string;
   networkFileName: string;
   updateTable: boolean;
+  barcodes: Array<String>;
+  isDecommissioned: boolean;
 }
 interface ElementViewProps {
   element: ElementType;
@@ -65,6 +72,10 @@ interface ElementViewProps {
   currDatacenter?: DatacenterObject;
   onDatacenterSelect?(datacenter: DatacenterObject): void;
   updateDatacenters?(): void;
+  updateChangePlans(status: boolean): void;
+  isActive?: boolean;
+  changePlan: ChangePlan;
+  permissionState: PermissionState;
 }
 
 type ElementTabProps = ElementViewProps & RouteComponentProps;
@@ -75,7 +86,9 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     fileNameIsOpen: false,
     fileName: "",
     networkFileName: "",
-    updateTable: false
+    updateTable: false,
+    barcodes: [],
+    isDecommissioned: false
   };
 
   getExportData = (
@@ -136,14 +149,16 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     filters: Array<IFilter>,
     token: string
   ) => {
+    const params: any = { page_size };
+    if (this.props.changePlan) {
+      params["change_plan"] = this.props.changePlan.id;
+    }
     const config = {
       headers: {
         Authorization: "Token " + token
       },
 
-      params: {
-        page_size
-      }
+      params: params
     };
     const filtersCopy = filters.slice();
     let datacenterName;
@@ -158,9 +173,12 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
         });
       }
     }
+    let url = this.state.isDecommissioned
+      ? "api/assets/pages-decommissioned"
+      : "api/" + path + "/pages";
     return axios
       .post(
-        API_ROOT + "api/" + path + "/pages",
+        API_ROOT + url,
         { filters: filtersCopy },
         config
       )
@@ -178,13 +196,16 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     console.log(API_ROOT + "api/" + path + "/get-many");
     this.handleDataUpdate(false);
 
-    const params =
+    const params: any =
       page_type === PagingTypes.ALL
         ? {}
         : {
             page_size: page_type,
             page
           };
+    if (this.props.changePlan) {
+      params["change_plan"] = this.props.changePlan.id;
+    }
     const config = {
       headers: {
         Authorization: "Token " + token
@@ -207,14 +228,16 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
         bodyCopy = updateObject(bodyCopy, { filters });
       }
     }
+    let url = this.state.isDecommissioned
+      ? API_ROOT + "api/assets/get-many-decommissioned"
+      : API_ROOT + "api/" + path + "/get-many";
 
-    return axios
-      .post(API_ROOT + "api/" + path + "/get-many", bodyCopy, config)
-      .then(res => {
-        const items = res.data[path];
+    return axios.post(url, bodyCopy, config).then(res => {
+      const items = res.data[path];
+      console.log(items);
 
-        return items;
-      });
+      return items;
+    });
   };
 
   public handleDataUpdate = (status: boolean) => {
@@ -234,7 +257,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       console.log("success");
       this.handleDataUpdate(true);
       this.handleClose();
-      this.addSuccessToast("Successfully created model!");
+      this.addSuccessToast(res.data.success_message);
       console.log(this.state.isOpen);
     });
   };
@@ -244,13 +267,25 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     headers: any
   ): Promise<any> => {
     console.log("api/assets/add");
-    return axios.post(API_ROOT + "api/assets/add", asset, headers).then(res => {
+    let config;
+    if (!this.props.changePlan) {
+      config = headers;
+    } else {
+      config = {
+        headers: headers["headers"],
+        params: {
+          change_plan: this.props.changePlan.id
+        }
+      };
+    }
+
+    return axios.post(API_ROOT + "api/assets/add", asset, config).then(res => {
       this.handleDataUpdate(true);
       this.handleClose();
       if (res.data.warning_message) {
         this.addWarnToast("Created asset. " + res.data.warning_message);
       } else {
-        this.addSuccessToast("Successfuly created asset");
+        this.addSuccessToast(res.data.success_message);
       }
 
       console.log(this.state.isOpen);
@@ -262,6 +297,11 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       intent: Intent.WARNING
     });
   };
+  componentWillReceiveProps(nextProps: ElementTabProps & RouteComponentProps) {
+    if (nextProps.changePlan !== this.props.changePlan) {
+      this.handleDataUpdate(true);
+    }
+  }
 
   private createDatacenter = (
     dc: DatacenterObject,
@@ -273,7 +313,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       .then(res => {
         this.handleDataUpdate(true);
         this.handleClose();
-        this.addSuccessToast("Successfully created datacenter!");
+        this.addSuccessToast(res.data.success_message);
         if (this.props.updateDatacenters) {
           this.props.updateDatacenters();
         }
@@ -289,9 +329,27 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
 
       this.handleDataUpdate(true);
       this.handleClose();
-      this.addSuccessToast("Successfully created user!");
+      this.addSuccessToast(res.data.success_message);
       console.log(this.state.isOpen);
     });
+  };
+
+  private createChangePlan = (
+    changePlan: ChangePlan,
+    headers: any
+  ): Promise<any> => {
+    return axios
+      .post(API_ROOT + "api/change-plans/add", changePlan, headers)
+      .then(res => {
+        console.log("success");
+        this.props.updateChangePlans(true);
+
+        this.handleDataUpdate(true);
+        this.handleClose();
+
+        this.addSuccessToast(res.data.success_message);
+        console.log(this.state.isOpen);
+      });
   };
   private toaster: Toaster = {} as Toaster;
   private addSuccessToast(message: string) {
@@ -310,6 +368,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
   };
 
   public render() {
+    console.log(this.props);
     return (
       <div className="element-tab">
         <Toaster
@@ -350,161 +409,238 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             </Callout>
           ) : null}
         </div>
-        <div className="element-tab-buttons">
-          {this.props.element !== ElementType.USER &&
-          this.props.element !== ElementType.DATACENTER ? (
-            <AnchorButton
-              className="add"
-              text="Export Table Data"
-              icon="import"
-              minimal
-              onClick={() => {
-                /* handle data based on state */
-                this.setState({ fileNameIsOpen: true });
-                console.log(this.state.filters);
-              }}
-            />
-          ) : (
-            <p></p>
-          )}
-          {this.props.isAdmin &&
-          this.props.element !== ElementType.USER &&
-          this.props.element !== ElementType.DATACENTER ? (
-            <AnchorButton
-              onClick={() => {
-                this.props.history.push(
-                  "/bulk-upload/" +
-                    (this.props.element === ElementType.MODEL
-                      ? "models"
-                      : "assets")
-                );
-              }}
-              className="add"
-              icon="export"
-              text="Add from CSV file"
-              minimal
-            />
-          ) : null}
-
-          <Alert
-            cancelButtonText="Cancel"
-            className={Classes.DARK}
-            intent={Intent.PRIMARY}
-            confirmButtonText="Confirm Export"
-            isOpen={this.state.fileNameIsOpen}
-            onCancel={() => {
-              this.setState({ fileNameIsOpen: false });
-            }}
-            onConfirm={() => {
-              if (
-                this.state.fileName === "" ||
-                (this.state.networkFileName === "" &&
-                  this.props.element === ElementType.ASSET) ||
-                (this.state.fileName === "" &&
-                  this.props.element === ElementType.MODEL)
-              ) {
-                this.addErrorToast("Please provide filenames for both files");
-              } else {
-                let fileRegEx = /.*\.(\w+)/;
-                let extension = this.state.fileName.match(fileRegEx);
-                console.log(extension);
-                let ext = extension ? extension[extension.length - 1] : null;
-                console.log(ext);
-                let networkExtension = this.state.networkFileName.match(
-                  fileRegEx
-                );
-                console.log(networkExtension);
-                let networkExt = networkExtension
-                  ? networkExtension[networkExtension.length - 1]
-                  : null;
-                console.log(networkExt);
-                if (
-                  (networkExt && (ext !== "csv" || networkExt !== "csv")) ||
-                  (!networkExt && ext !== "csv")
-                ) {
-                  this.addErrorToast("Filenames must end in .csv");
-                } else if (
-                  (networkExt &&
-                    (this.state.fileName.split(".")[0].length === 0 ||
-                      this.state.networkFileName.split(".")[0].length === 0)) ||
-                  (!networkExt &&
-                    this.state.fileName.split(".")[0].length === 0)
-                ) {
-                  this.addErrorToast(".csv file must have non-empty name");
-                } else {
-                  this.getExportData(
-                    this.props.element.slice(0, -1) + "s",
-                    this.state.filters,
-                    this.props.token,
-                    this.state.fileName,
-                    this.state.networkFileName
-                  );
-                  console.log("finished both exports");
-                  this.setState({
-                    fileNameIsOpen: false,
-                    fileName: "",
-                    networkFileName: ""
-                  });
-                }
-              }
-            }}
-          >
-            <p>
-              Please enter a filename ending in ".csv" for the following data:
-            </p>
-            <FormGroup label={this.props.element + ":"}>
-              <InputGroup
-                onChange={(event: any) => {
-                  this.setState({ fileName: event.currentTarget.value });
+        {this.state.isDecommissioned ? (
+          <Callout icon="warning-sign">
+            <FormGroup label="Showing decommissioned assets" inline={true}>
+              <Button
+                onClick={() => {
+                  /* handle data based on state */
+                  this.setState({ isDecommissioned: false });
+                  this.handleDataUpdate(true);
                 }}
-                fill={true}
-                type="text"
-              />
+              >
+                View Live Assets
+              </Button>
             </FormGroup>
-            {this.props.element === ElementType.ASSET ? (
-              <div>
-                <FormGroup label="network connections:">
+          </Callout>
+        ) : (
+            <div className="element-tab-buttons">
+              {this.props.element !== ElementType.USER &&
+                this.props.element !== ElementType.DATACENTER &&
+                this.props.element !== ElementType.CHANGEPLANS ? (
+                  <AnchorButton
+                    className="add"
+                    text="Export Table Data"
+                    disabled={this.props.changePlan ? true : false}
+                    icon="import"
+                    minimal
+                    onClick={() => {
+                      /* handle data based on state */
+                      this.setState({ fileNameIsOpen: true });
+                      console.log(this.state.filters);
+                    }}
+                  />
+                ) : (
+                  <p></p>
+                )}
+              {(this.props.element === ElementType.ASSET ||
+                this.props.element === ElementType.MODEL) ? (
+                  <AnchorButton
+                    disabled={this.props.changePlan ? true :
+                      !(
+                        this.props.permissionState.admin
+                        || (this.props.element === ElementType.MODEL && this.props.permissionState.model_management)
+                        || (this.props.element === ElementType.ASSET && this.props.permissionState.asset_management)
+                        || (this.props.element === ElementType.ASSET && this.props.permissionState.datacenter_permissions.length > 0)
+                      )
+                    }
+                    onClick={() => {
+                      this.props.history.push(
+                        "/dashboard/bulk-upload/" +
+                        (this.props.element === ElementType.MODEL
+                          ? "models"
+                          : "assets")
+                      );
+                    }}
+                    className="add"
+                    icon="export"
+                    text="Add from CSV file"
+                    minimal
+                  />
+                ) : null}
+              <Alert
+                cancelButtonText="Cancel"
+                className={Classes.DARK}
+                intent={Intent.PRIMARY}
+                confirmButtonText="Confirm Export"
+                isOpen={this.state.fileNameIsOpen}
+                onCancel={() => {
+                  this.setState({ fileNameIsOpen: false });
+                }}
+                onConfirm={() => {
+                  if (
+                    this.state.fileName === "" ||
+                    (this.state.networkFileName === "" &&
+                      this.props.element === ElementType.ASSET) ||
+                    (this.state.fileName === "" &&
+                      this.props.element === ElementType.MODEL)
+                  ) {
+                    this.addErrorToast("Please provide filenames for both files");
+                  } else {
+                    let fileRegEx = /.*\.(\w+)/;
+                    let extension = this.state.fileName.match(fileRegEx);
+                    console.log(extension);
+                    let ext = extension ? extension[extension.length - 1] : null;
+                    console.log(ext);
+                    let networkExtension = this.state.networkFileName.match(
+                      fileRegEx
+                    );
+                    console.log(networkExtension);
+                    let networkExt = networkExtension
+                      ? networkExtension[networkExtension.length - 1]
+                      : null;
+                    console.log(networkExt);
+                    if (
+                      (networkExt && (ext !== "csv" || networkExt !== "csv")) ||
+                      (!networkExt && ext !== "csv")
+                    ) {
+                      this.addErrorToast("Filenames must end in .csv");
+                    } else if (
+                      (networkExt &&
+                        (this.state.fileName.split(".")[0].length === 0 ||
+                          this.state.networkFileName.split(".")[0].length ===
+                          0)) ||
+                      (!networkExt &&
+                        this.state.fileName.split(".")[0].length === 0)
+                    ) {
+                      this.addErrorToast(".csv file must have non-empty name");
+                    } else {
+                      this.getExportData(
+                        this.props.element.slice(0, -1) + "s",
+                        this.state.filters,
+                        this.props.token,
+                        this.state.fileName,
+                        this.state.networkFileName
+                      );
+                      console.log("finished both exports");
+                      this.setState({
+                        fileNameIsOpen: false,
+                        fileName: "",
+                        networkFileName: ""
+                      });
+                    }
+                  }
+                }}
+              >
+                <p>
+                  Please enter a filename ending in ".csv" for the following data:
+              </p>
+                <FormGroup label={this.props.element + ":"}>
                   <InputGroup
                     onChange={(event: any) => {
-                      this.setState({
-                        networkFileName: event.currentTarget.value
-                      });
+                      this.setState({ fileName: event.currentTarget.value });
                     }}
                     fill={true}
                     type="text"
                   />
                 </FormGroup>
-              </div>
-            ) : null}
-          </Alert>
-          {this.props.isAdmin ? (
-            <AnchorButton
-              className="add"
-              text={"Add " + this.props.element.slice(0, -1)}
-              icon="add"
-              minimal
-              intent={Intent.PRIMARY}
-              onClick={this.handleOpen}
-            />
-          ) : null}
-          <FormPopup
-            {...this.props}
-            type={FormTypes.CREATE}
-            elementName={this.props.element}
-            submitForm={
-              this.props.element === ElementType.MODEL
-                ? this.createModel
-                : this.props.element === ElementType.ASSET
-                ? this.createAsset
-                : this.props.element === ElementType.DATACENTER
-                ? this.createDatacenter
-                : this.createUser
-            }
-            isOpen={this.state.isOpen}
-            handleClose={this.handleClose}
-          />
-        </div>
-
+                {this.props.element === ElementType.ASSET ? (
+                  <div>
+                    <FormGroup label="network connections:">
+                      <InputGroup
+                        onChange={(event: any) => {
+                          this.setState({
+                            networkFileName: event.currentTarget.value
+                          });
+                        }}
+                        fill={true}
+                        type="text"
+                      />
+                    </FormGroup>
+                  </div>
+                ) : null}
+              </Alert>
+              <AnchorButton
+                className="add"
+                text={"Add " + this.props.element.slice(0, -1)}
+                icon="add"
+                minimal
+                intent={Intent.PRIMARY}
+                onClick={this.handleOpen}
+                disabled={
+                  this.props.element !== ElementType.ASSET &&
+                  this.props.changePlan
+                    ? true
+                    :
+                    !(
+                      this.props.permissionState.admin
+                      || (this.props.element === ElementType.DATACENTER && this.props.permissionState.asset_management)
+                      || (this.props.element === ElementType.MODEL && this.props.permissionState.model_management)
+                      || (this.props.element === ElementType.ASSET && this.props.permissionState.asset_management)
+                      || (this.props.element === ElementType.ASSET && this.props.permissionState.datacenter_permissions.length > 0)
+                    )
+                }
+              />
+              {
+                this.props.element === ElementType.ASSET ? (
+                  <Link
+                    target="_blank"
+                    to={{ pathname: ROUTES.BARCODE_PRINT, state: null }}
+                  >
+                    <AnchorButton
+                      className="add"
+                      text="Print Barcodes for Selected Assets"
+                      icon="barcode"
+                      minimal
+                      onClick={(e: any) => {
+                        let barcodes: string;
+                        barcodes = "";
+                        for (var i = 0; i < this.state.barcodes.length - 1; i++) {
+                          barcodes = barcodes + this.state.barcodes[i] + ",";
+                        }
+                        barcodes =
+                          barcodes +
+                          this.state.barcodes[this.state.barcodes.length - 1];
+                        localStorage.setItem("barcodes", barcodes);
+                      }}
+                    />
+                  </Link>
+                ) : null
+              }
+              {
+                this.props.element === ElementType.ASSET ? (
+                  <Button
+                    onClick={() => {
+                      this.setState({ isDecommissioned: true });
+                      this.handleDataUpdate(true);
+                    }}
+                    text="View Decommissioned"
+                    minimal
+                    icon="archive"
+                  ></Button>
+                ) : null
+              }
+              <FormPopup
+                {...this.props}
+                type={FormTypes.CREATE}
+                elementName={this.props.element}
+                submitForm={
+                  this.props.element === ElementType.MODEL
+                    ? this.createModel
+                    : this.props.element === ElementType.ASSET
+                      ? this.createAsset
+                      : this.props.element === ElementType.DATACENTER
+                        ? this.createDatacenter
+                        : this.props.element === ElementType.CHANGEPLANS
+                          ? this.createChangePlan
+                          : this.createUser
+                }
+                isOpen={this.state.isOpen}
+                handleClose={this.handleClose}
+              />
+            </div >
+          )
+        }
         <div>
           <ElementTable
             datacenters={this.props.datacenters}
@@ -512,6 +648,11 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             type={this.props.element}
             getData={this.getElementData}
             getPages={this.getPages}
+            updateBarcodes={(data: Array<string>) => {
+              this.setState({
+                barcodes: data
+              });
+            }}
             callback={(data: Array<any>) => {
               this.setState({ filters: data });
             }}
@@ -519,16 +660,25 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             disableSorting={this.props.element === ElementType.DATACENTER}
             disableFiltering={this.props.element === ElementType.DATACENTER}
             currDatacenter={this.props.currDatacenter}
+            isDecommissioned={this.state.isDecommissioned}
           />
         </div>
-      </div>
+      </div >
     );
   }
 }
 const mapStateToProps = (state: any) => {
   return {
     token: state.token,
-    isAdmin: state.admin
+    isAdmin: state.admin,
+    permissionState: state.permissionState,
+    changePlan: state.changePlan
   };
 };
-export default connect(mapStateToProps)(ElementTab);
+const mapDispatchToProps = (dispatch: any) => {
+  return {
+    updateChangePlans: (status: boolean) =>
+      dispatch(actions.updateChangePlans(status))
+  };
+};
+export default connect(mapStateToProps, mapDispatchToProps)(ElementTab);

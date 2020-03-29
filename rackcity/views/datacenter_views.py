@@ -1,24 +1,25 @@
 from django.http import JsonResponse
-from rackcity.models import Datacenter, Rack
+from django.contrib.auth.decorators import permission_required
+from django.core.exceptions import ObjectDoesNotExist
+from http import HTTPStatus
 from rackcity.api.serializers import DatacenterSerializer
+from rackcity.models import Datacenter, Rack
+from rackcity.permissions.permissions import PermissionPath
+from rackcity.utils.errors_utils import (
+    Status,
+    GenericFailure,
+    parse_serializer_errors
+)
 from rackcity.utils.log_utils import (
     log_action,
     log_delete,
     ElementType,
     Action
 )
-from rackcity.utils.errors_utils import (
-    Status,
-    GenericFailure,
-    parse_serializer_errors
-)
+from rackcity.utils.query_utils import get_page_count_response
 from rest_framework.decorators import permission_classes, api_view
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from http import HTTPStatus
-from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.parsers import JSONParser
-from rackcity.views.rackcity_utils import get_filter_arguments
-import math
+from rest_framework.permissions import IsAuthenticated
 
 
 @api_view(['POST'])
@@ -36,7 +37,7 @@ def datacenter_all(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
 def datacenter_create(request):
     """
     Add a datacenter.
@@ -87,7 +88,7 @@ def datacenter_create(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
 def datacenter_delete(request):
     """
     Delete a single datacenter
@@ -109,7 +110,7 @@ def datacenter_delete(request):
             {"failure_message":
                 Status.DELETE_ERROR.value +
                 "Cannot delete datacenter that still contains racks"
-            },
+             },
             status=HTTPStatus.BAD_REQUEST
         )
     try:
@@ -154,40 +155,15 @@ def datacenter_page_count(request):
     Return total number of pages according to page size, which must be
     specified as query parameter.
     """
-    if (
-        not request.query_params.get('page_size')
-        or int(request.query_params.get('page_size')) <= 0
-    ):
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                "errors": "Must specify positive integer page_size."
-            },
-            status=HTTPStatus.BAD_REQUEST,
-        )
-    page_size = int(request.query_params.get('page_size'))
-    dc_query = Datacenter.objects
-    try:
-        filter_args = get_filter_arguments(request.data)
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.FILTER.value,
-                "errors": str(error)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    for filter_arg in filter_args:
-        dc_query = dc_query.filter(**filter_arg)
-    dc_count = dc_query.count()
-    page_count = math.ceil(dc_count / page_size)
-    return JsonResponse({"page_count": page_count})
+    return get_page_count_response(
+        Datacenter,
+        request.query_params,
+        data_for_filters=request.data,
+    )
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
 def datacenter_modify(request):
     """
     Modify an existing model

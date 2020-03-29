@@ -7,7 +7,8 @@ import {
   isModelObject,
   FormObjectType,
   isDatacenterObject,
-  DatacenterObject
+  DatacenterObject,
+  isChangePlanObject
 } from "../utils/utils";
 import { ALL_DATACENTERS } from "../components/elementView/elementTabContainer";
 import RackSelectView from "../components/elementView/rackSelectView";
@@ -16,8 +17,10 @@ import ModelForm from "./modelForm";
 import DatacenterForm from "./datacenterForm";
 import WrappedRegistrationForm from "./auth/register";
 import { FormTypes } from "./formUtils";
+import ChangePlanForm from "./changePlanForm";
+import UserForm from "./userForm";
 
-interface FormPopupState {}
+interface FormPopupState { }
 interface FormPopupProps {
   isOpen: boolean;
   type: FormTypes;
@@ -25,13 +28,14 @@ interface FormPopupProps {
   datacenters?: Array<DatacenterObject>;
   currDatacenter?: DatacenterObject;
   initialValues?: ElementObjectType;
+  userId?: string;
   elementName: ElementType;
   handleClose(): void;
   submitForm(element: FormObjectType, headers: any): Promise<any> | void;
 }
 
 var console: any = {};
-console.log = function() {};
+console.log = function () { };
 class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
   render() {
     return (
@@ -80,7 +84,7 @@ class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
             submitForm={this.props.submitForm}
           />
         ) : null}
-        {this.props.elementName === ElementType.USER ? (
+        {this.props.elementName === ElementType.USER && !this.props.userId ? (
           <WrappedRegistrationForm authSignup={this.props.submitForm} />
         ) : null}
         {this.props.elementName === ElementType.DATACENTER ? (
@@ -92,6 +96,24 @@ class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
                 ? this.props.initialValues
                 : undefined
             }
+          />
+        ) : null}
+        {this.props.elementName === ElementType.CHANGEPLANS ? (
+          <ChangePlanForm
+            submitForm={this.props.submitForm}
+            initialValues={
+              isChangePlanObject(this.props.initialValues)
+                ? this.props.initialValues
+                : undefined
+            }
+          />
+        ) : null}
+        {this.props.elementName === ElementType.USER && this.props.userId ? (
+          <UserForm
+            userId={this.props.userId} // change to dynamic id
+            submitForm={() => {
+              this.props.submitForm({} as FormObjectType, {});
+            }}
           />
         ) : null}
       </Dialog>

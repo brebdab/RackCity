@@ -1,27 +1,31 @@
 import { Classes } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
-// import axios from "axios";
 import * as React from "react";
 import { RouteComponentProps, withRouter } from "react-router";
 import {
-  ElementObjectType,
-  isObject,
-  isAssetObject,
   AssetFieldsTable,
+  ElementObjectType,
+  getChangePlanRowStyle,
+  isAssetObject,
   isModelObject,
-  ModelFieldsTable
+  isObject,
+  ModelFieldsTable,
+  ROUTES,
+  ChangePlan
 } from "../../../utils/utils";
 import "./propertiesView.scss";
+import { connect } from "react-redux";
 
 export interface AlertState {
   isDeleteOpen: boolean;
   fields: Array<string>;
 }
-var console: any = {};
-console.log = function() {};
+// var console: any = {};
+// console.log = function() {};
 
 interface PropertiesViewProps {
   data: ElementObjectType;
+  changePlan: ChangePlan;
 }
 
 class PropertiesView extends React.PureComponent<
@@ -36,7 +40,10 @@ class PropertiesView extends React.PureComponent<
         col !== "power_connections" &&
         col !== "mac_addresses" &&
         col !== "network_connections" &&
-        col !== "network_graph"
+        col !== "network_graph" &&
+        col !== "decommissioned_id" &&
+        col !== "decommissioning_user" &&
+        col !== "time_decommissioned"
       ) {
         fields.push(col);
       }
@@ -71,10 +78,16 @@ class PropertiesView extends React.PureComponent<
           dat = <p>{network_ports.toString()}</p>;
         }
       } else if (item === "model") {
+        const isDecommissioned = data["decommissioning_user"];
         dat = (
           <p
-            className="model-link"
-            onClick={() => this.props.history.push("/models/" + data[item].id)}
+            className={isDecommissioned ? undefined : "model-link"}
+            onClick={
+              isDecommissioned
+                ? undefined
+                : () =>
+                    this.props.history.push(ROUTES.MODELS + "/" + data[item].id)
+            }
           >
             {data[item].vendor + " " + data[item].model_number}
           </p>
@@ -86,7 +99,7 @@ class PropertiesView extends React.PureComponent<
               <p className="label">{AssetFieldsTable[item]}:</p>
             </td>
 
-            <td>
+            <td style={getChangePlanRowStyle(data)}>
               {" "}
               <p>{data[item].row_letter + "" + data[item].rack_num}</p>
             </td>
@@ -98,7 +111,7 @@ class PropertiesView extends React.PureComponent<
               </p>
             </td>
 
-            <td>
+            <td style={getChangePlanRowStyle(data)}>
               {" "}
               <p>{data[item].datacenter.name}</p>
             </td>
@@ -112,15 +125,15 @@ class PropertiesView extends React.PureComponent<
       }
 
       if (isAssetObject(this.props.data)) {
-        return (
+        return AssetFieldsTable[item] ? (
           <tr>
             <td key={item}>
               <p className="label">{AssetFieldsTable[item]}:</p>
             </td>
 
-            <td>{dat}</td>
+            <td style={getChangePlanRowStyle(data)}>{dat}</td>
           </tr>
-        );
+        ) : null;
       }
       if (isModelObject(this.props.data)) {
         return (
@@ -200,5 +213,9 @@ class PropertiesView extends React.PureComponent<
     );
   }
 }
-
-export default withRouter(PropertiesView);
+const mapStateToProps = (state: any) => {
+  return {
+    changePlan: state.changePlan
+  };
+};
+export default connect(mapStateToProps)(withRouter(PropertiesView));

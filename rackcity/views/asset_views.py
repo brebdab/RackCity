@@ -1,17 +1,27 @@
 from django.http import JsonResponse
 from rackcity.models import (
     Asset,
+    AssetCP,
+    DecommissionedAsset,
     ITModel,
     Rack,
     NetworkPort,
+    NetworkPortCP,
     PowerPort,
+    PowerPortCP,
     PDUPort,
+    PDUPortCP,
     Datacenter,
+    ChangePlan,
 )
-from django.core.exceptions import ObjectDoesNotExist
+from rackcity.models.asset import get_assets_for_cp
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from rackcity.api.serializers import (
     AssetSerializer,
+    AssetCPSerializer,
+    GetDecommissionedAssetSerializer,
     RecursiveAssetSerializer,
+    RecursiveAssetCPSerializer,
     BulkAssetSerializer,
     BulkNetworkPortSerializer,
     ITModelSerializer,
@@ -33,47 +43,43 @@ from rackcity.utils.errors_utils import (
     GenericFailure,
     parse_serializer_errors,
     parse_save_validation_error,
-    BulkFailure
+    BulkFailure,
+    AuthFailure,
 )
+from rackcity.permissions.permissions import user_has_asset_permission
 from rest_framework.decorators import permission_classes, api_view
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import JSONParser
-from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
-import math
 import csv
 from base64 import b64decode
 import re
 from io import StringIO, BytesIO
+from rackcity.utils.query_utils import (
+    get_sort_arguments,
+    get_filter_arguments,
+    get_page_count_response,
+    get_many_response,
+)
+from rackcity.utils.change_planner_utils import (
+    get_many_assets_response_for_cp,
+    get_page_count_response_for_cp,
+    get_cp_already_executed_response,
+)
 from rackcity.views.rackcity_utils import (
     validate_asset_location,
     validate_location_modification,
     no_infile_location_conflicts,
     records_are_identical,
-    get_sort_arguments,
-    get_filter_arguments,
     LocationException,
     MacAddressException,
     PowerConnectionException,
     NetworkConnectionException,
+    get_change_plan
 )
-from rackcity.models.asset import get_next_available_asset_number
+from rackcity.models.asset import get_next_available_asset_number, validate_asset_number_uniqueness
 
 
-# @close_old_connections_decorator
-@api_view(['GET'])  # DEPRECATED !
-@permission_classes([IsAuthenticated])
-def asset_list(request):
-    """
-    List all assets.
-    """
-    if request.method == 'GET':
-        assets = Asset.objects.all()
-        serializer = RecursiveAssetSerializer(assets, many=True)
-        return JsonResponse({"assets": serializer.data})
-
-
-# @close_old_connections_decorator
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def asset_many(request):
@@ -82,119 +88,86 @@ def asset_many(request):
     assets are returned. If page is specified as a query parameter, page
     size must also be specified, and a page of assets will be returned.
     """
-
-    errors = []
-
-    should_paginate = not(
-        request.query_params.get('page') is None
-        and request.query_params.get('page_size') is None
-    )
-
-    if should_paginate:
-        if not request.query_params.get('page'):
-            errors.append("Must specify field 'page' on " +
-                          "paginated requests.")
-        elif not request.query_params.get('page_size'):
-            errors.append("Must specify field 'page_size' on " +
-                          "paginated requests.")
-        elif int(request.query_params.get('page_size')) <= 0:
-            errors.append("Field 'page_size' must be an integer " +
-                          "greater than 0.")
-
-    if len(errors) > 0:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                "errors": " ".join(errors)
-            },
-            status=HTTPStatus.BAD_REQUEST,
-        )
-
-    assets_query = Asset.objects
-
-    try:
-        filter_args = get_filter_arguments(request.data)
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.FILTER.value,
-                "errors": str(error)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    for filter_arg in filter_args:
-        assets_query = assets_query.filter(**filter_arg)
-
-    try:
-        sort_args = get_sort_arguments(request.data)
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.SORT.value,
-                "errors": str(error)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    assets = assets_query.order_by(*sort_args)
-
-    if should_paginate:
-        paginator = PageNumberPagination()
-        paginator.page_size = request.query_params.get('page_size')
+    change_plan_id = request.query_params.get('change_plan')
+    if change_plan_id:
         try:
-            page_of_assets = paginator.paginate_queryset(assets, request)
-        except Exception as error:
+            change_plan = ChangePlan.objects.get(id=change_plan_id)
+        except ObjectDoesNotExist:
             return JsonResponse(
                 {
                     "failure_message":
-                        Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                    "errors": str(error)
+                        Status.ERROR.value +
+                        "Change Plan" + GenericFailure.DOES_NOT_EXIST.value,
+                    "errors":
+                        "No existing change plan with id="+str(change_plan_id)
                 },
-                status=HTTPStatus.BAD_REQUEST,
+                status=HTTPStatus.BAD_REQUEST
             )
-        assets_to_serialize = page_of_assets
+        else:
+            return get_many_assets_response_for_cp(
+                request,
+                change_plan,
+            )
     else:
-        assets_to_serialize = assets
-
-    serializer = RecursiveAssetSerializer(
-        assets_to_serialize,
-        many=True,
-    )
-    return JsonResponse(
-        {"assets": serializer.data},
-        status=HTTPStatus.OK,
-    )
+        return get_many_response(
+            Asset,
+            RecursiveAssetSerializer,
+            "assets",
+            request,
+        )
 
 
-# @close_old_connections_decorator
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def asset_detail(request, id):
     """
     Retrieve a single asset.
     """
-
+    change_plan = None
+    serializer = None
+    if request.query_params.get("change_plan"):
+        (change_plan, response) = get_change_plan(
+            request.query_params.get("change_plan"))
+        if response:
+            return response
     try:
-        asset = Asset.objects.get(id=id)
+        if change_plan:
+            assets, assets_cp = get_assets_for_cp(
+                change_plan.id, show_decommissioned=True)
+            # if id of live asset is given on a change plan, just return the corresponding related assetCP
+            if assets_cp.filter(related_asset=id).exists():
+                asset = assets_cp.get(related_asset=id)
+                serializer = RecursiveAssetCPSerializer(asset)
+            elif assets_cp.filter(id=id).exists():
+                asset = assets_cp.get(id=id)
+                serializer = RecursiveAssetCPSerializer(asset)
+            else:
+                asset = assets.get(id=id)
+                serializer = RecursiveAssetSerializer(asset)
+        else:
+            asset = Asset.objects.get(id=id)
+            serializer = RecursiveAssetSerializer(asset)
     except Asset.DoesNotExist:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value +
-                    "Asset" + GenericFailure.DOES_NOT_EXIST.value,
-                "errors": "No existing asset with id="+str(id)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    serializer = RecursiveAssetSerializer(asset)
+        try:
+            decommissioned_asset = DecommissionedAsset.objects.get(live_id=id)
+        except DecommissionedAsset.DoesNotExist:
+            return JsonResponse(
+                {
+                    "failure_message":
+                        Status.ERROR.value +
+                        "Asset" + GenericFailure.DOES_NOT_EXIST.value,
+                    "errors": "No existing asset with id="+str(id)
+                },
+                status=HTTPStatus.BAD_REQUEST
+            )
+        else:
+            serializer = GetDecommissionedAssetSerializer(decommissioned_asset)
+
     return JsonResponse(serializer.data, status=HTTPStatus.OK)
 
 
-# @close_old_connections_decorator
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def asset_add(request):
     """
     Add a new asset.
@@ -209,7 +182,19 @@ def asset_add(request):
             },
             status=HTTPStatus.BAD_REQUEST
         )
-    serializer = AssetSerializer(data=data)
+    change_plan = None
+    if request.query_params.get("change_plan"):
+        (change_plan, response) = get_change_plan(
+            request.query_params.get("change_plan"))
+        if response:
+            return response
+        response = get_cp_already_executed_response(change_plan)
+        if response:
+            return response
+        data["change_plan"] = change_plan.id
+        serializer = AssetCPSerializer(data=data)
+    else:
+        serializer = AssetSerializer(data=data)
     if not serializer.is_valid(raise_exception=False):
         return JsonResponse(
             {
@@ -221,10 +206,40 @@ def asset_add(request):
             status=HTTPStatus.BAD_REQUEST
         )
     rack_id = serializer.validated_data['rack'].id
+    try:
+        rack = Rack.objects.get(id=rack_id)
+    except ObjectDoesNotExist:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR.value +
+                    "Rack" + GenericFailure.DOES_NOT_EXIST.value,
+                "errors": "No existing rack with id="+str(rack_id)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    if not user_has_asset_permission(request.user, rack.datacenter):
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.AUTH_ERROR.value + AuthFailure.ASSET.value,
+                "errors":
+                    "User " + request.user.username +
+                    " does not have asset permission in datacenter id="
+                    + str(rack.datacenter.id)
+            },
+            status=HTTPStatus.UNAUTHORIZED
+        )
     rack_position = serializer.validated_data['rack_position']
     height = serializer.validated_data['model'].height
+
     try:
-        validate_asset_location(rack_id, rack_position, height)
+        validate_asset_location(
+            rack_id,
+            rack_position,
+            height,
+            change_plan=change_plan
+        )
     except LocationException as error:
         return JsonResponse(
             {"failure_message": Status.CREATE_ERROR.value + str(error)},
@@ -243,18 +258,23 @@ def asset_add(request):
             status=HTTPStatus.BAD_REQUEST
         )
     warning_message = ""
+    # TODO: CHANGE PLAN save power connections and network connections
+
     try:
         save_mac_addresses(
             asset_data=data,
-            asset_id=asset.id
+            asset_id=asset.id,
+            change_plan=change_plan
         )
     except MacAddressException as error:
         warning_message += "Some mac addresses couldn't be saved. " + \
             str(error)
+
     try:
         save_power_connections(
             asset_data=data,
-            asset_id=asset.id
+            asset_id=asset.id,
+            change_plan=change_plan
         )
     except PowerConnectionException as error:
         warning_message += "Some power connections couldn't be saved. " + \
@@ -262,9 +282,11 @@ def asset_add(request):
     try:
         save_network_connections(
             asset_data=data,
-            asset_id=asset.id
+            asset_id=asset.id,
+            change_plan=change_plan
         )
-        log_network_action(request.user, asset)
+        if not change_plan:
+            log_network_action(request.user, asset)
     except NetworkConnectionException as error:
         warning_message += "Some network connections couldn't be saved. " + \
             str(error)
@@ -274,18 +296,30 @@ def asset_add(request):
             status=HTTPStatus.OK,
         )
     else:
-        log_action(request.user, asset, Action.CREATE)
-        return JsonResponse(
-            {
-                "success_message":
-                    Status.SUCCESS.value +
-                    "Asset " + str(asset.asset_number) + " created"
-            },
-            status=HTTPStatus.OK,
-        )
+        if change_plan:
+            return JsonResponse(
+                {
+                    "success_message":
+                        Status.SUCCESS.value +
+                        "Asset created on change plan " +
+                        change_plan.name,
+                    "related_id": change_plan.id,
+                },
+                status=HTTPStatus.OK,
+            )
+        else:
+            log_action(request.user, asset, Action.CREATE)
+            return JsonResponse(
+                {
+                    "success_message":
+                        Status.SUCCESS.value +
+                        "Asset " + str(asset.asset_number) + " created"
+                },
+                status=HTTPStatus.OK,
+            )
 
 
-def save_mac_addresses(asset_data, asset_id):
+def save_mac_addresses(asset_data, asset_id, change_plan=None):
     if (
         'mac_addresses' not in asset_data
         or not asset_data['mac_addresses']
@@ -295,10 +329,17 @@ def save_mac_addresses(asset_data, asset_id):
     failure_message = ""
     for port_name in mac_address_assignments.keys():
         try:
-            network_port = NetworkPort.objects.get(
-                asset=asset_id,
-                port_name=port_name
-            )
+            if change_plan:
+                network_port = NetworkPortCP.objects.get(
+                    asset=asset_id,
+                    port_name=port_name,
+                    change_plan=change_plan
+                )
+            else:
+                network_port = NetworkPort.objects.get(
+                    asset=asset_id,
+                    port_name=port_name
+                )
         except ObjectDoesNotExist:
             failure_message += "Port name '"+port_name+"' is not valid. "
         else:
@@ -315,7 +356,7 @@ def save_mac_addresses(asset_data, asset_id):
         raise MacAddressException(failure_message)
 
 
-def save_network_connections(asset_data, asset_id):
+def save_network_connections(asset_data, asset_id, change_plan=None):
     if (
         'network_connections' not in asset_data
         or not asset_data['network_connections']
@@ -326,10 +367,16 @@ def save_network_connections(asset_data, asset_id):
     for network_connection in network_connections:
         port_name = network_connection['source_port']
         try:
-            network_port = NetworkPort.objects.get(
-                asset=asset_id,
-                port_name=port_name
-            )
+            if change_plan:
+                network_port = NetworkPortCP.objects.get(
+                    asset=asset_id,
+                    port_name=port_name,
+                    change_plan=change_plan)
+            else:
+                network_port = NetworkPort.objects.get(
+                    asset=asset_id,
+                    port_name=port_name
+                )
         except ObjectDoesNotExist:
             failure_message += "Port name '"+port_name+"' is not valid. "
         else:
@@ -354,9 +401,32 @@ def save_network_connections(asset_data, asset_id):
                     "' because no destination port was provided."
                 continue
             try:
-                destination_asset = Asset.objects.get(
-                    hostname=network_connection['destination_hostname']
-                )
+                if change_plan:
+                    assets, assets_cp = get_assets_for_cp(change_plan.id)
+                    if assets.filter(hostname=network_connection['destination_hostname']).exists():
+                        destination_asset = assets.get(
+                            hostname=network_connection['destination_hostname']
+                        )
+                        asset_cp = AssetCP(
+                            related_asset=destination_asset,
+                            change_plan=change_plan
+                        )
+                        # add destination asset to AssetCPTable
+                        for field in destination_asset._meta.fields:
+                            if field.name != 'id' and field.name == "assetid_ptr":
+                                setattr(asset_cp, field.name, getattr(
+                                    destination_asset, field.name))
+                        asset_cp.save()
+                        destination_asset = asset_cp
+                    else:
+                        destination_asset = assets_cp.get(
+                            hostname=network_connection['destination_hostname'],
+                            change_plan=change_plan,
+                        )
+                else:
+                    destination_asset = Asset.objects.get(
+                        hostname=network_connection['destination_hostname']
+                    )
             except ObjectDoesNotExist:
                 failure_message += \
                     "Asset with hostname '" + \
@@ -364,10 +434,17 @@ def save_network_connections(asset_data, asset_id):
                     "' does not exist. "
             else:
                 try:
-                    destination_port = NetworkPort.objects.get(
-                        asset=destination_asset,
-                        port_name=network_connection['destination_port']
-                    )
+                    if change_plan:
+                        destination_port = NetworkPortCP.objects.get(
+                            asset=destination_asset,
+                            port_name=network_connection['destination_port'],
+                            change_plan=change_plan
+                        )
+                    else:
+                        destination_port = NetworkPort.objects.get(
+                            asset=destination_asset,
+                            port_name=network_connection['destination_port']
+                        )
                 except ObjectDoesNotExist:
                     failure_message += \
                         "Destination port '" + \
@@ -390,7 +467,7 @@ def save_network_connections(asset_data, asset_id):
         raise NetworkConnectionException(failure_message)
 
 
-def save_power_connections(asset_data, asset_id):
+def save_power_connections(asset_data, asset_id, change_plan=None):
     if (
         'power_connections' not in asset_data
         or not asset_data['power_connections']
@@ -400,25 +477,54 @@ def save_power_connections(asset_data, asset_id):
     failure_message = ""
     for port_name in power_connection_assignments.keys():
         try:
-            power_port = PowerPort.objects.get(
-                asset=asset_id,
-                port_name=port_name
-            )
+            if change_plan:
+                power_port = PowerPortCP.objects.get(
+                    asset=asset_id,
+                    port_name=port_name,
+                    change_plan=change_plan.id
+                )
+            else:
+                power_port = PowerPort.objects.get(
+                    asset=asset_id,
+                    port_name=port_name
+                )
         except ObjectDoesNotExist:
             failure_message += "Power port '"+port_name+"' does not exist on this asset. "
         else:
             power_connection_data = power_connection_assignments[port_name]
-            asset = Asset.objects.get(id=asset_id)
+            if change_plan:
+                asset = AssetCP.objects.get(id=asset_id)
+            else:
+                asset = Asset.objects.get(id=asset_id)
             if not power_connection_data:
                 power_port.power_connection = None
                 power_port.save()
                 continue
             try:
-                pdu_port = PDUPort.objects.get(
+                pdu_port_master = PDUPort.objects.get(
                     rack=asset.rack,
                     left_right=power_connection_data['left_right'],
                     port_number=power_connection_data['port_number']
                 )
+                if change_plan:
+                    if PDUPortCP.objects.filter(
+                        rack=asset.rack,
+                        left_right=power_connection_data['left_right'],
+                        port_number=power_connection_data['port_number']
+                    ).exists():
+                        pdu_port = PDUPortCP.objects.get(
+                            rack=asset.rack,
+                            left_right=power_connection_data['left_right'],
+                            port_number=power_connection_data['port_number']
+                        )
+                    else:
+                        pdu_port = PDUPortCP(change_plan=change_plan)
+                        for field in pdu_port_master._meta.fields:
+                            if field.name != "id":
+                                setattr(pdu_port, field.name, getattr(
+                                    pdu_port_master, field.name))
+                        pdu_port.save()
+                pdu_port = pdu_port_master
             except ObjectDoesNotExist:
                 failure_message += \
                     "PDU port '" + \
@@ -440,9 +546,8 @@ def save_power_connections(asset_data, asset_id):
         raise PowerConnectionException(failure_message)
 
 
-# @close_old_connections_decorator
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def asset_modify(request):
     """
     Modify a single existing asset
@@ -458,20 +563,75 @@ def asset_modify(request):
             status=HTTPStatus.BAD_REQUEST
         )
     id = data['id']
-    try:
-        existing_asset = Asset.objects.get(id=id)
-    except ObjectDoesNotExist:
+    if request.query_params.get("change_plan"):
+        (change_plan, response) = get_change_plan(
+            request.query_params.get("change_plan"))
+        if response:
+            return response
+        response = get_cp_already_executed_response(change_plan)
+        if response:
+            return response
+        del data['id']
+    else:
+        change_plan = None
+
+    if change_plan:
+        assets, assets_cp = get_assets_for_cp(change_plan.id)
+        if assets_cp.filter(id=id).exists():
+            # if asset was created on a change_plan
+            existing_asset = assets_cp.get(id=id)
+        else:
+            try:
+                existing_asset_master = assets.get(id=id)
+            except ObjectDoesNotExist:
+                return JsonResponse(
+                    {
+                        "failure_message":
+                            Status.MODIFY_ERROR.value +
+                            "Model" + GenericFailure.DOES_NOT_EXIST.value,
+                        "errors": "No existing asset with id="+str(id)
+                    },
+                    status=HTTPStatus.BAD_REQUEST
+                )
+            existing_asset = AssetCP(
+                change_plan=change_plan,
+                related_asset=existing_asset_master)
+            for field in existing_asset_master._meta.fields:
+                if not (field.name == "id" or field.name == "assetid_ptr"):
+                    setattr(existing_asset, field.name, getattr(
+                        existing_asset_master, field.name))
+    else:
+        try:
+            existing_asset = Asset.objects.get(id=id)
+        except ObjectDoesNotExist:
+            return JsonResponse(
+                {
+                    "failure_message":
+                        Status.MODIFY_ERROR.value +
+                        "Model" + GenericFailure.DOES_NOT_EXIST.value,
+                    "errors": "No existing asset with id="+str(id)
+                },
+                status=HTTPStatus.BAD_REQUEST
+            )
+
+    if not user_has_asset_permission(
+        request.user,
+        existing_asset.rack.datacenter
+    ):
         return JsonResponse(
             {
                 "failure_message":
-                    Status.MODIFY_ERROR.value +
-                    "Model" + GenericFailure.DOES_NOT_EXIST.value,
-                "errors": "No existing asset with id="+str(id)
+                    Status.AUTH_ERROR.value + AuthFailure.ASSET.value,
+                "errors":
+                    "User " + request.user.username +
+                    " does not have asset permission in datacenter id="
+                    + str(existing_asset.rack.datacenter.id)
             },
-            status=HTTPStatus.BAD_REQUEST
+            status=HTTPStatus.UNAUTHORIZED
         )
     try:
-        validate_location_modification(data, existing_asset)
+        validate_location_modification(
+            data, existing_asset, request.user, change_plan=change_plan)
     except Exception as error:
         return JsonResponse(
             {
@@ -487,9 +647,22 @@ def asset_modify(request):
         elif field == 'rack':
             value = Rack.objects.get(id=data[field])
         elif field == 'hostname' and data['hostname']:
-            assets_with_hostname = Asset.objects.filter(
-                hostname__iexact=data[field]
-            )
+            if change_plan:
+                assets, assets_cp = get_assets_for_cp(change_plan.id)
+                assets_with_hostname = assets.filter(
+                    hostname__iexact=data[field]
+                )
+                if not (
+                    len(assets_with_hostname) > 0
+                    and assets_with_hostname[0].id != id
+                ):
+                    assets_with_hostname = assets_cp.filter(
+                        hostname__iexact=data[field]
+                    )
+            else:
+                assets_with_hostname = Asset.objects.filter(
+                    hostname__iexact=data[field]
+                )
             if (
                 len(assets_with_hostname) > 0
                 and assets_with_hostname[0].id != id
@@ -503,24 +676,41 @@ def asset_modify(request):
                     },
                     status=HTTPStatus.BAD_REQUEST,
                 )
+
             value = data[field]
         elif field == 'asset_number':
-            assets_with_asset_number = Asset.objects.filter(
-                asset_number=data[field]
-            )
-            if (
-                len(assets_with_asset_number) > 0
-                and assets_with_asset_number[0].id != id
-            ):
-                return JsonResponse(
-                    {
-                        "failure_message":
-                            Status.MODIFY_ERROR.value +
-                            "Asset with asset number '" +
-                            str(data[field]) + "' already exists."
-                    },
-                    status=HTTPStatus.BAD_REQUEST,
+            if change_plan:
+                try:
+                    validate_asset_number_uniqueness(
+                        data[field], id, change_plan, existing_asset.related_asset)
+                except ValidationError:
+                    return JsonResponse(
+                        {
+                            "failure_message":
+                                Status.MODIFY_ERROR.value +
+                                "Asset with asset number '" +
+                                str(data[field]) + "' already exists."
+                        },
+                        status=HTTPStatus.BAD_REQUEST,
+                    )
+
+            else:
+                assets_with_asset_number = Asset.objects.filter(
+                    asset_number=data[field]
                 )
+                if (
+                    data[field] and len(assets_with_asset_number) > 0
+                    and assets_with_asset_number[0].id != existing_asset.id
+                ):
+                    return JsonResponse(
+                        {
+                            "failure_message":
+                                Status.MODIFY_ERROR.value +
+                                "Asset with asset number '" +
+                                str(data[field]) + "' already exists."
+                        },
+                        status=HTTPStatus.BAD_REQUEST,
+                    )
             value = data[field]
         else:
             value = data[field]
@@ -543,7 +733,8 @@ def asset_modify(request):
         try:
             save_mac_addresses(
                 asset_data=data,
-                asset_id=existing_asset.id
+                asset_id=existing_asset.id,
+                change_plan=change_plan
             )
         except MacAddressException as error:
             warning_message += "Some mac addresses couldn't be saved. " + \
@@ -551,7 +742,8 @@ def asset_modify(request):
         try:
             save_power_connections(
                 asset_data=data,
-                asset_id=existing_asset.id
+                asset_id=existing_asset.id,
+                change_plan=change_plan
             )
         except PowerConnectionException as error:
             warning_message += "Some power connections couldn't be saved. " + \
@@ -559,9 +751,11 @@ def asset_modify(request):
         try:
             save_network_connections(
                 asset_data=data,
-                asset_id=existing_asset.id
+                asset_id=existing_asset.id,
+                change_plan=change_plan
             )
-            log_network_action(request.user, existing_asset)
+            if not change_plan:
+                log_network_action(request.user, existing_asset)
         except NetworkConnectionException as error:
             warning_message += \
                 "Some network connections couldn't be saved. " + str(error)
@@ -571,21 +765,32 @@ def asset_modify(request):
                 status=HTTPStatus.OK,
             )
         else:
-            log_action(request.user, existing_asset, Action.MODIFY)
-            return JsonResponse(
-                {
-                    "success_message":
-                        Status.SUCCESS.value +
-                        "Asset " +
-                    str(existing_asset.asset_number) + " modified"
-                },
-                status=HTTPStatus.OK,
-            )
+            if not change_plan:
+                log_action(request.user, existing_asset, Action.MODIFY)
+                return JsonResponse(
+                    {
+                        "success_message":
+                            Status.SUCCESS.value +
+                            "Asset " +
+                        str(existing_asset.asset_number) + " modified"
+                    },
+                    status=HTTPStatus.OK,
+                )
+            else:
+                return JsonResponse(
+                    {
+                        "success_message":
+                            Status.SUCCESS.value +
+                            "Asset modified on change plan " +
+                            change_plan.name,
+                        "related_id": change_plan.id,
+                    },
+                    status=HTTPStatus.OK,
+                )
 
 
-# @close_old_connections_decorator
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def asset_delete(request):
     """
     Delete a single existing asset
@@ -612,6 +817,21 @@ def asset_delete(request):
                 "errors": "No existing asset with id="+str(id)
             },
             status=HTTPStatus.BAD_REQUEST
+        )
+    if not user_has_asset_permission(
+        request.user,
+        existing_asset.rack.datacenter
+    ):
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.AUTH_ERROR.value + AuthFailure.ASSET.value,
+                "errors":
+                    "User " + request.user.username +
+                    " does not have asset permission in datacenter id="
+                    + str(existing_asset.rack.datacenter.id)
+            },
+            status=HTTPStatus.UNAUTHORIZED
         )
     asset_number = existing_asset.asset_number
     if (existing_asset.hostname):
@@ -643,9 +863,8 @@ def asset_delete(request):
     )
 
 
-# @close_old_connections_decorator
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def asset_bulk_upload(request):
     """
     Bulk upload many assets to add or modify
@@ -666,7 +885,7 @@ def asset_bulk_upload(request):
     csv_bytes_io = BytesIO(
         b64decode(re.sub(".*base64,", '', base_64_csv))
     )
-    csv_string_io = StringIO(csv_bytes_io.read().decode('UTF-8'))
+    csv_string_io = StringIO(csv_bytes_io.read().decode('UTF-8-SIG'))
     csvReader = csv.DictReader(csv_string_io)
     expected_fields = BulkAssetSerializer.Meta.fields
     given_fields = csvReader.fieldnames
@@ -817,7 +1036,11 @@ def asset_bulk_upload(request):
         if asset_exists:
             # asset number specfies existing asset
             try:
-                validate_location_modification(asset_data, existing_asset)
+                validate_location_modification(
+                    asset_data,
+                    existing_asset,
+                    request.user,
+                )
             except Exception:
                 failure_message = \
                     Status.IMPORT_ERROR.value + \
@@ -836,6 +1059,19 @@ def asset_bulk_upload(request):
             )
         else:
             # asset number not provided or it is new
+            rack = asset_serializer.validated_data['rack']
+            if not user_has_asset_permission(request.user, rack.datacenter):
+                return JsonResponse(
+                    {
+                        "failure_message":
+                            Status.AUTH_ERROR.value + AuthFailure.ASSET.value,
+                        "errors":
+                            "User " + request.user.username +
+                            " does not have asset permission in datacenter id="
+                            + str(rack.datacenter.id)
+                    },
+                    status=HTTPStatus.UNAUTHORIZED
+                )
             model = ITModel.objects.get(id=asset_data['model'])
             try:
                 validate_asset_location(
@@ -942,9 +1178,8 @@ def asset_bulk_upload(request):
     )
 
 
-# @close_old_connections_decorator
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def asset_bulk_approve(request):
     """
     Bulk approve many assets to modify
@@ -999,7 +1234,6 @@ def asset_bulk_approve(request):
         )
 
 
-# @close_old_connections_decorator
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def asset_bulk_export(request):
@@ -1047,7 +1281,7 @@ def asset_bulk_export(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def network_bulk_upload(request):
     data = JSONParser().parse(request)
     if 'import_csv' not in data:
@@ -1065,7 +1299,7 @@ def network_bulk_upload(request):
     csv_bytes_io = BytesIO(
         b64decode(re.sub(".*base64,", '', base_64_csv))
     )
-    csv_string_io = StringIO(csv_bytes_io.read().decode('UTF-8'))
+    csv_string_io = StringIO(csv_bytes_io.read().decode('UTF-8-SIG'))
     csvReader = csv.DictReader(csv_string_io)
     expected_fields = BulkNetworkPortSerializer.Meta.fields
     given_fields = csvReader.fieldnames
@@ -1123,6 +1357,21 @@ def network_bulk_upload(request):
                 {"failure_message": failure_message},
                 status=HTTPStatus.BAD_REQUEST
             )
+        if not user_has_asset_permission(
+            request.user,
+            source_asset.rack.datacenter
+        ):
+            return JsonResponse(
+                {
+                    "failure_message":
+                        Status.AUTH_ERROR.value + AuthFailure.ASSET.value,
+                    "errors":
+                        "User " + request.user.username +
+                        " does not have asset permission in datacenter id="
+                        + str(source_asset.rack.datacenter.id)
+                },
+                status=HTTPStatus.UNAUTHORIZED
+            )
         try:
             existing_port = NetworkPort.objects.get(
                 asset=source_asset,
@@ -1174,7 +1423,7 @@ def network_bulk_upload(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def network_bulk_approve(request):
     data = JSONParser().parse(request)
     if 'approved_modifications' not in data:
@@ -1278,7 +1527,6 @@ def network_bulk_export(request):
     serializer = BulkNetworkPortSerializer(all_ports, many=True)
     csv_string = StringIO()
     fields = BulkNetworkPortSerializer.Meta.fields
-    print(fields)
     csv_writer = csv.DictWriter(csv_string, fields)
     csv_writer.writeheader()
     csv_writer.writerows(serializer.data)
@@ -1288,7 +1536,6 @@ def network_bulk_export(request):
     )
 
 
-# @close_old_connections_decorator
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def asset_page_count(request):
@@ -1296,40 +1543,25 @@ def asset_page_count(request):
     Return total number of pages according to page size, which must be
     specified as query parameter.
     """
-    if (
-        not request.query_params.get('page_size')
-        or int(request.query_params.get('page_size')) <= 0
-    ):
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                "errors": "Must specify positive integer page_size."
-            },
-            status=HTTPStatus.BAD_REQUEST,
+    change_plan = None
+    if request.query_params.get("change_plan"):
+        (change_plan, response) = get_change_plan(
+            request.query_params.get("change_plan")
         )
-    page_size = int(request.query_params.get('page_size'))
-    assets_query = Asset.objects
-    try:
-        filter_args = get_filter_arguments(request.data)
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.FILTER.value,
-                "errors": str(error)
-            },
-            status=HTTPStatus.BAD_REQUEST
+        if response:
+            return response
+    if change_plan:
+        return get_page_count_response_for_cp(request, change_plan)
+    else:
+        return get_page_count_response(
+            Asset,
+            request.query_params,
+            data_for_filters=request.data,
         )
-    for filter_arg in filter_args:
-        assets_query = assets_query.filter(**filter_arg)
-    asset_count = assets_query.count()
-    page_count = math.ceil(asset_count / page_size)
-    return JsonResponse({"page_count": page_count})
 
 
-# @close_old_connections_decorator
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def asset_fields(request):
     """
     Return all fields on the AssetSerializer.

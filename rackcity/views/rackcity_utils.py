@@ -1,11 +1,16 @@
-from rackcity.models import Asset, ITModel, Rack, PowerPort, NetworkPort
-from rackcity.api.objects import RackRangeSerializer
+from rackcity.models import Asset, ITModel, Rack, PowerPort, NetworkPort, ChangePlan
+from rackcity.permissions.permissions import user_has_asset_permission
 from rackcity.api.serializers import RecursiveAssetSerializer, RackSerializer
 from http import HTTPStatus
 from django.http import JsonResponse
 import functools
 from django.db import close_old_connections
-
+from rackcity.models.asset import get_assets_for_cp
+from django.core.exceptions import ObjectDoesNotExist
+from rackcity.utils.errors_utils import (
+    Status,
+    GenericFailure,
+    )
 
 def get_rack_detailed_response(racks):
     if racks.count() == 0:
@@ -64,6 +69,8 @@ def validate_asset_location(
     asset_rack_position,
     asset_height,
     asset_id=None,
+    change_plan=None,
+    related_asset_id=None
 ):
     new_asset_location_range = [
         asset_rack_position + i for i in range(asset_height)
@@ -72,28 +79,64 @@ def validate_asset_location(
     for location in new_asset_location_range:
         if location <= 0 or location > rack_height:
             raise LocationException("Cannot place asset outside of rack. ")
-    assets_in_rack = Asset.objects.filter(rack=rack_id)
-    for asset_in_rack in assets_in_rack:
+    if change_plan:
+        assets, assets_cp = get_assets_for_cp(change_plan.id)
+    else:
+        assets = Asset.objects.all()
+
+    for asset_in_rack in assets.filter(rack=rack_id):
         # Ignore if asset being modified conflicts with its old location
-        if (asset_id is None or asset_in_rack.id != asset_id):
+        is_valid_conflict = asset_id is None or asset_in_rack.id != asset_id
+        if change_plan:
+            is_valid_conflict = related_asset_id is not None and asset_in_rack.id != related_asset_id
+  
+        if (is_valid_conflict):
             for occupied_location in [
                 asset_in_rack.rack_position + i for i
                     in range(asset_in_rack.model.height)
             ]:
                 if occupied_location in new_asset_location_range:
-                    raise LocationException(
-                        "Asset location conflicts with another asset: '" +
-                        str(asset_in_rack.asset_number) +
-                        "'. "
-                    )
+                    if asset_in_rack.asset_number:
+                        raise LocationException(
+                            "Asset location conflicts with another asset: '" +
+                            str(asset_in_rack.asset_number) +
+                            "'. "
+                        )
+                    else:
+                        raise LocationException(
+                            "Asset location conflicts with another asset."
+                                )
+    if change_plan:
+        for asset_in_rack in assets_cp.filter(rack=rack_id):
+        # Ignore if asset being modified conflicts with its old location
+            if (asset_id is None or asset_in_rack.id != asset_id):
+                for occupied_location in [
+                    asset_in_rack.rack_position + i for i
+                        in range(asset_in_rack.model.height)
+                ]:
+                    if occupied_location in new_asset_location_range:
+                        if asset_in_rack.asset_number:
+                            raise LocationException(
+                                "Asset location conflicts with another asset: '" +
+                                str(asset_in_rack.asset_number) +
+                                "'. "
+                            )
+                        else:
+                            raise LocationException(
+                                "Asset location conflicts with another asset."
+                                    )
 
-
-def validate_location_modification(data, existing_asset):
+def validate_location_modification(data, existing_asset, user, change_plan=None):
     asset_id = existing_asset.id
-    rack_id = existing_asset.rack.id
+    rack_id = existing_asset.rack_id
+    related_asset_id = None
+    print(existing_asset)
+    if hasattr(existing_asset, "related_asset") and existing_asset.related_asset:
+        print(existing_asset.related_asset)
+        related_asset_id = existing_asset.related_asset.id
+    print("here")
     asset_rack_position = existing_asset.rack_position
     asset_height = existing_asset.model.height
-
     if 'rack_position' in data:
         try:
             asset_rack_position = int(data['rack_position'])
@@ -109,10 +152,17 @@ def validate_location_modification(data, existing_asset):
 
     if 'rack' in data:
         try:
-            rack_id = Rack.objects.get(id=data['rack']).id
+            rack = Rack.objects.get(id=data['rack'])
+            rack_id = rack.id
         except Exception:
             raise Exception("No existing rack with id=" +
                             str(data['rack']) + ".")
+        else:
+            if not user_has_asset_permission(user, rack.datacenter):
+                raise Exception(
+                    "You do not have permission to move assets to " +
+                    "datacenter " + rack.datacenter.abbreviation + "."
+                )
 
     try:
         validate_asset_location(
@@ -120,9 +170,28 @@ def validate_location_modification(data, existing_asset):
             asset_rack_position,
             asset_height,
             asset_id=asset_id,
+            change_plan=change_plan,
+            related_asset_id=related_asset_id,
         )
     except LocationException as error:
         raise error
+
+def get_change_plan(change_plan_id):
+    try:
+        change_plan = ChangePlan.objects.get(
+            id=change_plan_id
+            )
+    except ObjectDoesNotExist:
+        return (None, JsonResponse(
+            {
+                "failure_message":
+                    Status.CREATE_ERROR.value + GenericFailure.INTERNAL.value,
+                "errors": "Invalid change_plan Parameter"
+            },
+            status=HTTPStatus.BAD_REQUEST
+        ))
+    else:
+        return (change_plan, None)
 
 
 def records_are_identical(existing_data, new_data):
@@ -209,9 +278,11 @@ class LocationException(Exception):
     def __init__(self, *args, **kwargs):
         Exception.__init__(self, *args, **kwargs)
 
+
 class ModelModificationException(Exception):
     def __init__(self, *args, **kwargs):
         Exception.__init__(self, *args, **kwargs)
+
 
 class MacAddressException(Exception):
     def __init__(self, *args, **kwargs):
@@ -226,137 +297,6 @@ class PowerConnectionException(Exception):
 class NetworkConnectionException(Exception):
     def __init__(self, *args, **kwargs):
         Exception.__init__(self, *args, **kwargs)
-
-
-def get_sort_arguments(data):
-    sort_args = []
-    if 'sort_by' in data:
-        sort_by = data['sort_by']
-        for sort in sort_by:
-            if ('field' not in sort) or ('ascending' not in sort):
-                raise Exception("Must specify 'field' and 'ascending' fields.")
-            if not isinstance(sort['field'], str):
-                raise Exception("Field 'field' must be of type string.")
-            if not isinstance(sort['ascending'], bool):
-                raise Exception("Field 'ascending' must be of type bool.")
-            field_name = sort['field']
-            order = "-" if not sort['ascending'] else ""
-            sort_args.append(order + field_name)
-    return sort_args
-
-
-def get_filter_arguments(data):
-    filter_args = []
-    if 'filters' in data:
-        filters = data['filters']
-        for filter in filters:
-
-            if (
-                ('field' not in filter)
-                or ('filter_type' not in filter)
-                or ('filter' not in filter)
-            ):
-                raise Exception(
-                    "Must specify 'field', 'filter_type', and 'filter' fields."
-                )
-            if not isinstance(filter['field'], str):
-                raise Exception("Field 'field' must be of type string.")
-            if not isinstance(filter['filter_type'], str):
-                raise Exception("Field 'filter_type' must be of type string.")
-            if not isinstance(filter['filter'], dict):
-                raise Exception("Field 'filter' must be of type dict.")
-
-            filter_field = filter['field']
-            filter_type = filter['filter_type']
-            filter_dict = filter['filter']
-
-            if filter_type == 'text':
-                if filter_dict['match_type'] == 'exact':
-                    filter_args.append(
-                        {
-                            '{0}__iexact'.format(filter_field): filter_dict['value']
-                        }
-                    )
-                elif filter_dict['match_type'] == 'contains':
-                    filter_args.append(
-                        {
-                            '{0}__icontains'.format(filter_field):
-                            filter_dict['value']
-                        }
-                    )
-
-            elif filter_type == 'numeric':
-                if (
-                    filter_dict['min'] is not None
-                    and isinstance(filter_dict['min'], int)
-                    and (
-                        filter_dict['max'] is None
-                        or filter_dict['max'] == ""
-                    )
-                ):
-                    filter_args.append(
-                        {
-                            '{0}__gte'.format(filter_field): int(filter_dict['min'])  # noqa greater than or equal to min
-                        }
-                    )
-                elif (
-                    filter_dict['max'] is not None
-                    and isinstance(filter_dict['max'], int)
-                    and (
-                        filter_dict['min'] is None
-                        or filter_dict['min'] == ""
-                    )
-                ):
-                    filter_args.append(
-                        {
-                            '{0}__lte'.format(filter_field): int(filter_dict['max'])  # noqa less than or equal to max
-                        }
-                    )
-                elif (
-                    int(filter_dict['max']) is not None
-                    and int(filter_dict['min']) is not None
-                ):
-                    range_value = (
-                        int(filter_dict['min']),
-                        int(filter_dict['max'])
-                    )
-                    filter_args.append(
-                        {
-                            '{0}__range'.format(filter_field): range_value  # noqa inclusive on both min, max
-                        }
-                    )
-                else:
-                    raise Exception(
-                        "Numeric filters must contain integer min, integer max, or both."
-                    )
-
-            elif filter_type == 'rack_range':
-                range_serializer = RackRangeSerializer(data=filter_dict)
-                if not range_serializer.is_valid():
-                    raise Exception(
-                        "Invalid rack_range filter: " +
-                        str(range_serializer.errors)
-                    )
-                filter_args.append(
-                    {
-                        'rack__rack_num__range':
-                        range_serializer.get_number_range()
-                    }
-                )
-                filter_args.append(
-                    {
-                        'rack__row_letter__range':
-                        range_serializer.get_row_range()  # noqa inclusive on both letter, number
-                    }
-                )
-
-            else:
-                raise Exception(
-                    "String field 'filter_type' must be either 'text', " +
-                    "'numeric', or 'rack_range'."
-                )
-
-    return filter_args
 
 
 def close_old_connections_decorator(func):

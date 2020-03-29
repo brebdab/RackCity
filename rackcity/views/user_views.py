@@ -1,34 +1,46 @@
-from django.contrib.auth.models import User
+from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.contrib.auth.models import User, Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from http import HTTPStatus
-import math
 from rackcity.api.serializers import RegisterNameSerializer, UserSerializer
-from rackcity.models import Asset
-from rackcity.views.rackcity_utils import (
-    get_filter_arguments,
-    get_sort_arguments,
+from rackcity.models import Asset, RackCityPermission
+from rackcity.permissions.groups import (
+    GroupName,
+    update_user_groups,
+    update_user_datacenter_permissions,
 )
-from rackcity.utils.errors_utils import UserFailure, GenericFailure, Status
-from rackcity.utils.user_utils import is_netid_user
+from rackcity.permissions.permissions import PermissionPath
+from rackcity.utils.query_utils import (
+    get_page_count_response,
+    get_many_response,
+)
+from rackcity.utils.errors_utils import (
+    UserFailure,
+    GenericFailure,
+    Status,
+    get_user_permission_success,
+)
 from rackcity.utils.log_utils import (
     log_delete,
     log_user_permission_action,
     ElementType,
     PermissionAction,
 )
+from rackcity.utils.user_utils import is_netid_user
 import requests
+from rest_auth.registration.views import RegisterView
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import permission_classes, api_view
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import JSONParser
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from rest_auth.registration.views import RegisterView
+from rest_framework.permissions import IsAuthenticated
 
 
-class RegisterNameView(RegisterView):
+class RegisterNameView(PermissionRequiredMixin, RegisterView):
     serializer_class = RegisterNameSerializer
-    permission_classes = [IsAdminUser]
+    permission_required = PermissionPath.USER_WRITE.value
+    raise_exception = True
 
 
 @api_view(['POST'])
@@ -84,103 +96,24 @@ def netid_login(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.USER_WRITE.value, raise_exception=True)
 def user_many(request):
     """
     List many users. If page is not specified as a query parameter, all
     instances are returned. If page is specified as a query parameter, page
     size must also be specified, and a page of users will be returned.
     """
-
-    errors = []
-
-    should_paginate = not(
-        request.query_params.get('page') is None
-        and request.query_params.get('page_size') is None
-    )
-
-    if should_paginate:
-        if not request.query_params.get('page'):
-            errors.append("Must specify field 'page' on " +
-                          "paginated requests.")
-        elif not request.query_params.get('page_size'):
-            errors.append("Must specify field 'page_size' on " +
-                          "paginated requests.")
-        elif int(request.query_params.get('page_size')) <= 0:
-            errors.append("Field 'page_size' must be an integer " +
-                          "greater than 0.")
-
-    if len(errors) > 0:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                "errors": " ".join(errors)
-            },
-            status=HTTPStatus.BAD_REQUEST,
-        )
-
-    users_query = User.objects
-
-    try:
-        filter_args = get_filter_arguments(request.data)
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.FILTER.value,
-                "errors": str(error)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    for filter_arg in filter_args:
-        users_query = users_query.filter(**filter_arg)
-
-    try:
-        sort_args = get_sort_arguments(request.data)
-        if len(sort_args) == 0:
-            sort_args = ['username']
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.SORT.value,
-                "errors": str(error)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    users = users_query.order_by(*sort_args)
-
-    if should_paginate:
-        paginator = PageNumberPagination()
-        paginator.page_size = request.query_params.get('page_size')
-        try:
-            page_of_users = paginator.paginate_queryset(users, request)
-        except Exception as error:
-            return JsonResponse(
-                {
-                    "failure_message":
-                        Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                    "errors": str(error)
-                },
-                status=HTTPStatus.BAD_REQUEST,
-            )
-        users_to_serialize = page_of_users
-    else:
-        users_to_serialize = users
-
-    serializer = UserSerializer(
-        users_to_serialize,
-        many=True,
-    )
-    return JsonResponse(
-        {"users": serializer.data},
-        status=HTTPStatus.OK,
+    return get_many_response(
+        User,
+        UserSerializer,
+        "users",
+        request,
+        default_order='username',
     )
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.USER_WRITE.value, raise_exception=True)
 def user_delete(request):
     """
     Delete an existing user. Any assets owned by this user will be updated to
@@ -262,22 +195,7 @@ def user_page_count(request):
     Return total number of pages according to page size, which must be
     specified as query parameter.
     """
-    if (
-        not request.query_params.get('page_size')
-        or int(request.query_params.get('page_size')) <= 0
-    ):
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                "errors": "Must specify positive integer page_size."
-            },
-            status=HTTPStatus.BAD_REQUEST,
-        )
-    page_size = int(request.query_params.get('page_size'))
-    user_count = User.objects.all().count()
-    page_count = math.ceil(user_count / page_size)
-    return JsonResponse({"page_count": page_count})
+    return get_page_count_response(User, request.query_params)
 
 
 @api_view(['GET'])
@@ -292,6 +210,7 @@ def who_am_i(request):
 
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def i_am_admin(request):
     """
     Returns whether logged in user is an admin user.
@@ -303,7 +222,7 @@ def i_am_admin(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.USER_WRITE.value, raise_exception=True)
 def user_grant_admin(request):
     """
     Grants admin permission to the specified user.
@@ -363,7 +282,7 @@ def user_grant_admin(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.USER_WRITE.value, raise_exception=True)
 def user_revoke_admin(request):
     """
     Revokes admin permission from the specified user.
@@ -439,5 +358,147 @@ def usernames(request):
     usernames = [obj.username for obj in User.objects.all()]
     return JsonResponse(
         {"usernames": usernames},
+        status=HTTPStatus.OK,
+    )
+
+
+@api_view(['POST'])
+@permission_required(PermissionPath.USER_WRITE.value, raise_exception=True)
+def user_set_groups(request):
+    """
+    Set groups and permissions for a user.
+    """
+    data = JSONParser().parse(request)
+    if 'id' not in data:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR.value +
+                    GenericFailure.INTERNAL.value,
+                "errors": "Must specify user id on admin permission revoke"
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    try:
+        user = User.objects.get(id=data['id'])
+    except ObjectDoesNotExist:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR.value +
+                    "User" + GenericFailure.DOES_NOT_EXIST.value,
+                "errors": "No existing user with id=" + data['id']
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+
+    groups_added, groups_removed, current_groups = \
+        update_user_groups(user, data)
+    if 'datacenter_permissions' in data:
+        try:
+            current_datacenters = \
+                update_user_datacenter_permissions(
+                    user,
+                    data['datacenter_permissions'],
+                )
+        except ObjectDoesNotExist:
+            return JsonResponse(
+                {
+                    "failure_message":
+                    Status.MODIFY_ERROR.value +
+                    "Datacenter" + GenericFailure.DOES_NOT_EXIST.value,
+                    "errors": "No existing datacenter with id"
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
+    else:
+        current_datacenters = []
+
+    success_message = get_user_permission_success(
+        groups_added,
+        groups_removed,
+        current_groups,
+        current_datacenters,
+    )
+    return JsonResponse(
+        {"success_message": Status.SUCCESS.value + success_message},
+        status=HTTPStatus.OK,
+    )
+
+
+@api_view(['POST'])
+@permission_required(PermissionPath.USER_WRITE.value, raise_exception=True)
+def user_get_groups(request):
+    data = JSONParser().parse(request)
+    if 'id' not in data:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR.value +
+                    GenericFailure.INTERNAL.value,
+                "errors": "Must specify user id on admin permission revoke"
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    try:
+        user = User.objects.get(id=data['id'])
+    except ObjectDoesNotExist:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.MODIFY_ERROR.value +
+                    "User" + GenericFailure.DOES_NOT_EXIST.value,
+                "errors": "No existing user with id="+str(data['id'])
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    permissions = get_permissions(user)
+    return JsonResponse(
+        permissions,
+        status=HTTPStatus.OK,
+    )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_get_my_groups(request):
+    user = request.user
+    permissions = get_permissions(user)
+    return JsonResponse(
+        permissions,
+        status=HTTPStatus.OK,
+    )
+
+
+def get_permissions(user):
+    permissions = {}
+    for group_name in GroupName:
+        try:
+            group = Group.objects.get(name=group_name.value)
+        except ObjectDoesNotExist:
+            user_in_group = False
+        else:
+            user_in_group = (group in user.groups.all())
+        permissions[group_name.value] = user_in_group
+    try:
+        permission = RackCityPermission.objects.get(user=user.id)
+    except ObjectDoesNotExist:
+        datacenter_list = []
+    else:
+        datacenter_list = [
+            dc.id for dc in permission.datacenter_permissions.all()
+        ]
+    permissions['datacenter_permissions'] = datacenter_list
+    return permissions
+
+
+@api_view(['GET'])
+@permission_required(PermissionPath.USER_WRITE.value, raise_exception=True)
+def all_user_groups(request):
+    group_list = []
+    for group in GroupName:
+        group_list.append(group.value)
+    return JsonResponse(
+        {"groups": group_list},
         status=HTTPStatus.OK,
     )

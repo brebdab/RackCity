@@ -14,13 +14,9 @@ from .it_model_views import (
     model_bulk_export,
     model_page_count,
     model_fields,
-    model_list,
-    model_auth,
-    model_admin,
 )
 from .asset_views import (
     asset_detail,
-    asset_list,
     asset_add,
     asset_modify,
     asset_delete,
@@ -35,6 +31,11 @@ from .asset_views import (
     asset_fields,
     asset_number,
 )
+from .decommission_views import (
+    decommission_asset,
+    decommissioned_asset_many,
+    decommissioned_asset_page_count,
+)
 from .rack_views import (
     rack_get,
     rack_get_all,
@@ -46,7 +47,6 @@ from .report_views import (
     report_rack_usage,
     rack_report_datacenter
 )
-
 from .user_views import (
     netid_login,
     RegisterNameView,
@@ -58,6 +58,10 @@ from .user_views import (
     i_am_admin,
     user_grant_admin,
     user_revoke_admin,
+    user_set_groups,
+    user_get_groups,
+    all_user_groups,
+    user_get_my_groups,
 )
 from .datacenter_views import (
     datacenter_all,
@@ -72,4 +76,15 @@ from .pdu_views import (
     power_off,
     power_cycle,
     power_availability
+)
+from .change_plan_views import (
+    change_plan_many,
+    change_plan_add,
+    change_plan_modify,
+    change_plan_delete,
+    change_plan_page_count,
+    change_plan_execute,
+    change_plan_detail,
+    change_plan_remove_asset,
+    change_plan_resolve_conflict
 )
