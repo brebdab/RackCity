@@ -489,7 +489,6 @@ def save_power_connections(asset_data, asset_id, change_plan=None):
             failure_message += "Power port '"+port_name+"' does not exist on this asset. "
         else:
             power_connection_data = power_connection_assignments[port_name]
-            print(power_connection_data)
             if change_plan:
                 asset = AssetCP.objects.get(id=asset_id)
             else:
@@ -518,11 +517,9 @@ def save_power_connections(asset_data, asset_id, change_plan=None):
                     else:
                         pdu_port = PDUPortCP(change_plan=change_plan)
                         for field in pdu_port_master._meta.fields:
-                            print(field.name)
                             if field.name != "id":
                                 setattr(pdu_port, field.name, getattr(
                                     pdu_port_master, field.name))
-                        print(pdu_port_master,pdu_port)
                         pdu_port.save()
                 pdu_port = pdu_port_master
             except ObjectDoesNotExist:
