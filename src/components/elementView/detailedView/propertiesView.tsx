@@ -128,7 +128,7 @@ class PropertiesView extends React.PureComponent<
               <p className="label">{AssetFieldsTable[item]}:</p>
             </td>
 
-            <td style={getChangePlanRowStyle(this.props.data)}>{dat}</td>
+            <td style={getChangePlanRowStyle(data)}>{dat}</td>
           </tr>
         ) : null;
       }

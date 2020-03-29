@@ -1,3 +1,4 @@
+.clickable:hover,
 .change-plan-item:hover {
   cursor: pointer !important;
   background-color: #394b59;
@@ -7,4 +8,20 @@
 }
 .bp3-list-unstyled {
   margin-top: 30pt;
+}
+.cp-details {
+  display: inline-flex;
+  width: 100%;
+  padding: 5pt;
+}
+.cp-details h3 {
+  margin: 1pt !important;
+}
+.cp-details pre {
+  flex-grow: 1;
+  overflow-x: auto;
+}
+
+.cp-details pre + pre {
+  margin-left: 5pt;
 }

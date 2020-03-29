@@ -533,11 +533,8 @@ class ElementTable extends React.Component<
     }
   }
 
-<<<<<<< HEAD
-=======
 
 
->>>>>>> 9f70eefd54f6d577549e3a8bddc0fbe87301f3d4
   updateTableData = () => {
     if (this.props.getData && this.props.token) {
       this.setState({
