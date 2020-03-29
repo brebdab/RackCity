@@ -8,7 +8,7 @@ import { RouteComponentProps, withRouter } from "react-router";
 // import { getHeaders, ROUTES } from "../../../../utils/utils";
 import Barcode from "react-barcode";
 import ReactDOMServer from "react-dom/server";
-// import "./barcodeView.scss";
+import "./barcodeView.scss";
 
 export interface BarcodeViewProps {
   token: string;
@@ -23,6 +23,10 @@ class BarcodeView extends React.PureComponent<
   RouteComponentProps & BarcodeViewProps,
   BarcodeViewState
 > {
+  public componentDidMount() {
+    window.print();
+  }
+
   public render() {
     const barcodeString = localStorage.getItem("barcodes")!;
     let barcodes: Array<string>;
