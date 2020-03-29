@@ -8,6 +8,7 @@ from rackcity.utils.query_utils import (
     get_invalid_paginated_request_response,
     should_paginate_query,
 )
+from django.db.models import Q
 from rackcity.utils.errors_utils import Status, GenericFailure
 from rackcity.models.asset import get_assets_for_cp
 from rackcity.models import Asset, AssetCP

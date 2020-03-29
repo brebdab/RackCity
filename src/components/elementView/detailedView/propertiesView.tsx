@@ -28,7 +28,7 @@ interface PropertiesViewProps {
 class PropertiesView extends React.PureComponent<
   RouteComponentProps & PropertiesViewProps,
   AlertState
-  > {
+> {
   setFieldNamesFromData = () => {
     let fields: Array<string> = [];
     Object.keys(this.props.data).forEach((col: string) => {
@@ -78,10 +78,12 @@ class PropertiesView extends React.PureComponent<
         const isDecommissioned = data["decommissioning_user"];
         dat = (
           <p
-            className={isDecommissioned ? undefined
-              : "model-link"}
-            onClick={isDecommissioned ? undefined
-              : () => this.props.history.push(ROUTES.MODELS + "/" + data[item].id)
+            className={isDecommissioned ? undefined : "model-link"}
+            onClick={
+              isDecommissioned
+                ? undefined
+                : () =>
+                    this.props.history.push(ROUTES.MODELS + "/" + data[item].id)
             }
           >
             {data[item].vendor + " " + data[item].model_number}
@@ -120,7 +122,7 @@ class PropertiesView extends React.PureComponent<
       }
 
       if (isAssetObject(this.props.data)) {
-        return (
+        return AssetFieldsTable[item] ? (
           <tr>
             <td key={item}>
               <p className="label">{AssetFieldsTable[item]}:</p>
@@ -128,7 +130,7 @@ class PropertiesView extends React.PureComponent<
 
             <td style={getChangePlanRowStyle(this.props.data)}>{dat}</td>
           </tr>
-        );
+        ) : null;
       }
       if (isModelObject(this.props.data)) {
         return (
