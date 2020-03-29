@@ -267,7 +267,7 @@ class CPDetailView extends React.Component<
                   Network Connections
                 </td>
                 <td style={this.getHighlightStyle(modification, col)}>
-                  {JSON.stringify(value)}
+                <pre>{JSON.stringify(value, null, 2)}</pre>
                 </td>
               </tr>
             );
