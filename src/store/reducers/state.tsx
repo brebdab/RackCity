@@ -14,12 +14,12 @@ const initialState: ReduxState = {
   loading: false,
   changePlan: null,
   permissionState: {
-    "model_management": false,
-    "asset_management": false,
-    "power_control": false,
-    "audit_read": false,
-    "admin": false,
-    "datacenter_permissions": []
+    model_management: false,
+    asset_management: false,
+    power_control: false,
+    audit_read: false,
+    admin: false,
+    datacenter_permissions: []
   } as PermissionState
 };
 const setChangePlan = (state: any, action: any) => {
@@ -29,8 +29,9 @@ const setChangePlan = (state: any, action: any) => {
 };
 const updateChangePlans = (state: any, action: any) => {
   return updateObject(state, {
-    updateChangePlans: action.updateChangePlans
-  }};
+    updateChangePlansBoolean: action.updateChangePlansBoolean
+  });
+};
 
 const setPermissionState = (state: any, action: any) => {
   return updateObject(state, {

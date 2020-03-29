@@ -12,6 +12,14 @@ export const setChangePlan = (changePlan: ChangePlan) => {
     changePlan: changePlan
   };
 };
+
+export const updateChangePlans = (status: boolean) => {
+  console.log("setting update changee plans to", status);
+  return {
+    type: actionTypes.UPDATE_CHANGE_PLANS,
+    updateChangePlansBoolean: status
+  };
+};
 export const setPermissionState = (permissionState: PermissionState) => {
   return {
     type: actionTypes.SET_PERMISSION_STATE,
