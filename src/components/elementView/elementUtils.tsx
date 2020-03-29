@@ -102,7 +102,16 @@ export const renderRackRangeFilterItem = (item: RackRangeFields) => {
 };
 
 export const renderDatetimeFilterItem = (item: DatetimeFilter) => {
-  return `from ${item.after} - ${item.before}`;
+  const after: Date | undefined = item.after ? new Date(item.after) : undefined
+  const before: Date | undefined = item.before ? new Date(item.before) : undefined
+  if (after && before) {
+    return `from ${after.toLocaleString()} to ${before.toLocaleString()}`;
+  }
+  else if (after) {
+    return `after ${after.toLocaleString()}`;
+  } else if (before) {
+    return `before ${before.toLocaleString()}`;
+  }
 };
 
 export const modifyModel = (model: ModelObject, headers: any) => {
@@ -135,10 +144,25 @@ export const modifyAsset = (
   }
   return axios.post(API_ROOT + "api/assets/modify", asset, config);
 };
-export const decommissionAsset = (asset: AssetObject, headers: any) => {
+export const decommissionAsset = (
+  asset: AssetObject,
+  headers: any,
+  changePlan: ChangePlan
+) => {
+  let config;
+  if (!changePlan) {
+    config = headers;
+  } else {
+    config = {
+      headers: headers["headers"],
+      params: {
+        change_plan: changePlan.id
+      }
+    };
+  }
   console.log("Decommissioning asset");
   const data = { id: asset.id };
-  return axios.post(API_ROOT + "api/assets/decommission", data, headers);
+  return axios.post(API_ROOT + "api/assets/decommission", data, config);
 };
 
 export const modifyChangePlan = (

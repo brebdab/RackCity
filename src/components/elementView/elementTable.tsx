@@ -739,7 +739,19 @@ class ElementTable extends React.Component<
   };
 
   //DELETE LOGIC
-
+  private shouldShowColumn = (item: any, col: string) => {
+    if (isAssetObject(item)) {
+      return AssetFieldsTable[col] && col !== "comment";
+    }
+    return (
+      col !== "id" &&
+      col !== "network_ports" &&
+      col !== "comment" &&
+      col !== "is_admin" &&
+      col !== "decommissioned_id" &&
+      !isObject(item[col])
+    );
+  };
   private handleDeleteOpen = () =>
     this.setState({ openAlert: ElementTableOpenAlert.DELETE });
   private handleDeleteCancel = () =>
@@ -800,7 +812,8 @@ class ElementTable extends React.Component<
     if (isAssetObject(this.state.editFormValues)) {
       resp = decommissionAsset(
         this.state.editFormValues,
-        getHeaders(this.props.token)
+        getHeaders(this.props.token),
+        this.props.changePlan
       );
     }
     if (resp) {
@@ -1080,7 +1093,9 @@ class ElementTable extends React.Component<
                                 );
                               }
                         }
-                        style={getChangePlanRowStyle(item)}
+                        style={getChangePlanRowStyle(
+                           item
+                          )}
                       >
                         {this.props.type === ElementType.ASSET ? (
                           <th
@@ -1121,19 +1136,27 @@ class ElementTable extends React.Component<
                         {Object.entries(item).map(([col, value]) => {
                           if (isModelObject(value)) {
                             return [
-                              <td style={getChangePlanRowStyle(item)}>
+                              <td style={getChangePlanRowStyle(
+                           item
+                          )}>
                                 {value.vendor}
                               </td>,
-                              <td style={getChangePlanRowStyle(item)}>
+                              <td style={getChangePlanRowStyle(
+                           item
+                          )}>
                                 {value.model_number}
                               </td>
                             ];
                           } else if (isRackObject(value)) {
                             return [
-                              <td style={getChangePlanRowStyle(item)}>
+                              <td style={getChangePlanRowStyle(
+                           item
+                          )}>
                                 {value.row_letter + value.rack_num}
                               </td>,
-                              <td style={getChangePlanRowStyle(item)}>
+                              <td style={getChangePlanRowStyle(
+                           item
+                          )}>
                                 {value.datacenter.name}
                               </td>
                             ];
@@ -1145,16 +1168,11 @@ class ElementTable extends React.Component<
                                 }}
                               ></td>
                             );
-                          } else if (
-                            col !== "id" &&
-                            col !== "decommissioned_id" &&
-                            col !== "network_ports" &&
-                            col !== "comment" &&
-                            col !== "is_admin" &&
-                            !isObject(value)
-                          ) {
+                          } else if (this.shouldShowColumn(item, col)) {
                             return (
-                              <td style={getChangePlanRowStyle(item)}>
+                              <td style={getChangePlanRowStyle(
+                           item
+                          )}>
                                 {value}
                               </td>
                             );
@@ -1191,11 +1209,6 @@ class ElementTable extends React.Component<
                                     : false
                                 }
                                 onClick={(event: any) => {
-                                  console.log(
-                                    "SCROLL",
-                                    window.scrollX,
-                                    window.scrollY
-                                  );
                                   this.handleEditButtonClick(item);
                                   event.stopPropagation();
                                 }}
@@ -1206,14 +1219,20 @@ class ElementTable extends React.Component<
                             !this.props.isDecommissioned ? (
                               <AnchorButton
                                 className="button-table"
-                                intent="danger"
+                                intent="primary"
+              
                                 minimal
                                 icon={
                                   this.props.type === ElementType.ASSET
                                     ? "remove"
                                     : "trash"
                                 }
-                                disabled={this.props.changePlan ? true : false}
+                                disabled={
+                                  this.props.changePlan &&
+                                  this.props.type !== ElementType.ASSET
+                                    ? true
+                                    : false
+                                }
                                 onClick={
                                   this.props.type === ElementType.ASSET
                                     ? (event: any) => {

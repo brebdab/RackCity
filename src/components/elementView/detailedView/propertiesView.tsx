@@ -10,9 +10,11 @@ import {
   isModelObject,
   isObject,
   ModelFieldsTable,
-  ROUTES
+  ROUTES,
+  ChangePlan
 } from "../../../utils/utils";
 import "./propertiesView.scss";
+import { connect } from "react-redux";
 
 export interface AlertState {
   isDeleteOpen: boolean;
@@ -23,12 +25,13 @@ export interface AlertState {
 
 interface PropertiesViewProps {
   data: ElementObjectType;
+  changePlan: ChangePlan;
 }
 
 class PropertiesView extends React.PureComponent<
   RouteComponentProps & PropertiesViewProps,
   AlertState
-  > {
+> {
   setFieldNamesFromData = () => {
     let fields: Array<string> = [];
     Object.keys(this.props.data).forEach((col: string) => {
@@ -78,10 +81,12 @@ class PropertiesView extends React.PureComponent<
         const isDecommissioned = data["decommissioning_user"];
         dat = (
           <p
-            className={isDecommissioned ? undefined
-              : "model-link"}
-            onClick={isDecommissioned ? undefined
-              : () => this.props.history.push(ROUTES.MODELS + "/" + data[item].id)
+            className={isDecommissioned ? undefined : "model-link"}
+            onClick={
+              isDecommissioned
+                ? undefined
+                : () =>
+                    this.props.history.push(ROUTES.MODELS + "/" + data[item].id)
             }
           >
             {data[item].vendor + " " + data[item].model_number}
@@ -120,15 +125,21 @@ class PropertiesView extends React.PureComponent<
       }
 
       if (isAssetObject(this.props.data)) {
-        return (
+        return AssetFieldsTable[item] ? (
           <tr>
             <td key={item}>
               <p className="label">{AssetFieldsTable[item]}:</p>
             </td>
 
-            <td style={getChangePlanRowStyle(this.props.data)}>{dat}</td>
+            <td
+              style={getChangePlanRowStyle(
+                this.props.data
+              )}
+            >
+              {dat}
+            </td>
           </tr>
-        );
+        ) : null;
       }
       if (isModelObject(this.props.data)) {
         return (
@@ -208,5 +219,9 @@ class PropertiesView extends React.PureComponent<
     );
   }
 }
-
-export default withRouter(PropertiesView);
+const mapStateToProps = (state: any) => {
+  return {
+    changePlan: state.changePlan
+  };
+};
+export default connect(mapStateToProps)(withRouter(PropertiesView));

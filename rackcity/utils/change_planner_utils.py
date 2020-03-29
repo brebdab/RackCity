@@ -1,5 +1,5 @@
 from django.db.models import Q
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from django.http import JsonResponse
 from enum import Enum
@@ -27,6 +27,16 @@ class ModificationType(Enum):
     MODIFY = 'Modify'
     CREATE = 'Create'
     DECOMMISSION = 'Decommission'
+
+
+@receiver(pre_delete, sender=Asset)
+def mark_delete_conflicts_cp(sender, **kwargs):
+    """
+    Mark conflict for related assets on change plan
+    """
+    deleted_asset = kwargs.get("instance")
+    AssetCP.objects.filter(
+        related_asset=deleted_asset).update(is_conflict=True)
 
 
 @receiver(post_save, sender=Asset)
