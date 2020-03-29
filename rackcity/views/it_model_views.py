@@ -407,7 +407,7 @@ def model_bulk_upload(request):
     csv_bytes_io = BytesIO(
         b64decode(re.sub(".*base64,", '', base_64_csv))
     )
-    csv_string_io = StringIO(csv_bytes_io.read().decode('UTF-8'))
+    csv_string_io = StringIO(csv_bytes_io.read().decode('UTF-8-SIG'))
     csvReader = csv.DictReader(csv_string_io)
     expected_fields = BulkITModelSerializer.Meta.fields
     given_fields = csvReader.fieldnames
