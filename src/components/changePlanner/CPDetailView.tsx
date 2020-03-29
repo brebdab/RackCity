@@ -1,25 +1,25 @@
 import {
+  Alert,
   AnchorButton,
   Callout,
   Classes,
   Collapse,
+  Divider,
   Intent,
   IToastProps,
+  Position,
   Pre,
   Spinner,
-  Toaster,
-  Position,
-  Alert,
-  Divider,
-  ButtonGroup
+  Toaster
 } from "@blueprintjs/core";
 import axios from "axios";
 import * as React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps } from "react-router";
 import { withRouter } from "react-router-dom";
-import { API_ROOT } from "../../utils/api-config";
+import { isNullOrUndefined } from "util";
 import * as actions from "../../store/actions/state";
+import { API_ROOT } from "../../utils/api-config";
 import {
   AssetCPObject,
   AssetFieldsTable,
@@ -32,8 +32,6 @@ import {
   ROUTES
 } from "../../utils/utils";
 import "./changePlanner.scss";
-import { isNullOrUndefined } from "util";
-
 interface CPDetailViewProps {
   token: string;
   updateChangePlans(status: boolean): void;
@@ -77,16 +75,23 @@ class CPDetailView extends React.Component<
   loading = false;
 
   dataLoaded = false;
-
-  getConflictWarning = () => {
-    return <div></div>;
-  };
+  openPrint = false;
   public state = {
-    isOpen: [false, false],
+    isOpen: [] as Array<boolean>,
     changePlan: {} as ChangePlan,
     modifications: [],
     isAlertOpen: false
   };
+  printWorkOrder = () => {
+    const isOpen = this.state.isOpen.map(() => {
+      return true;
+    });
+    this.setState({
+      isOpen
+    });
+    this.openPrint = true;
+  };
+
   disableExecute() {
     if (this.loading || this.state.modifications.length === 0) {
       return true;
@@ -197,9 +202,11 @@ class CPDetailView extends React.Component<
             this.loading = false;
             this.dataLoaded = true;
             this.props.setChangePlan(res.data.change_plan);
+            const isOpen = new Array(res.data.modifications.length).fill(false);
             this.setState({
               changePlan: res.data.change_plan,
-              modifications: res.data.modifications
+              modifications: res.data.modifications,
+              isOpen
             });
           })
           .catch(err => {
@@ -362,9 +369,11 @@ class CPDetailView extends React.Component<
           this.loading = false;
           this.dataLoaded = true;
           this.props.setChangePlan(res.data.change_plan);
+          const isOpen = new Array(res.data.modifications.length).fill(false);
           this.setState({
             changePlan: res.data.change_plan,
-            modifications: res.data.modifications
+            modifications: res.data.modifications,
+            isOpen
           });
         })
         .catch(err => {
@@ -374,7 +383,16 @@ class CPDetailView extends React.Component<
     }
   }
   public render() {
-    console.log(this.props.match);
+    console.log(this.openPrint, this.state.isOpen);
+    if (
+      this.openPrint &&
+      this.state.isOpen.every((item: boolean) => item === true)
+    ) {
+      this.openPrint = false;
+      setTimeout(() => {
+        window.print();
+      }, 1000);
+    }
     if (!this.dataLoaded && this.route_id) {
       this.loading = true;
       getChangePlanDetail(this.props.token, this.route_id)
@@ -382,9 +400,11 @@ class CPDetailView extends React.Component<
           this.loading = false;
           this.dataLoaded = true;
           this.props.setChangePlan(res.data.change_plan);
+          const isOpen = new Array(res.data.modifications.length).fill(false);
           this.setState({
             changePlan: res.data.change_plan,
-            modifications: res.data.modifications
+            modifications: res.data.modifications,
+            isOpen
           });
         })
         .catch(err => {
@@ -560,17 +580,16 @@ class CPDetailView extends React.Component<
             <div>
               <AnchorButton
                 disabled={this.disableExecute()}
+                onClick={() => this.printWorkOrder()}
                 intent="none"
                 icon="document-open"
                 text="Generate Work Order"
               />
             </div>
             <div className="cp-dividers">
-              {/* <ButtonGroup vertical={true}> */}
               <Divider className="cp-detail-divider" />
               <p className={Classes.DARK + " cp-detail-divider-text"}>then</p>
               <Divider className="cp-detail-divider" />
-              {/* </ButtonGroup> */}
             </div>
             <div>
               <AnchorButton
