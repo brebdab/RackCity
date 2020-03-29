@@ -442,8 +442,9 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                   disabled={this.props.changePlan ? true :
                     !(
                       this.props.permissionState.admin
-                      || (this.props.permissionState.model_management && this.props.element === ElementType.MODEL)
-                      || (this.props.permissionState.asset_management && this.props.element === ElementType.ASSET)
+                      || (this.props.element === ElementType.MODEL && this.props.permissionState.model_management)
+                      || (this.props.element === ElementType.ASSET && this.props.permissionState.asset_management)
+                      || (this.props.element === ElementType.ASSET && this.props.permissionState.datacenter_permissions.length > 0)
                     )
                   }
                   onClick={() => {
@@ -551,22 +552,27 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                 </div>
               ) : null}
             </Alert>
-            {this.props.isAdmin ? (
-              <AnchorButton
-                className="add"
-                text={"Add " + this.props.element.slice(0, -1)}
-                icon="add"
-                minimal
-                intent={Intent.PRIMARY}
-                onClick={this.handleOpen}
-                disabled={
-                  this.props.element !== ElementType.ASSET &&
-                    this.props.changePlan
-                    ? true
-                    : false
-                }
-              />
-            ) : null}
+            <AnchorButton
+              className="add"
+              text={"Add " + this.props.element.slice(0, -1)}
+              icon="add"
+              minimal
+              intent={Intent.PRIMARY}
+              onClick={this.handleOpen}
+              disabled={
+                this.props.element !== ElementType.ASSET &&
+                  this.props.changePlan
+                  ? true
+                  :
+                  !(
+                    this.props.permissionState.admin
+                    || (this.props.element === ElementType.DATACENTER && this.props.permissionState.asset_management)
+                    || (this.props.element === ElementType.MODEL && this.props.permissionState.model_management)
+                    || (this.props.element === ElementType.ASSET && this.props.permissionState.asset_management)
+                    || (this.props.element === ElementType.ASSET && this.props.permissionState.datacenter_permissions.length > 0)
+                  )
+              }
+            />
             {this.props.element === ElementType.ASSET ? (
               <AnchorButton
                 className="add"

@@ -123,20 +123,23 @@ class ElementTabContainer extends React.Component<
           panel={<ElementTab {...this.props} element={ElementType.MODEL} />}
         />
 
-        {this.props.isAdmin ? (
-          <Tab
-            className="tab do-not-print"
-            id="datacenters"
-            title="Datacenters"
-            panel={
-              <ElementTab
-                {...this.props}
-                updateDatacenters={this.getDatacenters}
-                element={ElementType.DATACENTER}
-              />
-            }
-          />
-        ) : null}
+        <Tab
+          className="tab do-not-print"
+          id="datacenters"
+          title="Datacenters"
+          disabled={
+            !(this.props.permissionState.admin
+              || this.props.permissionState.asset_management
+            )
+          }
+          panel={
+            <ElementTab
+              {...this.props}
+              updateDatacenters={this.getDatacenters}
+              element={ElementType.DATACENTER}
+            />
+          }
+        />
 
         <Tabs.Expander />
       </Tabs>
@@ -147,7 +150,7 @@ class ElementTabContainer extends React.Component<
 const mapStateToProps = (state: any) => {
   return {
     isAdmin: state.admin,
-    permissionState: state.permission,
+    permissionState: state.permissionState,
     token: state.token
   };
 };

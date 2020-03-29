@@ -45,7 +45,8 @@ import {
   ROUTES,
   isChangePlanObject,
   ChangePlan,
-  getChangePlanRowStyle
+  getChangePlanRowStyle,
+  PermissionState
 } from "../../utils/utils";
 import DragDropList, { DragDropListTypes } from "./dragDropList";
 import {
@@ -106,6 +107,7 @@ interface ElementTableProps {
   disableFiltering?: boolean;
   currDatacenter?: DatacenterObject;
   datacenters?: Array<DatacenterObject>;
+  permissionState: PermissionState;
   getData?(
     type: string,
     page_num: number,
@@ -1255,7 +1257,6 @@ class ElementTable extends React.Component<
                           <div className="inline-buttons">
                             {this.props.type !== ElementType.USER &&
                               !this.props.data &&
-                              this.props.isAdmin &&
                               !this.props.isDecommissioned ? (
                                 <AnchorButton
                                   className="button-table"
@@ -1266,7 +1267,14 @@ class ElementTable extends React.Component<
                                     this.props.changePlan &&
                                       this.props.type !== ElementType.ASSET
                                       ? true
-                                      : false
+                                      :
+                                      !(
+                                        this.props.permissionState.admin
+                                        || (this.props.type === ElementType.DATACENTER && this.props.permissionState.asset_management)
+                                        || (this.props.type === ElementType.MODEL && this.props.permissionState.model_management)
+                                        || (this.props.type === ElementType.ASSET && this.props.permissionState.asset_management)
+                                        || (this.props.type === ElementType.ASSET && isAssetObject(item) && this.props.permissionState.datacenter_permissions.includes(+item.rack.datacenter.id))
+                                      )
                                   }
                                   onClick={(event: any) => {
                                     console.log(
@@ -1279,13 +1287,22 @@ class ElementTable extends React.Component<
                                   }}
                                 />
                               ) : null}
-                            {this.props.isAdmin && !this.props.data && !this.props.isDecommissioned ? (
+                            {!this.props.data && !this.props.isDecommissioned ? (
                               <AnchorButton
                                 className="button-table"
                                 intent="danger"
                                 minimal
                                 icon={this.props.type === ElementType.ASSET ? "remove" : "trash"}
-                                disabled={this.props.changePlan ? true : false}
+                                disabled={
+                                  this.props.changePlan ? true :
+                                    !(
+                                      this.props.permissionState.admin
+                                      || (this.props.type === ElementType.DATACENTER && this.props.permissionState.asset_management)
+                                      || (this.props.type === ElementType.MODEL && this.props.permissionState.model_management)
+                                      || (this.props.type === ElementType.ASSET && this.props.permissionState.asset_management)
+                                      || (this.props.type === ElementType.ASSET && isAssetObject(item) && this.props.permissionState.datacenter_permissions.includes(+item.rack.datacenter.id))
+                                    )
+                                }
                                 onClick={this.props.type === ElementType.ASSET ? (event: any) => {
                                   this.handleDecommissionButtonClick(item);
                                   event.stopPropagation();
@@ -1348,7 +1365,8 @@ const mapStateToProps = (state: any) => {
   return {
     token: state.token,
     isAdmin: state.admin,
-    changePlan: state.changePlan
+    changePlan: state.changePlan,
+    permissionState: state.permissionState,
   };
 };
 export default connect(mapStateToProps)(withRouter(ElementTable));

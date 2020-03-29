@@ -26,7 +26,8 @@ import {
   ROUTES,
   ChangePlan,
   AssetCPObject,
-  getChangePlanRowStyle
+  getChangePlanRowStyle,
+  PermissionState
 } from "../../../../utils/utils";
 import {
   deleteAsset,
@@ -45,6 +46,7 @@ export interface AssetViewProps {
   token: string;
   isAdmin: boolean;
   changePlan: ChangePlan;
+  permissionState: PermissionState;
 }
 // Given an rid, will perform a GET request of that rid and display info about that instnace
 
@@ -83,7 +85,7 @@ interface AssetViewState {
 export class AssetView extends React.PureComponent<
   RouteComponentProps & AssetViewProps,
   AssetViewState
-> {
+  > {
   public state: AssetViewState = {
     asset: {} as AssetObject,
     isFormOpen: false,
@@ -212,7 +214,7 @@ export class AssetView extends React.PureComponent<
           position={Position.TOP}
           ref={this.refHandlers.toaster}
         />
-        {this.props.isAdmin && !this.state.asset.decommissioning_user ? (
+        {!this.state.asset.decommissioning_user ? (
           <div className="detail-buttons-wrapper">
             <div className={"detail-buttons"}>
               <AnchorButton
@@ -221,6 +223,13 @@ export class AssetView extends React.PureComponent<
                 text="Edit"
                 minimal
                 onClick={() => this.handleFormOpen()}
+                disabled={
+                  !(
+                    this.props.permissionState.admin
+                    || this.props.permissionState.asset_management
+                    || (this.state.asset && this.state.asset.rack && this.props.permissionState.datacenter_permissions.includes(+this.state.asset.rack.datacenter.id))
+                  )
+                }
               />
               <FormPopup
                 datacenters={this.state.datacenters}
@@ -237,6 +246,13 @@ export class AssetView extends React.PureComponent<
                 icon="remove"
                 text="Decommission"
                 onClick={this.handleDecommissionOpen}
+                disabled={
+                  !(
+                    this.props.permissionState.admin
+                    || this.props.permissionState.asset_management
+                    || (this.state.asset && this.state.asset.rack && this.props.permissionState.datacenter_permissions.includes(+this.state.asset.rack.datacenter.id))
+                  )
+                }
               />
               <Alert
                 cancelButtonText="Cancel"
@@ -257,6 +273,13 @@ export class AssetView extends React.PureComponent<
                 icon="trash"
                 text="Delete"
                 onClick={this.handleDeleteOpen}
+                disabled={
+                  !(
+                    this.props.permissionState.admin
+                    || this.props.permissionState.asset_management
+                    || (this.state.asset && this.state.asset.rack && this.props.permissionState.datacenter_permissions.includes(+this.state.asset.rack.datacenter.id))
+                  )
+                }
               />
               <Alert
                 cancelButtonText="Cancel"
@@ -283,32 +306,32 @@ export class AssetView extends React.PureComponent<
           <h3>Network Connections</h3>
 
           {this.state.asset.model &&
-          this.state.asset.model.network_ports &&
-          this.state.asset.model.network_ports.length !== 0 ? (
-            <div className="network-connections">
-              <table className="bp3-html-table bp3-html-table-bordered bp3-html-table-striped">
-                <tr>
-                  <th>Network Port</th>
-                  <th>Mac Address</th>
-                  <th>Destination Asset</th>
-                  <th>Destination Port</th>
-                </tr>
-                <tbody>
-                  {this.state.asset.model.network_ports.map((port: string) => {
-                    var connection = this.getNetworkConnectionForPort(port);
-                    return (
-                      <tr>
-                        {" "}
-                        <td style={getChangePlanRowStyle(this.state.asset)}>
-                          {port}
-                        </td>
-                        <td style={getChangePlanRowStyle(this.state.asset)}>
-                          {this.state.asset.mac_addresses
-                            ? this.state.asset.mac_addresses[port]
-                            : null}
-                        </td>{" "}
-                        {connection
-                          ? [
+            this.state.asset.model.network_ports &&
+            this.state.asset.model.network_ports.length !== 0 ? (
+              <div className="network-connections">
+                <table className="bp3-html-table bp3-html-table-bordered bp3-html-table-striped">
+                  <tr>
+                    <th>Network Port</th>
+                    <th>Mac Address</th>
+                    <th>Destination Asset</th>
+                    <th>Destination Port</th>
+                  </tr>
+                  <tbody>
+                    {this.state.asset.model.network_ports.map((port: string) => {
+                      var connection = this.getNetworkConnectionForPort(port);
+                      return (
+                        <tr>
+                          {" "}
+                          <td style={getChangePlanRowStyle(this.state.asset)}>
+                            {port}
+                          </td>
+                          <td style={getChangePlanRowStyle(this.state.asset)}>
+                            {this.state.asset.mac_addresses
+                              ? this.state.asset.mac_addresses[port]
+                              : null}
+                          </td>{" "}
+                          {connection
+                            ? [
                               <td
                                 style={getChangePlanRowStyle(this.state.asset)}
                                 className={
@@ -320,13 +343,13 @@ export class AssetView extends React.PureComponent<
                                   this.state.asset.decommissioning_user
                                     ? undefined
                                     : (e: any) => {
-                                        const id = this.getAssetIdFromHostname(
-                                          connection!.destination_hostname!
-                                        );
-                                        if (id) {
-                                          this.redirectToAsset(id);
-                                        }
+                                      const id = this.getAssetIdFromHostname(
+                                        connection!.destination_hostname!
+                                      );
+                                      if (id) {
+                                        this.redirectToAsset(id);
                                       }
+                                    }
                                 }
                               >
                                 {connection.destination_hostname}
@@ -337,27 +360,27 @@ export class AssetView extends React.PureComponent<
                                 {connection.destination_port}
                               </td>
                             ]
-                          : [<td></td>, <td></td>]}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                            : [<td></td>, <td></td>]}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
 
-              <NetworkGraph
-                networkGraph={this.state.asset.network_graph}
-                onClickNode={this.redirectToAsset}
-                isDecommissioned={
-                  this.state.asset.decommissioning_user !== null
-                }
-              />
-            </div>
-          ) : (
-            <Callout
-              title="No network ports"
-              icon={IconNames.INFO_SIGN}
-            ></Callout>
-          )}
+                <NetworkGraph
+                  networkGraph={this.state.asset.network_graph}
+                  onClickNode={this.redirectToAsset}
+                  isDecommissioned={
+                    this.state.asset.decommissioning_user !== null
+                  }
+                />
+              </div>
+            ) : (
+              <Callout
+                title="No network ports"
+                icon={IconNames.INFO_SIGN}
+              ></Callout>
+            )}
         </div>
 
         {Object.keys(this.state.asset).length !== 0 ? this.renderPower() : null}
@@ -448,7 +471,8 @@ const mapStatetoProps = (state: any) => {
   return {
     token: state.token,
     isAdmin: state.admin,
-    changePlan: state.changePlan
+    changePlan: state.changePlan,
+    permissionState: state.permissionState
   };
 };
 

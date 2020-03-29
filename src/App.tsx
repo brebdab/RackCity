@@ -77,7 +77,7 @@ class App extends React.Component<AppProps> {
         path={path}
         component={
           this.props.isAuthenticated
-            ? this.props.isAdmin
+            ? this.props.permissionState.admin
               ? component
               : NotAuthorizedAdmin
             : NotAuthorized
