@@ -1,31 +1,26 @@
+from django.db.models import Q
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from django.http import JsonResponse
+from enum import Enum
 from http import HTTPStatus
 import math
 from rackcity.api.serializers import (
     RecursiveAssetSerializer,
-    RecursiveAssetCPSerializer)
-from enum import Enum
+    RecursiveAssetCPSerializer,
+)
+from rackcity.models.asset import get_assets_for_cp
+from rackcity.models import Asset, AssetCP
+from rackcity.utils.errors_utils import Status, GenericFailure
 from rackcity.utils.query_utils import (
     get_filtered_query,
     get_invalid_paginated_request_response,
     should_paginate_query,
 )
-from rackcity.views.rackcity_utils import validate_asset_location, LocationException
-from django.db.models import Q
-from rackcity.utils.errors_utils import Status, GenericFailure
-from rackcity.models.asset import get_assets_for_cp
-from rackcity.models import Asset, AssetCP
-from rackcity.api.serializers import (
-    RecursiveAssetSerializer,
-    RecursiveAssetCPSerializer,
+from rackcity.views.rackcity_utils import (
+    validate_asset_location,
+    LocationException,
 )
-import math
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from django.http import JsonResponse
-from http import HTTPStatus
 
 
 class ModificationType(Enum):
@@ -37,31 +32,49 @@ class ModificationType(Enum):
 @receiver(pre_delete, sender=Asset)
 def mark_delete_conflicts_cp(sender, **kwargs):
     """
-    Mark conflict for related assets on change plan
+    Mark conflict for related assets on change plan when an asset is
+    deleted live. This method is automatically called before Asset delete.
     """
     deleted_asset = kwargs.get("instance")
-    AssetCP.objects.filter(related_asset=deleted_asset).update(is_conflict=True)
+    AssetCP.objects.filter(
+        related_asset=deleted_asset,
+        change_plan__execution_time=None,
+    ).update(is_conflict=True)
 
 
 @receiver(post_save, sender=Asset)
 def detect_conflicts_cp(sender, **kwargs):
-    # fields: sender, instance, created, raw, using, update_fields
-    # asset is a related asset of assetCP
+    """
+    Mark conflict for affected assets on change plan when an asset is
+    modified live. This method is automatically called after Asset save.
+
+    fields: sender, instance, created, raw, using, update_fields
+    asset is a related asset of assetCP
+    """
     asset = kwargs.get("instance")
-    related_assets_cp = AssetCP.objects.filter(related_asset=asset.id)
+    related_assets_cp = AssetCP.objects.filter(
+        related_asset=asset.id,
+        change_plan__execution_time=None,
+    )
     for related_asset_cp in related_assets_cp:
         related_asset_cp.is_conflict = True
         related_asset_cp.save()
-    # hostname conflicts with hostnames on assetcps
+
+    # asset hostname conflicts with hostnames on an active assetCP
     asset.hostname_conflict.clear()
     AssetCP.objects.filter(
-        Q(hostname=asset.hostname) & ~Q(related_asset=asset.id)
+        Q(hostname=asset.hostname)
+        & ~Q(related_asset=asset.id)
+        & Q(change_plan__execution_time=None)
     ).update(asset_conflict_hostname=asset)
 
-    # asset rack location conflicts with an assetCP
-
+    # asset rack location conflicts with an active assetCP
     asset.location_conflict.clear()
-    for assetcp in AssetCP.objects.filter(rack=asset.rack_id):
+    for assetcp in AssetCP.objects.filter(
+        Q(rack=asset.rack_id)
+        & ~Q(related_asset=asset.id)
+        & Q(change_plan__execution_time=None)
+    ):
         try:
             validate_asset_location(
                 asset.rack_id,
@@ -74,10 +87,12 @@ def detect_conflicts_cp(sender, **kwargs):
             AssetCP.objects.filter(id=assetcp.id).update(
                 asset_conflict_location=asset)
 
-    # asset number conflict
+    # asset number conflicts with an active assetCP
     asset.asset_number_conflict.clear()
     AssetCP.objects.filter(
-        Q(asset_number=asset.asset_number) & ~Q(related_asset_id=asset.id)
+        Q(asset_number=asset.asset_number)
+        & ~Q(related_asset_id=asset.id)
+        & Q(change_plan__execution_time=None)
     ).update(asset_conflict_asset_number=asset)
 
 
@@ -315,10 +330,13 @@ def get_modifications_in_cp(change_plan):
                 title += " " + str(asset_cp.asset_number)
             if asset_cp.rack:
                 title += get_location_detail(asset_cp)
-        elif related_asset:
+        elif related_asset or (asset_cp.is_conflict and related_asset is None):
             modification_type = ModificationType.MODIFY
-            title = "Modify asset " + str(related_asset.asset_number) + \
-                get_location_detail(related_asset)
+            if related_asset:
+                title = "Modify asset " + str(related_asset.asset_number) + \
+                    get_location_detail(related_asset)
+            else:
+                title = "Modify asset"
         else:
             modification_type = ModificationType.CREATE
             title = "Create asset"
@@ -336,4 +354,29 @@ def get_modifications_in_cp(change_plan):
             "changes": changes,
         })
     return modifications
-    # TODO add logic for decommission modification
+
+
+def asset_cp_has_conflicts(asset_cp):
+    return (
+        asset_cp.is_conflict
+        or asset_cp.asset_conflict_hostname
+        or asset_cp.asset_conflict_asset_number
+        or asset_cp.asset_conflict_location
+        or asset_cp.related_decommissioned_asset
+        or asset_cp.model is None
+        or asset_cp.rack is None
+    )
+
+
+def get_cp_already_executed_response(change_plan):
+    if change_plan.execution_time:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.ERROR.value +
+                    "Executed change plans are read only.",
+                "errors":
+                    "Change plan with id=" + str(change_plan.id) + " "
+                    "was executed on " + str(change_plan.execution_time)
+            },
+        )

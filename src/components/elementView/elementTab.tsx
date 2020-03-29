@@ -10,7 +10,7 @@ import {
   IToastProps,
   MenuItem,
   Position,
-  Toaster,
+  Toaster
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -35,7 +35,8 @@ import {
   ShallowAssetObject,
   SortFilterBody,
   ChangePlan,
-  PermissionState
+  PermissionState,
+  ROUTES,
 } from "../../utils/utils";
 import { ALL_DATACENTERS } from "./elementTabContainer";
 import ElementTable from "./elementTable";
@@ -46,6 +47,7 @@ import {
   TextFilterTypes
 } from "./elementUtils";
 import "./elementView.scss";
+import { Link } from "react-router-dom";
 
 // var console: any = {};
 // console.log = function() {};
@@ -58,6 +60,7 @@ interface ElementViewState {
   fileName: string;
   networkFileName: string;
   updateTable: boolean;
+  barcodes: Array<String>;
   isDecommissioned: boolean;
 }
 interface ElementViewProps {
@@ -82,6 +85,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     fileName: "",
     networkFileName: "",
     updateTable: false,
+    barcodes: [],
     isDecommissioned: false
   };
 
@@ -219,18 +223,16 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
         bodyCopy = updateObject(bodyCopy, { filters });
       }
     }
-    let url = this.state.isDecommissioned ?
-      API_ROOT + "api/assets/get-many-decommissioned" :
-      API_ROOT + "api/" + path + "/get-many"
+    let url = this.state.isDecommissioned
+      ? API_ROOT + "api/assets/get-many-decommissioned"
+      : API_ROOT + "api/" + path + "/get-many";
 
-    return axios
-      .post(url, bodyCopy, config)
-      .then(res => {
-        const items = res.data[path];
-        console.log(items);
+    return axios.post(url, bodyCopy, config).then(res => {
+      const items = res.data[path];
+      console.log(items);
 
-        return items;
-      });
+      return items;
+    });
   };
 
   public handleDataUpdate = (status: boolean) => {
@@ -400,219 +402,237 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             </Callout>
           ) : null}
         </div>
-        {this.state.isDecommissioned ? <Callout
-          icon="warning-sign"
-        >
-          <FormGroup label="Showing decommissioned assets" inline={true}>
-            <Button
-              onClick={() => {
-                /* handle data based on state */
-                this.setState({ isDecommissioned: false });
-                this.handleDataUpdate(true);
-              }}
-            >
-
-              View Live Assets
-          </Button>
-          </FormGroup>
-        </Callout>
-          :
-          <div className="element-tab-buttons">
-            {this.props.element !== ElementType.USER &&
-              this.props.element !== ElementType.DATACENTER &&
-              this.props.element !== ElementType.CHANGEPLANS ? (
-                <AnchorButton
-                  className="add"
-                  text="Export Table Data"
-                  disabled={this.props.changePlan ? true : false}
-                  icon="import"
-                  minimal
-                  onClick={() => {
-                    /* handle data based on state */
-                    this.setState({ fileNameIsOpen: true });
-                    console.log(this.state.filters);
-                  }}
-                />
-              ) : (
-                <p></p>
-              )}
-            {(this.props.element === ElementType.ASSET ||
-              this.props.element === ElementType.MODEL) ? (
-                <AnchorButton
-                  disabled={this.props.changePlan ? true :
+        {this.state.isDecommissioned ? (
+          <Callout icon="warning-sign">
+            <FormGroup label="Showing decommissioned assets" inline={true}>
+              <Button
+                onClick={() => {
+                  /* handle data based on state */
+                  this.setState({ isDecommissioned: false });
+                  this.handleDataUpdate(true);
+                }}
+              >
+                View Live Assets
+              </Button>
+            </FormGroup>
+          </Callout>
+        ) : (
+            <div className="element-tab-buttons">
+              {this.props.element !== ElementType.USER &&
+                this.props.element !== ElementType.DATACENTER &&
+                this.props.element !== ElementType.CHANGEPLANS ? (
+                  <AnchorButton
+                    className="add"
+                    text="Export Table Data"
+                    disabled={this.props.changePlan ? true : false}
+                    icon="import"
+                    minimal
+                    onClick={() => {
+                      /* handle data based on state */
+                      this.setState({ fileNameIsOpen: true });
+                      console.log(this.state.filters);
+                    }}
+                  />
+                ) : (
+                  <p></p>
+                )}
+              {(this.props.element === ElementType.ASSET ||
+                this.props.element === ElementType.MODEL) ? (
+                  <AnchorButton
+                    disabled={this.props.changePlan ? true :
+                      !(
+                        this.props.permissionState.admin
+                        || (this.props.element === ElementType.MODEL && this.props.permissionState.model_management)
+                        || (this.props.element === ElementType.ASSET && this.props.permissionState.asset_management)
+                        || (this.props.element === ElementType.ASSET && this.props.permissionState.datacenter_permissions.length > 0)
+                      )
+                    }
+                    onClick={() => {
+                      this.props.history.push(
+                        "/dashboard/bulk-upload/" +
+                        (this.props.element === ElementType.MODEL
+                          ? "models"
+                          : "assets")
+                      );
+                    }}
+                    className="add"
+                    icon="export"
+                    text="Add from CSV file"
+                    minimal
+                  />
+                ) : null}
+              <Alert
+                cancelButtonText="Cancel"
+                className={Classes.DARK}
+                intent={Intent.PRIMARY}
+                confirmButtonText="Confirm Export"
+                isOpen={this.state.fileNameIsOpen}
+                onCancel={() => {
+                  this.setState({ fileNameIsOpen: false });
+                }}
+                onConfirm={() => {
+                  if (
+                    this.state.fileName === "" ||
+                    (this.state.networkFileName === "" &&
+                      this.props.element === ElementType.ASSET) ||
+                    (this.state.fileName === "" &&
+                      this.props.element === ElementType.MODEL)
+                  ) {
+                    this.addErrorToast("Please provide filenames for both files");
+                  } else {
+                    let fileRegEx = /.*\.(\w+)/;
+                    let extension = this.state.fileName.match(fileRegEx);
+                    console.log(extension);
+                    let ext = extension ? extension[extension.length - 1] : null;
+                    console.log(ext);
+                    let networkExtension = this.state.networkFileName.match(
+                      fileRegEx
+                    );
+                    console.log(networkExtension);
+                    let networkExt = networkExtension
+                      ? networkExtension[networkExtension.length - 1]
+                      : null;
+                    console.log(networkExt);
+                    if (
+                      (networkExt && (ext !== "csv" || networkExt !== "csv")) ||
+                      (!networkExt && ext !== "csv")
+                    ) {
+                      this.addErrorToast("Filenames must end in .csv");
+                    } else if (
+                      (networkExt &&
+                        (this.state.fileName.split(".")[0].length === 0 ||
+                          this.state.networkFileName.split(".")[0].length ===
+                          0)) ||
+                      (!networkExt &&
+                        this.state.fileName.split(".")[0].length === 0)
+                    ) {
+                      this.addErrorToast(".csv file must have non-empty name");
+                    } else {
+                      this.getExportData(
+                        this.props.element.slice(0, -1) + "s",
+                        this.state.filters,
+                        this.props.token,
+                        this.state.fileName,
+                        this.state.networkFileName
+                      );
+                      console.log("finished both exports");
+                      this.setState({
+                        fileNameIsOpen: false,
+                        fileName: "",
+                        networkFileName: ""
+                      });
+                    }
+                  }
+                }}
+              >
+                <p>
+                  Please enter a filename ending in ".csv" for the following data:
+              </p>
+                <FormGroup label={this.props.element + ":"}>
+                  <InputGroup
+                    onChange={(event: any) => {
+                      this.setState({ fileName: event.currentTarget.value });
+                    }}
+                    fill={true}
+                    type="text"
+                  />
+                </FormGroup>
+                {this.props.element === ElementType.ASSET ? (
+                  <div>
+                    <FormGroup label="network connections:">
+                      <InputGroup
+                        onChange={(event: any) => {
+                          this.setState({
+                            networkFileName: event.currentTarget.value
+                          });
+                        }}
+                        fill={true}
+                        type="text"
+                      />
+                    </FormGroup>
+                  </div>
+                ) : null}
+              </Alert>
+              <AnchorButton
+                className="add"
+                text={"Add " + this.props.element.slice(0, -1)}
+                icon="add"
+                minimal
+                intent={Intent.PRIMARY}
+                onClick={this.handleOpen}
+                disabled={
+                  this.props.element !== ElementType.ASSET &&
+                    this.props.changePlan
+                    ? true
+                    :
                     !(
                       this.props.permissionState.admin
+                      || (this.props.element === ElementType.DATACENTER && this.props.permissionState.asset_management)
                       || (this.props.element === ElementType.MODEL && this.props.permissionState.model_management)
                       || (this.props.element === ElementType.ASSET && this.props.permissionState.asset_management)
                       || (this.props.element === ElementType.ASSET && this.props.permissionState.datacenter_permissions.length > 0)
                     )
-                  }
-                  onClick={() => {
-                    this.props.history.push(
-                      "/dashboard/bulk-upload/" +
-                      (this.props.element === ElementType.MODEL
-                        ? "models"
-                        : "assets")
-                    );
-                  }}
-                  className="add"
-                  icon="export"
-                  text="Add from CSV file"
-                  minimal
-                />
-              ) : null}
-            <Alert
-              cancelButtonText="Cancel"
-              className={Classes.DARK}
-              intent={Intent.PRIMARY}
-              confirmButtonText="Confirm Export"
-              isOpen={this.state.fileNameIsOpen}
-              onCancel={() => {
-                this.setState({ fileNameIsOpen: false });
-              }}
-              onConfirm={() => {
-                if (
-                  this.state.fileName === "" ||
-                  (this.state.networkFileName === "" &&
-                    this.props.element === ElementType.ASSET) ||
-                  (this.state.fileName === "" &&
-                    this.props.element === ElementType.MODEL)
-                ) {
-                  this.addErrorToast("Please provide filenames for both files");
-                } else {
-                  let fileRegEx = /.*\.(\w+)/;
-                  let extension = this.state.fileName.match(fileRegEx);
-                  console.log(extension);
-                  let ext = extension ? extension[extension.length - 1] : null;
-                  console.log(ext);
-                  let networkExtension = this.state.networkFileName.match(
-                    fileRegEx
-                  );
-                  console.log(networkExtension);
-                  let networkExt = networkExtension
-                    ? networkExtension[networkExtension.length - 1]
-                    : null;
-                  console.log(networkExt);
-                  if (
-                    (networkExt && (ext !== "csv" || networkExt !== "csv")) ||
-                    (!networkExt && ext !== "csv")
-                  ) {
-                    this.addErrorToast("Filenames must end in .csv");
-                  } else if (
-                    (networkExt &&
-                      (this.state.fileName.split(".")[0].length === 0 ||
-                        this.state.networkFileName.split(".")[0].length === 0)) ||
-                    (!networkExt &&
-                      this.state.fileName.split(".")[0].length === 0)
-                  ) {
-                    this.addErrorToast(".csv file must have non-empty name");
-                  } else {
-                    this.getExportData(
-                      this.props.element.slice(0, -1) + "s",
-                      this.state.filters,
-                      this.props.token,
-                      this.state.fileName,
-                      this.state.networkFileName
-                    );
-                    console.log("finished both exports");
-                    this.setState({
-                      fileNameIsOpen: false,
-                      fileName: "",
-                      networkFileName: ""
-                    });
-                  }
                 }
-              }}
-            >
-              <p>
-                Please enter a filename ending in ".csv" for the following data:
-            </p>
-              <FormGroup label={this.props.element + ":"}>
-                <InputGroup
-                  onChange={(event: any) => {
-                    this.setState({ fileName: event.currentTarget.value });
-                  }}
-                  fill={true}
-                  type="text"
-                />
-              </FormGroup>
-              {this.props.element === ElementType.ASSET ? (
-                <div>
-                  <FormGroup label="network connections:">
-                    <InputGroup
-                      onChange={(event: any) => {
-                        this.setState({
-                          networkFileName: event.currentTarget.value
-                        });
-                      }}
-                      fill={true}
-                      type="text"
-                    />
-                  </FormGroup>
-                </div>
-              ) : null}
-            </Alert>
-            <AnchorButton
-              className="add"
-              text={"Add " + this.props.element.slice(0, -1)}
-              icon="add"
-              minimal
-              intent={Intent.PRIMARY}
-              onClick={this.handleOpen}
-              disabled={
-                this.props.element !== ElementType.ASSET &&
-                  this.props.changePlan
-                  ? true
-                  :
-                  !(
-                    this.props.permissionState.admin
-                    || (this.props.element === ElementType.DATACENTER && this.props.permissionState.asset_management)
-                    || (this.props.element === ElementType.MODEL && this.props.permissionState.model_management)
-                    || (this.props.element === ElementType.ASSET && this.props.permissionState.asset_management)
-                    || (this.props.element === ElementType.ASSET && this.props.permissionState.datacenter_permissions.length > 0)
-                  )
-              }
-            />
-            {this.props.element === ElementType.ASSET ? (
-              <AnchorButton
-                className="add"
-                text="Print Barcodes for Selected Assets"
-                icon="barcode"
-                minimal
-                onClick={() => { }}
               />
-            ) : null}
-            {this.props.element === ElementType.ASSET ? (
-              <Button
-                onClick={() => {
-                  this.setState({ isDecommissioned: true });
-                  this.handleDataUpdate(true);
-                }}
-                text="View Decommissioned"
-                minimal
-                icon="archive"
-              >
-              </Button>
-            ) : null}
-            <FormPopup
-              {...this.props}
-              type={FormTypes.CREATE}
-              elementName={this.props.element}
-              submitForm={
-                this.props.element === ElementType.MODEL
-                  ? this.createModel
-                  : this.props.element === ElementType.ASSET
-                    ? this.createAsset
-                    : this.props.element === ElementType.DATACENTER
-                      ? this.createDatacenter
-                      : this.props.element === ElementType.CHANGEPLANS
-                        ? this.createChangePlan
-                        : this.createUser
+              {
+                this.props.element === ElementType.ASSET ? (
+                  <Link
+                    target="_blank"
+                    to={{ pathname: ROUTES.BARCODE_PRINT, state: null }}
+                  >
+                    <AnchorButton
+                      className="add"
+                      text="Print Barcodes for Selected Assets"
+                      icon="barcode"
+                      minimal
+                      onClick={(e: any) => {
+                        let barcodes: string;
+                        barcodes = "";
+                        for (var i = 0; i < this.state.barcodes.length - 1; i++) {
+                          barcodes = barcodes + this.state.barcodes[i] + ",";
+                        }
+                        barcodes =
+                          barcodes +
+                          this.state.barcodes[this.state.barcodes.length - 1];
+                        localStorage.setItem("barcodes", barcodes);
+                      }}
+                    />
+                  </Link>
+                ) : null
               }
-              isOpen={this.state.isOpen}
-              handleClose={this.handleClose}
-            />
-          </div>
+              {
+                this.props.element === ElementType.ASSET ? (
+                  <Button
+                    onClick={() => {
+                      this.setState({ isDecommissioned: true });
+                      this.handleDataUpdate(true);
+                    }}
+                    text="View Decommissioned"
+                    minimal
+                    icon="archive"
+                  ></Button>
+                ) : null
+              }
+              <FormPopup
+                {...this.props}
+                type={FormTypes.CREATE}
+                elementName={this.props.element}
+                submitForm={
+                  this.props.element === ElementType.MODEL
+                    ? this.createModel
+                    : this.props.element === ElementType.ASSET
+                      ? this.createAsset
+                      : this.props.element === ElementType.DATACENTER
+                        ? this.createDatacenter
+                        : this.props.element === ElementType.CHANGEPLANS
+                          ? this.createChangePlan
+                          : this.createUser
+                }
+                isOpen={this.state.isOpen}
+                handleClose={this.handleClose}
+              />
+            </div >
+          )
         }
         <div>
           <ElementTable
@@ -621,6 +641,11 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             type={this.props.element}
             getData={this.getElementData}
             getPages={this.getPages}
+            updateBarcodes={(data: Array<string>) => {
+              this.setState({
+                barcodes: data
+              });
+            }}
             callback={(data: Array<any>) => {
               this.setState({ filters: data });
             }}
@@ -631,7 +656,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             isDecommissioned={this.state.isDecommissioned}
           />
         </div>
-      </div>
+      </div >
     );
   }
 }

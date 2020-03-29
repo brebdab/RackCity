@@ -502,7 +502,7 @@ export class AssetView extends React.PureComponent<
     )
       .then(res => {
         this.setState({ isDecommissionOpen: false });
-        this.addSuccessToast("Successfuly Decommissioned Asset");
+        this.addSuccessToast("Successfully Decommissioned Asset");
         let params: any;
         params = this.props.match.params;
         this.updateAssetData(params.rid);

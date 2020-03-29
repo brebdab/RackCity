@@ -64,6 +64,7 @@ from rackcity.utils.query_utils import (
 from rackcity.utils.change_planner_utils import (
     get_many_assets_response_for_cp,
     get_page_count_response_for_cp,
+    get_cp_already_executed_response,
 )
 from rackcity.views.rackcity_utils import (
     validate_asset_location,
@@ -185,6 +186,9 @@ def asset_add(request):
     if request.query_params.get("change_plan"):
         (change_plan, response) = get_change_plan(
             request.query_params.get("change_plan"))
+        if response:
+            return response
+        response = get_cp_already_executed_response(change_plan)
         if response:
             return response
         data["change_plan"] = change_plan.id
@@ -409,7 +413,7 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
                         )
                         # add destination asset to AssetCPTable
                         for field in destination_asset._meta.fields:
-                            if field != 'id':
+                            if field.name != 'id' and field.name == "assetid_ptr":
                                 setattr(asset_cp, field.name, getattr(
                                     destination_asset, field.name))
                         asset_cp.save()
@@ -516,7 +520,7 @@ def save_power_connections(asset_data, asset_id, change_plan=None):
                     else:
                         pdu_port = PDUPortCP(change_plan=change_plan)
                         for field in pdu_port_master._meta.fields:
-                            if field != "id":
+                            if field.name != "id":
                                 setattr(pdu_port, field.name, getattr(
                                     pdu_port_master, field.name))
                         pdu_port.save()
@@ -562,6 +566,9 @@ def asset_modify(request):
     if request.query_params.get("change_plan"):
         (change_plan, response) = get_change_plan(
             request.query_params.get("change_plan"))
+        if response:
+            return response
+        response = get_cp_already_executed_response(change_plan)
         if response:
             return response
         del data['id']

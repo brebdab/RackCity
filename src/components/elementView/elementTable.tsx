@@ -44,7 +44,7 @@ import {
   isChangePlanObject,
   ChangePlan,
   getChangePlanRowStyle,
-  PermissionState
+  PermissionState,
 } from "../../utils/utils";
 import DragDropList, { DragDropListTypes } from "./dragDropList";
 import {
@@ -100,6 +100,7 @@ interface ElementTableState {
 interface ElementTableProps {
   isDecommissioned: boolean;
   callback?: Function;
+  updateBarcodes?: Function;
   type: ElementType;
   token: string;
   disableSorting?: boolean;
@@ -1003,15 +1004,22 @@ class ElementTable extends React.Component<
                             onClick={(event: any) => {
                               const selected = this.state.selected;
                               const selectedAll = !this.state.selectedAll;
-
                               this.state.items.forEach(item => {
-                                if (selected.includes(item.id) && !selectedAll) {
-                                  selected.splice(selected.indexOf(item.id), 1);
-                                } else if (
-                                  !selected.includes(item.id) &&
-                                  selectedAll
-                                ) {
-                                  selected.push(item.id);
+                                if (isAssetObject(item)) {
+                                  if (
+                                    selected.includes(item.asset_number) &&
+                                    !selectedAll
+                                  ) {
+                                    selected.splice(
+                                      selected.indexOf(item.asset_number),
+                                      1
+                                    );
+                                  } else if (
+                                    !selected.includes(item.asset_number) &&
+                                    selectedAll
+                                  ) {
+                                    selected.push(item.asset_number);
+                                  }
                                 }
                               });
                               console.log(selected);
@@ -1020,6 +1028,9 @@ class ElementTable extends React.Component<
                                 selectedAll,
                                 selected
                               });
+                              if (this.props.updateBarcodes) {
+                                this.props.updateBarcodes(this.state.selected);
+                              }
                             }}
                           />
                         )}
@@ -1097,69 +1108,81 @@ class ElementTable extends React.Component<
                             }
                         }
                         style={getChangePlanRowStyle(
-                           item
-                          )}
+                          item
+                        )}
                       >
-                        {this.props.type === ElementType.ASSET ? (
-                          <th
-                            onClick={(event: any) => {
-                              event.stopPropagation();
-                            }}
-                          >
-                            {this.props.isDecommissioned ? null : (
-                              <Checkbox
-                                checked={this.state.selected.includes(item.id)}
-                                onClick={(event: any) => {
-                                  const selected = this.state.selected;
-                                  if (selected.includes(item.id)) {
-                                    console.log("removing", item.id, selected);
-                                    if (this.state.selectedAll) {
-                                      this.setState({
-                                        selectedAll: false
-                                      });
+                        {this.props.type === ElementType.ASSET &&
+                          isAssetObject(item) ? (
+                            <th
+                              onClick={(event: any) => {
+                                event.stopPropagation();
+                              }}
+                            >
+                              {this.props.isDecommissioned ? null : (
+                                <Checkbox
+                                  checked={this.state.selected.includes(
+                                    item.asset_number
+                                  )}
+                                  onClick={(event: any) => {
+                                    const selected = this.state.selected;
+                                    if (selected.includes(item.asset_number)) {
+                                      console.log(
+                                        "removing",
+                                        item.asset_number,
+                                        selected
+                                      );
+                                      if (this.state.selectedAll) {
+                                        this.setState({
+                                          selectedAll: false
+                                        });
+                                      }
+                                      selected.splice(
+                                        selected.indexOf(item.asset_number),
+                                        1
+                                      );
+                                    } else {
+                                      selected.push(item.asset_number);
+                                      console.log("adding", item.asset_number);
                                     }
-                                    selected.splice(
-                                      selected.indexOf(item.id),
-                                      1
-                                    );
-                                  } else {
-                                    selected.push(item.id);
-                                    console.log("adding", item.id);
-                                  }
-                                  this.setState({
-                                    selected
-                                  });
-                                  console.log(selected);
-                                  event.stopPropagation();
-                                }}
-                              />
-                            )}
-                          </th>
-                        ) : null}
+                                    this.setState({
+                                      selected
+                                    });
+                                    if (this.props.updateBarcodes) {
+                                      this.props.updateBarcodes(
+                                        this.state.selected
+                                      );
+                                    }
+                                    console.log(selected);
+                                    event.stopPropagation();
+                                  }}
+                                />
+                              )}
+                            </th>
+                          ) : null}
                         {Object.entries(item).map(([col, value]) => {
                           if (isModelObject(value)) {
                             return [
                               <td style={getChangePlanRowStyle(
-                           item
-                          )}>
+                                item
+                              )}>
                                 {value.vendor}
                               </td>,
                               <td style={getChangePlanRowStyle(
-                           item
-                          )}>
+                                item
+                              )}>
                                 {value.model_number}
                               </td>
                             ];
                           } else if (isRackObject(value)) {
                             return [
                               <td style={getChangePlanRowStyle(
-                           item
-                          )}>
+                                item
+                              )}>
                                 {value.row_letter + value.rack_num}
                               </td>,
                               <td style={getChangePlanRowStyle(
-                           item
-                          )}>
+                                item
+                              )}>
                                 {value.datacenter.name}
                               </td>
                             ];
@@ -1174,8 +1197,8 @@ class ElementTable extends React.Component<
                           } else if (this.shouldShowColumn(item, col)) {
                             return (
                               <td style={getChangePlanRowStyle(
-                           item
-                          )}>
+                                item
+                              )}>
                                 {value}
                               </td>
                             );

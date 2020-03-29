@@ -27,6 +27,7 @@ import * as actions from "../../store/actions/state";
 import { API_ROOT } from "../../utils/api-config";
 import { ChangePlan, ROUTES, getHeaders, ElementType, PermissionState } from "../../utils/utils";
 import "./navigation.scss";
+import { isNullOrUndefined } from "util";
 export interface NavigationProps {
   isAuthenticated: boolean;
   logout(): any;
@@ -88,7 +89,10 @@ export class Navigation extends React.Component<
     if (!this.sucessfulChangePlanRequest) {
       getChangePlanList(this.props.token).then(res => {
         this.sucessfulChangePlanRequest = true;
-        const items = res.data[ElementType.CHANGEPLANS];
+        let items: Array<ChangePlan> = res.data[ElementType.CHANGEPLANS];
+        items = items.filter(changePlan =>
+          isNullOrUndefined(changePlan.execution_time)
+        );
         this.setState({
           changePlans: items
         });
