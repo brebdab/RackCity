@@ -77,7 +77,20 @@ class CPDetailView extends React.Component<
     changePlan: {} as ChangePlan,
     modifications: []
   };
+  disableExecute() {
+    if (this.loading) {
+      return true;
+    }
 
+    let conflict = false;
+    this.state.modifications.forEach((modification: Modification) => {
+      if (modification.conflicts && modification.conflicts.length > 0) {
+        conflict = true;
+      }
+    });
+
+    return conflict;
+  }
   toggleCollapse(index: number) {
     const isOpen = this.state.isOpen;
     isOpen[index] = !isOpen[index];
@@ -272,6 +285,17 @@ class CPDetailView extends React.Component<
                             intent={Intent.DANGER}
                             minimal
                             icon="delete"
+                            onClick={(e: any) => {
+                              const modifications = this.state.modifications;
+                              const isOpen = this.state.isOpen;
+                              isOpen.splice(index, 1);
+                              modifications.splice(index, 1);
+
+                              this.setState({
+                                modifications
+                              });
+                              e.stopPropagation();
+                            }}
                             text="Remove change"
                           />
                         </Callout>
@@ -355,7 +379,11 @@ class CPDetailView extends React.Component<
           </ul>
         </div>
 
-        <AnchorButton intent="primary" icon="build" text="Execute Work Order" />
+        <AnchorButton
+          disabled={this.disableExecute()}
+          icon="build"
+          text="Execute Work Order"
+        />
       </div>
     );
   }
