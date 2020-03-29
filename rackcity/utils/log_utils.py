@@ -8,6 +8,7 @@ class Action(Enum):
     CREATE = "created"
     MODIFY = "modified"
     DELETE = "deleted"
+    DECOMMISSION = "decommissioned"
 
 
 class PermissionAction(Enum):
@@ -33,7 +34,7 @@ def datetime_to_string(date):
     return "[" + str(date) + "]"
 
 
-def log_action(user, related_element, action):
+def log_action(user, related_element, action, change_plan=None):
     """
     Specified action should be Action enum.
     """
@@ -67,6 +68,9 @@ def log_action(user, related_element, action):
         "this",
         element_type
     ])
+    if change_plan:
+        log_content += \
+            " in the execution of Change Plan '" + change_plan.name + "'"
     log = Log(
         date=date,
         log_content=log_content,
@@ -91,6 +95,35 @@ def log_delete(user, element_type, element_name):
         Action.DELETE.value,
         "this",
         element_type.value
+    ])
+    log = Log(
+        date=date,
+        log_content=log_content,
+        user=user,
+    )
+    log.save()
+
+
+def log_execute_change_plan(
+    user,
+    change_plan_name,
+    num_created,
+    num_modified,
+    num_decommissioned
+):
+    date = datetime.now()
+    log_content = " ".join([
+        datetime_to_string(date),
+        ElementType.USER.value,
+        user.username,
+        "executed Change Plan"
+        "'" + change_plan_name + "':",
+        str(num_created),
+        "assets created,",
+        str(num_modified),
+        "assets modified,",
+        str(num_decommissioned),
+        "assets decommissioned."
     ])
     log = Log(
         date=date,

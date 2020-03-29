@@ -21,6 +21,10 @@ from rackcity.utils.errors_utils import (
     parse_save_validation_error,
     AuthFailure,
 )
+from rackcity.utils.log_utils import (
+    Action,
+    log_action,
+)
 from rackcity.utils.query_utils import (
     get_sort_arguments,
     get_filter_arguments,
@@ -96,8 +100,7 @@ def decommission_asset(request):
                         Status.AUTH_ERROR.value + AuthFailure.ASSET.value,
                     "errors":
                         "User " + request.user.username +
-                        " does not have asset permission in datacenter id="
-                        + str(asset.rack.datacenter.id)
+                        " does not have asset permission in datacenter"
                 },
                 status=HTTPStatus.UNAUTHORIZED
             )
@@ -186,13 +189,15 @@ def decommission_asset(request):
             status=HTTPStatus.BAD_REQUEST
         )
     else:
-
         for assetcp in AssetCP.objects.filter(related_asset=id):
-            print(assetcp)
             assetcp.related_decommissioned_asset = decommissioned_asset_object
             assetcp.save()
+        log_action(
+            request.user,
+            asset,
+            Action.DECOMMISSION,
+        )
         asset.delete()
-
         return JsonResponse(
             {
                 "success_message": "Asset successfully decommissioned. "
