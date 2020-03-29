@@ -8,7 +8,7 @@ from rackcity.api.serializers import (
     GetDecommissionedAssetSerializer,
 )
 from rest_framework.decorators import permission_classes, api_view
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
 from rackcity.utils.errors_utils import (
@@ -30,7 +30,7 @@ from rackcity.views.rackcity_utils import get_change_plan
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def decommission_asset(request):
     """
     Decommission a live asset

@@ -173,6 +173,12 @@ def get_invalid_paginated_request_response(query_params):
     elif not query_params.get('page_size'):
         errors.append("Must specify field 'page_size' on " +
                       "paginated requests.")
+    elif not isinstance(query_params.get('page'), int):
+        errors.append("Must specify integer 'page' on " +
+                      "paginated requests.")
+    elif not isinstance(query_params.get('page_size'), int):
+        errors.append("Must specify integer 'page_size' on " +
+                      "paginated requests.")
     elif int(query_params.get('page_size')) <= 0:
         errors.append("Field 'page_size' must be an integer " +
                       "greater than 0.")
