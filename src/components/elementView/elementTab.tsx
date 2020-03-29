@@ -10,8 +10,9 @@ import {
   IToastProps,
   MenuItem,
   Position,
-  Toaster,
+  Toaster
 } from "@blueprintjs/core";
+import * as actions from "../../store/actions/state";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
@@ -189,9 +190,9 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       page_type === PagingTypes.ALL
         ? {}
         : {
-          page_size: page_type,
-          page
-        };
+            page_size: page_type,
+            page
+          };
     if (this.props.changePlan) {
       params["change_plan"] = this.props.changePlan.id;
     }
@@ -217,18 +218,16 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
         bodyCopy = updateObject(bodyCopy, { filters });
       }
     }
-    let url = this.state.isDecommissioned ?
-      API_ROOT + "api/assets/get-many-decommissioned" :
-      API_ROOT + "api/" + path + "/get-many"
+    let url = this.state.isDecommissioned
+      ? API_ROOT + "api/assets/get-many-decommissioned"
+      : API_ROOT + "api/" + path + "/get-many";
 
-    return axios
-      .post(url, bodyCopy, config)
-      .then(res => {
-        const items = res.data[path];
-        console.log(items);
+    return axios.post(url, bodyCopy, config).then(res => {
+      const items = res.data[path];
+      console.log(items);
 
-        return items;
-      });
+      return items;
+    });
   };
 
   public handleDataUpdate = (status: boolean) => {
@@ -388,7 +387,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                     rightIcon="caret-down"
                     text={
                       this.props.currDatacenter &&
-                        this.props.currDatacenter.name
+                      this.props.currDatacenter.name
                         ? this.props.currDatacenter.name
                         : "All datacenters"
                     }
@@ -398,61 +397,59 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             </Callout>
           ) : null}
         </div>
-        {this.state.isDecommissioned ? <Callout
-          icon="warning-sign"
-        >
-          <FormGroup label="Showing decommissioned assets" inline={true}>
-            <Button
-              onClick={() => {
-                /* handle data based on state */
-                this.setState({ isDecommissioned: false });
-                this.handleDataUpdate(true);
-              }}
-            >
-
-              View Live Assets
-          </Button>
-          </FormGroup>
-        </Callout>
-          :
+        {this.state.isDecommissioned ? (
+          <Callout icon="warning-sign">
+            <FormGroup label="Showing decommissioned assets" inline={true}>
+              <Button
+                onClick={() => {
+                  /* handle data based on state */
+                  this.setState({ isDecommissioned: false });
+                  this.handleDataUpdate(true);
+                }}
+              >
+                View Live Assets
+              </Button>
+            </FormGroup>
+          </Callout>
+        ) : (
           <div className="element-tab-buttons">
             {this.props.element !== ElementType.USER &&
-              this.props.element !== ElementType.DATACENTER &&
-              this.props.element !== ElementType.CHANGEPLANS ? (
-                <AnchorButton
-                  className="add"
-                  text="Export Table Data"
-                  disabled={this.props.changePlan ? true : false}
-                  icon="import"
-                  minimal
-                  onClick={() => {
-                    /* handle data based on state */
-                    this.setState({ fileNameIsOpen: true });
-                    console.log(this.state.filters);
-                  }}
-                />
-              ) : (
-                <p></p>
-              )}
+            this.props.element !== ElementType.DATACENTER &&
+            this.props.element !== ElementType.CHANGEPLANS ? (
+              <AnchorButton
+                className="add"
+                text="Export Table Data"
+                disabled={this.props.changePlan ? true : false}
+                icon="import"
+                minimal
+                onClick={() => {
+                  /* handle data based on state */
+                  this.setState({ fileNameIsOpen: true });
+                  console.log(this.state.filters);
+                }}
+              />
+            ) : (
+              <p></p>
+            )}
             {this.props.isAdmin &&
-              (this.props.element === ElementType.ASSET ||
-                this.props.element === ElementType.MODEL) ? (
-                <AnchorButton
-                  disabled={this.props.changePlan ? true : false}
-                  onClick={() => {
-                    this.props.history.push(
-                      "/dashboard/bulk-upload/" +
+            (this.props.element === ElementType.ASSET ||
+              this.props.element === ElementType.MODEL) ? (
+              <AnchorButton
+                disabled={this.props.changePlan ? true : false}
+                onClick={() => {
+                  this.props.history.push(
+                    "/dashboard/bulk-upload/" +
                       (this.props.element === ElementType.MODEL
                         ? "models"
                         : "assets")
-                    );
-                  }}
-                  className="add"
-                  icon="export"
-                  text="Add from CSV file"
-                  minimal
-                />
-              ) : null}
+                  );
+                }}
+                className="add"
+                icon="export"
+                text="Add from CSV file"
+                minimal
+              />
+            ) : null}
             <Alert
               cancelButtonText="Cancel"
               className={Classes.DARK}
@@ -493,7 +490,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                   } else if (
                     (networkExt &&
                       (this.state.fileName.split(".")[0].length === 0 ||
-                        this.state.networkFileName.split(".")[0].length === 0)) ||
+                        this.state.networkFileName.split(".")[0].length ===
+                          0)) ||
                     (!networkExt &&
                       this.state.fileName.split(".")[0].length === 0)
                   ) {
@@ -518,7 +516,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             >
               <p>
                 Please enter a filename ending in ".csv" for the following data:
-            </p>
+              </p>
               <FormGroup label={this.props.element + ":"}>
                 <InputGroup
                   onChange={(event: any) => {
@@ -554,7 +552,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                 onClick={this.handleOpen}
                 disabled={
                   this.props.element !== ElementType.ASSET &&
-                    this.props.changePlan
+                  this.props.changePlan
                     ? true
                     : false
                 }
@@ -566,7 +564,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                 text="Print Barcodes for Selected Assets"
                 icon="barcode"
                 minimal
-                onClick={() => { }}
+                onClick={() => {}}
               />
             ) : null}
             {this.props.element === ElementType.ASSET ? (
@@ -578,8 +576,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                 text="View Decommissioned"
                 minimal
                 icon="archive"
-              >
-              </Button>
+              ></Button>
             ) : null}
             <FormPopup
               {...this.props}
@@ -589,18 +586,18 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                 this.props.element === ElementType.MODEL
                   ? this.createModel
                   : this.props.element === ElementType.ASSET
-                    ? this.createAsset
-                    : this.props.element === ElementType.DATACENTER
-                      ? this.createDatacenter
-                      : this.props.element === ElementType.CHANGEPLANS
-                        ? this.createChangePlan
-                        : this.createUser
+                  ? this.createAsset
+                  : this.props.element === ElementType.DATACENTER
+                  ? this.createDatacenter
+                  : this.props.element === ElementType.CHANGEPLANS
+                  ? this.createChangePlan
+                  : this.createUser
               }
               isOpen={this.state.isOpen}
               handleClose={this.handleClose}
             />
           </div>
-        }
+        )}
         <div>
           <ElementTable
             datacenters={this.props.datacenters}
@@ -629,4 +626,10 @@ const mapStateToProps = (state: any) => {
     changePlan: state.changePlan
   };
 };
-export default connect(mapStateToProps)(ElementTab);
+const mapDispatchToProps = (dispatch: any) => {
+  return {
+    setChangePlan: (changePlan: ChangePlan) =>
+      dispatch(actions.setChangePlan(changePlan))
+  };
+};
+export default connect(mapStateToProps, mapDispatchToProps)(ElementTab);
