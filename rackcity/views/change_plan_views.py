@@ -37,7 +37,6 @@ from rackcity.views.rackcity_utils import get_change_plan
 from rackcity.models import AssetCP
 
 
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def change_plan_resolve_conflict(request, id):
@@ -97,6 +96,7 @@ def change_plan_resolve_conflict(request, id):
         status=HTTPStatus.OK
     )
 
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def change_plan_remove_asset(request, id):
@@ -117,7 +117,7 @@ def change_plan_remove_asset(request, id):
             status=HTTPStatus.BAD_REQUEST
         )
     asset_cp = data['asset_cp']
-    
+
     try:
         asset_cp_model = AssetCP.objects.get(id=asset_cp)
     except ObjectDoesNotExist:
@@ -143,7 +143,7 @@ def change_plan_remove_asset(request, id):
             },
             status=HTTPStatus.BAD_REQUEST
         )
-    
+
     return JsonResponse(
         {
             "success_message":
@@ -152,7 +152,6 @@ def change_plan_remove_asset(request, id):
         },
         status=HTTPStatus.OK
     )
-
 
 
 @api_view(['POST'])
