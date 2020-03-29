@@ -16,7 +16,7 @@ export const setChangePlan = (changePlan: ChangePlan) => {
 export const updateChangePlans = () => {
   return {
     type: actionTypes.UPDATE_CHANGE_PLANS,
-    updateChangePlan: true
+    updateChangePlans: true
   };
 };
 export const authStart = () => {

@@ -18,6 +18,11 @@ const setChangePlan = (state: any, action: any) => {
     changePlan: action.changePlan
   });
 };
+const updateChangePlans = (state: any, action: any) => {
+  return updateObject(state, {
+    updateChangePlans: action.updateChangePlans
+  });
+};
 const authStart = (state: any, action: any) => {
   return updateObject(state, {
     error: null,
@@ -69,6 +74,8 @@ const reducer = (state = initialState, action: any) => {
       return authAdmin(state, action);
     case actionTypes.SWITCH_CHANGE_PLAN:
       return setChangePlan(state, action);
+    case actionTypes.UPDATE_CHANGE_PLANS;
+      return updateChangePlans(state,action)
     default:
       return state;
   }
