@@ -1,13 +1,9 @@
-import { Classes, Position } from "@blueprintjs/core";
+import { Classes } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
-// import axios from "axios";
 import * as React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
-// import { API_ROOT } from "../../../../utils/api-config";
-// import { getHeaders, ROUTES } from "../../../../utils/utils";
 import Barcode from "react-barcode";
-import ReactDOMServer from "react-dom/server";
 import "./barcodeView.scss";
 
 export interface BarcodeViewProps {
@@ -24,6 +20,7 @@ class BarcodeView extends React.PureComponent<
   BarcodeViewState
 > {
   public componentDidMount() {
+    window.moveBy(0, 1000);
     window.print();
   }
 
@@ -35,22 +32,60 @@ class BarcodeView extends React.PureComponent<
     console.log(element);
     return (
       <div className={Classes.DARK}>
-        {barcodes.map((barcode: string) => {
-          return (
-            <div style={{ width: "1.75in", height: "0.5in" }}>
-              <Barcode
-                value={barcode}
-                text={"Hyposoft " + barcode}
-                text-align="left"
-                height={"15"}
-                // font-size={10}
-                width={"2"}
-              />
-            </div>
-          );
-        })}
+        <table>
+          <tbody>{this.renderBarcodes(barcodes)}</tbody>
+        </table>
       </div>
     );
+  }
+
+  private renderBarcodes(barcodes: Array<string>) {
+    var width = 0;
+    let row: Array<any>;
+    row = [];
+    let rows: Array<any>;
+    rows = [];
+    for (var i = 0; i < barcodes.length; i++) {
+      width++;
+      if (width < 5) {
+        row.push(
+          <td className={"barcode-container"}>
+            <Barcode
+              value={barcodes[i]}
+              text={"Hyposoft " + barcodes[i]}
+              text-align="left"
+              height={26}
+              fontSize={9}
+              textMargin={1}
+              width={2.25}
+              margin={6}
+            />
+          </td>
+        );
+      } else {
+        width = 1;
+        rows.push(<tr className={"barcode-row"}>{row}</tr>);
+        row = [];
+        row.push(
+          <td className={"barcode-container"}>
+            <Barcode
+              value={barcodes[i]}
+              text={"Hyposoft " + barcodes[i]}
+              text-align="left"
+              height={26}
+              fontSize={9}
+              textMargin={1}
+              width={2.25}
+              margin={6}
+            />
+          </td>
+        );
+      }
+    }
+    if (row.length > 0) {
+      rows.push(<tr className={"barcode-row"}>{row}</tr>);
+    }
+    return rows;
   }
 }
 
