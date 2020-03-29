@@ -87,6 +87,15 @@ class CPDetailView extends React.Component<
       isOpen
     });
   }
+  getHighlightStyle(modification: Modification, col: string) {
+    const highlight =
+      modification.changes && modification.changes.includes(col);
+
+    return {
+      fontWeight: highlight ? ("bold" as any) : ("normal" as any),
+      color: highlight ? "#bf8c0a" : "white"
+    };
+  }
   private toaster: Toaster = {} as Toaster;
   private addToast(toast: IToastProps) {
     toast.timeout = 5000;
@@ -109,7 +118,10 @@ class CPDetailView extends React.Component<
   private addErrorToast = (message: string) => {
     this.addToast({ message: message, intent: Intent.DANGER });
   };
-  renderAssetData(asset: AssetObject | AssetCPObject) {
+  renderAssetData(
+    asset: AssetObject | AssetCPObject,
+    modification: Modification
+  ) {
     return (
       <table>
         {Object.entries(asset).map(([col, value]) => {
@@ -131,14 +143,22 @@ class CPDetailView extends React.Component<
           } else if (isRackObject(value)) {
             return [
               <tr>
-                <td className="label" key={col}>
+                <td
+                  style={this.getHighlightStyle(modification, col)}
+                  className="label"
+                  key={col}
+                >
                   {AssetFieldsTable[col]}:
                 </td>
 
                 <td>{value.row_letter + "" + value.rack_num}</td>
               </tr>,
               <tr>
-                <td className="label" key={"datacenter"}>
+                <td
+                  style={this.getHighlightStyle(modification, col)}
+                  className="label"
+                  key={"datacenter"}
+                >
                   {AssetFieldsTable["rack__datacenter__name"]}:
                 </td>
 
@@ -153,7 +173,11 @@ class CPDetailView extends React.Component<
 
           return AssetFieldsTable[col] ? (
             <tr>
-              <td className="label" key={col}>
+              <td
+                style={this.getHighlightStyle(modification, col)}
+                // className="label"
+                key={col}
+              >
                 {AssetFieldsTable[col]}:
               </td>
 
@@ -221,29 +245,56 @@ class CPDetailView extends React.Component<
                     return (
                       <li>
                         <Callout
+                          icon={null}
+                          intent={
+                            modification.conflicts &&
+                            modification.conflicts.length > 0
+                              ? Intent.DANGER
+                              : Intent.NONE
+                          }
                           className="change-plan-item"
                           onClick={e => this.toggleCollapse(index)}
                         >
                           {modification.title}
                         </Callout>
                         <Collapse isOpen={this.state.isOpen[index]}>
+                          {modification.conflicts
+                            ? modification.conflicts.map(
+                                (conflict: Conflict) => {
+                                  return (
+                                    <Callout intent={Intent.DANGER}>
+                                      {conflict.conflict_message}
+                                    </Callout>
+                                  );
+                                }
+                              )
+                            : null}
                           {modification.asset ? (
                             <div className="cp-details">
                               <Pre>
                                 <h3>Live Asset </h3>
-                                {this.renderAssetData(modification.asset)}
+                                {this.renderAssetData(
+                                  modification.asset,
+                                  modification
+                                )}
                               </Pre>
                               <Pre>
                                 <h3>Change Plan Asset</h3>
                                 {modification.asset_cp
-                                  ? this.renderAssetData(modification.asset_cp)
+                                  ? this.renderAssetData(
+                                      modification.asset_cp,
+                                      modification
+                                    )
                                   : null}
                               </Pre>
                             </div>
                           ) : (
                             <Pre>
                               {modification.asset_cp
-                                ? this.renderAssetData(modification.asset_cp)
+                                ? this.renderAssetData(
+                                    modification.asset_cp,
+                                    modification
+                                  )
                                 : null}
                             </Pre>
                           )}
