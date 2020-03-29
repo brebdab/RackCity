@@ -63,7 +63,7 @@ type NavigationPropsAll = NavigationProps & RouteComponentProps;
 export class Navigation extends React.Component<
   NavigationPropsAll,
   NavigationState
-> {
+  > {
   public state = {
     username: undefined,
     changePlans: []
@@ -125,8 +125,8 @@ export class Navigation extends React.Component<
             >
               <Banner
                 title={
-                  this.props.changePlan.name +
-                  "\n click here to go to change plan summary"
+                  "Change Plan: " + this.props.changePlan.name +
+                  "\n (click here to see summary of this change plan)"
                 }
               />
             </div>
@@ -182,14 +182,14 @@ export class Navigation extends React.Component<
                         />
                       </Menu>
                     }
-                    // position={Position.RIGHT_TOP}
+                  // position={Position.RIGHT_TOP}
                   >
                     <Button icon="menu" text="Tools" minimal />
                   </Popover>
                 </div>
               ) : (
-                <p></p>
-              )}
+                  <p></p>
+                )}
             </NavbarGroup>
 
             <NavbarGroup align={Alignment.RIGHT}>
@@ -248,14 +248,14 @@ export class Navigation extends React.Component<
                   />
                 </div>
               ) : (
-                <AnchorButton
-                  onClick={() => this.props.history.push(ROUTES.LOGIN)}
-                  className="nav-bar-button"
-                  icon="user"
-                  text="Login"
-                  minimal
-                />
-              )}
+                  <AnchorButton
+                    onClick={() => this.props.history.push(ROUTES.LOGIN)}
+                    className="nav-bar-button"
+                    icon="user"
+                    text="Login"
+                    minimal
+                  />
+                )}
             </NavbarGroup>
           </Navbar>
         </div>
