@@ -414,5 +414,7 @@ def get_cp_already_executed_response(change_plan):
                 "errors":
                     "Change plan with id=" + str(change_plan.id) + " "
                     "was executed on " + str(change_plan.execution_time)
+                    
             },
+            status=HTTPStatus.BAD_REQUEST
         )
