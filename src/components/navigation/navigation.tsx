@@ -101,11 +101,16 @@ export class Navigation extends React.Component<
             <div
               onClick={() =>
                 this.props.history.push(
-                  ROUTES.CHANGE_PLAN + "/" + this.props.changePlan.name
+                  ROUTES.CHANGE_PLAN + "/" + this.props.changePlan.id
                 )
               }
             >
-              <Banner title={this.props.changePlan.name} />
+              <Banner
+                title={
+                  this.props.changePlan.name +
+                  "\n click here to go to change plan summary"
+                }
+              />
             </div>
           ) : null}
           <Navbar className={Classes.DARK + " nav-bar"}>

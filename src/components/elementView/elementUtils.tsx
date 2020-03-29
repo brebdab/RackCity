@@ -135,10 +135,25 @@ export const modifyAsset = (
   }
   return axios.post(API_ROOT + "api/assets/modify", asset, config);
 };
-export const decommissionAsset = (asset: AssetObject, headers: any) => {
+export const decommissionAsset = (
+  asset: AssetObject,
+  headers: any,
+  changePlan: ChangePlan
+) => {
+  let config;
+  if (!changePlan) {
+    config = headers;
+  } else {
+    config = {
+      headers: headers["headers"],
+      params: {
+        change_plan: changePlan.id
+      }
+    };
+  }
   console.log("Decommissioning asset");
   const data = { id: asset.id };
-  return axios.post(API_ROOT + "api/assets/decommission", data, headers);
+  return axios.post(API_ROOT + "api/assets/decommission", data, config);
 };
 
 export const modifyChangePlan = (

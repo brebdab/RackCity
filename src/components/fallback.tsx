@@ -6,7 +6,7 @@ import { RouteComponentProps } from "react-router";
 class Fallback extends React.Component<RouteComponentProps> {
   isExistingPath() {
     const regex = new RegExp(
-      "^/dashboard/(assets|models|datacenters|racks|bulk-upload)|^/dashboard$"
+      "^/dashboard/(assets|models|datacenters|racks|bulk-upload|change-plans)|^/dashboard$"
     );
     if (regex.exec(this.props.location.pathname)) {
       return true;
