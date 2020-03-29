@@ -1,18 +1,16 @@
 from django.http import JsonResponse
-from rest_framework.parsers import JSONParser
-from rackcity.models import Asset, DecommissionedAsset, AssetCP
-from rackcity.permissions.permissions import user_has_asset_permission
+from http import HTTPStatus
 from rackcity.api.serializers import (
     RecursiveAssetSerializer,
     AddDecommissionedAssetSerializer,
     GetDecommissionedAssetSerializer,
 )
-from rest_framework.decorators import permission_classes, api_view
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.pagination import PageNumberPagination
-from http import HTTPStatus
+from rackcity.models import Asset, DecommissionedAsset, AssetCP
+from rackcity.permissions.permissions import user_has_asset_permission
 from rackcity.utils.change_planner_utils import (
     get_cp_already_executed_response,
+    get_many_assets_response_for_cp,
+    get_page_count_response_for_decommissioned_cp,
 )
 from rackcity.utils.errors_utils import (
     Status,
@@ -26,14 +24,13 @@ from rackcity.utils.log_utils import (
     log_action,
 )
 from rackcity.utils.query_utils import (
-    get_sort_arguments,
-    get_filter_arguments,
+    get_many_response,
     get_page_count_response,
 )
-from rackcity.utils.change_planner_utils import (
-    get_page_count_response_for_decommissioned_cp,
-)
 from rackcity.views.rackcity_utils import get_change_plan
+from rest_framework.decorators import permission_classes, api_view
+from rest_framework.parsers import JSONParser
+from rest_framework.permissions import IsAuthenticated
 
 
 @api_view(['POST'])
@@ -214,93 +211,25 @@ def decommissioned_asset_many(request):
     assets are returned. If page is specified as a query parameter, page
     size must also be specified, and a page of assets will be returned.
     """
-
-    errors = []
-
-    should_paginate = not(
-        request.query_params.get('page') is None
-        and request.query_params.get('page_size') is None
-    )
-
-    if should_paginate:
-        if not request.query_params.get('page'):
-            errors.append("Must specify field 'page' on " +
-                          "paginated requests.")
-        elif not request.query_params.get('page_size'):
-            errors.append("Must specify field 'page_size' on " +
-                          "paginated requests.")
-        elif int(request.query_params.get('page_size')) <= 0:
-            errors.append("Field 'page_size' must be an integer " +
-                          "greater than 0.")
-
-    if len(errors) > 0:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                "errors": " ".join(errors)
-            },
-            status=HTTPStatus.BAD_REQUEST,
+    if request.query_params.get('change_plan'):
+        (change_plan, response) = get_change_plan(
+            request.query_params.get('change_plan')
         )
-
-    decommissioned_assets_query = DecommissionedAsset.objects
-    try:
-        # TODO: create a date range filter
-        filter_args = get_filter_arguments(request.data)
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.FILTER.value,
-                "errors": str(error)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    for filter_arg in filter_args:
-        decommissioned_assets_query = decommissioned_assets_query.filter(
-            **filter_arg)
-
-    try:
-        sort_args = get_sort_arguments(request.data)
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.SORT.value,
-                "errors": str(error)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    decommissioned_assets = decommissioned_assets_query.order_by(*sort_args)
-
-    if should_paginate:
-        paginator = PageNumberPagination()
-        paginator.page_size = request.query_params.get('page_size')
-        try:
-            page_of_decommissioned_assets = paginator.paginate_queryset(
-                decommissioned_assets, request)
-        except Exception as error:
-            return JsonResponse(
-                {
-                    "failure_message":
-                        Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                    "errors": str(error)
-                },
-                status=HTTPStatus.BAD_REQUEST,
+        if response:
+            return response
+        else:
+            return get_many_assets_response_for_cp(
+                request,
+                change_plan,
+                decommissioned=True,
             )
-        decommissioned_assets_to_serialize = page_of_decommissioned_assets
     else:
-        decommissioned_assets_to_serialize = decommissioned_assets
-
-    serializer = GetDecommissionedAssetSerializer(
-        decommissioned_assets_to_serialize,
-        many=True,
-    )
-    # TODO: it may be preferred to make this key "assets" so it's easier to repurpose front end element table code
-    return JsonResponse(
-        {"assets": serializer.data},
-        status=HTTPStatus.OK,
-    )
+        return get_many_response(
+            DecommissionedAsset,
+            GetDecommissionedAssetSerializer,
+            "assets",
+            request,
+        )
 
 
 @api_view(['POST'])
