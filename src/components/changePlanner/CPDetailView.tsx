@@ -92,14 +92,18 @@ class CPDetailView extends React.Component<
     return conflict;
   }
   resolveConflict(asset_cp: AssetCPObject, override_live: boolean) {
-    axios.post(
-      API_ROOT +
-        "/api/change-plans/" +
-        this.state.changePlan.id +
-        "/resolve-conflict",
-      { asset_cp: asset_cp.id, override_live },
-      getHeaders(this.props.token)
-    );
+    axios
+      .post(
+        API_ROOT +
+          "api/change-plans/" +
+          this.state.changePlan.id +
+          "/resolve-conflict",
+        { asset_cp: asset_cp.id, override_live },
+        getHeaders(this.props.token)
+      )
+      .then(res => {
+        this.addSuccessToast(res.data.success_message);
+      });
   }
   toggleCollapse(index: number) {
     const isOpen = this.state.isOpen;
@@ -320,10 +324,9 @@ class CPDetailView extends React.Component<
                                         {conflict.conflict_resolvable ? (
                                           <div className="merge-options">
                                             <AnchorButton
-                                              minimal
                                               onClick={() =>
                                                 this.resolveConflict(
-                                                  modification.asset,
+                                                  modification.asset_cp,
                                                   false
                                                 )
                                               }
@@ -331,7 +334,12 @@ class CPDetailView extends React.Component<
                                               text="Discard change plan modifications"
                                             />
                                             <AnchorButton
-                                              minimal
+                                              onClick={() =>
+                                                this.resolveConflict(
+                                                  modification.asset_cp,
+                                                  true
+                                                )
+                                              }
                                               icon="properties"
                                               text="Keep change plan modifications"
                                             />

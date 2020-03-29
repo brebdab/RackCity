@@ -21,6 +21,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import JSONParser
 from django.core.exceptions import ObjectDoesNotExist
 from rackcity.views.rackcity_utils import get_change_plan
+from rackcity.models import AssetCP
 
 
 
@@ -74,7 +75,14 @@ def change_plan_resolve_conflict(request, id):
             },
             status=HTTPStatus.BAD_REQUEST
         )
-          
+    return JsonResponse(
+        {
+            "success_message":
+                Status.SUCCESS.value +
+                "Sucessfully resolved conflict "
+        },
+        status=HTTPStatus.OK
+    )
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
