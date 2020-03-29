@@ -3,11 +3,13 @@ from django.http import JsonResponse
 from rackcity.models import Rack, Asset
 from rackcity.api.serializers import RackSerializer
 from rackcity.api.objects import RackRangeSerializer
+from rackcity.permissions.permissions import user_has_asset_permission
 from rackcity.utils.log_utils import (
     log_rack_action,
     Action,
 )
 from rackcity.utils.errors_utils import (
+    AuthFailure,
     Status,
     GenericFailure,
     parse_serializer_errors,
@@ -17,7 +19,7 @@ from rackcity.utils.errors_utils import (
     get_rack_do_not_exist_failure
 )
 from rest_framework.decorators import permission_classes, api_view
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated
 from http import HTTPStatus
 from rackcity.views.rackcity_utils import get_rack_detailed_response
 
@@ -71,7 +73,7 @@ def rack_get(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def rack_create(request):
     """
     Create racks within specified range.
@@ -86,6 +88,22 @@ def rack_create(request):
                 "errors": str(range_serializer.errors)
             },
             status=HTTPStatus.BAD_REQUEST,
+        )
+    datacenter_id = range_serializer.get_datacenter()
+    if not user_has_asset_permission(
+        request.user,
+        datacenter_id,
+    ):
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.AUTH_ERROR.value + AuthFailure.RACK.value,
+                "errors":
+                    "User " + request.user.username +
+                    " does not have asset permission in datacenter id="
+                    + str(datacenter_id)
+            },
+            status=HTTPStatus.UNAUTHORIZED
         )
     racks = Rack.objects.filter(
         datacenter=range_serializer.get_datacenter(),
@@ -131,7 +149,7 @@ def rack_create(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAuthenticated])
 def rack_delete(request):
     """
     Delete racks within specified range.
@@ -146,6 +164,22 @@ def rack_delete(request):
                 "errors": str(range_serializer.errors)
             },
             status=HTTPStatus.BAD_REQUEST,
+        )
+    datacenter_id = range_serializer.get_datacenter()
+    if not user_has_asset_permission(
+        request.user,
+        datacenter_id,
+    ):
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.AUTH_ERROR.value + AuthFailure.RACK.value,
+                "errors":
+                    "User " + request.user.username +
+                    " does not have asset permission in datacenter id="
+                    + str(datacenter_id)
+            },
+            status=HTTPStatus.UNAUTHORIZED
         )
     nonexistent_rack_names = []
     unempty_racks = []
