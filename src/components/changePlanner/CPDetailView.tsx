@@ -1,35 +1,32 @@
-import { RouteComponentProps } from "react-router";
-import { connect } from "react-redux";
-import * as React from "react";
 import {
-  Classes,
   AnchorButton,
-  Pre,
-  Collapse,
   Callout,
-  Toaster,
-  IToastProps,
+  Classes,
+  Collapse,
   Intent,
-  Spinner
+  IToastProps,
+  Pre,
+  Spinner,
+  Toaster
 } from "@blueprintjs/core";
+import axios from "axios";
+import * as React from "react";
+import { connect } from "react-redux";
+import { RouteComponentProps } from "react-router";
 import { withRouter } from "react-router-dom";
-import "./changePlanner.scss";
+import { API_ROOT } from "../../utils/api-config";
 import {
   AssetCPObject,
+  AssetFieldsTable,
   AssetObject,
   ChangePlan,
   getHeaders,
-  ROUTES,
-  AssetFieldsTable,
-  getChangePlanRowStyle,
-  isObject,
-  isAssetObject,
   isModelObject,
-  ModelFieldsTable,
-  isRackObject
+  isObject,
+  isRackObject,
+  ROUTES
 } from "../../utils/utils";
-import axios from "axios";
-import { API_ROOT } from "../../utils/api-config";
+import "./changePlanner.scss";
 interface CPDetailViewProps {
   token: string;
 }
@@ -132,6 +129,7 @@ class CPDetailView extends React.Component<
           } else if (isModelObject(value)) {
             field = (
               <td
+                style={this.getHighlightStyle(modification, col)}
                 className="clickable"
                 onClick={e =>
                   this.props.history.push(ROUTES.MODELS + "/" + value.id)
@@ -143,11 +141,7 @@ class CPDetailView extends React.Component<
           } else if (isRackObject(value)) {
             return [
               <tr>
-                <td
-                  style={this.getHighlightStyle(modification, col)}
-                  className="label"
-                  key={col}
-                >
+                <td style={this.getHighlightStyle(modification, col)} key={col}>
                   {AssetFieldsTable[col]}:
                 </td>
 
@@ -156,19 +150,29 @@ class CPDetailView extends React.Component<
               <tr>
                 <td
                   style={this.getHighlightStyle(modification, col)}
-                  className="label"
                   key={"datacenter"}
                 >
                   {AssetFieldsTable["rack__datacenter__name"]}:
                 </td>
 
-                <td>{value.datacenter.name}</td>
+                <td style={this.getHighlightStyle(modification, col)}>
+                  {value.datacenter.name}
+                </td>
               </tr>
             ];
           } else if (col === "comment") {
-            field = <td className="comment">{value}</td>;
+            field = (
+              <td
+                style={this.getHighlightStyle(modification, col)}
+                className="comment"
+              >
+                {value}
+              </td>
+            );
           } else if (!isObject(value)) {
-            field = <td>{value}</td>;
+            field = (
+              <td style={this.getHighlightStyle(modification, col)}>{value}</td>
+            );
           }
 
           return AssetFieldsTable[col] ? (
@@ -256,48 +260,59 @@ class CPDetailView extends React.Component<
                           onClick={e => this.toggleCollapse(index)}
                         >
                           {modification.title}
+                          <AnchorButton
+                            className="cp-remove"
+                            intent={Intent.DANGER}
+                            minimal
+                            icon="delete"
+                            text="Remove change"
+                          />
                         </Callout>
                         <Collapse isOpen={this.state.isOpen[index]}>
-                          {modification.conflicts
-                            ? modification.conflicts.map(
-                                (conflict: Conflict) => {
-                                  return (
-                                    <Callout intent={Intent.DANGER}>
-                                      {conflict.conflict_message}
-                                    </Callout>
-                                  );
-                                }
-                              )
-                            : null}
-                          {modification.asset ? (
-                            <div className="cp-details">
-                              <Pre>
-                                <h3>Live Asset </h3>
-                                {this.renderAssetData(
-                                  modification.asset,
-                                  modification
-                                )}
-                              </Pre>
-                              <Pre>
-                                <h3>Change Plan Asset</h3>
-                                {modification.asset_cp
-                                  ? this.renderAssetData(
-                                      modification.asset_cp,
-                                      modification
-                                    )
-                                  : null}
-                              </Pre>
-                            </div>
-                          ) : (
-                            <Pre>
-                              {modification.asset_cp
-                                ? this.renderAssetData(
-                                    modification.asset_cp,
+                          <div className="cp-collapse-body">
+                            {modification.conflicts
+                              ? modification.conflicts.map(
+                                  (conflict: Conflict) => {
+                                    return (
+                                      <Callout intent={Intent.DANGER}>
+                                        {conflict.conflict_message}
+                                      </Callout>
+                                    );
+                                  }
+                                )
+                              : null}
+                            {modification.asset ? (
+                              <div className="cp-details">
+                                <Pre>
+                                  <h3>Live Asset </h3>
+                                  {this.renderAssetData(
+                                    modification.asset,
                                     modification
-                                  )
-                                : null}
-                            </Pre>
-                          )}
+                                  )}
+                                </Pre>
+                                <Pre>
+                                  <h3>Change Plan Asset</h3>
+                                  {modification.asset_cp
+                                    ? this.renderAssetData(
+                                        modification.asset_cp,
+                                        modification
+                                      )
+                                    : null}
+                                </Pre>
+                              </div>
+                            ) : (
+                              <Pre>
+                                <div className="cp-details">
+                                  {modification.asset_cp
+                                    ? this.renderAssetData(
+                                        modification.asset_cp,
+                                        modification
+                                      )
+                                    : null}
+                                </div>
+                              </Pre>
+                            )}
+                          </div>
                         </Collapse>
                       </li>
                     );

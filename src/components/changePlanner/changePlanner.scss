@@ -3,16 +3,28 @@
   cursor: pointer !important;
   background-color: #394b59;
 }
-.change-plan-item {
-  padding-bottom: 10pt;
+// .change-plan-item {
+//   padding-bottom: 10pt;
+// }
+
+.cp-remove {
+  float: right;
+  padding: 0;
+  margin-top: -3pt;
+}
+.cp-collapse-body {
+  padding: 5pt;
 }
 .bp3-list-unstyled {
   margin-top: 30pt;
 }
+
+.bp3-list-unstyled .bp3-callout {
+  padding-bottom: 10pt;
+}
 .cp-details {
   display: inline-flex;
   width: 100%;
-  padding: 5pt;
 }
 .cp-details h3 {
   margin: 1pt !important;
