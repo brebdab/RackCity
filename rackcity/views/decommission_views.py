@@ -24,6 +24,10 @@ from rackcity.utils.errors_utils import (
 from rackcity.utils.query_utils import (
     get_sort_arguments,
     get_filter_arguments,
+    get_page_count_response,
+)
+from rackcity.utils.change_planner_utils import (
+    get_page_count_response_for_decommissioned_cp,
 )
 from rackcity.views.rackcity_utils import get_change_plan
 
@@ -292,3 +296,30 @@ def decommissioned_asset_many(request):
         {"assets": serializer.data},
         status=HTTPStatus.OK,
     )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def decommissioned_asset_page_count(request):
+    """
+    Return total number of pages according to page size, which must be
+    specified as query parameter.
+    """
+    change_plan = None
+    if request.query_params.get("change_plan"):
+        (change_plan, response) = get_change_plan(
+            request.query_params.get("change_plan")
+        )
+        if response:
+            return response
+    if change_plan:
+        return get_page_count_response_for_decommissioned_cp(
+            request,
+            change_plan,
+        )
+    else:
+        return get_page_count_response(
+            DecommissionedAsset,
+            request.query_params,
+            data_for_filters=request.data,
+        )
