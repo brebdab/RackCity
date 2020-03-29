@@ -66,6 +66,7 @@ urlpatterns = [
     path('change-plans/modify', views.change_plan_modify),
     path('change-plans/delete', views.change_plan_delete),
     path('change-plans/pages', views.change_plan_page_count),
+    path('change-plans/execute', views.change_plan_execute),
     path('change-plans/<int:id>', views.change_plan_detail),
     path('change-plans/<int:id>/resolve-conflict', views.change_plan_resolve_conflict),
     path('change-plans/<int:id>/remove-asset', views.change_plan_remove_asset),

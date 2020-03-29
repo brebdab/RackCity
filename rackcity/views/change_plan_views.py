@@ -1,10 +1,23 @@
+from datetime import datetime
 from django.http import JsonResponse
 from rackcity.api.serializers import (
     AddChangePlanSerializer,
     GetChangePlanSerializer,
 )
-from rackcity.models import ChangePlan
-from rackcity.utils.change_planner_utils import get_modifications_in_cp
+from rackcity.models import (
+    ChangePlan,
+    AssetCP,
+)
+from rackcity.utils.change_planner_utils import (
+    get_modifications_in_cp,
+    asset_cp_has_conflicts,
+)
+from rackcity.utils.execute_change_planner_utils import (
+    update_network_ports,
+    update_power_ports,
+    decommission_asset_cp,
+    get_updated_asset,
+)
 from rackcity.utils.query_utils import (
     get_page_count_response,
     get_many_response,
@@ -167,7 +180,7 @@ def change_plan_delete(request):
             {
                 "failure_message":
                     Status.MODIFY_ERROR.value +
-                    "Model" + GenericFailure.DOES_NOT_EXIST.value,
+                    "Change plan" + GenericFailure.DOES_NOT_EXIST.value,
                 "errors": "No existing Change Plan with id="+str(id)
             },
             status=HTTPStatus.BAD_REQUEST
@@ -220,7 +233,7 @@ def change_plan_modify(request):
             {
                 "failure_message":
                     Status.MODIFY_ERROR.value +
-                    "Model" + GenericFailure.DOES_NOT_EXIST.value,
+                    "Change plan" + GenericFailure.DOES_NOT_EXIST.value,
                 "errors": "No existing change plan with id="+str(id)
             },
             status=HTTPStatus.BAD_REQUEST
@@ -373,4 +386,100 @@ def change_plan_detail(request, id):
             "modifications": modifications,
         },
         status=HTTPStatus.OK
+    )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def change_plan_execute(request):
+    """
+    Execute all changes associated with a change plan.
+    """
+    data = JSONParser().parse(request)
+    if 'id' not in data:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.DELETE_ERROR.value + GenericFailure.INTERNAL.value,
+                "errors": "Must include 'id' when deleting a Change Plan"
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    id = data['id']
+    try:
+        change_plan = ChangePlan.objects.get(id=id)
+    except ObjectDoesNotExist:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.ERROR.value +
+                    "Change plan" + GenericFailure.DOES_NOT_EXIST.value,
+                "errors": "No existing change plan with id="+str(id)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    if request.user != change_plan.owner:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.ERROR.value +
+                    "You do not have access to execute this change plan.",
+                "errors":
+                    "User " + request.user.username +
+                    "does not own change plan with id="+str(id)
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    assets_cp = AssetCP.objects.filter(change_plan=change_plan)
+    for asset_cp in assets_cp:
+        if asset_cp_has_conflicts(asset_cp):
+            return JsonResponse(
+                {
+                    "failure_message":
+                        Status.ERROR.value +
+                        "All conflicts must be resolved before a change " +
+                        "plan can be executed.",
+                    "errors":
+                        "Conflict found on AssetCP with id=" + str(asset_cp.id)
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
+    num_created = 0
+    num_modified = 0
+    num_decommissioned = 0
+    updated_asset_mappings = {}
+    for asset_cp in assets_cp:
+        updated_asset, created = get_updated_asset(asset_cp)
+        updated_asset_mappings[asset_cp] = updated_asset
+        if created:
+            num_created += 1
+        else:
+            num_modified += 1
+        update_network_ports(updated_asset, asset_cp, change_plan)
+        update_power_ports(updated_asset, asset_cp, change_plan)
+
+    for asset_cp in assets_cp:
+        # Decommission only after all changes have been made to all CP assets
+        updated_asset = updated_asset_mappings[asset_cp]
+        if asset_cp.is_decommissioned:
+            failure_response = decommission_asset_cp(
+                updated_asset,
+                asset_cp,
+                change_plan,
+            )
+            if failure_response:
+                return failure_response
+            num_decommissioned += 1
+
+    change_plan.execution_time = datetime.now()
+    change_plan.save()
+
+    return JsonResponse(
+        {"success_message":
+            "Change Plan '" + change_plan.name + "' executed: " +
+            str(num_created) + " assets created, " +
+            str(num_modified) + " assets modified, " +
+            str(num_decommissioned) + " assets decommissioned."
+         },
+        status=HTTPStatus.OK,
     )

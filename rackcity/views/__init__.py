@@ -81,6 +81,7 @@ from .change_plan_views import (
     change_plan_modify,
     change_plan_delete,
     change_plan_page_count,
+    change_plan_execute,
     change_plan_detail,
     change_plan_remove_asset,
     change_plan_resolve_conflict
