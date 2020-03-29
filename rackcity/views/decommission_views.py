@@ -21,6 +21,10 @@ from rackcity.utils.errors_utils import (
 from rackcity.utils.query_utils import (
     get_sort_arguments,
     get_filter_arguments,
+    get_page_count_response,
+)
+from rackcity.utils.change_planner_utils import (
+    get_page_count_response_for_cp,
 )
 from rackcity.views.rackcity_utils import get_change_plan
 
@@ -35,7 +39,8 @@ def decommission_asset(request):
     change_plan = None
 
     if request.query_params.get("change_plan"):
-        (change_plan, response) = get_change_plan(request.query_params.get("change_plan"))
+        (change_plan, response) = get_change_plan(
+            request.query_params.get("change_plan"))
         if response:
             return response
     if 'id' not in data:
@@ -55,7 +60,7 @@ def decommission_asset(request):
             decommissioned_asset_cp = AssetCP(
                 change_plan=change_plan,
                 related_asset=existing_asset,
-                is_decommissioned=True) 
+                is_decommissioned=True)
             for field in existing_asset._meta.fields:
                 if not (field.name == "id" or field.name == "assetid_ptr"):
                     setattr(decommissioned_asset_cp, field.name, getattr(
@@ -63,7 +68,7 @@ def decommission_asset(request):
         else:
             try:
                 decommissioned_asset_cp = AssetCP.objects.get(id=id)
-                decommissioned_asset_cp.is_decommissioned=True
+                decommissioned_asset_cp.is_decommissioned = True
 
             except Asset.DoesNotExist:
                 return JsonResponse(
@@ -90,7 +95,7 @@ def decommission_asset(request):
                 },
                 status=HTTPStatus.UNAUTHORIZED
             )
-    
+
     else:
         try:
             asset = Asset.objects.get(id=id)
@@ -136,7 +141,7 @@ def decommission_asset(request):
                 },
                 status=HTTPStatus.BAD_REQUEST
             )
-        
+
         return JsonResponse(
             {
                 "success_message": "Asset successfully decommissioned on change plan: " + change_plan.name
@@ -144,8 +149,6 @@ def decommission_asset(request):
             status=HTTPStatus.OK
         )
 
-   
-        
     asset_data = RecursiveAssetSerializer(asset).data
     asset_data['live_id'] = asset_data['id']
     del asset_data['id']
@@ -177,13 +180,13 @@ def decommission_asset(request):
             status=HTTPStatus.BAD_REQUEST
         )
     else:
-        
+
         for assetcp in AssetCP.objects.filter(related_asset=id):
             print(assetcp)
             assetcp.related_decommissioned_asset = decommissioned_asset_object
             assetcp.save()
         asset.delete()
-        
+
         return JsonResponse(
             {
                 "success_message": "Asset successfully decommissioned. "
@@ -287,3 +290,27 @@ def decommissioned_asset_many(request):
         {"assets": serializer.data},
         status=HTTPStatus.OK,
     )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def decommissioned_asset_page_count(request):
+    """
+    Return total number of pages according to page size, which must be
+    specified as query parameter.
+    """
+    change_plan = None
+    if request.query_params.get("change_plan"):
+        (change_plan, response) = get_change_plan(
+            request.query_params.get("change_plan")
+        )
+        if response:
+            return response
+    if change_plan:
+        return get_page_count_response_for_cp(request, change_plan)
+    else:
+        return get_page_count_response(
+            DecommissionedAsset,
+            request.query_params,
+            data_for_filters=request.data,
+        )
