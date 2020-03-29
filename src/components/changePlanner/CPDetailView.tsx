@@ -62,6 +62,7 @@ interface CPDetailViewState {
   isAlertOpen: boolean;
   changePlan: ChangePlan;
   modifications: Array<Modification>;
+  disableButtons: boolean;
 }
 
 function getChangePlanDetail(token: string, id: string) {
@@ -84,21 +85,27 @@ class CPDetailView extends React.Component<
     isOpen: [false, false],
     changePlan: {} as ChangePlan,
     modifications: [],
-    isAlertOpen: false
+    isAlertOpen: false,
+    disableButtons: false
   };
-  disableExecute() {
-    if (this.loading || this.state.modifications.length === 0) {
-      return true;
+  setButtonState() {
+    let disable = false;
+    if (
+      this.loading ||
+      this.state.modifications.length === 0 ||
+      !isNullOrUndefined(this.state.changePlan.execution_time)
+    ) {
+      disable = true;
     }
 
-    let conflict = false;
     this.state.modifications.forEach((modification: Modification) => {
       if (modification.conflicts && modification.conflicts.length > 0) {
-        conflict = true;
+        disable = true;
       }
     });
-
-    return conflict;
+    this.setState({
+      disableButtons: disable
+    });
   }
   removeModification(modification: Modification) {
     axios
@@ -188,6 +195,9 @@ class CPDetailView extends React.Component<
         this.addSuccessToast(res.data.success_message);
         this.setState({
           isAlertOpen: false
+        });
+        this.setState({
+          disableButtons: true
         });
 
         this.loading = true;
@@ -370,7 +380,7 @@ class CPDetailView extends React.Component<
           } else {
             this.props.setChangePlan(null);
           }
-
+          this.setButtonState();
           this.setState({
             changePlan: changePlan,
             modifications: res.data.modifications
@@ -396,7 +406,7 @@ class CPDetailView extends React.Component<
           } else {
             this.props.setChangePlan(null);
           }
-
+          this.setButtonState();
           this.setState({
             changePlan: changePlan,
             modifications: res.data.modifications
@@ -420,7 +430,7 @@ class CPDetailView extends React.Component<
         >
           <p>
             Are you sure you want to execute this change plan? You will not be
-            able to generate a work order for this change plan anymore
+            able to generate a work order for this change plan anymore.
           </p>
         </Alert>
         <Toaster
@@ -574,7 +584,7 @@ class CPDetailView extends React.Component<
           <div className={"detail-buttons-cp"}>
             <div>
               <AnchorButton
-                disabled={this.disableExecute()}
+                disabled={this.state.disableButtons}
                 intent="none"
                 icon="document-open"
                 text="Generate Work Order"
@@ -587,7 +597,7 @@ class CPDetailView extends React.Component<
             </div>
             <div>
               <AnchorButton
-                disabled={this.disableExecute()}
+                disabled={this.state.disableButtons}
                 icon="build"
                 intent="primary"
                 text="Execute Change Plan"
