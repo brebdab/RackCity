@@ -1189,20 +1189,32 @@ class ElementTable extends React.Component<
                               !this.props.isDecommissioned ? (
                                 <AnchorButton
                                   className="button-table"
-                                  intent="primary"
-                                  icon="edit"
+                                  intent="danger"
                                   minimal
                                   disabled={
                                     this.props.changePlan &&
                                       this.props.type !== ElementType.ASSET
                                       ? true
-                                      :
-                                      !(
-                                        this.props.permissionState.admin
-                                        || (this.props.type === ElementType.DATACENTER && this.props.permissionState.asset_management)
-                                        || (this.props.type === ElementType.MODEL && this.props.permissionState.model_management)
-                                        || (this.props.type === ElementType.ASSET && this.props.permissionState.asset_management)
-                                        || (this.props.type === ElementType.ASSET && isAssetObject(item) && this.props.permissionState.datacenter_permissions.includes(+item.rack.datacenter.id))
+                                      : !(
+                                        this.props.permissionState.admin ||
+                                        (this.props.type ===
+                                          ElementType.DATACENTER &&
+                                          this.props.permissionState
+                                            .asset_management) ||
+                                        (this.props.type ===
+                                          ElementType.MODEL &&
+                                          this.props.permissionState
+                                            .model_management) ||
+                                        (this.props.type ===
+                                          ElementType.ASSET &&
+                                          this.props.permissionState
+                                            .asset_management) ||
+                                        (this.props.type ===
+                                          ElementType.ASSET &&
+                                          isAssetObject(item) &&
+                                          this.props.permissionState.datacenter_permissions.includes(
+                                            +item.rack.datacenter.id
+                                          ))
                                       )
                                   }
                                   onClick={(event: any) => {
@@ -1216,37 +1228,58 @@ class ElementTable extends React.Component<
                                   }}
                                 />
                               ) : null}
-                            {!this.props.data && !this.props.isDecommissioned ? (
-                              <AnchorButton
-                                className="button-table"
-                                intent="danger"
-                                minimal
-                                icon={this.props.type === ElementType.ASSET ? "remove" : "trash"}
-                                disabled={
-                                  this.props.changePlan ? true :
-                                    !(
-                                      this.props.permissionState.admin
-                                      || (this.props.type === ElementType.DATACENTER && this.props.permissionState.asset_management)
-                                      || (this.props.type === ElementType.MODEL && this.props.permissionState.model_management)
-                                      || (this.props.type === ElementType.ASSET && this.props.permissionState.asset_management)
-                                      || (this.props.type === ElementType.ASSET && isAssetObject(item) && this.props.permissionState.datacenter_permissions.includes(+item.rack.datacenter.id))
-                                    )
-                                }
-                                onClick={
-                                  this.props.type === ElementType.ASSET
-                                    ? (event: any) => {
-                                      this.handleDecommissionButtonClick(
-                                        item
-                                      );
-                                      event.stopPropagation();
-                                    }
-                                    : (event: any) => {
-                                      this.handleDeleteButtonClick(item);
-                                      event.stopPropagation();
-                                    }
-                                }
-                              />
-                            ) : null}
+                            {!this.props.data &&
+                              !this.props.isDecommissioned ? (
+                                <AnchorButton
+                                  className="button-table"
+                                  intent="danger"
+                                  minimal
+                                  icon={
+                                    this.props.type === ElementType.ASSET
+                                      ? "remove"
+                                      : "trash"
+                                  }
+                                  disabled={
+                                    this.props.changePlan &&
+                                      this.props.type !== ElementType.ASSET
+                                      ? true
+                                      : !(
+                                        this.props.permissionState.admin ||
+                                        (this.props.type ===
+                                          ElementType.DATACENTER &&
+                                          this.props.permissionState
+                                            .asset_management) ||
+                                        (this.props.type ===
+                                          ElementType.MODEL &&
+                                          this.props.permissionState
+                                            .model_management) ||
+                                        (this.props.type ===
+                                          ElementType.ASSET &&
+                                          this.props.permissionState
+                                            .asset_management) ||
+                                        (this.props.type ===
+                                          ElementType.ASSET &&
+                                          isAssetObject(item) &&
+                                          this.props.permissionState.datacenter_permissions.includes(
+                                            +item.rack.datacenter.id
+                                          ))
+                                      )
+                                  }
+                                  onClick={
+                                    this.props.type === ElementType.ASSET
+                                      ? (event: any) => {
+                                        this.handleDecommissionButtonClick(
+                                          item
+                                        );
+                                        event.stopPropagation();
+                                      }
+                                      : (event: any) => {
+                                        this.handleDeleteButtonClick(item);
+                                        event.stopPropagation();
+                                      }
+                                  }
+                                />
+                              ) : null}
                             {isAssetObject(item) &&
                               item.rack.is_network_controlled &&
                               !this.props.isDecommissioned ? (
@@ -1299,7 +1332,7 @@ const mapStateToProps = (state: any) => {
     token: state.token,
     isAdmin: state.admin,
     changePlan: state.changePlan,
-    permissionState: state.permissionState,
+    permissionState: state.permissionState
   };
 };
 export default connect(mapStateToProps)(withRouter(ElementTable));
