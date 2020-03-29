@@ -366,3 +366,17 @@ def asset_cp_has_conflicts(asset_cp):
         or asset_cp.model is None
         or asset_cp.rack is None
     )
+
+
+def get_cp_already_executed_response(change_plan):
+    if change_plan.execution_time:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.ERROR.value +
+                    "Executed change plans are read only.",
+                "errors":
+                    "Change plan with id=" + str(change_plan.id) + " "
+                    "was executed on " + str(change_plan.execution_time)
+            },
+        )
