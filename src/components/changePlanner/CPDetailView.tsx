@@ -278,6 +278,28 @@ class CPDetailView extends React.Component<
             field = (
               <td style={this.getHighlightStyle(modification, col)}>{value}</td>
             );
+          } else if (col === "network_connections") {
+            return (
+              <tr>
+                <td style={this.getHighlightStyle(modification, col)} key={col}>
+                  Network Connections
+                </td>
+                <td style={this.getHighlightStyle(modification, col)}>
+                <pre>{JSON.stringify(value, null, 2)}</pre>
+                </td>
+              </tr>
+            );
+          } else if (col === "power_connections") {
+            return (
+              <tr>
+                <td style={this.getHighlightStyle(modification, col)} key={col}>
+                  Power Connections
+                </td>
+                <td style={this.getHighlightStyle(modification, col)}>
+                  <pre>{JSON.stringify(value, null, 2)}</pre>
+                </td>
+              </tr>
+            );
           }
 
           return AssetFieldsTable[col] ? (

@@ -94,6 +94,7 @@ export const AssetFieldsTable: any = {
   model__vendor: "Model Vendor",
   model__model_number: "Model Number",
   rack: "Rack",
+
   rack__datacenter__name: "Datacenter",
   rack_position: "Rack Position",
   owner: "Owner",
