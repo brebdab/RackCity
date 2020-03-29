@@ -7,7 +7,8 @@ import {
   IToastProps,
   Pre,
   Spinner,
-  Toaster
+  Toaster,
+  Position
 } from "@blueprintjs/core";
 import axios from "axios";
 import * as React from "react";
@@ -230,6 +231,12 @@ class CPDetailView extends React.Component<
     }
     return (
       <div className={Classes.DARK + " asset-view"}>
+        <Toaster
+          autoFocus={false}
+          canEscapeKeyClear={true}
+          position={Position.TOP}
+          ref={this.refHandlers.toaster}
+        />
         <h1>Change Plan</h1>
         <div className="detail-buttons-wrapper">
           <div className={"detail-buttons"}>
@@ -276,11 +283,36 @@ class CPDetailView extends React.Component<
                                     return (
                                       <Callout intent={Intent.DANGER}>
                                         {conflict.conflict_message}
+                                        {conflict.conflict_resolvable ? (
+                                          <div className="merge-options">
+                                            <AnchorButton
+                                              minimal
+                                              icon="properties"
+                                              text="Take Live Version"
+                                            />
+                                            <AnchorButton
+                                              minimal
+                                              icon="properties"
+                                              text="Take Change Plan Version"
+                                            />
+                                          </div>
+                                        ) : null}
                                       </Callout>
                                     );
                                   }
                                 )
                               : null}
+
+                            <AnchorButton
+                              className="asset-detail"
+                              icon="properties"
+                              onClick={(e: any) => {
+                                this.props.history.push(
+                                  ROUTES.ASSETS + "/" + modification.asset_cp.id
+                                );
+                              }}
+                              text="Go to change plan asset detail page"
+                            />
                             {modification.asset ? (
                               <div className="cp-details">
                                 <Pre>
@@ -301,16 +333,17 @@ class CPDetailView extends React.Component<
                                 </Pre>
                               </div>
                             ) : (
-                              <Pre>
-                                <div className="cp-details">
+                              <div className="cp-details">
+                                <Pre>
+                                  <h3>Change Plan Asset</h3>
                                   {modification.asset_cp
                                     ? this.renderAssetData(
                                         modification.asset_cp,
                                         modification
                                       )
                                     : null}
-                                </div>
-                              </Pre>
+                                </Pre>
+                              </div>
                             )}
                           </div>
                         </Collapse>
