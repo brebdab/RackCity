@@ -63,6 +63,7 @@ interface CPDetailViewState {
   changePlan: ChangePlan;
   modifications: Array<Modification>;
   username: string;
+  disableButtons: boolean;
 }
 
 function getChangePlanDetail(token: string, id: string) {
@@ -96,19 +97,25 @@ class CPDetailView extends React.Component<
     this.openPrint = true;
   };
 
-  disableExecute() {
-    if (this.loading || this.state.modifications.length === 0) {
-      return true;
+
+  setButtonState() {
+    let disable = false;
+    if (
+      this.loading ||
+      this.state.modifications.length === 0 ||
+      !isNullOrUndefined(this.state.changePlan.execution_time)
+    ) {
+      disable = true;
     }
 
-    let conflict = false;
     this.state.modifications.forEach((modification: Modification) => {
       if (modification.conflicts && modification.conflicts.length > 0) {
-        conflict = true;
+        disable = true;
       }
     });
-
-    return conflict;
+    this.setState({
+      disableButtons: disable
+    });
   }
   removeModification(modification: Modification) {
     axios
@@ -198,13 +205,21 @@ class CPDetailView extends React.Component<
         this.setState({
           isAlertOpen: false
         });
+        this.setState({
+          disableButtons: true
+        });
 
         this.loading = true;
         getChangePlanDetail(this.props.token, this.route_id)
           .then(res => {
             this.loading = false;
             this.dataLoaded = true;
-            this.props.setChangePlan(res.data.change_plan);
+            const changePlan: ChangePlan = res.data.change_plan;
+            if (isNullOrUndefined(changePlan.execution_time)) {
+              this.props.setChangePlan(changePlan);
+            } else {
+              this.props.setChangePlan(null);
+            }
             const isOpen = new Array(res.data.modifications.length).fill(false);
             this.setState({
               changePlan: res.data.change_plan,
@@ -371,7 +386,13 @@ class CPDetailView extends React.Component<
         .then(res => {
           this.loading = false;
           this.dataLoaded = true;
-          this.props.setChangePlan(res.data.change_plan);
+          
+          const changePlan: ChangePlan = res.data.change_plan;
+          if (isNullOrUndefined(changePlan.execution_time)) {
+            this.props.setChangePlan(changePlan);
+          } else {
+            this.props.setChangePlan(null);
+          }
           const isOpen = new Array(res.data.modifications.length).fill(false);
           this.setState({
             changePlan: res.data.change_plan,
@@ -417,13 +438,18 @@ class CPDetailView extends React.Component<
         .then(res => {
           this.loading = false;
           this.dataLoaded = true;
-          this.props.setChangePlan(res.data.change_plan);
-          const isOpen = new Array(res.data.modifications.length).fill(false);
-          this.setState({
-            changePlan: res.data.change_plan,
-            modifications: res.data.modifications,
-            isOpen
-          });
+          const changePlan: ChangePlan = res.data.change_plan;
+            if (isNullOrUndefined(changePlan.execution_time)) {
+              this.props.setChangePlan(changePlan);
+            } else {
+              this.props.setChangePlan(null);
+            }
+            const isOpen = new Array(res.data.modifications.length).fill(false);
+            this.setState({
+              changePlan: res.data.change_plan,
+              modifications: res.data.modifications,
+              isOpen
+            });
         })
         .catch(err => {
           this.loading = false;
@@ -443,7 +469,7 @@ class CPDetailView extends React.Component<
         >
           <p>
             Are you sure you want to execute this change plan? You will not be
-            able to generate a work order for this change plan anymore
+            able to generate a work order for this change plan anymore.
           </p>
         </Alert>
         <Toaster
@@ -602,8 +628,9 @@ class CPDetailView extends React.Component<
           <div className={"detail-buttons-cp"}>
             <div>
               <AnchorButton
-                disabled={this.disableExecute()}
+    
                 onClick={() => this.printWorkOrder()}
+                disabled={this.state.disableButtons}
                 intent="none"
                 icon="document-open"
                 text="Generate Work Order"
@@ -616,7 +643,7 @@ class CPDetailView extends React.Component<
             </div>
             <div>
               <AnchorButton
-                disabled={this.disableExecute()}
+                disabled={this.state.disableButtons}
                 icon="build"
                 intent="primary"
                 text="Execute Change Plan"
