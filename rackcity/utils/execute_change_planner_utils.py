@@ -28,7 +28,7 @@ def get_updated_asset(asset_cp):
         updated_asset = Asset()
         created = True
     for field in Asset._meta.fields:
-        if field != 'id':
+        if (field.name != 'id' and field.name != "assetid_ptr"):
             setattr(
                 updated_asset,
                 field.name,
