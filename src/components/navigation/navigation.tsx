@@ -35,6 +35,8 @@ export interface NavigationProps {
   isAdmin: boolean;
   token: string;
   changePlan: ChangePlan;
+  updateChangePlans: boolean;
+  updateChangePlans(status: boolean): void;
 }
 
 export interface NavigationState {
@@ -85,9 +87,10 @@ export class Navigation extends React.Component<
     if (this.props.isAuthenticated && !this.state.username) {
       this.getUsername(this.props.token);
     }
-    if (!this.sucessfulChangePlanRequest) {
+    if (!this.sucessfulChangePlanRequest || this.props.updateChangePlans) {
       getChangePlanList(this.props.token).then(res => {
         this.sucessfulChangePlanRequest = true;
+        this.props.updateChangePlans(false);
         let items: Array<ChangePlan> = res.data[ElementType.CHANGEPLANS];
         items = items.filter(changePlan =>
           isNullOrUndefined(changePlan.execution_time)
@@ -252,13 +255,17 @@ const mapStateToProps = (state: any) => {
     isAuthenticated: state.token !== null,
     isAdmin: state.admin,
     token: state.token,
-    changePlan: state.changePlan
+    changePlan: state.changePlan,
+    updateChangePlans: state.updateChangePlan
   };
 };
 
 const mapDispatchToProps = (dispatch: any) => {
   return {
     logout: () => dispatch(actions.logout()),
+    updateChangePlans: (status: boolean) =>
+      dispatch(actions.updateChangePlans(status)),
+
     setChangePlan: (changePlan: ChangePlan) =>
       dispatch(actions.setChangePlan(changePlan))
   };

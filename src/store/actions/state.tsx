@@ -13,10 +13,10 @@ export const setChangePlan = (changePlan: ChangePlan) => {
   };
 };
 
-export const updateChangePlans = () => {
+export const updateChangePlans = (status: boolean) => {
   return {
     type: actionTypes.UPDATE_CHANGE_PLANS,
-    updateChangePlans: true
+    updateChangePlans: status
   };
 };
 export const authStart = () => {

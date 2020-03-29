@@ -74,8 +74,8 @@ const reducer = (state = initialState, action: any) => {
       return authAdmin(state, action);
     case actionTypes.SWITCH_CHANGE_PLAN:
       return setChangePlan(state, action);
-    case actionTypes.UPDATE_CHANGE_PLANS;
-      return updateChangePlans(state,action)
+    case actionTypes.UPDATE_CHANGE_PLANS:
+      return updateChangePlans(state, action);
     default:
       return state;
   }

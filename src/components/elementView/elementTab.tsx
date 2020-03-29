@@ -68,6 +68,7 @@ interface ElementViewProps {
   currDatacenter?: DatacenterObject;
   onDatacenterSelect?(datacenter: DatacenterObject): void;
   updateDatacenters?(): void;
+  updateChangePlans(status: boolean): void;
   isActive?: boolean;
   changePlan: ChangePlan;
 }
@@ -332,9 +333,11 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       .post(API_ROOT + "api/change-plans/add", changePlan, headers)
       .then(res => {
         console.log("success");
+        this.props.updateChangePlans(true);
 
         this.handleDataUpdate(true);
         this.handleClose();
+
         this.addSuccessToast(res.data.success_message);
         console.log(this.state.isOpen);
       });
@@ -628,8 +631,8 @@ const mapStateToProps = (state: any) => {
 };
 const mapDispatchToProps = (dispatch: any) => {
   return {
-    setChangePlan: (changePlan: ChangePlan) =>
-      dispatch(actions.setChangePlan(changePlan))
+    updateChangePlans: (status: boolean) =>
+      dispatch(actions.updateChangePlans(status))
   };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(ElementTab);
