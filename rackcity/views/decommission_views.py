@@ -77,7 +77,7 @@ def decommission_asset(request):
                 )
         if not user_has_asset_permission(
             request.user,
-            decomissioned_asset_cp.rack.datacenter
+            decommissioned_asset_cp.rack.datacenter
         ):
             return JsonResponse(
                 {
