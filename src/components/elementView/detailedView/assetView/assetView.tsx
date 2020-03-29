@@ -27,7 +27,8 @@ import {
   ChangePlan,
   AssetCPObject,
   getChangePlanRowStyle,
-  PermissionState
+  PermissionState,
+  isAssetCPObject,
 } from "../../../../utils/utils";
 import {
   deleteAsset,
@@ -41,7 +42,7 @@ import NetworkGraph from "./graph";
 import PowerView from "../../powerView/powerView";
 import { ALL_DATACENTERS } from "../../elementTabContainer";
 import { IconNames } from "@blueprintjs/icons";
-
+import { isNullOrUndefined } from "util";
 export interface AssetViewProps {
   token: string;
   isAdmin: boolean;
@@ -178,6 +179,14 @@ export class AssetView extends React.PureComponent<
       (connection: NetworkConnection) => connection.source_port === port
     );
   }
+  detectConflict(assetcp: AssetCPObject) {
+    return (
+      assetcp.is_conflict ||
+      !isNullOrUndefined(assetcp.asset_conflict_location) ||
+      !isNullOrUndefined(assetcp.asset_conflict_asset_name) ||
+      !isNullOrUndefined(assetcp.asset_conflict_hostname)
+    );
+  }
   getDatacenters = () => {
     const headers = getHeaders(this.props.token);
     // console.log(API_ROOT + "api/datacenters/get-all");
@@ -222,6 +231,10 @@ export class AssetView extends React.PureComponent<
                 icon="edit"
                 text="Edit"
                 minimal
+                disabled={
+                  isAssetCPObject(this.state.asset) &&
+                  this.state.asset.is_decommissioned
+                }
                 onClick={() => this.handleFormOpen()}
                 disabled={
                   !(
@@ -243,6 +256,10 @@ export class AssetView extends React.PureComponent<
               <AnchorButton
                 minimal
                 intent="danger"
+                disabled={
+                  isAssetCPObject(this.state.asset) &&
+                  this.state.asset.is_decommissioned
+                }
                 icon="remove"
                 text="Decommission"
                 onClick={this.handleDecommissionOpen}
@@ -272,6 +289,7 @@ export class AssetView extends React.PureComponent<
                 intent="danger"
                 icon="trash"
                 text="Delete"
+                disabled={isAssetCPObject(this.state.asset)}
                 onClick={this.handleDeleteOpen}
                 disabled={
                   !(
@@ -301,6 +319,27 @@ export class AssetView extends React.PureComponent<
         {this.state.asset.decommissioning_user ? (
           <DecommissionedPropertiesView data={this.state.asset} />
         ) : null}
+        {isAssetCPObject(this.state.asset) &&
+          this.state.asset.is_decommissioned ? (
+            <Callout
+              className="propsview"
+              intent={Intent.WARNING}
+              title="This asset has been marked as decommissioned on this change plan. "
+            >
+              This asset will actually become decommissioned at the time of change
+              plan execution, but no more modifications can be made to this asset.
+            </Callout>
+          ) : null}
+        {isAssetCPObject(this.state.asset) &&
+          this.detectConflict(this.state.asset) ? (
+            <Callout
+              className="propsview"
+              intent={Intent.DANGER}
+              title="This asset has conflicts "
+            >
+              Please go to change plan detail view for more details
+            </Callout>
+          ) : null}
         <PropertiesView data={this.state.asset} />
         <div className="propsview">
           <h3>Network Connections</h3>
@@ -449,7 +488,11 @@ export class AssetView extends React.PureComponent<
   private handleDecommissionOpen = () =>
     this.setState({ isDecommissionOpen: true });
   private handleDecommission = () => {
-    decommissionAsset(this.state.asset!, getHeaders(this.props.token))
+    decommissionAsset(
+      this.state.asset!,
+      getHeaders(this.props.token),
+      this.props.changePlan
+    )
       .then(res => {
         this.setState({ isDecommissionOpen: false });
         this.addSuccessToast("Successfuly Decommissioned Asset");
