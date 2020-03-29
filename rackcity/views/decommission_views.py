@@ -24,7 +24,7 @@ from rackcity.utils.query_utils import (
     get_page_count_response,
 )
 from rackcity.utils.change_planner_utils import (
-    get_page_count_response_for_cp,
+    get_page_count_response_for_decommissioned_cp,
 )
 from rackcity.views.rackcity_utils import get_change_plan
 
@@ -307,7 +307,10 @@ def decommissioned_asset_page_count(request):
         if response:
             return response
     if change_plan:
-        return get_page_count_response_for_cp(request, change_plan)
+        return get_page_count_response_for_decommissioned_cp(
+            request,
+            change_plan,
+        )
     else:
         return get_page_count_response(
             DecommissionedAsset,
