@@ -4,7 +4,8 @@ import {
   AssetObject,
   DatacenterObject,
   UserInfoObject,
-  ChangePlan
+  ChangePlan,
+  UserPermissionsObject
 } from "../../utils/utils";
 import { API_ROOT } from "../../utils/api-config";
 import axios from "axios";
@@ -173,4 +174,10 @@ export const deleteUser = (
 ): Promise<any> => {
   const data = { id: user.id };
   return axios.post(API_ROOT + "api/users/delete", data, headers);
+};
+export const modifyUser = (
+  data: UserPermissionsObject,
+  headers: any
+): Promise<any> => {
+  return axios.post(API_ROOT + "api/users/permissions/set", data, headers);
 };
