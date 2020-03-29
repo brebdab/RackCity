@@ -10,8 +10,8 @@ import {
   Toaster,
   Position,
   Alert,
-  Divider,
-  ButtonGroup
+  Divider
+
 } from "@blueprintjs/core";
 import axios from "axios";
 import * as React from "react";
@@ -561,11 +561,11 @@ class CPDetailView extends React.Component<
               />
             </div>
             <div className="cp-dividers">
-              {/* <ButtonGroup vertical={true}> */}
+
               <Divider className="cp-detail-divider" />
               <p className={Classes.DARK + " cp-detail-divider-text"}>then</p>
               <Divider className="cp-detail-divider" />
-              {/* </ButtonGroup> */}
+  
             </div>
             <div>
               <AnchorButton
