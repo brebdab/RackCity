@@ -1219,7 +1219,6 @@ class ElementTable extends React.Component<
                               <AnchorButton
                                 className="button-table"
                                 intent="primary"
-                                icon="edit"
                                 minimal
                                 icon={this.props.type === ElementType.ASSET ? "remove" : "trash"}
                                 disabled={
