@@ -26,6 +26,58 @@ from rackcity.views.rackcity_utils import get_change_plan
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+def change_plan_resolve_conflict(request, id):
+    """
+    Resolve a merge conflict
+    """
+    (change_plan, response) = get_change_plan(id)
+    if response:
+        return response
+    data = JSONParser().parse(request)
+    if 'asset_cp' not in data or "override_live" not in data:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.ERROR.value + GenericFailure.INTERNAL.value,
+                "errors": "Must include both 'asset_cp' and `override_live` when resolving a merge conflict"
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    asset_cp = data['asset_cp']
+    override_live = data["override_live"]
+    try:
+        asset_cp = AssetCP.objects.get(id=asset_cp)
+    except ObjectDoesNotExist:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.ERROR.value +
+                    "AssetCP" + GenericFailure.DOES_NOT_EXIST.value,
+                "errors": "No existing Asset CP with id="+str(asset_cp)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    try:
+        if override_live:
+            asset_cp.is_conflict = False
+            asset_cp.save()
+        else:
+            asset_cp.delete()
+    except Exception as error:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.DELETE_ERROR.value +
+                    "Change Plan" +
+                    GenericFailure.ON_DELETE.value,
+                "errors": str(error)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+          
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def change_plan_remove_asset(request, id):
     """
     Remove a single assetCP from a change plan
@@ -46,7 +98,7 @@ def change_plan_remove_asset(request, id):
     asset_cp = data['asset_cp']
     
     try:
-        AssetCP.objects.get(id=asset_cp).delete()
+        asset_cp_model = AssetCP.objects.get(id=asset_cp)
     except ObjectDoesNotExist:
         return JsonResponse(
             {
@@ -57,6 +109,20 @@ def change_plan_remove_asset(request, id):
             },
             status=HTTPStatus.BAD_REQUEST
         )
+    try:
+        asset_cp_model.delete()
+    except Exception as error:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.DELETE_ERROR.value +
+                    "Change Plan" +
+                    GenericFailure.ON_DELETE.value,
+                "errors": str(error)
+            },
+            status=HTTPStatus.BAD_REQUEST
+        )
+    
     return JsonResponse(
         {
             "success_message":
