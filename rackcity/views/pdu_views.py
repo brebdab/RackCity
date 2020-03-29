@@ -332,6 +332,7 @@ def power_availability(request):
         if response:
             return response
         assets, assets_cp = get_assets_for_cp(change_plan.id)
+        assets = assets.filter(rack=rack.id)
     else:
         assets = Asset.objects.filter(rack=rack.id)
     availableL = list(range(1, 25))
@@ -341,7 +342,9 @@ def power_availability(request):
         for port_num in asset_power.keys():
             if asset_power[port_num]["left_right"] == "L":
                 try:
+
                     availableL.remove(asset_power[port_num]["port_number"])
+
                 except ValueError:
                     failure_message = \
                         Status.ERROR.value + \
