@@ -33,7 +33,7 @@ def datetime_to_string(date):
     return "[" + str(date) + "]"
 
 
-def log_action(user, related_element, action, change_plan=None):
+def log_action(user, related_element, action):
     """
     Specified action should be Action enum.
     """
@@ -44,8 +44,6 @@ def log_action(user, related_element, action, change_plan=None):
         element_type = ElementType.ASSET.value
         element_name = get_asset_name(related_element)
         related_asset = related_element
-    elif isinstance(related_element, AssetCP):
-        element_type = ElementType.ASSET.value
     elif isinstance(related_element, ITModel):
         element_type = ElementType.MODEL.value
         element_name = " ".join([
