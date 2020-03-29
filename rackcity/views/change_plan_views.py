@@ -1,9 +1,11 @@
 from datetime import datetime
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from rackcity.api.serializers import (
     AddChangePlanSerializer,
     GetChangePlanSerializer,
 )
+from http import HTTPStatus
 from rackcity.models import (
     ChangePlan,
     AssetCP,
@@ -11,6 +13,13 @@ from rackcity.models import (
 from rackcity.utils.change_planner_utils import (
     get_modifications_in_cp,
     asset_cp_has_conflicts,
+    get_cp_already_executed_response,
+)
+from rackcity.utils.errors_utils import (
+    Status,
+    GenericFailure,
+    parse_serializer_errors,
+    parse_save_validation_error,
 )
 from rackcity.utils.execute_change_planner_utils import (
     update_network_ports,
@@ -22,19 +31,10 @@ from rackcity.utils.query_utils import (
     get_page_count_response,
     get_many_response,
 )
-from rackcity.utils.errors_utils import (
-    Status,
-    GenericFailure,
-    parse_serializer_errors,
-    parse_save_validation_error,
-)
-from http import HTTPStatus
-from rest_framework.decorators import permission_classes, api_view
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.parsers import JSONParser
-from django.core.exceptions import ObjectDoesNotExist
 from rackcity.views.rackcity_utils import get_change_plan
-from rackcity.models import AssetCP
+from rest_framework.decorators import permission_classes, api_view
+from rest_framework.parsers import JSONParser
+from rest_framework.permissions import IsAuthenticated
 
 
 @api_view(['POST'])
@@ -44,6 +44,9 @@ def change_plan_resolve_conflict(request, id):
     Resolve a merge conflict
     """
     (change_plan, response) = get_change_plan(id)
+    if response:
+        return response
+    response = get_cp_already_executed_response(change_plan)
     if response:
         return response
     data = JSONParser().parse(request)
@@ -106,6 +109,9 @@ def change_plan_remove_asset(request, id):
     (change_plan, response) = get_change_plan(id)
     if response:
         return response
+    response = get_cp_already_executed_response(change_plan)
+    if response:
+        return response
     data = JSONParser().parse(request)
     if 'asset_cp' not in data:
         return JsonResponse(
@@ -148,7 +154,7 @@ def change_plan_remove_asset(request, id):
         {
             "success_message":
                 Status.SUCCESS.value +
-                "Asset successfuly removed from change plan"
+                "Asset successfully removed from change plan"
         },
         status=HTTPStatus.OK
     )
@@ -184,6 +190,9 @@ def change_plan_delete(request):
             },
             status=HTTPStatus.BAD_REQUEST
         )
+    response = get_cp_already_executed_response(existing_change_plan)
+    if response:
+        return response
     try:
         existing_change_plan.delete()
     except Exception as error:
@@ -237,6 +246,9 @@ def change_plan_modify(request):
             },
             status=HTTPStatus.BAD_REQUEST
         )
+    response = get_cp_already_executed_response(existing_change_plan)
+    if response:
+        return response
     for field in data.keys():
         value = data[field]
         setattr(existing_change_plan, field, value)
@@ -390,33 +402,13 @@ def change_plan_detail(request, id):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def change_plan_execute(request):
+def change_plan_execute(request, id):
     """
     Execute all changes associated with a change plan.
     """
-    data = JSONParser().parse(request)
-    if 'id' not in data:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.DELETE_ERROR.value + GenericFailure.INTERNAL.value,
-                "errors": "Must include 'id' when deleting a Change Plan"
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    id = data['id']
-    try:
-        change_plan = ChangePlan.objects.get(id=id)
-    except ObjectDoesNotExist:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value +
-                    "Change plan" + GenericFailure.DOES_NOT_EXIST.value,
-                "errors": "No existing change plan with id="+str(id)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
+    (change_plan, response) = get_change_plan(id)
+    if response:
+        return response
     if request.user != change_plan.owner:
         return JsonResponse(
             {
@@ -425,10 +417,11 @@ def change_plan_execute(request):
                     "You do not have access to execute this change plan.",
                 "errors":
                     "User " + request.user.username +
-                    "does not own change plan with id="+str(id)
+                    " does not own change plan with id="+str(id)
             },
             status=HTTPStatus.BAD_REQUEST,
         )
+
     assets_cp = AssetCP.objects.filter(change_plan=change_plan)
     for asset_cp in assets_cp:
         if asset_cp_has_conflicts(asset_cp):

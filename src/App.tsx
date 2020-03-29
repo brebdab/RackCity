@@ -12,6 +12,7 @@ import {
 import AssetView from "./components/elementView/detailedView/assetView/assetView";
 import ModelView from "./components/elementView/detailedView/modelView/modelView";
 import RackView from "./components/elementView/detailedView/rackView/rackView";
+import BarcodeView from "./components/elementView/detailedView/assetView/barcodeView";
 import Fallback, {
   NotAuthorized,
   NotAuthorizedAdmin
@@ -27,16 +28,17 @@ import LoginView from "./forms/auth/loginView";
 // import BulkExport from "./components/export/export";
 import "./index.scss";
 import * as actions from "./store/actions/state";
-import { ROUTES } from "./utils/utils";
+import { ROUTES, PermissionState } from "./utils/utils";
 import CPDetailView from "./components/changePlanner/CPDetailView";
 
 var console: any = {};
-console.log = function() {};
+console.log = function () { };
 export interface AppProps {
   isAuthenticated?: boolean;
   onTryAutoSignup: any;
   isAdmin: boolean;
   loading: boolean;
+  permissionState: PermissionState;
 }
 
 class App extends React.Component<AppProps> {
@@ -49,10 +51,10 @@ class App extends React.Component<AppProps> {
     return this.props.isAuthenticated ? (
       <Route {...rest} />
     ) : (
-      <Route {...rest}>
-        <Redirect to={ROUTES.LOGIN} />
-      </Route>
-    );
+        <Route {...rest}>
+          <Redirect to={ROUTES.LOGIN} />
+        </Route>
+      );
   };
 
   PrivateRoute = ({ path, component, render, ...rest }: any) => {
@@ -77,7 +79,7 @@ class App extends React.Component<AppProps> {
         path={path}
         component={
           this.props.isAuthenticated
-            ? this.props.isAdmin
+            ? this.props.permissionState.admin
               ? component
               : NotAuthorizedAdmin
             : NotAuthorized
@@ -124,6 +126,10 @@ class App extends React.Component<AppProps> {
           <this.PrivateRoute path={ROUTES.LOGS} component={Logs} />
           <this.PrivateRoute path={ROUTES.RACK_PRINT} component={RackView} />
           <this.PrivateRoute
+            path={ROUTES.BARCODE_PRINT}
+            component={BarcodeView}
+          />
+          <this.PrivateRoute
             exact
             path={ROUTES.CHANGE_PLAN}
             component={ChangePlannerView}
@@ -142,6 +148,7 @@ const mapStateToProps = (state: any) => {
   return {
     isAuthenticated: state.token !== null,
     isAdmin: state.admin,
+    permissionState: state.permissionState,
     loading: state.loading
   };
 };

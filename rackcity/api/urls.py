@@ -28,6 +28,7 @@ urlpatterns = [
     path('assets/network-bulk-approve', views.network_bulk_approve),
     path('assets/network-bulk-export', views.network_bulk_export),
     path('assets/pages', views.asset_page_count),
+    path('assets/pages-decommissioned', views.decommissioned_asset_page_count),
     path('assets/fields', views.asset_fields),
     path('assets/asset-number', views.asset_number),
     path('assets/decommission', views.decommission_asset),
@@ -56,6 +57,7 @@ urlpatterns = [
     path('users/permissions/get', views.user_get_groups),
     path('users/permissions/set', views.user_set_groups),
     path('users/groups', views.all_user_groups),
+    path('users/permissions/mine', views.user_get_my_groups),
     path('power/get-state/<int:id>', views.power_status),
     path('power/mask-on', views.power_on),
     path('power/mask-off', views.power_off),
@@ -66,8 +68,8 @@ urlpatterns = [
     path('change-plans/modify', views.change_plan_modify),
     path('change-plans/delete', views.change_plan_delete),
     path('change-plans/pages', views.change_plan_page_count),
-    path('change-plans/execute', views.change_plan_execute),
     path('change-plans/<int:id>', views.change_plan_detail),
-    path('change-plans/<int:id>/resolve-conflict', views.change_plan_resolve_conflict),
+    path('change-plans/<int:id>/execute', views.change_plan_execute),
+    path('change-plans/<int:id>/resolve-conflict', views.change_plan_resolve_conflict),  # noqa ignore line limit
     path('change-plans/<int:id>/remove-asset', views.change_plan_remove_asset),
 ]

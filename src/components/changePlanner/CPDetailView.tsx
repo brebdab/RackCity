@@ -28,6 +28,7 @@ import {
   ROUTES
 } from "../../utils/utils";
 import "./changePlanner.scss";
+import { isNullOrUndefined } from "util";
 interface CPDetailViewProps {
   token: string;
 }
@@ -63,7 +64,7 @@ function getChangePlanDetail(token: string, id: string) {
 class CPDetailView extends React.Component<
   CPDetailViewProps & RouteComponentProps,
   CPDetailViewState
-> {
+  > {
   route_id = (this.props.match.params as any).id;
   loading = false;
   items = ["a", "b"];
@@ -95,9 +96,9 @@ class CPDetailView extends React.Component<
     axios
       .post(
         API_ROOT +
-          "api/change-plans/" +
-          this.state.changePlan.id +
-          "/remove-asset",
+        "api/change-plans/" +
+        this.state.changePlan.id +
+        "/remove-asset",
         { asset_cp: modification.asset_cp.id },
         getHeaders(this.props.token)
       )
@@ -129,9 +130,9 @@ class CPDetailView extends React.Component<
     axios
       .post(
         API_ROOT +
-          "api/change-plans/" +
-          this.state.changePlan.id +
-          "/resolve-conflict",
+        "api/change-plans/" +
+        this.state.changePlan.id +
+        "/resolve-conflict",
         { asset_cp: modification.asset_cp.id, override_live },
         getHeaders(this.props.token)
       )
@@ -158,6 +159,24 @@ class CPDetailView extends React.Component<
         this.setState({
           modifications
         });
+      })
+      .catch(err => {
+        this.addErrorToast(err.response.data.failure_message);
+      });
+  }
+
+  handleExecute() {
+    axios
+      .post(
+        API_ROOT +
+        "api/change-plans/" +
+        this.state.changePlan.id +
+        "/execute",
+        {},
+        getHeaders(this.props.token)
+      )
+      .then(res => {
+        this.addSuccessToast(res.data.success_message);
       })
       .catch(err => {
         this.addErrorToast(err.response.data.failure_message);
@@ -260,6 +279,28 @@ class CPDetailView extends React.Component<
             field = (
               <td style={this.getHighlightStyle(modification, col)}>{value}</td>
             );
+          } else if (col === "network_connections") {
+            return (
+              <tr>
+                <td style={this.getHighlightStyle(modification, col)} key={col}>
+                  Network Connections
+                </td>
+                <td style={this.getHighlightStyle(modification, col)}>
+                  <pre>{JSON.stringify(value, null, 2)}</pre>
+                </td>
+              </tr>
+            );
+          } else if (col === "power_connections") {
+            return (
+              <tr>
+                <td style={this.getHighlightStyle(modification, col)} key={col}>
+                  Power Connections
+                </td>
+                <td style={this.getHighlightStyle(modification, col)}>
+                  <pre>{JSON.stringify(value, null, 2)}</pre>
+                </td>
+              </tr>
+            );
           }
 
           return AssetFieldsTable[col] ? (
@@ -345,7 +386,7 @@ class CPDetailView extends React.Component<
                         icon={null}
                         intent={
                           modification.conflicts &&
-                          modification.conflicts.length > 0
+                            modification.conflicts.length > 0
                             ? Intent.DANGER
                             : Intent.NONE
                         }
@@ -369,40 +410,40 @@ class CPDetailView extends React.Component<
                         <div className="cp-collapse-body">
                           {modification.conflicts
                             ? modification.conflicts.map(
-                                (conflict: Conflict) => {
-                                  return (
-                                    <Callout intent={Intent.DANGER}>
-                                      {conflict.conflict_message}
-                                      {conflict.conflict_resolvable ? (
-                                        <div className="merge-options">
-                                          <AnchorButton
-                                            onClick={() =>
-                                              this.resolveConflict(
-                                                modification,
-                                                conflict,
-                                                false
-                                              )
-                                            }
-                                            icon="properties"
-                                            text="Discard change plan modifications"
-                                          />
-                                          <AnchorButton
-                                            onClick={() =>
-                                              this.resolveConflict(
-                                                modification,
-                                                conflict,
-                                                true
-                                              )
-                                            }
-                                            icon="properties"
-                                            text="Keep change plan modifications"
-                                          />
-                                        </div>
-                                      ) : null}
-                                    </Callout>
-                                  );
-                                }
-                              )
+                              (conflict: Conflict) => {
+                                return (
+                                  <Callout intent={Intent.DANGER}>
+                                    {conflict.conflict_message}
+                                    {conflict.conflict_resolvable ? (
+                                      <div className="merge-options">
+                                        <AnchorButton
+                                          onClick={() =>
+                                            this.resolveConflict(
+                                              modification,
+                                              conflict,
+                                              false
+                                            )
+                                          }
+                                          icon="properties"
+                                          text="Discard change plan modifications"
+                                        />
+                                        <AnchorButton
+                                          onClick={() =>
+                                            this.resolveConflict(
+                                              modification,
+                                              conflict,
+                                              true
+                                            )
+                                          }
+                                          icon="properties"
+                                          text="Keep change plan modifications"
+                                        />
+                                      </div>
+                                    ) : null}
+                                  </Callout>
+                                );
+                              }
+                            )
                             : null}
 
                           <AnchorButton
@@ -415,7 +456,10 @@ class CPDetailView extends React.Component<
                             }}
                             text="Go to change plan asset detail page"
                           />
-                          {modification.asset ? (
+                          {modification.asset &&
+                          isNullOrUndefined(
+                            this.state.changePlan.execution_time
+                          ) ? (
                             <div className="cp-details">
                               <Pre>
                                 <h3>Live Asset </h3>
@@ -428,25 +472,25 @@ class CPDetailView extends React.Component<
                                 <h3>Change Plan Asset</h3>
                                 {modification.asset_cp
                                   ? this.renderAssetData(
-                                      modification.asset_cp,
-                                      modification
-                                    )
+                                    modification.asset_cp,
+                                    modification
+                                  )
                                   : null}
                               </Pre>
                             </div>
                           ) : (
-                            <div className="cp-details">
-                              <Pre>
-                                <h3>Change Plan Asset</h3>
-                                {modification.asset_cp
-                                  ? this.renderAssetData(
+                              <div className="cp-details">
+                                <Pre>
+                                  <h3>Change Plan Asset</h3>
+                                  {modification.asset_cp
+                                    ? this.renderAssetData(
                                       modification.asset_cp,
                                       modification
                                     )
-                                  : null}
-                              </Pre>
-                            </div>
-                          )}
+                                    : null}
+                                </Pre>
+                              </div>
+                            )}
                         </div>
                       </Collapse>
                     </li>
@@ -454,8 +498,8 @@ class CPDetailView extends React.Component<
                 }
               )
             ) : (
-              <Callout title="No modifications for this change plan"> </Callout>
-            )}
+                <Callout title="No modifications for this change plan"> </Callout>
+              )}
           </ul>
         </div>
 
@@ -463,6 +507,7 @@ class CPDetailView extends React.Component<
           disabled={this.disableExecute()}
           icon="build"
           text="Execute Work Order"
+          onClick={() => this.handleExecute()}
         />
       </div>
     );

@@ -27,7 +27,8 @@ import {
   ChangePlan,
   AssetCPObject,
   getChangePlanRowStyle,
-  isAssetCPObject
+  PermissionState,
+  isAssetCPObject,
 } from "../../../../utils/utils";
 import {
   deleteAsset,
@@ -46,6 +47,7 @@ export interface AssetViewProps {
   token: string;
   isAdmin: boolean;
   changePlan: ChangePlan;
+  permissionState: PermissionState;
 }
 // Given an rid, will perform a GET request of that rid and display info about that instnace
 
@@ -84,7 +86,7 @@ interface AssetViewState {
 export class AssetView extends React.PureComponent<
   RouteComponentProps & AssetViewProps,
   AssetViewState
-> {
+  > {
   public state: AssetViewState = {
     asset: {} as AssetObject,
     isFormOpen: false,
@@ -221,7 +223,7 @@ export class AssetView extends React.PureComponent<
           position={Position.TOP}
           ref={this.refHandlers.toaster}
         />
-        {this.props.isAdmin && !this.state.asset.decommissioning_user ? (
+        {!this.state.asset.decommissioning_user ? (
           <div className="detail-buttons-wrapper">
             <div className={"detail-buttons"}>
               <AnchorButton
@@ -229,11 +231,19 @@ export class AssetView extends React.PureComponent<
                 icon="edit"
                 text="Edit"
                 minimal
-                disabled={
-                  isAssetCPObject(this.state.asset) &&
-                  this.state.asset.is_decommissioned
-                }
                 onClick={() => this.handleFormOpen()}
+                disabled={
+                  (
+                    isAssetCPObject(this.state.asset) &&
+                    this.state.asset.is_decommissioned
+                  )
+                  ||
+                  !(
+                    this.props.permissionState.admin
+                    || this.props.permissionState.asset_management
+                    || (this.state.asset && this.state.asset.rack && this.props.permissionState.datacenter_permissions.includes(+this.state.asset.rack.datacenter.id))
+                  )
+                }
               />
               <FormPopup
                 datacenters={this.state.datacenters}
@@ -247,13 +257,21 @@ export class AssetView extends React.PureComponent<
               <AnchorButton
                 minimal
                 intent="danger"
-                disabled={
-                  isAssetCPObject(this.state.asset) &&
-                  this.state.asset.is_decommissioned
-                }
                 icon="remove"
                 text="Decommission"
                 onClick={this.handleDecommissionOpen}
+                disabled={
+                  (
+                    isAssetCPObject(this.state.asset) &&
+                    this.state.asset.is_decommissioned
+                  )
+                  ||
+                  !(
+                    this.props.permissionState.admin
+                    || this.props.permissionState.asset_management
+                    || (this.state.asset && this.state.asset.rack && this.props.permissionState.datacenter_permissions.includes(+this.state.asset.rack.datacenter.id))
+                  )
+                }
               />
               <Alert
                 cancelButtonText="Cancel"
@@ -273,8 +291,16 @@ export class AssetView extends React.PureComponent<
                 intent="danger"
                 icon="trash"
                 text="Delete"
-                disabled={isAssetCPObject(this.state.asset)}
                 onClick={this.handleDeleteOpen}
+                disabled={
+                  isAssetCPObject(this.state.asset)
+                  ||
+                  !(
+                    this.props.permissionState.admin
+                    || this.props.permissionState.asset_management
+                    || (this.state.asset && this.state.asset.rack && this.props.permissionState.datacenter_permissions.includes(+this.state.asset.rack.datacenter.id))
+                  )
+                }
               />
               <Alert
                 cancelButtonText="Cancel"
@@ -297,65 +323,57 @@ export class AssetView extends React.PureComponent<
           <DecommissionedPropertiesView data={this.state.asset} />
         ) : null}
         {isAssetCPObject(this.state.asset) &&
-        this.state.asset.is_decommissioned ? (
-          <Callout
-            className="propsview"
-            intent={Intent.WARNING}
-            title="This asset has been marked as decommissioned on this change plan. "
-          >
-            This asset will actually become decommissioned at the time of change
-            plan execution, but no more modifications can be made to this asset.
-          </Callout>
-        ) : null}
+          this.state.asset.is_decommissioned ? (
+            <Callout
+              className="propsview"
+              intent={Intent.WARNING}
+              title="This asset has been marked as decommissioned on this change plan. "
+            >
+              This asset will actually become decommissioned at the time of change
+              plan execution, but no more modifications can be made to this asset.
+            </Callout>
+          ) : null}
         {isAssetCPObject(this.state.asset) &&
-        this.detectConflict(this.state.asset) ? (
-          <Callout
-            className="propsview"
-            intent={Intent.DANGER}
-            title="This asset has conflicts "
-          >
-            Please go to change plan detail view for more details
-          </Callout>
-        ) : null}
+          this.detectConflict(this.state.asset) ? (
+            <Callout
+              className="propsview"
+              intent={Intent.DANGER}
+              title="This asset has conflicts "
+            >
+              Please go to change plan detail view for more details
+            </Callout>
+          ) : null}
         <PropertiesView data={this.state.asset} />
         <div className="propsview">
           <h3>Network Connections</h3>
 
           {this.state.asset.model &&
-          this.state.asset.model.network_ports &&
-          this.state.asset.model.network_ports.length !== 0 ? (
-            <div className="network-connections">
-              <table className="bp3-html-table bp3-html-table-bordered bp3-html-table-striped">
-                <tr>
-                  <th>Network Port</th>
-                  <th>Mac Address</th>
-                  <th>Destination Asset</th>
-                  <th>Destination Port</th>
-                </tr>
-                <tbody>
-                  {this.state.asset.model.network_ports.map((port: string) => {
-                    var connection = this.getNetworkConnectionForPort(port);
-                    return (
-                      <tr>
-                        {" "}
-                        <td
-                          style={getChangePlanRowStyle(
-                            this.state.asset
-                          )}
-                        >
-                          {port}
-                        </td>
-                        <td
-                          style={getChangePlanRowStyle(
-                            this.state.asset
-                          )}
-                        >
-                          {this.state.asset.mac_addresses
-                            ? this.state.asset.mac_addresses[port]
-                            : null}
-                        </td>{" "}
-                        {connection
-                          ? [
+            this.state.asset.model.network_ports &&
+            this.state.asset.model.network_ports.length !== 0 ? (
+              <div className="network-connections">
+                <table className="bp3-html-table bp3-html-table-bordered bp3-html-table-striped">
+                  <tr>
+                    <th>Network Port</th>
+                    <th>Mac Address</th>
+                    <th>Destination Asset</th>
+                    <th>Destination Port</th>
+                  </tr>
+                  <tbody>
+                    {this.state.asset.model.network_ports.map((port: string) => {
+                      var connection = this.getNetworkConnectionForPort(port);
+                      return (
+                        <tr>
+                          {" "}
+                          <td style={getChangePlanRowStyle(this.state.asset)}>
+                            {port}
+                          </td>
+                          <td style={getChangePlanRowStyle(this.state.asset)}>
+                            {this.state.asset.mac_addresses
+                              ? this.state.asset.mac_addresses[port]
+                              : null}
+                          </td>{" "}
+                          {connection
+                            ? [
                               <td
                                 style={getChangePlanRowStyle(
                                   this.state.asset
@@ -369,13 +387,13 @@ export class AssetView extends React.PureComponent<
                                   this.state.asset.decommissioning_user
                                     ? undefined
                                     : (e: any) => {
-                                        const id = this.getAssetIdFromHostname(
-                                          connection!.destination_hostname!
-                                        );
-                                        if (id) {
-                                          this.redirectToAsset(id);
-                                        }
+                                      const id = this.getAssetIdFromHostname(
+                                        connection!.destination_hostname!
+                                      );
+                                      if (id) {
+                                        this.redirectToAsset(id);
                                       }
+                                    }
                                 }
                               >
                                 {connection.destination_hostname}
@@ -388,27 +406,27 @@ export class AssetView extends React.PureComponent<
                                 {connection.destination_port}
                               </td>
                             ]
-                          : [<td></td>, <td></td>]}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                            : [<td></td>, <td></td>]}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
 
-              <NetworkGraph
-                networkGraph={this.state.asset.network_graph}
-                onClickNode={this.redirectToAsset}
-                isDecommissioned={
-                  this.state.asset.decommissioning_user !== null
-                }
-              />
-            </div>
-          ) : (
-            <Callout
-              title="No network ports"
-              icon={IconNames.INFO_SIGN}
-            ></Callout>
-          )}
+                <NetworkGraph
+                  networkGraph={this.state.asset.network_graph}
+                  onClickNode={this.redirectToAsset}
+                  isDecommissioned={
+                    this.state.asset.decommissioning_user !== null
+                  }
+                />
+              </div>
+            ) : (
+              <Callout
+                title="No network ports"
+                icon={IconNames.INFO_SIGN}
+              ></Callout>
+            )}
         </div>
 
         {Object.keys(this.state.asset).length !== 0 ? this.renderPower() : null}
@@ -438,7 +456,7 @@ export class AssetView extends React.PureComponent<
         updated={() => {
           this.setState({ powerShouldUpdate: false });
         }}
-        assetIsDecommissioned={this.state.asset.decommissioning_user !== null}
+        assetIsDecommissioned={this.state.asset.decommissioning_user !== undefined}
       />
     );
   }
@@ -484,7 +502,7 @@ export class AssetView extends React.PureComponent<
     )
       .then(res => {
         this.setState({ isDecommissionOpen: false });
-        this.addSuccessToast("Successfuly Decommissioned Asset");
+        this.addSuccessToast("Successfully Decommissioned Asset");
         let params: any;
         params = this.props.match.params;
         this.updateAssetData(params.rid);
@@ -503,7 +521,8 @@ const mapStatetoProps = (state: any) => {
   return {
     token: state.token,
     isAdmin: state.admin,
-    changePlan: state.changePlan
+    changePlan: state.changePlan,
+    permissionState: state.permissionState
   };
 };
 

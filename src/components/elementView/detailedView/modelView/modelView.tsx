@@ -21,7 +21,8 @@ import {
   getHeaders,
   ModelObject,
   ROUTES,
-  ChangePlan
+  ChangePlan,
+  PermissionState
 } from "../../../../utils/utils";
 import ElementTable from "../../elementTable";
 import { deleteModel, modifyModel } from "../../elementUtils";
@@ -32,6 +33,7 @@ export interface ModelViewProps {
   rid: any;
   isAdmin: boolean;
   changePlan: ChangePlan;
+  permissionState: PermissionState;
 }
 
 
@@ -182,47 +184,57 @@ export class ModelView extends React.PureComponent<
           position={Position.TOP}
           ref={this.refHandlers.toaster}
         />
-        {this.props.isAdmin ? (
-          <div className="detail-buttons-wrapper">
-            <div className={"detail-buttons"}>
-              <AnchorButton
-                className="button-add"
-                intent="primary"
-                icon="edit"
-                text="Edit"
-                minimal
-                onClick={() => this.handleFormOpen()}
-              />
-              <FormPopup
-                isOpen={this.state.isFormOpen}
-                initialValues={this.state.model}
-                type={FormTypes.MODIFY}
-                elementName={ElementType.MODEL}
-                handleClose={this.handleFormClose}
-                submitForm={this.updateModel}
-              />
-              <AnchorButton
-                className="button-add"
-                intent="danger"
-                icon="trash"
-                text="Delete"
-                minimal
-                onClick={this.handleDeleteOpen}
-              />
-              <Alert
-                className={Classes.DARK}
-                cancelButtonText="Cancel"
-                confirmButtonText="Delete"
-                intent="danger"
-                isOpen={this.state.isDeleteOpen}
-                onCancel={this.handleDeleteCancel}
-                onConfirm={this.handleDelete}
-              >
-                <p>Are you sure you want to delete?</p>
-              </Alert>
-            </div>
+        <div className="detail-buttons-wrapper">
+          <div className={"detail-buttons"}>
+            <AnchorButton
+              className="button-add"
+              intent="primary"
+              icon="edit"
+              text="Edit"
+              minimal
+              onClick={() => this.handleFormOpen()}
+              disabled={
+                !(
+                  this.props.permissionState.admin
+                  || this.props.permissionState.model_management
+                )
+              }
+            />
+            <FormPopup
+              isOpen={this.state.isFormOpen}
+              initialValues={this.state.model}
+              type={FormTypes.MODIFY}
+              elementName={ElementType.MODEL}
+              handleClose={this.handleFormClose}
+              submitForm={this.updateModel}
+            />
+            <AnchorButton
+              className="button-add"
+              intent="danger"
+              icon="trash"
+              text="Delete"
+              minimal
+              onClick={this.handleDeleteOpen}
+              disabled={
+                !(
+                  this.props.permissionState.admin
+                  || this.props.permissionState.model_management
+                )
+              }
+            />
+            <Alert
+              className={Classes.DARK}
+              cancelButtonText="Cancel"
+              confirmButtonText="Delete"
+              intent="danger"
+              isOpen={this.state.isDeleteOpen}
+              onCancel={this.handleDeleteCancel}
+              onConfirm={this.handleDelete}
+            >
+              <p>Are you sure you want to delete?</p>
+            </Alert>
           </div>
-        ) : null}
+        </div>
 
         <PropertiesView data={this.state.model} />
         <div className="propsview">
@@ -244,7 +256,8 @@ const mapStatetoProps = (state: any) => {
   return {
     token: state.token,
     isAdmin: state.admin,
-    changePlan: state.changePlan
+    changePlan: state.changePlan,
+    permissionState: state.permissionState
   };
 };
 
