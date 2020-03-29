@@ -125,13 +125,19 @@ def asset_detail(request, id):
     change_plan = None
     serializer = None
     if request.query_params.get("change_plan"):
-        (change_plan, response) = get_change_plan(request.query_params.get("change_plan"))
+        (change_plan, response) = get_change_plan(
+            request.query_params.get("change_plan"))
         if response:
             return response
     try:
         if change_plan:
-            assets, assets_cp = get_assets_for_cp(change_plan.id)
-            if assets_cp.filter(id=id).exists():
+            assets, assets_cp = get_assets_for_cp(
+                change_plan.id, show_decommissioned=True)
+            # if id of live asset is given on a change plan, just return the corresponding related assetCP
+            if assets_cp.filter(related_asset=id).exists():
+                asset = assets_cp.get(related_asset=id)
+                serializer = RecursiveAssetCPSerializer(asset)
+            elif assets_cp.filter(id=id).exists():
                 asset = assets_cp.get(id=id)
                 serializer = RecursiveAssetCPSerializer(asset)
             else:
@@ -159,9 +165,6 @@ def asset_detail(request, id):
     return JsonResponse(serializer.data, status=HTTPStatus.OK)
 
 
-
-
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def asset_add(request):
@@ -180,7 +183,8 @@ def asset_add(request):
         )
     change_plan = None
     if request.query_params.get("change_plan"):
-        (change_plan, response) = get_change_plan(request.query_params.get("change_plan"))
+        (change_plan, response) = get_change_plan(
+            request.query_params.get("change_plan"))
         if response:
             return response
         data["change_plan"] = change_plan.id
@@ -231,7 +235,7 @@ def asset_add(request):
             rack_position,
             height,
             change_plan=change_plan
-            )
+        )
     except LocationException as error:
         return JsonResponse(
             {"failure_message": Status.CREATE_ERROR.value + str(error)},
@@ -250,9 +254,8 @@ def asset_add(request):
             status=HTTPStatus.BAD_REQUEST
         )
     warning_message = ""
-    #TODO: CHANGE PLAN save power connections and network connections
+    # TODO: CHANGE PLAN save power connections and network connections
 
-        
     try:
         save_mac_addresses(
             asset_data=data,
@@ -362,7 +365,7 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
         try:
             if change_plan:
                 network_port = NetworkPortCP.objects.get(
-                    asset=asset_id, 
+                    asset=asset_id,
                     port_name=port_name,
                     change_plan=change_plan)
             else:
@@ -404,9 +407,9 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
                             related_asset=destination_asset,
                             change_plan=change_plan
                         )
-                        ## add destination asset to AssetCPTable
+                        # add destination asset to AssetCPTable
                         for field in destination_asset._meta.fields:
-                            if field != 'id':
+                            if field.name != 'id' and field.name == "assetid_ptr":
                                 setattr(asset_cp, field.name, getattr(
                                     destination_asset, field.name))
                         asset_cp.save()
@@ -419,7 +422,7 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
                 else:
                     destination_asset = Asset.objects.get(
                         hostname=network_connection['destination_hostname']
-                )
+                    )
             except ObjectDoesNotExist:
                 failure_message += \
                     "Asset with hostname '" + \
@@ -446,7 +449,7 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
                         network_connection['destination_port'] + \
                         "' does not exist. "
                 else:
-                    try: 
+                    try:
                         network_port.create_network_connection(
                             destination_port=destination_port
                         )
@@ -501,10 +504,10 @@ def save_power_connections(asset_data, asset_id, change_plan=None):
                 )
                 if change_plan:
                     if PDUPortCP.objects.filter(
-                            rack=asset.rack,
-                            left_right=power_connection_data['left_right'],
-                            port_number=power_connection_data['port_number']
-                        ).exists():
+                        rack=asset.rack,
+                        left_right=power_connection_data['left_right'],
+                        port_number=power_connection_data['port_number']
+                    ).exists():
                         pdu_port = PDUPortCP.objects.get(
                             rack=asset.rack,
                             left_right=power_connection_data['left_right'],
@@ -513,7 +516,7 @@ def save_power_connections(asset_data, asset_id, change_plan=None):
                     else:
                         pdu_port = PDUPortCP(change_plan=change_plan)
                         for field in pdu_port_master._meta.fields:
-                            if field != "id":
+                            if field.name != "id":
                                 setattr(pdu_port, field.name, getattr(
                                     pdu_port_master, field.name))
                         pdu_port.save()
@@ -539,7 +542,6 @@ def save_power_connections(asset_data, asset_id, change_plan=None):
         raise PowerConnectionException(failure_message)
 
 
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def asset_modify(request):
@@ -558,17 +560,18 @@ def asset_modify(request):
         )
     id = data['id']
     if request.query_params.get("change_plan"):
-        (change_plan, response) = get_change_plan(request.query_params.get("change_plan"))
+        (change_plan, response) = get_change_plan(
+            request.query_params.get("change_plan"))
         if response:
             return response
         del data['id']
     else:
         change_plan = None
-   
+
     if change_plan:
         assets, assets_cp = get_assets_for_cp(change_plan.id)
         if assets_cp.filter(id=id).exists():
-            #if asset was created on a change_plan
+            # if asset was created on a change_plan
             existing_asset = assets_cp.get(id=id)
         else:
             try:
@@ -620,7 +623,8 @@ def asset_modify(request):
             status=HTTPStatus.UNAUTHORIZED
         )
     try:
-        validate_location_modification(data, existing_asset, request.user,change_plan=change_plan)
+        validate_location_modification(
+            data, existing_asset, request.user, change_plan=change_plan)
     except Exception as error:
         return JsonResponse(
             {
@@ -670,7 +674,8 @@ def asset_modify(request):
         elif field == 'asset_number':
             if change_plan:
                 try:
-                    validate_asset_number_uniqueness(data[field], id, change_plan, existing_asset.related_asset)
+                    validate_asset_number_uniqueness(
+                        data[field], id, change_plan, existing_asset.related_asset)
                 except ValidationError:
                     return JsonResponse(
                         {
@@ -684,7 +689,7 @@ def asset_modify(request):
 
             else:
                 assets_with_asset_number = Asset.objects.filter(
-                     asset_number=data[field]
+                    asset_number=data[field]
                 )
                 if (
                     data[field] and len(assets_with_asset_number) > 0
@@ -873,7 +878,7 @@ def asset_bulk_upload(request):
     csv_bytes_io = BytesIO(
         b64decode(re.sub(".*base64,", '', base_64_csv))
     )
-    csv_string_io = StringIO(csv_bytes_io.read().decode('UTF-8'))
+    csv_string_io = StringIO(csv_bytes_io.read().decode('UTF-8-SIG'))
     csvReader = csv.DictReader(csv_string_io)
     expected_fields = BulkAssetSerializer.Meta.fields
     given_fields = csvReader.fieldnames
@@ -1287,7 +1292,7 @@ def network_bulk_upload(request):
     csv_bytes_io = BytesIO(
         b64decode(re.sub(".*base64,", '', base_64_csv))
     )
-    csv_string_io = StringIO(csv_bytes_io.read().decode('UTF-8'))
+    csv_string_io = StringIO(csv_bytes_io.read().decode('UTF-8-SIG'))
     csvReader = csv.DictReader(csv_string_io)
     expected_fields = BulkNetworkPortSerializer.Meta.fields
     given_fields = csvReader.fieldnames

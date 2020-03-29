@@ -211,6 +211,7 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
             'network_graph',
             'power_connections',
             'change_plan',
+            'is_decommissioned',
             'is_conflict',
             'asset_conflict_hostname',
             'asset_conflict_location',

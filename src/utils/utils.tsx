@@ -17,7 +17,7 @@ export enum ROUTES {
   RACK_PRINT = "/dashboard/rack-print",
   BULK_IMPORT = "/dashboard/bulk-upload/:resourceType",
   USERS = "/dashboard/users",
-  CHANGE_PLAN = "/change-plans",
+  CHANGE_PLAN = "/dashboard/change-plans",
   BARCODE_PRINT = "/assets/barcode-print"
 }
 export enum ElementType {
@@ -54,7 +54,11 @@ export interface AssetObject extends ParentAssetObject {
 export interface AssetCPObject extends AssetObject {
   change_plan: ChangePlan;
   is_conflict: boolean;
+  asset_conflict_hostname: AssetObject;
+  asset_conflict_asset_name: AssetObject;
+  asset_conflict_location: AssetObject;
   related_asset: AssetObject;
+  is_decommissioned: boolean;
 }
 interface ParentAssetObject extends ElementObject {
   asset_number: string;
@@ -95,12 +99,12 @@ export const AssetFieldsTable: any = {
   owner: "Owner",
   comment: "Comment",
   decommissioning_user: "Decommissioning User",
-  time_decommissioned: "Time Decommissioned",
+  time_decommissioned: "Time Decommissioned"
 };
 
 export const DecommissionedFieldsTable: any = {
   decommissioning_user: "User",
-  time_decommissioned: "Time",
+  time_decommissioned: "Time"
 };
 
 export const ModelFieldsTable: any = {
@@ -291,6 +295,9 @@ export function isUserObject(obj: any): obj is UserInfoObject {
 export function isChangePlanObject(obj: any): obj is ChangePlan {
   return obj && obj.name;
 }
+export function isAssetCPObject(obj: any): obj is AssetCPObject {
+  return obj && obj.change_plan;
+}
 export const getHeaders = (token: string) => {
   return {
     headers: {
@@ -301,7 +308,7 @@ export const getHeaders = (token: string) => {
 
 export const getChangePlanRowStyle = (item: any) => {
   return {
-    fontWeight: isAssetCP(item) ? ("bold" as any) : ("none" as any),
+    fontWeight: isAssetCP(item) ? ("bold" as any) : ("normal" as any),
     color: isAssetCP(item) ? "#bf8c0a" : "white"
   };
 };

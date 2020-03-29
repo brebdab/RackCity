@@ -1,5 +1,5 @@
 import { Button, FormGroup, HTMLSelect, MenuItem } from "@blueprintjs/core";
-import { DateRangeInput } from "@blueprintjs/datetime";
+import { DateRangeInput, DateRange } from "@blueprintjs/datetime";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { Select } from "@blueprintjs/select";
 import * as React from "react";
@@ -34,8 +34,8 @@ import {
 } from "./elementUtils";
 import "./elementView.scss";
 
-var console: any = {};
-console.log = function () { };
+// var console: any = {};
+// console.log = function () { };
 
 interface FilterSelectProps {
   token: string;
@@ -89,7 +89,7 @@ class FilterSelect extends React.Component<
       <FormGroup label="Date range">
         <DateRangeInput
           formatDate={(date: Date) => date.toLocaleString()}
-          onChange={undefined}
+          onChange={this.handleDatetimeChange}
           parseDate={(str: string) => new Date(str)}
           allowSingleDayRange={true}
           shortcuts={true}
@@ -165,6 +165,13 @@ class FilterSelect extends React.Component<
         filter: filter
       });
     }
+    if (type === FilterTypes.DATETIME) {
+      console.log("set type to datetime")
+      const filter: DatetimeFilter = {};
+      this.setState({
+        filter: filter
+      });
+    }
   }
   handleChange = (field: { [key: string]: any }) => {
     const test = updateObject(this.state.filter, {
@@ -179,6 +186,16 @@ class FilterSelect extends React.Component<
       filter: test
     });
   };
+  handleDatetimeChange = (range: DateRange) => {
+    console.log("handling datetime change")
+    let filter: DatetimeFilter = {
+      after: range[0] ? range[0].toISOString() : undefined,
+      before: range[1] ? range[1].toISOString() : undefined,
+    }
+    this.setState({ filter: filter })
+    console.log("datetime filter: ")
+    console.log(this.state.filter)
+  }
   handleSubmit = (e: any) => {
     e.preventDefault();
     console.log("test");

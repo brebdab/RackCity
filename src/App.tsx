@@ -29,6 +29,7 @@ import LoginView from "./forms/auth/loginView";
 import "./index.scss";
 import * as actions from "./store/actions/state";
 import { ROUTES } from "./utils/utils";
+import CPDetailView from "./components/changePlanner/CPDetailView";
 
 var console: any = {};
 console.log = function() {};
@@ -114,6 +115,10 @@ class App extends React.Component<AppProps> {
             <this.PrivateRoute
               path={ROUTES.ASSETS + "/:rid"}
               component={AssetView}
+            />
+            <this.PrivateRoute
+              path={ROUTES.CHANGE_PLAN + "/:id"}
+              component={CPDetailView}
             />
           </div>
           <this.PrivateRoute path={ROUTES.REPORT} component={Report} />
