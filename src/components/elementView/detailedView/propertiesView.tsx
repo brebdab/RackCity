@@ -99,7 +99,7 @@ class PropertiesView extends React.PureComponent<
               <p className="label">{AssetFieldsTable[item]}:</p>
             </td>
 
-            <td style={getChangePlanRowStyle(data, this.props.changePlan)}>
+            <td style={getChangePlanRowStyle(data)}>
               {" "}
               <p>{data[item].row_letter + "" + data[item].rack_num}</p>
             </td>
@@ -111,7 +111,7 @@ class PropertiesView extends React.PureComponent<
               </p>
             </td>
 
-            <td style={getChangePlanRowStyle(data, this.props.changePlan)}>
+            <td style={getChangePlanRowStyle(data)}>
               {" "}
               <p>{data[item].datacenter.name}</p>
             </td>
@@ -133,8 +133,7 @@ class PropertiesView extends React.PureComponent<
 
             <td
               style={getChangePlanRowStyle(
-                this.props.data,
-                this.props.changePlan
+                this.props.data
               )}
             >
               {dat}

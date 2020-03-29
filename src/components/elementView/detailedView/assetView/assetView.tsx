@@ -340,16 +340,14 @@ export class AssetView extends React.PureComponent<
                         {" "}
                         <td
                           style={getChangePlanRowStyle(
-                            this.state.asset,
-                            this.props.changePlan
+                            this.state.asset
                           )}
                         >
                           {port}
                         </td>
                         <td
                           style={getChangePlanRowStyle(
-                            this.state.asset,
-                            this.props.changePlan
+                            this.state.asset
                           )}
                         >
                           {this.state.asset.mac_addresses
@@ -360,8 +358,7 @@ export class AssetView extends React.PureComponent<
                           ? [
                               <td
                                 style={getChangePlanRowStyle(
-                                  this.state.asset,
-                                  this.props.changePlan
+                                  this.state.asset
                                 )}
                                 className={
                                   this.state.asset.decommissioning_user
@@ -385,8 +382,7 @@ export class AssetView extends React.PureComponent<
                               </td>,
                               <td
                                 style={getChangePlanRowStyle(
-                                  this.state.asset,
-                                  this.props.changePlan
+                                  this.state.asset
                                 )}
                               >
                                 {connection.destination_port}

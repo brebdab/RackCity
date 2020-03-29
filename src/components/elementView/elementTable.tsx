@@ -1094,8 +1094,7 @@ class ElementTable extends React.Component<
                               }
                         }
                         style={getChangePlanRowStyle(
-                           item,
-                            this.props.changePlan
+                           item
                           )}
                       >
                         {this.props.type === ElementType.ASSET ? (
@@ -1138,14 +1137,12 @@ class ElementTable extends React.Component<
                           if (isModelObject(value)) {
                             return [
                               <td style={getChangePlanRowStyle(
-                           item,
-                            this.props.changePlan
+                           item
                           )}>
                                 {value.vendor}
                               </td>,
                               <td style={getChangePlanRowStyle(
-                           item,
-                            this.props.changePlan
+                           item
                           )}>
                                 {value.model_number}
                               </td>
@@ -1153,14 +1150,12 @@ class ElementTable extends React.Component<
                           } else if (isRackObject(value)) {
                             return [
                               <td style={getChangePlanRowStyle(
-                           item,
-                            this.props.changePlan
+                           item
                           )}>
                                 {value.row_letter + value.rack_num}
                               </td>,
                               <td style={getChangePlanRowStyle(
-                           item,
-                            this.props.changePlan
+                           item
                           )}>
                                 {value.datacenter.name}
                               </td>
@@ -1176,8 +1171,7 @@ class ElementTable extends React.Component<
                           } else if (this.shouldShowColumn(item, col)) {
                             return (
                               <td style={getChangePlanRowStyle(
-                           item,
-                            this.props.changePlan
+                           item
                           )}>
                                 {value}
                               </td>
