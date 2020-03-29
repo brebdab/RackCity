@@ -582,16 +582,18 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                 onClick={() => { }}
               />
             ) : null}
-            <Button
-              onClick={() => {
-                this.setState({ isDecommissioned: true });
-                this.handleDataUpdate(true);
-              }}
-              text="View Decommissioned"
-              minimal
-              icon="archive"
-            >
-            </Button>
+            {this.props.element === ElementType.ASSET ? (
+              <Button
+                onClick={() => {
+                  this.setState({ isDecommissioned: true });
+                  this.handleDataUpdate(true);
+                }}
+                text="View Decommissioned"
+                minimal
+                icon="archive"
+              >
+              </Button>
+            ) : null}
             <FormPopup
               {...this.props}
               type={FormTypes.CREATE}

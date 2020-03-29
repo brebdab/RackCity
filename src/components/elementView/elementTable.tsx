@@ -1096,7 +1096,9 @@ class ElementTable extends React.Component<
                               );
                             }
                         }
-                        style={getChangePlanRowStyle(item)}
+                        style={getChangePlanRowStyle(
+                           item
+                          )}
                       >
                         {this.props.type === ElementType.ASSET ? (
                           <th
@@ -1137,19 +1139,27 @@ class ElementTable extends React.Component<
                         {Object.entries(item).map(([col, value]) => {
                           if (isModelObject(value)) {
                             return [
-                              <td style={getChangePlanRowStyle(item)}>
+                              <td style={getChangePlanRowStyle(
+                           item
+                          )}>
                                 {value.vendor}
                               </td>,
-                              <td style={getChangePlanRowStyle(item)}>
+                              <td style={getChangePlanRowStyle(
+                           item
+                          )}>
                                 {value.model_number}
                               </td>
                             ];
                           } else if (isRackObject(value)) {
                             return [
-                              <td style={getChangePlanRowStyle(item)}>
+                              <td style={getChangePlanRowStyle(
+                           item
+                          )}>
                                 {value.row_letter + value.rack_num}
                               </td>,
-                              <td style={getChangePlanRowStyle(item)}>
+                              <td style={getChangePlanRowStyle(
+                           item
+                          )}>
                                 {value.datacenter.name}
                               </td>
                             ];
@@ -1163,7 +1173,9 @@ class ElementTable extends React.Component<
                             );
                           } else if (this.shouldShowColumn(item, col)) {
                             return (
-                              <td style={getChangePlanRowStyle(item)}>
+                              <td style={getChangePlanRowStyle(
+                           item
+                          )}>
                                 {value}
                               </td>
                             );

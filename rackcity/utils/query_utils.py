@@ -134,10 +134,12 @@ def get_filter_arguments(data):
 
             elif filter_type == 'datetime':
                 if (
-                    filter_dict['after'] is not None
+                    'after' in filter_dict
+                    and filter_dict['after'] is not None
                     and isinstance(filter_dict['after'], str)
                     and (
-                        filter_dict['before'] is None
+                        'before' not in filter_dict
+                        or filter_dict['before'] is None
                         or filter_dict['before'] == ""
                     )
                 ):
@@ -147,10 +149,12 @@ def get_filter_arguments(data):
                         }
                     )
                 elif (
-                    filter_dict['before'] is not None
+                    'before' in filter_dict
+                    and filter_dict['before'] is not None
                     and isinstance(filter_dict['before'], str)
                     and (
-                        filter_dict['after'] is None
+                        'after' not in filter_dict
+                        or filter_dict['after'] is None
                         or filter_dict['after'] == ""
                     )
                 ):
