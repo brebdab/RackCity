@@ -302,7 +302,7 @@ export function isUserObject(obj: any): obj is UserInfoObject {
   return obj && obj.username;
 }
 export function isChangePlanObject(obj: any): obj is ChangePlan {
-  return obj && obj.name;
+  return obj && obj.name && !obj.abbreviation;
 }
 export function isAssetCPObject(obj: any): obj is AssetCPObject {
   return obj && obj.change_plan;
