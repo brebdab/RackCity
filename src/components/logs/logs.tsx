@@ -77,7 +77,7 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
         logs: [],
         curr_page: 1,
         total_pages: 0,
-        page_type: PagingTypes.TEN,
+        page_type: PagingTypes.FIFTY,
         search_query: undefined,
         filters: undefined,
         is_state_loaded: false
@@ -248,7 +248,7 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
         }
         return (
             <div className={Classes.DARK + " log-view"}>
-                <h1>System Logs</h1>
+                <h1>Audit Logs</h1>
                 <div className={Classes.DARK + " bp3-input-group .modifier"}>
                     <span className="search-span bp3-icon bp3-icon-search"></span>
                     <form onSubmit={this.onFormSubmit}>
@@ -275,8 +275,8 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
                         onChange={(e: any) => this.handlePagingChange(e.target.value)}
                     >
                         {" "}
-                        <option> {PagingTypes.TEN}</option>
-                        <option>{PagingTypes.FIFTY}</option>
+                        <option> {PagingTypes.FIFTY}</option>
+                        <option>{PagingTypes.HUNDRED}</option>
                         <option>{PagingTypes.ALL}</option>
                     </HTMLSelect>
                     {this.state.page_type !== PagingTypes.ALL

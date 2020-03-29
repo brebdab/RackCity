@@ -134,10 +134,10 @@ class App extends React.Component<AppProps> {
             path={ROUTES.CHANGE_PLAN}
             component={ChangePlannerView}
           />
+          <this.PrivateRoute path={ROUTES.BULK_IMPORT} component={BulkImport} />
 
           {/* admin paths */}
           <this.AdminRoute path={ROUTES.USERS} component={User} />
-          <this.AdminRoute path={ROUTES.BULK_IMPORT} component={BulkImport} />
         </div>
       </BrowserRouter>
     );
