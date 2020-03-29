@@ -11,6 +11,7 @@ from rackcity.models import (
 from rackcity.utils.change_planner_utils import (
     get_modifications_in_cp,
     asset_cp_has_conflicts,
+    get_cp_already_executed_response,
 )
 from rackcity.utils.execute_change_planner_utils import (
     update_network_ports,
@@ -37,7 +38,6 @@ from rackcity.views.rackcity_utils import get_change_plan
 from rackcity.models import AssetCP
 
 
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def change_plan_resolve_conflict(request, id):
@@ -45,6 +45,9 @@ def change_plan_resolve_conflict(request, id):
     Resolve a merge conflict
     """
     (change_plan, response) = get_change_plan(id)
+    if response:
+        return response
+    response = get_cp_already_executed_response(change_plan)
     if response:
         return response
     data = JSONParser().parse(request)
@@ -97,6 +100,7 @@ def change_plan_resolve_conflict(request, id):
         status=HTTPStatus.OK
     )
 
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def change_plan_remove_asset(request, id):
@@ -104,6 +108,9 @@ def change_plan_remove_asset(request, id):
     Remove a single assetCP from a change plan
     """
     (change_plan, response) = get_change_plan(id)
+    if response:
+        return response
+    response = get_cp_already_executed_response(change_plan)
     if response:
         return response
     data = JSONParser().parse(request)
@@ -117,7 +124,7 @@ def change_plan_remove_asset(request, id):
             status=HTTPStatus.BAD_REQUEST
         )
     asset_cp = data['asset_cp']
-    
+
     try:
         asset_cp_model = AssetCP.objects.get(id=asset_cp)
     except ObjectDoesNotExist:
@@ -143,7 +150,7 @@ def change_plan_remove_asset(request, id):
             },
             status=HTTPStatus.BAD_REQUEST
         )
-    
+
     return JsonResponse(
         {
             "success_message":
@@ -152,7 +159,6 @@ def change_plan_remove_asset(request, id):
         },
         status=HTTPStatus.OK
     )
-
 
 
 @api_view(['POST'])
@@ -185,6 +191,9 @@ def change_plan_delete(request):
             },
             status=HTTPStatus.BAD_REQUEST
         )
+    response = get_cp_already_executed_response(existing_change_plan)
+    if response:
+        return response
     try:
         existing_change_plan.delete()
     except Exception as error:
@@ -238,6 +247,9 @@ def change_plan_modify(request):
             },
             status=HTTPStatus.BAD_REQUEST
         )
+    response = get_cp_already_executed_response(existing_change_plan)
+    if response:
+        return response
     for field in data.keys():
         value = data[field]
         setattr(existing_change_plan, field, value)
@@ -430,6 +442,7 @@ def change_plan_execute(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
+
     assets_cp = AssetCP.objects.filter(change_plan=change_plan)
     for asset_cp in assets_cp:
         if asset_cp_has_conflicts(asset_cp):
