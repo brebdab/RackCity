@@ -86,7 +86,7 @@ class CPDetailView extends React.Component<
     changePlan: {} as ChangePlan,
     modifications: [],
     isAlertOpen: false,
-    disableButtons: false
+    disableButtons: true
   };
   setButtonState() {
     let disable = false;
