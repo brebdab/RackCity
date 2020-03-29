@@ -62,9 +62,18 @@
   margin-left: 5pt;
 }
 
+.print {
+  display: none;
+}
 @media print {
   .banner {
     display: none;
+  }
+  .print {
+    display: block;
+  }
+  h1 {
+    color: black !important;
   }
   .bp3-button {
     display: none;
@@ -84,5 +93,8 @@
   .cp-detail-divider,
   .cp-detail-divider-text {
     display: none;
+  }
+  .change-plan-item {
+    display: flex;
   }
 }
