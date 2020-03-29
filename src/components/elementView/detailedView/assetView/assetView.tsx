@@ -231,12 +231,13 @@ export class AssetView extends React.PureComponent<
                 icon="edit"
                 text="Edit"
                 minimal
-                disabled={
-                  isAssetCPObject(this.state.asset) &&
-                  this.state.asset.is_decommissioned
-                }
                 onClick={() => this.handleFormOpen()}
                 disabled={
+                  (
+                    isAssetCPObject(this.state.asset) &&
+                    this.state.asset.is_decommissioned
+                  )
+                  ||
                   !(
                     this.props.permissionState.admin
                     || this.props.permissionState.asset_management
@@ -256,14 +257,15 @@ export class AssetView extends React.PureComponent<
               <AnchorButton
                 minimal
                 intent="danger"
-                disabled={
-                  isAssetCPObject(this.state.asset) &&
-                  this.state.asset.is_decommissioned
-                }
                 icon="remove"
                 text="Decommission"
                 onClick={this.handleDecommissionOpen}
                 disabled={
+                  (
+                    isAssetCPObject(this.state.asset) &&
+                    this.state.asset.is_decommissioned
+                  )
+                  ||
                   !(
                     this.props.permissionState.admin
                     || this.props.permissionState.asset_management
@@ -289,9 +291,10 @@ export class AssetView extends React.PureComponent<
                 intent="danger"
                 icon="trash"
                 text="Delete"
-                disabled={isAssetCPObject(this.state.asset)}
                 onClick={this.handleDeleteOpen}
                 disabled={
+                  isAssetCPObject(this.state.asset)
+                  ||
                   !(
                     this.props.permissionState.admin
                     || this.props.permissionState.asset_management
