@@ -168,7 +168,7 @@ class CPDetailView extends React.Component<
     axios
       .post(
         API_ROOT +
-        "/api/change-plans/" +
+        "api/change-plans/" +
         this.state.changePlan.id +
         "/execute",
         {},
