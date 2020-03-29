@@ -33,7 +33,7 @@ def datetime_to_string(date):
     return "[" + str(date) + "]"
 
 
-def log_action(user, related_element, action, change_plan):
+def log_action(user, related_element, action, change_plan=None):
     """
     Specified action should be Action enum.
     """

@@ -27,6 +27,11 @@ from rackcity.utils.execute_change_planner_utils import (
     decommission_asset_cp,
     get_updated_asset,
 )
+from rackcity.utils.log_utils import (
+    Action,
+    log_action,
+    log_execute_change_plan,
+)
 from rackcity.utils.query_utils import (
     get_page_count_response,
     get_many_response,
@@ -445,8 +450,20 @@ def change_plan_execute(request, id):
         updated_asset_mappings[asset_cp] = updated_asset
         if created:
             num_created += 1
+            log_action(
+                request.user,
+                updated_asset,
+                Action.CREATE,
+                change_plan=change_plan,
+            )
         else:
             num_modified += 1
+            log_action(
+                request.user,
+                updated_asset,
+                Action.MODIFY,
+                change_plan=change_plan,
+            )
         update_network_ports(updated_asset, asset_cp, change_plan)
         update_power_ports(updated_asset, asset_cp, change_plan)
 
@@ -465,6 +482,14 @@ def change_plan_execute(request, id):
 
     change_plan.execution_time = datetime.now()
     change_plan.save()
+
+    log_execute_change_plan(
+        request.user,
+        change_plan.name,
+        num_created,
+        num_modified,
+        num_decommissioned,
+    )
 
     return JsonResponse(
         {"success_message":
