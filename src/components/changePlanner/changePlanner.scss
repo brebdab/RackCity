@@ -1,10 +1,46 @@
+.clickable:hover,
 .change-plan-item:hover {
   cursor: pointer !important;
   background-color: #394b59;
 }
-.change-plan-item {
-  padding-bottom: 10pt;
+// .change-plan-item {
+//   padding-bottom: 10pt;
+// }
+
+.cp-remove {
+  float: right;
+  padding: 0;
+  margin-top: -3pt;
+}
+.cp-collapse-body {
+  padding: 5pt;
+}
+.merge-options {
+  text-align: center;
+  width: 100%;
 }
 .bp3-list-unstyled {
   margin-top: 30pt;
+}
+.asset-detail {
+  float: right;
+}
+
+.bp3-list-unstyled .bp3-callout {
+  padding-bottom: 10pt;
+}
+.cp-details {
+  display: inline-flex;
+  width: 100%;
+}
+.cp-details h3 {
+  margin: 1pt !important;
+}
+.cp-details pre {
+  flex-grow: 1;
+  overflow-x: auto;
+}
+
+.cp-details pre + pre {
+  margin-left: 5pt;
 }
