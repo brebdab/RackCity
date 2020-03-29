@@ -1189,7 +1189,7 @@ class ElementTable extends React.Component<
                               !this.props.isDecommissioned ? (
                                 <AnchorButton
                                   className="button-table"
-                                  intent="danger"
+                                  intent="primary"
                                   minimal
                                   icon="edit"
                                   disabled={
