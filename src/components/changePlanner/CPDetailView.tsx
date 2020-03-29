@@ -17,6 +17,7 @@ import { connect } from "react-redux";
 import { RouteComponentProps } from "react-router";
 import { withRouter } from "react-router-dom";
 import { API_ROOT } from "../../utils/api-config";
+import * as actions from "../../store/actions/state";
 import {
   AssetCPObject,
   AssetFieldsTable,
@@ -32,6 +33,8 @@ import "./changePlanner.scss";
 import { isNullOrUndefined } from "util";
 interface CPDetailViewProps {
   token: string;
+  updateChangePlans(status: boolean): void;
+  setChangePlan(changePlan: ChangePlan | null): void;
 }
 enum ModificationType {
   MODIFY = "Modify",
@@ -69,7 +72,7 @@ class CPDetailView extends React.Component<
 > {
   route_id = (this.props.match.params as any).id;
   loading = false;
-  items = ["a", "b"];
+
   dataLoaded = false;
 
   getConflictWarning = () => {
@@ -82,7 +85,7 @@ class CPDetailView extends React.Component<
     isAlertOpen: false
   };
   disableExecute() {
-    if (this.loading) {
+    if (this.loading || this.state.modifications.length === 0) {
       return true;
     }
 
@@ -337,6 +340,7 @@ class CPDetailView extends React.Component<
         .then(res => {
           this.loading = false;
           this.dataLoaded = true;
+          this.props.setChangePlan(res.data.change_plan);
           this.setState({
             changePlan: res.data.change_plan,
             modifications: res.data.modifications
@@ -356,6 +360,7 @@ class CPDetailView extends React.Component<
         .then(res => {
           this.loading = false;
           this.dataLoaded = true;
+          this.props.setChangePlan(res.data.change_plan);
           this.setState({
             changePlan: res.data.change_plan,
             modifications: res.data.modifications
@@ -384,155 +389,169 @@ class CPDetailView extends React.Component<
           position={Position.TOP}
           ref={this.refHandlers.toaster}
         />
-        <h1>Change Plan</h1>
+        <h1>
+          Change Plan:
+          {this.state.changePlan ? this.state.changePlan.name : null}
+        </h1>
+
+        {this.loading ? <Spinner /> : null}
+        <ul className="bp3-list-unstyled">
+          {this.state.changePlan && this.state.changePlan.execution_time ? (
+            <Callout intent="primary">
+              This change plan was executed at:
+              {this.state.changePlan.execution_time}
+            </Callout>
+          ) : null}
+          {this.state.modifications.length > 0 ? (
+            this.state.modifications.map(
+              (modification: Modification, index: number) => {
+                return (
+                  <li>
+                    <Callout
+                      icon={null}
+                      intent={
+                        modification.conflicts &&
+                        modification.conflicts.length > 0
+                          ? Intent.DANGER
+                          : Intent.NONE
+                      }
+                      className="change-plan-item"
+                      onClick={e => this.toggleCollapse(index)}
+                    >
+                      {modification.title}
+                      <AnchorButton
+                        className="cp-remove"
+                        intent={Intent.DANGER}
+                        minimal
+                        disabled={
+                          !isNullOrUndefined(this.state.changePlan) &&
+                          !isNullOrUndefined(
+                            this.state.changePlan.execution_time
+                          )
+                        }
+                        icon="delete"
+                        onClick={(e: any) => {
+                          this.removeModification(modification);
+                          e.stopPropagation();
+                        }}
+                        text="Discard change"
+                      />
+                    </Callout>
+                    <Collapse isOpen={this.state.isOpen[index]}>
+                      <div className="cp-collapse-body">
+                        {modification.conflicts
+                          ? modification.conflicts.map((conflict: Conflict) => {
+                              return (
+                                <Callout intent={Intent.DANGER}>
+                                  {conflict.conflict_message}
+                                  {conflict.conflict_resolvable ? (
+                                    <div className="merge-options">
+                                      <AnchorButton
+                                        onClick={() =>
+                                          this.resolveConflict(
+                                            modification,
+                                            conflict,
+                                            false
+                                          )
+                                        }
+                                        icon="properties"
+                                        text="Discard change plan modifications"
+                                      />
+                                      <AnchorButton
+                                        onClick={() =>
+                                          this.resolveConflict(
+                                            modification,
+                                            conflict,
+                                            true
+                                          )
+                                        }
+                                        icon="properties"
+                                        text="Keep change plan modifications"
+                                      />
+                                    </div>
+                                  ) : null}
+                                </Callout>
+                              );
+                            })
+                          : null}
+
+                        <AnchorButton
+                          className="asset-detail"
+                          icon="properties"
+                          onClick={(e: any) => {
+                            this.props.history.push(
+                              ROUTES.ASSETS + "/" + modification.asset_cp.id
+                            );
+                          }}
+                          text="Go to change plan asset detail page"
+                        />
+                        {modification.asset &&
+                        isNullOrUndefined(
+                          this.state.changePlan.execution_time
+                        ) ? (
+                          <div className="cp-details">
+                            <Pre>
+                              <h3>Live Asset </h3>
+                              {this.renderAssetData(
+                                modification.asset,
+                                modification
+                              )}
+                            </Pre>
+                            <Pre>
+                              <h3>Change Plan Asset</h3>
+                              {modification.asset_cp
+                                ? this.renderAssetData(
+                                    modification.asset_cp,
+                                    modification
+                                  )
+                                : null}
+                            </Pre>
+                          </div>
+                        ) : (
+                          <div className="cp-details">
+                            <Pre>
+                              <h3>Change Plan Asset</h3>
+                              {modification.asset_cp
+                                ? this.renderAssetData(
+                                    modification.asset_cp,
+                                    modification
+                                  )
+                                : null}
+                            </Pre>
+                          </div>
+                        )}
+                      </div>
+                    </Collapse>
+                  </li>
+                );
+              }
+            )
+          ) : (
+            <Callout title="No modifications for this change plan"> </Callout>
+          )}
+        </ul>
         <div className="detail-buttons-wrapper">
           <div className={"detail-buttons"}>
             <AnchorButton
               minimal
-              intent="primary"
+              disabled={this.disableExecute()}
+              intent="none"
               icon="document-open"
               text="Generate Work Order"
             />
+            <AnchorButton
+              disabled={this.disableExecute()}
+              icon="build"
+              intent="primary"
+              text="Execute Change Plan"
+              onClick={() =>
+                this.setState({
+                  isAlertOpen: true
+                })
+              }
+            />
           </div>
-          {this.loading ? <Spinner /> : null}
-
-          <ul className="bp3-list-unstyled">
-            {this.state.modifications.length > 0 ? (
-              this.state.modifications.map(
-                (modification: Modification, index: number) => {
-                  return (
-                    <li>
-                      <Callout
-                        icon={null}
-                        intent={
-                          modification.conflicts &&
-                          modification.conflicts.length > 0
-                            ? Intent.DANGER
-                            : Intent.NONE
-                        }
-                        className="change-plan-item"
-                        onClick={e => this.toggleCollapse(index)}
-                      >
-                        {modification.title}
-                        <AnchorButton
-                          className="cp-remove"
-                          intent={Intent.DANGER}
-                          minimal
-                          icon="delete"
-                          onClick={(e: any) => {
-                            this.removeModification(modification);
-                            e.stopPropagation();
-                          }}
-                          text="Discard change"
-                        />
-                      </Callout>
-                      <Collapse isOpen={this.state.isOpen[index]}>
-                        <div className="cp-collapse-body">
-                          {modification.conflicts
-                            ? modification.conflicts.map(
-                                (conflict: Conflict) => {
-                                  return (
-                                    <Callout intent={Intent.DANGER}>
-                                      {conflict.conflict_message}
-                                      {conflict.conflict_resolvable ? (
-                                        <div className="merge-options">
-                                          <AnchorButton
-                                            onClick={() =>
-                                              this.resolveConflict(
-                                                modification,
-                                                conflict,
-                                                false
-                                              )
-                                            }
-                                            icon="properties"
-                                            text="Discard change plan modifications"
-                                          />
-                                          <AnchorButton
-                                            onClick={() =>
-                                              this.resolveConflict(
-                                                modification,
-                                                conflict,
-                                                true
-                                              )
-                                            }
-                                            icon="properties"
-                                            text="Keep change plan modifications"
-                                          />
-                                        </div>
-                                      ) : null}
-                                    </Callout>
-                                  );
-                                }
-                              )
-                            : null}
-
-                          <AnchorButton
-                            className="asset-detail"
-                            icon="properties"
-                            onClick={(e: any) => {
-                              this.props.history.push(
-                                ROUTES.ASSETS + "/" + modification.asset_cp.id
-                              );
-                            }}
-                            text="Go to change plan asset detail page"
-                          />
-                          {modification.asset &&
-                          isNullOrUndefined(
-                            this.state.changePlan.execution_time
-                          ) ? (
-                            <div className="cp-details">
-                              <Pre>
-                                <h3>Live Asset </h3>
-                                {this.renderAssetData(
-                                  modification.asset,
-                                  modification
-                                )}
-                              </Pre>
-                              <Pre>
-                                <h3>Change Plan Asset</h3>
-                                {modification.asset_cp
-                                  ? this.renderAssetData(
-                                      modification.asset_cp,
-                                      modification
-                                    )
-                                  : null}
-                              </Pre>
-                            </div>
-                          ) : (
-                            <div className="cp-details">
-                              <Pre>
-                                <h3>Change Plan Asset</h3>
-                                {modification.asset_cp
-                                  ? this.renderAssetData(
-                                      modification.asset_cp,
-                                      modification
-                                    )
-                                  : null}
-                              </Pre>
-                            </div>
-                          )}
-                        </div>
-                      </Collapse>
-                    </li>
-                  );
-                }
-              )
-            ) : (
-              <Callout title="No modifications for this change plan"> </Callout>
-            )}
-          </ul>
         </div>
-
-        <AnchorButton
-          disabled={this.disableExecute()}
-          icon="build"
-          text="Execute Work Order"
-          onClick={() =>
-            this.setState({
-              isAlertOpen: true
-            })
-          }
-        />
       </div>
     );
   }
@@ -543,5 +562,17 @@ const mapStatetoProps = (state: any) => {
     token: state.token
   };
 };
+const mapDispatchToProps = (dispatch: any) => {
+  return {
+    logout: () => dispatch(actions.logout()),
+    updateChangePlans: (status: boolean) =>
+      dispatch(actions.updateChangePlans(status)),
 
-export default withRouter(connect(mapStatetoProps)(CPDetailView));
+    setChangePlan: (changePlan: ChangePlan) =>
+      dispatch(actions.setChangePlan(changePlan))
+  };
+};
+
+export default withRouter(
+  connect(mapStatetoProps, mapDispatchToProps)(CPDetailView)
+);

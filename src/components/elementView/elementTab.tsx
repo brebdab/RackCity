@@ -570,9 +570,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               intent={Intent.PRIMARY}
               onClick={this.handleOpen}
               disabled={
-                (this.props.element !== ElementType.ASSET &&
-                  this.props.changePlan) ||
-                this.props.element === ElementType.CHANGEPLANS
+                this.props.element !== ElementType.ASSET &&
+                this.props.changePlan
                   ? true
                   : !(
                       this.props.permissionState.admin ||
@@ -584,7 +583,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                         this.props.permissionState.asset_management) ||
                       (this.props.element === ElementType.ASSET &&
                         this.props.permissionState.datacenter_permissions
-                          .length > 0)
+                          .length > 0) ||
+                      this.props.element === ElementType.CHANGEPLANS
                     )
               }
             />

@@ -12,6 +12,10 @@
 .nav-bar-button:focus {
   outline: none;
 }
+.nav-buttons-right {
+  display: flex;
+  align-items: center;
+}
 .nav-bar-non-button:hover {
   cursor: default !important;
   background-color: #394b59 !important;
