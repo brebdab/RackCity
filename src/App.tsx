@@ -116,7 +116,7 @@ class App extends React.Component<AppProps> {
               component={AssetView}
             />
             <this.PrivateRoute
-              path={ROUTES.CHANGE_PLAN + "/:rid"}
+              path={ROUTES.CHANGE_PLAN + "/:id"}
               component={CPDetailView}
             />
           </div>

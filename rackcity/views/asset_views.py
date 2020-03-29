@@ -409,7 +409,7 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
                         )
                         # add destination asset to AssetCPTable
                         for field in destination_asset._meta.fields:
-                            if field != 'id':
+                            if field.name != 'id' and field.name == "assetid_ptr":
                                 setattr(asset_cp, field.name, getattr(
                                     destination_asset, field.name))
                         asset_cp.save()
@@ -516,7 +516,7 @@ def save_power_connections(asset_data, asset_id, change_plan=None):
                     else:
                         pdu_port = PDUPortCP(change_plan=change_plan)
                         for field in pdu_port_master._meta.fields:
-                            if field != "id":
+                            if field.name != "id":
                                 setattr(pdu_port, field.name, getattr(
                                     pdu_port_master, field.name))
                         pdu_port.save()

@@ -57,7 +57,7 @@ def detect_conflicts_cp(sender, **kwargs):
     # asset rack location conflicts with an assetCP
 
     asset.location_conflict.clear()
-    for assetcp in AssetCP.objects.filter(rack=asset.rack_id):
+    for assetcp in AssetCP.objects.filter(Q(rack=asset.rack_id) & ~Q(related_asset=asset.id)):
         try:
             validate_asset_location(
                 asset.rack_id,
@@ -311,10 +311,13 @@ def get_modifications_in_cp(change_plan):
                 title += " " + str(asset_cp.asset_number)
             if asset_cp.rack:
                 title += get_location_detail(asset_cp)
-        elif related_asset:
+        elif related_asset or (asset_cp.is_conflict and related_asset is None):
             modification_type = ModificationType.MODIFY
-            title = "Modify asset " + str(related_asset.asset_number) + \
-                get_location_detail(related_asset)
+            if related_asset:
+                title = "Modify asset " + str(related_asset.asset_number) + \
+                    get_location_detail(related_asset)
+            else:
+                title = "Modify asset"
         else:
             modification_type = ModificationType.CREATE
             title = "Create asset"
