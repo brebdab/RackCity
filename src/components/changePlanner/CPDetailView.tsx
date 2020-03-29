@@ -91,6 +91,16 @@ class CPDetailView extends React.Component<
 
     return conflict;
   }
+  resolveConflict(asset_cp: AssetCPObject, override_live: boolean) {
+    axios.post(
+      API_ROOT +
+        "/api/change-plans/" +
+        this.state.changePlan.id +
+        "/resolve-conflict",
+      { asset_cp: asset_cp.id, override_live },
+      getHeaders(this.props.token)
+    );
+  }
   toggleCollapse(index: number) {
     const isOpen = this.state.isOpen;
     isOpen[index] = !isOpen[index];
@@ -311,13 +321,19 @@ class CPDetailView extends React.Component<
                                           <div className="merge-options">
                                             <AnchorButton
                                               minimal
+                                              onClick={() =>
+                                                this.resolveConflict(
+                                                  modification.asset,
+                                                  false
+                                                )
+                                              }
                                               icon="properties"
-                                              text="Take Live Version"
+                                              text="Discard change plan modifications"
                                             />
                                             <AnchorButton
                                               minimal
                                               icon="properties"
-                                              text="Take Change Plan Version"
+                                              text="Keep change plan modifications"
                                             />
                                           </div>
                                         ) : null}
