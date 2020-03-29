@@ -12,6 +12,23 @@
   padding: 0;
   margin-top: -3pt;
 }
+.detail-buttons-cp {
+  float: right;
+}
+.cp-dividers {
+  align-items: center;
+  margin-top: 5pt;
+  // display: block;
+  // flex-direction: column;
+}
+.cp-detail-divider {
+  float: left;
+  width: 50pt;
+  margin-top: 7pt;
+}
+.cp-detail-divider-text {
+  float: left;
+}
 .cp-collapse-body {
   padding: 5pt;
 }

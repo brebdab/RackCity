@@ -9,7 +9,9 @@ import {
   Spinner,
   Toaster,
   Position,
-  Alert
+  Alert,
+  Divider,
+  ButtonGroup
 } from "@blueprintjs/core";
 import axios from "axios";
 import * as React from "react";
@@ -31,6 +33,7 @@ import {
 } from "../../utils/utils";
 import "./changePlanner.scss";
 import { isNullOrUndefined } from "util";
+
 interface CPDetailViewProps {
   token: string;
   updateChangePlans(status: boolean): void;
@@ -392,13 +395,13 @@ class CPDetailView extends React.Component<
         <Alert
           cancelButtonText="Cancel"
           confirmButtonText="Execute"
-          intent="primary"
+          intent={Intent.WARNING}
           className={Classes.DARK}
           isOpen={this.state.isAlertOpen}
-          onCancel={()=>this.handleExecuteCancel()}
-          onConfirm={()=>this.handleExecute()}
+          onCancel={() => this.handleExecuteCancel()}
+          onConfirm={() => this.handleExecute()}
         >
-          <p>Are you sure you want to execute this change plan?</p>
+          <p>Are you sure you want to execute this change plan? You will not be able to generate a work order for this change plan anymore</p>
         </Alert>
         <Toaster
           autoFocus={false}
@@ -548,24 +551,35 @@ class CPDetailView extends React.Component<
           )}
         </ul>
         <div className="detail-buttons-wrapper">
-          <div className={"detail-buttons"}>
-            <AnchorButton
-              disabled={this.disableExecute()}
-              intent="none"
-              icon="document-open"
-              text="Generate Work Order"
-            />
-            <AnchorButton
-              disabled={this.disableExecute()}
-              icon="build"
-              intent="primary"
-              text="Execute Change Plan"
-              onClick={() =>
-                this.setState({
-                  isAlertOpen: true
-                })
-              }
-            />
+          <div className={"detail-buttons-cp"}>
+            <div>
+              <AnchorButton
+                disabled={this.disableExecute()}
+                intent="none"
+                icon="document-open"
+                text="Generate Work Order"
+              />
+            </div>
+            <div className="cp-dividers">
+              {/* <ButtonGroup vertical={true}> */}
+              <Divider className="cp-detail-divider" />
+              <p className={Classes.DARK + " cp-detail-divider-text"}>then</p>
+              <Divider className="cp-detail-divider" />
+              {/* </ButtonGroup> */}
+            </div>
+            <div>
+              <AnchorButton
+                disabled={this.disableExecute()}
+                icon="build"
+                intent="primary"
+                text="Execute Change Plan"
+                onClick={() =>
+                  this.setState({
+                    isAlertOpen: true
+                  })
+                }
+              />
+            </div>
           </div>
         </div>
       </div>
