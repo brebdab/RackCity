@@ -63,6 +63,9 @@ def update_network_ports(updated_asset, asset_cp, change_plan):
                 )
                 network_port_to_update.connected_port = \
                     destination_port_to_connect
+                destination_port_to_connect.connected_port = \
+                    network_port_to_update
+                destination_port_to_connect.save()
         else:
             network_port_to_update.connected_port = None
         network_port_to_update.mac_address = network_port_cp.mac_address
