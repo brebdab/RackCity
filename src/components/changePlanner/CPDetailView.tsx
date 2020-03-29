@@ -28,6 +28,7 @@ import {
   ROUTES
 } from "../../utils/utils";
 import "./changePlanner.scss";
+import { isNullOrUndefined } from "util";
 interface CPDetailViewProps {
   token: string;
 }
@@ -267,7 +268,7 @@ class CPDetailView extends React.Component<
                   Network Connections
                 </td>
                 <td style={this.getHighlightStyle(modification, col)}>
-                <pre>{JSON.stringify(value, null, 2)}</pre>
+                  <pre>{JSON.stringify(value, null, 2)}</pre>
                 </td>
               </tr>
             );
@@ -437,7 +438,10 @@ class CPDetailView extends React.Component<
                             }}
                             text="Go to change plan asset detail page"
                           />
-                          {modification.asset ? (
+                          {modification.asset &&
+                          isNullOrUndefined(
+                            this.state.changePlan.execution_time
+                          ) ? (
                             <div className="cp-details">
                               <Pre>
                                 <h3>Live Asset </h3>
