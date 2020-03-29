@@ -33,6 +33,7 @@ export enum FilterTypes {
 export enum PagingTypes {
   TEN = 10,
   FIFTY = 50,
+  HUNDRED = 100,
   ALL = "View All"
 }
 export enum TextFilterTypes {

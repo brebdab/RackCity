@@ -77,7 +77,7 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
         logs: [],
         curr_page: 1,
         total_pages: 0,
-        page_type: PagingTypes.TEN,
+        page_type: PagingTypes.FIFTY,
         search_query: undefined,
         filters: undefined,
         is_state_loaded: false
@@ -275,8 +275,8 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
                         onChange={(e: any) => this.handlePagingChange(e.target.value)}
                     >
                         {" "}
-                        <option> {PagingTypes.TEN}</option>
-                        <option>{PagingTypes.FIFTY}</option>
+                        <option> {PagingTypes.FIFTY}</option>
+                        <option>{PagingTypes.HUNDRED}</option>
                         <option>{PagingTypes.ALL}</option>
                     </HTMLSelect>
                     {this.state.page_type !== PagingTypes.ALL
