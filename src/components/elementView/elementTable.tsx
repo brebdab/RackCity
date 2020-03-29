@@ -1107,9 +1107,7 @@ class ElementTable extends React.Component<
                               );
                             }
                         }
-                        style={getChangePlanRowStyle(
-                          item
-                        )}
+                        style={getChangePlanRowStyle(item)}
                       >
                         {this.props.type === ElementType.ASSET &&
                           isAssetObject(item) ? (
@@ -1162,27 +1160,19 @@ class ElementTable extends React.Component<
                         {Object.entries(item).map(([col, value]) => {
                           if (isModelObject(value)) {
                             return [
-                              <td style={getChangePlanRowStyle(
-                                item
-                              )}>
+                              <td style={getChangePlanRowStyle(item)}>
                                 {value.vendor}
                               </td>,
-                              <td style={getChangePlanRowStyle(
-                                item
-                              )}>
+                              <td style={getChangePlanRowStyle(item)}>
                                 {value.model_number}
                               </td>
                             ];
                           } else if (isRackObject(value)) {
                             return [
-                              <td style={getChangePlanRowStyle(
-                                item
-                              )}>
+                              <td style={getChangePlanRowStyle(item)}>
                                 {value.row_letter + value.rack_num}
                               </td>,
-                              <td style={getChangePlanRowStyle(
-                                item
-                              )}>
+                              <td style={getChangePlanRowStyle(item)}>
                                 {value.datacenter.name}
                               </td>
                             ];
@@ -1196,9 +1186,7 @@ class ElementTable extends React.Component<
                             );
                           } else if (this.shouldShowColumn(item, col)) {
                             return (
-                              <td style={getChangePlanRowStyle(
-                                item
-                              )}>
+                              <td style={getChangePlanRowStyle(item)}>
                                 {value}
                               </td>
                             );
@@ -1228,8 +1216,11 @@ class ElementTable extends React.Component<
                                   minimal
                                   icon="edit"
                                   disabled={
-                                    this.props.changePlan &&
-                                      this.props.type !== ElementType.ASSET
+                                    (this.props.changePlan &&
+                                      this.props.type !== ElementType.ASSET) ||  (this.props.type ===
+                                        ElementType.CHANGEPLANS &&
+                                        isChangePlanObject(item) &&
+                                        item.execution_time)
                                       ? true
                                       : !(
                                         this.props.permissionState.admin ||
@@ -1276,8 +1267,11 @@ class ElementTable extends React.Component<
                                       : "trash"
                                   }
                                   disabled={
-                                    this.props.changePlan &&
-                                      this.props.type !== ElementType.ASSET
+                                    (this.props.changePlan &&
+                                      this.props.type !== ElementType.ASSET) ||  (this.props.type ===
+                                        ElementType.CHANGEPLANS &&
+                                        isChangePlanObject(item) &&
+                                        item.execution_time)
                                       ? true
                                       : !(
                                         this.props.permissionState.admin ||
