@@ -25,7 +25,7 @@ import {
 } from "../../forms/formUtils";
 import * as actions from "../../store/actions/state";
 import { API_ROOT } from "../../utils/api-config";
-import { ChangePlan, ROUTES, getHeaders, ElementType } from "../../utils/utils";
+import { ChangePlan, ROUTES, getHeaders, ElementType, PermissionState } from "../../utils/utils";
 import "./navigation.scss";
 import { isNullOrUndefined } from "util";
 export interface NavigationProps {
@@ -35,6 +35,7 @@ export interface NavigationProps {
   isAdmin: boolean;
   token: string;
   changePlan: ChangePlan;
+  permissionState: PermissionState;
 }
 
 export interface NavigationState {
@@ -54,7 +55,7 @@ type NavigationPropsAll = NavigationProps & RouteComponentProps;
 export class Navigation extends React.Component<
   NavigationPropsAll,
   NavigationState
-> {
+  > {
   public state = {
     username: undefined,
     changePlans: []
@@ -146,6 +147,12 @@ export class Navigation extends React.Component<
                           onClick={() => this.props.history.push(ROUTES.LOGS)}
                           icon="history"
                           text="View Logs"
+                          disabled={
+                            !(
+                              this.props.permissionState.admin
+                              || this.props.permissionState.audit_read
+                            )
+                          }
                         />
                         <MenuItem
                           onClick={() =>
@@ -154,25 +161,26 @@ export class Navigation extends React.Component<
                           icon="clipboard"
                           text="Change Plans"
                         />
-                        {this.props.isAdmin ? (
-                          <MenuItem
-                            icon="user"
-                            onClick={() =>
-                              this.props.history.push(ROUTES.USERS)
-                            }
-                            text="Manage Users"
-                          />
-                        ) : null}
+                        <MenuItem
+                          icon="user"
+                          onClick={() =>
+                            this.props.history.push(ROUTES.USERS)
+                          }
+                          disabled={
+                            !(this.props.permissionState.admin)
+                          }
+                          text="Manage Users"
+                        />
                       </Menu>
                     }
-                    // position={Position.RIGHT_TOP}
+                  // position={Position.RIGHT_TOP}
                   >
                     <Button icon="menu" text="Tools" minimal />
                   </Popover>
                 </div>
               ) : (
-                <p></p>
-              )}
+                  <p></p>
+                )}
             </NavbarGroup>
 
             <NavbarGroup align={Alignment.RIGHT}>
@@ -231,14 +239,14 @@ export class Navigation extends React.Component<
                   />
                 </div>
               ) : (
-                <AnchorButton
-                  onClick={() => this.props.history.push(ROUTES.LOGIN)}
-                  className="nav-bar-button"
-                  icon="user"
-                  text="Login"
-                  minimal
-                />
-              )}
+                  <AnchorButton
+                    onClick={() => this.props.history.push(ROUTES.LOGIN)}
+                    className="nav-bar-button"
+                    icon="user"
+                    text="Login"
+                    minimal
+                  />
+                )}
             </NavbarGroup>
           </Navbar>
         </div>
@@ -252,6 +260,7 @@ const mapStateToProps = (state: any) => {
     isAuthenticated: state.token !== null,
     isAdmin: state.admin,
     token: state.token,
+    permissionState: state.permissionState,
     changePlan: state.changePlan
   };
 };

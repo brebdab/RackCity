@@ -10,7 +10,7 @@ from rackcity.api.serializers import (
     RecursiveAssetCPSerializer,
 )
 from rackcity.models.asset import get_assets_for_cp
-from rackcity.models import Asset, AssetCP
+from rackcity.models import Asset, AssetCP, DecommissionedAsset
 from rackcity.utils.errors_utils import Status, GenericFailure
 from rackcity.utils.query_utils import (
     get_filtered_query,
@@ -192,6 +192,42 @@ def get_many_assets_response_for_cp(request, change_plan):
         {"assets": assets_data},
         status=HTTPStatus.OK,
     )
+
+
+def get_page_count_response_for_decommissioned_cp(request, change_plan):
+    if (
+        not request.query_params.get('page_size')
+        or int(request.query_params.get('page_size')) <= 0
+    ):
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
+                "errors": "Must specify positive integer page_size."
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    page_size = int(request.query_params.get('page_size'))
+    decommissioned_assets = DecommissionedAsset.objects.all()
+    decommissioned_assets_cp = AssetCP.objects.filter(
+        change_plan=change_plan,
+        is_decommissioned=True,
+    )
+    decommissioned_assets, filter_failure_response = get_filtered_query(
+        decommissioned_assets,
+        request.data,
+    )
+    if filter_failure_response:
+        return filter_failure_response
+    decommissioned_assets_cp, filter_failure_response = get_filtered_query(
+        decommissioned_assets_cp,
+        request.data,
+    )
+    if filter_failure_response:
+        return filter_failure_response
+    count = decommissioned_assets.count() + decommissioned_assets_cp.count()
+    page_count = math.ceil(count / page_size)
+    return JsonResponse({"page_count": page_count})
 
 
 def get_page_count_response_for_cp(request, change_plan):
