@@ -36,6 +36,10 @@ def get_updated_asset(asset_cp):
             )
     # Assigns asset number, creates network & power ports on save
     updated_asset.save()
+    if not related_asset:
+        # If asset was created, put that in related_asset field (network ports)
+        asset_cp.related_asset = updated_asset
+        asset_cp.save()
     return updated_asset, created
 
 
@@ -52,12 +56,15 @@ def update_network_ports(updated_asset, asset_cp, change_plan):
         if network_port_cp.connected_port:
             destination_host = \
                 network_port_cp.connected_port.asset.related_asset
-            destination_port_to_connect = NetworkPort.objects.get(
-                asset=destination_host,
-                port_name=network_port_cp.connected_port.port_name,
-            )
-            network_port_to_update.connected_port = \
-                destination_port_to_connect
+            if destination_host:
+                destination_port_to_connect = NetworkPort.objects.get(
+                    asset=destination_host,
+                    port_name=network_port_cp.connected_port.port_name,
+                )
+                network_port_to_update.connected_port = \
+                    destination_port_to_connect
+        else:
+            network_port_to_update.connected_port = None
         network_port_to_update.mac_address = network_port_cp.mac_address
         network_port_to_update.save()
 
@@ -68,17 +75,20 @@ def update_power_ports(updated_asset, asset_cp, change_plan):
         asset=asset_cp,
     )
     for power_port_cp in power_ports_cp:
-        pdu_port_cp = power_port_cp.power_connection
-        pdu_port_to_connect = PDUPort.objects.get(
-            rack=pdu_port_cp.rack,
-            left_right=pdu_port_cp.left_right,
-            port_number=pdu_port_cp.port_number,
-        )
         power_port_to_update = PowerPort.objects.get(
             asset=updated_asset,
             port_name=power_port_cp.port_name,
         )
-        power_port_to_update.power_connection = pdu_port_to_connect
+        pdu_port_cp = power_port_cp.power_connection
+        if pdu_port_cp:
+            pdu_port_to_connect = PDUPort.objects.get(
+                rack=pdu_port_cp.rack,
+                left_right=pdu_port_cp.left_right,
+                port_number=pdu_port_cp.port_number,
+            )
+            power_port_to_update.power_connection = pdu_port_to_connect
+        else:
+            power_port_to_update.power_connection = None
         power_port_to_update.save()
 
 
