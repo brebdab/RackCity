@@ -11,7 +11,6 @@ import {
   Position,
   Alert,
   Divider
-
 } from "@blueprintjs/core";
 import axios from "axios";
 import * as React from "react";
@@ -196,9 +195,15 @@ class CPDetailView extends React.Component<
           .then(res => {
             this.loading = false;
             this.dataLoaded = true;
-            this.props.setChangePlan(res.data.change_plan);
+            const changePlan: ChangePlan = res.data.change_plan;
+            if (isNullOrUndefined(changePlan.execution_time)) {
+              this.props.setChangePlan(changePlan);
+            } else {
+              this.props.setChangePlan(null);
+            }
+
             this.setState({
-              changePlan: res.data.change_plan,
+              changePlan: changePlan,
               modifications: res.data.modifications
             });
           })
@@ -359,9 +364,15 @@ class CPDetailView extends React.Component<
         .then(res => {
           this.loading = false;
           this.dataLoaded = true;
-          this.props.setChangePlan(res.data.change_plan);
+          const changePlan: ChangePlan = res.data.change_plan;
+          if (isNullOrUndefined(changePlan.execution_time)) {
+            this.props.setChangePlan(changePlan);
+          } else {
+            this.props.setChangePlan(null);
+          }
+
           this.setState({
-            changePlan: res.data.change_plan,
+            changePlan: changePlan,
             modifications: res.data.modifications
           });
         })
@@ -379,9 +390,15 @@ class CPDetailView extends React.Component<
         .then(res => {
           this.loading = false;
           this.dataLoaded = true;
-          this.props.setChangePlan(res.data.change_plan);
+          const changePlan: ChangePlan = res.data.change_plan;
+          if (isNullOrUndefined(changePlan.execution_time)) {
+            this.props.setChangePlan(changePlan);
+          } else {
+            this.props.setChangePlan(null);
+          }
+
           this.setState({
-            changePlan: res.data.change_plan,
+            changePlan: changePlan,
             modifications: res.data.modifications
           });
         })
@@ -401,7 +418,10 @@ class CPDetailView extends React.Component<
           onCancel={() => this.handleExecuteCancel()}
           onConfirm={() => this.handleExecute()}
         >
-          <p>Are you sure you want to execute this change plan? You will not be able to generate a work order for this change plan anymore</p>
+          <p>
+            Are you sure you want to execute this change plan? You will not be
+            able to generate a work order for this change plan anymore
+          </p>
         </Alert>
         <Toaster
           autoFocus={false}
@@ -561,11 +581,9 @@ class CPDetailView extends React.Component<
               />
             </div>
             <div className="cp-dividers">
-
               <Divider className="cp-detail-divider" />
               <p className={Classes.DARK + " cp-detail-divider-text"}>then</p>
               <Divider className="cp-detail-divider" />
-  
             </div>
             <div>
               <AnchorButton
