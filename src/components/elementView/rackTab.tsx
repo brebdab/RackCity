@@ -31,7 +31,8 @@ import {
   RackResponseObject,
   getHeaders,
   ROUTES,
-  ChangePlan
+  ChangePlan,
+  PermissionState
 } from "../../utils/utils";
 import RackView from "./detailedView/rackView/rackView";
 import { ALL_DATACENTERS } from "./elementTabContainer";
@@ -58,13 +59,14 @@ interface RackTabProps {
   currDatacenter: DatacenterObject;
   onDatacenterSelect(datacenter: DatacenterObject): void;
   changePlan: ChangePlan;
+  permissionState: PermissionState;
 }
 var console: any = {};
-console.log = function() {};
+console.log = function () { };
 class RackTab extends React.Component<
   RackTabProps & RouteComponentProps,
   RackTabState
-> {
+  > {
   state = {
     isOpen: false,
     isDeleteOpen: false,
@@ -332,17 +334,16 @@ class RackTab extends React.Component<
           <p>Are you sure you want to delete?</p>
         </Alert>
         {this.props.currDatacenter &&
-        this.props.currDatacenter.name !== ALL_DATACENTERS.name ? (
-          <div className="rack-tab-panel">
-            {this.props.changePlan && this.props.isAdmin ? (
-              <Callout
-                intent={Intent.WARNING}
-                title="Rack Management on a change plan"
-              >
-                <em>All changes made to racks will be live in the database </em>
-              </Callout>
-            ) : null}
-            {this.props.isAdmin ? (
+          this.props.currDatacenter.name !== ALL_DATACENTERS.name ? (
+            <div className="rack-tab-panel">
+              {this.props.changePlan ? (
+                <Callout
+                  intent={Intent.WARNING}
+                  title="Rack Management on a change plan"
+                >
+                  <em>All changes made to racks will be live in the database </em>
+                </Callout>
+              ) : null}
               <div className=" element-tab-buttons">
                 <AnchorButton
                   className="add"
@@ -351,6 +352,13 @@ class RackTab extends React.Component<
                   minimal
                   intent={Intent.PRIMARY}
                   onClick={this.handleOpen}
+                  disabled={
+                    !(
+                      this.props.permissionState.admin
+                      || this.props.permissionState.asset_management
+                      || this.props.permissionState.datacenter_permissions.includes(+this.props.currDatacenter.id)
+                    )
+                  }
                 />
                 <AnchorButton
                   className="add "
@@ -359,32 +367,38 @@ class RackTab extends React.Component<
                   minimal
                   intent={Intent.DANGER}
                   onClick={this.handleDeleteOpen}
-                />
-              </div>
-            ) : null}
-
-            <Card>
-              <div className="rack-view-options">
-                <Button
-                  className="all-racks"
-                  text="View All Racks"
-                  onClick={(e: any) =>
-                    this.getAllRacks(this.props.currDatacenter)
+                  disabled={
+                    !(
+                      this.props.permissionState.admin
+                      || this.props.permissionState.asset_management
+                      || this.props.permissionState.datacenter_permissions.includes(+this.props.currDatacenter.id)
+                    )
                   }
                 />
-                <p className="or">or </p>
-                <RackSelectView
-                  currDatacenter={this.props.currDatacenter}
-                  submitForm={this.viewRackForm}
-                />
               </div>
-            </Card>
-          </div>
-        ) : (
-          <Callout title="No Datacenter Selected">
-            <em>Please select a datacenter to view rack information</em>
-          </Callout>
-        )}
+
+              <Card>
+                <div className="rack-view-options">
+                  <Button
+                    className="all-racks"
+                    text="View All Racks"
+                    onClick={(e: any) =>
+                      this.getAllRacks(this.props.currDatacenter)
+                    }
+                  />
+                  <p className="or">or </p>
+                  <RackSelectView
+                    currDatacenter={this.props.currDatacenter}
+                    submitForm={this.viewRackForm}
+                  />
+                </div>
+              </Card>
+            </div>
+          ) : (
+            <Callout title="No Datacenter Selected">
+              <em>Please select a datacenter to view rack information</em>
+            </Callout>
+          )}
 
         {this.state.racks.length !== 0 ? (
           <Link
@@ -415,7 +429,8 @@ const mapStatetoProps = (state: any) => {
   return {
     token: state.token,
     isAdmin: state.admin,
-    changePlan: state.changePlan
+    changePlan: state.changePlan,
+    permissionState: state.permissionState,
   };
 };
 export default connect(mapStatetoProps)(withRouter(RackTab));

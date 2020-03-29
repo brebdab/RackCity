@@ -27,7 +27,8 @@ import {
   ChangePlan,
   AssetCPObject,
   getChangePlanRowStyle,
-  isAssetCPObject
+  PermissionState,
+  isAssetCPObject,
 } from "../../../../utils/utils";
 import {
   deleteAsset,
@@ -46,6 +47,7 @@ export interface AssetViewProps {
   token: string;
   isAdmin: boolean;
   changePlan: ChangePlan;
+  permissionState: PermissionState;
 }
 // Given an rid, will perform a GET request of that rid and display info about that instnace
 
@@ -221,7 +223,7 @@ export class AssetView extends React.PureComponent<
           position={Position.TOP}
           ref={this.refHandlers.toaster}
         />
-        {this.props.isAdmin && !this.state.asset.decommissioning_user ? (
+        {!this.state.asset.decommissioning_user ? (
           <div className="detail-buttons-wrapper">
             <div className={"detail-buttons"}>
               <AnchorButton
@@ -229,11 +231,19 @@ export class AssetView extends React.PureComponent<
                 icon="edit"
                 text="Edit"
                 minimal
-                disabled={
-                  isAssetCPObject(this.state.asset) &&
-                  this.state.asset.is_decommissioned
-                }
                 onClick={() => this.handleFormOpen()}
+                disabled={
+                  (
+                    isAssetCPObject(this.state.asset) &&
+                    this.state.asset.is_decommissioned
+                  )
+                  ||
+                  !(
+                    this.props.permissionState.admin
+                    || this.props.permissionState.asset_management
+                    || (this.state.asset && this.state.asset.rack && this.props.permissionState.datacenter_permissions.includes(+this.state.asset.rack.datacenter.id))
+                  )
+                }
               />
               <FormPopup
                 datacenters={this.state.datacenters}
@@ -247,13 +257,21 @@ export class AssetView extends React.PureComponent<
               <AnchorButton
                 minimal
                 intent="danger"
-                disabled={
-                  isAssetCPObject(this.state.asset) &&
-                  this.state.asset.is_decommissioned
-                }
                 icon="remove"
                 text="Decommission"
                 onClick={this.handleDecommissionOpen}
+                disabled={
+                  (
+                    isAssetCPObject(this.state.asset) &&
+                    this.state.asset.is_decommissioned
+                  )
+                  ||
+                  !(
+                    this.props.permissionState.admin
+                    || this.props.permissionState.asset_management
+                    || (this.state.asset && this.state.asset.rack && this.props.permissionState.datacenter_permissions.includes(+this.state.asset.rack.datacenter.id))
+                  )
+                }
               />
               <Alert
                 cancelButtonText="Cancel"
@@ -273,8 +291,16 @@ export class AssetView extends React.PureComponent<
                 intent="danger"
                 icon="trash"
                 text="Delete"
-                disabled={isAssetCPObject(this.state.asset)}
                 onClick={this.handleDeleteOpen}
+                disabled={
+                  isAssetCPObject(this.state.asset)
+                  ||
+                  !(
+                    this.props.permissionState.admin
+                    || this.props.permissionState.asset_management
+                    || (this.state.asset && this.state.asset.rack && this.props.permissionState.datacenter_permissions.includes(+this.state.asset.rack.datacenter.id))
+                  )
+                }
               />
               <Alert
                 cancelButtonText="Cancel"
@@ -338,18 +364,10 @@ export class AssetView extends React.PureComponent<
                       return (
                         <tr>
                           {" "}
-                          <td
-                            style={getChangePlanRowStyle(
-                              this.state.asset
-                            )}
-                          >
+                          <td style={getChangePlanRowStyle(this.state.asset)}>
                             {port}
                           </td>
-                          <td
-                            style={getChangePlanRowStyle(
-                              this.state.asset
-                            )}
-                          >
+                          <td style={getChangePlanRowStyle(this.state.asset)}>
                             {this.state.asset.mac_addresses
                               ? this.state.asset.mac_addresses[port]
                               : null}
@@ -438,7 +456,7 @@ export class AssetView extends React.PureComponent<
         updated={() => {
           this.setState({ powerShouldUpdate: false });
         }}
-        assetIsDecommissioned={this.state.asset.decommissioning_user !== null}
+        assetIsDecommissioned={this.state.asset.decommissioning_user !== undefined}
       />
     );
   }
@@ -503,7 +521,8 @@ const mapStatetoProps = (state: any) => {
   return {
     token: state.token,
     isAdmin: state.admin,
-    changePlan: state.changePlan
+    changePlan: state.changePlan,
+    permissionState: state.permissionState
   };
 };
 
