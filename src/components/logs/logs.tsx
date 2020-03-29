@@ -248,7 +248,7 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
         }
         return (
             <div className={Classes.DARK + " log-view"}>
-                <h1>System Logs</h1>
+                <h1>Audit Logs</h1>
                 <div className={Classes.DARK + " bp3-input-group .modifier"}>
                     <span className="search-span bp3-icon bp3-icon-search"></span>
                     <form onSubmit={this.onFormSubmit}>
