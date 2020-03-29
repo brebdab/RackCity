@@ -147,7 +147,7 @@ def change_plan_remove_asset(request, id):
         {
             "success_message":
                 Status.SUCCESS.value +
-                "Asset successfuly removed from change plan"
+                "Asset successfully removed from change plan"
         },
         status=HTTPStatus.OK
     )
