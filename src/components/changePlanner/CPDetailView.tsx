@@ -91,20 +91,79 @@ class CPDetailView extends React.Component<
 
     return conflict;
   }
-  resolveConflict(asset_cp: AssetCPObject, override_live: boolean) {
+  removeModification(modification: Modification) {
+    axios
+      .post(
+        API_ROOT +
+          "api/change-plans/" +
+          this.state.changePlan.id +
+          "/remove-asset",
+        { asset_cp: modification.asset_cp.id },
+        getHeaders(this.props.token)
+      )
+      .then(res => {
+        this.addSuccessToast(res.data.success_message);
+
+        const modifications: Array<Modification> = this.state.modifications.slice();
+        const index = modifications.indexOf(modification);
+        modifications.splice(index, 1);
+        console.log(modifications, index);
+        const isOpen = this.state.isOpen;
+        isOpen.splice(index, 1);
+
+        this.setState({
+          modifications,
+          isOpen
+        });
+      })
+      .catch(err => {
+        this.addErrorToast(err.response.data.failure_message);
+      });
+  }
+
+  resolveConflict(
+    modification: Modification,
+    conflict: Conflict,
+    override_live: boolean
+  ) {
     axios
       .post(
         API_ROOT +
           "api/change-plans/" +
           this.state.changePlan.id +
           "/resolve-conflict",
-        { asset_cp: asset_cp.id, override_live },
+        { asset_cp: modification.asset_cp.id, override_live },
         getHeaders(this.props.token)
       )
       .then(res => {
         this.addSuccessToast(res.data.success_message);
+
+        const modifications: Array<Modification> = this.state.modifications.slice();
+        const index = modifications.indexOf(modification);
+        if (override_live) {
+          modification.conflicts.splice(
+            modification.conflicts.indexOf(conflict),
+            1
+          );
+
+          modifications[index] = modification;
+        } else {
+          modifications.splice(index, 1);
+          const isOpen = this.state.isOpen;
+          isOpen.splice(index, 1);
+          this.setState({
+            isOpen
+          });
+        }
+        this.setState({
+          modifications
+        });
+      })
+      .catch(err => {
+        this.addErrorToast(err.response.data.failure_message);
       });
   }
+
   toggleCollapse(index: number) {
     const isOpen = this.state.isOpen;
     isOpen[index] = !isOpen[index];
@@ -277,129 +336,126 @@ class CPDetailView extends React.Component<
           {this.loading ? <Spinner /> : null}
 
           <ul className="bp3-list-unstyled">
-            {this.state.modifications.length > 0
-              ? this.state.modifications.map(
-                  (modification: Modification, index: number) => {
-                    return (
-                      <li>
-                        <Callout
-                          icon={null}
-                          intent={
-                            modification.conflicts &&
-                            modification.conflicts.length > 0
-                              ? Intent.DANGER
-                              : Intent.NONE
-                          }
-                          className="change-plan-item"
-                          onClick={e => this.toggleCollapse(index)}
-                        >
-                          {modification.title}
+            {this.state.modifications.length > 0 ? (
+              this.state.modifications.map(
+                (modification: Modification, index: number) => {
+                  return (
+                    <li>
+                      <Callout
+                        icon={null}
+                        intent={
+                          modification.conflicts &&
+                          modification.conflicts.length > 0
+                            ? Intent.DANGER
+                            : Intent.NONE
+                        }
+                        className="change-plan-item"
+                        onClick={e => this.toggleCollapse(index)}
+                      >
+                        {modification.title}
+                        <AnchorButton
+                          className="cp-remove"
+                          intent={Intent.DANGER}
+                          minimal
+                          icon="delete"
+                          onClick={(e: any) => {
+                            this.removeModification(modification);
+                            e.stopPropagation();
+                          }}
+                          text="Discard change"
+                        />
+                      </Callout>
+                      <Collapse isOpen={this.state.isOpen[index]}>
+                        <div className="cp-collapse-body">
+                          {modification.conflicts
+                            ? modification.conflicts.map(
+                                (conflict: Conflict) => {
+                                  return (
+                                    <Callout intent={Intent.DANGER}>
+                                      {conflict.conflict_message}
+                                      {conflict.conflict_resolvable ? (
+                                        <div className="merge-options">
+                                          <AnchorButton
+                                            onClick={() =>
+                                              this.resolveConflict(
+                                                modification,
+                                                conflict,
+                                                false
+                                              )
+                                            }
+                                            icon="properties"
+                                            text="Discard change plan modifications"
+                                          />
+                                          <AnchorButton
+                                            onClick={() =>
+                                              this.resolveConflict(
+                                                modification,
+                                                conflict,
+                                                true
+                                              )
+                                            }
+                                            icon="properties"
+                                            text="Keep change plan modifications"
+                                          />
+                                        </div>
+                                      ) : null}
+                                    </Callout>
+                                  );
+                                }
+                              )
+                            : null}
+
                           <AnchorButton
-                            className="cp-remove"
-                            intent={Intent.DANGER}
-                            minimal
-                            icon="delete"
+                            className="asset-detail"
+                            icon="properties"
                             onClick={(e: any) => {
-                              const modifications = this.state.modifications;
-                              const isOpen = this.state.isOpen;
-                              isOpen.splice(index, 1);
-                              modifications.splice(index, 1);
-
-                              this.setState({
-                                modifications
-                              });
-                              e.stopPropagation();
+                              this.props.history.push(
+                                ROUTES.ASSETS + "/" + modification.asset_cp.id
+                              );
                             }}
-                            text="Remove change"
+                            text="Go to change plan asset detail page"
                           />
-                        </Callout>
-                        <Collapse isOpen={this.state.isOpen[index]}>
-                          <div className="cp-collapse-body">
-                            {modification.conflicts
-                              ? modification.conflicts.map(
-                                  (conflict: Conflict) => {
-                                    return (
-                                      <Callout intent={Intent.DANGER}>
-                                        {conflict.conflict_message}
-                                        {conflict.conflict_resolvable ? (
-                                          <div className="merge-options">
-                                            <AnchorButton
-                                              onClick={() =>
-                                                this.resolveConflict(
-                                                  modification.asset_cp,
-                                                  false
-                                                )
-                                              }
-                                              icon="properties"
-                                              text="Discard change plan modifications"
-                                            />
-                                            <AnchorButton
-                                              onClick={() =>
-                                                this.resolveConflict(
-                                                  modification.asset_cp,
-                                                  true
-                                                )
-                                              }
-                                              icon="properties"
-                                              text="Keep change plan modifications"
-                                            />
-                                          </div>
-                                        ) : null}
-                                      </Callout>
-                                    );
-                                  }
-                                )
-                              : null}
-
-                            <AnchorButton
-                              className="asset-detail"
-                              icon="properties"
-                              onClick={(e: any) => {
-                                this.props.history.push(
-                                  ROUTES.ASSETS + "/" + modification.asset_cp.id
-                                );
-                              }}
-                              text="Go to change plan asset detail page"
-                            />
-                            {modification.asset ? (
-                              <div className="cp-details">
-                                <Pre>
-                                  <h3>Live Asset </h3>
-                                  {this.renderAssetData(
-                                    modification.asset,
-                                    modification
-                                  )}
-                                </Pre>
-                                <Pre>
-                                  <h3>Change Plan Asset</h3>
-                                  {modification.asset_cp
-                                    ? this.renderAssetData(
-                                        modification.asset_cp,
-                                        modification
-                                      )
-                                    : null}
-                                </Pre>
-                              </div>
-                            ) : (
-                              <div className="cp-details">
-                                <Pre>
-                                  <h3>Change Plan Asset</h3>
-                                  {modification.asset_cp
-                                    ? this.renderAssetData(
-                                        modification.asset_cp,
-                                        modification
-                                      )
-                                    : null}
-                                </Pre>
-                              </div>
-                            )}
-                          </div>
-                        </Collapse>
-                      </li>
-                    );
-                  }
-                )
-              : null}
+                          {modification.asset ? (
+                            <div className="cp-details">
+                              <Pre>
+                                <h3>Live Asset </h3>
+                                {this.renderAssetData(
+                                  modification.asset,
+                                  modification
+                                )}
+                              </Pre>
+                              <Pre>
+                                <h3>Change Plan Asset</h3>
+                                {modification.asset_cp
+                                  ? this.renderAssetData(
+                                      modification.asset_cp,
+                                      modification
+                                    )
+                                  : null}
+                              </Pre>
+                            </div>
+                          ) : (
+                            <div className="cp-details">
+                              <Pre>
+                                <h3>Change Plan Asset</h3>
+                                {modification.asset_cp
+                                  ? this.renderAssetData(
+                                      modification.asset_cp,
+                                      modification
+                                    )
+                                  : null}
+                              </Pre>
+                            </div>
+                          )}
+                        </div>
+                      </Collapse>
+                    </li>
+                  );
+                }
+              )
+            ) : (
+              <Callout title="No modifications for this change plan"> </Callout>
+            )}
           </ul>
         </div>
 
