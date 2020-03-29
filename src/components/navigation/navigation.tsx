@@ -123,8 +123,9 @@ export class Navigation extends React.Component<
             >
               <Banner
                 title={
+                  "Change Plan: " +
                   this.props.changePlan.name +
-                  "\n click here to go to change plan summary"
+                  "\n (click here to see summary of this change plan)"
                 }
               />
             </div>
