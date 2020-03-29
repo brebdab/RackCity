@@ -1,0 +1,16 @@
+.barcode-container {
+  width: 2.0625in;
+  //   width: 2.05;
+  height: 0.5in;
+  //   float: left;
+}
+
+.barcode-row {
+  float: none;
+}
+
+@page {
+  margin-top: 0.15in;
+  margin-left: 0.2in;
+  margin-bottom: 0.5in;
+}

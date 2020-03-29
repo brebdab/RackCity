@@ -12,6 +12,7 @@ import {
 import AssetView from "./components/elementView/detailedView/assetView/assetView";
 import ModelView from "./components/elementView/detailedView/modelView/modelView";
 import RackView from "./components/elementView/detailedView/rackView/rackView";
+import BarcodeView from "./components/elementView/detailedView/assetView/barcodeView";
 import Fallback, {
   NotAuthorized,
   NotAuthorizedAdmin
@@ -123,6 +124,10 @@ class App extends React.Component<AppProps> {
           <this.PrivateRoute path={ROUTES.REPORT} component={Report} />
           <this.PrivateRoute path={ROUTES.LOGS} component={Logs} />
           <this.PrivateRoute path={ROUTES.RACK_PRINT} component={RackView} />
+          <this.PrivateRoute
+            path={ROUTES.BARCODE_PRINT}
+            component={BarcodeView}
+          />
           <this.PrivateRoute
             exact
             path={ROUTES.CHANGE_PLAN}

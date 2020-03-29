@@ -29,6 +29,7 @@
     "package.json": "^2.0.1",
     "query-string": "^6.10.1",
     "react": "^16.12.0",
+    "react-barcode": "^1.4.0",
     "react-beautiful-dnd": "^12.2.0",
     "react-dom": "^16.12.0",
     "react-graph-vis": "^1.0.5",
