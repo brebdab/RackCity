@@ -96,6 +96,27 @@ def detect_conflicts_cp(sender, **kwargs):
     ).update(asset_conflict_asset_number=asset)
 
 
+def get_filtered_decommissioned_assets_for_cp(change_plan, data):
+    decommissioned_assets = DecommissionedAsset.objects.all()
+    decomissioned_assets_cp = AssetCP.objects.filter(
+        change_plan=change_plan,
+        is_decommissioned=True,
+    )
+    decommissioned_assets, filter_failure_response = get_filtered_query(
+        decommissioned_assets,
+        data,
+    )
+    if filter_failure_response:
+        return (None, None, filter_failure_response)
+    decomissioned_assets_cp, filter_failure_response = get_filtered_query(
+        decomissioned_assets_cp,
+        data,
+    )
+    if filter_failure_response:
+        return (None, None, filter_failure_response)
+    return (decommissioned_assets, decomissioned_assets_cp, None)
+
+
 def get_filtered_assets_for_cp(change_plan, data):
     assets, assetsCP = get_assets_for_cp(change_plan=change_plan)
     filtered_assets, filter_failure_response = get_filtered_query(
@@ -143,7 +164,67 @@ def get_page_of_serialized_assets(all_assets, query_params):
         return all_assets[start:end]
 
 
-def get_many_assets_response_for_cp(request, change_plan):
+def get_many_assets_response_for_cp(request, change_plan, decommissioned=False):
+    should_paginate = should_paginate_query(request.query_params)
+    if should_paginate:
+        page_failure_response = get_invalid_paginated_request_response(
+            request.query_params
+        )
+        if page_failure_response:
+            return page_failure_response
+
+    if not decommissioned:
+        assets, assetsCP, filter_failure_response = \
+            get_filtered_assets_for_cp(
+                change_plan,
+                request.data,
+            )
+        if filter_failure_response:
+            return filter_failure_response
+    else:
+        assets, assetsCP, filter_failure_response = \
+            get_filtered_decommissioned_assets_for_cp(
+                change_plan,
+                request.data,
+            )
+
+    asset_serializer = RecursiveAssetSerializer(
+        assets,
+        many=True,
+    )
+    assetCP_serializer = RecursiveAssetCPSerializer(
+        assetsCP,
+        many=True,
+    )
+    all_assets = asset_serializer.data + assetCP_serializer.data
+
+    sorted_assets = sort_serialized_assets(all_assets, request.data)
+
+    if should_paginate:
+        try:
+            assets_data = get_page_of_serialized_assets(
+                sorted_assets,
+                request.query_params,
+            )
+        except Exception as error:
+            return JsonResponse(
+                {
+                    "failure_message":
+                        Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
+                        "errors": str(error)
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
+    else:
+        assets_data = sorted_assets
+
+    return JsonResponse(
+        {"assets": assets_data},
+        status=HTTPStatus.OK,
+    )
+
+
+def get_many_decommissioned_assets_response_for_cp(request, change_plan):
     should_paginate = should_paginate_query(request.query_params)
     if should_paginate:
         page_failure_response = get_invalid_paginated_request_response(

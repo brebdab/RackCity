@@ -88,21 +88,12 @@ def asset_many(request):
     assets are returned. If page is specified as a query parameter, page
     size must also be specified, and a page of assets will be returned.
     """
-    change_plan_id = request.query_params.get('change_plan')
-    if change_plan_id:
-        try:
-            change_plan = ChangePlan.objects.get(id=change_plan_id)
-        except ObjectDoesNotExist:
-            return JsonResponse(
-                {
-                    "failure_message":
-                        Status.ERROR.value +
-                        "Change Plan" + GenericFailure.DOES_NOT_EXIST.value,
-                    "errors":
-                        "No existing change plan with id="+str(change_plan_id)
-                },
-                status=HTTPStatus.BAD_REQUEST
-            )
+    if request.query_params.get('change_plan'):
+        (change_plan, response) = get_change_plan(
+            request.query_params.get('change_plan')
+        )
+        if response:
+            return response
         else:
             return get_many_assets_response_for_cp(
                 request,
