@@ -39,7 +39,7 @@ from rest_framework.permissions import IsAuthenticated
 
 class RegisterNameView(PermissionRequiredMixin, RegisterView):
     serializer_class = RegisterNameSerializer
-    permission_required = PermissionPath.MODEL_WRITE.value
+    permission_required = PermissionPath.USER_WRITE.value
     raise_exception = True
 
 
