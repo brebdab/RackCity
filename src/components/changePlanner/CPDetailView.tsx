@@ -171,6 +171,7 @@ class CPDetailView extends React.Component<
         "/api/change-plans/" +
         this.state.changePlan.id +
         "/execute",
+        {},
         getHeaders(this.props.token)
       )
       .then(res => {
