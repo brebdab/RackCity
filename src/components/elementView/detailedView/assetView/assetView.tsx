@@ -338,10 +338,18 @@ export class AssetView extends React.PureComponent<
                     return (
                       <tr>
                         {" "}
-                        <td style={getChangePlanRowStyle(this.state.asset)}>
+                        <td
+                          style={getChangePlanRowStyle(
+                            this.state.asset
+                          )}
+                        >
                           {port}
                         </td>
-                        <td style={getChangePlanRowStyle(this.state.asset)}>
+                        <td
+                          style={getChangePlanRowStyle(
+                            this.state.asset
+                          )}
+                        >
                           {this.state.asset.mac_addresses
                             ? this.state.asset.mac_addresses[port]
                             : null}
@@ -349,7 +357,9 @@ export class AssetView extends React.PureComponent<
                         {connection
                           ? [
                               <td
-                                style={getChangePlanRowStyle(this.state.asset)}
+                                style={getChangePlanRowStyle(
+                                  this.state.asset
+                                )}
                                 className={
                                   this.state.asset.decommissioning_user
                                     ? undefined
@@ -371,7 +381,9 @@ export class AssetView extends React.PureComponent<
                                 {connection.destination_hostname}
                               </td>,
                               <td
-                                style={getChangePlanRowStyle(this.state.asset)}
+                                style={getChangePlanRowStyle(
+                                  this.state.asset
+                                )}
                               >
                                 {connection.destination_port}
                               </td>

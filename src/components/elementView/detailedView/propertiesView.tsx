@@ -10,9 +10,11 @@ import {
   isModelObject,
   isObject,
   ModelFieldsTable,
-  ROUTES
+  ROUTES,
+  ChangePlan
 } from "../../../utils/utils";
 import "./propertiesView.scss";
+import { connect } from "react-redux";
 
 export interface AlertState {
   isDeleteOpen: boolean;
@@ -23,6 +25,7 @@ export interface AlertState {
 
 interface PropertiesViewProps {
   data: ElementObjectType;
+  changePlan: ChangePlan;
 }
 
 class PropertiesView extends React.PureComponent<
@@ -210,5 +213,9 @@ class PropertiesView extends React.PureComponent<
     );
   }
 }
-
-export default withRouter(PropertiesView);
+const mapStateToProps = (state: any) => {
+  return {
+    changePlan: state.changePlan
+  };
+};
+export default connect(mapStateToProps)(withRouter(PropertiesView));

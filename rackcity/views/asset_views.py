@@ -131,7 +131,11 @@ def asset_detail(request, id):
     try:
         if change_plan:
             assets, assets_cp = get_assets_for_cp(change_plan.id, show_decommissioned=True)
-            if assets_cp.filter(id=id).exists():
+            ## if id of live asset is given on a change plan, just return the corresponding related assetCP 
+            if assets_cp.filter(related_asset=id).exists():
+                asset = assets_cp.get(related_asset=id)
+                serializer = RecursiveAssetCPSerializer(asset)
+            elif assets_cp.filter(id=id).exists():
                 asset = assets_cp.get(id=id)
                 serializer = RecursiveAssetCPSerializer(asset)
             else:
