@@ -129,7 +129,6 @@ class CPDetailView extends React.Component<
         console.log(modifications, index);
         const isOpen = this.state.isOpen;
         isOpen.splice(index, 1);
-
         this.setState({
           modifications,
           isOpen
