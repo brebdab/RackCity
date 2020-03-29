@@ -164,7 +164,11 @@ def get_page_of_serialized_assets(all_assets, query_params):
         return all_assets[start:end]
 
 
-def get_many_assets_response_for_cp(request, change_plan, decommissioned=False):
+def get_many_assets_response_for_cp(
+    request,
+    change_plan,
+    decommissioned=False
+):
     should_paginate = should_paginate_query(request.query_params)
     if should_paginate:
         page_failure_response = get_invalid_paginated_request_response(
@@ -188,57 +192,6 @@ def get_many_assets_response_for_cp(request, change_plan, decommissioned=False):
                 request.data,
             )
 
-    asset_serializer = RecursiveAssetSerializer(
-        assets,
-        many=True,
-    )
-    assetCP_serializer = RecursiveAssetCPSerializer(
-        assetsCP,
-        many=True,
-    )
-    all_assets = asset_serializer.data + assetCP_serializer.data
-
-    sorted_assets = sort_serialized_assets(all_assets, request.data)
-
-    if should_paginate:
-        try:
-            assets_data = get_page_of_serialized_assets(
-                sorted_assets,
-                request.query_params,
-            )
-        except Exception as error:
-            return JsonResponse(
-                {
-                    "failure_message":
-                        Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                        "errors": str(error)
-                },
-                status=HTTPStatus.BAD_REQUEST,
-            )
-    else:
-        assets_data = sorted_assets
-
-    return JsonResponse(
-        {"assets": assets_data},
-        status=HTTPStatus.OK,
-    )
-
-
-def get_many_decommissioned_assets_response_for_cp(request, change_plan):
-    should_paginate = should_paginate_query(request.query_params)
-    if should_paginate:
-        page_failure_response = get_invalid_paginated_request_response(
-            request.query_params
-        )
-        if page_failure_response:
-            return page_failure_response
-
-    assets, assetsCP, filter_failure_response = get_filtered_assets_for_cp(
-        change_plan,
-        request.data,
-    )
-    if filter_failure_response:
-        return filter_failure_response
     asset_serializer = RecursiveAssetSerializer(
         assets,
         many=True,
