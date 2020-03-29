@@ -19,7 +19,8 @@ import {
   AssetObject,
   getHeaders,
   getChangePlanRowStyle,
-  ChangePlan
+  ChangePlan,
+  PermissionState
 } from "../../../utils/utils";
 import "./powerView.scss";
 import { IconNames } from "@blueprintjs/icons";
@@ -33,6 +34,7 @@ interface PowerViewProps {
   isAdmin: boolean;
   changePlan: ChangePlan;
   assetIsDecommissioned: boolean;
+  permissionState: PermissionState;
 }
 
 interface PowerViewState {
@@ -141,6 +143,22 @@ export class PowerView extends React.PureComponent<
     this.props.updated();
   }
 
+  getUsername(token: string) {
+    const headers = {
+      headers: {
+        Authorization: "Token " + token
+      }
+    };
+    axios
+      .get(API_ROOT + "api/users/who-am-i", headers)
+      .then(res => {
+        this.setState({ username: res.data.username });
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  }
+
   getPowerPortRows() {
     const rows = [];
     if (this.props.asset) {
@@ -245,6 +263,13 @@ export class PowerView extends React.PureComponent<
                           : "Turn off"
                       }
                       icon="power"
+                      disabled={
+                        !(
+                          this.props.permissionState.admin
+                          || this.props.permissionState.power_control
+                          || this.state.username === this.props.asset.owner
+                        )
+                      }
                       onClick={
                         this.state.powerStatus[
                           Object.keys(this.state.powerStatus)[0]
@@ -304,6 +329,13 @@ export class PowerView extends React.PureComponent<
                       minimal
                       intent="warning"
                       text={"Cycle Power"}
+                      disabled={
+                        !(
+                          this.props.permissionState.admin
+                          || this.props.permissionState.power_control
+                          || this.state.username === this.props.asset.owner
+                        )
+                      }
                       onClick={() => {
                         this.setState({
                           statusLoaded: !this.state.statusLoaded
@@ -374,29 +406,14 @@ export class PowerView extends React.PureComponent<
       </div>
     );
   }
-
-  private getUsername(token: string) {
-    const headers = {
-      headers: {
-        Authorization: "Token " + token
-      }
-    };
-    axios
-      .get(API_ROOT + "api/users/utils", headers)
-      .then(res => {
-        this.setState({ username: res.data.username });
-      })
-      .catch(err => {
-        console.log(err);
-      });
-  }
 }
 
 const mapStatetoProps = (state: any) => {
   return {
     token: state.token,
     isAdmin: state.admin,
-    changePlan: state.changePlan
+    changePlan: state.changePlan,
+    permissionState: state.permissionState,
   };
 };
 
