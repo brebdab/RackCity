@@ -1197,11 +1197,6 @@ class ElementTable extends React.Component<
                                     : false
                                 }
                                 onClick={(event: any) => {
-                                  console.log(
-                                    "SCROLL",
-                                    window.scrollX,
-                                    window.scrollY
-                                  );
                                   this.handleEditButtonClick(item);
                                   event.stopPropagation();
                                 }}
@@ -1213,7 +1208,7 @@ class ElementTable extends React.Component<
                               <AnchorButton
                                 className="button-table"
                                 intent="primary"
-                                icon="edit"
+              
                                 minimal
                                 icon={
                                   this.props.type === ElementType.ASSET
