@@ -516,12 +516,14 @@ def save_power_connections(asset_data, asset_id, change_plan=None):
                     if PDUPortCP.objects.filter(
                         rack=asset.rack,
                         left_right=power_connection_data['left_right'],
-                        port_number=power_connection_data['port_number']
+                        port_number=power_connection_data['port_number'],
+                        change_plan=change_plan
                     ).exists():
                         pdu_port = PDUPortCP.objects.get(
                             rack=asset.rack,
                             left_right=power_connection_data['left_right'],
-                            port_number=power_connection_data['port_number']
+                            port_number=power_connection_data['port_number'],
+                            change_plan=change_plan
                         )
                     else:
                         pdu_port = PDUPortCP(change_plan=change_plan)
@@ -538,10 +540,12 @@ def save_power_connections(asset_data, asset_id, change_plan=None):
                     str(power_connection_data['port_number']) + \
                     "' does not exist. "
             else:
+                print(pdu_port)
                 power_port.power_connection = pdu_port
                 try:
                     power_port.save()
                 except Exception as error:
+                    print(error)
                     failure_message += \
                         "Power connection on port '" + \
                         port_name + \
