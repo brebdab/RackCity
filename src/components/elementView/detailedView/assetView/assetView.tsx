@@ -452,7 +452,7 @@ export class AssetView extends React.PureComponent<
         updated={() => {
           this.setState({ powerShouldUpdate: false });
         }}
-        assetIsDecommissioned={this.state.asset.decommissioning_user !== null}
+        assetIsDecommissioned={this.state.asset.decommissioning_user !== undefined}
       />
     );
   }

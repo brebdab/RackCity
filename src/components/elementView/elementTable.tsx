@@ -682,6 +682,7 @@ class ElementTable extends React.Component<
           asset={this.state.assetPower}
           shouldUpdate={false}
           updated={() => { }}
+          assetIsDecommissioned={this.props.isDecommissioned}
         />
       </Dialog>
     );
