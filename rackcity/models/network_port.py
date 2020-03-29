@@ -37,7 +37,6 @@ class AbstractNetworkPort(models.Model):
         null=True,
         blank=True,
     )
-
     def create_network_connection(self, destination_port):
         if (
             destination_port.connected_port
@@ -87,6 +86,7 @@ class NetworkPort(AbstractNetworkPort):
         Asset,
         on_delete=models.CASCADE,
         verbose_name="asset",
+        
     )
 
     class Meta:

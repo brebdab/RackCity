@@ -412,10 +412,15 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
                             change_plan=change_plan
                         )
                         # add destination asset to AssetCPTable
+                        print(destination_asset)
+                        print(destination_asset._meta.fields)
                         for field in destination_asset._meta.fields:
-                            if field.name != 'id' and field.name == "assetid_ptr":
+                            
+                            if field.name != 'id' and field.name != "assetid_ptr":
+                                
                                 setattr(asset_cp, field.name, getattr(
                                     destination_asset, field.name))
+                               
                         asset_cp.save()
                         destination_asset = asset_cp
                     else:
@@ -506,6 +511,7 @@ def save_power_connections(asset_data, asset_id, change_plan=None):
                     left_right=power_connection_data['left_right'],
                     port_number=power_connection_data['port_number']
                 )
+                pdu_port = pdu_port_master
                 if change_plan:
                     if PDUPortCP.objects.filter(
                         rack=asset.rack,
@@ -524,7 +530,7 @@ def save_power_connections(asset_data, asset_id, change_plan=None):
                                 setattr(pdu_port, field.name, getattr(
                                     pdu_port_master, field.name))
                         pdu_port.save()
-                pdu_port = pdu_port_master
+                
             except ObjectDoesNotExist:
                 failure_message += \
                     "PDU port '" + \
@@ -536,6 +542,7 @@ def save_power_connections(asset_data, asset_id, change_plan=None):
                 try:
                     power_port.save()
                 except Exception as error:
+                    print(error)
                     failure_message += \
                         "Power connection on port '" + \
                         port_name + \
