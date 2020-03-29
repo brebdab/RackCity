@@ -417,7 +417,7 @@ export class AssetView extends React.PureComponent<
                   networkGraph={this.state.asset.network_graph}
                   onClickNode={this.redirectToAsset}
                   isDecommissioned={
-                    this.state.asset.decommissioning_user !== null
+                    this.state.asset.decommissioning_user !== undefined
                   }
                 />
               </div>
