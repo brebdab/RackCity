@@ -12,6 +12,7 @@ import {
   Position,
   Toaster
 } from "@blueprintjs/core";
+import * as actions from "../../store/actions/state";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
@@ -71,6 +72,7 @@ interface ElementViewProps {
   currDatacenter?: DatacenterObject;
   onDatacenterSelect?(datacenter: DatacenterObject): void;
   updateDatacenters?(): void;
+  updateChangePlans(status: boolean): void;
   isActive?: boolean;
   changePlan: ChangePlan;
   permissionState: PermissionState;
@@ -198,9 +200,9 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       page_type === PagingTypes.ALL
         ? {}
         : {
-          page_size: page_type,
-          page
-        };
+            page_size: page_type,
+            page
+          };
     if (this.props.changePlan) {
       params["change_plan"] = this.props.changePlan.id;
     }
@@ -340,9 +342,11 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       .post(API_ROOT + "api/change-plans/add", changePlan, headers)
       .then(res => {
         console.log("success");
+        this.props.updateChangePlans(true);
 
         this.handleDataUpdate(true);
         this.handleClose();
+
         this.addSuccessToast(res.data.success_message);
         console.log(this.state.isOpen);
       });
@@ -395,7 +399,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                     rightIcon="caret-down"
                     text={
                       this.props.currDatacenter &&
-                        this.props.currDatacenter.name
+                      this.props.currDatacenter.name
                         ? this.props.currDatacenter.name
                         : "All datacenters"
                     }
@@ -565,7 +569,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                 onClick={this.handleOpen}
                 disabled={
                   this.props.element !== ElementType.ASSET &&
-                    this.props.changePlan
+                  this.props.changePlan
                     ? true
                     :
                     !(
@@ -671,4 +675,10 @@ const mapStateToProps = (state: any) => {
     changePlan: state.changePlan
   };
 };
-export default connect(mapStateToProps)(ElementTab);
+const mapDispatchToProps = (dispatch: any) => {
+  return {
+    updateChangePlans: (status: boolean) =>
+      dispatch(actions.updateChangePlans(status))
+  };
+};
+export default connect(mapStateToProps, mapDispatchToProps)(ElementTab);

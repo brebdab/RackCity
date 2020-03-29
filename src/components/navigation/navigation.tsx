@@ -25,7 +25,13 @@ import {
 } from "../../forms/formUtils";
 import * as actions from "../../store/actions/state";
 import { API_ROOT } from "../../utils/api-config";
-import { ChangePlan, ROUTES, getHeaders, ElementType, PermissionState } from "../../utils/utils";
+import {
+  ChangePlan,
+  ROUTES,
+  getHeaders,
+  ElementType,
+  PermissionState
+} from "../../utils/utils";
 import "./navigation.scss";
 import { isNullOrUndefined } from "util";
 export interface NavigationProps {
@@ -35,6 +41,8 @@ export interface NavigationProps {
   isAdmin: boolean;
   token: string;
   changePlan: ChangePlan;
+  updateChangePlansBoolean: boolean;
+  updateChangePlans(status: boolean): void;
   permissionState: PermissionState;
 }
 
@@ -55,7 +63,7 @@ type NavigationPropsAll = NavigationProps & RouteComponentProps;
 export class Navigation extends React.Component<
   NavigationPropsAll,
   NavigationState
-  > {
+> {
   public state = {
     username: undefined,
     changePlans: []
@@ -86,9 +94,13 @@ export class Navigation extends React.Component<
     if (this.props.isAuthenticated && !this.state.username) {
       this.getUsername(this.props.token);
     }
-    if (!this.sucessfulChangePlanRequest) {
+    if (
+      !this.sucessfulChangePlanRequest ||
+      this.props.updateChangePlansBoolean
+    ) {
       getChangePlanList(this.props.token).then(res => {
         this.sucessfulChangePlanRequest = true;
+        this.props.updateChangePlans(false);
         let items: Array<ChangePlan> = res.data[ElementType.CHANGEPLANS];
         items = items.filter(changePlan =>
           isNullOrUndefined(changePlan.execution_time)
@@ -96,6 +108,7 @@ export class Navigation extends React.Component<
         this.setState({
           changePlans: items
         });
+        console.log("GETTING NEW CHANGE PLANS", items);
       });
     }
 
@@ -149,8 +162,8 @@ export class Navigation extends React.Component<
                           text="View Logs"
                           disabled={
                             !(
-                              this.props.permissionState.admin
-                              || this.props.permissionState.audit_read
+                              this.props.permissionState.admin ||
+                              this.props.permissionState.audit_read
                             )
                           }
                         />
@@ -163,24 +176,20 @@ export class Navigation extends React.Component<
                         />
                         <MenuItem
                           icon="user"
-                          onClick={() =>
-                            this.props.history.push(ROUTES.USERS)
-                          }
-                          disabled={
-                            !(this.props.permissionState.admin)
-                          }
+                          onClick={() => this.props.history.push(ROUTES.USERS)}
+                          disabled={!this.props.permissionState.admin}
                           text="Manage Users"
                         />
                       </Menu>
                     }
-                  // position={Position.RIGHT_TOP}
+                    // position={Position.RIGHT_TOP}
                   >
                     <Button icon="menu" text="Tools" minimal />
                   </Popover>
                 </div>
               ) : (
-                  <p></p>
-                )}
+                <p></p>
+              )}
             </NavbarGroup>
 
             <NavbarGroup align={Alignment.RIGHT}>
@@ -239,14 +248,14 @@ export class Navigation extends React.Component<
                   />
                 </div>
               ) : (
-                  <AnchorButton
-                    onClick={() => this.props.history.push(ROUTES.LOGIN)}
-                    className="nav-bar-button"
-                    icon="user"
-                    text="Login"
-                    minimal
-                  />
-                )}
+                <AnchorButton
+                  onClick={() => this.props.history.push(ROUTES.LOGIN)}
+                  className="nav-bar-button"
+                  icon="user"
+                  text="Login"
+                  minimal
+                />
+              )}
             </NavbarGroup>
           </Navbar>
         </div>
@@ -260,14 +269,18 @@ const mapStateToProps = (state: any) => {
     isAuthenticated: state.token !== null,
     isAdmin: state.admin,
     token: state.token,
-    permissionState: state.permissionState,
-    changePlan: state.changePlan
+    changePlan: state.changePlan,
+    updateChangePlansBoolean: state.updateChangePlansBoolean,
+    permissionState: state.permissionState
   };
 };
 
 const mapDispatchToProps = (dispatch: any) => {
   return {
     logout: () => dispatch(actions.logout()),
+    updateChangePlans: (status: boolean) =>
+      dispatch(actions.updateChangePlans(status)),
+
     setChangePlan: (changePlan: ChangePlan) =>
       dispatch(actions.setChangePlan(changePlan))
   };

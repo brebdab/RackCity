@@ -12,12 +12,20 @@ export const setChangePlan = (changePlan: ChangePlan) => {
     changePlan: changePlan
   };
 };
+
+export const updateChangePlans = (status: boolean) => {
+  console.log("setting update changee plans to", status);
+  return {
+    type: actionTypes.UPDATE_CHANGE_PLANS,
+    updateChangePlansBoolean: status
+  };
+};
 export const setPermissionState = (permissionState: PermissionState) => {
   return {
     type: actionTypes.SET_PERMISSION_STATE,
     permissionState: permissionState
-  }
-}
+  };
+};
 export const authStart = () => {
   return {
     type: actionTypes.AUTH_START
@@ -26,7 +34,7 @@ export const authStart = () => {
 
 var console: any = {};
 
-console.log = function () { };
+console.log = function() {};
 export const authSuccess = (token: string) => {
   return {
     type: actionTypes.AUTH_SUCCESS,
@@ -139,8 +147,8 @@ export const checkPermissions = (token: string) => {
           power_control: res.data.power_control,
           audit_read: res.data.audit_read,
           admin: res.data.admin,
-          datacenter_permissions: res.data.datacenter_permissions,
-        }
+          datacenter_permissions: res.data.datacenter_permissions
+        };
         dispatch(setPermissionState(permissionState));
       })
       .catch(err => {
