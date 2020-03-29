@@ -17,7 +17,8 @@ export enum ROUTES {
   RACK_PRINT = "/dashboard/rack-print",
   BULK_IMPORT = "/dashboard/bulk-upload/:resourceType",
   USERS = "/dashboard/users",
-  CHANGE_PLAN = "/dashboard/change-plans"
+  CHANGE_PLAN = "/dashboard/change-plans",
+  BARCODE_PRINT = "/assets/barcode-print"
 }
 export enum ElementType {
   RACK = "racks",
@@ -34,6 +35,14 @@ export enum PowerSide {
 export interface ChangePlan extends ElementObject {
   name: string;
   execution_time?: string;
+}
+export interface PermissionState {
+  model_management: boolean;
+  asset_management: boolean;
+  power_control: boolean;
+  audit_read: boolean;
+  admin: boolean;
+  datacenter_permissions: Array<number>;
 }
 export interface AssetObjectOld extends ElementObject {
   hostname: string;

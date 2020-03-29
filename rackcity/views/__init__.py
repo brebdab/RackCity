@@ -34,6 +34,7 @@ from .asset_views import (
 from .decommission_views import (
     decommission_asset,
     decommissioned_asset_many,
+    decommissioned_asset_page_count,
 )
 from .rack_views import (
     rack_get,
@@ -60,6 +61,7 @@ from .user_views import (
     user_set_groups,
     user_get_groups,
     all_user_groups,
+    user_get_my_groups,
 )
 from .datacenter_views import (
     datacenter_all,

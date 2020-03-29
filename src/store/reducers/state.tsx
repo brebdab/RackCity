@@ -1,17 +1,26 @@
 import * as actionTypes from "../actions/actionTypes";
 import { updateObject } from "../utility";
-import { ChangePlan } from "../../utils/utils";
+import { ChangePlan, PermissionState } from "../../utils/utils";
 interface ReduxState {
   token: string | null;
   error: string | null;
   loading: boolean;
   changePlan: ChangePlan | null;
+  permissionState: PermissionState;
 }
 const initialState: ReduxState = {
   token: null,
   error: null,
   loading: false,
-  changePlan: null
+  changePlan: null,
+  permissionState: {
+    "model_management": false,
+    "asset_management": false,
+    "power_control": false,
+    "audit_read": false,
+    "admin": false,
+    "datacenter_permissions": []
+  } as PermissionState
 };
 const setChangePlan = (state: any, action: any) => {
   return updateObject(state, {
@@ -21,6 +30,11 @@ const setChangePlan = (state: any, action: any) => {
 const updateChangePlans = (state: any, action: any) => {
   return updateObject(state, {
     updateChangePlans: action.updateChangePlans
+  }};
+
+const setPermissionState = (state: any, action: any) => {
+  return updateObject(state, {
+    permissionState: action.permissionState
   });
 };
 const authStart = (state: any, action: any) => {
@@ -76,6 +90,8 @@ const reducer = (state = initialState, action: any) => {
       return setChangePlan(state, action);
     case actionTypes.UPDATE_CHANGE_PLANS:
       return updateChangePlans(state, action);
+    case actionTypes.SET_PERMISSION_STATE:
+      return setPermissionState(state, action);
     default:
       return state;
   }

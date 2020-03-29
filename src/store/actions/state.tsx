@@ -1,7 +1,7 @@
 import axios from "axios";
 import { API_ROOT } from "../../utils/api-config";
 import * as actionTypes from "./actionTypes";
-import { ChangePlan } from "../../utils/utils";
+import { ChangePlan, PermissionState } from "../../utils/utils";
 
 export const DUKE_OAUTH_URI =
   "https://oauth.oit.duke.edu/oauth/authorize.php?client_id=hyposoft-rack-city&response_type=token&state=1129&scope=basic&redirect_uri=";
@@ -12,11 +12,10 @@ export const setChangePlan = (changePlan: ChangePlan) => {
     changePlan: changePlan
   };
 };
-
-export const updateChangePlans = (status: boolean) => {
+export const setPermissionState = (permissionState: PermissionState) => {
   return {
-    type: actionTypes.UPDATE_CHANGE_PLANS,
-    updateChangePlans: status
+    type: actionTypes.SET_PERMISSION_STATE,
+    permissionState: permissionState
   };
 };
 export const authStart = () => {
@@ -124,6 +123,32 @@ export const checkAdmin = (token: string) => {
   };
 };
 
+export const checkPermissions = (token: string) => {
+  return (dispatch: any) => {
+    const headers = {
+      headers: {
+        Authorization: "Token " + token
+      }
+    };
+    axios
+      .get(API_ROOT + "api/users/permissions/mine", headers)
+      .then(res => {
+        let permissionState: PermissionState = {
+          model_management: res.data.model_management,
+          asset_management: res.data.asset_management,
+          power_control: res.data.power_control,
+          audit_read: res.data.audit_read,
+          admin: res.data.admin,
+          datacenter_permissions: res.data.datacenter_permissions
+        };
+        dispatch(setPermissionState(permissionState));
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  };
+};
+
 export const loginHelper = (res: any, dispatch: any) => {
   const token = res.data.key;
   const expirationDate = new Date(new Date().getTime() + 3600 * 1000);
@@ -132,6 +157,7 @@ export const loginHelper = (res: any, dispatch: any) => {
 
   dispatch(authSuccess(token));
   dispatch(checkAdmin(token));
+  dispatch(checkPermissions(token));
   // dispatch(checkAuthTimeout(3600));
 };
 
@@ -147,6 +173,7 @@ export const authCheckState = () => {
       } else {
         dispatch(authSuccess(token!));
         dispatch(checkAdmin(token!));
+        dispatch(checkPermissions(token!));
       }
     }
   };

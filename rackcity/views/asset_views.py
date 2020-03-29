@@ -64,6 +64,7 @@ from rackcity.utils.query_utils import (
 from rackcity.utils.change_planner_utils import (
     get_many_assets_response_for_cp,
     get_page_count_response_for_cp,
+    get_cp_already_executed_response,
 )
 from rackcity.views.rackcity_utils import (
     validate_asset_location,
@@ -185,6 +186,9 @@ def asset_add(request):
     if request.query_params.get("change_plan"):
         (change_plan, response) = get_change_plan(
             request.query_params.get("change_plan"))
+        if response:
+            return response
+        response = get_cp_already_executed_response(change_plan)
         if response:
             return response
         data["change_plan"] = change_plan.id
@@ -562,6 +566,9 @@ def asset_modify(request):
     if request.query_params.get("change_plan"):
         (change_plan, response) = get_change_plan(
             request.query_params.get("change_plan"))
+        if response:
+            return response
+        response = get_cp_already_executed_response(change_plan)
         if response:
             return response
         del data['id']
