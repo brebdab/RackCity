@@ -16,6 +16,7 @@ urlpatterns = [
     path('models/pages', views.model_page_count),
     path('models/fields', views.model_fields),
     path('assets/get-many', views.asset_many),
+    path('assets/get-many-decommissioned', views.decommissioned_asset_many),
     path('assets/<int:id>', views.asset_detail),
     path('assets/add', views.asset_add),
     path('assets/modify', views.asset_modify),
@@ -64,5 +65,6 @@ urlpatterns = [
     path('change-plans/add', views.change_plan_add),
     path('change-plans/modify', views.change_plan_modify),
     path('change-plans/delete', views.change_plan_delete),
-    path('change-plans/pages', views.change_plan_page_count)
+    path('change-plans/pages', views.change_plan_page_count),
+    path('change-plans/<int:id>', views.change_plan_detail),
 ]

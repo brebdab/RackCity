@@ -1,7 +1,9 @@
 from django.http import JsonResponse
 from rackcity.models import (
     Rack,
-    Asset
+    Asset,
+    PowerPort,
+    PowerPortCP
 )
 from rackcity.api.serializers import (
     serialize_power_connections,
@@ -9,13 +11,14 @@ from rackcity.api.serializers import (
 from rackcity.utils.errors_utils import (
     Status,
     GenericFailure,
-    PowerFailure
+    PowerFailure,
+    AuthFailure,
 )
 from rackcity.utils.log_utils import (
     log_power_action,
     PowerAction,
 )
-from rackcity.permissions.decorators import power_permission_required
+from rackcity.permissions.permissions import user_has_power_permission
 from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import permission_classes, api_view
@@ -24,8 +27,8 @@ import re
 import requests
 import time
 from requests.exceptions import ConnectionError
-
-
+from rackcity.models.asset import get_assets_for_cp
+from rackcity.views.rackcity_utils import get_change_plan
 pdu_url = 'http://hyposoft-mgt.colab.duke.edu:8005/'
 # Need to specify rack + side in request, e.g. for A1 left, use A01L
 get_pdu = 'pdu.php?pdu=hpdu-rtp1-'
@@ -51,7 +54,8 @@ def power_status(request, id):
             },
             status=HTTPStatus.BAD_REQUEST
         )
-    power_connections = serialize_power_connections(asset)
+
+    power_connections = serialize_power_connections(PowerPort, asset)
 
     # get string parameter representing rack number (i.e. A01<L/R>)
     rack_str = str(asset.rack.row_letter)
@@ -90,12 +94,8 @@ def power_status(request, id):
     )
 
 
-"""
-TODO check that power is in opposite state when performing a toggle
-TODO validate if ports exist/are connected
-"""
 @api_view(['POST'])
-@power_permission_required()
+@permission_classes([IsAuthenticated])
 def power_on(request):
     """
     Turn on power to specified port
@@ -122,7 +122,19 @@ def power_on(request):
             },
             status=HTTPStatus.BAD_REQUEST
         )
-    power_connections = serialize_power_connections(asset)
+    if not user_has_power_permission(request.user, asset=asset):
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.AUTH_ERROR.value + AuthFailure.POWER.value,
+                "errors":
+                    "User " + request.user.username +
+                    " does not have power permission and does not own" +
+                    " asset with id=" + str(data['id'])
+            },
+            status=HTTPStatus.UNAUTHORIZED
+        )
+    power_connections = serialize_power_connections(PowerPort, asset)
     # Check power is off
     for connection in power_connections:
         try:
@@ -159,7 +171,7 @@ def power_on(request):
 
 
 @api_view(['POST'])
-@power_permission_required()
+@permission_classes([IsAuthenticated])
 def power_off(request):
     """
     Turn on power to specified port
@@ -186,7 +198,19 @@ def power_off(request):
             },
             status=HTTPStatus.BAD_REQUEST
         )
-    power_connections = serialize_power_connections(asset)
+    if not user_has_power_permission(request.user, asset=asset):
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.AUTH_ERROR.value + AuthFailure.POWER.value,
+                "errors":
+                    "User " + request.user.username +
+                    " does not have power permission and does not own" +
+                    " asset with id=" + str(data['id'])
+            },
+            status=HTTPStatus.UNAUTHORIZED
+        )
+    power_connections = serialize_power_connections(PowerPort, asset)
     # Check power is off
     for connection in power_connections:
         try:
@@ -223,7 +247,7 @@ def power_off(request):
 
 
 @api_view(['POST'])
-@power_permission_required()
+@permission_classes([IsAuthenticated])
 def power_cycle(request):
     data = JSONParser().parse(request)
     if 'id' not in data.keys():
@@ -247,7 +271,19 @@ def power_cycle(request):
             },
             status=HTTPStatus.BAD_REQUEST
         )
-    power_connections = serialize_power_connections(asset)
+    if not user_has_power_permission(request.user, asset=asset):
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.AUTH_ERROR.value + AuthFailure.POWER.value,
+                "errors":
+                    "User " + request.user.username +
+                    " does not have power permission and does not own" +
+                    " asset with id=" + str(data['id'])
+            },
+            status=HTTPStatus.UNAUTHORIZED
+        )
+    power_connections = serialize_power_connections(PowerPort, asset)
     for connection in power_connections:
         toggle_power(asset, connection, "off")
     time.sleep(2)
@@ -289,11 +325,19 @@ def power_availability(request):
             },
             status=HTTPStatus.BAD_REQUEST
         )
-    assets = Asset.objects.filter(rack=rack.id)
+    change_plan = None
+    
+    if request.query_params.get("change_plan"):
+        (change_plan, response) = get_change_plan(request.query_params.get("change_plan"))
+        if response:
+            return response
+        assets, assets_cp = get_assets_for_cp(change_plan.id)
+    else:
+        assets = Asset.objects.filter(rack=rack.id)
     availableL = list(range(1, 25))
     availableR = list(range(1, 25))
     for asset in assets:
-        asset_power = serialize_power_connections(asset)
+        asset_power = serialize_power_connections(PowerPort, asset)
         for port_num in asset_power.keys():
             if asset_power[port_num]["left_right"] == "L":
                 try:
@@ -321,6 +365,37 @@ def power_availability(request):
                         {"failure_message": failure_message},
                         status=HTTPStatus.BAD_REQUEST
                     )
+    if change_plan:
+        for assetcp in assets_cp:
+            asset_power = serialize_power_connections(PowerPortCP, assetcp)
+            for port_num in asset_power.keys():
+                if asset_power[port_num]["left_right"] == "L":
+                    try:
+                        availableL.remove(asset_power[port_num]["port_number"])
+                    except ValueError:
+                        failure_message = \
+                            Status.ERROR.value + \
+                            "Port " + \
+                            asset_power[port_num]["port_number"] + \
+                            " does not exist on PDU"
+                        return JsonResponse(
+                            {"failure_message": failure_message},
+                            status=HTTPStatus.BAD_REQUEST
+                        )
+                else:
+                    try:
+                        availableR.remove(asset_power[port_num]["port_number"])
+                    except ValueError:
+                        failure_message = \
+                            Status.ERROR.value + \
+                            "Port " + \
+                            asset_power[port_num]["port_number"] + \
+                            " does not exist on PDU"
+                        return JsonResponse(
+                            {"failure_message": failure_message},
+                            status=HTTPStatus.BAD_REQUEST
+                        )
+
     for index in availableL:
         if index in availableR:
             suggest = index
@@ -352,7 +427,7 @@ def get_pdu_status_ext(asset, left_right):
 
 
 def toggle_power(asset, asset_port_number, goal_state):
-    power_connections = serialize_power_connections(asset)
+    power_connections = serialize_power_connections(PowerPort, asset)
     pdu_port = power_connections[asset_port_number]['port_number']
     pdu = 'hpdu-rtp1-' + \
         get_pdu_status_ext(asset, str(

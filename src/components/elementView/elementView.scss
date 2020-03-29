@@ -7,10 +7,20 @@
   outline: none;
 }
 
+.permissions-button {
+  overflow: hidden;
+}
+
 .inline-buttons {
   display: inline-block;
   white-space: nowrap;
   overflow: auto;
+}
+
+.inline-buttons-user {
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .no-data-text {

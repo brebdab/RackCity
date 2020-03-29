@@ -4,7 +4,8 @@ import {
   AssetObject,
   DatacenterObject,
   UserInfoObject,
-  ChangePlan
+  ChangePlan,
+  UserPermissionsObject
 } from "../../utils/utils";
 import { API_ROOT } from "../../utils/api-config";
 import axios from "axios";
@@ -17,6 +18,7 @@ export interface ITableSort {
 export enum ElementTableOpenAlert {
   NONE = "none",
   DELETE = "delete",
+  DECOMMISSION = "decommission",
   GRANT_ADMIN = "grant_admin",
   REVOKE_ADMIN = "revoke_admin"
 }
@@ -24,7 +26,8 @@ export enum ElementTableOpenAlert {
 export enum FilterTypes {
   TEXT = "text",
   NUMERIC = "numeric",
-  RACKRANGE = "rack_range"
+  RACKRANGE = "rack_range",
+  DATETIME = "datetime"
 }
 
 export enum PagingTypes {
@@ -41,7 +44,7 @@ export interface IFilter {
   id: string;
   field: string;
   filter_type?: FilterTypes;
-  filter?: TextFilter | NumericFilter | RackRangeFields;
+  filter?: TextFilter | NumericFilter | RackRangeFields | DatetimeFilter;
 }
 const numberFields = [
   "rack_position",
@@ -56,6 +59,8 @@ export function getFilterType(field: string | undefined) {
   if (field) {
     if (field === "rack") {
       return FilterTypes.RACKRANGE;
+    } else if (field === "time_decommissioned") {
+      return FilterTypes.DATETIME;
     } else if (numberFields.includes(field)) {
       return FilterTypes.NUMERIC;
     }
@@ -71,6 +76,10 @@ export interface TextFilter {
   value?: string;
   match_type: string;
 }
+export interface DatetimeFilter {
+  after?: string;
+  before?: string;
+}
 
 export const renderTextFilterItem = (item: TextFilter) => {
   return `${item.match_type} ${item.value}`;
@@ -79,6 +88,7 @@ export const renderTextFilterItem = (item: TextFilter) => {
 export const renderNumericFilterItem = (item: NumericFilter) => {
   return `between ${item.min} - ${item.max}`;
 };
+
 export const renderRackRangeFilterItem = (item: RackRangeFields) => {
   if (item.letter_end && item.num_end) {
     return `rows  ${item.letter_start} - ${item.letter_end} & letters ${item.num_start} - ${item.num_end}`;
@@ -89,6 +99,10 @@ export const renderRackRangeFilterItem = (item: RackRangeFields) => {
   } else {
     return ` ${item.letter_start}${item.num_start} `;
   }
+};
+
+export const renderDatetimeFilterItem = (item: DatetimeFilter) => {
+  return `from ${item.after} - ${item.before}`;
 };
 
 export const modifyModel = (model: ModelObject, headers: any) => {
@@ -103,9 +117,30 @@ export const deleteAsset = (asset: AssetObject, headers: any) => {
   const data = { id: asset.id };
   return axios.post(API_ROOT + "api/assets/delete", data, headers);
 };
-export const modifyAsset = (asset: AssetObject, headers: any): Promise<any> => {
-  return axios.post(API_ROOT + "api/assets/modify", asset, headers);
+export const modifyAsset = (
+  asset: AssetObject,
+  headers: any,
+  changePlan: ChangePlan
+): Promise<any> => {
+  let config;
+  if (!changePlan) {
+    config = headers;
+  } else {
+    config = {
+      headers: headers["headers"],
+      params: {
+        change_plan: changePlan.id
+      }
+    };
+  }
+  return axios.post(API_ROOT + "api/assets/modify", asset, config);
 };
+export const decommissionAsset = (asset: AssetObject, headers: any) => {
+  console.log("Decommissioning asset");
+  const data = { id: asset.id };
+  return axios.post(API_ROOT + "api/assets/decommission", data, headers);
+};
+
 export const modifyChangePlan = (
   changePlan: ChangePlan,
   headers: any
@@ -139,4 +174,10 @@ export const deleteUser = (
 ): Promise<any> => {
   const data = { id: user.id };
   return axios.post(API_ROOT + "api/users/delete", data, headers);
+};
+export const modifyUser = (
+  data: UserPermissionsObject,
+  headers: any
+): Promise<any> => {
+  return axios.post(API_ROOT + "api/users/permissions/set", data, headers);
 };

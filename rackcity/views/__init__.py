@@ -33,6 +33,7 @@ from .asset_views import (
 )
 from .decommission_views import (
     decommission_asset,
+    decommissioned_asset_many,
 )
 from .rack_views import (
     rack_get,
@@ -79,5 +80,6 @@ from .change_plan_views import (
     change_plan_add,
     change_plan_modify,
     change_plan_delete,
-    change_plan_page_count
+    change_plan_page_count,
+    change_plan_detail,
 )

@@ -34,7 +34,6 @@ def get_filter_arguments(data):
     if 'filters' in data:
         filters = data['filters']
         for filter in filters:
-
             if (
                 ('field' not in filter)
                 or ('filter_type' not in filter)
@@ -53,7 +52,6 @@ def get_filter_arguments(data):
             filter_field = filter['field']
             filter_type = filter['filter_type']
             filter_dict = filter['filter']
-
             if filter_type == 'text':
                 if filter_dict['match_type'] == 'exact':
                     filter_args.append(
@@ -134,10 +132,55 @@ def get_filter_arguments(data):
                     }
                 )
 
+            elif filter_type == 'datetime':
+                if (
+                    filter_dict['after'] is not None
+                    and isinstance(filter_dict['after'], str)
+                    and (
+                        filter_dict['before'] is None
+                        or filter_dict['before'] == ""
+                    )
+                ):
+                    filter_args.append(
+                        {
+                            '{0}__gte'.format(filter_field): filter_dict['after']  # noqa greater than or equal to min
+                        }
+                    )
+                elif (
+                    filter_dict['before'] is not None
+                    and isinstance(filter_dict['before'], str)
+                    and (
+                        filter_dict['after'] is None
+                        or filter_dict['after'] == ""
+                    )
+                ):
+                    filter_args.append(
+                        {
+                            '{0}__lte'.format(filter_field): filter_dict['before']  # noqa less than or equal to max
+                        }
+                    )
+                elif (
+                    filter_dict['before'] is not None
+                    and filter_dict['after'] is not None
+                ):
+                    range_value = (
+                        filter_dict['after'],
+                        filter_dict['before']
+                    )
+                    filter_args.append(
+                        {
+                            '{0}__range'.format(filter_field): range_value  # noqa inclusive on both min, max
+                        }
+                    )
+                else:
+                    raise Exception(
+                        "Date filters must contain datetime min, datetime max, or both."
+                    )
+
             else:
                 raise Exception(
                     "String field 'filter_type' must be either 'text', " +
-                    "'numeric', or 'rack_range'."
+                    "'numeric', 'rack_range', or 'datetime'."
                 )
 
     return filter_args
@@ -248,11 +291,12 @@ def get_many_response(
     """
     should_paginate = should_paginate_query(request.query_params)
 
-    page_failure_response = get_invalid_paginated_request_response(
-        request.query_params
-    )
-    if page_failure_response:
-        return page_failure_response
+    if should_paginate:
+        page_failure_response = get_invalid_paginated_request_response(
+            request.query_params
+        )
+        if page_failure_response:
+            return page_failure_response
 
     if premade_object_query is not None:
         object_query = premade_object_query

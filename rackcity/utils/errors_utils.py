@@ -16,6 +16,7 @@ class Status(Enum):
     IMPORT_ERROR = "IMPORT ERROR: "
     EXPORT_ERROR = "EXPORT ERROR: "
     CONNECTION = "CONNECTION ERROR: "
+    AUTH_ERROR = "AUTHORIZATION ERROR: "
 
 
 class GenericFailure(Enum):
@@ -33,6 +34,15 @@ class UserFailure(Enum):
     DELETE = "Cannot delete user"
     NETID_LOGIN = \
         "The Duke NetID login credentials you have provided are invalid."
+
+
+class AuthFailure(Enum):
+    POWER = "You do not have power permission on this asset."
+    ASSET = "You do not have asset permission in this datacenter."
+    DATACENTER = "You do not have global asset permission required to " + \
+        "create, modify, or delete datacenters."
+    RACK = "You do not have the asset permission required to create or " + \
+        "delete racks in this datacenter."
 
 
 class BulkFailure(Enum):
