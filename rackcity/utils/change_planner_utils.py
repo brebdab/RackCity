@@ -1,31 +1,26 @@
+from django.db.models import Q
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from django.http import JsonResponse
+from enum import Enum
 from http import HTTPStatus
 import math
 from rackcity.api.serializers import (
     RecursiveAssetSerializer,
-    RecursiveAssetCPSerializer)
-from enum import Enum
+    RecursiveAssetCPSerializer,
+)
+from rackcity.models.asset import get_assets_for_cp
+from rackcity.models import Asset, AssetCP
+from rackcity.utils.errors_utils import Status, GenericFailure
 from rackcity.utils.query_utils import (
     get_filtered_query,
     get_invalid_paginated_request_response,
     should_paginate_query,
 )
-from rackcity.views.rackcity_utils import validate_asset_location, LocationException
-from django.db.models import Q
-from rackcity.utils.errors_utils import Status, GenericFailure
-from rackcity.models.asset import get_assets_for_cp
-from rackcity.models import Asset, AssetCP
-from rackcity.api.serializers import (
-    RecursiveAssetSerializer,
-    RecursiveAssetCPSerializer,
+from rackcity.views.rackcity_utils import (
+    validate_asset_location,
+    LocationException,
 )
-import math
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from django.http import JsonResponse
-from http import HTTPStatus
 
 
 class ModificationType(Enum):
@@ -40,7 +35,8 @@ def mark_delete_conflicts_cp(sender, **kwargs):
     Mark conflict for related assets on change plan
     """
     deleted_asset = kwargs.get("instance")
-    AssetCP.objects.filter(related_asset=deleted_asset).update(is_conflict=True)
+    AssetCP.objects.filter(
+        related_asset=deleted_asset).update(is_conflict=True)
 
 
 @receiver(post_save, sender=Asset)
@@ -336,4 +332,15 @@ def get_modifications_in_cp(change_plan):
             "changes": changes,
         })
     return modifications
-    # TODO add logic for decommission modification
+
+
+def asset_cp_has_conflicts(asset_cp):
+    return (
+        asset_cp.is_conflict
+        or asset_cp.asset_conflict_hostname
+        or asset_cp.asset_conflict_asset_number
+        or asset_cp.asset_conflict_location
+        or asset_cp.related_decommissioned_asset
+        or asset_cp.model is None
+        or asset_cp.rack is None
+    )
