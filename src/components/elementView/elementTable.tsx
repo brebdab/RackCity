@@ -99,6 +99,7 @@ interface ElementTableState {
 interface ElementTableProps {
   isDecommissioned: boolean;
   callback?: Function;
+  updateBarcodes?: Function;
   type: ElementType;
   token: string;
   disableSorting?: boolean;
@@ -1002,13 +1003,21 @@ class ElementTable extends React.Component<
                             const selectedAll = !this.state.selectedAll;
 
                             this.state.items.forEach(item => {
-                              if (selected.includes(item.id) && !selectedAll) {
-                                selected.splice(selected.indexOf(item.id), 1);
-                              } else if (
-                                !selected.includes(item.id) &&
-                                selectedAll
-                              ) {
-                                selected.push(item.id);
+                              if (isAssetObject(item)) {
+                                if (
+                                  selected.includes(item.asset_number) &&
+                                  !selectedAll
+                                ) {
+                                  selected.splice(
+                                    selected.indexOf(item.asset_number),
+                                    1
+                                  );
+                                } else if (
+                                  !selected.includes(item.asset_number) &&
+                                  selectedAll
+                                ) {
+                                  selected.push(item.asset_number);
+                                }
                               }
                             });
                             console.log(selected);
@@ -1017,6 +1026,9 @@ class ElementTable extends React.Component<
                               selectedAll,
                               selected
                             });
+                            if (this.props.updateBarcodes) {
+                              this.props.updateBarcodes(this.state.selected);
+                            }
                           }}
                         />
                       )}
@@ -1095,7 +1107,8 @@ class ElementTable extends React.Component<
                         }
                         style={getChangePlanRowStyle(item)}
                       >
-                        {this.props.type === ElementType.ASSET ? (
+                        {this.props.type === ElementType.ASSET &&
+                        isAssetObject(item) ? (
                           <th
                             onClick={(event: any) => {
                               event.stopPropagation();
@@ -1103,27 +1116,38 @@ class ElementTable extends React.Component<
                           >
                             {this.props.isDecommissioned ? null : (
                               <Checkbox
-                                checked={this.state.selected.includes(item.id)}
+                                checked={this.state.selected.includes(
+                                  item.asset_number
+                                )}
                                 onClick={(event: any) => {
                                   const selected = this.state.selected;
-                                  if (selected.includes(item.id)) {
-                                    console.log("removing", item.id, selected);
+                                  if (selected.includes(item.asset_number)) {
+                                    console.log(
+                                      "removing",
+                                      item.asset_number,
+                                      selected
+                                    );
                                     if (this.state.selectedAll) {
                                       this.setState({
                                         selectedAll: false
                                       });
                                     }
                                     selected.splice(
-                                      selected.indexOf(item.id),
+                                      selected.indexOf(item.asset_number),
                                       1
                                     );
                                   } else {
-                                    selected.push(item.id);
-                                    console.log("adding", item.id);
+                                    selected.push(item.asset_number);
+                                    console.log("adding", item.asset_number);
                                   }
                                   this.setState({
                                     selected
                                   });
+                                  if (this.props.updateBarcodes) {
+                                    this.props.updateBarcodes(
+                                      this.state.selected
+                                    );
+                                  }
                                   console.log(selected);
                                   event.stopPropagation();
                                 }}

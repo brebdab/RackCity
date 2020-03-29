@@ -17,7 +17,8 @@ export enum ROUTES {
   RACK_PRINT = "/dashboard/rack-print",
   BULK_IMPORT = "/dashboard/bulk-upload/:resourceType",
   USERS = "/dashboard/users",
-  CHANGE_PLAN = "/dashboard/change-plans"
+  CHANGE_PLAN = "/dashboard/change-plans",
+  BARCODE_PRINT = "/assets/barcode-print"
 }
 export enum ElementType {
   RACK = "racks",

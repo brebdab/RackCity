@@ -11,6 +11,9 @@ from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from http import HTTPStatus
+from rackcity.utils.change_planner_utils import (
+    get_cp_already_executed_response,
+)
 from rackcity.utils.errors_utils import (
     Status,
     GenericFailure,
@@ -51,6 +54,9 @@ def decommission_asset(request):
     id = data['id']
     decommissioned_asset_cp = None
     if change_plan:
+        response = get_cp_already_executed_response(change_plan)
+        if response:
+            return response
         if not AssetCP.objects.filter(id=id).exists() and Asset.objects.filter(id=id).exists():
             existing_asset = Asset.objects.get(id=id)
             decommissioned_asset_cp = AssetCP(

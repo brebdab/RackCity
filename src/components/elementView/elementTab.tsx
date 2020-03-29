@@ -10,7 +10,7 @@ import {
   IToastProps,
   MenuItem,
   Position,
-  Toaster,
+  Toaster
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -34,7 +34,8 @@ import {
   ModelObject,
   ShallowAssetObject,
   SortFilterBody,
-  ChangePlan
+  ChangePlan,
+  ROUTES
 } from "../../utils/utils";
 import { ALL_DATACENTERS } from "./elementTabContainer";
 import ElementTable from "./elementTable";
@@ -45,6 +46,7 @@ import {
   TextFilterTypes
 } from "./elementUtils";
 import "./elementView.scss";
+import { Link } from "react-router-dom";
 
 // var console: any = {};
 // console.log = function() {};
@@ -57,6 +59,7 @@ interface ElementViewState {
   fileName: string;
   networkFileName: string;
   updateTable: boolean;
+  barcodes: Array<String>;
   isDecommissioned: boolean;
 }
 interface ElementViewProps {
@@ -80,6 +83,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     fileName: "",
     networkFileName: "",
     updateTable: false,
+    barcodes: [],
     isDecommissioned: false
   };
 
@@ -189,9 +193,9 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       page_type === PagingTypes.ALL
         ? {}
         : {
-          page_size: page_type,
-          page
-        };
+            page_size: page_type,
+            page
+          };
     if (this.props.changePlan) {
       params["change_plan"] = this.props.changePlan.id;
     }
@@ -217,18 +221,16 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
         bodyCopy = updateObject(bodyCopy, { filters });
       }
     }
-    let url = this.state.isDecommissioned ?
-      API_ROOT + "api/assets/get-many-decommissioned" :
-      API_ROOT + "api/" + path + "/get-many"
+    let url = this.state.isDecommissioned
+      ? API_ROOT + "api/assets/get-many-decommissioned"
+      : API_ROOT + "api/" + path + "/get-many";
 
-    return axios
-      .post(url, bodyCopy, config)
-      .then(res => {
-        const items = res.data[path];
-        console.log(items);
+    return axios.post(url, bodyCopy, config).then(res => {
+      const items = res.data[path];
+      console.log(items);
 
-        return items;
-      });
+      return items;
+    });
   };
 
   public handleDataUpdate = (status: boolean) => {
@@ -388,7 +390,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                     rightIcon="caret-down"
                     text={
                       this.props.currDatacenter &&
-                        this.props.currDatacenter.name
+                      this.props.currDatacenter.name
                         ? this.props.currDatacenter.name
                         : "All datacenters"
                     }
@@ -398,61 +400,59 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             </Callout>
           ) : null}
         </div>
-        {this.state.isDecommissioned ? <Callout
-          icon="warning-sign"
-        >
-          <FormGroup label="Showing decommissioned assets" inline={true}>
-            <Button
-              onClick={() => {
-                /* handle data based on state */
-                this.setState({ isDecommissioned: false });
-                this.handleDataUpdate(true);
-              }}
-            >
-
-              View Live Assets
-          </Button>
-          </FormGroup>
-        </Callout>
-          :
+        {this.state.isDecommissioned ? (
+          <Callout icon="warning-sign">
+            <FormGroup label="Showing decommissioned assets" inline={true}>
+              <Button
+                onClick={() => {
+                  /* handle data based on state */
+                  this.setState({ isDecommissioned: false });
+                  this.handleDataUpdate(true);
+                }}
+              >
+                View Live Assets
+              </Button>
+            </FormGroup>
+          </Callout>
+        ) : (
           <div className="element-tab-buttons">
             {this.props.element !== ElementType.USER &&
-              this.props.element !== ElementType.DATACENTER &&
-              this.props.element !== ElementType.CHANGEPLANS ? (
-                <AnchorButton
-                  className="add"
-                  text="Export Table Data"
-                  disabled={this.props.changePlan ? true : false}
-                  icon="import"
-                  minimal
-                  onClick={() => {
-                    /* handle data based on state */
-                    this.setState({ fileNameIsOpen: true });
-                    console.log(this.state.filters);
-                  }}
-                />
-              ) : (
-                <p></p>
-              )}
+            this.props.element !== ElementType.DATACENTER &&
+            this.props.element !== ElementType.CHANGEPLANS ? (
+              <AnchorButton
+                className="add"
+                text="Export Table Data"
+                disabled={this.props.changePlan ? true : false}
+                icon="import"
+                minimal
+                onClick={() => {
+                  /* handle data based on state */
+                  this.setState({ fileNameIsOpen: true });
+                  console.log(this.state.filters);
+                }}
+              />
+            ) : (
+              <p></p>
+            )}
             {this.props.isAdmin &&
-              (this.props.element === ElementType.ASSET ||
-                this.props.element === ElementType.MODEL) ? (
-                <AnchorButton
-                  disabled={this.props.changePlan ? true : false}
-                  onClick={() => {
-                    this.props.history.push(
-                      "/dashboard/bulk-upload/" +
+            (this.props.element === ElementType.ASSET ||
+              this.props.element === ElementType.MODEL) ? (
+              <AnchorButton
+                disabled={this.props.changePlan ? true : false}
+                onClick={() => {
+                  this.props.history.push(
+                    "/dashboard/bulk-upload/" +
                       (this.props.element === ElementType.MODEL
                         ? "models"
                         : "assets")
-                    );
-                  }}
-                  className="add"
-                  icon="export"
-                  text="Add from CSV file"
-                  minimal
-                />
-              ) : null}
+                  );
+                }}
+                className="add"
+                icon="export"
+                text="Add from CSV file"
+                minimal
+              />
+            ) : null}
             <Alert
               cancelButtonText="Cancel"
               className={Classes.DARK}
@@ -493,7 +493,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                   } else if (
                     (networkExt &&
                       (this.state.fileName.split(".")[0].length === 0 ||
-                        this.state.networkFileName.split(".")[0].length === 0)) ||
+                        this.state.networkFileName.split(".")[0].length ===
+                          0)) ||
                     (!networkExt &&
                       this.state.fileName.split(".")[0].length === 0)
                   ) {
@@ -518,7 +519,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             >
               <p>
                 Please enter a filename ending in ".csv" for the following data:
-            </p>
+              </p>
               <FormGroup label={this.props.element + ":"}>
                 <InputGroup
                   onChange={(event: any) => {
@@ -554,20 +555,35 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                 onClick={this.handleOpen}
                 disabled={
                   this.props.element !== ElementType.ASSET &&
-                    this.props.changePlan
+                  this.props.changePlan
                     ? true
                     : false
                 }
               />
             ) : null}
             {this.props.element === ElementType.ASSET ? (
-              <AnchorButton
-                className="add"
-                text="Print Barcodes for Selected Assets"
-                icon="barcode"
-                minimal
-                onClick={() => { }}
-              />
+              <Link
+                target="_blank"
+                to={{ pathname: ROUTES.BARCODE_PRINT, state: null }}
+              >
+                <AnchorButton
+                  className="add"
+                  text="Print Barcodes for Selected Assets"
+                  icon="barcode"
+                  minimal
+                  onClick={(e: any) => {
+                    let barcodes: string;
+                    barcodes = "";
+                    for (var i = 0; i < this.state.barcodes.length - 1; i++) {
+                      barcodes = barcodes + this.state.barcodes[i] + ",";
+                    }
+                    barcodes =
+                      barcodes +
+                      this.state.barcodes[this.state.barcodes.length - 1];
+                    localStorage.setItem("barcodes", barcodes);
+                  }}
+                />
+              </Link>
             ) : null}
             {this.props.element === ElementType.ASSET ? (
               <Button
@@ -578,8 +594,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                 text="View Decommissioned"
                 minimal
                 icon="archive"
-              >
-              </Button>
+              ></Button>
             ) : null}
             <FormPopup
               {...this.props}
@@ -589,18 +604,18 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                 this.props.element === ElementType.MODEL
                   ? this.createModel
                   : this.props.element === ElementType.ASSET
-                    ? this.createAsset
-                    : this.props.element === ElementType.DATACENTER
-                      ? this.createDatacenter
-                      : this.props.element === ElementType.CHANGEPLANS
-                        ? this.createChangePlan
-                        : this.createUser
+                  ? this.createAsset
+                  : this.props.element === ElementType.DATACENTER
+                  ? this.createDatacenter
+                  : this.props.element === ElementType.CHANGEPLANS
+                  ? this.createChangePlan
+                  : this.createUser
               }
               isOpen={this.state.isOpen}
               handleClose={this.handleClose}
             />
           </div>
-        }
+        )}
         <div>
           <ElementTable
             datacenters={this.props.datacenters}
@@ -608,6 +623,11 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             type={this.props.element}
             getData={this.getElementData}
             getPages={this.getPages}
+            updateBarcodes={(data: Array<string>) => {
+              this.setState({
+                barcodes: data
+              });
+            }}
             callback={(data: Array<any>) => {
               this.setState({ filters: data });
             }}

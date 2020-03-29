@@ -32,32 +32,49 @@ class ModificationType(Enum):
 @receiver(pre_delete, sender=Asset)
 def mark_delete_conflicts_cp(sender, **kwargs):
     """
-    Mark conflict for related assets on change plan
+    Mark conflict for related assets on change plan when an asset is
+    deleted live. This method is automatically called before Asset delete.
     """
     deleted_asset = kwargs.get("instance")
     AssetCP.objects.filter(
-        related_asset=deleted_asset).update(is_conflict=True)
+        related_asset=deleted_asset,
+        change_plan__execution_time=None,
+    ).update(is_conflict=True)
 
 
 @receiver(post_save, sender=Asset)
 def detect_conflicts_cp(sender, **kwargs):
-    # fields: sender, instance, created, raw, using, update_fields
-    # asset is a related asset of assetCP
+    """
+    Mark conflict for affected assets on change plan when an asset is
+    modified live. This method is automatically called after Asset save.
+
+    fields: sender, instance, created, raw, using, update_fields
+    asset is a related asset of assetCP
+    """
     asset = kwargs.get("instance")
-    related_assets_cp = AssetCP.objects.filter(related_asset=asset.id)
+    related_assets_cp = AssetCP.objects.filter(
+        related_asset=asset.id,
+        change_plan__execution_time=None,
+    )
     for related_asset_cp in related_assets_cp:
         related_asset_cp.is_conflict = True
         related_asset_cp.save()
-    # hostname conflicts with hostnames on assetcps
+
+    # asset hostname conflicts with hostnames on an active assetCP
     asset.hostname_conflict.clear()
     AssetCP.objects.filter(
-        Q(hostname=asset.hostname) & ~Q(related_asset=asset.id)
+        Q(hostname=asset.hostname)
+        & ~Q(related_asset=asset.id)
+        & Q(change_plan__execution_time=None)
     ).update(asset_conflict_hostname=asset)
 
-    # asset rack location conflicts with an assetCP
-
+    # asset rack location conflicts with an active assetCP
     asset.location_conflict.clear()
-    for assetcp in AssetCP.objects.filter(Q(rack=asset.rack_id) & ~Q(related_asset=asset.id)):
+    for assetcp in AssetCP.objects.filter(
+        Q(rack=asset.rack_id)
+        & ~Q(related_asset=asset.id)
+        & Q(change_plan__execution_time=None)
+    ):
         try:
             validate_asset_location(
                 asset.rack_id,
@@ -70,10 +87,12 @@ def detect_conflicts_cp(sender, **kwargs):
             AssetCP.objects.filter(id=assetcp.id).update(
                 asset_conflict_location=asset)
 
-    # asset number conflict
+    # asset number conflicts with an active assetCP
     asset.asset_number_conflict.clear()
     AssetCP.objects.filter(
-        Q(asset_number=asset.asset_number) & ~Q(related_asset_id=asset.id)
+        Q(asset_number=asset.asset_number)
+        & ~Q(related_asset_id=asset.id)
+        & Q(change_plan__execution_time=None)
     ).update(asset_conflict_asset_number=asset)
 
 
@@ -347,3 +366,17 @@ def asset_cp_has_conflicts(asset_cp):
         or asset_cp.model is None
         or asset_cp.rack is None
     )
+
+
+def get_cp_already_executed_response(change_plan):
+    if change_plan.execution_time:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.ERROR.value +
+                    "Executed change plans are read only.",
+                "errors":
+                    "Change plan with id=" + str(change_plan.id) + " "
+                    "was executed on " + str(change_plan.execution_time)
+            },
+        )
