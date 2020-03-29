@@ -1191,6 +1191,7 @@ class ElementTable extends React.Component<
                                   className="button-table"
                                   intent="danger"
                                   minimal
+                                  icon="edit"
                                   disabled={
                                     this.props.changePlan &&
                                       this.props.type !== ElementType.ASSET
