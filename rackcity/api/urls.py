@@ -28,6 +28,7 @@ urlpatterns = [
     path('assets/network-bulk-approve', views.network_bulk_approve),
     path('assets/network-bulk-export', views.network_bulk_export),
     path('assets/pages', views.asset_page_count),
+    path('assets/pages-decommissioned', views.decommissioned_asset_page_count),
     path('assets/fields', views.asset_fields),
     path('assets/asset-number', views.asset_number),
     path('assets/decommission', views.decommission_asset),

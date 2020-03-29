@@ -171,9 +171,12 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
         });
       }
     }
+    let url = this.state.isDecommissioned
+      ? "api/assets/pages-decommissioned"
+      : "api/" + path + "/pages";
     return axios
       .post(
-        API_ROOT + "api/" + path + "/pages",
+        API_ROOT + url,
         { filters: filtersCopy },
         config
       )
