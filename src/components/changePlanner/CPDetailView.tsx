@@ -187,6 +187,22 @@ class CPDetailView extends React.Component<
         this.setState({
           isAlertOpen: false
         });
+
+        this.loading = true;
+        getChangePlanDetail(this.props.token, this.route_id)
+          .then(res => {
+            this.loading = false;
+            this.dataLoaded = true;
+            this.props.setChangePlan(res.data.change_plan);
+            this.setState({
+              changePlan: res.data.change_plan,
+              modifications: res.data.modifications
+            });
+          })
+          .catch(err => {
+            this.loading = false;
+            this.addErrorToast(err.response.data.failure_message);
+          });
       })
       .catch(err => {
         this.addErrorToast(err.response.data.failure_message);
@@ -377,9 +393,10 @@ class CPDetailView extends React.Component<
           cancelButtonText="Cancel"
           confirmButtonText="Execute"
           intent="primary"
+          className={Classes.DARK}
           isOpen={this.state.isAlertOpen}
-          onCancel={this.handleExecuteCancel}
-          onConfirm={this.handleExecute}
+          onCancel={()=>this.handleExecuteCancel()}
+          onConfirm={()=>this.handleExecute()}
         >
           <p>Are you sure you want to execute this change plan?</p>
         </Alert>
@@ -533,7 +550,6 @@ class CPDetailView extends React.Component<
         <div className="detail-buttons-wrapper">
           <div className={"detail-buttons"}>
             <AnchorButton
-              minimal
               disabled={this.disableExecute()}
               intent="none"
               icon="document-open"

@@ -216,6 +216,9 @@ export class Navigation extends React.Component<
                   {this.props.changePlan ? (
                     <AnchorButton
                       minimal
+                      disabled={this.props.location.pathname.includes(
+                        "/dashboard/change-plans/"
+                      )}
                       icon={IconNames.DELETE}
                       onClick={() => this.props.setChangePlan(null)}
                     />
