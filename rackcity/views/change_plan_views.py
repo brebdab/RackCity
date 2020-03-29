@@ -479,6 +479,12 @@ def change_plan_execute(request, id):
             if failure_response:
                 return failure_response
             num_decommissioned += 1
+            log_action(
+                request.user,
+                updated_asset,
+                Action.DECOMMISSION,
+                change_plan=change_plan,
+            )
 
     change_plan.execution_time = datetime.now()
     change_plan.save()

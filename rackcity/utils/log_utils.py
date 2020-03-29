@@ -8,6 +8,7 @@ class Action(Enum):
     CREATE = "created"
     MODIFY = "modified"
     DELETE = "deleted"
+    DECOMMISSION = "decommissioned"
 
 
 class PermissionAction(Enum):
