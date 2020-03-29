@@ -336,7 +336,7 @@ class RackTab extends React.Component<
         {this.props.currDatacenter &&
           this.props.currDatacenter.name !== ALL_DATACENTERS.name ? (
             <div className="rack-tab-panel">
-              {this.props.changePlan && this.props.isAdmin ? (
+              {this.props.changePlan ? (
                 <Callout
                   intent={Intent.WARNING}
                   title="Rack Management on a change plan"

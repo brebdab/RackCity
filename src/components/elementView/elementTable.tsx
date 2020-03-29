@@ -1176,7 +1176,7 @@ class ElementTable extends React.Component<
                             event.stopPropagation();
                           }}
                         >
-                          {this.props.isAdmin && isUserObject(item) ? (
+                          {this.props.permissionState.admin && isUserObject(item) ? (
                             <div className="inline-buttons-user grant-admin-button permissions-button">
                               {" "}
                               {/* TODO change grant-admin-button to change-permissions*/}
