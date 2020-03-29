@@ -130,7 +130,7 @@ def asset_detail(request, id):
             return response
     try:
         if change_plan:
-            assets, assets_cp = get_assets_for_cp(change_plan.id)
+            assets, assets_cp = get_assets_for_cp(change_plan.id, show_decommissioned=True)
             if assets_cp.filter(id=id).exists():
                 asset = assets_cp.get(id=id)
                 serializer = RecursiveAssetCPSerializer(asset)

@@ -1,23 +1,25 @@
 from django.http import JsonResponse
-from rackcity.models import Datacenter, Rack
+from django.contrib.auth.decorators import permission_required
+from django.core.exceptions import ObjectDoesNotExist
+from http import HTTPStatus
 from rackcity.api.serializers import DatacenterSerializer
+from rackcity.models import Datacenter, Rack
+from rackcity.permissions.permissions import PermissionPath
+from rackcity.utils.errors_utils import (
+    Status,
+    GenericFailure,
+    parse_serializer_errors
+)
 from rackcity.utils.log_utils import (
     log_action,
     log_delete,
     ElementType,
     Action
 )
-from rackcity.utils.errors_utils import (
-    Status,
-    GenericFailure,
-    parse_serializer_errors
-)
-from rest_framework.decorators import permission_classes, api_view
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-from http import HTTPStatus
-from django.core.exceptions import ObjectDoesNotExist
-from rest_framework.parsers import JSONParser
 from rackcity.utils.query_utils import get_page_count_response
+from rest_framework.decorators import permission_classes, api_view
+from rest_framework.parsers import JSONParser
+from rest_framework.permissions import IsAuthenticated
 
 
 @api_view(['POST'])
@@ -35,7 +37,7 @@ def datacenter_all(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
 def datacenter_create(request):
     """
     Add a datacenter.
@@ -86,7 +88,7 @@ def datacenter_create(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
 def datacenter_delete(request):
     """
     Delete a single datacenter
@@ -161,7 +163,7 @@ def datacenter_page_count(request):
 
 
 @api_view(['POST'])
-@permission_classes([IsAdminUser])
+@permission_required(PermissionPath.ASSET_WRITE.value, raise_exception=True)
 def datacenter_modify(request):
     """
     Modify an existing model

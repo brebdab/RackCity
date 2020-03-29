@@ -57,6 +57,7 @@ export interface AssetCPObject extends AssetObject {
   asset_conflict_asset_name: AssetObject;
   asset_conflict_location: AssetObject;
   related_asset: AssetObject;
+  is_decommissioned: boolean;
 }
 interface ParentAssetObject extends ElementObject {
   asset_number: string;
@@ -234,6 +235,17 @@ export interface ModelDetailObject {
   model: ModelObjectOld;
   assets: Array<AssetObjectOld>;
 }
+
+export interface UserPermissionsObject {
+  [index: string]: any;
+  model_management: boolean;
+  asset_management: boolean;
+  power_control: boolean;
+  audit_read: boolean;
+  admin: boolean;
+  datacenter_permissions: Array<string>;
+}
+
 export type ElementObjectType =
   | ModelObjectOld
   | ModelObject
@@ -255,7 +267,8 @@ export type FormObjectType =
   | ShallowAssetObject
   | UserInfoObject
   | CreateUserObject
-  | ChangePlan;
+  | ChangePlan
+  | UserPermissionsObject;
 
 export function isObject(obj: any) {
   return obj === Object(obj);
