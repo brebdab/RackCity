@@ -84,7 +84,8 @@ class CPDetailView extends React.Component<
     changePlan: {} as ChangePlan,
     modifications: [],
     isAlertOpen: false,
-    username: ""
+    username: "",
+    disableButtons: true
   };
   printWorkOrder = () => {
     this.getUsername(this.props.token);
@@ -96,7 +97,6 @@ class CPDetailView extends React.Component<
     });
     this.openPrint = true;
   };
-
 
   setButtonState() {
     let disable = false;
@@ -386,7 +386,7 @@ class CPDetailView extends React.Component<
         .then(res => {
           this.loading = false;
           this.dataLoaded = true;
-          
+
           const changePlan: ChangePlan = res.data.change_plan;
           if (isNullOrUndefined(changePlan.execution_time)) {
             this.props.setChangePlan(changePlan);
@@ -439,17 +439,17 @@ class CPDetailView extends React.Component<
           this.loading = false;
           this.dataLoaded = true;
           const changePlan: ChangePlan = res.data.change_plan;
-            if (isNullOrUndefined(changePlan.execution_time)) {
-              this.props.setChangePlan(changePlan);
-            } else {
-              this.props.setChangePlan(null);
-            }
-            const isOpen = new Array(res.data.modifications.length).fill(false);
-            this.setState({
-              changePlan: res.data.change_plan,
-              modifications: res.data.modifications,
-              isOpen
-            });
+          if (isNullOrUndefined(changePlan.execution_time)) {
+            this.props.setChangePlan(changePlan);
+          } else {
+            this.props.setChangePlan(null);
+          }
+          const isOpen = new Array(res.data.modifications.length).fill(false);
+          this.setState({
+            changePlan: res.data.change_plan,
+            modifications: res.data.modifications,
+            isOpen
+          });
         })
         .catch(err => {
           this.loading = false;
@@ -628,7 +628,6 @@ class CPDetailView extends React.Component<
           <div className={"detail-buttons-cp"}>
             <div>
               <AnchorButton
-    
                 onClick={() => this.printWorkOrder()}
                 disabled={this.state.disableButtons}
                 intent="none"
