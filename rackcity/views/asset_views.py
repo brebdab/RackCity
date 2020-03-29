@@ -542,7 +542,6 @@ def save_power_connections(asset_data, asset_id, change_plan=None):
                 try:
                     power_port.save()
                 except Exception as error:
-                    print(error)
                     failure_message += \
                         "Power connection on port '" + \
                         port_name + \
