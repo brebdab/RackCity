@@ -48,9 +48,9 @@ def decommission_asset(request):
             status=HTTPStatus.BAD_REQUEST
         )
     id = data['id']
+    decommissioned_asset_cp = None
     if change_plan:
-        if not AssetCP.objects.filter(id=id).exists() and Asset.objects.filter(id=id).exists:
-            print("new")
+        if not AssetCP.objects.filter(id=id).exists() and Asset.objects.filter(id=id).exists():
             existing_asset = Asset.objects.get(id=id)
             decommissioned_asset_cp = AssetCP(
                 change_plan=change_plan,
@@ -62,7 +62,6 @@ def decommission_asset(request):
                         existing_asset, field.name))
         else:
             try:
-                print("exists")
                 decommissioned_asset_cp = AssetCP.objects.get(id=id)
                 decommissioned_asset_cp.is_decommissioned=True
 
@@ -72,11 +71,56 @@ def decommission_asset(request):
                         "failure_message":
                             Status.ERROR.value +
                             "Asset" + GenericFailure.DOES_NOT_EXIST.value,
-                        "errors": "No existing asse in change plan with id="+str(id)
+                        "errors": "No existing asset in change plan with id="+str(id)
                     },
                     status=HTTPStatus.BAD_REQUEST
                 )
+        if not user_has_asset_permission(
+            request.user,
+            decommissioned_asset_cp.rack.datacenter
+        ):
+            return JsonResponse(
+                {
+                    "failure_message":
+                        Status.AUTH_ERROR.value + AuthFailure.ASSET.value,
+                    "errors":
+                        "User " + request.user.username +
+                        " does not have asset permission in datacenter id="
+                        + str(asset.rack.datacenter.id)
+                },
+                status=HTTPStatus.UNAUTHORIZED
+            )
+    
+    else:
+        try:
+            asset = Asset.objects.get(id=id)
+        except Asset.DoesNotExist:
+            return JsonResponse(
+                {
+                    "failure_message":
+                        Status.ERROR.value +
+                        "Asset" + GenericFailure.DOES_NOT_EXIST.value,
+                    "errors": "No existing asset with id="+str(id)
+                },
+                status=HTTPStatus.BAD_REQUEST
+            )
+        if not user_has_asset_permission(
+            request.user,
+            asset.rack.datacenter
+        ):
+            return JsonResponse(
+                {
+                    "failure_message":
+                        Status.AUTH_ERROR.value + AuthFailure.ASSET.value,
+                    "errors":
+                        "User " + request.user.username +
+                        " does not have asset permission in datacenter id="
+                        + str(asset.rack.datacenter.id)
+                },
+                status=HTTPStatus.UNAUTHORIZED
+            )
 
+    if change_plan:
         try:
             decommissioned_asset_cp.save()
         except Exception as error:
@@ -100,34 +144,7 @@ def decommission_asset(request):
             status=HTTPStatus.OK
         )
 
-    try:
-
-        asset = Asset.objects.get(id=id)
-    except Asset.DoesNotExist:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value +
-                    "Asset" + GenericFailure.DOES_NOT_EXIST.value,
-                "errors": "No existing asset with id="+str(id)
-            },
-            status=HTTPStatus.BAD_REQUEST
-        )
-    if not user_has_asset_permission(
-        request.user,
-        asset.rack.datacenter
-    ):
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.AUTH_ERROR.value + AuthFailure.ASSET.value,
-                "errors":
-                    "User " + request.user.username +
-                    " does not have asset permission in datacenter id="
-                    + str(asset.rack.datacenter.id)
-            },
-            status=HTTPStatus.UNAUTHORIZED
-        )
+   
         
     asset_data = RecursiveAssetSerializer(asset).data
     asset_data['live_id'] = asset_data['id']

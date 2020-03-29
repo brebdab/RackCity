@@ -32,7 +32,7 @@ def get_assets_for_cp(change_plan, show_decommissioned=False):
         if (assetCP.related_asset) and (assetCP.related_asset) in assets:
             assets = assets.filter(~Q(id=assetCP.related_asset.id))
     if not show_decommissioned:
-        assetsCP = AssetCP.objects.filter(change_plan=change_plan, is_decommissioned=False)
+        assetsCP = assetsCP.filter(is_decommissioned=False)
     return (assets, assetsCP)
 
 

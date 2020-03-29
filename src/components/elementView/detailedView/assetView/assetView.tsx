@@ -301,9 +301,9 @@ export class AssetView extends React.PureComponent<
           <Callout
             className="propsview"
             intent={Intent.WARNING}
-            title="This asset has been marked as decomissioned on this change plan. "
+            title="This asset has been marked as decommissioned on this change plan. "
           >
-            This asset will actually become decomissioned at the time of change
+            This asset will actually become decommissioned at the time of change
             plan execution, but no more modifications can be made to this asset.
           </Callout>
         ) : null}
