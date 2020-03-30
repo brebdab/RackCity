@@ -303,9 +303,12 @@ def network_connections_have_changed(asset, asset_cp):
     network_ports = NetworkPort.objects.filter(asset=asset)
     for network_port_cp in network_ports_cp:
         # Get NetworkPort connected to this port live
-        network_port = network_ports.get(
-            port_name=network_port_cp.port_name,
-        )
+        try:
+            network_port = network_ports.get(
+                port_name=network_port_cp.port_name,
+            )
+        except ObjectDoesNotExist:
+            continue
         connected_port_live = network_port.connected_port
         # Get NetworkPort associated with the NetworkPortCP connected to this port live
         cp_connected_port_in_cp = network_port_cp.connected_port
@@ -333,7 +336,10 @@ def power_connections_have_changed(asset, asset_cp):
         # Get PDUPortCP corresponding to this CP connection
         pdu_port_cp = power_port_cp.power_connection
         # Get PDUPort corresponding to this live connection
-        pdu_port_live = power_ports.get(port_name=power_port_cp.port_name)
+        try:
+            pdu_port_live = power_ports.get(port_name=power_port_cp.port_name)
+        except ObjectDoesNotExist:
+            continue
         # Check for match
         if (pdu_port_cp is None and pdu_port_live is None):
             continue
@@ -513,7 +519,7 @@ def get_cp_already_executed_response(change_plan):
                 "errors":
                     "Change plan with id=" + str(change_plan.id) + " "
                     "was executed on " + str(change_plan.execution_time)
-                    
+
             },
             status=HTTPStatus.BAD_REQUEST
         )
