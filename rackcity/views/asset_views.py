@@ -398,15 +398,21 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
                                     destination_asset_live, field.name))
 
                         destination_asset_cp.save()
+
+                        ## Destination asset has been added to AssetCP, but its network ports are empty (no connections/mac addresses)
+                        #get the network ports from the live asset 
                         dest_network_ports_live = NetworkPort.objects.filter(asset=destination_asset_live)
                         for dest_network_port_live in dest_network_ports_live:
+                            #for each of the ports, copy over the mac address values
                             dest_network_port_cp = NetworkPortCP.objects.get(
                                 asset=destination_asset_cp,
                                 port_name=dest_network_port_live.port_name)
                             dest_network_port_cp.mac_address = dest_network_port_live.mac_address
+                            #also copy over the connected_port if there 1. is a connection and 2. is not the port that is being deleted in this PR 
                             if dest_network_port_live.connected_port and not (dest_network_port_live.connected_port.port_name == port_name):
                                 dest_network_port_cp.connected_port = dest_network_port_live.connected_port
                             dest_network_port_cp.save()
+                        ## same dealio with power ports
                         dest_power_ports_live = PowerPort.objects.filter(asset=destination_asset_live)
                         for dest_power_port_live in dest_power_ports_live:
                             dest_power_port_cp = PowerPortCP.objects.get(
@@ -414,6 +420,7 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
                                 port_name=dest_power_port_live.port_name
                             )
                             dest_pdu_live = dest_power_port_live.power_connection
+                            ## if the live power port had a pdu connection, create/update the PDUs on PDUCP
                             if dest_pdu_live:
                                 if PDUPortCP.objects.filter(
                                     rack=dest_pdu_live.rack,
@@ -472,6 +479,7 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
                                 setattr(asset_cp, field.name, getattr(
                                     destination_asset, field.name))
                         asset_cp.save()
+                        ## copy over mac address values, the actual connections get made later in the create_network_connections() method
                         dest_network_ports_live = NetworkPort.objects.filter(asset=destination_asset)
                         for dest_network_port_live in dest_network_ports_live:
                             dest_network_port_cp = NetworkPortCP.objects.get(
@@ -480,6 +488,7 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
                             dest_network_port_cp.mac_address = dest_network_port_live.mac_address
                             dest_network_port_cp.save()
                         
+                        ##power connection info
                         dest_power_ports_live = PowerPort.objects.filter(asset=destination_asset)
                         for dest_power_port_live in dest_power_ports_live:
                             dest_power_port_cp = PowerPortCP.objects.get(
