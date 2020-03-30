@@ -96,6 +96,9 @@ class FilterSelect extends React.Component<
           singleMonthOnly={true}
           closeOnSelection={false}
           timePrecision="minute"
+          timePickerProps={
+            { useAmPm: true }
+          }
         />
       </FormGroup>
     );

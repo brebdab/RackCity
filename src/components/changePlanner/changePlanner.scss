@@ -63,3 +63,40 @@
 .cp-details pre + pre {
   margin-left: 5pt;
 }
+
+.print {
+  display: none;
+}
+@media print {
+  .banner {
+    display: none;
+  }
+  .print {
+    display: block;
+  }
+  h1 {
+    color: black !important;
+  }
+  .bp3-button {
+    display: none;
+  }
+  .bp3-callout {
+    color: black !important;
+    font-weight: bold;
+    box-shadow: inset 0 0 0 1px rgba(16, 22, 26, 0.4);
+  }
+  td {
+    color: black !important;
+  }
+  pre,
+  .bp3-code-block {
+    color: black !important;
+  }
+  .cp-detail-divider,
+  .cp-detail-divider-text {
+    display: none;
+  }
+  .change-plan-item {
+    display: flex;
+  }
+}
