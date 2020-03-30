@@ -314,7 +314,7 @@ def network_connections_have_changed(asset, asset_cp):
             related_asset = cp_connected_port_in_cp.asset.related_asset
             if related_asset:
                 try:
-                    real_connected_port_in_cp = NetworkPort.get(
+                    real_connected_port_in_cp = NetworkPort.objects.get(
                         asset=related_asset,
                         port_name=cp_connected_port_in_cp.port_name,
                     )
