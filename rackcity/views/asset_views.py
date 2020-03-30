@@ -412,8 +412,6 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
                             change_plan=change_plan
                         )
                         # add destination asset to AssetCPTable
-                        print(destination_asset)
-                        print(destination_asset._meta.fields)
                         for field in destination_asset._meta.fields:
                             
                             if field.name != 'id' and field.name != "assetid_ptr":
@@ -540,12 +538,10 @@ def save_power_connections(asset_data, asset_id, change_plan=None):
                     str(power_connection_data['port_number']) + \
                     "' does not exist. "
             else:
-                print(pdu_port)
                 power_port.power_connection = pdu_port
                 try:
                     power_port.save()
                 except Exception as error:
-                    print(error)
                     failure_message += \
                         "Power connection on port '" + \
                         port_name + \
