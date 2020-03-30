@@ -44,8 +44,9 @@ import {
   isChangePlanObject,
   ChangePlan,
   getChangePlanRowStyle,
-  PermissionState,
+  PermissionState
 } from "../../utils/utils";
+import * as actions from "../../store/actions/state";
 import DragDropList, { DragDropListTypes } from "./dragDropList";
 import {
   deleteAsset,
@@ -127,6 +128,7 @@ interface ElementTableProps {
   shouldUpdateData?: boolean;
   isAdmin: boolean;
   updateDatacenters?(): void;
+  updateChangePlans(status: boolean): void;
   changePlan: ChangePlan;
 }
 
@@ -135,7 +137,7 @@ interface ElementTableProps {
 class ElementTable extends React.Component<
   ElementTableProps & RouteComponentProps,
   ElementTableState
-  > {
+> {
   public state: ElementTableState = {
     page_type: 10,
     filters: [],
@@ -271,7 +273,7 @@ class ElementTable extends React.Component<
         </span>
         <span>{`${item.field} by ${
           item.ascending ? "ascending" : "descending"
-          }`}</span>
+        }`}</span>
 
         <span>
           <Icon
@@ -370,7 +372,7 @@ class ElementTable extends React.Component<
             filters: filters_copy
           });
         })
-        .catch(err => { });
+        .catch(err => {});
     }
   };
 
@@ -659,7 +661,7 @@ class ElementTable extends React.Component<
           this.setState({ editUserFormOpen: false });
           this.successfulModification("User permissions successfully updated");
         }}
-      // submitForm={this.getSubmitFormFunction(FormTypes.MODIFY)}
+        // submitForm={this.getSubmitFormFunction(FormTypes.MODIFY)}
       />
     );
   };
@@ -682,7 +684,7 @@ class ElementTable extends React.Component<
           }}
           asset={this.state.assetPower}
           shouldUpdate={false}
-          updated={() => { }}
+          updated={() => {}}
           assetIsDecommissioned={this.props.isDecommissioned}
         />
       </Dialog>
@@ -714,6 +716,7 @@ class ElementTable extends React.Component<
       });
     } else if (isChangePlanObject(values)) {
       return modifyChangePlan(values, headers).then(res => {
+        this.props.updateChangePlans(true);
         this.successfulModification(res.data.success_message);
       });
     } else if (isDatacenterObject(values)) {
@@ -802,6 +805,9 @@ class ElementTable extends React.Component<
           this.handleDeleteCancel();
           if (this.props.updateDatacenters) {
             this.props.updateDatacenters();
+          }
+          if (this.props.type === ElementType.CHANGEPLANS) {
+            this.props.updateChangePlans(true);
           }
         })
         .catch(err => {
@@ -921,20 +927,20 @@ class ElementTable extends React.Component<
           {this.props.disableFiltering
             ? null
             : [
-              <div className="filter-select">
-                <FilterSelect
-                  handleAddFilter={this.addFilter}
-                  fields={this.state.fields}
-                />
-              </div>,
-              <div className="table-options">
-                <DragDropList
-                  type={DragDropListTypes.FILTER}
-                  items={this.state.filters}
-                  renderItem={this.renderFilterItem}
-                />
-              </div>
-            ]}
+                <div className="filter-select">
+                  <FilterSelect
+                    handleAddFilter={this.addFilter}
+                    fields={this.state.fields}
+                  />
+                </div>,
+                <div className="table-options">
+                  <DragDropList
+                    type={DragDropListTypes.FILTER}
+                    items={this.state.filters}
+                    renderItem={this.renderFilterItem}
+                  />
+                </div>
+              ]}
           {this.props.disableSorting ? null : (
             <div className="table-options">
               <DragDropList
@@ -958,26 +964,26 @@ class ElementTable extends React.Component<
               </HTMLSelect>
               {this.state.page_type !== PagingTypes.ALL
                 ? [
-                  <span>
-                    <Icon
-                      className="icon"
-                      icon={IconNames.CARET_LEFT}
-                      iconSize={Icon.SIZE_LARGE}
-                      onClick={() => this.previousPage()}
-                    />
-                  </span>,
-                  <span>
-                    page {this.state.curr_page} of {this.state.total_pages}
-                  </span>,
-                  <span>
-                    <Icon
-                      className="icon"
-                      icon={IconNames.CARET_RIGHT}
-                      iconSize={Icon.SIZE_LARGE}
-                      onClick={() => this.nextPage()}
-                    />
-                  </span>
-                ]
+                    <span>
+                      <Icon
+                        className="icon"
+                        icon={IconNames.CARET_LEFT}
+                        iconSize={Icon.SIZE_LARGE}
+                        onClick={() => this.previousPage()}
+                      />
+                    </span>,
+                    <span>
+                      page {this.state.curr_page} of {this.state.total_pages}
+                    </span>,
+                    <span>
+                      <Icon
+                        className="icon"
+                        icon={IconNames.CARET_RIGHT}
+                        iconSize={Icon.SIZE_LARGE}
+                        onClick={() => this.nextPage()}
+                      />
+                    </span>
+                  ]
                 : null}
             </div>
           ) : null}
@@ -986,7 +992,7 @@ class ElementTable extends React.Component<
           <table
             className={
               this.props.type !== ElementType.DATACENTER &&
-                this.props.type !== ElementType.USER
+              this.props.type !== ElementType.USER
                 ? "bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered element-table"
                 : "bp3-html-table bp3-html-table-striped bp3-html-table-bordered element-table"
             }
@@ -994,49 +1000,49 @@ class ElementTable extends React.Component<
             <thead>
               <tr>
                 {this.props.type === ElementType.ASSET &&
-                  this.state.fields &&
-                  this.state.fields.length > 0 ? (
-                    <th className="header-cell">
-                      <div className="header-text">
-                        {this.props.isDecommissioned ? null : (
-                          <Checkbox
-                            checked={this.state.selectedAll}
-                            onClick={(event: any) => {
-                              const selected = this.state.selected;
-                              const selectedAll = !this.state.selectedAll;
-                              this.state.items.forEach(item => {
-                                if (isAssetObject(item)) {
-                                  if (
-                                    selected.includes(item.asset_number) &&
-                                    !selectedAll
-                                  ) {
-                                    selected.splice(
-                                      selected.indexOf(item.asset_number),
-                                      1
-                                    );
-                                  } else if (
-                                    !selected.includes(item.asset_number) &&
-                                    selectedAll
-                                  ) {
-                                    selected.push(item.asset_number);
-                                  }
+                this.state.fields &&
+                this.state.fields.length > 0 ? (
+                  <th className="header-cell">
+                    <div className="header-text">
+                      {this.props.isDecommissioned ? null : (
+                        <Checkbox
+                          checked={this.state.selectedAll}
+                          onClick={(event: any) => {
+                            const selected = this.state.selected;
+                            const selectedAll = !this.state.selectedAll;
+                            this.state.items.forEach(item => {
+                              if (isAssetObject(item)) {
+                                if (
+                                  selected.includes(item.asset_number) &&
+                                  !selectedAll
+                                ) {
+                                  selected.splice(
+                                    selected.indexOf(item.asset_number),
+                                    1
+                                  );
+                                } else if (
+                                  !selected.includes(item.asset_number) &&
+                                  selectedAll
+                                ) {
+                                  selected.push(item.asset_number);
                                 }
-                              });
-                              console.log(selected);
-
-                              this.setState({
-                                selectedAll,
-                                selected
-                              });
-                              if (this.props.updateBarcodes) {
-                                this.props.updateBarcodes(this.state.selected);
                               }
-                            }}
-                          />
-                        )}
-                      </div>
-                    </th>
-                  ) : null}
+                            });
+                            console.log(selected);
+
+                            this.setState({
+                              selectedAll,
+                              selected
+                            });
+                            if (this.props.updateBarcodes) {
+                              this.props.updateBarcodes(this.state.selected);
+                            }
+                          }}
+                        />
+                      )}
+                    </div>
+                  </th>
+                ) : null}
                 {this.state.fields.map((col: string) => {
                   if (col === "model") {
                     return [
@@ -1095,68 +1101,68 @@ class ElementTable extends React.Component<
                         key={item.id}
                         onClick={
                           this.props.type === ElementType.DATACENTER ||
-                            this.props.type === ElementType.USER
-                            ? () => { }
+                          this.props.type === ElementType.USER
+                            ? () => {}
                             : () => {
-                              this.props.history.push(
-                                ROUTES.DASHBOARD +
-                                "/" +
-                                this.props.type +
-                                "/" +
-                                item.id
-                              );
-                            }
+                                this.props.history.push(
+                                  ROUTES.DASHBOARD +
+                                    "/" +
+                                    this.props.type +
+                                    "/" +
+                                    item.id
+                                );
+                              }
                         }
                         style={getChangePlanRowStyle(item)}
                       >
                         {this.props.type === ElementType.ASSET &&
-                          isAssetObject(item) ? (
-                            <th
-                              onClick={(event: any) => {
-                                event.stopPropagation();
-                              }}
-                            >
-                              {this.props.isDecommissioned ? null : (
-                                <Checkbox
-                                  checked={this.state.selected.includes(
-                                    item.asset_number
-                                  )}
-                                  onClick={(event: any) => {
-                                    const selected = this.state.selected;
-                                    if (selected.includes(item.asset_number)) {
-                                      console.log(
-                                        "removing",
-                                        item.asset_number,
-                                        selected
-                                      );
-                                      if (this.state.selectedAll) {
-                                        this.setState({
-                                          selectedAll: false
-                                        });
-                                      }
-                                      selected.splice(
-                                        selected.indexOf(item.asset_number),
-                                        1
-                                      );
-                                    } else {
-                                      selected.push(item.asset_number);
-                                      console.log("adding", item.asset_number);
-                                    }
-                                    this.setState({
+                        isAssetObject(item) ? (
+                          <th
+                            onClick={(event: any) => {
+                              event.stopPropagation();
+                            }}
+                          >
+                            {this.props.isDecommissioned ? null : (
+                              <Checkbox
+                                checked={this.state.selected.includes(
+                                  item.asset_number
+                                )}
+                                onClick={(event: any) => {
+                                  const selected = this.state.selected;
+                                  if (selected.includes(item.asset_number)) {
+                                    console.log(
+                                      "removing",
+                                      item.asset_number,
                                       selected
-                                    });
-                                    if (this.props.updateBarcodes) {
-                                      this.props.updateBarcodes(
-                                        this.state.selected
-                                      );
+                                    );
+                                    if (this.state.selectedAll) {
+                                      this.setState({
+                                        selectedAll: false
+                                      });
                                     }
-                                    console.log(selected);
-                                    event.stopPropagation();
-                                  }}
-                                />
-                              )}
-                            </th>
-                          ) : null}
+                                    selected.splice(
+                                      selected.indexOf(item.asset_number),
+                                      1
+                                    );
+                                  } else {
+                                    selected.push(item.asset_number);
+                                    console.log("adding", item.asset_number);
+                                  }
+                                  this.setState({
+                                    selected
+                                  });
+                                  if (this.props.updateBarcodes) {
+                                    this.props.updateBarcodes(
+                                      this.state.selected
+                                    );
+                                  }
+                                  console.log(selected);
+                                  event.stopPropagation();
+                                }}
+                              />
+                            )}
+                          </th>
+                        ) : null}
                         {Object.entries(item).map(([col, value]) => {
                           if (isModelObject(value)) {
                             return [
@@ -1199,7 +1205,8 @@ class ElementTable extends React.Component<
                             event.stopPropagation();
                           }}
                         >
-                          {this.props.permissionState.admin && isUserObject(item) ? (
+                          {this.props.permissionState.admin &&
+                          isUserObject(item) ? (
                             <div className="inline-buttons-user grant-admin-button permissions-button">
                               {" "}
                               {/* TODO change grant-admin-button to change-permissions*/}
@@ -1208,21 +1215,22 @@ class ElementTable extends React.Component<
                           ) : null}
                           <div className="inline-buttons">
                             {this.props.type !== ElementType.USER &&
-                              !this.props.data &&
-                              !this.props.isDecommissioned ? (
-                                <AnchorButton
-                                  className="button-table"
-                                  intent="primary"
-                                  minimal
-                                  icon="edit"
-                                  disabled={
-                                    (this.props.changePlan &&
-                                      this.props.type !== ElementType.ASSET) ||  (this.props.type ===
-                                        ElementType.CHANGEPLANS &&
-                                        isChangePlanObject(item) &&
-                                        item.execution_time)
-                                      ? true
-                                      : !(
+                            !this.props.data &&
+                            !this.props.isDecommissioned ? (
+                              <AnchorButton
+                                className="button-table"
+                                intent="primary"
+                                minimal
+                                icon="edit"
+                                disabled={
+                                  (this.props.changePlan &&
+                                    this.props.type !== ElementType.ASSET) ||
+                                  (this.props.type ===
+                                    ElementType.CHANGEPLANS &&
+                                    isChangePlanObject(item) &&
+                                    item.execution_time)
+                                    ? true
+                                    : !(
                                         this.props.permissionState.admin ||
                                         (this.props.type ===
                                           ElementType.DATACENTER &&
@@ -1243,37 +1251,38 @@ class ElementTable extends React.Component<
                                             +item.rack.datacenter.id
                                           ))
                                       )
-                                  }
-                                  onClick={(event: any) => {
-                                    console.log(
-                                      "SCROLL",
-                                      window.scrollX,
-                                      window.scrollY
-                                    );
-                                    this.handleEditButtonClick(item);
-                                    event.stopPropagation();
-                                  }}
-                                />
-                              ) : null}
+                                }
+                                onClick={(event: any) => {
+                                  console.log(
+                                    "SCROLL",
+                                    window.scrollX,
+                                    window.scrollY
+                                  );
+                                  this.handleEditButtonClick(item);
+                                  event.stopPropagation();
+                                }}
+                              />
+                            ) : null}
                             {!this.props.data &&
-                              !this.props.isDecommissioned ? (
-                                <AnchorButton
-                                  className="button-table"
-                                  intent="danger"
-                                  minimal
-                                  icon={
-                                    this.props.type === ElementType.ASSET
-                                      ? "remove"
-                                      : "trash"
-                                  }
-                                  disabled={
-                                    (this.props.changePlan &&
-                                      this.props.type !== ElementType.ASSET) ||  (this.props.type ===
-                                        ElementType.CHANGEPLANS &&
-                                        isChangePlanObject(item) &&
-                                        item.execution_time)
-                                      ? true
-                                      : !(
+                            !this.props.isDecommissioned ? (
+                              <AnchorButton
+                                className="button-table"
+                                intent="danger"
+                                minimal
+                                icon={
+                                  this.props.type === ElementType.ASSET
+                                    ? "remove"
+                                    : "trash"
+                                }
+                                disabled={
+                                  (this.props.changePlan &&
+                                    this.props.type !== ElementType.ASSET) ||
+                                  (this.props.type ===
+                                    ElementType.CHANGEPLANS &&
+                                    isChangePlanObject(item) &&
+                                    item.execution_time)
+                                    ? true
+                                    : !(
                                         this.props.permissionState.admin ||
                                         (this.props.type ===
                                           ElementType.DATACENTER &&
@@ -1294,37 +1303,37 @@ class ElementTable extends React.Component<
                                             +item.rack.datacenter.id
                                           ))
                                       )
-                                  }
-                                  onClick={
-                                    this.props.type === ElementType.ASSET
-                                      ? (event: any) => {
+                                }
+                                onClick={
+                                  this.props.type === ElementType.ASSET
+                                    ? (event: any) => {
                                         this.handleDecommissionButtonClick(
                                           item
                                         );
                                         event.stopPropagation();
                                       }
-                                      : (event: any) => {
+                                    : (event: any) => {
                                         this.handleDeleteButtonClick(item);
                                         event.stopPropagation();
                                       }
-                                  }
-                                />
-                              ) : null}
+                                }
+                              />
+                            ) : null}
                             {isAssetObject(item) &&
-                              item.rack.is_network_controlled &&
-                              !this.props.isDecommissioned ? (
-                                <AnchorButton
-                                  className="button-table"
-                                  intent="warning"
-                                  minimal
-                                  icon="offline"
-                                  disabled={this.props.changePlan ? true : false}
-                                  onClick={(event: any) => {
-                                    this.handlePowerButtonClick(item);
-                                    event.stopPropagation();
-                                  }}
-                                />
-                              ) : null}
+                            item.rack.is_network_controlled &&
+                            !this.props.isDecommissioned ? (
+                              <AnchorButton
+                                className="button-table"
+                                intent="warning"
+                                minimal
+                                icon="offline"
+                                disabled={this.props.changePlan ? true : false}
+                                onClick={(event: any) => {
+                                  this.handlePowerButtonClick(item);
+                                  event.stopPropagation();
+                                }}
+                              />
+                            ) : null}
                           </div>{" "}
                           {/* TODO add logic for determining if isOwner for power button */}
                         </td>
@@ -1334,11 +1343,11 @@ class ElementTable extends React.Component<
                 </tbody>
               ) : null
             ) : null
-              // <Spinner
-              //   className="table-spinner"
-              //   size={Spinner.SIZE_STANDARD}
-              // />
-              // <h4 className="no-data-text">no {this.props.type} found </h4>
+            // <Spinner
+            //   className="table-spinner"
+            //   size={Spinner.SIZE_STANDARD}
+            // />
+            // <h4 className="no-data-text">no {this.props.type} found </h4>
             }
           </table>
 
@@ -1346,12 +1355,12 @@ class ElementTable extends React.Component<
             <Spinner className="table-spinner" size={Spinner.SIZE_STANDARD} />
           ) : null}
           {(!this.state.items || this.state.items.length === 0) &&
-            !this.state.getDataInProgress ? (
-              <Callout
-                icon={IconNames.ERROR}
-                title={"No " + this.props.type}
-              ></Callout>
-            ) : null}
+          !this.state.getDataInProgress ? (
+            <Callout
+              icon={IconNames.ERROR}
+              title={"No " + this.props.type}
+            ></Callout>
+          ) : null}
         </div>
       </div>
     );
@@ -1365,4 +1374,13 @@ const mapStateToProps = (state: any) => {
     permissionState: state.permissionState
   };
 };
-export default connect(mapStateToProps)(withRouter(ElementTable));
+const mapDispatchToProps = (dispatch: any) => {
+  return {
+    updateChangePlans: (status: boolean) =>
+      dispatch(actions.updateChangePlans(status))
+  };
+};
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(withRouter(ElementTable));
