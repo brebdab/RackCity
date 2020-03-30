@@ -337,9 +337,12 @@ def power_connections_have_changed(asset, asset_cp):
         pdu_port_cp = power_port_cp.power_connection
         # Get PDUPort corresponding to this live connection
         try:
-            pdu_port_live = power_ports.get(port_name=power_port_cp.port_name)
+            power_port_live = power_ports.get(
+                port_name=power_port_cp.port_name
+            )
         except ObjectDoesNotExist:
             continue
+        pdu_port_live = power_port_live.power_connection
         # Check for match
         if (pdu_port_cp is None and pdu_port_live is None):
             continue
