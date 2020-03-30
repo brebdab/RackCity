@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
@@ -301,22 +302,26 @@ def network_connections_have_changed(asset, asset_cp):
     network_ports_cp = NetworkPortCP.objects.filter(asset=asset_cp)
     network_ports = NetworkPort.objects.filter(asset=asset)
     for network_port_cp in network_ports_cp:
-        # Get Asset corresponding to this CP connection
-        connected_port_cp = network_port_cp.connected_port
-        if connected_port_cp:
-            destination_host_in_cp = connected_port_cp.asset.related_asset
-        else:
-            destination_host_in_cp = None
-        # Get Asset corresponding to this live connection
-        connected_port_live = network_ports.get(
-            port_name=network_port_cp.port_name
+        # Get NetworkPort connected to this port live
+        network_port = network_ports.get(
+            port_name=network_port_cp.port_name,
         )
-        if connected_port_live:
-            destination_host_live = connected_port_live.asset
-        else:
-            destination_host_live = None
+        connected_port_live = network_port.connected_port
+        # Get NetworkPort associated with the NetworkPortCP connected to this port live
+        cp_connected_port_in_cp = network_port_cp.connected_port
+        real_connected_port_in_cp = None
+        if cp_connected_port_in_cp:
+            related_asset = cp_connected_port_in_cp.asset.related_asset
+            if related_asset:
+                try:
+                    real_connected_port_in_cp = NetworkPort.get(
+                        asset=related_asset,
+                        port_name=cp_connected_port_in_cp.port_name,
+                    )
+                except ObjectDoesNotExist:
+                    real_connected_port_in_cp = None
         # Check for match
-        if destination_host_in_cp != destination_host_live:
+        if connected_port_live != real_connected_port_in_cp:
             return True
     return False
 
