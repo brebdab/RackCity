@@ -583,35 +583,13 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                         this.props.permissionState.asset_management) ||
                       (this.props.element === ElementType.ASSET &&
                         this.props.permissionState.datacenter_permissions
-                          .length > 0) ||
-                      this.props.element === ElementType.CHANGEPLANS
+                          .length > 0)
                     )
               }
             />
-            {this.props.element === ElementType.ASSET ? (
-              <Link
-                target="_blank"
-                to={{ pathname: ROUTES.BARCODE_PRINT, state: null }}
-              >
-                <AnchorButton
-                  className="add"
-                  text="Print Barcodes for Selected Assets"
-                  icon="barcode"
-                  minimal
-                  onClick={(e: any) => {
-                    let barcodes: string;
-                    barcodes = "";
-                    for (var i = 0; i < this.state.barcodes.length - 1; i++) {
-                      barcodes = barcodes + this.state.barcodes[i] + ",";
-                    }
-                    barcodes =
-                      barcodes +
-                      this.state.barcodes[this.state.barcodes.length - 1];
-                    localStorage.setItem("barcodes", barcodes);
-                  }}
-                />
-              </Link>
-            ) : null}
+            {this.props.element === ElementType.ASSET
+              ? this.renderBarcodeButton()
+              : null}
             {this.props.element === ElementType.ASSET ? (
               <Button
                 onClick={() => {
@@ -666,6 +644,42 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
           />
         </div>
       </div>
+    );
+  }
+  private renderBarcodeButton() {
+    return this.state.barcodes.length === 0 ? (
+      <AnchorButton
+        className="add"
+        text="Print Barcodes for Selected Assets"
+        icon="barcode"
+        minimal
+        disabled={true}
+        onClick={() => {}}
+      />
+    ) : (
+      <Link
+        target="_blank"
+        to={{ pathname: ROUTES.BARCODE_PRINT, state: null }}
+      >
+        <AnchorButton
+          className="add"
+          text="Print Barcodes for Selected Assets"
+          icon="barcode"
+          style={{ color: "white" }}
+          minimal
+          disabled={this.state.barcodes.length === 0}
+          onClick={(e: any) => {
+            let barcodes: string;
+            barcodes = "";
+            for (var i = 0; i < this.state.barcodes.length - 1; i++) {
+              barcodes = barcodes + this.state.barcodes[i] + ",";
+            }
+            barcodes =
+              barcodes + this.state.barcodes[this.state.barcodes.length - 1];
+            localStorage.setItem("barcodes", barcodes);
+          }}
+        />
+      </Link>
     );
   }
 }
