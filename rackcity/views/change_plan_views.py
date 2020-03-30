@@ -423,6 +423,17 @@ def change_plan_execute(request, id):
         )
         if response:
             return response
+    else:
+        return JsonResponse(
+            {
+                "failure_message":
+                    Status.ERROR.value +
+                    GenericFailure.INTERNAL.value,
+                "errors":
+                    "Must specify change plan id as query param on execute"
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
     if request.user != change_plan.owner:
         return JsonResponse(
             {
