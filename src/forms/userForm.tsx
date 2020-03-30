@@ -27,15 +27,13 @@ import { FormTypes } from "./formUtils";
 import { API_ROOT } from "../utils/api-config";
 import { modifyUser } from "../components/elementView/elementUtils";
 
-//TO DO : add validation of types!!!
-// var console: any = {};
-// console.log = function() {};
+var console: any = {};
+console.log = function() {};
 
 export interface UserFormProps {
   userId: string;
   token: string;
   type?: FormTypes;
-  // submitForm(model: UserPermissionsObject, headers: any): Promise<any> | void;
   submitForm: Function;
 }
 interface UserFormState {
@@ -396,10 +394,7 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
           initialValues: res.data,
           permissions: res.data
         });
-        if (
-          res.data.datacenter_permissions.length ===
-          this.state.datacenters.length
-        ) {
+        if (res.data.asset_management) {
           this.setState({
             datacenter_selection: "Global"
           });
