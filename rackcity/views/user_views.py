@@ -391,16 +391,28 @@ def user_set_groups(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
-
+    if (
+        (user.username == 'admin')
+        and ('admin' in data)
+        and (not (data['admin']))
+    ):
+        return JsonResponse(
+            {
+                "failure_message":
+                Status.MODIFY_ERROR.value +
+                "Not allowed to revoke admin permission from superuser " +
+                user.username
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
     groups_added, groups_removed, current_groups = \
         update_user_groups(user, data)
     if 'datacenter_permissions' in data:
         try:
-            current_datacenters = \
-                update_user_datacenter_permissions(
-                    user,
-                    data['datacenter_permissions'],
-                )
+            current_datacenters = update_user_datacenter_permissions(
+                user,
+                data['datacenter_permissions'],
+            )
         except ObjectDoesNotExist:
             return JsonResponse(
                 {
