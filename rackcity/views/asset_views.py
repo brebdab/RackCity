@@ -376,77 +376,113 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
                 not network_connection['destination_hostname'] and
                 not network_connection['destination_port']
             ):
-          
+
                 if change_plan:
                     # need to add deleted connection's asset to asset change plan
                     asset_cp = AssetCP.objects.get(id=asset_id)
                     if asset_cp.related_asset_id:
-                        asset_live = Asset.objects.get(id=asset_cp.related_asset_id)
-                        network_port_live = NetworkPort.objects.get(asset=asset_live,port_name=port_name)
+                        asset_live = Asset.objects.get(
+                            id=asset_cp.related_asset_id
+                        )
+                        network_port_live = NetworkPort.objects.get(
+                            asset=asset_live, port_name=port_name
+                        )
                         if network_port_live.connected_port:
-                            destination_port_live = NetworkPort.objects.filter(id=network_port_live.connected_port_id)[0]
-                            destination_asset_live = Asset.objects.get(id=destination_port_live.asset_id)
+                            destination_port_live = NetworkPort.objects.filter(
+                                id=network_port_live.connected_port_id
+                            )[0]
+                            destination_asset_live = Asset.objects.get(
+                                id=destination_port_live.asset_id
+                            )
                             destination_asset_cp = AssetCP(
                                 related_asset=destination_asset_live,
-                                change_plan=change_plan
+                                change_plan=change_plan,
                             )
                         # add destination asset to AssetCPTable
                         for field in destination_asset_live._meta.fields:
-                            
-                            if field.name != 'id' and field.name != "assetid_ptr":
-                                setattr(destination_asset_cp, field.name, getattr(
-                                    destination_asset_live, field.name))
+                            if (
+                                field.name != 'id'
+                                and field.name != "assetid_ptr"
+                            ):
+                                setattr(
+                                    destination_asset_cp,
+                                    field.name,
+                                    getattr(destination_asset_live,
+                                            field.name),
+                                )
 
                         destination_asset_cp.save()
 
-                        ## Destination asset has been added to AssetCP, but its network ports are empty (no connections/mac addresses)
-                        #get the network ports from the live asset 
-                        dest_network_ports_live = NetworkPort.objects.filter(asset=destination_asset_live)
+                        # Destination asset has been added to AssetCP, but its
+                        # network ports are empty (no connections/mac
+                        # addresses) get the network ports from the live asset
+                        dest_network_ports_live = NetworkPort.objects.filter(
+                            asset=destination_asset_live
+                        )
                         for dest_network_port_live in dest_network_ports_live:
-                            #for each of the ports, copy over the mac address values
+                            # for each port, copy over mac address values
                             dest_network_port_cp = NetworkPortCP.objects.get(
                                 asset=destination_asset_cp,
-                                port_name=dest_network_port_live.port_name)
-                            dest_network_port_cp.mac_address = dest_network_port_live.mac_address
-                            #also copy over the connected_port if there 1. is a connection and 2. is not the port that is being deleted in this PR 
-                            if dest_network_port_live.connected_port and not (dest_network_port_live.connected_port.port_name == port_name):
-                                dest_network_port_cp.connected_port = dest_network_port_live.connected_port
+                                port_name=dest_network_port_live.port_name,
+                            )
+                            dest_network_port_cp.mac_address = \
+                                dest_network_port_live.mac_address
+                            # also copy over the connected_port if there 1. is
+                            # a connection and 2. is not the port that is being
+                            # deleted in this PR
+                            if (
+                                dest_network_port_live.connected_port
+                                and not (dest_network_port_live.connected_port.port_name == port_name)
+                            ):
+                                dest_network_port_cp.connected_port = \
+                                    dest_network_port_live.connected_port
                             dest_network_port_cp.save()
-                        ## same dealio with power ports
-                        dest_power_ports_live = PowerPort.objects.filter(asset=destination_asset_live)
+                        # same dealio with power ports
+                        dest_power_ports_live = PowerPort.objects.filter(
+                            asset=destination_asset_live
+                        )
                         for dest_power_port_live in dest_power_ports_live:
                             dest_power_port_cp = PowerPortCP.objects.get(
                                 asset=destination_asset_cp,
-                                port_name=dest_power_port_live.port_name
+                                port_name=dest_power_port_live.port_name,
                             )
-                            dest_pdu_live = dest_power_port_live.power_connection
-                            ## if the live power port had a pdu connection, create/update the PDUs on PDUCP
+                            dest_pdu_live = \
+                                dest_power_port_live.power_connection
+                            # if the live power port had a pdu connection,
+                            # create/update the PDUs on PDUCP
                             if dest_pdu_live:
                                 if PDUPortCP.objects.filter(
                                     rack=dest_pdu_live.rack,
                                     left_right=dest_pdu_live.left_right,
                                     port_number=dest_pdu_live.port_number,
-                                    change_plan=change_plan
+                                    change_plan=change_plan,
                                 ).exists():
                                     pdu_port = PDUPortCP.objects.filter(
                                         rack=dest_pdu_live.rack,
                                         left_right=dest_pdu_live.left_right,
                                         port_number=dest_pdu_live.port_number,
-                                        change_plan=change_plan
+                                        change_plan=change_plan,
                                     )
                                 else:
-                                    pdu_port = PDUPortCP(change_plan=change_plan)
+                                    pdu_port = PDUPortCP(
+                                        change_plan=change_plan
+                                    )
                                     for field in dest_pdu_live._meta.fields:
                                         if field.name != "id":
-                                            setattr(pdu_port, field.name, getattr(
-                                                dest_pdu_live, field.name))
+                                            setattr(
+                                                pdu_port,
+                                                field.name,
+                                                getattr(
+                                                    dest_pdu_live,
+                                                    field.name,
+                                                ),
+                                            )
                                     pdu_port.save()
                                 dest_power_port_cp.power_connection = pdu_port
                                 dest_power_port_cp.save()
 
                 network_port.delete_network_connection()
-                
-                
+
                 continue
             if (
                 not network_connection['destination_hostname']
@@ -465,7 +501,9 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
             try:
                 if change_plan:
                     assets, assets_cp = get_assets_for_cp(change_plan.id)
-                    if assets.filter(hostname=network_connection['destination_hostname']).exists():
+                    if assets.filter(
+                        hostname=network_connection['destination_hostname']
+                    ).exists():
                         destination_asset = assets.get(
                             hostname=network_connection['destination_hostname']
                         )
@@ -479,48 +517,64 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
                                 setattr(asset_cp, field.name, getattr(
                                     destination_asset, field.name))
                         asset_cp.save()
-                        ## copy over mac address values, the actual connections get made later in the create_network_connections() method
-                        dest_network_ports_live = NetworkPort.objects.filter(asset=destination_asset)
+                        # copy over mac address values, the actual connections
+                        # get made later in the create_network_connections()
+                        # method
+                        dest_network_ports_live = NetworkPort.objects.filter(
+                            asset=destination_asset
+                        )
                         for dest_network_port_live in dest_network_ports_live:
                             dest_network_port_cp = NetworkPortCP.objects.get(
                                 asset=asset_cp,
-                                port_name=dest_network_port_live.port_name)
-                            dest_network_port_cp.mac_address = dest_network_port_live.mac_address
+                                port_name=dest_network_port_live.port_name,
+                            )
+                            dest_network_port_cp.mac_address = \
+                                dest_network_port_live.mac_address
                             dest_network_port_cp.save()
-                        
-                        ##power connection info
-                        dest_power_ports_live = PowerPort.objects.filter(asset=destination_asset)
+
+                        # power connection info
+                        dest_power_ports_live = PowerPort.objects.filter(
+                            asset=destination_asset
+                        )
                         for dest_power_port_live in dest_power_ports_live:
                             dest_power_port_cp = PowerPortCP.objects.get(
                                 asset=asset_cp,
-                                port_name=dest_power_port_live.port_name
+                                port_name=dest_power_port_live.port_name,
                             )
-                            print(dest_power_port_live)
-                            dest_pdu_live = dest_power_port_live.power_connection
+                            dest_pdu_live = \
+                                dest_power_port_live.power_connection
                             if dest_pdu_live:
                                 if PDUPortCP.objects.filter(
                                     rack=dest_pdu_live.rack,
                                     left_right=dest_pdu_live.left_right,
                                     port_number=dest_pdu_live.port_number,
-                                    change_plan=change_plan
+                                    change_plan=change_plan,
                                 ).exists():
                                     pdu_port = PDUPortCP.objects.filter(
                                         rack=dest_pdu_live.rack,
                                         left_right=dest_pdu_live.left_right,
                                         port_number=dest_pdu_live.port_number,
-                                        change_plan=change_plan
+                                        change_plan=change_plan,
                                     )
                                 else:
-                                    pdu_port = PDUPortCP(change_plan=change_plan)
+                                    pdu_port = PDUPortCP(
+                                        change_plan=change_plan
+                                    )
                                     for field in dest_pdu_live._meta.fields:
                                         if field.name != "id":
-                                            setattr(pdu_port, field.name, getattr(
-                                                dest_pdu_live, field.name))
+                                            setattr(
+                                                pdu_port,
+                                                field.name,
+                                                getattr(
+                                                    dest_pdu_live,
+                                                    field.name,
+                                                ),
+                                            )
                                     pdu_port.save()
                                 dest_power_port_cp.power_connection = pdu_port
                                 dest_power_port_cp.save()
                         destination_asset = asset_cp
-                            
+
                     else:
                         destination_asset = assets_cp.get(
                             hostname=network_connection['destination_hostname'],
@@ -531,9 +585,6 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
                         hostname=network_connection['destination_hostname']
                     )
             except ObjectDoesNotExist:
-                track = traceback.format_exc()
-                print(track)
-
                 failure_message += \
                     "Asset with hostname '" + \
                     network_connection['destination_hostname'] + \
@@ -633,7 +684,7 @@ def save_power_connections(asset_data, asset_id, change_plan=None):
                                 setattr(pdu_port, field.name, getattr(
                                     pdu_port_master, field.name))
                         pdu_port.save()
-                
+
             except ObjectDoesNotExist:
                 failure_message += \
                     "PDU port '" + \
@@ -1028,8 +1079,7 @@ def asset_bulk_upload(request):
                 model_number=asset_data['model_number']
             )
         except ObjectDoesNotExist:
-            failure_message = \
-                Status.IMPORT_ERROR.value + \
+            failure_message = Status.IMPORT_ERROR.value + \
                 "Model does not exist: " + \
                 "vendor="+asset_data['vendor'] + \
                 ", model_number="+asset_data['model_number']
@@ -1045,8 +1095,7 @@ def asset_bulk_upload(request):
                 abbreviation=asset_data['datacenter']
             )
         except ObjectDoesNotExist:
-            failure_message = \
-                Status.IMPORT_ERROR.value + \
+            failure_message = Status.IMPORT_ERROR.value + \
                 "Provided datacenter doesn't exist: " + \
                 asset_data['datacenter']
             return JsonResponse(
@@ -1062,8 +1111,7 @@ def asset_bulk_upload(request):
                 rack_num=rack_num
             )
         except ObjectDoesNotExist:
-            failure_message = \
-                Status.IMPORT_ERROR.value + \
+            failure_message = Status.IMPORT_ERROR.value + \
                 "Provided rack doesn't exist: " + \
                 asset_data['rack']
             return JsonResponse(
@@ -1075,7 +1123,9 @@ def asset_bulk_upload(request):
             data=asset_data)  # non-recursive to validate
         if not asset_serializer.is_valid():
             errors = asset_serializer.errors
-            if not (  # if the only errors are the asset number and/or hostname uniqueness, that's fine - it's a modify
+            if not (
+                # if the only errors are the asset number and/or
+                # hostname uniqueness, that's fine - it's a modify
                 (
                     len(errors.keys()) == 2  # known bug here!
                     and 'hostname' in errors
@@ -1107,8 +1157,7 @@ def asset_bulk_upload(request):
         if 'hostname' in asset_data and asset_data['hostname']:
             asset_data_hostname_lower = asset_data['hostname'].lower()
             if asset_data_hostname_lower in hostnames_in_import:
-                failure_message = \
-                    Status.IMPORT_ERROR.value + \
+                failure_message = Status.IMPORT_ERROR.value + \
                     "Hostname must be unique, but '" + \
                     asset_data_hostname_lower + \
                     "' appears more than once in import. "
@@ -1122,8 +1171,7 @@ def asset_bulk_upload(request):
         if 'asset_number' in asset_data and asset_data['asset_number']:
             asset_number = asset_data['asset_number']
             if asset_number in asset_numbers_in_import:
-                failure_message = \
-                    Status.IMPORT_ERROR.value + \
+                failure_message = Status.IMPORT_ERROR.value + \
                     "Asset number must be unique, but '" + \
                     str(asset_number) + \
                     "' appears more than once in import. "
@@ -1151,8 +1199,7 @@ def asset_bulk_upload(request):
                     request.user,
                 )
             except Exception:
-                failure_message = \
-                    Status.IMPORT_ERROR.value + \
+                failure_message = Status.IMPORT_ERROR.value + \
                     "Asset " + \
                     str(asset_data['asset_number']) + \
                     " would conflict location with an existing asset. "
@@ -1215,8 +1262,7 @@ def asset_bulk_upload(request):
     try:
         no_infile_location_conflicts(asset_datas)
     except LocationException as error:
-        failure_message = \
-            Status.IMPORT_ERROR.value + \
+        failure_message = Status.IMPORT_ERROR.value + \
             "Location conflicts among assets in import file. " + \
             str(error)
         return JsonResponse(
@@ -1307,13 +1353,15 @@ def asset_bulk_approve(request):
             status=HTTPStatus.BAD_REQUEST
         )
     asset_datas = data['approved_modifications']
-    # Don't do any validation here because we know we sent valid assets to the frontend,
-    # and they should send the same ones back
+    # Don't do any validation here because we know we sent valid assets to the
+    # frontend, and they should send the same ones back
     warning_message = ""
     for asset_data in asset_datas:
         existing_asset = Asset.objects.get(
             id=asset_data['id'])
-        for field in asset_data.keys():  # This is assumed to have all fields, and with null values for blank ones. That's how it's returned in bulk-upload
+        for field in asset_data.keys():
+            # This is assumed to have all fields, and with null values for
+            # blank ones. That's how it's returned in bulk-upload
             if field == 'model':
                 value = ITModel.objects.get(id=asset_data[field]['id'])
             elif field == 'rack':
@@ -1434,8 +1482,7 @@ def network_bulk_upload(request):
             'src_hostname' not in bulk_network_port_data
             or not bulk_network_port_data['src_hostname']
         ):
-            failure_message = \
-                Status.IMPORT_ERROR.value + \
+            failure_message = Status.IMPORT_ERROR.value + \
                 "Field 'src_hostname' is required for all network imports."
             return JsonResponse(
                 {"failure_message": failure_message},
@@ -1445,8 +1492,7 @@ def network_bulk_upload(request):
             'src_port' not in bulk_network_port_data
             or not bulk_network_port_data['src_port']
         ):
-            failure_message = \
-                Status.IMPORT_ERROR.value + \
+            failure_message = Status.IMPORT_ERROR.value + \
                 "Field 'src_port' is required for all network imports."
             return JsonResponse(
                 {"failure_message": failure_message},
@@ -1457,8 +1503,7 @@ def network_bulk_upload(request):
                 hostname=bulk_network_port_data['src_hostname']
             )
         except ObjectDoesNotExist:
-            failure_message = \
-                Status.IMPORT_ERROR.value + \
+            failure_message = Status.IMPORT_ERROR.value + \
                 "Source asset '" + \
                 bulk_network_port_data['src_hostname'] + \
                 "' does not exist. "
@@ -1487,8 +1532,7 @@ def network_bulk_upload(request):
                 port_name=bulk_network_port_data['src_port']
             )
         except ObjectDoesNotExist:
-            failure_message = \
-                Status.IMPORT_ERROR.value + \
+            failure_message = Status.IMPORT_ERROR.value + \
                 "Source port '" + \
                 bulk_network_port_data['src_port'] + \
                 "' does not exist on asset '" + \
