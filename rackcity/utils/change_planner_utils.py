@@ -352,7 +352,6 @@ def get_changes_on_asset(asset, asset_cp):
     for field in fields:
         if getattr(asset, field) != getattr(asset_cp, field):
             changes.append(field)
-    # Check if network & power connections have changed
     if network_connections_have_changed(asset, asset_cp):
         changes.append('network_connections')
     if power_connections_have_changed(asset, asset_cp):
