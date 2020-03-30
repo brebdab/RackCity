@@ -301,12 +301,18 @@ def network_connections_have_changed(asset, asset_cp):
     network_ports_cp = NetworkPortCP.objects.filter(asset=asset_cp)
     network_ports = NetworkPort.objects.filter(asset=asset)
     for network_port_cp in network_ports_cp:
-        destination_host_in_cp = \
-            network_port_cp.connected_port.asset.related_asset
-        destination_host_live = \
-            network_ports.get(
-                port_name=network_port_cp.port_name,
-            ).connected_port.asset
+        connected_port_cp = network_port_cp.connected_port
+        if connected_port_cp:
+            destination_host_in_cp = connected_port_cp.asset.related_asset
+        else:
+            destination_host_in_cp = None
+        connected_port_live = network_ports.get(
+            port_name=network_port_cp.port_name
+        )
+        if connected_port_live:
+            destination_host_live = connected_port_live.asset
+        else:
+            destination_host_live = None
         if destination_host_in_cp != destination_host_live:
             return True
     return False
@@ -318,6 +324,13 @@ def power_connections_have_changed(asset, asset_cp):
     for power_port_cp in power_ports_cp:
         pdu_port_cp = power_port_cp.power_connection
         pdu_port_live = power_ports.get(port_name=power_port_cp.port_name)
+        if (pdu_port_cp is None and pdu_port_live is None):
+            continue
+        if (
+            (pdu_port_cp is None and pdu_port_live)
+            or (pdu_port_cp and pdu_port_live is None)
+        ):
+            return False
         if (
             pdu_port_cp.port_number != pdu_port_live.port_number
             or pdu_port_cp.left_right != pdu_port_live.left_right
