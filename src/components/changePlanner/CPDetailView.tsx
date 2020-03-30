@@ -85,7 +85,7 @@ class CPDetailView extends React.Component<
     modifications: [],
     isAlertOpen: false,
     username: "",
-    disableButtons: true
+    disableButtons: false
   };
   printWorkOrder = () => {
     this.getUsername(this.props.token);
