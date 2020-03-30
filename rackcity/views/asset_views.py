@@ -14,6 +14,7 @@ from rackcity.models import (
     Datacenter,
     ChangePlan,
 )
+import traceback
 from rackcity.models.asset import get_assets_for_cp
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from rackcity.api.serializers import (
@@ -375,7 +376,70 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
                 not network_connection['destination_hostname'] and
                 not network_connection['destination_port']
             ):
+          
+                if change_plan:
+                    # need to add deleted connection's asset to asset change plan
+                    asset_cp = AssetCP.objects.get(id=asset_id)
+                    if asset_cp.related_asset_id:
+                        asset_live = Asset.objects.get(id=asset_cp.related_asset_id)
+                        network_port_live = NetworkPort.objects.get(asset=asset_live,port_name=port_name)
+                        if network_port_live.connected_port:
+                            destination_port_live = NetworkPort.objects.filter(id=network_port_live.connected_port_id)[0]
+                            destination_asset_live = Asset.objects.get(id=destination_port_live.asset_id)
+                            destination_asset_cp = AssetCP(
+                                related_asset=destination_asset_live,
+                                change_plan=change_plan
+                            )
+                        # add destination asset to AssetCPTable
+                        for field in destination_asset_live._meta.fields:
+                            
+                            if field.name != 'id' and field.name != "assetid_ptr":
+                                setattr(destination_asset_cp, field.name, getattr(
+                                    destination_asset_live, field.name))
+
+                        destination_asset_cp.save()
+                        dest_network_ports_live = NetworkPort.objects.filter(asset=destination_asset_live)
+                        for dest_network_port_live in dest_network_ports_live:
+                            dest_network_port_cp = NetworkPortCP.objects.get(
+                                asset=destination_asset_cp,
+                                port_name=dest_network_port_live.port_name)
+                            dest_network_port_cp.mac_address = dest_network_port_live.mac_address
+                            if dest_network_port_live.connected_port and not (dest_network_port_live.connected_port.port_name == port_name):
+                                dest_network_port_cp.connected_port = dest_network_port_live.connected_port
+                            dest_network_port_cp.save()
+                        dest_power_ports_live = PowerPort.objects.filter(asset=destination_asset_live)
+                        for dest_power_port_live in dest_power_ports_live:
+                            dest_power_port_cp = PowerPortCP.objects.get(
+                                asset=destination_asset_cp,
+                                port_name=dest_power_port_live.port_name
+                            )
+                            dest_pdu_live = dest_power_port_live.power_connection
+                            if dest_pdu_live:
+                                if PDUPortCP.objects.filter(
+                                    rack=dest_pdu_live.rack,
+                                    left_right=dest_pdu_live.left_right,
+                                    port_number=dest_pdu_live.port_number,
+                                    change_plan=change_plan
+                                ).exists():
+                                    pdu_port = PDUPortCP.objects.filter(
+                                        rack=dest_pdu_live.rack,
+                                        left_right=dest_pdu_live.left_right,
+                                        port_number=dest_pdu_live.port_number,
+                                        change_plan=change_plan
+                                    )
+                                else:
+                                    pdu_port = PDUPortCP(change_plan=change_plan)
+                                    for field in dest_pdu_live._meta.fields:
+                                        if field.name != "id":
+                                            setattr(pdu_port, field.name, getattr(
+                                                dest_pdu_live, field.name))
+                                    pdu_port.save()
+                                dest_power_port_cp.power_connection = pdu_port
+                                dest_power_port_cp.save()
+
                 network_port.delete_network_connection()
+                
+                
                 continue
             if (
                 not network_connection['destination_hostname']
@@ -404,14 +468,50 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
                         )
                         # add destination asset to AssetCPTable
                         for field in destination_asset._meta.fields:
-                            
                             if field.name != 'id' and field.name != "assetid_ptr":
-                                
                                 setattr(asset_cp, field.name, getattr(
                                     destination_asset, field.name))
-                               
                         asset_cp.save()
+                        dest_network_ports_live = NetworkPort.objects.filter(asset=destination_asset)
+                        for dest_network_port_live in dest_network_ports_live:
+                            dest_network_port_cp = NetworkPortCP.objects.get(
+                                asset=asset_cp,
+                                port_name=dest_network_port_live.port_name)
+                            dest_network_port_cp.mac_address = dest_network_port_live.mac_address
+                            dest_network_port_cp.save()
+                        
+                        dest_power_ports_live = PowerPort.objects.filter(asset=destination_asset)
+                        for dest_power_port_live in dest_power_ports_live:
+                            dest_power_port_cp = PowerPortCP.objects.get(
+                                asset=asset_cp,
+                                port_name=dest_power_port_live.port_name
+                            )
+                            print(dest_power_port_live)
+                            dest_pdu_live = dest_power_port_live.power_connection
+                            if dest_pdu_live:
+                                if PDUPortCP.objects.filter(
+                                    rack=dest_pdu_live.rack,
+                                    left_right=dest_pdu_live.left_right,
+                                    port_number=dest_pdu_live.port_number,
+                                    change_plan=change_plan
+                                ).exists():
+                                    pdu_port = PDUPortCP.objects.filter(
+                                        rack=dest_pdu_live.rack,
+                                        left_right=dest_pdu_live.left_right,
+                                        port_number=dest_pdu_live.port_number,
+                                        change_plan=change_plan
+                                    )
+                                else:
+                                    pdu_port = PDUPortCP(change_plan=change_plan)
+                                    for field in dest_pdu_live._meta.fields:
+                                        if field.name != "id":
+                                            setattr(pdu_port, field.name, getattr(
+                                                dest_pdu_live, field.name))
+                                    pdu_port.save()
+                                dest_power_port_cp.power_connection = pdu_port
+                                dest_power_port_cp.save()
                         destination_asset = asset_cp
+                            
                     else:
                         destination_asset = assets_cp.get(
                             hostname=network_connection['destination_hostname'],
@@ -422,6 +522,9 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
                         hostname=network_connection['destination_hostname']
                     )
             except ObjectDoesNotExist:
+                track = traceback.format_exc()
+                print(track)
+
                 failure_message += \
                     "Asset with hostname '" + \
                     network_connection['destination_hostname'] + \
