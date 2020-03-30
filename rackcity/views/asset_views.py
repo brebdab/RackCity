@@ -88,21 +88,12 @@ def asset_many(request):
     assets are returned. If page is specified as a query parameter, page
     size must also be specified, and a page of assets will be returned.
     """
-    change_plan_id = request.query_params.get('change_plan')
-    if change_plan_id:
-        try:
-            change_plan = ChangePlan.objects.get(id=change_plan_id)
-        except ObjectDoesNotExist:
-            return JsonResponse(
-                {
-                    "failure_message":
-                        Status.ERROR.value +
-                        "Change Plan" + GenericFailure.DOES_NOT_EXIST.value,
-                    "errors":
-                        "No existing change plan with id="+str(change_plan_id)
-                },
-                status=HTTPStatus.BAD_REQUEST
-            )
+    if request.query_params.get('change_plan'):
+        (change_plan, response) = get_change_plan(
+            request.query_params.get('change_plan')
+        )
+        if response:
+            return response
         else:
             return get_many_assets_response_for_cp(
                 request,
@@ -413,9 +404,12 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
                         )
                         # add destination asset to AssetCPTable
                         for field in destination_asset._meta.fields:
-                            if field.name != 'id' and field.name == "assetid_ptr":
+                            
+                            if field.name != 'id' and field.name != "assetid_ptr":
+                                
                                 setattr(asset_cp, field.name, getattr(
                                     destination_asset, field.name))
+                               
                         asset_cp.save()
                         destination_asset = asset_cp
                     else:
@@ -506,16 +500,19 @@ def save_power_connections(asset_data, asset_id, change_plan=None):
                     left_right=power_connection_data['left_right'],
                     port_number=power_connection_data['port_number']
                 )
+                pdu_port = pdu_port_master
                 if change_plan:
                     if PDUPortCP.objects.filter(
                         rack=asset.rack,
                         left_right=power_connection_data['left_right'],
-                        port_number=power_connection_data['port_number']
+                        port_number=power_connection_data['port_number'],
+                        change_plan=change_plan
                     ).exists():
                         pdu_port = PDUPortCP.objects.get(
                             rack=asset.rack,
                             left_right=power_connection_data['left_right'],
-                            port_number=power_connection_data['port_number']
+                            port_number=power_connection_data['port_number'],
+                            change_plan=change_plan
                         )
                     else:
                         pdu_port = PDUPortCP(change_plan=change_plan)
@@ -524,7 +521,7 @@ def save_power_connections(asset_data, asset_id, change_plan=None):
                                 setattr(pdu_port, field.name, getattr(
                                     pdu_port_master, field.name))
                         pdu_port.save()
-                pdu_port = pdu_port_master
+                
             except ObjectDoesNotExist:
                 failure_message += \
                     "PDU port '" + \
