@@ -196,12 +196,10 @@ class ElementTable extends React.Component<
     if (nextProps.token !== this.props.token) {
       this.updateTableData();
     }
-    // if (nextProps.changePlan !== this.props.changePlan) {
-    //   this.updateTableData();
-    // }
+
     if (nextProps.data !== this.props.data) {
       this.setFieldNamesFromData(nextProps.data!);
-      console.log("NEW TABLE DATA");
+
       if (nextProps.data) {
         this.setState({
           items: nextProps.data
@@ -555,7 +553,7 @@ class ElementTable extends React.Component<
         )
         .then(res => {
           this.validRequestMadeWithToken = true;
-          console.log(res);
+
           this.setState({
             items: res,
             getDataInProgress: false
@@ -607,7 +605,7 @@ class ElementTable extends React.Component<
         fields.push(col);
       }
     });
-    console.log(fields);
+
     this.setState({
       fields: fields
     });
@@ -883,7 +881,7 @@ class ElementTable extends React.Component<
   };
 
   render() {
-    console.log(this.props.data, this.state.items);
+
     if (
       this.props.data &&
       this.props.data.length !== 0 &&
@@ -892,7 +890,7 @@ class ElementTable extends React.Component<
       this.setState({
         items: this.props.data
       });
-      console.log(this.props.data);
+
       this.setFieldNamesFromData(this.props.data);
     }
 
@@ -1035,7 +1033,6 @@ class ElementTable extends React.Component<
                                 }
                               }
                             });
-                            console.log(selected);
 
                             this.setState({
                               selectedAll,
@@ -1139,11 +1136,7 @@ class ElementTable extends React.Component<
                                 onClick={(event: any) => {
                                   const selected = this.state.selected;
                                   if (selected.includes(item.asset_number)) {
-                                    console.log(
-                                      "removing",
-                                      item.asset_number,
-                                      selected
-                                    );
+                
                                     if (this.state.selectedAll) {
                                       this.setState({
                                         selectedAll: false
@@ -1155,7 +1148,7 @@ class ElementTable extends React.Component<
                                     );
                                   } else {
                                     selected.push(item.asset_number);
-                                    console.log("adding", item.asset_number);
+                  
                                   }
                                   this.setState({
                                     selected
@@ -1165,7 +1158,7 @@ class ElementTable extends React.Component<
                                       this.state.selected
                                     );
                                   }
-                                  console.log(selected);
+                        
                                   event.stopPropagation();
                                 }}
                               />
@@ -1262,11 +1255,7 @@ class ElementTable extends React.Component<
                                       )
                                 }
                                 onClick={(event: any) => {
-                                  console.log(
-                                    "SCROLL",
-                                    window.scrollX,
-                                    window.scrollY
-                                  );
+                
                                   this.handleEditButtonClick(item);
                                   event.stopPropagation();
                                 }}

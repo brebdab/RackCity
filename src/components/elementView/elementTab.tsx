@@ -126,7 +126,6 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     axios
       .post(API_ROOT + "api/" + path + "/bulk-export", body, config)
       .then(res => {
-        console.log(res.data);
         fs(res.data.export_csv, file);
         return 0;
       })
@@ -136,7 +135,6 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       axios
         .post(API_ROOT + "api/" + path + "/network-bulk-export", body, config)
         .then(res => {
-          console.log(res.data);
           fs(res.data.export_csv, networkFile);
           return 0;
         })
@@ -189,7 +187,6 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     body: SortFilterBody,
     token: string
   ): Promise<Array<ElementObjectType>> => {
-    console.log(API_ROOT + "api/" + path + "/get-many");
     this.handleDataUpdate(false);
 
     const params: any =
@@ -230,7 +227,6 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
 
     return axios.post(url, bodyCopy, config).then(res => {
       const items = res.data[path];
-      console.log(items);
 
       return items;
     });
@@ -250,11 +246,9 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
 
   private createModel = (model: ModelObject, headers: any): Promise<any> => {
     return axios.post(API_ROOT + "api/models/add", model, headers).then(res => {
-      console.log("success");
       this.handleDataUpdate(true);
       this.handleClose();
       this.addSuccessToast(res.data.success_message);
-      console.log(this.state.isOpen);
     });
   };
 
@@ -262,7 +256,6 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     asset: ShallowAssetObject,
     headers: any
   ): Promise<any> => {
-    console.log("api/assets/add");
     let config;
     if (!this.props.changePlan) {
       config = headers;
@@ -283,8 +276,6 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       } else {
         this.addSuccessToast(res.data.success_message);
       }
-
-      console.log(this.state.isOpen);
     });
   };
   private addWarnToast = (message: string) => {
@@ -303,7 +294,6 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     dc: DatacenterObject,
     headers: any
   ): Promise<any> => {
-    console.log("api/dataceneters/add");
     return axios
       .post(API_ROOT + "api/datacenters/add", dc, headers)
       .then(res => {
@@ -313,20 +303,14 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
         if (this.props.updateDatacenters) {
           this.props.updateDatacenters();
         }
-
-        console.log(this.state.isOpen);
       });
   };
 
   private createUser = (user: CreateUserObject, headers: any): Promise<any> => {
-    console.log("api/users/add");
     return axios.post(API_ROOT + "api/users/add", user, headers).then(res => {
-      console.log("success");
-
       this.handleDataUpdate(true);
       this.handleClose();
       this.addSuccessToast(res.data.success_message);
-      console.log(this.state.isOpen);
     });
   };
 
@@ -337,14 +321,12 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     return axios
       .post(API_ROOT + "api/change-plans/add", changePlan, headers)
       .then(res => {
-        console.log("success");
         this.props.updateChangePlans(true);
 
         this.handleDataUpdate(true);
         this.handleClose();
 
         this.addSuccessToast(res.data.success_message);
-        console.log(this.state.isOpen);
       });
   };
   private toaster: Toaster = {} as Toaster;
@@ -364,7 +346,6 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
   };
 
   public render() {
-    console.log(this.props);
     return (
       <div className="element-tab">
         <Toaster
@@ -433,7 +414,6 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                 onClick={() => {
                   /* handle data based on state */
                   this.setState({ fileNameIsOpen: true });
-                  console.log(this.state.filters);
                 }}
               />
             ) : (
@@ -491,17 +471,13 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                 } else {
                   let fileRegEx = /.*\.(\w+)/;
                   let extension = this.state.fileName.match(fileRegEx);
-                  console.log(extension);
                   let ext = extension ? extension[extension.length - 1] : null;
-                  console.log(ext);
                   let networkExtension = this.state.networkFileName.match(
                     fileRegEx
                   );
-                  console.log(networkExtension);
                   let networkExt = networkExtension
                     ? networkExtension[networkExtension.length - 1]
                     : null;
-                  console.log(networkExt);
                   if (
                     (networkExt && (ext !== "csv" || networkExt !== "csv")) ||
                     (!networkExt && ext !== "csv")
@@ -524,7 +500,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                       this.state.fileName,
                       this.state.networkFileName
                     );
-                    console.log("finished both exports");
+
                     this.setState({
                       fileNameIsOpen: false,
                       fileName: "",

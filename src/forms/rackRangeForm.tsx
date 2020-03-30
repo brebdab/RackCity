@@ -29,14 +29,12 @@ class RackRangeForm extends React.Component<
     if (
       JSON.stringify(nextProps.values) !== JSON.stringify(this.props.values)
     ) {
-      console.log("new props", nextProps.values);
       this.setState({
         values: JSON.parse(JSON.stringify(nextProps.values))
       });
     }
   };
   render() {
-    console.log("rack range form new values", this.state.values);
     return (
       <div className={this.props.className + " rack-range"}>
         <div className="rack-letter">

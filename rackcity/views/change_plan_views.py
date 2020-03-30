@@ -48,7 +48,7 @@ def change_plan_resolve_conflict(request, id):
     """
     Resolve a merge conflict
     """
-    (change_plan, response) = get_change_plan(id)  
+    (change_plan, response) = get_change_plan(id)
     if response:
         return response
     response = get_cp_already_executed_response(change_plan)
@@ -111,7 +111,7 @@ def change_plan_remove_asset(request, id):
     """
     Remove a single assetCP from a change plan
     """
-    (change_plan, response) = get_change_plan(id)  
+    (change_plan, response) = get_change_plan(id)
     if response:
         return response
     response = get_cp_already_executed_response(change_plan)
@@ -411,7 +411,7 @@ def change_plan_execute(request, id):
     """
     Execute all changes associated with a change plan.
     """
-    (change_plan, response) = get_change_plan(id)  
+    (change_plan, response) = get_change_plan(id)
     if response:
         return response
     response = get_cp_already_executed_response(change_plan)
@@ -488,7 +488,7 @@ def change_plan_execute(request, id):
             num_decommissioned += 1
             log_action(
                 request.user,
-                updated_asset,
+                None,
                 Action.DECOMMISSION,
                 change_plan=change_plan,
             )

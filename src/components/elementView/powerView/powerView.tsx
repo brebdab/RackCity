@@ -109,9 +109,9 @@ export class PowerView extends React.PureComponent<
   }
 
   componentDidUpdate() {
-    console.log("componentDIDUPDST");
+
     if (this.props.shouldUpdate) {
-      console.log("here");
+
       if (!this.props.assetIsDecommissioned && !this.props.changePlan) {
         axios
           .get(
@@ -155,7 +155,7 @@ export class PowerView extends React.PureComponent<
         this.setState({ username: res.data.username });
       })
       .catch(err => {
-        console.log(err);
+
       });
   }
 

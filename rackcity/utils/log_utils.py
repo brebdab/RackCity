@@ -58,6 +58,11 @@ def log_action(user, related_element, action, change_plan=None):
     elif isinstance(related_element, Datacenter):
         element_type = ElementType.DATACENTER.value
         element_name = related_element.abbreviation
+    elif related_element is not None:
+        return
+    if action == Action.DECOMMISSION:
+        element_type = ElementType.ASSET.value
+        element_name = ""
     log_content = " ".join([
         datetime_to_string(date),
         element_type,
