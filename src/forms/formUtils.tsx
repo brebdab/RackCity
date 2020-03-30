@@ -58,7 +58,7 @@ export const filterAssetField: ItemPredicate<string> = (
   _index,
   exactMatch
 ) => {
-  console.log(AssetFieldsTable[field], field);
+
   let normalizedTitle;
   if (AssetFieldsTable[field]) {
     normalizedTitle = AssetFieldsTable[field].toLowerCase();

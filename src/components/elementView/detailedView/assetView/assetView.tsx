@@ -66,7 +66,6 @@ function getData(assetkey: string, token: string, changePlan: ChangePlan) {
     params: params
   };
 
-  console.log("getting_data");
   return axios.get(API_ROOT + "api/assets/" + assetkey, config).then(res => {
     const data = res.data;
     return data;
@@ -97,7 +96,6 @@ export class AssetView extends React.PureComponent<
     powerShouldUpdate: false
   };
   private updateAsset = (asset: AssetObject, headers: any): Promise<any> => {
-    console.log("updateAsset");
     let params: any;
     params = this.props.match.params;
     return modifyAsset(asset, headers, this.props.changePlan).then(res => {
@@ -146,19 +144,15 @@ export class AssetView extends React.PureComponent<
     this.addToast({ message: message, intent: Intent.DANGER });
   };
   public updateAssetData = (rid: string) => {
-    console.log(this.props.changePlan);
     getData(rid, this.props.token, this.props.changePlan).then(result => {
-      console.log(result);
       this.setState({
         asset: result
       });
     });
-    console.log(this.state.asset);
   };
 
   public updateAssetDataCP = (rid: string, changePlan: ChangePlan) => {
     getData(rid, this.props.token, changePlan).then(result => {
-      console.log(result);
       this.setState({
         asset: result
       });
@@ -170,7 +164,6 @@ export class AssetView extends React.PureComponent<
       let params: any;
       params = this.props.match.params;
       this.updateAssetDataCP(params.rid, nextProps.changePlan);
-      console.log("new change plan", nextProps.changePlan);
     }
   }
 
@@ -189,23 +182,19 @@ export class AssetView extends React.PureComponent<
   }
   getDatacenters = () => {
     const headers = getHeaders(this.props.token);
-    // console.log(API_ROOT + "api/datacenters/get-all");
+
     axios
       .post(API_ROOT + "api/datacenters/get-many", {}, headers)
       .then(res => {
-        console.log(res.data.datacenters);
         const datacenters = res.data.datacenters as Array<DatacenterObject>;
         datacenters.push(ALL_DATACENTERS);
         this.setState({
           datacenters
         });
       })
-      .catch(err => {
-        console.log(err);
-      });
+      .catch(err => {});
   };
   public render() {
-    console.log(this.state.asset);
     if (Object.keys(this.state.asset).length === 0) {
       let params: any;
       params = this.props.match.params;
@@ -486,7 +475,6 @@ export class AssetView extends React.PureComponent<
         this.props.history.push(ROUTES.DASHBOARD);
       })
       .catch(err => {
-        console.log("ERROR", err);
         this.addToast({
           message: err.response.data.failure_message,
           intent: Intent.DANGER
@@ -511,7 +499,6 @@ export class AssetView extends React.PureComponent<
         this.updateAssetData(params.rid);
       })
       .catch(err => {
-        console.log("ERROR", err);
         this.addToast({
           message: err.response.data.failure_message,
           intent: Intent.DANGER

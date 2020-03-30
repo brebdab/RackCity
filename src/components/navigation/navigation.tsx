@@ -80,7 +80,7 @@ export class Navigation extends React.Component<
         this.setState({ username: res.data.username });
       })
       .catch(err => {
-        console.log(err);
+
       });
   }
   clearUsernameAndLogout() {
@@ -106,7 +106,7 @@ export class Navigation extends React.Component<
         this.setState({
           changePlans: items
         });
-        console.log("GETTING NEW CHANGE PLANS", items);
+
       });
     }
 

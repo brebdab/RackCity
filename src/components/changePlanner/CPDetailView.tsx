@@ -67,7 +67,6 @@ interface CPDetailViewState {
 }
 
 function getChangePlanDetail(token: string, id: string) {
-  console.log("getting change plan detail");
   return axios.get(API_ROOT + "api/change-plans/" + id, getHeaders(token));
 }
 class CPDetailView extends React.Component<
@@ -113,7 +112,6 @@ class CPDetailView extends React.Component<
         disable = true;
       }
     });
-    console.log(disable, this.state.modifications);
     this.setState({
       disableButtons: disable
     });
@@ -425,11 +423,9 @@ class CPDetailView extends React.Component<
         this.setState({ username: res.data.username });
       })
       .catch(err => {
-        console.log(err);
       });
   }
   public render() {
-    console.log(this.openPrint, this.state.isOpen);
     if (
       this.openPrint &&
       this.state.isOpen.every((item: boolean) => item === true)

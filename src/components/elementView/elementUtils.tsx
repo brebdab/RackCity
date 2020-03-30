@@ -103,12 +103,13 @@ export const renderRackRangeFilterItem = (item: RackRangeFields) => {
 };
 
 export const renderDatetimeFilterItem = (item: DatetimeFilter) => {
-  const after: Date | undefined = item.after ? new Date(item.after) : undefined
-  const before: Date | undefined = item.before ? new Date(item.before) : undefined
+  const after: Date | undefined = item.after ? new Date(item.after) : undefined;
+  const before: Date | undefined = item.before
+    ? new Date(item.before)
+    : undefined;
   if (after && before) {
     return `from ${after.toLocaleString()} to ${before.toLocaleString()}`;
-  }
-  else if (after) {
+  } else if (after) {
     return `after ${after.toLocaleString()}`;
   } else if (before) {
     return `before ${before.toLocaleString()}`;
@@ -123,7 +124,6 @@ export const deleteModel = (model: ModelObject, headers: any) => {
   return axios.post(API_ROOT + "api/models/delete", data, headers);
 };
 export const deleteAsset = (asset: AssetObject, headers: any) => {
-  console.log("Deleting asset");
   const data = { id: asset.id };
   return axios.post(API_ROOT + "api/assets/delete", data, headers);
 };
@@ -161,7 +161,7 @@ export const decommissionAsset = (
       }
     };
   }
-  console.log("Decommissioning asset");
+
   const data = { id: asset.id };
   return axios.post(API_ROOT + "api/assets/decommission", data, config);
 };

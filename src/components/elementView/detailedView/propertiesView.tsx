@@ -48,7 +48,6 @@ class PropertiesView extends React.PureComponent<
         fields.push(col);
       }
     });
-    console.log("FIELDS", this.props.data, fields);
     return fields;
   };
   public state: AlertState = {
@@ -71,10 +70,8 @@ class PropertiesView extends React.PureComponent<
           </p>
         );
       } else if (item === "network_ports") {
-        console.log(item, data[item]);
         if (data[item]) {
           const network_ports: Array<string> = data[item];
-          console.log(network_ports.toString());
           dat = <p>{network_ports.toString()}</p>;
         }
       } else if (item === "model") {
@@ -160,12 +157,10 @@ class PropertiesView extends React.PureComponent<
   }
 
   public render() {
-    console.log(this.props.data);
     if (
       this.state.fields.length === 0 &&
       Object.keys(this.props.data).length !== 0
     ) {
-      console.log(this.setFieldNamesFromData());
       this.setState({
         fields: this.setFieldNamesFromData()
       });

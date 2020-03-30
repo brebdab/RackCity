@@ -81,7 +81,6 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
         loading: true
       });
       if (this.props.initialValues) {
-        console.log(this.props.initialValues);
         this.setState({
           values: updateObject(this.state.values, {
             id: this.props.initialValues.id

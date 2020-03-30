@@ -177,7 +177,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     body: any,
     token: string
   ): Promise<Array<ElementObjectType>> {
-    console.log(API_ROOT + "api/" + path + "/get-many");
 
     const params: any =
       page_type === PagingTypes.ALL
@@ -297,7 +296,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         values: newValues
       });
 
-      console.log("submitting form");
       const resp = this.props.submitForm(
         this.mapAssetObject(newValues),
         getHeaders(this.props.token)
@@ -367,11 +365,11 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         });
       })
       .catch(err => {
-        console.log(err);
+
       });
   };
   getRacks = (datacenter: DatacenterObject) => {
-    console.log("GETTING RACKS for ", datacenter);
+
     if (datacenter) {
       this.gettingRacksInProgress = true;
       const config = {
@@ -382,11 +380,11 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
           datacenter: datacenter ? datacenter.id : undefined
         }
       };
-      console.log(API_ROOT + "api/racks/summary");
+
       axios
         .get(API_ROOT + "api/racks/summary", config)
         .then(res => {
-          console.log(res.data.racks);
+
           this.initialGetRacks = true;
           this.gettingRacksInProgress = false;
           this.setState({
@@ -394,7 +392,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
           });
         })
         .catch(err => {
-          console.log(err);
+
         });
     }
   };
@@ -413,7 +411,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   };
   getValidAssets = (currDatacenter: DatacenterObject) => {
     this.gettingAssetsInProgress = true;
-    console.log("getting assets from this datacenter", currDatacenter);
+
     let body = {};
     const filters: Array<IFilter> = [];
     let datacenterName;
@@ -437,7 +435,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       body,
       this.props.token
     ).then(res => {
-      console.log(res);
+
       let assetsWithHostname: Array<AssetObject> = res as Array<AssetObject>;
       assetsWithHostname = assetsWithHostname.filter(asset => {
         if (
@@ -448,7 +446,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         }
         return true;
       });
-      console.log("got assets", assetsWithHostname);
 
       this.setState({
         assets: assetsWithHostname as Array<AssetObject>
@@ -737,7 +734,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       power_connections: clearedPowerConnections,
       network_connections: clearedNetworkConnections
     });
-    console.log("SELECTER DATACENTER", datacenter, newValues);
+
     this.setState({
       currDatacenter: datacenter,
       values: newValues
@@ -748,7 +745,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   }
 
   handleRackSelect(rack: RackObject) {
-    console.log("SELECTED RACK:", rack);
 
     const clearedPowerConnections = this.getClearedPowerSelections();
     this.setState({
@@ -764,11 +760,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     source_port: string,
     destination_hostname: string | undefined
   ) {
-    console.log(
-      "network connection asset selected",
-      source_port,
-      destination_hostname
-    );
+
     const newNetworkConnection: NetworkConnection = {
       source_port,
       destination_hostname,
@@ -782,7 +774,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       networkConnections = networkConnections.map(
         (connection: NetworkConnection) => {
           if (connection.source_port === source_port) {
-            console.log("updating network connection");
+  
             modification = true;
             return updateObject(connection, {
               destination_hostname: destination_hostname,
@@ -796,12 +788,12 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     } else {
       networkConnections = [] as Array<NetworkConnection>;
     }
-    console.log("UPDADTING NEWORK CONNECTIONS", networkConnections);
+
     if (!modification) {
       //add a new network connection
       networkConnections.push(newNetworkConnection);
     }
-    console.log("new network connections", networkConnections);
+    
     this.setState({
       values: updateObject(this.state.values, {
         network_connections: networkConnections
@@ -907,7 +899,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
   getPortsFromHostname(hostname: string) {
     const asset = this.getAssetObjectFromHostname(hostname);
-    console.log("getting ports for " + hostname);
     if (isAssetObject(asset)) {
       return asset.model.network_ports ? asset.model.network_ports : [];
     } else {
@@ -976,7 +967,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       this.getRacks(this.state.currDatacenter);
     }
 
-    console.log(this.state.values);
+
     const { values } = this.state;
     return (
       <div className={Classes.DARK + " login-container"}>
