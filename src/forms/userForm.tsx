@@ -28,8 +28,8 @@ import { API_ROOT } from "../utils/api-config";
 import { modifyUser } from "../components/elementView/elementUtils";
 
 //TO DO : add validation of types!!!
-// var console: any = {};
-// console.log = function() {};
+var console: any = {};
+console.log = function() {};
 
 export interface UserFormProps {
   userId: string;
@@ -397,8 +397,9 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
           permissions: res.data
         });
         if (
-          res.data.datacenter_permissions.length ===
-          this.state.datacenters.length
+          res.data.asset_management
+          // res.data.datacenter_permissions.length ===
+          // this.state.datacenters.length
         ) {
           this.setState({
             datacenter_selection: "Global"
