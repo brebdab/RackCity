@@ -76,6 +76,7 @@ import "./elementView.scss";
 import FilterSelect from "./filterSelect";
 import { PowerView } from "./powerView/powerView";
 import "./powerView/powerView.scss";
+import { isNullOrUndefined } from "util";
 
 interface ElementTableState {
   items: Array<ElementObjectType>;
@@ -199,6 +200,7 @@ class ElementTable extends React.Component<
     //   this.updateTableData();
     // }
     if (nextProps.data !== this.props.data) {
+      this.setFieldNamesFromData(nextProps.data!);
       console.log("NEW TABLE DATA");
       if (nextProps.data) {
         this.setState({
@@ -605,6 +607,7 @@ class ElementTable extends React.Component<
         fields.push(col);
       }
     });
+    console.log(fields);
     this.setState({
       fields: fields
     });
@@ -880,6 +883,7 @@ class ElementTable extends React.Component<
   };
 
   render() {
+    console.log(this.props.data, this.state.items);
     if (
       this.props.data &&
       this.props.data.length !== 0 &&
@@ -888,6 +892,7 @@ class ElementTable extends React.Component<
       this.setState({
         items: this.props.data
       });
+      console.log(this.props.data);
       this.setFieldNamesFromData(this.props.data);
     }
 
@@ -1001,6 +1006,8 @@ class ElementTable extends React.Component<
               <tr>
                 {this.props.type === ElementType.ASSET &&
                 this.state.fields &&
+                (isNullOrUndefined(this.props.data) ||
+                  this.props.data.length === 0) &&
                 this.state.fields.length > 0 ? (
                   <th className="header-cell">
                     <div className="header-text">
@@ -1116,7 +1123,9 @@ class ElementTable extends React.Component<
                         style={getChangePlanRowStyle(item)}
                       >
                         {this.props.type === ElementType.ASSET &&
-                        isAssetObject(item) ? (
+                        isAssetObject(item) &&
+                        (isNullOrUndefined(this.props.data) ||
+                          this.props.data.length === 0) ? (
                           <th
                             onClick={(event: any) => {
                               event.stopPropagation();
