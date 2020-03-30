@@ -404,9 +404,12 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
                         )
                         # add destination asset to AssetCPTable
                         for field in destination_asset._meta.fields:
-                            if field.name != 'id' and field.name == "assetid_ptr":
+                            
+                            if field.name != 'id' and field.name != "assetid_ptr":
+                                
                                 setattr(asset_cp, field.name, getattr(
                                     destination_asset, field.name))
+                               
                         asset_cp.save()
                         destination_asset = asset_cp
                     else:
@@ -497,16 +500,19 @@ def save_power_connections(asset_data, asset_id, change_plan=None):
                     left_right=power_connection_data['left_right'],
                     port_number=power_connection_data['port_number']
                 )
+                pdu_port = pdu_port_master
                 if change_plan:
                     if PDUPortCP.objects.filter(
                         rack=asset.rack,
                         left_right=power_connection_data['left_right'],
-                        port_number=power_connection_data['port_number']
+                        port_number=power_connection_data['port_number'],
+                        change_plan=change_plan
                     ).exists():
                         pdu_port = PDUPortCP.objects.get(
                             rack=asset.rack,
                             left_right=power_connection_data['left_right'],
-                            port_number=power_connection_data['port_number']
+                            port_number=power_connection_data['port_number'],
+                            change_plan=change_plan
                         )
                     else:
                         pdu_port = PDUPortCP(change_plan=change_plan)
@@ -515,7 +521,7 @@ def save_power_connections(asset_data, asset_id, change_plan=None):
                                 setattr(pdu_port, field.name, getattr(
                                     pdu_port_master, field.name))
                         pdu_port.save()
-                pdu_port = pdu_port_master
+                
             except ObjectDoesNotExist:
                 failure_message += \
                     "PDU port '" + \
