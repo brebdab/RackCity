@@ -341,7 +341,7 @@ def power_connections_have_changed(asset, asset_cp):
             (pdu_port_cp is None and pdu_port_live)
             or (pdu_port_cp and pdu_port_live is None)
         ):
-            return False
+            return True
         if (
             pdu_port_cp.port_number != pdu_port_live.port_number
             or pdu_port_cp.left_right != pdu_port_live.left_right
