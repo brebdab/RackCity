@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
@@ -10,7 +11,15 @@ from rackcity.api.serializers import (
     RecursiveAssetCPSerializer,
 )
 from rackcity.models.asset import get_assets_for_cp
-from rackcity.models import Asset, AssetCP, DecommissionedAsset
+from rackcity.models import (
+    Asset,
+    AssetCP,
+    DecommissionedAsset,
+    NetworkPort,
+    NetworkPortCP,
+    PowerPort,
+    PowerPortCP,
+)
 from rackcity.utils.errors_utils import Status, GenericFailure
 from rackcity.utils.query_utils import (
     get_filtered_query,
@@ -289,13 +298,69 @@ def get_page_count_response_for_cp(request, change_plan):
     return JsonResponse({"page_count": page_count})
 
 
-def get_changes_on_asset(asset, assetCP):
+def network_connections_have_changed(asset, asset_cp):
+    network_ports_cp = NetworkPortCP.objects.filter(asset=asset_cp)
+    network_ports = NetworkPort.objects.filter(asset=asset)
+    for network_port_cp in network_ports_cp:
+        # Get NetworkPort connected to this port live
+        network_port = network_ports.get(
+            port_name=network_port_cp.port_name,
+        )
+        connected_port_live = network_port.connected_port
+        # Get NetworkPort associated with the NetworkPortCP connected to this port live
+        cp_connected_port_in_cp = network_port_cp.connected_port
+        real_connected_port_in_cp = None
+        if cp_connected_port_in_cp:
+            related_asset = cp_connected_port_in_cp.asset.related_asset
+            if related_asset:
+                try:
+                    real_connected_port_in_cp = NetworkPort.objects.get(
+                        asset=related_asset,
+                        port_name=cp_connected_port_in_cp.port_name,
+                    )
+                except ObjectDoesNotExist:
+                    real_connected_port_in_cp = None
+        # Check for match
+        if connected_port_live != real_connected_port_in_cp:
+            return True
+    return False
+
+
+def power_connections_have_changed(asset, asset_cp):
+    power_ports_cp = PowerPortCP.objects.filter(asset=asset_cp)
+    power_ports = PowerPort.objects.filter(asset=asset)
+    for power_port_cp in power_ports_cp:
+        # Get PDUPortCP corresponding to this CP connection
+        pdu_port_cp = power_port_cp.power_connection
+        # Get PDUPort corresponding to this live connection
+        pdu_port_live = power_ports.get(port_name=power_port_cp.port_name)
+        # Check for match
+        if (pdu_port_cp is None and pdu_port_live is None):
+            continue
+        if (
+            (pdu_port_cp is None and pdu_port_live)
+            or (pdu_port_cp and pdu_port_live is None)
+        ):
+            return True
+        if (
+            pdu_port_cp.port_number != pdu_port_live.port_number
+            or pdu_port_cp.left_right != pdu_port_live.left_right
+            or pdu_port_cp.rack != pdu_port_live.rack
+        ):
+            return True
+    return False
+
+
+def get_changes_on_asset(asset, asset_cp):
     fields = [field.name for field in Asset._meta.fields]
     changes = []
     for field in fields:
-        if getattr(asset, field) != getattr(assetCP, field):
+        if getattr(asset, field) != getattr(asset_cp, field):
             changes.append(field)
-    # TODO check if network & power connections have changed
+    if network_connections_have_changed(asset, asset_cp):
+        changes.append('network_connections')
+    if power_connections_have_changed(asset, asset_cp):
+        changes.append('power_connections')
     return changes
 
 

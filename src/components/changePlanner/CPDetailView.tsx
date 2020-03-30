@@ -113,6 +113,7 @@ class CPDetailView extends React.Component<
         disable = true;
       }
     });
+    console.log(disable, this.state.modifications);
     this.setState({
       disableButtons: disable
     });
@@ -129,19 +130,44 @@ class CPDetailView extends React.Component<
       )
       .then(res => {
         this.addSuccessToast(res.data.success_message);
+        this.updateData();
 
-        const modifications: Array<Modification> = this.state.modifications.slice();
-        const index = modifications.indexOf(modification);
-        modifications.splice(index, 1);
-        console.log(modifications, index);
-        const isOpen = this.state.isOpen;
-        isOpen.splice(index, 1);
+        // const modifications: Array<Modification> = this.state.modifications.slice();
+        // const index = modifications.indexOf(modification);
+        // modifications.splice(index, 1);
+        // console.log(modifications, index);
+        // const isOpen = this.state.isOpen;
+        // isOpen.splice(index, 1);
+        //   this.setState({
+        //     modifications,
+        //     isOpen
+        //   });
+      })
+      .catch(err => {
+        this.addErrorToast(err.response.data.failure_message);
+      });
+  }
+  updateData() {
+    this.loading = true;
+    getChangePlanDetail(this.props.token, this.route_id)
+      .then(res => {
+        this.loading = false;
+        this.dataLoaded = true;
+        const changePlan: ChangePlan = res.data.change_plan;
+        if (isNullOrUndefined(changePlan.execution_time)) {
+          this.props.setChangePlan(changePlan);
+        } else {
+          this.props.setChangePlan(null);
+        }
+        const isOpen = new Array(res.data.modifications.length).fill(false);
         this.setState({
-          modifications,
+          changePlan: res.data.change_plan,
+          modifications: res.data.modifications,
           isOpen
         });
       })
       .catch(err => {
+        this.loading = false;
         this.addErrorToast(err.response.data.failure_message);
       });
   }
@@ -162,27 +188,28 @@ class CPDetailView extends React.Component<
       )
       .then(res => {
         this.addSuccessToast(res.data.success_message);
+        this.updateData();
 
-        const modifications: Array<Modification> = this.state.modifications.slice();
-        const index = modifications.indexOf(modification);
-        if (override_live) {
-          modification.conflicts.splice(
-            modification.conflicts.indexOf(conflict),
-            1
-          );
+        // const modifications: Array<Modification> = this.state.modifications.slice();
+        // const index = modifications.indexOf(modification);
+        // if (override_live) {
+        //   modification.conflicts.splice(
+        //     modification.conflicts.indexOf(conflict),
+        //     1
+        //   );
 
-          modifications[index] = modification;
-        } else {
-          modifications.splice(index, 1);
-          const isOpen = this.state.isOpen;
-          isOpen.splice(index, 1);
-          this.setState({
-            isOpen
-          });
-        }
-        this.setState({
-          modifications
-        });
+        //   modifications[index] = modification;
+        // } else {
+        //   modifications.splice(index, 1);
+        //   const isOpen = this.state.isOpen;
+        //   isOpen.splice(index, 1);
+        //   this.setState({
+        //     isOpen
+        //   });
+        // }
+        // this.setState({
+        //   modifications
+        // });
       })
       .catch(err => {
         this.addErrorToast(err.response.data.failure_message);
@@ -209,28 +236,7 @@ class CPDetailView extends React.Component<
           disableButtons: true
         });
 
-        this.loading = true;
-        getChangePlanDetail(this.props.token, this.route_id)
-          .then(res => {
-            this.loading = false;
-            this.dataLoaded = true;
-            const changePlan: ChangePlan = res.data.change_plan;
-            if (isNullOrUndefined(changePlan.execution_time)) {
-              this.props.setChangePlan(changePlan);
-            } else {
-              this.props.setChangePlan(null);
-            }
-            const isOpen = new Array(res.data.modifications.length).fill(false);
-            this.setState({
-              changePlan: res.data.change_plan,
-              modifications: res.data.modifications,
-              isOpen
-            });
-          })
-          .catch(err => {
-            this.loading = false;
-            this.addErrorToast(err.response.data.failure_message);
-          });
+        this.updateData();
       })
       .catch(err => {
         this.addErrorToast(err.response.data.failure_message);
@@ -393,6 +399,7 @@ class CPDetailView extends React.Component<
           } else {
             this.props.setChangePlan(null);
           }
+          this.setButtonState();
           const isOpen = new Array(res.data.modifications.length).fill(false);
           this.setState({
             changePlan: res.data.change_plan,
@@ -444,6 +451,7 @@ class CPDetailView extends React.Component<
           } else {
             this.props.setChangePlan(null);
           }
+          this.setButtonState();
           const isOpen = new Array(res.data.modifications.length).fill(false);
           this.setState({
             changePlan: res.data.change_plan,
