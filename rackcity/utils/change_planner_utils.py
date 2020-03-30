@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
@@ -10,7 +11,15 @@ from rackcity.api.serializers import (
     RecursiveAssetCPSerializer,
 )
 from rackcity.models.asset import get_assets_for_cp
-from rackcity.models import Asset, AssetCP, DecommissionedAsset
+from rackcity.models import (
+    Asset,
+    AssetCP,
+    DecommissionedAsset,
+    NetworkPort,
+    NetworkPortCP,
+    PowerPort,
+    PowerPortCP,
+)
 from rackcity.utils.errors_utils import Status, GenericFailure
 from rackcity.utils.query_utils import (
     get_filtered_query,
@@ -96,6 +105,27 @@ def detect_conflicts_cp(sender, **kwargs):
     ).update(asset_conflict_asset_number=asset)
 
 
+def get_filtered_decommissioned_assets_for_cp(change_plan, data):
+    decommissioned_assets = DecommissionedAsset.objects.all()
+    decomissioned_assets_cp = AssetCP.objects.filter(
+        change_plan=change_plan,
+        is_decommissioned=True,
+    )
+    decommissioned_assets, filter_failure_response = get_filtered_query(
+        decommissioned_assets,
+        data,
+    )
+    if filter_failure_response:
+        return (None, None, filter_failure_response)
+    decomissioned_assets_cp, filter_failure_response = get_filtered_query(
+        decomissioned_assets_cp,
+        data,
+    )
+    if filter_failure_response:
+        return (None, None, filter_failure_response)
+    return (decommissioned_assets, decomissioned_assets_cp, None)
+
+
 def get_filtered_assets_for_cp(change_plan, data):
     assets, assetsCP = get_assets_for_cp(change_plan=change_plan)
     filtered_assets, filter_failure_response = get_filtered_query(
@@ -143,7 +173,11 @@ def get_page_of_serialized_assets(all_assets, query_params):
         return all_assets[start:end]
 
 
-def get_many_assets_response_for_cp(request, change_plan):
+def get_many_assets_response_for_cp(
+    request,
+    change_plan,
+    decommissioned=False
+):
     should_paginate = should_paginate_query(request.query_params)
     if should_paginate:
         page_failure_response = get_invalid_paginated_request_response(
@@ -152,12 +186,21 @@ def get_many_assets_response_for_cp(request, change_plan):
         if page_failure_response:
             return page_failure_response
 
-    assets, assetsCP, filter_failure_response = get_filtered_assets_for_cp(
-        change_plan,
-        request.data,
-    )
-    if filter_failure_response:
-        return filter_failure_response
+    if not decommissioned:
+        assets, assetsCP, filter_failure_response = \
+            get_filtered_assets_for_cp(
+                change_plan,
+                request.data,
+            )
+        if filter_failure_response:
+            return filter_failure_response
+    else:
+        assets, assetsCP, filter_failure_response = \
+            get_filtered_decommissioned_assets_for_cp(
+                change_plan,
+                request.data,
+            )
+
     asset_serializer = RecursiveAssetSerializer(
         assets,
         many=True,
@@ -255,13 +298,69 @@ def get_page_count_response_for_cp(request, change_plan):
     return JsonResponse({"page_count": page_count})
 
 
-def get_changes_on_asset(asset, assetCP):
+def network_connections_have_changed(asset, asset_cp):
+    network_ports_cp = NetworkPortCP.objects.filter(asset=asset_cp)
+    network_ports = NetworkPort.objects.filter(asset=asset)
+    for network_port_cp in network_ports_cp:
+        # Get NetworkPort connected to this port live
+        network_port = network_ports.get(
+            port_name=network_port_cp.port_name,
+        )
+        connected_port_live = network_port.connected_port
+        # Get NetworkPort associated with the NetworkPortCP connected to this port live
+        cp_connected_port_in_cp = network_port_cp.connected_port
+        real_connected_port_in_cp = None
+        if cp_connected_port_in_cp:
+            related_asset = cp_connected_port_in_cp.asset.related_asset
+            if related_asset:
+                try:
+                    real_connected_port_in_cp = NetworkPort.objects.get(
+                        asset=related_asset,
+                        port_name=cp_connected_port_in_cp.port_name,
+                    )
+                except ObjectDoesNotExist:
+                    real_connected_port_in_cp = None
+        # Check for match
+        if connected_port_live != real_connected_port_in_cp:
+            return True
+    return False
+
+
+def power_connections_have_changed(asset, asset_cp):
+    power_ports_cp = PowerPortCP.objects.filter(asset=asset_cp)
+    power_ports = PowerPort.objects.filter(asset=asset)
+    for power_port_cp in power_ports_cp:
+        # Get PDUPortCP corresponding to this CP connection
+        pdu_port_cp = power_port_cp.power_connection
+        # Get PDUPort corresponding to this live connection
+        pdu_port_live = power_ports.get(port_name=power_port_cp.port_name)
+        # Check for match
+        if (pdu_port_cp is None and pdu_port_live is None):
+            continue
+        if (
+            (pdu_port_cp is None and pdu_port_live)
+            or (pdu_port_cp and pdu_port_live is None)
+        ):
+            return True
+        if (
+            pdu_port_cp.port_number != pdu_port_live.port_number
+            or pdu_port_cp.left_right != pdu_port_live.left_right
+            or pdu_port_cp.rack != pdu_port_live.rack
+        ):
+            return True
+    return False
+
+
+def get_changes_on_asset(asset, asset_cp):
     fields = [field.name for field in Asset._meta.fields]
     changes = []
     for field in fields:
-        if getattr(asset, field) != getattr(assetCP, field):
+        if getattr(asset, field) != getattr(asset_cp, field):
             changes.append(field)
-    # TODO check if network & power connections have changed
+    if network_connections_have_changed(asset, asset_cp):
+        changes.append('network_connections')
+    if power_connections_have_changed(asset, asset_cp):
+        changes.append('power_connections')
     return changes
 
 
@@ -343,8 +442,8 @@ def get_cp_modification_conflicts(asset_cp):
 
 def get_location_detail(asset):
     return " at rack " + asset.rack.datacenter.abbreviation + " " + \
-        asset.rack.row_letter + str(asset.rack.rack_num) + ", " + \
-        str(asset.rack_position) + "U"
+        asset.rack.row_letter + str(asset.rack.rack_num) + ", position " + \
+        str(asset.rack_position)
 
 
 def get_modifications_in_cp(change_plan):
@@ -414,5 +513,7 @@ def get_cp_already_executed_response(change_plan):
                 "errors":
                     "Change plan with id=" + str(change_plan.id) + " "
                     "was executed on " + str(change_plan.execution_time)
+                    
             },
+            status=HTTPStatus.BAD_REQUEST
         )

@@ -10,7 +10,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from rackcity.utils.errors_utils import (
     Status,
     GenericFailure,
-    )
+)
+
 
 def get_rack_detailed_response(racks):
     if racks.count() == 0:
@@ -89,7 +90,7 @@ def validate_asset_location(
         is_valid_conflict = asset_id is None or asset_in_rack.id != asset_id
         if change_plan:
             is_valid_conflict = related_asset_id is not None and asset_in_rack.id != related_asset_id
-  
+
         if (is_valid_conflict):
             for occupied_location in [
                 asset_in_rack.rack_position + i for i
@@ -105,10 +106,10 @@ def validate_asset_location(
                     else:
                         raise LocationException(
                             "Asset location conflicts with another asset."
-                                )
+                        )
     if change_plan:
         for asset_in_rack in assets_cp.filter(rack=rack_id):
-        # Ignore if asset being modified conflicts with its old location
+            # Ignore if asset being modified conflicts with its old location
             if (asset_id is None or asset_in_rack.id != asset_id):
                 for occupied_location in [
                     asset_in_rack.rack_position + i for i
@@ -124,7 +125,8 @@ def validate_asset_location(
                         else:
                             raise LocationException(
                                 "Asset location conflicts with another asset."
-                                    )
+                            )
+
 
 def validate_location_modification(data, existing_asset, user, change_plan=None):
     asset_id = existing_asset.id
@@ -176,16 +178,19 @@ def validate_location_modification(data, existing_asset, user, change_plan=None)
     except LocationException as error:
         raise error
 
+
 def get_change_plan(change_plan_id):
     try:
         change_plan = ChangePlan.objects.get(
             id=change_plan_id
-            )
+        )
     except ObjectDoesNotExist:
         return (None, JsonResponse(
             {
                 "failure_message":
-                    Status.CREATE_ERROR.value + GenericFailure.INTERNAL.value,
+                    Status.ERROR.value +
+                    "Change plan" +
+                    GenericFailure.DOES_NOT_EXIST.value,
                 "errors": "Invalid change_plan Parameter"
             },
             status=HTTPStatus.BAD_REQUEST
