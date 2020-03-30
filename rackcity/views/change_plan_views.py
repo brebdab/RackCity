@@ -415,7 +415,7 @@ def change_plan_execute(request, id):
     if response:
         return response
     response = get_cp_already_executed_response(change_plan)
-    if response
+    if response:
         return response
     if request.user != change_plan.owner:
         return JsonResponse(
