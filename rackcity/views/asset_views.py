@@ -12,9 +12,7 @@ from rackcity.models import (
     PDUPort,
     PDUPortCP,
     Datacenter,
-    ChangePlan,
 )
-import traceback
 from rackcity.models.asset import get_assets_for_cp
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from rackcity.api.serializers import (
@@ -78,7 +76,10 @@ from rackcity.views.rackcity_utils import (
     NetworkConnectionException,
     get_change_plan
 )
-from rackcity.models.asset import get_next_available_asset_number, validate_asset_number_uniqueness
+from rackcity.models.asset import (
+    get_next_available_asset_number,
+    validate_asset_number_uniqueness,
+)
 
 
 @api_view(['POST'])
@@ -513,9 +514,15 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
                         )
                         # add destination asset to AssetCPTable
                         for field in destination_asset._meta.fields:
-                            if field.name != 'id' and field.name != "assetid_ptr":
-                                setattr(asset_cp, field.name, getattr(
-                                    destination_asset, field.name))
+                            if (
+                                field.name != 'id'
+                                and field.name != "assetid_ptr"
+                            ):
+                                setattr(
+                                    asset_cp,
+                                    field.name,
+                                    getattr(destination_asset, field.name),
+                                )
                         asset_cp.save()
                         # copy over mac address values, the actual connections
                         # get made later in the create_network_connections()
@@ -842,7 +849,11 @@ def asset_modify(request):
             if change_plan:
                 try:
                     validate_asset_number_uniqueness(
-                        data[field], id, change_plan, existing_asset.related_asset)
+                        data[field],
+                        id,
+                        change_plan,
+                        existing_asset.related_asset,
+                    )
                 except ValidationError:
                     return JsonResponse(
                         {
