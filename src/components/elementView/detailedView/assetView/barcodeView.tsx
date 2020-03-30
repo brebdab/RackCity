@@ -28,7 +28,6 @@ class BarcodeView extends React.PureComponent<
     const barcodeString = localStorage.getItem("barcodes")!;
     let barcodes: Array<string>;
     barcodes = barcodeString.split(",");
-    const element = <Barcode value={100000} />;
 
     return (
       <div className={Classes.DARK}>
