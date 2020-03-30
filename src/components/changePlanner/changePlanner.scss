@@ -99,4 +99,8 @@
   .change-plan-item {
     display: flex;
   }
+  .cp-details pre {
+    flex: 1;
+    overflow-x: visible;
+  }
 }
