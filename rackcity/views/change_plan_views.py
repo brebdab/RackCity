@@ -48,12 +48,9 @@ def change_plan_resolve_conflict(request, id):
     """
     Resolve a merge conflict
     """
-    if request.query_params.get('change_plan'):
-        (change_plan, response) = get_change_plan(
-            request.query_params.get('change_plan')
-        )
-        if response:
-            return response
+    (change_plan, response) = get_change_plan(id)  
+    if response:
+        return response
     response = get_cp_already_executed_response(change_plan)
     if response:
         return response
@@ -114,12 +111,9 @@ def change_plan_remove_asset(request, id):
     """
     Remove a single assetCP from a change plan
     """
-    if request.query_params.get('change_plan'):
-        (change_plan, response) = get_change_plan(
-            request.query_params.get('change_plan')
-        )
-        if response:
-            return response
+    (change_plan, response) = get_change_plan(id)  
+    if response:
+        return response
     response = get_cp_already_executed_response(change_plan)
     if response:
         return response
@@ -417,23 +411,12 @@ def change_plan_execute(request, id):
     """
     Execute all changes associated with a change plan.
     """
-    if request.query_params.get('change_plan'):
-        (change_plan, response) = get_change_plan(
-            request.query_params.get('change_plan')
-        )
-        if response:
-            return response
-    else:
-        return JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value +
-                    GenericFailure.INTERNAL.value,
-                "errors":
-                    "Must specify change plan id as query param on execute"
-            },
-            status=HTTPStatus.BAD_REQUEST,
-        )
+    (change_plan, response) = get_change_plan(id)  
+    if response:
+        return response
+    response = get_cp_already_executed_response(change_plan)
+    if response:
+        return response
     if request.user != change_plan.owner:
         return JsonResponse(
             {

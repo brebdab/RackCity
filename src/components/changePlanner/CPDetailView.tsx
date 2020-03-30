@@ -113,6 +113,7 @@ class CPDetailView extends React.Component<
         disable = true;
       }
     });
+    console.log(disable, this.state.modifications);
     this.setState({
       disableButtons: disable
     });
@@ -398,6 +399,7 @@ class CPDetailView extends React.Component<
           } else {
             this.props.setChangePlan(null);
           }
+          this.setButtonState();
           const isOpen = new Array(res.data.modifications.length).fill(false);
           this.setState({
             changePlan: res.data.change_plan,
@@ -449,6 +451,7 @@ class CPDetailView extends React.Component<
           } else {
             this.props.setChangePlan(null);
           }
+          this.setButtonState();
           const isOpen = new Array(res.data.modifications.length).fill(false);
           this.setState({
             changePlan: res.data.change_plan,
