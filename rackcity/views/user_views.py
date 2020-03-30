@@ -391,17 +391,12 @@ def user_set_groups(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
-    if (
-        (user.username == 'admin')
-        and ('admin' in data)
-        and (not (data['admin']))
-    ):
+    if (user.username == 'admin'):
         return JsonResponse(
             {
                 "failure_message":
                 Status.MODIFY_ERROR.value +
-                "Not allowed to revoke admin permission from superuser " +
-                user.username
+                "Not allowed to modify superuser's permissions."
             },
             status=HTTPStatus.BAD_REQUEST,
         )
