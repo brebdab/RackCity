@@ -51,6 +51,7 @@ from rackcity.utils.errors_utils import (
     AuthFailure,
 )
 from rackcity.utils.exceptions import (
+    LocationException,
     MacAddressException,
     PowerConnectionException,
     NetworkConnectionException,
@@ -75,7 +76,6 @@ from rackcity.utils.rackcity_utils import (
     validate_location_modification,
     no_infile_location_conflicts,
     records_are_identical,
-    LocationException,
 )
 from rackcity.permissions.permissions import user_has_asset_permission
 import re
