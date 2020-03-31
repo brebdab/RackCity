@@ -1,4 +1,4 @@
-from rackcity.models import Asset, ITModel, Rack, PowerPort, NetworkPort, ChangePlan
+from rackcity.models import Asset, ITModel, Rack, PowerPort, NetworkPort
 from rackcity.permissions.permissions import user_has_asset_permission
 from rackcity.api.serializers import RecursiveAssetSerializer, RackSerializer
 from http import HTTPStatus
@@ -6,11 +6,6 @@ from django.http import JsonResponse
 import functools
 from django.db import close_old_connections
 from rackcity.models.asset import get_assets_for_cp
-from django.core.exceptions import ObjectDoesNotExist
-from rackcity.utils.errors_utils import (
-    Status,
-    GenericFailure,
-)
 
 
 def get_rack_detailed_response(racks):
@@ -257,31 +252,6 @@ def no_infile_location_conflicts(asset_datas):
                     unnamed_asset_count += 1
                 location_occupied_by[rack][location] = asset_name
     return
-
-
-class LocationException(Exception):
-    def __init__(self, *args, **kwargs):
-        Exception.__init__(self, *args, **kwargs)
-
-
-class ModelModificationException(Exception):
-    def __init__(self, *args, **kwargs):
-        Exception.__init__(self, *args, **kwargs)
-
-
-class MacAddressException(Exception):
-    def __init__(self, *args, **kwargs):
-        Exception.__init__(self, *args, **kwargs)
-
-
-class PowerConnectionException(Exception):
-    def __init__(self, *args, **kwargs):
-        Exception.__init__(self, *args, **kwargs)
-
-
-class NetworkConnectionException(Exception):
-    def __init__(self, *args, **kwargs):
-        Exception.__init__(self, *args, **kwargs)
 
 
 def close_old_connections_decorator(func):
