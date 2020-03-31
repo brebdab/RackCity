@@ -153,71 +153,56 @@ def handle_network_connection_delete_on_cp(port_name, asset_id, change_plan):
                 dest_power_port_cp.save()
 
 
-def copy_asset_to_new_asset_cp(assets, destination_hostname, change_plan):
-    destination_asset = assets.get(hostname=destination_hostname)
-    asset_cp = AssetCP(related_asset=destination_asset, change_plan=change_plan)
-    # add destination asset to AssetCPTable
-    for field in destination_asset._meta.fields:
+def copy_asset_to_new_asset_cp(assets, hostname, change_plan):
+    # Copy existing asset to AssetCP table
+    asset_live = assets.get(hostname=hostname)
+    asset_cp = AssetCP(related_asset=asset_live, change_plan=change_plan)
+    for field in asset_live._meta.fields:
         if field.name != "id" and field.name != "assetid_ptr":
-            setattr(
-                asset_cp,
-                field.name,
-                getattr(destination_asset, field.name),
-            )
+            setattr(asset_cp, field.name, getattr(asset_live, field.name))
     asset_cp.save()
-    # copy over mac address values, the actual connections
-    # get made later in the create_network_connections()
-    # method
-    dest_network_ports_live = NetworkPort.objects.filter(
-        asset=destination_asset
-    )
-    for dest_network_port_live in dest_network_ports_live:
-        dest_network_port_cp = NetworkPortCP.objects.get(
-            asset=asset_cp,
-            port_name=dest_network_port_live.port_name,
-        )
-        dest_network_port_cp.mac_address = (
-            dest_network_port_live.mac_address
-        )
-        dest_network_port_cp.save()
+    # Copy mac address values, the actual connections get made later in create_network_connections()
+    network_ports_live = NetworkPort.objects.filter(asset=asset_live)
+    for network_port_live in network_ports_live:
+        network_port_cp = NetworkPortCP.objects.get(asset=asset_cp, port_name=network_port_live.port_name)
+        network_port_cp.mac_address = network_port_live.mac_address
+        network_port_cp.save()
 
-    # power connection info
-    dest_power_ports_live = PowerPort.objects.filter(
-        asset=destination_asset
-    )
-    for dest_power_port_live in dest_power_ports_live:
-        dest_power_port_cp = PowerPortCP.objects.get(
+    # Copy over power connections
+    power_ports_live = PowerPort.objects.filter(asset=asset_live)
+    for power_port_live in power_ports_live:
+        power_port_cp = PowerPortCP.objects.get(
             asset=asset_cp,
-            port_name=dest_power_port_live.port_name,
+            port_name=power_port_live.port_name,
         )
-        dest_pdu_live = dest_power_port_live.power_connection
-        if dest_pdu_live:
+        pdu_live = power_port_live.power_connection
+        if pdu_live:
             if PDUPortCP.objects.filter(
-                    rack=dest_pdu_live.rack,
-                    left_right=dest_pdu_live.left_right,
-                    port_number=dest_pdu_live.port_number,
+                    rack=pdu_live.rack,
+                    left_right=pdu_live.left_right,
+                    port_number=pdu_live.port_number,
                     change_plan=change_plan,
             ).exists():
                 pdu_port = PDUPortCP.objects.filter(
-                    rack=dest_pdu_live.rack,
-                    left_right=dest_pdu_live.left_right,
-                    port_number=dest_pdu_live.port_number,
+                    rack=pdu_live.rack,
+                    left_right=pdu_live.left_right,
+                    port_number=pdu_live.port_number,
                     change_plan=change_plan,
                 )
             else:
                 pdu_port = PDUPortCP(change_plan=change_plan)
-                for field in dest_pdu_live._meta.fields:
+                for field in pdu_live._meta.fields:
                     if field.name != "id":
                         setattr(
                             pdu_port,
                             field.name,
-                            getattr(dest_pdu_live, field.name, ),
+                            getattr(pdu_live, field.name, ),
                         )
                 pdu_port.save()
-            dest_power_port_cp.power_connection = pdu_port
-            dest_power_port_cp.save()
-    destination_asset = asset_cp
-    return destination_asset
+            power_port_cp.power_connection = pdu_port
+            power_port_cp.save()
+
+    return asset_cp
 
 
 def get_destination_asset(destination_hostname, change_plan=None):
