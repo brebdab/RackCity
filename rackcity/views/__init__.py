@@ -24,12 +24,14 @@ from .asset_views import (
     asset_bulk_upload,
     asset_bulk_approve,
     asset_bulk_export,
-    network_bulk_upload,
-    network_bulk_approve,
-    network_bulk_export,
     asset_page_count,
     asset_fields,
     asset_number,
+)
+from .network_connections_views import (
+    network_bulk_upload,
+    network_bulk_approve,
+    network_bulk_export,
 )
 from .decommission_views import (
     decommission_asset,
@@ -43,10 +45,7 @@ from .rack_views import (
     rack_delete,
     rack_summary,
 )
-from .report_views import (
-    report_rack_usage,
-    rack_report_datacenter
-)
+from .report_views import report_rack_usage, rack_report_datacenter
 from .user_views import (
     netid_login,
     RegisterNameView,
@@ -68,14 +67,14 @@ from .datacenter_views import (
     datacenter_create,
     datacenter_delete,
     datacenter_page_count,
-    datacenter_modify
+    datacenter_modify,
 )
 from .pdu_views import (
     power_status,
     power_on,
     power_off,
     power_cycle,
-    power_availability
+    power_availability,
 )
 from .change_plan_views import (
     change_plan_many,
@@ -86,5 +85,5 @@ from .change_plan_views import (
     change_plan_execute,
     change_plan_detail,
     change_plan_remove_asset,
-    change_plan_resolve_conflict
+    change_plan_resolve_conflict,
 )
