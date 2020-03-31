@@ -28,7 +28,7 @@ import requests
 import time
 from requests.exceptions import ConnectionError
 from rackcity.models.asset import get_assets_for_cp
-from rackcity.utils.rackcity_utils import get_change_plan
+from rackcity.utils.change_planner_utils import get_change_plan
 pdu_url = 'http://hyposoft-mgt.colab.duke.edu:8005/'
 # Need to specify rack + side in request, e.g. for A1 left, use A01L
 get_pdu = 'pdu.php?pdu=hpdu-rtp1-'

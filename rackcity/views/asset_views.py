@@ -61,6 +61,7 @@ from rackcity.utils.query_utils import (
     get_many_response,
 )
 from rackcity.utils.change_planner_utils import (
+    get_change_plan,
     get_many_assets_response_for_cp,
     get_page_count_response_for_cp,
     get_cp_already_executed_response,
@@ -74,7 +75,6 @@ from rackcity.utils.rackcity_utils import (
     MacAddressException,
     PowerConnectionException,
     NetworkConnectionException,
-    get_change_plan
 )
 from rackcity.models.asset import (
     get_next_available_asset_number,

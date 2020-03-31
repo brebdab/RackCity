@@ -8,6 +8,7 @@ from rackcity.api.serializers import (
 from rackcity.models import Asset, DecommissionedAsset, AssetCP
 from rackcity.permissions.permissions import user_has_asset_permission
 from rackcity.utils.change_planner_utils import (
+    get_change_plan,
     get_cp_already_executed_response,
     get_many_assets_response_for_cp,
     get_page_count_response_for_decommissioned_cp,
@@ -27,7 +28,6 @@ from rackcity.utils.query_utils import (
     get_many_response,
     get_page_count_response,
 )
-from rackcity.utils.rackcity_utils import get_change_plan
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAuthenticated

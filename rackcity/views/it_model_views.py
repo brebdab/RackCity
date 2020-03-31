@@ -45,8 +45,8 @@ from rackcity.utils.rackcity_utils import (
     records_are_identical,
     LocationException,
     ModelModificationException,
-    get_change_plan
 )
+from rackcity.utils.change_planner_utils import get_change_plan
 
 
 @api_view(['POST'])

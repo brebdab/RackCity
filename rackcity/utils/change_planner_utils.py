@@ -14,6 +14,7 @@ from rackcity.models.asset import get_assets_for_cp
 from rackcity.models import (
     Asset,
     AssetCP,
+    ChangePlan,
     DecommissionedAsset,
     NetworkPort,
     NetworkPortCP,
@@ -103,6 +104,26 @@ def detect_conflicts_cp(sender, **kwargs):
         & ~Q(related_asset_id=asset.id)
         & Q(change_plan__execution_time=None)
     ).update(asset_conflict_asset_number=asset)
+
+
+def get_change_plan(change_plan_id):
+    try:
+        change_plan = ChangePlan.objects.get(
+            id=change_plan_id
+        )
+    except ObjectDoesNotExist:
+        return (None, JsonResponse(
+            {
+                "failure_message":
+                    Status.ERROR.value +
+                    "Change plan" +
+                    GenericFailure.DOES_NOT_EXIST.value,
+                "errors": "Invalid change_plan Parameter"
+            },
+            status=HTTPStatus.BAD_REQUEST
+        ))
+    else:
+        return change_plan, None
 
 
 def get_filtered_decommissioned_assets_for_cp(change_plan, data):

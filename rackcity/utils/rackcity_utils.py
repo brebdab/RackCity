@@ -179,26 +179,6 @@ def validate_location_modification(data, existing_asset, user, change_plan=None)
         raise error
 
 
-def get_change_plan(change_plan_id):
-    try:
-        change_plan = ChangePlan.objects.get(
-            id=change_plan_id
-        )
-    except ObjectDoesNotExist:
-        return (None, JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value +
-                    "Change plan" +
-                    GenericFailure.DOES_NOT_EXIST.value,
-                "errors": "Invalid change_plan Parameter"
-            },
-            status=HTTPStatus.BAD_REQUEST
-        ))
-    else:
-        return (change_plan, None)
-
-
 def records_are_identical(existing_data, new_data):
     existing_keys = existing_data.keys()
     new_keys = new_data.keys()
