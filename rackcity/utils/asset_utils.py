@@ -284,9 +284,7 @@ def get_or_create_pdu_port(asset, power_connection_data, change_plan=None):
             pdu_port = PDUPortCP(change_plan=change_plan)
             for field in pdu_port_live._meta.fields:
                 if field.name != "id":
-                    setattr(
-                        pdu_port, field.name, getattr(pdu_port_live, field.name)
-                    )
+                    setattr(pdu_port, field.name, getattr(pdu_port_live, field.name))
             pdu_port.save()
             return pdu_port
     else:
