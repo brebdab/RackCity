@@ -58,104 +58,9 @@ def network_connection_data_has_destination(network_connection_data):
     )
 
 
-def handle_network_connection_delete_on_cp(port_name, asset_id, change_plan):
-    # need to add deleted connection's asset to asset change plan
-    asset_cp = AssetCP.objects.get(id=asset_id)
-    if asset_cp.related_asset_id:
-        asset_live = Asset.objects.get(id=asset_cp.related_asset_id)
-        network_port_live = NetworkPort.objects.get(
-            asset=asset_live, port_name=port_name
-        )
-        if network_port_live.connected_port:
-            destination_port_live = NetworkPort.objects.filter(
-                id=network_port_live.connected_port_id
-            )[0]
-            destination_asset_live = Asset.objects.get(
-                id=destination_port_live.asset_id
-            )
-            destination_asset_cp = AssetCP(
-                related_asset=destination_asset_live,
-                change_plan=change_plan,
-            )
-        # add destination asset to AssetCPTable
-        for field in destination_asset_live._meta.fields:
-            if field.name != "id" and field.name != "assetid_ptr":
-                setattr(
-                    destination_asset_cp,
-                    field.name,
-                    getattr(destination_asset_live, field.name),
-                )
-
-        destination_asset_cp.save()
-
-        # Destination asset has been added to AssetCP, but its
-        # network ports are empty (no connections/mac
-        # addresses) get the network ports from the live asset
-        dest_network_ports_live = NetworkPort.objects.filter(
-            asset=destination_asset_live
-        )
-        for dest_network_port_live in dest_network_ports_live:
-            # for each port, copy over mac address values
-            dest_network_port_cp = NetworkPortCP.objects.get(
-                asset=destination_asset_cp,
-                port_name=dest_network_port_live.port_name,
-            )
-            dest_network_port_cp.mac_address = (
-                dest_network_port_live.mac_address
-            )
-            # also copy over the connected_port if there 1. is
-            # a connection and 2. is not the port that is being
-            # deleted in this PR
-            if dest_network_port_live.connected_port and not (
-                    dest_network_port_live.connected_port.port_name
-                    == port_name
-            ):
-                dest_network_port_cp.connected_port = (
-                    dest_network_port_live.connected_port
-                )
-            dest_network_port_cp.save()
-        # same dealio with power ports
-        dest_power_ports_live = PowerPort.objects.filter(
-            asset=destination_asset_live
-        )
-        for dest_power_port_live in dest_power_ports_live:
-            dest_power_port_cp = PowerPortCP.objects.get(
-                asset=destination_asset_cp,
-                port_name=dest_power_port_live.port_name,
-            )
-            dest_pdu_live = dest_power_port_live.power_connection
-            # if the live power port had a pdu connection,
-            # create/update the PDUs on PDUCP
-            if dest_pdu_live:
-                if PDUPortCP.objects.filter(
-                        rack=dest_pdu_live.rack,
-                        left_right=dest_pdu_live.left_right,
-                        port_number=dest_pdu_live.port_number,
-                        change_plan=change_plan,
-                ).exists():
-                    pdu_port = PDUPortCP.objects.filter(
-                        rack=dest_pdu_live.rack,
-                        left_right=dest_pdu_live.left_right,
-                        port_number=dest_pdu_live.port_number,
-                        change_plan=change_plan,
-                    )
-                else:
-                    pdu_port = PDUPortCP(change_plan=change_plan)
-                    for field in dest_pdu_live._meta.fields:
-                        if field.name != "id":
-                            setattr(
-                                pdu_port,
-                                field.name,
-                                getattr(dest_pdu_live, field.name, ),
-                            )
-                    pdu_port.save()
-                dest_power_port_cp.power_connection = pdu_port
-                dest_power_port_cp.save()
-
-
-def copy_asset_to_new_asset_cp(assets, hostname, change_plan):
+def copy_asset_to_new_asset_cp(asset_live, change_plan):
     # Copy existing asset to AssetCP table
-    asset_live = assets.get(hostname=hostname)
+    # asset_live = assets.get(hostname=hostname)
     asset_cp = AssetCP(related_asset=asset_live, change_plan=change_plan)
     for field in asset_live._meta.fields:
         if field.name != "id" and field.name != "assetid_ptr":
@@ -203,6 +108,35 @@ def copy_asset_to_new_asset_cp(assets, hostname, change_plan):
             power_port_cp.save()
 
     return asset_cp
+
+
+def handle_network_connection_delete_on_cp(port_name, asset_id, change_plan):
+    # If connection being deleted was with a live asset, add that asset to the change plan
+    asset_cp = AssetCP.objects.get(id=asset_id)
+    if not asset_cp.related_asset:
+        return
+    asset_live = Asset.objects.get(id=asset_cp.related_asset_id)
+    network_port_live = NetworkPort.objects.get(asset=asset_live, port_name=port_name)
+    if network_port_live.connected_port:
+        # Add destination asset to the change plan (and delete connection on change plan only)
+        destination_port_live = NetworkPort.objects.get(
+            id=network_port_live.connected_port_id
+        )
+        _ = copy_asset_to_new_asset_cp(destination_port_live, change_plan)
+        # Copy over network connections for the new AssetCP
+        destination_network_ports_live = NetworkPort.objects.filter(asset=destination_port_live)
+        for destination_network_port_live in destination_network_ports_live:
+            destination_network_port_cp = NetworkPortCP.objects.get(
+                asset=asset_cp,
+                port_name=network_port_live.port_name,
+            )
+            # Only copy the connection if it's not to the port being disconnected
+            if (
+                destination_network_port_live.connected_port
+                and destination_network_port_live.connected_port.port_name != port_name
+            ):
+                destination_network_port_cp.connected_port = destination_network_port_live.connected_port
+                destination_network_port_cp.save()
 
 
 def get_destination_asset(destination_hostname, change_plan=None):
