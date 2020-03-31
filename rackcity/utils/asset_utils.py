@@ -10,7 +10,7 @@ from rackcity.models import (
     PDUPortCP,
 )
 from rackcity.models.asset import get_assets_for_cp
-from rackcity.views.rackcity_utils import (
+from rackcity.utils.rackcity_utils import (
     MacAddressException,
     NetworkConnectionException,
     PowerConnectionException,

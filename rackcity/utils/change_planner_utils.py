@@ -26,7 +26,7 @@ from rackcity.utils.query_utils import (
     get_invalid_paginated_request_response,
     should_paginate_query,
 )
-from rackcity.views.rackcity_utils import (
+from rackcity.utils.rackcity_utils import (
     validate_asset_location,
     LocationException,
 )

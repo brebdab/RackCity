@@ -40,7 +40,7 @@ from rackcity.utils.query_utils import (
     get_page_count_response,
     get_many_response,
 )
-from rackcity.views.rackcity_utils import (
+from rackcity.utils.rackcity_utils import (
     validate_asset_location,
     records_are_identical,
     LocationException,

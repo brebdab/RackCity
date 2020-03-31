@@ -42,7 +42,7 @@ class AbstractNetworkPort(models.Model):
             destination_port.connected_port
             and destination_port.connected_port != self
         ):
-            from rackcity.views.rackcity_utils import NetworkConnectionException
+            from rackcity.utils.rackcity_utils import NetworkConnectionException
 
             raise NetworkConnectionException(
                 "Destination port '"

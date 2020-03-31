@@ -27,7 +27,7 @@ from rackcity.utils.query_utils import (
     get_many_response,
     get_page_count_response,
 )
-from rackcity.views.rackcity_utils import get_change_plan
+from rackcity.utils.rackcity_utils import get_change_plan
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAuthenticated

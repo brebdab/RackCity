@@ -65,7 +65,7 @@ from rackcity.utils.change_planner_utils import (
     get_page_count_response_for_cp,
     get_cp_already_executed_response,
 )
-from rackcity.views.rackcity_utils import (
+from rackcity.utils.rackcity_utils import (
     validate_asset_location,
     validate_location_modification,
     no_infile_location_conflicts,
