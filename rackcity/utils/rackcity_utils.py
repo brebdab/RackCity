@@ -1,11 +1,12 @@
-from rackcity.models import Asset, ITModel, Rack, PowerPort, NetworkPort
-from rackcity.permissions.permissions import user_has_asset_permission
-from rackcity.api.serializers import RecursiveAssetSerializer, RackSerializer
-from http import HTTPStatus
+from django.db import close_old_connections
 from django.http import JsonResponse
 import functools
-from django.db import close_old_connections
+from http import HTTPStatus
+from rackcity.api.serializers import RecursiveAssetSerializer, RackSerializer
+from rackcity.models import Asset, ITModel, Rack, PowerPort, NetworkPort
 from rackcity.models.asset import get_assets_for_cp
+from rackcity.permissions.permissions import user_has_asset_permission
+from rackcity.utils.exceptions import LocationException
 
 
 def get_rack_detailed_response(racks):
@@ -42,18 +43,18 @@ def validate_asset_datacenter_move(data, asset):
     if 'rack' not in data:
         return
     new_datacenter = Rack.objects.get(id=data['rack']).datacenter
-    if (old_datacenter == new_datacenter):
+    if old_datacenter == new_datacenter:
         return
     power_ports = PowerPort.objects.filter(asset=asset.id)
     for power_port in power_ports:
-        if (power_port.power_connection is not None):
+        if power_port.power_connection is not None:
             raise LocationException(
                 "Cannot move asset with existing power connections " +
                 "to different datacenter."
             )
     network_ports = NetworkPort.objects.filter(asset=asset.id)
     for network_port in network_ports:
-        if (network_port.connected_port is not None):
+        if network_port.connected_port is not None:
             raise LocationException(
                 "Cannot move asset with existing network connections " +
                 "to different datacenter."
@@ -86,7 +87,7 @@ def validate_asset_location(
         if change_plan:
             is_valid_conflict = related_asset_id is not None and asset_in_rack.id != related_asset_id
 
-        if (is_valid_conflict):
+        if is_valid_conflict:
             for occupied_location in [
                 asset_in_rack.rack_position + i for i
                     in range(asset_in_rack.model.height)
@@ -105,7 +106,7 @@ def validate_asset_location(
     if change_plan:
         for asset_in_rack in assets_cp.filter(rack=rack_id):
             # Ignore if asset being modified conflicts with its old location
-            if (asset_id is None or asset_in_rack.id != asset_id):
+            if (asset_id is None) or (asset_in_rack.id != asset_id):
                 for occupied_location in [
                     asset_in_rack.rack_position + i for i
                         in range(asset_in_rack.model.height)
