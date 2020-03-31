@@ -286,11 +286,6 @@ def save_power_connections(asset_data, asset_id, change_plan=None):
             power_port.power_connection = None
             power_port.save()
             continue
-        if change_plan:
-            asset = AssetCP.objects.get(id=asset_id)
-        else:
-            asset = Asset.objects.get(id=asset_id)
-
         pdu_port = get_power_port(port_name,  asset_id, change_plan=change_plan)
         if pdu_port is None: 
             failure_message += (
@@ -304,6 +299,10 @@ def save_power_connections(asset_data, asset_id, change_plan=None):
         try:
             power_port.save()
         except Exception as error:
+            if change_plan:
+                asset = AssetCP.objects.get(id=asset_id)
+            else:
+                asset = Asset.objects.get(id=asset_id)
             failure_message += (
                 "Power connection on port '"
                 + port_name
