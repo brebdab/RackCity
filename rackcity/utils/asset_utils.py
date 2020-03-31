@@ -161,10 +161,15 @@ def copy_asset_to_new_asset_cp(assets, hostname, change_plan):
         if field.name != "id" and field.name != "assetid_ptr":
             setattr(asset_cp, field.name, getattr(asset_live, field.name))
     asset_cp.save()
-    # Copy mac address values, the actual connections get made later in create_network_connections()
+
+    # Copy mac address values
+    # Note: actual connections get made later in create_network_connections()
     network_ports_live = NetworkPort.objects.filter(asset=asset_live)
     for network_port_live in network_ports_live:
-        network_port_cp = NetworkPortCP.objects.get(asset=asset_cp, port_name=network_port_live.port_name)
+        network_port_cp = NetworkPortCP.objects.get(
+            asset=asset_cp,
+            port_name=network_port_live.port_name,
+        )
         network_port_cp.mac_address = network_port_live.mac_address
         network_port_cp.save()
 
@@ -175,31 +180,26 @@ def copy_asset_to_new_asset_cp(assets, hostname, change_plan):
             asset=asset_cp,
             port_name=power_port_live.port_name,
         )
-        pdu_live = power_port_live.power_connection
-        if pdu_live:
-            if PDUPortCP.objects.filter(
-                    rack=pdu_live.rack,
-                    left_right=pdu_live.left_right,
-                    port_number=pdu_live.port_number,
-                    change_plan=change_plan,
-            ).exists():
-                pdu_port = PDUPortCP.objects.filter(
-                    rack=pdu_live.rack,
-                    left_right=pdu_live.left_right,
-                    port_number=pdu_live.port_number,
+        connected_pdu_live = power_port_live.power_connection
+        if connected_pdu_live:
+            try:
+                connected_pdu_port_cp = PDUPortCP.objects.get(
+                    rack=connected_pdu_live.rack,
+                    left_right=connected_pdu_live.left_right,
+                    port_number=connected_pdu_live.port_number,
                     change_plan=change_plan,
                 )
-            else:
-                pdu_port = PDUPortCP(change_plan=change_plan)
-                for field in pdu_live._meta.fields:
+            except ObjectDoesNotExist:
+                connected_pdu_port_cp = PDUPortCP(change_plan=change_plan)
+                for field in connected_pdu_live._meta.fields:
                     if field.name != "id":
                         setattr(
-                            pdu_port,
+                            connected_pdu_port_cp,
                             field.name,
-                            getattr(pdu_live, field.name, ),
+                            getattr(connected_pdu_live, field.name),
                         )
-                pdu_port.save()
-            power_port_cp.power_connection = pdu_port
+                connected_pdu_port_cp.save()
+            power_port_cp.power_connection = connected_pdu_port_cp
             power_port_cp.save()
 
     return asset_cp
