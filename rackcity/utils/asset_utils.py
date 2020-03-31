@@ -221,7 +221,7 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
         raise NetworkConnectionException(failure_message)
 
 
-def get_power_port(port_name, asset_id, change_plan=None):
+def get_existing_power_port(port_name, asset_id, change_plan=None):
     try:
         if change_plan:
             power_port_cp = PowerPortCP.objects.get(
@@ -235,7 +235,7 @@ def get_power_port(port_name, asset_id, change_plan=None):
         return None
     
     
-def get_pdu_port(asset, power_connection_data, change_plan=None):
+def get_or_create_pdu_port(asset, power_connection_data, change_plan=None):
     try:
         pdu_port_live = PDUPort.objects.get(
             rack=asset.rack,
@@ -275,7 +275,7 @@ def save_power_connections(asset_data, asset_id, change_plan=None):
     power_connection_assignments = asset_data["power_connections"]
     failure_message = ""
     for port_name in power_connection_assignments.keys():
-        power_port = get_power_port(port_name, asset_id, change_plan=change_plan)
+        power_port = get_existing_power_port(port_name, asset_id, change_plan=change_plan)
         if power_port is None:
             failure_message += (
                 "Power port '" + port_name + "' does not exist on this asset. "
@@ -286,7 +286,11 @@ def save_power_connections(asset_data, asset_id, change_plan=None):
             power_port.power_connection = None
             power_port.save()
             continue
-        pdu_port = get_power_port(port_name,  asset_id, change_plan=change_plan)
+        if change_plan:
+            asset = AssetCP.objects.get(id=asset_id)
+        else:
+            asset = Asset.objects.get(id=asset_id)
+        pdu_port = get_or_create_pdu_port(asset, power_connection_data, change_plan=change_plan)
         if pdu_port is None: 
             failure_message += (
                 "PDU port '"
@@ -299,10 +303,6 @@ def save_power_connections(asset_data, asset_id, change_plan=None):
         try:
             power_port.save()
         except Exception as error:
-            if change_plan:
-                asset = AssetCP.objects.get(id=asset_id)
-            else:
-                asset = Asset.objects.get(id=asset_id)
             failure_message += (
                 "Power connection on port '"
                 + port_name
@@ -321,23 +321,15 @@ def save_mac_addresses(asset_data, asset_id, change_plan=None):
     mac_address_assignments = asset_data["mac_addresses"]
     failure_message = ""
     for port_name in mac_address_assignments.keys():
+        network_port = get_existing_network_port(port_name,  asset_id, change_plan=change_plan)
+        if not network_port:
+            failure_message += ("Port name '" + port_name + "' is not valid. ")
+            continue
+        mac_address = mac_address_assignments[port_name]
+        network_port.mac_address = mac_address
         try:
-            if change_plan:
-                network_port = NetworkPortCP.objects.get(
-                    asset=asset_id, port_name=port_name, change_plan=change_plan
-                )
-            else:
-                network_port = NetworkPort.objects.get(
-                    asset=asset_id, port_name=port_name
-                )
-        except ObjectDoesNotExist:
-            failure_message += "Port name '" + port_name + "' is not valid. "
-        else:
-            mac_address = mac_address_assignments[port_name]
-            network_port.mac_address = mac_address
-            try:
-                network_port.save()
-            except Exception:
-                failure_message += "Mac address '" + mac_address + "' is not valid. "
+            network_port.save()
+        except Exception:
+            failure_message += ("Mac address '" + mac_address + "' is not valid. ")
     if failure_message:
         raise MacAddressException(failure_message)
