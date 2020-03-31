@@ -221,83 +221,97 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
         raise NetworkConnectionException(failure_message)
 
 
+def get_power_port(port_name, asset_id, change_plan=None):
+    try:
+        if change_plan:
+            power_port_cp = PowerPortCP.objects.get(
+                asset=asset_id, port_name=port_name, change_plan=change_plan.id
+            )
+            return power_port_cp
+        else:
+            power_port = PowerPort.objects.get(asset=asset_id, port_name=port_name)
+            return power_port
+    except ObjectDoesNotExist:
+        return None
+    
+    
+def get_pdu_port(asset, power_connection_data, change_plan=None):
+    try:
+        pdu_port_live = PDUPort.objects.get(
+            rack=asset.rack,
+            left_right=power_connection_data["left_right"],
+            port_number=power_connection_data["port_number"],
+        )
+    except ObjectDoesNotExist:
+        return None
+
+    if change_plan:
+        try:
+            pdu_port = PDUPortCP.objects.get(
+                rack=asset.rack,
+                left_right=power_connection_data["left_right"],
+                port_number=power_connection_data["port_number"],
+                change_plan=change_plan,
+            )
+            return pdu_port
+        except ObjectDoesNotExist:
+            pdu_port = PDUPortCP(change_plan=change_plan)
+            for field in pdu_port_live._meta.fields:
+                if field.name != "id":
+                    setattr(
+                        pdu_port,
+                        field.name,
+                        getattr(pdu_port_live, field.name),
+                    )
+            pdu_port.save()
+            return pdu_port
+    else:
+        return pdu_port_live
+
+
 def save_power_connections(asset_data, asset_id, change_plan=None):
-    if "power_connections" not in asset_data or not asset_data["power_connections"]:
+    if ("power_connections" not in asset_data) or (not asset_data["power_connections"]):
         return
     power_connection_assignments = asset_data["power_connections"]
     failure_message = ""
     for port_name in power_connection_assignments.keys():
-        try:
-            if change_plan:
-                power_port = PowerPortCP.objects.get(
-                    asset=asset_id, port_name=port_name, change_plan=change_plan.id
-                )
-            else:
-                power_port = PowerPort.objects.get(asset=asset_id, port_name=port_name)
-        except ObjectDoesNotExist:
+        power_port = get_power_port(port_name, asset_id, change_plan=change_plan)
+        if power_port is None:
             failure_message += (
                 "Power port '" + port_name + "' does not exist on this asset. "
             )
+            continue
+        power_connection_data = power_connection_assignments[port_name]
+        if not power_connection_data:
+            power_port.power_connection = None
+            power_port.save()
+            continue
+        if change_plan:
+            asset = AssetCP.objects.get(id=asset_id)
         else:
-            power_connection_data = power_connection_assignments[port_name]
-            if change_plan:
-                asset = AssetCP.objects.get(id=asset_id)
-            else:
-                asset = Asset.objects.get(id=asset_id)
-            if not power_connection_data:
-                power_port.power_connection = None
-                power_port.save()
-                continue
-            try:
-                pdu_port_master = PDUPort.objects.get(
-                    rack=asset.rack,
-                    left_right=power_connection_data["left_right"],
-                    port_number=power_connection_data["port_number"],
-                )
-                pdu_port = pdu_port_master
-                if change_plan:
-                    if PDUPortCP.objects.filter(
-                        rack=asset.rack,
-                        left_right=power_connection_data["left_right"],
-                        port_number=power_connection_data["port_number"],
-                        change_plan=change_plan,
-                    ).exists():
-                        pdu_port = PDUPortCP.objects.get(
-                            rack=asset.rack,
-                            left_right=power_connection_data["left_right"],
-                            port_number=power_connection_data["port_number"],
-                            change_plan=change_plan,
-                        )
-                    else:
-                        pdu_port = PDUPortCP(change_plan=change_plan)
-                        for field in pdu_port_master._meta.fields:
-                            if field.name != "id":
-                                setattr(
-                                    pdu_port,
-                                    field.name,
-                                    getattr(pdu_port_master, field.name),
-                                )
-                        pdu_port.save()
+            asset = Asset.objects.get(id=asset_id)
 
-            except ObjectDoesNotExist:
-                failure_message += (
-                    "PDU port '"
-                    + power_connection_data["left_right"]
-                    + str(power_connection_data["port_number"])
-                    + "' does not exist. "
-                )
-            else:
-                power_port.power_connection = pdu_port
-                try:
-                    power_port.save()
-                except Exception as error:
-                    failure_message += (
-                        "Power connection on port '"
-                        + port_name
-                        + "' of asset '"
-                        + str(asset.asset_number)
-                        + "' was not valid. "
-                    )
+        pdu_port = get_power_port(port_name,  asset_id, change_plan=change_plan)
+        if pdu_port is None: 
+            failure_message += (
+                "PDU port '"
+                + power_connection_data["left_right"]
+                + str(power_connection_data["port_number"])
+                + "' does not exist. "
+            )
+            continue
+        power_port.power_connection = pdu_port
+        try:
+            power_port.save()
+        except Exception as error:
+            failure_message += (
+                "Power connection on port '"
+                + port_name
+                + "' of asset '"
+                + str(asset.asset_number)
+                + "' was not valid. "
+            )
+
     if failure_message:
         raise PowerConnectionException(failure_message)
 
