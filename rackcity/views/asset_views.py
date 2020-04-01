@@ -29,8 +29,7 @@ from rackcity.models.asset import (
     validate_asset_number_uniqueness,
 )
 from rackcity.utils.asset_utils import (
-    save_mac_addresses,
-    save_network_connections,
+    save_all_connection_data,
     save_power_connections,
 )
 from rackcity.utils.change_planner_utils import (
@@ -49,16 +48,13 @@ from rackcity.utils.errors_utils import (
 )
 from rackcity.utils.exceptions import (
     LocationException,
-    MacAddressException,
     PowerConnectionException,
-    NetworkConnectionException,
 )
 from rackcity.utils.log_utils import (
     log_action,
     log_bulk_upload,
     log_bulk_approve,
     log_delete,
-    log_network_action,
     Action,
     ElementType,
 )
@@ -224,26 +220,9 @@ def asset_add(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     # Save and validate connection data
-    warning_message = ""
-    try:
-        save_mac_addresses(asset_data=data, asset_id=asset.id, change_plan=change_plan)
-    except MacAddressException as error:
-        warning_message += "Some mac addresses couldn't be saved. " + str(error)
-
-    try:
-        save_power_connections(
-            asset_data=data, asset_id=asset.id, change_plan=change_plan
-        )
-    except PowerConnectionException as error:
-        warning_message += "Some power connections couldn't be saved. " + str(error)
-    try:
-        save_network_connections(
-            asset_data=data, asset_id=asset.id, change_plan=change_plan
-        )
-        if not change_plan:
-            log_network_action(request.user, asset)
-    except NetworkConnectionException as error:
-        warning_message += "Some network connections couldn't be saved. " + str(error)
+    warning_message = save_all_connection_data(
+        data, asset, request.user, change_plan=change_plan
+    )
     if warning_message:
         return JsonResponse({"warning_message": warning_message}, status=HTTPStatus.OK)
     if change_plan:
@@ -454,33 +433,11 @@ def asset_modify(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     # Save and validate connection data
-    warning_message = ""
-    try:
-        save_mac_addresses(
-            asset_data=data, asset_id=existing_asset.id, change_plan=change_plan
-        )
-    except MacAddressException as error:
-        warning_message += "Some mac addresses couldn't be saved. " + str(error)
-    try:
-        save_power_connections(
-            asset_data=data, asset_id=existing_asset.id, change_plan=change_plan
-        )
-    except PowerConnectionException as error:
-        warning_message += "Some power connections couldn't be saved. " + str(error)
-    try:
-        save_network_connections(
-            asset_data=data, asset_id=existing_asset.id, change_plan=change_plan
-        )
-        if not change_plan:
-            log_network_action(request.user, existing_asset)
-    except NetworkConnectionException as error:
-        warning_message += "Some network connections couldn't be saved. " + str(
-            error
-        )
+    warning_message = save_all_connection_data(
+        data, existing_asset, request.user, change_plan=change_plan
+    )
     if warning_message:
-        return JsonResponse(
-            {"warning_message": warning_message}, status=HTTPStatus.OK,
-        )
+        return JsonResponse({"warning_message": warning_message}, status=HTTPStatus.OK)
     if change_plan:
         return JsonResponse(
             {

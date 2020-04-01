@@ -15,6 +15,7 @@ from rackcity.utils.exceptions import (
     NetworkConnectionException,
     PowerConnectionException,
 )
+from rackcity.utils.log_utils import log_network_action
 
 
 def get_existing_network_port(port_name, asset_id, change_plan=None):
@@ -368,3 +369,30 @@ def save_mac_addresses(asset_data, asset_id, change_plan=None):
             failure_message += "Mac address '" + mac_address + "' is not valid. "
     if failure_message:
         raise MacAddressException(failure_message)
+
+
+def save_all_connection_data(data, asset, user, change_plan=None):
+    warning_message = ""
+    try:
+        save_mac_addresses(
+            asset_data=data, asset_id=asset.id, change_plan=change_plan
+        )
+    except MacAddressException as error:
+        warning_message += "Some mac addresses couldn't be saved. " + str(error)
+    try:
+        save_power_connections(
+            asset_data=data, asset_id=asset.id, change_plan=change_plan
+        )
+    except PowerConnectionException as error:
+        warning_message += "Some power connections couldn't be saved. " + str(error)
+    try:
+        save_network_connections(
+            asset_data=data, asset_id=asset.id, change_plan=change_plan
+        )
+        if not change_plan:
+            log_network_action(user, asset)
+    except NetworkConnectionException as error:
+        warning_message += "Some network connections couldn't be saved. " + str(
+            error
+        )
+    return warning_message
