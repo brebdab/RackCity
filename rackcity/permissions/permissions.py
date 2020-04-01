@@ -1,9 +1,22 @@
 from django.contrib.auth.models import Permission, User
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
+from django.http import JsonResponse
 from enum import Enum
-from rackcity.models import ITModel, Asset, Log, RackCityPermission
+from http import HTTPStatus
+from rackcity.models import (
+    Asset,
+    ITModel,
+    Log,
+    Rack,
+    RackCityPermission,
+)
 from typing import Tuple
+from rackcity.utils.errors_utils import (
+    Status,
+    GenericFailure,
+    AuthFailure,
+)
 
 
 class PermissionName(Enum):
@@ -74,6 +87,34 @@ def user_has_asset_permission(user, datacenter=None):
             if datacenter in permission.datacenter_permissions.all():
                 return True
     return False
+
+
+def validate_asset_permission_to_add(user, validated_data):
+    rack_id = validated_data["rack"].id
+    try:
+        rack = Rack.objects.get(id=rack_id)
+    except ObjectDoesNotExist:
+        return JsonResponse(
+            {
+                "failure_message": Status.MODIFY_ERROR.value
+                + "Rack"
+                + GenericFailure.DOES_NOT_EXIST.value,
+                "errors": "No existing rack with id=" + str(rack_id),
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    if not user_has_asset_permission(user, rack.datacenter):
+        return JsonResponse(
+            {
+                "failure_message": Status.AUTH_ERROR.value + AuthFailure.ASSET.value,
+                "errors": "User "
+                + user.username
+                + " does not have asset permission in datacenter id="
+                + str(rack.datacenter.id),
+            },
+            status=HTTPStatus.UNAUTHORIZED,
+        )
+    return None
 
 
 def user_has_power_permission(user, asset=None):

@@ -74,7 +74,10 @@ from rackcity.utils.rackcity_utils import (
     no_infile_location_conflicts,
     records_are_identical,
 )
-from rackcity.permissions.permissions import user_has_asset_permission
+from rackcity.permissions.permissions import (
+    user_has_asset_permission,
+    validate_asset_permission_to_add,
+)
 import re
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
@@ -159,6 +162,7 @@ def asset_add(request):
     Add a new asset.
     """
     data = JSONParser().parse(request)
+    # Validate that "id" is NOT in data
     if "id" in data:
         return JsonResponse(
             {
@@ -168,16 +172,17 @@ def asset_add(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
+    # Serialize and validate data for either live request or change plan request
     change_plan = None
     if request.query_params.get("change_plan"):
-        (change_plan, response) = get_change_plan(
+        (change_plan, failure_response) = get_change_plan(
             request.query_params.get("change_plan")
         )
-        if response:
-            return response
-        response = get_cp_already_executed_response(change_plan)
-        if response:
-            return response
+        if failure_response:
+            return failure_response
+        failure_response = get_cp_already_executed_response(change_plan)
+        if failure_response:
+            return failure_response
         data["change_plan"] = change_plan.id
         serializer = AssetCPSerializer(data=data)
     else:
@@ -191,33 +196,14 @@ def asset_add(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
+    # Validate that user has asset permission
+    failure_response = validate_asset_permission_to_add(request.user, serializer.validated_data)
+    if failure_response:
+        return failure_response
+    # Validate asset location
     rack_id = serializer.validated_data["rack"].id
-    try:
-        rack = Rack.objects.get(id=rack_id)
-    except ObjectDoesNotExist:
-        return JsonResponse(
-            {
-                "failure_message": Status.MODIFY_ERROR.value
-                + "Rack"
-                + GenericFailure.DOES_NOT_EXIST.value,
-                "errors": "No existing rack with id=" + str(rack_id),
-            },
-            status=HTTPStatus.BAD_REQUEST,
-        )
-    if not user_has_asset_permission(request.user, rack.datacenter):
-        return JsonResponse(
-            {
-                "failure_message": Status.AUTH_ERROR.value + AuthFailure.ASSET.value,
-                "errors": "User "
-                + request.user.username
-                + " does not have asset permission in datacenter id="
-                + str(rack.datacenter.id),
-            },
-            status=HTTPStatus.UNAUTHORIZED,
-        )
     rack_position = serializer.validated_data["rack_position"]
     height = serializer.validated_data["model"].height
-
     try:
         validate_asset_location(rack_id, rack_position, height, change_plan=change_plan)
     except LocationException as error:
@@ -225,6 +211,7 @@ def asset_add(request):
             {"failure_message": Status.CREATE_ERROR.value + str(error)},
             status=HTTPStatus.BAD_REQUEST,
         )
+    # Save asset from serializer
     try:
         asset = serializer.save()
     except Exception as error:
@@ -236,9 +223,8 @@ def asset_add(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
+    # Save and validate connection data
     warning_message = ""
-    # TODO: CHANGE PLAN save power connections and network connections
-
     try:
         save_mac_addresses(asset_data=data, asset_id=asset.id, change_plan=change_plan)
     except MacAddressException as error:
@@ -260,28 +246,27 @@ def asset_add(request):
         warning_message += "Some network connections couldn't be saved. " + str(error)
     if warning_message:
         return JsonResponse({"warning_message": warning_message}, status=HTTPStatus.OK)
+    if change_plan:
+        return JsonResponse(
+            {
+                "success_message": Status.SUCCESS.value
+                + "Asset created on change plan "
+                + change_plan.name,
+                "related_id": change_plan.id,
+            },
+            status=HTTPStatus.OK,
+        )
     else:
-        if change_plan:
-            return JsonResponse(
-                {
-                    "success_message": Status.SUCCESS.value
-                    + "Asset created on change plan "
-                    + change_plan.name,
-                    "related_id": change_plan.id,
-                },
-                status=HTTPStatus.OK,
-            )
-        else:
-            log_action(request.user, asset, Action.CREATE)
-            return JsonResponse(
-                {
-                    "success_message": Status.SUCCESS.value
-                    + "Asset "
-                    + str(asset.asset_number)
-                    + " created"
-                },
-                status=HTTPStatus.OK,
-            )
+        log_action(request.user, asset, Action.CREATE)
+        return JsonResponse(
+            {
+                "success_message": Status.SUCCESS.value
+                + "Asset "
+                + str(asset.asset_number)
+                + " created"
+            },
+            status=HTTPStatus.OK,
+        )
 
 
 @api_view(["POST"])
@@ -291,6 +276,7 @@ def asset_modify(request):
     Modify a single existing asset
     """
     data = JSONParser().parse(request)
+    # Validate that "id" is in data
     if "id" not in data:
         return JsonResponse(
             {
@@ -301,6 +287,8 @@ def asset_modify(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     id = data["id"]
+    # Get and validate change plan (if not live)
+    change_plan = None
     if request.query_params.get("change_plan"):
         (change_plan, response) = get_change_plan(
             request.query_params.get("change_plan")
@@ -311,10 +299,9 @@ def asset_modify(request):
         if response:
             return response
         del data["id"]
-    else:
-        change_plan = None
 
     if change_plan:
+        # Get existing asset on change plan
         assets, assets_cp = get_assets_for_cp(change_plan.id)
         if assets_cp.filter(id=id).exists():
             # if asset was created on a change_plan
@@ -343,6 +330,7 @@ def asset_modify(request):
                         getattr(existing_asset_master, field.name),
                     )
     else:
+        # Get existing asset live
         try:
             existing_asset = Asset.objects.get(id=id)
         except ObjectDoesNotExist:
@@ -356,6 +344,7 @@ def asset_modify(request):
                 status=HTTPStatus.BAD_REQUEST,
             )
 
+    # Validate that user has asset permission
     if not user_has_asset_permission(request.user, existing_asset.rack.datacenter):
         return JsonResponse(
             {
@@ -367,6 +356,7 @@ def asset_modify(request):
             },
             status=HTTPStatus.UNAUTHORIZED,
         )
+    # Validate asset location
     try:
         validate_location_modification(
             data, existing_asset, request.user, change_plan=change_plan
@@ -380,6 +370,7 @@ def asset_modify(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
+    # Modify existing asset
     for field in data.keys():
         if field == "model":
             value = ITModel.objects.get(id=data[field])
@@ -450,7 +441,7 @@ def asset_modify(request):
         else:
             value = data[field]
         setattr(existing_asset, field, value)
-
+    # Save modified asset
     try:
         existing_asset.save()
     except Exception as error:
@@ -462,56 +453,55 @@ def asset_modify(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
+    # Save and validate connection data
+    warning_message = ""
+    try:
+        save_mac_addresses(
+            asset_data=data, asset_id=existing_asset.id, change_plan=change_plan
+        )
+    except MacAddressException as error:
+        warning_message += "Some mac addresses couldn't be saved. " + str(error)
+    try:
+        save_power_connections(
+            asset_data=data, asset_id=existing_asset.id, change_plan=change_plan
+        )
+    except PowerConnectionException as error:
+        warning_message += "Some power connections couldn't be saved. " + str(error)
+    try:
+        save_network_connections(
+            asset_data=data, asset_id=existing_asset.id, change_plan=change_plan
+        )
+        if not change_plan:
+            log_network_action(request.user, existing_asset)
+    except NetworkConnectionException as error:
+        warning_message += "Some network connections couldn't be saved. " + str(
+            error
+        )
+    if warning_message:
+        return JsonResponse(
+            {"warning_message": warning_message}, status=HTTPStatus.OK,
+        )
+    if change_plan:
+        return JsonResponse(
+            {
+                "success_message": Status.SUCCESS.value
+                + "Asset modified on change plan "
+                + change_plan.name,
+                "related_id": change_plan.id,
+            },
+            status=HTTPStatus.OK,
+        )
     else:
-        warning_message = ""
-        try:
-            save_mac_addresses(
-                asset_data=data, asset_id=existing_asset.id, change_plan=change_plan
-            )
-        except MacAddressException as error:
-            warning_message += "Some mac addresses couldn't be saved. " + str(error)
-        try:
-            save_power_connections(
-                asset_data=data, asset_id=existing_asset.id, change_plan=change_plan
-            )
-        except PowerConnectionException as error:
-            warning_message += "Some power connections couldn't be saved. " + str(error)
-        try:
-            save_network_connections(
-                asset_data=data, asset_id=existing_asset.id, change_plan=change_plan
-            )
-            if not change_plan:
-                log_network_action(request.user, existing_asset)
-        except NetworkConnectionException as error:
-            warning_message += "Some network connections couldn't be saved. " + str(
-                error
-            )
-        if warning_message:
-            return JsonResponse(
-                {"warning_message": warning_message}, status=HTTPStatus.OK,
-            )
-        else:
-            if not change_plan:
-                log_action(request.user, existing_asset, Action.MODIFY)
-                return JsonResponse(
-                    {
-                        "success_message": Status.SUCCESS.value
-                        + "Asset "
-                        + str(existing_asset.asset_number)
-                        + " modified"
-                    },
-                    status=HTTPStatus.OK,
-                )
-            else:
-                return JsonResponse(
-                    {
-                        "success_message": Status.SUCCESS.value
-                        + "Asset modified on change plan "
-                        + change_plan.name,
-                        "related_id": change_plan.id,
-                    },
-                    status=HTTPStatus.OK,
-                )
+        log_action(request.user, existing_asset, Action.MODIFY)
+        return JsonResponse(
+            {
+                "success_message": Status.SUCCESS.value
+                + "Asset "
+                + str(existing_asset.asset_number)
+                + " modified"
+            },
+            status=HTTPStatus.OK,
+        )
 
 
 @api_view(["POST"])
