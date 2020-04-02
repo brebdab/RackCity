@@ -11,6 +11,7 @@ from rackcity.models import (
     AssetCP,
 )
 from rackcity.utils.change_planner_utils import (
+    get_change_plan,
     get_modifications_in_cp,
     asset_cp_has_conflicts,
     get_cp_already_executed_response,
@@ -36,7 +37,6 @@ from rackcity.utils.query_utils import (
     get_page_count_response,
     get_many_response,
 )
-from rackcity.views.rackcity_utils import get_change_plan
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAuthenticated

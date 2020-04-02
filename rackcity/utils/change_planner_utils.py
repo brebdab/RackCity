@@ -14,6 +14,7 @@ from rackcity.models.asset import get_assets_for_cp
 from rackcity.models import (
     Asset,
     AssetCP,
+    ChangePlan,
     DecommissionedAsset,
     NetworkPort,
     NetworkPortCP,
@@ -21,21 +22,19 @@ from rackcity.models import (
     PowerPortCP,
 )
 from rackcity.utils.errors_utils import Status, GenericFailure
+from rackcity.utils.exceptions import LocationException
 from rackcity.utils.query_utils import (
     get_filtered_query,
     get_invalid_paginated_request_response,
     should_paginate_query,
 )
-from rackcity.views.rackcity_utils import (
-    validate_asset_location,
-    LocationException,
-)
+from rackcity.utils.rackcity_utils import validate_asset_location
 
 
 class ModificationType(Enum):
-    MODIFY = 'Modify'
-    CREATE = 'Create'
-    DECOMMISSION = 'Decommission'
+    MODIFY = "Modify"
+    CREATE = "Create"
+    DECOMMISSION = "Decommission"
 
 
 @receiver(pre_delete, sender=Asset)
@@ -46,8 +45,7 @@ def mark_delete_conflicts_cp(sender, **kwargs):
     """
     deleted_asset = kwargs.get("instance")
     AssetCP.objects.filter(
-        related_asset=deleted_asset,
-        change_plan__execution_time=None,
+        related_asset=deleted_asset, change_plan__execution_time=None,
     ).update(is_conflict=True)
 
 
@@ -62,8 +60,7 @@ def detect_conflicts_cp(sender, **kwargs):
     """
     asset = kwargs.get("instance")
     related_assets_cp = AssetCP.objects.filter(
-        related_asset=asset.id,
-        change_plan__execution_time=None,
+        related_asset=asset.id, change_plan__execution_time=None,
     )
     for related_asset_cp in related_assets_cp:
         related_asset_cp.is_conflict = True
@@ -89,12 +86,11 @@ def detect_conflicts_cp(sender, **kwargs):
                 asset.rack_id,
                 assetcp.rack_position,
                 assetcp.model.height,
-                asset_id=assetcp.id
+                asset_id=assetcp.id,
             )
         except LocationException:
             assetcp.asset_conflict_location = asset
-            AssetCP.objects.filter(id=assetcp.id).update(
-                asset_conflict_location=asset)
+            AssetCP.objects.filter(id=assetcp.id).update(asset_conflict_location=asset)
 
     # asset number conflicts with an active assetCP
     asset.asset_number_conflict.clear()
@@ -105,64 +101,74 @@ def detect_conflicts_cp(sender, **kwargs):
     ).update(asset_conflict_asset_number=asset)
 
 
+def get_change_plan(change_plan_id):
+    try:
+        change_plan = ChangePlan.objects.get(id=change_plan_id)
+    except ObjectDoesNotExist:
+        return (
+            None,
+            JsonResponse(
+                {
+                    "failure_message": Status.ERROR.value
+                    + "Change plan"
+                    + GenericFailure.DOES_NOT_EXIST.value,
+                    "errors": "Invalid change_plan Parameter",
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            ),
+        )
+    else:
+        return change_plan, None
+
+
 def get_filtered_decommissioned_assets_for_cp(change_plan, data):
     decommissioned_assets = DecommissionedAsset.objects.all()
-    decomissioned_assets_cp = AssetCP.objects.filter(
-        change_plan=change_plan,
-        is_decommissioned=True,
+    decommissioned_assets_cp = AssetCP.objects.filter(
+        change_plan=change_plan, is_decommissioned=True,
     )
     decommissioned_assets, filter_failure_response = get_filtered_query(
-        decommissioned_assets,
-        data,
+        decommissioned_assets, data,
     )
     if filter_failure_response:
-        return (None, None, filter_failure_response)
-    decomissioned_assets_cp, filter_failure_response = get_filtered_query(
-        decomissioned_assets_cp,
-        data,
+        return None, None, filter_failure_response
+    decommissioned_assets_cp, filter_failure_response = get_filtered_query(
+        decommissioned_assets_cp, data,
     )
     if filter_failure_response:
-        return (None, None, filter_failure_response)
-    return (decommissioned_assets, decomissioned_assets_cp, None)
+        return None, None, filter_failure_response
+    return decommissioned_assets, decommissioned_assets_cp, None
 
 
 def get_filtered_assets_for_cp(change_plan, data):
-    assets, assetsCP = get_assets_for_cp(change_plan=change_plan)
-    filtered_assets, filter_failure_response = get_filtered_query(
-        assets,
-        data,
-    )
+    assets, assets_cp = get_assets_for_cp(change_plan=change_plan)
+    filtered_assets, filter_failure_response = get_filtered_query(assets, data,)
     if filter_failure_response:
-        return (None, None, filter_failure_response)
-    filtered_assetsCP, filter_failure_response = get_filtered_query(
-        assetsCP,
-        data,
-    )
+        return None, None, filter_failure_response
+    filtered_assets_cp, filter_failure_response = get_filtered_query(assets_cp, data,)
     if filter_failure_response:
-        return (None, None, filter_failure_response)
-    return (filtered_assets, filtered_assetsCP, None)
+        return None, None, filter_failure_response
+    return filtered_assets, filtered_assets_cp, None
 
 
 def sort_serialized_assets(all_assets, data):
     sorted_assets = all_assets
-    if 'sort_by' in data:
-        for sort in data['sort_by']:
+    if "sort_by" in data:
+        for sort in data["sort_by"]:
             if (
-                'field' in sort
-                and 'ascending' in sort
-                and isinstance(sort['field'], str)
-                and isinstance(sort['ascending'], bool)
+                "field" in sort
+                and "ascending" in sort
+                and isinstance(sort["field"], str)
+                and isinstance(sort["ascending"], bool)
             ):
                 sorted_assets.sort(
-                    key=lambda i: i[sort['field']],
-                    reverse=not sort['ascending'],
+                    key=lambda i: i[sort["field"]], reverse=not sort["ascending"],
                 )
     return sorted_assets
 
 
 def get_page_of_serialized_assets(all_assets, query_params):
-    page = int(query_params.get('page'))
-    page_size = int(query_params.get('page_size'))
+    page = int(query_params.get("page"))
+    page_size = int(query_params.get("page_size"))
     start = (page - 1) * page_size
     end = page * page_size
     if start > len(all_assets):
@@ -173,11 +179,7 @@ def get_page_of_serialized_assets(all_assets, query_params):
         return all_assets[start:end]
 
 
-def get_many_assets_response_for_cp(
-    request,
-    change_plan,
-    decommissioned=False
-):
+def get_many_assets_response_for_cp(request, change_plan, decommissioned=False):
     should_paginate = should_paginate_query(request.query_params)
     if should_paginate:
         page_failure_response = get_invalid_paginated_request_response(
@@ -187,84 +189,68 @@ def get_many_assets_response_for_cp(
             return page_failure_response
 
     if not decommissioned:
-        assets, assetsCP, filter_failure_response = \
-            get_filtered_assets_for_cp(
-                change_plan,
-                request.data,
-            )
+        assets, assets_cp, filter_failure_response = get_filtered_assets_for_cp(
+            change_plan, request.data,
+        )
         if filter_failure_response:
             return filter_failure_response
     else:
-        assets, assetsCP, filter_failure_response = \
-            get_filtered_decommissioned_assets_for_cp(
-                change_plan,
-                request.data,
-            )
+        (
+            assets,
+            assets_cp,
+            filter_failure_response,
+        ) = get_filtered_decommissioned_assets_for_cp(change_plan, request.data,)
 
-    asset_serializer = RecursiveAssetSerializer(
-        assets,
-        many=True,
-    )
-    assetCP_serializer = RecursiveAssetCPSerializer(
-        assetsCP,
-        many=True,
-    )
-    all_assets = asset_serializer.data + assetCP_serializer.data
+    asset_serializer = RecursiveAssetSerializer(assets, many=True,)
+    asset_cp_serializer = RecursiveAssetCPSerializer(assets_cp, many=True,)
+    all_assets = asset_serializer.data + asset_cp_serializer.data
 
     sorted_assets = sort_serialized_assets(all_assets, request.data)
 
     if should_paginate:
         try:
             assets_data = get_page_of_serialized_assets(
-                sorted_assets,
-                request.query_params,
+                sorted_assets, request.query_params,
             )
         except Exception as error:
             return JsonResponse(
                 {
-                    "failure_message":
-                        Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                        "errors": str(error)
+                    "failure_message": Status.ERROR.value
+                    + GenericFailure.PAGE_ERROR.value,
+                    "errors": str(error),
                 },
                 status=HTTPStatus.BAD_REQUEST,
             )
     else:
         assets_data = sorted_assets
 
-    return JsonResponse(
-        {"assets": assets_data},
-        status=HTTPStatus.OK,
-    )
+    return JsonResponse({"assets": assets_data}, status=HTTPStatus.OK,)
 
 
 def get_page_count_response_for_decommissioned_cp(request, change_plan):
     if (
-        not request.query_params.get('page_size')
-        or int(request.query_params.get('page_size')) <= 0
+        not request.query_params.get("page_size")
+        or int(request.query_params.get("page_size")) <= 0
     ):
         return JsonResponse(
             {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                "errors": "Must specify positive integer page_size."
+                "failure_message": Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
+                "errors": "Must specify positive integer page_size.",
             },
             status=HTTPStatus.BAD_REQUEST,
         )
-    page_size = int(request.query_params.get('page_size'))
+    page_size = int(request.query_params.get("page_size"))
     decommissioned_assets = DecommissionedAsset.objects.all()
     decommissioned_assets_cp = AssetCP.objects.filter(
-        change_plan=change_plan,
-        is_decommissioned=True,
+        change_plan=change_plan, is_decommissioned=True,
     )
     decommissioned_assets, filter_failure_response = get_filtered_query(
-        decommissioned_assets,
-        request.data,
+        decommissioned_assets, request.data,
     )
     if filter_failure_response:
         return filter_failure_response
     decommissioned_assets_cp, filter_failure_response = get_filtered_query(
-        decommissioned_assets_cp,
-        request.data,
+        decommissioned_assets_cp, request.data,
     )
     if filter_failure_response:
         return filter_failure_response
@@ -275,25 +261,23 @@ def get_page_count_response_for_decommissioned_cp(request, change_plan):
 
 def get_page_count_response_for_cp(request, change_plan):
     if (
-        not request.query_params.get('page_size')
-        or int(request.query_params.get('page_size')) <= 0
+        not request.query_params.get("page_size")
+        or int(request.query_params.get("page_size")) <= 0
     ):
         return JsonResponse(
             {
-                "failure_message":
-                    Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                "errors": "Must specify positive integer page_size."
+                "failure_message": Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
+                "errors": "Must specify positive integer page_size.",
             },
             status=HTTPStatus.BAD_REQUEST,
         )
-    page_size = int(request.query_params.get('page_size'))
-    assets, assetsCP, filter_failure_response = get_filtered_assets_for_cp(
-        change_plan,
-        request.data,
+    page_size = int(request.query_params.get("page_size"))
+    assets, assets_cp, filter_failure_response = get_filtered_assets_for_cp(
+        change_plan, request.data,
     )
     if filter_failure_response:
         return filter_failure_response
-    count = assets.count() + assetsCP.count()
+    count = assets.count() + assets_cp.count()
     page_count = math.ceil(count / page_size)
     return JsonResponse({"page_count": page_count})
 
@@ -304,9 +288,7 @@ def network_connections_have_changed(asset, asset_cp):
     for network_port_cp in network_ports_cp:
         # Get NetworkPort connected to this port live
         try:
-            network_port = network_ports.get(
-                port_name=network_port_cp.port_name,
-            )
+            network_port = network_ports.get(port_name=network_port_cp.port_name,)
         except ObjectDoesNotExist:
             continue
         connected_port_live = network_port.connected_port
@@ -337,18 +319,15 @@ def power_connections_have_changed(asset, asset_cp):
         pdu_port_cp = power_port_cp.power_connection
         # Get PDUPort corresponding to this live connection
         try:
-            power_port_live = power_ports.get(
-                port_name=power_port_cp.port_name
-            )
+            power_port_live = power_ports.get(port_name=power_port_cp.port_name)
         except ObjectDoesNotExist:
             continue
         pdu_port_live = power_port_live.power_connection
         # Check for match
-        if (pdu_port_cp is None and pdu_port_live is None):
+        if pdu_port_cp is None and pdu_port_live is None:
             continue
-        if (
-            (pdu_port_cp is None and pdu_port_live)
-            or (pdu_port_cp and pdu_port_live is None)
+        if (pdu_port_cp is None and pdu_port_live) or (
+            pdu_port_cp and pdu_port_live is None
         ):
             return True
         if (
@@ -367,82 +346,105 @@ def get_changes_on_asset(asset, asset_cp):
         if getattr(asset, field) != getattr(asset_cp, field):
             changes.append(field)
     if network_connections_have_changed(asset, asset_cp):
-        changes.append('network_connections')
+        changes.append("network_connections")
     if power_connections_have_changed(asset, asset_cp):
-        changes.append('power_connections')
+        changes.append("power_connections")
     return changes
 
 
 def get_cp_modification_conflicts(asset_cp):
     conflicts = []
-    nonresolvable_message = "This conflict cannot be resolved; the " + \
-        "related changes need to be removed from your change plan."
-    conflicting_asset_message_1 = "Due to more recent live changes, " + \
-        "your change plan version of this asset's "
+    nonresolvable_message = (
+        "This conflict cannot be resolved; the "
+        + "related changes need to be removed from your change plan."
+    )
+    conflicting_asset_message_1 = (
+        "Due to more recent live changes, "
+        + "your change plan version of this asset's "
+    )
     conflicting_asset_message_2 = " now conflicts with a live asset. "
     if asset_cp.is_conflict and asset_cp.related_asset is None:
-        conflicts.append({
-            "conflict_message":
-                "This asset has been deleted live. " + nonresolvable_message
-        })
+        conflicts.append(
+            {
+                "conflict_message": "This asset has been deleted live. "
+                + nonresolvable_message
+            }
+        )
     if asset_cp.asset_conflict_hostname:
-        conflicts.append({
-            "conflict_message":
-                conflicting_asset_message_1 + "hostname" +
-                conflicting_asset_message_2 + nonresolvable_message,
-            "conflicting_asset": asset_cp.asset_conflict_hostname.id,
-            "conflict_resolvable": False,
-        })
+        conflicts.append(
+            {
+                "conflict_message": conflicting_asset_message_1
+                + "hostname"
+                + conflicting_asset_message_2
+                + nonresolvable_message,
+                "conflicting_asset": asset_cp.asset_conflict_hostname.id,
+                "conflict_resolvable": False,
+            }
+        )
     if asset_cp.asset_conflict_asset_number:
-        conflicts.append({
-            "conflict_message":
-                conflicting_asset_message_1 + "asset number" +
-                conflicting_asset_message_2 + nonresolvable_message,
-            "conflicting_asset": asset_cp.asset_conflict_asset_number.id,
-            "conflict_resolvable": False,
-        })
+        conflicts.append(
+            {
+                "conflict_message": conflicting_asset_message_1
+                + "asset number"
+                + conflicting_asset_message_2
+                + nonresolvable_message,
+                "conflicting_asset": asset_cp.asset_conflict_asset_number.id,
+                "conflict_resolvable": False,
+            }
+        )
     if asset_cp.asset_conflict_location:
-        conflicts.append({
-            "conflict_message":
-                conflicting_asset_message_1 + "rack location" +
-                conflicting_asset_message_2 + nonresolvable_message,
-            "conflicting_asset": asset_cp.asset_conflict_location.id,
-            "conflict_resolvable": False,
-        })
+        conflicts.append(
+            {
+                "conflict_message": conflicting_asset_message_1
+                + "rack location"
+                + conflicting_asset_message_2
+                + nonresolvable_message,
+                "conflicting_asset": asset_cp.asset_conflict_location.id,
+                "conflict_resolvable": False,
+            }
+        )
     deleted_relation_message = " associated with this asset has been deleted. "
     if asset_cp.model is None:
-        conflicts.append({
-            "conflict_message":
-                "The model" + deleted_relation_message + nonresolvable_message,
-            "conflicting_asset": None,
-            "conflict_resolvable": False,
-        })
+        conflicts.append(
+            {
+                "conflict_message": "The model"
+                + deleted_relation_message
+                + nonresolvable_message,
+                "conflicting_asset": None,
+                "conflict_resolvable": False,
+            }
+        )
     if asset_cp.rack is None:
-        conflicts.append({
-            "conflict_message":
-                "The rack" + deleted_relation_message + nonresolvable_message,
-            "conflicting_asset": None,
-            "conflict_resolvable": False,
-        })
+        conflicts.append(
+            {
+                "conflict_message": "The rack"
+                + deleted_relation_message
+                + nonresolvable_message,
+                "conflicting_asset": None,
+                "conflict_resolvable": False,
+            }
+        )
     if asset_cp.related_decommissioned_asset:
-        conflicts.append({
-            "conflict_message":
-                "This asset has been decommissioned in a live change. " +
-                nonresolvable_message,
-            "conflicting_asset": None,
-            "conflict_resolvable": False,
-        })
+        conflicts.append(
+            {
+                "conflict_message": "This asset has been decommissioned in a live change. "
+                + nonresolvable_message,
+                "conflicting_asset": None,
+                "conflict_resolvable": False,
+            }
+        )
     if len(conflicts) == 0:
         if asset_cp.is_conflict:
-            conflicts.append({
-                "conflict_message":
-                    "Live changes have been made to this asset since your " +
-                    "latest change planner modification. This conflict " +
-                    "needs to be resolved. Please select which version " +
-                    "you would like to keep.",
-                "conflicting_asset": None,
-                "conflict_resolvable": True,
-            })
+            conflicts.append(
+                {
+                    "conflict_message": "Live changes have been made to this asset since your "
+                    + "latest change planner modification. This conflict "
+                    + "needs to be resolved. Please select which version "
+                    + "you would like to keep.",
+                    "conflicting_asset": None,
+                    "conflict_resolvable": True,
+                }
+            )
     if len(conflicts) == 0:
         return None
     else:
@@ -450,16 +452,22 @@ def get_cp_modification_conflicts(asset_cp):
 
 
 def get_location_detail(asset):
-    return " at rack " + asset.rack.datacenter.abbreviation + " " + \
-        asset.rack.row_letter + str(asset.rack.rack_num) + ", position " + \
-        str(asset.rack_position)
+    return (
+        " at rack "
+        + asset.rack.datacenter.abbreviation
+        + " "
+        + asset.rack.row_letter
+        + str(asset.rack.rack_num)
+        + ", position "
+        + str(asset.rack_position)
+    )
 
 
 def get_modifications_in_cp(change_plan):
     assets_cp = AssetCP.objects.filter(change_plan=change_plan)
     modifications = []
     for asset_cp in assets_cp:
-        assetCP_data = RecursiveAssetCPSerializer(asset_cp).data
+        asset_cp_data = RecursiveAssetCPSerializer(asset_cp).data
         related_asset = asset_cp.related_asset
         if related_asset:
             asset_data = RecursiveAssetSerializer(related_asset).data
@@ -477,8 +485,11 @@ def get_modifications_in_cp(change_plan):
         elif related_asset or (asset_cp.is_conflict and related_asset is None):
             modification_type = ModificationType.MODIFY
             if related_asset:
-                title = "Modify asset " + str(related_asset.asset_number) + \
-                    get_location_detail(related_asset)
+                title = (
+                    "Modify asset "
+                    + str(related_asset.asset_number)
+                    + get_location_detail(related_asset)
+                )
             else:
                 title = "Modify asset"
         else:
@@ -489,14 +500,16 @@ def get_modifications_in_cp(change_plan):
             if asset_cp.rack:
                 title += get_location_detail(asset_cp)
             asset_data = None
-        modifications.append({
-            "title": title,
-            "type": modification_type.value,
-            "asset": asset_data,
-            "asset_cp": assetCP_data,
-            "conflicts": get_cp_modification_conflicts(asset_cp),
-            "changes": changes,
-        })
+        modifications.append(
+            {
+                "title": title,
+                "type": modification_type.value,
+                "asset": asset_data,
+                "asset_cp": asset_cp_data,
+                "conflicts": get_cp_modification_conflicts(asset_cp),
+                "changes": changes,
+            }
+        )
     return modifications
 
 
@@ -516,13 +529,10 @@ def get_cp_already_executed_response(change_plan):
     if change_plan.execution_time:
         return JsonResponse(
             {
-                "failure_message":
-                    Status.ERROR.value +
-                    "Executed change plans are read only.",
-                "errors":
-                    "Change plan with id=" + str(change_plan.id) + " "
-                    "was executed on " + str(change_plan.execution_time)
-
+                "failure_message": Status.ERROR.value
+                + "Executed change plans are read only.",
+                "errors": "Change plan with id=" + str(change_plan.id) + " "
+                "was executed on " + str(change_plan.execution_time),
             },
-            status=HTTPStatus.BAD_REQUEST
+            status=HTTPStatus.BAD_REQUEST,
         )

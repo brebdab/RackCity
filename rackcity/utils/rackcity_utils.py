@@ -1,16 +1,12 @@
-from rackcity.models import Asset, ITModel, Rack, PowerPort, NetworkPort, ChangePlan
-from rackcity.permissions.permissions import user_has_asset_permission
-from rackcity.api.serializers import RecursiveAssetSerializer, RackSerializer
-from http import HTTPStatus
+from django.db import close_old_connections
 from django.http import JsonResponse
 import functools
-from django.db import close_old_connections
+from http import HTTPStatus
+from rackcity.api.serializers import RecursiveAssetSerializer, RackSerializer
+from rackcity.models import Asset, ITModel, Rack, PowerPort, NetworkPort
 from rackcity.models.asset import get_assets_for_cp
-from django.core.exceptions import ObjectDoesNotExist
-from rackcity.utils.errors_utils import (
-    Status,
-    GenericFailure,
-)
+from rackcity.permissions.permissions import user_has_asset_permission
+from rackcity.utils.exceptions import LocationException
 
 
 def get_rack_detailed_response(racks):
@@ -47,18 +43,18 @@ def validate_asset_datacenter_move(data, asset):
     if 'rack' not in data:
         return
     new_datacenter = Rack.objects.get(id=data['rack']).datacenter
-    if (old_datacenter == new_datacenter):
+    if old_datacenter == new_datacenter:
         return
     power_ports = PowerPort.objects.filter(asset=asset.id)
     for power_port in power_ports:
-        if (power_port.power_connection is not None):
+        if power_port.power_connection is not None:
             raise LocationException(
                 "Cannot move asset with existing power connections " +
                 "to different datacenter."
             )
     network_ports = NetworkPort.objects.filter(asset=asset.id)
     for network_port in network_ports:
-        if (network_port.connected_port is not None):
+        if network_port.connected_port is not None:
             raise LocationException(
                 "Cannot move asset with existing network connections " +
                 "to different datacenter."
@@ -91,7 +87,7 @@ def validate_asset_location(
         if change_plan:
             is_valid_conflict = related_asset_id is not None and asset_in_rack.id != related_asset_id
 
-        if (is_valid_conflict):
+        if is_valid_conflict:
             for occupied_location in [
                 asset_in_rack.rack_position + i for i
                     in range(asset_in_rack.model.height)
@@ -110,7 +106,7 @@ def validate_asset_location(
     if change_plan:
         for asset_in_rack in assets_cp.filter(rack=rack_id):
             # Ignore if asset being modified conflicts with its old location
-            if (asset_id is None or asset_in_rack.id != asset_id):
+            if (asset_id is None) or (asset_in_rack.id != asset_id):
                 for occupied_location in [
                     asset_in_rack.rack_position + i for i
                         in range(asset_in_rack.model.height)
@@ -177,26 +173,6 @@ def validate_location_modification(data, existing_asset, user, change_plan=None)
         )
     except LocationException as error:
         raise error
-
-
-def get_change_plan(change_plan_id):
-    try:
-        change_plan = ChangePlan.objects.get(
-            id=change_plan_id
-        )
-    except ObjectDoesNotExist:
-        return (None, JsonResponse(
-            {
-                "failure_message":
-                    Status.ERROR.value +
-                    "Change plan" +
-                    GenericFailure.DOES_NOT_EXIST.value,
-                "errors": "Invalid change_plan Parameter"
-            },
-            status=HTTPStatus.BAD_REQUEST
-        ))
-    else:
-        return (change_plan, None)
 
 
 def records_are_identical(existing_data, new_data):
@@ -277,31 +253,6 @@ def no_infile_location_conflicts(asset_datas):
                     unnamed_asset_count += 1
                 location_occupied_by[rack][location] = asset_name
     return
-
-
-class LocationException(Exception):
-    def __init__(self, *args, **kwargs):
-        Exception.__init__(self, *args, **kwargs)
-
-
-class ModelModificationException(Exception):
-    def __init__(self, *args, **kwargs):
-        Exception.__init__(self, *args, **kwargs)
-
-
-class MacAddressException(Exception):
-    def __init__(self, *args, **kwargs):
-        Exception.__init__(self, *args, **kwargs)
-
-
-class PowerConnectionException(Exception):
-    def __init__(self, *args, **kwargs):
-        Exception.__init__(self, *args, **kwargs)
-
-
-class NetworkConnectionException(Exception):
-    def __init__(self, *args, **kwargs):
-        Exception.__init__(self, *args, **kwargs)
 
 
 def close_old_connections_decorator(func):

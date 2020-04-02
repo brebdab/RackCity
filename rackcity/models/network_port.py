@@ -14,7 +14,7 @@ def format_mac_address(mac_address):
     mac_address = mac_address.replace(",", ":")
     mac_address = mac_address.replace(";", ":")
     # if contains no delimiters:
-    if (not mac_address.__contains__(":")):
+    if not (mac_address.__contains__(":")):
         mac_address = ':'.join(
             a+b for a, b in zip(mac_address[::2], mac_address[1::2]))
     return mac_address
@@ -37,12 +37,13 @@ class AbstractNetworkPort(models.Model):
         null=True,
         blank=True,
     )
+
     def create_network_connection(self, destination_port):
         if (
             destination_port.connected_port
             and destination_port.connected_port != self
         ):
-            from rackcity.views.rackcity_utils import NetworkConnectionException
+            from rackcity.utils.exceptions import NetworkConnectionException
 
             raise NetworkConnectionException(
                 "Destination port '"
