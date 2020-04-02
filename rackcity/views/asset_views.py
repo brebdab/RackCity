@@ -89,11 +89,11 @@ def asset_many(request):
     size must also be specified, and a page of assets will be returned.
     """
     if request.query_params.get("change_plan"):
-        (change_plan, response) = get_change_plan(
+        (change_plan, failure_response) = get_change_plan(
             request.query_params.get("change_plan")
         )
-        if response:
-            return response
+        if failure_response:
+            return failure_response
         else:
             return get_many_assets_response_for_cp(request, change_plan)
     else:
@@ -109,11 +109,11 @@ def asset_detail(request, id):
     change_plan = None
     serializer = None
     if request.query_params.get("change_plan"):
-        (change_plan, response) = get_change_plan(
+        (change_plan, failure_response) = get_change_plan(
             request.query_params.get("change_plan")
         )
-        if response:
-            return response
+        if failure_response:
+            return failure_response
     try:
         if change_plan:
             assets, assets_cp = get_assets_for_cp(
@@ -270,14 +270,14 @@ def asset_modify(request):
 
     change_plan = None
     if request.query_params.get("change_plan"):
-        (change_plan, response) = get_change_plan(
+        (change_plan, failure_response) = get_change_plan(
             request.query_params.get("change_plan")
         )
-        if response:
-            return response
-        response = get_cp_already_executed_response(change_plan)
-        if response:
-            return response
+        if failure_response:
+            return failure_response
+        failure_response = get_cp_already_executed_response(change_plan)
+        if failure_response:
+            return failure_response
         del data["id"]
 
     if change_plan:
@@ -820,11 +820,11 @@ def asset_page_count(request):
     """
     change_plan = None
     if request.query_params.get("change_plan"):
-        (change_plan, response) = get_change_plan(
+        (change_plan, failure_response) = get_change_plan(
             request.query_params.get("change_plan")
         )
-        if response:
-            return response
+        if failure_response:
+            return failure_response
     if change_plan:
         return get_page_count_response_for_cp(request, change_plan)
     else:
