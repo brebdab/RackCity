@@ -1,9 +1,7 @@
 from django.contrib.auth.models import Permission, User
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import JsonResponse
 from enum import Enum
-from http import HTTPStatus
 from rackcity.models import (
     Asset,
     ITModel,
@@ -13,11 +11,6 @@ from rackcity.models import (
 )
 from rackcity.utils.exceptions import UserAssetPermissionException
 from typing import Tuple
-from rackcity.utils.errors_utils import (
-    Status,
-    GenericFailure,
-    AuthFailure,
-)
 
 
 class PermissionName(Enum):
