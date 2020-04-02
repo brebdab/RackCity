@@ -56,13 +56,17 @@ def get_existing_power_port(port_name, asset_id, change_plan=None):
 
 def get_or_create_asset_cp(asset_id, change_plan):
     try:
-        existing_asset_cp = AssetCP.objects.get(asset=asset_id, change_plan=change_plan.id)
+        existing_asset_cp = AssetCP.objects.get(
+            asset=asset_id, change_plan=change_plan.id
+        )
     except ObjectDoesNotExist:
         try:
             existing_asset_live = Asset.objects.get(id=asset_id)
         except ObjectDoesNotExist:
             return None
-        existing_asset_cp = copy_asset_to_new_asset_cp(existing_asset_live, change_plan, fields_only=True)
+        existing_asset_cp = copy_asset_to_new_asset_cp(
+            existing_asset_live, change_plan, fields_only=True
+        )
     return existing_asset_cp
 
 
@@ -79,13 +83,9 @@ def get_or_create_asset_with_hostname(hostname, change_plan=None):
             assets, assets_cp = get_assets_for_cp(change_plan.id)
             if assets.filter(hostname=hostname).exists():
                 asset_live = assets.get(hostname=hostname)
-                asset = copy_asset_to_new_asset_cp(
-                    asset_live, hostname, change_plan
-                )
+                asset = copy_asset_to_new_asset_cp(asset_live, hostname, change_plan)
             else:
-                asset = assets_cp.get(
-                    hostname=hostname, change_plan=change_plan
-                )
+                asset = assets_cp.get(hostname=hostname, change_plan=change_plan)
         else:
             asset = Asset.objects.get(hostname=hostname)
     except ObjectDoesNotExist:
@@ -293,7 +293,9 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
                     + "' does not exist. "
                 )
                 continue
-            destination_port = get_existing_network_port(destination_port_name, destination_asset.id, change_plan=change_plan)
+            destination_port = get_existing_network_port(
+                destination_port_name, destination_asset.id, change_plan=change_plan
+            )
             if destination_port is None:
                 failure_message += (
                     "Destination port '"
@@ -392,9 +394,7 @@ def save_mac_addresses(asset_data, asset_id, change_plan=None):
 def save_all_connection_data(data, asset, user, change_plan=None):
     warning_message = ""
     try:
-        save_mac_addresses(
-            asset_data=data, asset_id=asset.id, change_plan=change_plan
-        )
+        save_mac_addresses(asset_data=data, asset_id=asset.id, change_plan=change_plan)
     except MacAddressException as error:
         warning_message += "Some mac addresses couldn't be saved. " + str(error)
     try:
@@ -410,9 +410,7 @@ def save_all_connection_data(data, asset, user, change_plan=None):
         if not change_plan:
             log_network_action(user, asset)
     except NetworkConnectionException as error:
-        warning_message += "Some network connections couldn't be saved. " + str(
-            error
-        )
+        warning_message += "Some network connections couldn't be saved. " + str(error)
     return warning_message
 
 
@@ -437,7 +435,9 @@ def save_all_field_data(data, asset, change_plan=None):
                     hostname__iexact=data[field]
                 )
             if len(assets_with_hostname) > 0 and assets_with_hostname[0].id != id:
-                return "Asset with hostname '" + data[field].lower() + "' already exists."
+                return (
+                    "Asset with hostname '" + data[field].lower() + "' already exists."
+                )
             value = data[field]
         elif field == "asset_number":
             if change_plan:
@@ -446,7 +446,11 @@ def save_all_field_data(data, asset, change_plan=None):
                         data[field], id, change_plan, asset.related_asset,
                     )
                 except ValidationError:
-                    return "Asset with asset number '" + str(data[field]) + "' already exists."
+                    return (
+                        "Asset with asset number '"
+                        + str(data[field])
+                        + "' already exists."
+                    )
             else:
                 assets_with_asset_number = Asset.objects.filter(
                     asset_number=data[field]
@@ -456,7 +460,11 @@ def save_all_field_data(data, asset, change_plan=None):
                     and len(assets_with_asset_number) > 0
                     and assets_with_asset_number[0].id != asset.id
                 ):
-                    return "Asset with asset number '" + str(data[field]) + "' already exists."
+                    return (
+                        "Asset with asset number '"
+                        + str(data[field])
+                        + "' already exists."
+                    )
             value = data[field]
         else:
             value = data[field]

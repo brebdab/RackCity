@@ -193,7 +193,9 @@ def asset_add(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     # Validate that user has asset permission
-    failure_response = validate_asset_permission_to_add(request.user, serializer.validated_data)
+    failure_response = validate_asset_permission_to_add(
+        request.user, serializer.validated_data
+    )
     if failure_response:
         return failure_response
     # Validate asset location
@@ -284,8 +286,8 @@ def asset_modify(request):
             return JsonResponse(
                 {
                     "failure_message": Status.MODIFY_ERROR.value
-                                       + "Asset"
-                                       + GenericFailure.DOES_NOT_EXIST.value,
+                    + "Asset"
+                    + GenericFailure.DOES_NOT_EXIST.value,
                     "errors": "No existing asset with id=" + str(id),
                 },
                 status=HTTPStatus.BAD_REQUEST,
