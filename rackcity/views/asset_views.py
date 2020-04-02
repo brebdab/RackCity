@@ -49,6 +49,7 @@ from rackcity.utils.errors_utils import (
 from rackcity.utils.exceptions import (
     LocationException,
     PowerConnectionException,
+    UserAssetPermissionException,
 )
 from rackcity.utils.log_utils import (
     log_action,
@@ -72,7 +73,8 @@ from rackcity.utils.rackcity_utils import (
 )
 from rackcity.permissions.permissions import (
     user_has_asset_permission,
-    validate_asset_permission_to_add,
+    validate_user_asset_permission_to_modify_or_delete,
+    validate_user_asset_permission_to_add,
 )
 import re
 from rest_framework.decorators import permission_classes, api_view
@@ -88,7 +90,9 @@ def asset_many(request):
     assets are returned. If page is specified as a query parameter, page
     size must also be specified, and a page of assets will be returned.
     """
-    (change_plan, failure_response) = get_change_plan(request.query_params.get("change_plan"))
+    (change_plan, failure_response) = get_change_plan(
+        request.query_params.get("change_plan")
+    )
     if failure_response:
         return failure_response
     if change_plan:
@@ -103,7 +107,9 @@ def asset_detail(request, id):
     """
     Retrieve a single asset.
     """
-    (change_plan, failure_response) = get_change_plan(request.query_params.get("change_plan"))
+    (change_plan, failure_response) = get_change_plan(
+        request.query_params.get("change_plan")
+    )
     if failure_response:
         return failure_response
     try:
@@ -150,7 +156,6 @@ def asset_add(request):
     Add a new asset.
     """
     data = JSONParser().parse(request)
-    # Validate that "id" is NOT in data
     if "id" in data:
         return JsonResponse(
             {
@@ -160,8 +165,10 @@ def asset_add(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
-    # Serialize and validate data for either live request or change plan request
-    (change_plan, failure_response) = get_change_plan(request.query_params.get("change_plan"))
+
+    (change_plan, failure_response) = get_change_plan(
+        request.query_params.get("change_plan")
+    )
     if failure_response:
         return failure_response
     if change_plan:
@@ -181,13 +188,20 @@ def asset_add(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
-    # Validate that user has asset permission
-    failure_response = validate_asset_permission_to_add(
-        request.user, serializer.validated_data
-    )
-    if failure_response:
-        return failure_response
-    # Validate asset location
+
+    try:
+        validate_user_asset_permission_to_add(request.user, serializer.validated_data)
+    except UserAssetPermissionException as auth_error:
+        return JsonResponse(
+            {"failure_message": Status.AUTH_ERROR + str(auth_error)},
+            status=HTTPStatus.UNAUTHORIZED,
+        )
+    except Exception as error:
+        return JsonResponse(
+            {"failure_message": Status.MODIFY_ERROR + str(error)},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+
     rack_id = serializer.validated_data["rack"].id
     rack_position = serializer.validated_data["rack_position"]
     height = serializer.validated_data["model"].height
@@ -198,7 +212,7 @@ def asset_add(request):
             {"failure_message": Status.CREATE_ERROR.value + str(error)},
             status=HTTPStatus.BAD_REQUEST,
         )
-    # Save asset from serializer
+
     try:
         asset = serializer.save()
     except Exception as error:
@@ -210,7 +224,7 @@ def asset_add(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
-    # Save and validate connection data
+
     warning_message = save_all_connection_data(
         data, asset, request.user, change_plan=change_plan
     )
@@ -257,7 +271,9 @@ def asset_modify(request):
         )
     id = data["id"]
 
-    (change_plan, failure_response) = get_change_plan(request.query_params.get("change_plan"))
+    (change_plan, failure_response) = get_change_plan(
+        request.query_params.get("change_plan")
+    )
     if failure_response:
         return failure_response
 
@@ -291,15 +307,11 @@ def asset_modify(request):
                 status=HTTPStatus.BAD_REQUEST,
             )
 
-    if not user_has_asset_permission(request.user, existing_asset.rack.datacenter):
+    try:
+        validate_user_asset_permission_to_modify_or_delete(request.user, existing_asset)
+    except UserAssetPermissionException as auth_error:
         return JsonResponse(
-            {
-                "failure_message": Status.AUTH_ERROR.value + AuthFailure.ASSET.value,
-                "errors": "User "
-                + request.user.username
-                + " does not have asset permission in datacenter id="
-                + str(existing_asset.rack.datacenter.id),
-            },
+            {"failure_message": Status.AUTH_ERROR + str(auth_error)},
             status=HTTPStatus.UNAUTHORIZED,
         )
 
@@ -382,15 +394,12 @@ def asset_delete(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
-    if not user_has_asset_permission(request.user, existing_asset.rack.datacenter):
+
+    try:
+        validate_user_asset_permission_to_modify_or_delete(request.user, existing_asset)
+    except UserAssetPermissionException as auth_error:
         return JsonResponse(
-            {
-                "failure_message": Status.AUTH_ERROR.value + AuthFailure.ASSET.value,
-                "errors": "User "
-                + request.user.username
-                + " does not have asset permission in datacenter id="
-                + str(existing_asset.rack.datacenter.id),
-            },
+            {"failure_message": Status.AUTH_ERROR + str(auth_error)},
             status=HTTPStatus.UNAUTHORIZED,
         )
     try:
@@ -406,7 +415,9 @@ def asset_delete(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     if existing_asset.hostname:
-        asset_log_name = str(existing_asset.asset_number) + " (" + existing_asset.hostname + ")"
+        asset_log_name = (
+            str(existing_asset.asset_number) + " (" + existing_asset.hostname + ")"
+        )
     else:
         asset_log_name = str(existing_asset.asset_number)
     log_delete(request.user, ElementType.ASSET, asset_log_name)
@@ -803,7 +814,9 @@ def asset_page_count(request):
     Return total number of pages according to page size, which must be
     specified as query parameter.
     """
-    (change_plan, failure_response) = get_change_plan(request.query_params.get("change_plan"))
+    (change_plan, failure_response) = get_change_plan(
+        request.query_params.get("change_plan")
+    )
     if failure_response:
         return failure_response
     if change_plan:

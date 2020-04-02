@@ -21,3 +21,8 @@ class PowerConnectionException(Exception):
 class NetworkConnectionException(Exception):
     def __init__(self, *args, **kwargs):
         Exception.__init__(self, *args, **kwargs)
+
+
+class UserAssetPermissionException(Exception):
+    def __init__(self, *args, **kwargs):
+        Exception.__init__(self, *args, **kwargs)
