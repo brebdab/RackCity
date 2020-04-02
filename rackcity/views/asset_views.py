@@ -17,7 +17,6 @@ from rackcity.api.serializers import (
 )
 from rackcity.models import (
     Asset,
-    AssetCP,
     DecommissionedAsset,
     ITModel,
     Rack,
@@ -26,11 +25,12 @@ from rackcity.models import (
 from rackcity.models.asset import (
     get_assets_for_cp,
     get_next_available_asset_number,
-    validate_asset_number_uniqueness,
 )
 from rackcity.utils.asset_utils import (
+    get_or_create_asset_cp,
     save_all_connection_data,
     save_power_connections,
+    save_all_field_data,
 )
 from rackcity.utils.change_planner_utils import (
     get_change_plan,
@@ -255,7 +255,6 @@ def asset_modify(request):
     Modify a single existing asset
     """
     data = JSONParser().parse(request)
-    # Validate that "id" is in data
     if "id" not in data:
         return JsonResponse(
             {
@@ -266,7 +265,7 @@ def asset_modify(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     id = data["id"]
-    # Get and validate change plan (if not live)
+
     change_plan = None
     if request.query_params.get("change_plan"):
         (change_plan, response) = get_change_plan(
@@ -280,36 +279,18 @@ def asset_modify(request):
         del data["id"]
 
     if change_plan:
-        # Get existing asset on change plan
-        assets, assets_cp = get_assets_for_cp(change_plan.id)
-        if assets_cp.filter(id=id).exists():
-            # if asset was created on a change_plan
-            existing_asset = assets_cp.get(id=id)
-        else:
-            try:
-                existing_asset_master = assets.get(id=id)
-            except ObjectDoesNotExist:
-                return JsonResponse(
-                    {
-                        "failure_message": Status.MODIFY_ERROR.value
-                        + "Model"
-                        + GenericFailure.DOES_NOT_EXIST.value,
-                        "errors": "No existing asset with id=" + str(id),
-                    },
-                    status=HTTPStatus.BAD_REQUEST,
-                )
-            existing_asset = AssetCP(
-                change_plan=change_plan, related_asset=existing_asset_master
+        existing_asset = get_or_create_asset_cp(id, change_plan)
+        if existing_asset is None:
+            return JsonResponse(
+                {
+                    "failure_message": Status.MODIFY_ERROR.value
+                                       + "Asset"
+                                       + GenericFailure.DOES_NOT_EXIST.value,
+                    "errors": "No existing asset with id=" + str(id),
+                },
+                status=HTTPStatus.BAD_REQUEST,
             )
-            for field in existing_asset_master._meta.fields:
-                if not (field.name == "id" or field.name == "assetid_ptr"):
-                    setattr(
-                        existing_asset,
-                        field.name,
-                        getattr(existing_asset_master, field.name),
-                    )
     else:
-        # Get existing asset live
         try:
             existing_asset = Asset.objects.get(id=id)
         except ObjectDoesNotExist:
@@ -323,7 +304,6 @@ def asset_modify(request):
                 status=HTTPStatus.BAD_REQUEST,
             )
 
-    # Validate that user has asset permission
     if not user_has_asset_permission(request.user, existing_asset.rack.datacenter):
         return JsonResponse(
             {
@@ -335,7 +315,7 @@ def asset_modify(request):
             },
             status=HTTPStatus.UNAUTHORIZED,
         )
-    # Validate asset location
+
     try:
         validate_location_modification(
             data, existing_asset, request.user, change_plan=change_plan
@@ -349,95 +329,20 @@ def asset_modify(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
-    # Modify existing asset
-    for field in data.keys():
-        if field == "model":
-            value = ITModel.objects.get(id=data[field])
-        elif field == "rack":
-            value = Rack.objects.get(id=data[field])
-        elif field == "hostname" and data["hostname"]:
-            if change_plan:
-                assets, assets_cp = get_assets_for_cp(change_plan.id)
-                assets_with_hostname = assets.filter(hostname__iexact=data[field])
-                if not (
-                    len(assets_with_hostname) > 0 and assets_with_hostname[0].id != id
-                ):
-                    assets_with_hostname = assets_cp.filter(
-                        hostname__iexact=data[field]
-                    )
-            else:
-                assets_with_hostname = Asset.objects.filter(
-                    hostname__iexact=data[field]
-                )
-            if len(assets_with_hostname) > 0 and assets_with_hostname[0].id != id:
-                return JsonResponse(
-                    {
-                        "failure_message": Status.MODIFY_ERROR.value
-                        + "Asset with hostname '"
-                        + data[field].lower()
-                        + "' already exists."
-                    },
-                    status=HTTPStatus.BAD_REQUEST,
-                )
 
-            value = data[field]
-        elif field == "asset_number":
-            if change_plan:
-                try:
-                    validate_asset_number_uniqueness(
-                        data[field], id, change_plan, existing_asset.related_asset,
-                    )
-                except ValidationError:
-                    return JsonResponse(
-                        {
-                            "failure_message": Status.MODIFY_ERROR.value
-                            + "Asset with asset number '"
-                            + str(data[field])
-                            + "' already exists."
-                        },
-                        status=HTTPStatus.BAD_REQUEST,
-                    )
-
-            else:
-                assets_with_asset_number = Asset.objects.filter(
-                    asset_number=data[field]
-                )
-                if (
-                    data[field]
-                    and len(assets_with_asset_number) > 0
-                    and assets_with_asset_number[0].id != existing_asset.id
-                ):
-                    return JsonResponse(
-                        {
-                            "failure_message": Status.MODIFY_ERROR.value
-                            + "Asset with asset number '"
-                            + str(data[field])
-                            + "' already exists."
-                        },
-                        status=HTTPStatus.BAD_REQUEST,
-                    )
-            value = data[field]
-        else:
-            value = data[field]
-        setattr(existing_asset, field, value)
-    # Save modified asset
-    try:
-        existing_asset.save()
-    except Exception as error:
+    failure_message = save_all_field_data(data, existing_asset, change_plan=change_plan)
+    if failure_message:
         return JsonResponse(
-            {
-                "failure_message": Status.MODIFY_ERROR.value
-                + parse_save_validation_error(error, "Asset"),
-                "errors": str(error),
-            },
+            {"failure_message": Status.MODIFY_ERROR.value + failure_message},
             status=HTTPStatus.BAD_REQUEST,
         )
-    # Save and validate connection data
+
     warning_message = save_all_connection_data(
         data, existing_asset, request.user, change_plan=change_plan
     )
     if warning_message:
         return JsonResponse({"warning_message": warning_message}, status=HTTPStatus.OK)
+
     if change_plan:
         return JsonResponse(
             {

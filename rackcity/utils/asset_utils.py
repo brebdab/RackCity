@@ -1,15 +1,18 @@
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from rackcity.models import (
     Asset,
     AssetCP,
+    ITModel,
     NetworkPort,
     NetworkPortCP,
     PowerPort,
     PowerPortCP,
     PDUPort,
     PDUPortCP,
+    Rack,
 )
-from rackcity.models.asset import get_assets_for_cp
+from rackcity.models.asset import get_assets_for_cp, validate_asset_number_uniqueness
+from rackcity.utils.errors_utils import parse_save_validation_error
 from rackcity.utils.exceptions import (
     MacAddressException,
     NetworkConnectionException,
@@ -51,46 +54,76 @@ def get_existing_power_port(port_name, asset_id, change_plan=None):
         return power_port
 
 
-def validate_network_connection_data(network_connection_data):
+def get_or_create_asset_cp(asset_id, change_plan):
+    try:
+        existing_asset_cp = AssetCP.objects.get(asset=asset_id, change_plan=change_plan.id)
+    except ObjectDoesNotExist:
+        try:
+            existing_asset_live = Asset.objects.get(id=asset_id)
+        except ObjectDoesNotExist:
+            return None
+        existing_asset_cp = copy_asset_to_new_asset_cp(existing_asset_live, change_plan, fields_only=True)
+    return existing_asset_cp
+
+
+def get_or_create_asset_with_hostname(hostname, change_plan=None):
     """
-    Validates that network_connection_data contains valid values for source_port,
-    destination_hostname, and destination_port. Returns error message if invalid, and
-    None if valid.
+    If live, returns Asset corresponding to hostname. If change plan, checks if an Asset
+    with that hostname exists; if so, it copies that Asset to the AssetCP table and returns
+    the newly created AssetCP; if it does not already exist as an Asset, then it returns
+    the AssetCP corresponding to hostname. If the asset object being fetched does not exist,
+    then None is returned.
     """
-    if network_connection_data["source_port"] is None:
-        return "Could not create connection because source port was not provided."
-    port_name = network_connection_data["source_port"]
-    if (network_connection_data["destination_hostname"] is None) and (
-        network_connection_data["destination_port"] is not None
-    ):
-        return (
-            "Could not create connection on port '"
-            + port_name
-            + "' because no destination hostname was provided."
-        )
-    elif (network_connection_data["destination_hostname"] is not None) and (
-        network_connection_data["destination_port"] is None
-    ):
-        return (
-            "Could not create connection on port '"
-            + port_name
-            + "' because no destination port was provided."
-        )
-    else:
+    try:
+        if change_plan:
+            assets, assets_cp = get_assets_for_cp(change_plan.id)
+            if assets.filter(hostname=hostname).exists():
+                asset_live = assets.get(hostname=hostname)
+                asset = copy_asset_to_new_asset_cp(
+                    asset_live, hostname, change_plan
+                )
+            else:
+                asset = assets_cp.get(
+                    hostname=hostname, change_plan=change_plan
+                )
+        else:
+            asset = Asset.objects.get(hostname=hostname)
+    except ObjectDoesNotExist:
         return None
+    else:
+        return asset
 
 
-def network_connection_data_has_destination(network_connection_data):
-    """
-    Returns True if network_connection_data contains non-null destination_hostname
-    and destination_port, returns False otherwise.
-    """
-    return (network_connection_data["destination_hostname"] is not None) and (
-        network_connection_data["destination_port"] is not None
-    )
+def get_or_create_pdu_port(asset, power_connection_data, change_plan=None):
+    try:
+        pdu_port_live = PDUPort.objects.get(
+            rack=asset.rack,
+            left_right=power_connection_data["left_right"],
+            port_number=power_connection_data["port_number"],
+        )
+    except ObjectDoesNotExist:
+        return None
+    if change_plan:
+        try:
+            pdu_port = PDUPortCP.objects.get(
+                rack=asset.rack,
+                left_right=power_connection_data["left_right"],
+                port_number=power_connection_data["port_number"],
+                change_plan=change_plan,
+            )
+            return pdu_port
+        except ObjectDoesNotExist:
+            pdu_port = PDUPortCP(change_plan=change_plan)
+            for field in pdu_port_live._meta.fields:
+                if field.name != "id":
+                    setattr(pdu_port, field.name, getattr(pdu_port_live, field.name))
+            pdu_port.save()
+            return pdu_port
+    else:
+        return pdu_port_live
 
 
-def copy_asset_to_new_asset_cp(asset_live, change_plan):
+def copy_asset_to_new_asset_cp(asset_live, change_plan, fields_only=False):
     """
     Copies an existing Asset (asset_live) to the AssetCP table, assigning
     the given change_plan. Copies all Asset fields, network port mac addresses,
@@ -102,6 +135,9 @@ def copy_asset_to_new_asset_cp(asset_live, change_plan):
         if field.name != "id" and field.name != "assetid_ptr":
             setattr(asset_cp, field.name, getattr(asset_live, field.name))
     asset_cp.save()
+
+    if fields_only:
+        return asset_cp
 
     # Copy mac address values
     # Note: actual connections get made later in create_network_connections()
@@ -144,6 +180,45 @@ def copy_asset_to_new_asset_cp(asset_live, change_plan):
     return asset_cp
 
 
+def validate_network_connection_data(network_connection_data):
+    """
+    Validates that network_connection_data contains valid values for source_port,
+    destination_hostname, and destination_port. Returns error message if invalid, and
+    None if valid.
+    """
+    if network_connection_data["source_port"] is None:
+        return "Could not create connection because source port was not provided."
+    port_name = network_connection_data["source_port"]
+    if (network_connection_data["destination_hostname"] is None) and (
+        network_connection_data["destination_port"] is not None
+    ):
+        return (
+            "Could not create connection on port '"
+            + port_name
+            + "' because no destination hostname was provided."
+        )
+    elif (network_connection_data["destination_hostname"] is not None) and (
+        network_connection_data["destination_port"] is None
+    ):
+        return (
+            "Could not create connection on port '"
+            + port_name
+            + "' because no destination port was provided."
+        )
+    else:
+        return None
+
+
+def network_connection_data_has_destination(network_connection_data):
+    """
+    Returns True if network_connection_data contains non-null destination_hostname
+    and destination_port, returns False otherwise.
+    """
+    return (network_connection_data["destination_hostname"] is not None) and (
+        network_connection_data["destination_port"] is not None
+    )
+
+
 def handle_network_connection_delete_on_cp(port_name, asset_id, change_plan):
     """
     Adds any Asset that was connected to the AssetCP with asset_id via the network
@@ -178,34 +253,6 @@ def handle_network_connection_delete_on_cp(port_name, asset_id, change_plan):
                     destination_network_port_live.connected_port
                 )
                 destination_network_port_cp.save()
-
-
-def get_or_create_asset_with_hostname(hostname, change_plan=None):
-    """
-    If live, returns Asset corresponding to hostname. If change plan, checks if an Asset
-    with that hostname exists; if so, it copies that Asset to the AssetCP table and returns
-    the newly created AssetCP; if it does not already exist as an Asset, then it returns
-    the AssetCP corresponding to hostname. If the asset object being fetched does not exist,
-    then None is returned.
-    """
-    try:
-        if change_plan:
-            assets, assets_cp = get_assets_for_cp(change_plan.id)
-            if assets.filter(hostname=hostname).exists():
-                asset_live = assets.get(hostname=hostname)
-                asset = copy_asset_to_new_asset_cp(
-                    asset_live, hostname, change_plan
-                )
-            else:
-                asset = assets_cp.get(
-                    hostname=hostname, change_plan=change_plan
-                )
-        else:
-            asset = Asset.objects.get(hostname=hostname)
-    except ObjectDoesNotExist:
-        return None
-    else:
-        return asset
 
 
 def save_network_connections(asset_data, asset_id, change_plan=None):
@@ -269,35 +316,6 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
                 )
     if failure_message:
         raise NetworkConnectionException(failure_message)
-
-
-def get_or_create_pdu_port(asset, power_connection_data, change_plan=None):
-    try:
-        pdu_port_live = PDUPort.objects.get(
-            rack=asset.rack,
-            left_right=power_connection_data["left_right"],
-            port_number=power_connection_data["port_number"],
-        )
-    except ObjectDoesNotExist:
-        return None
-    if change_plan:
-        try:
-            pdu_port = PDUPortCP.objects.get(
-                rack=asset.rack,
-                left_right=power_connection_data["left_right"],
-                port_number=power_connection_data["port_number"],
-                change_plan=change_plan,
-            )
-            return pdu_port
-        except ObjectDoesNotExist:
-            pdu_port = PDUPortCP(change_plan=change_plan)
-            for field in pdu_port_live._meta.fields:
-                if field.name != "id":
-                    setattr(pdu_port, field.name, getattr(pdu_port_live, field.name))
-            pdu_port.save()
-            return pdu_port
-    else:
-        return pdu_port_live
 
 
 def save_power_connections(asset_data, asset_id, change_plan=None):
@@ -396,3 +414,54 @@ def save_all_connection_data(data, asset, user, change_plan=None):
             error
         )
     return warning_message
+
+
+def save_all_field_data(data, asset, change_plan=None):
+    for field in data.keys():
+        if field == "model":
+            value = ITModel.objects.get(id=data[field])
+        elif field == "rack":
+            value = Rack.objects.get(id=data[field])
+        elif field == "hostname" and data["hostname"]:
+            if change_plan:
+                assets, assets_cp = get_assets_for_cp(change_plan.id)
+                assets_with_hostname = assets.filter(hostname__iexact=data[field])
+                if not (
+                    len(assets_with_hostname) > 0 and assets_with_hostname[0].id != id
+                ):
+                    assets_with_hostname = assets_cp.filter(
+                        hostname__iexact=data[field]
+                    )
+            else:
+                assets_with_hostname = Asset.objects.filter(
+                    hostname__iexact=data[field]
+                )
+            if len(assets_with_hostname) > 0 and assets_with_hostname[0].id != id:
+                return "Asset with hostname '" + data[field].lower() + "' already exists."
+            value = data[field]
+        elif field == "asset_number":
+            if change_plan:
+                try:
+                    validate_asset_number_uniqueness(
+                        data[field], id, change_plan, asset.related_asset,
+                    )
+                except ValidationError:
+                    return "Asset with asset number '" + str(data[field]) + "' already exists."
+            else:
+                assets_with_asset_number = Asset.objects.filter(
+                    asset_number=data[field]
+                )
+                if (
+                    data[field]
+                    and len(assets_with_asset_number) > 0
+                    and assets_with_asset_number[0].id != asset.id
+                ):
+                    return "Asset with asset number '" + str(data[field]) + "' already exists."
+            value = data[field]
+        else:
+            value = data[field]
+        setattr(asset, field, value)
+        try:
+            asset.save()
+        except Exception as error:
+            return parse_save_validation_error(error, "Asset")
