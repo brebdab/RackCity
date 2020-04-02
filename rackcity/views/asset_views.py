@@ -408,12 +408,6 @@ def asset_delete(request):
             },
             status=HTTPStatus.UNAUTHORIZED,
         )
-    asset_number = existing_asset.asset_number
-    if existing_asset.hostname:
-        asset_hostname = existing_asset.hostname
-        asset_log_name = str(asset_number) + " (" + asset_hostname + ")"
-    else:
-        asset_log_name = str(asset_number)
     try:
         existing_asset.delete()
     except Exception as error:
@@ -426,6 +420,10 @@ def asset_delete(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
+    if existing_asset.hostname:
+        asset_log_name = str(existing_asset.asset_number) + " (" + existing_asset.hostname + ")"
+    else:
+        asset_log_name = str(existing_asset.asset_number)
     log_delete(request.user, ElementType.ASSET, asset_log_name)
     return JsonResponse(
         {
