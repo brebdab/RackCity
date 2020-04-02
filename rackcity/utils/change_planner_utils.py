@@ -102,6 +102,8 @@ def detect_conflicts_cp(sender, **kwargs):
 
 
 def get_change_plan(change_plan_id):
+    if change_plan_id is None:
+        return None, None
     try:
         change_plan = ChangePlan.objects.get(id=change_plan_id)
     except ObjectDoesNotExist:

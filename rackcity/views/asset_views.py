@@ -88,14 +88,11 @@ def asset_many(request):
     assets are returned. If page is specified as a query parameter, page
     size must also be specified, and a page of assets will be returned.
     """
-    if request.query_params.get("change_plan"):
-        (change_plan, failure_response) = get_change_plan(
-            request.query_params.get("change_plan")
-        )
-        if failure_response:
-            return failure_response
-        else:
-            return get_many_assets_response_for_cp(request, change_plan)
+    (change_plan, failure_response) = get_change_plan(request.query_params.get("change_plan"))
+    if failure_response:
+        return failure_response
+    if change_plan:
+        return get_many_assets_response_for_cp(request, change_plan)
     else:
         return get_many_response(Asset, RecursiveAssetSerializer, "assets", request)
 
@@ -106,14 +103,9 @@ def asset_detail(request, id):
     """
     Retrieve a single asset.
     """
-    change_plan = None
-    serializer = None
-    if request.query_params.get("change_plan"):
-        (change_plan, failure_response) = get_change_plan(
-            request.query_params.get("change_plan")
-        )
-        if failure_response:
-            return failure_response
+    (change_plan, failure_response) = get_change_plan(request.query_params.get("change_plan"))
+    if failure_response:
+        return failure_response
     try:
         if change_plan:
             assets, assets_cp = get_assets_for_cp(
@@ -169,13 +161,10 @@ def asset_add(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     # Serialize and validate data for either live request or change plan request
-    change_plan = None
-    if request.query_params.get("change_plan"):
-        (change_plan, failure_response) = get_change_plan(
-            request.query_params.get("change_plan")
-        )
-        if failure_response:
-            return failure_response
+    (change_plan, failure_response) = get_change_plan(request.query_params.get("change_plan"))
+    if failure_response:
+        return failure_response
+    if change_plan:
         failure_response = get_cp_already_executed_response(change_plan)
         if failure_response:
             return failure_response
@@ -268,19 +257,15 @@ def asset_modify(request):
         )
     id = data["id"]
 
-    change_plan = None
-    if request.query_params.get("change_plan"):
-        (change_plan, failure_response) = get_change_plan(
-            request.query_params.get("change_plan")
-        )
-        if failure_response:
-            return failure_response
+    (change_plan, failure_response) = get_change_plan(request.query_params.get("change_plan"))
+    if failure_response:
+        return failure_response
+
+    if change_plan:
         failure_response = get_cp_already_executed_response(change_plan)
         if failure_response:
             return failure_response
         del data["id"]
-
-    if change_plan:
         existing_asset = get_or_create_asset_cp(id, change_plan)
         if existing_asset is None:
             return JsonResponse(
@@ -818,13 +803,9 @@ def asset_page_count(request):
     Return total number of pages according to page size, which must be
     specified as query parameter.
     """
-    change_plan = None
-    if request.query_params.get("change_plan"):
-        (change_plan, failure_response) = get_change_plan(
-            request.query_params.get("change_plan")
-        )
-        if failure_response:
-            return failure_response
+    (change_plan, failure_response) = get_change_plan(request.query_params.get("change_plan"))
+    if failure_response:
+        return failure_response
     if change_plan:
         return get_page_count_response_for_cp(request, change_plan)
     else:

@@ -40,13 +40,9 @@ def decommission_asset(request):
     Decommission a live asset
     """
     data = JSONParser().parse(request)
-    change_plan = None
-
-    if request.query_params.get("change_plan"):
-        (change_plan, response) = get_change_plan(
-            request.query_params.get("change_plan"))
-        if response:
-            return response
+    (change_plan, failure_response) = get_change_plan(request.query_params.get("change_plan"))
+    if failure_response:
+        return failure_response
     if 'id' not in data:
         return JsonResponse(
             {
@@ -211,18 +207,15 @@ def decommissioned_asset_many(request):
     assets are returned. If page is specified as a query parameter, page
     size must also be specified, and a page of assets will be returned.
     """
-    if request.query_params.get('change_plan'):
-        (change_plan, response) = get_change_plan(
-            request.query_params.get('change_plan')
+    (change_plan, failure_response) = get_change_plan(request.query_params.get('change_plan'))
+    if failure_response:
+        return failure_response
+    if change_plan:
+        return get_many_assets_response_for_cp(
+            request,
+            change_plan,
+            decommissioned=True,
         )
-        if response:
-            return response
-        else:
-            return get_many_assets_response_for_cp(
-                request,
-                change_plan,
-                decommissioned=True,
-            )
     else:
         return get_many_response(
             DecommissionedAsset,
@@ -239,13 +232,9 @@ def decommissioned_asset_page_count(request):
     Return total number of pages according to page size, which must be
     specified as query parameter.
     """
-    change_plan = None
-    if request.query_params.get("change_plan"):
-        (change_plan, response) = get_change_plan(
-            request.query_params.get("change_plan")
-        )
-        if response:
-            return response
+    (change_plan, failure_response) = get_change_plan(request.query_params.get("change_plan"))
+    if failure_response:
+        return failure_response
     if change_plan:
         return get_page_count_response_for_decommissioned_cp(
             request,

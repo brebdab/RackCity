@@ -325,12 +325,10 @@ def power_availability(request):
             },
             status=HTTPStatus.BAD_REQUEST
         )
-    change_plan = None
-    
-    if request.query_params.get("change_plan"):
-        (change_plan, response) = get_change_plan(request.query_params.get("change_plan"))
-        if response:
-            return response
+    (change_plan, failure_response) = get_change_plan(request.query_params.get("change_plan"))
+    if failure_response:
+        return failure_response
+    if change_plan:
         assets, assets_cp = get_assets_for_cp(change_plan.id)
         assets_cp = assets_cp.filter(rack=rack.id)
         assets = assets.filter(rack=rack.id)

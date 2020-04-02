@@ -48,12 +48,12 @@ def change_plan_resolve_conflict(request, id):
     """
     Resolve a merge conflict
     """
-    (change_plan, response) = get_change_plan(id)
-    if response:
-        return response
-    response = get_cp_already_executed_response(change_plan)
-    if response:
-        return response
+    (change_plan, failure_response) = get_change_plan(id)
+    if failure_response:
+        return failure_response
+    failure_response = get_cp_already_executed_response(change_plan)
+    if failure_response:
+        return failure_response
     data = JSONParser().parse(request)
     if 'asset_cp' not in data or "override_live" not in data:
         return JsonResponse(
@@ -111,12 +111,12 @@ def change_plan_remove_asset(request, id):
     """
     Remove a single assetCP from a change plan
     """
-    (change_plan, response) = get_change_plan(id)
-    if response:
-        return response
-    response = get_cp_already_executed_response(change_plan)
-    if response:
-        return response
+    (change_plan, failure_response) = get_change_plan(id)
+    if failure_response:
+        return failure_response
+    failure_response = get_cp_already_executed_response(change_plan)
+    if failure_response:
+        return failure_response
     data = JSONParser().parse(request)
     if 'asset_cp' not in data:
         return JsonResponse(
@@ -411,12 +411,12 @@ def change_plan_execute(request, id):
     """
     Execute all changes associated with a change plan.
     """
-    (change_plan, response) = get_change_plan(id)
-    if response:
-        return response
-    response = get_cp_already_executed_response(change_plan)
-    if response:
-        return response
+    (change_plan, failure_response) = get_change_plan(id)
+    if failure_response:
+        return failure_response
+    failure_response = get_cp_already_executed_response(change_plan)
+    if failure_response:
+        return failure_response
     if request.user != change_plan.owner:
         return JsonResponse(
             {
