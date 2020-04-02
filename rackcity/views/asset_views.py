@@ -1,6 +1,6 @@
 from base64 import b64decode
 import csv
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from http import HTTPStatus
 from io import StringIO, BytesIO
