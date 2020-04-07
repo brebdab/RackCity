@@ -300,7 +300,9 @@ def model_detail(request, id):
     try:
         model = ITModel.objects.get(id=id)
         model_serializer = ITModelSerializer(model)
-        (change_plan, failure_response) = get_change_plan(request.query_params.get("change_plan"))
+        (change_plan, failure_response) = get_change_plan(
+            request.query_params.get("change_plan")
+        )
         if failure_response:
             return failure_response
         if change_plan:

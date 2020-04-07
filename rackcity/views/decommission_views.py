@@ -33,41 +33,50 @@ from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAuthenticated
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def decommission_asset(request):
     """
     Decommission a live asset
     """
     data = JSONParser().parse(request)
-    (change_plan, failure_response) = get_change_plan(request.query_params.get("change_plan"))
+    (change_plan, failure_response) = get_change_plan(
+        request.query_params.get("change_plan")
+    )
     if failure_response:
         return failure_response
-    if 'id' not in data:
+    if "id" not in data:
         return JsonResponse(
             {
-                "failure_message":
-                    Status.DECOMMISSION_ERROR.value + GenericFailure.INTERNAL.value,
-                "errors": "Must include 'id' when decommissioning an asset"
+                "failure_message": Status.DECOMMISSION_ERROR.value
+                + GenericFailure.INTERNAL.value,
+                "errors": "Must include 'id' when decommissioning an asset",
             },
-            status=HTTPStatus.BAD_REQUEST
+            status=HTTPStatus.BAD_REQUEST,
         )
-    id = data['id']
+    id = data["id"]
     decommissioned_asset_cp = None
     if change_plan:
         response = get_cp_already_executed_response(change_plan)
         if response:
             return response
-        if not AssetCP.objects.filter(id=id).exists() and Asset.objects.filter(id=id).exists():
+        if (
+            not AssetCP.objects.filter(id=id).exists()
+            and Asset.objects.filter(id=id).exists()
+        ):
             existing_asset = Asset.objects.get(id=id)
             decommissioned_asset_cp = AssetCP(
                 change_plan=change_plan,
                 related_asset=existing_asset,
-                is_decommissioned=True)
+                is_decommissioned=True,
+            )
             for field in existing_asset._meta.fields:
                 if not (field.name == "id" or field.name == "assetid_ptr"):
-                    setattr(decommissioned_asset_cp, field.name, getattr(
-                        existing_asset, field.name))
+                    setattr(
+                        decommissioned_asset_cp,
+                        field.name,
+                        getattr(existing_asset, field.name),
+                    )
         else:
             try:
                 decommissioned_asset_cp = AssetCP.objects.get(id=id)
@@ -76,26 +85,25 @@ def decommission_asset(request):
             except Asset.DoesNotExist:
                 return JsonResponse(
                     {
-                        "failure_message":
-                            Status.ERROR.value +
-                            "Asset" + GenericFailure.DOES_NOT_EXIST.value,
-                        "errors": "No existing asset in change plan with id="+str(id)
+                        "failure_message": Status.ERROR.value
+                        + "Asset"
+                        + GenericFailure.DOES_NOT_EXIST.value,
+                        "errors": "No existing asset in change plan with id=" + str(id),
                     },
-                    status=HTTPStatus.BAD_REQUEST
+                    status=HTTPStatus.BAD_REQUEST,
                 )
         if not user_has_asset_permission(
-            request.user,
-            decommissioned_asset_cp.rack.datacenter
+            request.user, decommissioned_asset_cp.rack.datacenter
         ):
             return JsonResponse(
                 {
-                    "failure_message":
-                        Status.AUTH_ERROR.value + AuthFailure.ASSET.value,
-                    "errors":
-                        "User " + request.user.username +
-                        " does not have asset permission in datacenter"
+                    "failure_message": Status.AUTH_ERROR.value
+                    + AuthFailure.ASSET.value,
+                    "errors": "User "
+                    + request.user.username
+                    + " does not have asset permission in datacenter",
                 },
-                status=HTTPStatus.UNAUTHORIZED
+                status=HTTPStatus.UNAUTHORIZED,
             )
 
     else:
@@ -104,27 +112,24 @@ def decommission_asset(request):
         except Asset.DoesNotExist:
             return JsonResponse(
                 {
-                    "failure_message":
-                        Status.ERROR.value +
-                        "Asset" + GenericFailure.DOES_NOT_EXIST.value,
-                    "errors": "No existing asset with id="+str(id)
+                    "failure_message": Status.ERROR.value
+                    + "Asset"
+                    + GenericFailure.DOES_NOT_EXIST.value,
+                    "errors": "No existing asset with id=" + str(id),
                 },
-                status=HTTPStatus.BAD_REQUEST
+                status=HTTPStatus.BAD_REQUEST,
             )
-        if not user_has_asset_permission(
-            request.user,
-            asset.rack.datacenter
-        ):
+        if not user_has_asset_permission(request.user, asset.rack.datacenter):
             return JsonResponse(
                 {
-                    "failure_message":
-                        Status.AUTH_ERROR.value + AuthFailure.ASSET.value,
-                    "errors":
-                        "User " + request.user.username +
-                        " does not have asset permission in datacenter id="
-                        + str(asset.rack.datacenter.id)
+                    "failure_message": Status.AUTH_ERROR.value
+                    + AuthFailure.ASSET.value,
+                    "errors": "User "
+                    + request.user.username
+                    + " does not have asset permission in datacenter id="
+                    + str(asset.rack.datacenter.id),
                 },
-                status=HTTPStatus.UNAUTHORIZED
+                status=HTTPStatus.UNAUTHORIZED,
             )
 
     if change_plan:
@@ -133,73 +138,61 @@ def decommission_asset(request):
         except Exception as error:
             return JsonResponse(
                 {
-                    "failure_message":
-                        Status.DECOMMISSION_ERROR.value +
-                        parse_save_validation_error(
-                            error,
-                            "Decommissioned Asset "
-                        ),
-                    "errors": str(error)
+                    "failure_message": Status.DECOMMISSION_ERROR.value
+                    + parse_save_validation_error(error, "Decommissioned Asset "),
+                    "errors": str(error),
                 },
-                status=HTTPStatus.BAD_REQUEST
+                status=HTTPStatus.BAD_REQUEST,
             )
 
         return JsonResponse(
             {
-                "success_message": "Asset successfully decommissioned on change plan: " + change_plan.name
+                "success_message": "Asset successfully decommissioned on change plan: "
+                + change_plan.name
             },
-            status=HTTPStatus.OK
+            status=HTTPStatus.OK,
         )
 
     asset_data = RecursiveAssetSerializer(asset).data
-    asset_data['live_id'] = asset_data['id']
-    del asset_data['id']
-    asset_data['decommissioning_user'] = str(request.user)
+    asset_data["live_id"] = asset_data["id"]
+    del asset_data["id"]
+    asset_data["decommissioning_user"] = str(request.user)
     decommissioned_asset = AddDecommissionedAssetSerializer(data=asset_data)
     if not decommissioned_asset.is_valid(raise_exception=False):
         return JsonResponse(
             {
-                "failure_message":
-                    Status.INVALID_INPUT.value +
-                    parse_serializer_errors(decommissioned_asset.errors),
-                "errors": str(decommissioned_asset.errors)
+                "failure_message": Status.INVALID_INPUT.value
+                + parse_serializer_errors(decommissioned_asset.errors),
+                "errors": str(decommissioned_asset.errors),
             },
-            status=HTTPStatus.BAD_REQUEST
+            status=HTTPStatus.BAD_REQUEST,
         )
     try:
         decommissioned_asset_object = decommissioned_asset.save()
     except Exception as error:
         return JsonResponse(
             {
-                "failure_message":
-                    Status.DECOMMISSION_ERROR.value +
-                    parse_save_validation_error(
-                        error,
-                        "Decommissioned Asset "
-                    ),
-                "errors": str(error)
+                "failure_message": Status.DECOMMISSION_ERROR.value
+                + parse_save_validation_error(error, "Decommissioned Asset "),
+                "errors": str(error),
             },
-            status=HTTPStatus.BAD_REQUEST
+            status=HTTPStatus.BAD_REQUEST,
         )
     else:
         for assetcp in AssetCP.objects.filter(related_asset=id):
             assetcp.related_decommissioned_asset = decommissioned_asset_object
             assetcp.save()
         log_action(
-            request.user,
-            asset,
-            Action.DECOMMISSION,
+            request.user, asset, Action.DECOMMISSION,
         )
         asset.delete()
         return JsonResponse(
-            {
-                "success_message": "Asset successfully decommissioned. "
-            },
-            status=HTTPStatus.OK
+            {"success_message": "Asset successfully decommissioned. "},
+            status=HTTPStatus.OK,
         )
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def decommissioned_asset_many(request):
     """
@@ -207,42 +200,36 @@ def decommissioned_asset_many(request):
     assets are returned. If page is specified as a query parameter, page
     size must also be specified, and a page of assets will be returned.
     """
-    (change_plan, failure_response) = get_change_plan(request.query_params.get('change_plan'))
+    (change_plan, failure_response) = get_change_plan(
+        request.query_params.get("change_plan")
+    )
     if failure_response:
         return failure_response
     if change_plan:
         return get_many_assets_response_for_cp(
-            request,
-            change_plan,
-            decommissioned=True,
+            request, change_plan, decommissioned=True,
         )
     else:
         return get_many_response(
-            DecommissionedAsset,
-            GetDecommissionedAssetSerializer,
-            "assets",
-            request,
+            DecommissionedAsset, GetDecommissionedAssetSerializer, "assets", request,
         )
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def decommissioned_asset_page_count(request):
     """
     Return total number of pages according to page size, which must be
     specified as query parameter.
     """
-    (change_plan, failure_response) = get_change_plan(request.query_params.get("change_plan"))
+    (change_plan, failure_response) = get_change_plan(
+        request.query_params.get("change_plan")
+    )
     if failure_response:
         return failure_response
     if change_plan:
-        return get_page_count_response_for_decommissioned_cp(
-            request,
-            change_plan,
-        )
+        return get_page_count_response_for_decommissioned_cp(request, change_plan,)
     else:
         return get_page_count_response(
-            DecommissionedAsset,
-            request.query_params,
-            data_for_filters=request.data,
+            DecommissionedAsset, request.query_params, data_for_filters=request.data,
         )
