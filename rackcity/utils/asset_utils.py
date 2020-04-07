@@ -64,9 +64,7 @@ def get_or_create_asset_cp(asset_id, change_plan):
             existing_asset_live = Asset.objects.get(id=asset_id)
         except ObjectDoesNotExist:
             return None
-        existing_asset_cp = copy_asset_to_new_asset_cp(
-            existing_asset_live, change_plan, fields_only=True
-        )
+        existing_asset_cp = copy_asset_to_new_asset_cp(existing_asset_live, change_plan)
     return existing_asset_cp
 
 
@@ -123,7 +121,7 @@ def get_or_create_pdu_port(asset, power_connection_data, change_plan=None):
         return pdu_port_live
 
 
-def copy_asset_to_new_asset_cp(asset_live, change_plan, fields_only=False):
+def copy_asset_to_new_asset_cp(asset_live, change_plan):
     """
     Copies an existing Asset (asset_live) to the AssetCP table, assigning
     the given change_plan. Copies all Asset fields, network port mac addresses,
@@ -135,9 +133,6 @@ def copy_asset_to_new_asset_cp(asset_live, change_plan, fields_only=False):
         if field.name != "id" and field.name != "assetid_ptr":
             setattr(asset_cp, field.name, getattr(asset_live, field.name))
     asset_cp.save()
-
-    if fields_only:
-        return asset_cp
 
     # Copy mac address values
     # Note: actual connections get made later in create_network_connections()
