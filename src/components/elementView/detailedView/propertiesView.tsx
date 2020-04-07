@@ -11,7 +11,7 @@ import {
   isObject,
   ModelFieldsTable,
   ROUTES,
-  ChangePlan
+  ChangePlan,
 } from "../../../utils/utils";
 import "./propertiesView.scss";
 import { connect } from "react-redux";
@@ -52,7 +52,7 @@ class PropertiesView extends React.PureComponent<
   };
   public state: AlertState = {
     isDeleteOpen: false,
-    fields: this.setFieldNamesFromData()
+    fields: this.setFieldNamesFromData(),
   };
 
   renderData(fields: Array<any>, data: any) {
@@ -63,7 +63,7 @@ class PropertiesView extends React.PureComponent<
           <p
             className="color"
             style={{
-              backgroundColor: data[item]
+              backgroundColor: data[item],
             }}
           >
             {data[item]}
@@ -112,7 +112,7 @@ class PropertiesView extends React.PureComponent<
               {" "}
               <p>{data[item].datacenter.name}</p>
             </td>
-          </tr>
+          </tr>,
         ];
       } else if (item === "comment") {
         dat = <p className="comment">{data[item]}</p>;
@@ -162,7 +162,7 @@ class PropertiesView extends React.PureComponent<
       Object.keys(this.props.data).length !== 0
     ) {
       this.setState({
-        fields: this.setFieldNamesFromData()
+        fields: this.setFieldNamesFromData(),
       });
     }
     const length = Math.ceil(this.state.fields.length / 4);
@@ -210,7 +210,7 @@ class PropertiesView extends React.PureComponent<
 }
 const mapStateToProps = (state: any) => {
   return {
-    changePlan: state.changePlan
+    changePlan: state.changePlan,
   };
 };
 export default connect(mapStateToProps)(withRouter(PropertiesView));

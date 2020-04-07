@@ -26,26 +26,26 @@ class ChangePlanForm extends React.Component<
 
   public state = {
     values: this.initialState,
-    errors: []
+    errors: [],
   };
   handleChange = (field: { [key: string]: any }) => {
     this.setState({
       values: updateObject(this.state.values, {
-        ...field
-      })
+        ...field,
+      }),
     });
   };
   private handleSubmit = (e: any) => {
     e.preventDefault();
     if (this.state.values) {
       this.setState({
-        errors: []
+        errors: [],
       });
       if (this.props.initialValues) {
         this.setState({
           values: updateObject(this.state.values, {
-            id: this.props.initialValues.id
-          })
+            id: this.props.initialValues.id,
+          }),
         });
       }
 
@@ -54,11 +54,11 @@ class ChangePlanForm extends React.Component<
         getHeaders(this.props.token)
       );
       if (resp) {
-        resp.catch(err => {
+        resp.catch((err) => {
           let errors: Array<string> = this.state.errors;
           errors.push(err.response.data.failure_message as string);
           this.setState({
-            errors: errors
+            errors: errors,
           });
         });
       }
@@ -92,7 +92,7 @@ class ChangePlanForm extends React.Component<
 
 const mapStateToProps = (state: any) => {
   return {
-    token: state.token
+    token: state.token,
   };
 };
 export default connect(mapStateToProps)(ChangePlanForm);

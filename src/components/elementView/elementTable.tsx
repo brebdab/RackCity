@@ -11,7 +11,7 @@ import {
   Toaster,
   Spinner,
   Callout,
-  Checkbox
+  Checkbox,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { IconNames } from "@blueprintjs/icons";
@@ -44,7 +44,6 @@ import {
   isChangePlanObject,
   ChangePlan,
   getChangePlanRowStyle,
-  PermissionState
 } from "../../utils/utils";
 import * as actions from "../../store/actions/state";
 import DragDropList, { DragDropListTypes } from "./dragDropList";
@@ -70,13 +69,14 @@ import {
   renderDatetimeFilterItem,
   TextFilter,
   modifyChangePlan,
-  deleteChangePlan
+  deleteChangePlan,
 } from "./elementUtils";
 import "./elementView.scss";
 import FilterSelect from "./filterSelect";
 import { PowerView } from "./powerView/powerView";
 import "./powerView/powerView.scss";
 import { isNullOrUndefined } from "util";
+import { PermissionState } from "../../utils/permissionUtils";
 
 interface ElementTableState {
   items: Array<ElementObjectType>;
@@ -156,21 +156,21 @@ class ElementTable extends React.Component<
     getDataInProgress: false,
     selected: [],
     selectedAll: false,
-    editUserFormOpen: false
+    editUserFormOpen: false,
   };
   validRequestMadeWithToken = false;
 
   //PAGING LOGIC
   resetPage = () => {
     this.setState({
-      curr_page: 1
+      curr_page: 1,
     });
   };
   previousPage = () => {
     if (this.state.curr_page > 1 && this.props.getData) {
       const next_page = this.state.curr_page - 1;
       this.setState({
-        curr_page: next_page
+        curr_page: next_page,
       });
       this.updatePageData(this.state.page_type, next_page);
     }
@@ -179,7 +179,7 @@ class ElementTable extends React.Component<
     if (this.state.curr_page < this.state.total_pages && this.props.getData) {
       const next_page = this.state.curr_page + 1;
       this.setState({
-        curr_page: next_page
+        curr_page: next_page,
       });
       this.updatePageData(this.state.page_type, next_page);
     }
@@ -189,7 +189,7 @@ class ElementTable extends React.Component<
   ) {
     if (nextProps.currDatacenter !== this.props.currDatacenter) {
       this.setState({
-        curr_page: 1
+        curr_page: 1,
       });
       this.updatePageData(this.state.page_type, 1);
     }
@@ -202,7 +202,7 @@ class ElementTable extends React.Component<
 
       if (nextProps.data) {
         this.setState({
-          items: nextProps.data
+          items: nextProps.data,
         });
       }
     }
@@ -211,7 +211,7 @@ class ElementTable extends React.Component<
   handlePagingChange = (page: PagingTypes) => {
     this.setState({
       page_type: page,
-      curr_page: 1
+      curr_page: 1,
     });
     this.updatePageData(page, 1);
   };
@@ -290,7 +290,7 @@ class ElementTable extends React.Component<
   // SORTING AND FILTERING LOGIC
   updateSortOrder = (items: Array<ITableSort>) => {
     this.setState({
-      sort_by: items
+      sort_by: items,
     });
     this.updateSortData(items);
   };
@@ -302,21 +302,21 @@ class ElementTable extends React.Component<
     if (index > -1) {
       sorted_cols.splice(index, 1);
     }
-    sorts = sorts.filter(item => {
+    sorts = sorts.filter((item) => {
       return item.field !== field;
     });
     this.setState({
       sort_by: sorts,
-      sorted_cols
+      sorted_cols,
     });
     this.updateSortData(sorts);
   };
   removeFilterItem = (filter: IFilter) => {
-    const filters = this.state.filters.filter(item => {
+    const filters = this.state.filters.filter((item) => {
       return JSON.stringify(item) !== JSON.stringify(filter);
     });
     this.setState({
-      filters
+      filters,
     });
     this.updateFilterData(filters);
   };
@@ -327,13 +327,13 @@ class ElementTable extends React.Component<
 
     const sorted_cols = this.state.sorted_cols;
     if (this.state.sorted_cols.includes(field)) {
-      ascending = !this.state.sort_by.find(item => item.field === field)!
+      ascending = !this.state.sort_by.find((item) => item.field === field)!
         .ascending;
-      sorts = sorts.filter(item => {
+      sorts = sorts.filter((item) => {
         return item.field !== field;
       });
       this.setState({
-        sort_by: sorts
+        sort_by: sorts,
       });
     } else {
       ascending = true;
@@ -343,11 +343,11 @@ class ElementTable extends React.Component<
     sorts.push({
       field,
       ascending,
-      id: field
+      id: field,
     });
     this.setState({
       sort_by: sorts,
-      sorted_cols
+      sorted_cols,
     });
     this.updateSortData(sorts);
   }
@@ -358,7 +358,7 @@ class ElementTable extends React.Component<
     if (isRackRangeFields(filter.filter)) {
       if (this.props.currDatacenter && this.props.currDatacenter.id !== "") {
         let filter_datacenter = updateObject(filter.filter, {
-          datacenter: this.props.currDatacenter!.id
+          datacenter: this.props.currDatacenter!.id,
         });
         filter = updateObject(filter, { filter: filter_datacenter });
       }
@@ -367,12 +367,12 @@ class ElementTable extends React.Component<
     let resp = this.updateFilterData(filters_copy);
     if (resp) {
       resp
-        .then(res => {
+        .then((res) => {
           this.setState({
-            filters: filters_copy
+            filters: filters_copy,
           });
         })
-        .catch(err => {});
+        .catch((err) => {});
     }
   };
 
@@ -389,9 +389,9 @@ class ElementTable extends React.Component<
           items,
           this.props.token
         )
-        .then(res => {
+        .then((res) => {
           this.setState({
-            total_pages: res
+            total_pages: res,
           });
         });
     }
@@ -405,22 +405,22 @@ class ElementTable extends React.Component<
         this.props.token
       );
       resp
-        .then(res => {
+        .then((res) => {
           this.setState({ getDataInProgress: false });
           this.setState({
-            items: res
+            items: res,
           });
           if (res.length === 0) {
             this.setState({
-              curr_page: 0
+              curr_page: 0,
             });
           }
         })
-        .catch(err => {
+        .catch((err) => {
           this.setState({ getDataInProgress: false });
           this.addToast({
             message: err.response.data.failure_message,
-            intent: Intent.DANGER
+            intent: Intent.DANGER,
           });
         });
     }
@@ -430,7 +430,7 @@ class ElementTable extends React.Component<
   updatePageData = (page: PagingTypes, page_num: number) => {
     if (this.props.getData) {
       this.setState({
-        getDataInProgress: true
+        getDataInProgress: true,
       });
       this.props.getData!(
         this.props.type,
@@ -439,28 +439,28 @@ class ElementTable extends React.Component<
         { sort_by: this.state.sort_by, filters: this.state.filters },
         this.props.token
       )
-        .then(res => {
+        .then((res) => {
           this.setState({
             items: res,
-            getDataInProgress: false
+            getDataInProgress: false,
           });
         })
-        .catch(err => {
+        .catch((err) => {
           this.addToast({
             message: err.response.data.failure_message,
-            intent: Intent.DANGER
+            intent: Intent.DANGER,
           });
           this.setState({
-            getDataInProgress: false
+            getDataInProgress: false,
           });
         });
     }
     if (this.props.getPages) {
       this.props
         .getPages(this.props.type, page, this.state.filters, this.props.token)
-        .then(res => {
+        .then((res) => {
           this.setState({
-            total_pages: res
+            total_pages: res,
           });
         });
     }
@@ -468,7 +468,7 @@ class ElementTable extends React.Component<
   updateSortData = (items: Array<ITableSort>) => {
     if (this.props.getData) {
       this.setState({
-        getDataInProgress: true
+        getDataInProgress: true,
       });
       this.props.getData!(
         this.props.type,
@@ -477,15 +477,15 @@ class ElementTable extends React.Component<
         { sort_by: items, filters: this.state.filters },
         this.props.token
       )
-        .then(res => {
+        .then((res) => {
           this.setState({
             items: res,
-            getDataInProgress: false
+            getDataInProgress: false,
           });
         })
         .catch(() => {
           this.setState({
-            getDataInProgress: false
+            getDataInProgress: false,
           });
         });
     }
@@ -506,8 +506,8 @@ class ElementTable extends React.Component<
       intent: Intent.WARNING,
       action: {
         onClick: () => this.setState({ isEditFormOpen: true }),
-        text: "Edit values"
-      }
+        text: "Edit values",
+      },
     });
   };
   private addErrorToast = (message: string) => {
@@ -515,7 +515,7 @@ class ElementTable extends React.Component<
   };
 
   private refHandlers = {
-    toaster: (ref: Toaster) => (this.toaster = ref)
+    toaster: (ref: Toaster) => (this.toaster = ref),
   };
 
   componentDidUpdate() {
@@ -530,7 +530,7 @@ class ElementTable extends React.Component<
   componentDidMount() {
     if (this.props.data) {
       this.setState({
-        items: this.props.data
+        items: this.props.data,
       });
       this.setFieldNames();
     } else {
@@ -541,7 +541,7 @@ class ElementTable extends React.Component<
   updateTableData = () => {
     if (this.props.getData && this.props.token) {
       this.setState({
-        getDataInProgress: true
+        getDataInProgress: true,
       });
       this.props
         .getData(
@@ -551,18 +551,18 @@ class ElementTable extends React.Component<
           { sort_by: this.state.sort_by, filters: this.state.filters },
           this.props.token
         )
-        .then(res => {
+        .then((res) => {
           this.validRequestMadeWithToken = true;
 
           this.setState({
             items: res,
-            getDataInProgress: false
+            getDataInProgress: false,
           });
           this.setFieldNames();
         })
-        .catch(err => {
+        .catch((err) => {
           this.setState({
-            getDataInProgress: false
+            getDataInProgress: false,
           });
         });
     }
@@ -574,9 +574,9 @@ class ElementTable extends React.Component<
           this.state.filters,
           this.props.token
         )
-        .then(res => {
+        .then((res) => {
           this.setState({
-            total_pages: res
+            total_pages: res,
           });
         });
     }
@@ -607,7 +607,7 @@ class ElementTable extends React.Component<
     });
 
     this.setState({
-      fields: fields
+      fields: fields,
     });
   };
   setFieldNames = () => {
@@ -626,7 +626,7 @@ class ElementTable extends React.Component<
       isUserObject(data)
     ) {
       this.setState({
-        editFormValues: data
+        editFormValues: data,
       });
     }
   };
@@ -704,11 +704,11 @@ class ElementTable extends React.Component<
   };
   handleEditFormSubmit = (values: ElementObjectType, headers: any) => {
     if (isModelObject(values)) {
-      return modifyModel(values, headers).then(res => {
+      return modifyModel(values, headers).then((res) => {
         this.successfulModification(res.data.success_message);
       });
     } else if (isAssetObject(values)) {
-      return modifyAsset(values, headers, this.props.changePlan).then(res => {
+      return modifyAsset(values, headers, this.props.changePlan).then((res) => {
         if (res.data.warning_message) {
           this.successfulModifcationWithWarning(res.data.warning_message);
         } else {
@@ -716,12 +716,12 @@ class ElementTable extends React.Component<
         }
       });
     } else if (isChangePlanObject(values)) {
-      return modifyChangePlan(values, headers).then(res => {
+      return modifyChangePlan(values, headers).then((res) => {
         this.props.updateChangePlans(true);
         this.successfulModification(res.data.success_message);
       });
     } else if (isDatacenterObject(values)) {
-      return modifyDatacenter(values, headers).then(res => {
+      return modifyDatacenter(values, headers).then((res) => {
         this.successfulModification(res.data.success_message);
         if (this.props.updateDatacenters) {
           this.props.updateDatacenters();
@@ -732,7 +732,7 @@ class ElementTable extends React.Component<
 
   handleEditFormOpen = () => {
     this.setState({
-      isEditFormOpen: true
+      isEditFormOpen: true,
     });
   };
 
@@ -800,7 +800,7 @@ class ElementTable extends React.Component<
     }
     if (resp) {
       resp
-        .then(res => {
+        .then((res) => {
           this.addSuccessToast(res.data.success_message);
           this.updateTableData();
           this.handleDeleteCancel();
@@ -811,7 +811,7 @@ class ElementTable extends React.Component<
             this.props.updateChangePlans(true);
           }
         })
-        .catch(err => {
+        .catch((err) => {
           this.addErrorToast(err.response.data.failure_message);
           this.handleDeleteCancel();
         });
@@ -829,7 +829,7 @@ class ElementTable extends React.Component<
     }
     if (resp) {
       resp
-        .then(res => {
+        .then((res) => {
           this.addSuccessToast(res.data.success_message);
           this.updateTableData();
           this.handleDecommissionCancel();
@@ -837,7 +837,7 @@ class ElementTable extends React.Component<
             this.props.updateDatacenters();
           }
         })
-        .catch(err => {
+        .catch((err) => {
           this.addErrorToast(err.response.data.failure_message);
           this.handleDecommissionCancel();
         });
@@ -857,7 +857,7 @@ class ElementTable extends React.Component<
   handlePowerButtonClick = (data: AssetObject) => {
     this.setState({
       isPowerOptionsOpen: true,
-      assetPower: data
+      assetPower: data,
     });
   };
 
@@ -873,7 +873,7 @@ class ElementTable extends React.Component<
           this.setState({
             editUserFormOpen: true,
             selected_userid: item.id,
-            isEditFormOpen: false
+            isEditFormOpen: false,
           });
         }}
       />
@@ -881,14 +881,13 @@ class ElementTable extends React.Component<
   };
 
   render() {
-
     if (
       this.props.data &&
       this.props.data.length !== 0 &&
       this.state.items.length === 0
     ) {
       this.setState({
-        items: this.props.data
+        items: this.props.data,
       });
 
       this.setFieldNamesFromData(this.props.data);
@@ -942,7 +941,7 @@ class ElementTable extends React.Component<
                     items={this.state.filters}
                     renderItem={this.renderFilterItem}
                   />
-                </div>
+                </div>,
               ]}
           {this.props.disableSorting ? null : (
             <div className="table-options">
@@ -985,7 +984,7 @@ class ElementTable extends React.Component<
                         iconSize={Icon.SIZE_LARGE}
                         onClick={() => this.nextPage()}
                       />
-                    </span>
+                    </span>,
                   ]
                 : null}
             </div>
@@ -1015,7 +1014,7 @@ class ElementTable extends React.Component<
                           onClick={(event: any) => {
                             const selected = this.state.selected;
                             const selectedAll = !this.state.selectedAll;
-                            this.state.items.forEach(item => {
+                            this.state.items.forEach((item) => {
                               if (isAssetObject(item)) {
                                 if (
                                   selected.includes(item.asset_number) &&
@@ -1036,7 +1035,7 @@ class ElementTable extends React.Component<
 
                             this.setState({
                               selectedAll,
-                              selected
+                              selected,
                             });
                             if (this.props.updateBarcodes) {
                               this.props.updateBarcodes(this.state.selected);
@@ -1061,7 +1060,7 @@ class ElementTable extends React.Component<
                           <span>model number</span>
                           {this.getScrollIcon("model__model_number")}
                         </div>
-                      </th>
+                      </th>,
                     ];
                   } else if (this.props.type === ElementType.ASSET) {
                     return (
@@ -1096,256 +1095,256 @@ class ElementTable extends React.Component<
               </tr>
             </thead>
 
-            {this.state.items && this.state.items.length > 0 ? (
-              !this.state.getDataInProgress ? (
-                <tbody>
-                  {this.state.items.map((item: ElementObjectType) => {
-                    return (
-                      <tr
-                        key={item.id}
-                        onClick={
-                          this.props.type === ElementType.DATACENTER ||
-                          this.props.type === ElementType.USER
-                            ? () => {}
-                            : () => {
-                                this.props.history.push(
-                                  ROUTES.DASHBOARD +
-                                    "/" +
-                                    this.props.type +
-                                    "/" +
-                                    item.id
-                                );
-                              }
-                        }
-                        style={getChangePlanRowStyle(item)}
-                      >
-                        {this.props.type === ElementType.ASSET &&
-                        isAssetObject(item) &&
-                        (isNullOrUndefined(this.props.data) ||
-                          this.props.data.length === 0) ? (
-                          <th
+            {
+              this.state.items && this.state.items.length > 0 ? (
+                !this.state.getDataInProgress ? (
+                  <tbody>
+                    {this.state.items.map((item: ElementObjectType) => {
+                      return (
+                        <tr
+                          key={item.id}
+                          onClick={
+                            this.props.type === ElementType.DATACENTER ||
+                            this.props.type === ElementType.USER
+                              ? () => {}
+                              : () => {
+                                  this.props.history.push(
+                                    ROUTES.DASHBOARD +
+                                      "/" +
+                                      this.props.type +
+                                      "/" +
+                                      item.id
+                                  );
+                                }
+                          }
+                          style={getChangePlanRowStyle(item)}
+                        >
+                          {this.props.type === ElementType.ASSET &&
+                          isAssetObject(item) &&
+                          (isNullOrUndefined(this.props.data) ||
+                            this.props.data.length === 0) ? (
+                            <th
+                              onClick={(event: any) => {
+                                event.stopPropagation();
+                              }}
+                            >
+                              {this.props.isDecommissioned ? null : (
+                                <Checkbox
+                                  checked={this.state.selected.includes(
+                                    item.asset_number
+                                  )}
+                                  onClick={(event: any) => {
+                                    const selected = this.state.selected;
+                                    if (selected.includes(item.asset_number)) {
+                                      if (this.state.selectedAll) {
+                                        this.setState({
+                                          selectedAll: false,
+                                        });
+                                      }
+                                      selected.splice(
+                                        selected.indexOf(item.asset_number),
+                                        1
+                                      );
+                                    } else {
+                                      selected.push(item.asset_number);
+                                    }
+                                    this.setState({
+                                      selected,
+                                    });
+                                    if (this.props.updateBarcodes) {
+                                      this.props.updateBarcodes(
+                                        this.state.selected
+                                      );
+                                    }
+
+                                    event.stopPropagation();
+                                  }}
+                                />
+                              )}
+                            </th>
+                          ) : null}
+                          {Object.entries(item).map(([col, value]) => {
+                            if (isModelObject(value)) {
+                              return [
+                                <td style={getChangePlanRowStyle(item)}>
+                                  {value.vendor}
+                                </td>,
+                                <td style={getChangePlanRowStyle(item)}>
+                                  {value.model_number}
+                                </td>,
+                              ];
+                            } else if (isRackObject(value)) {
+                              return [
+                                <td style={getChangePlanRowStyle(item)}>
+                                  {value.row_letter + value.rack_num}
+                                </td>,
+                                <td style={getChangePlanRowStyle(item)}>
+                                  {value.datacenter.name}
+                                </td>,
+                              ];
+                            } else if (col === "display_color") {
+                              return (
+                                <td
+                                  style={{
+                                    backgroundColor: value,
+                                  }}
+                                ></td>
+                              );
+                            } else if (this.shouldShowColumn(item, col)) {
+                              return (
+                                <td style={getChangePlanRowStyle(item)}>
+                                  {value}
+                                </td>
+                              );
+                            }
+
+                            return null;
+                          })}
+                          <td
                             onClick={(event: any) => {
                               event.stopPropagation();
                             }}
                           >
-                            {this.props.isDecommissioned ? null : (
-                              <Checkbox
-                                checked={this.state.selected.includes(
-                                  item.asset_number
-                                )}
-                                onClick={(event: any) => {
-                                  const selected = this.state.selected;
-                                  if (selected.includes(item.asset_number)) {
-                
-                                    if (this.state.selectedAll) {
-                                      this.setState({
-                                        selectedAll: false
-                                      });
-                                    }
-                                    selected.splice(
-                                      selected.indexOf(item.asset_number),
-                                      1
-                                    );
-                                  } else {
-                                    selected.push(item.asset_number);
-                  
+                            {this.props.permissionState.admin &&
+                            isUserObject(item) ? (
+                              <div className="inline-buttons-user grant-admin-button permissions-button">
+                                {" "}
+                                {/* TODO change grant-admin-button to change-permissions*/}
+                                {this.renderPermissionsButton(item)}
+                              </div>
+                            ) : null}
+                            <div className="inline-buttons">
+                              {this.props.type !== ElementType.USER &&
+                              !this.props.data &&
+                              !this.props.isDecommissioned ? (
+                                <AnchorButton
+                                  className="button-table"
+                                  intent="primary"
+                                  minimal
+                                  icon="edit"
+                                  disabled={
+                                    (this.props.changePlan &&
+                                      this.props.type !== ElementType.ASSET) ||
+                                    (this.props.type ===
+                                      ElementType.CHANGEPLANS &&
+                                      isChangePlanObject(item) &&
+                                      item.execution_time)
+                                      ? true
+                                      : !(
+                                          this.props.permissionState.admin ||
+                                          (this.props.type ===
+                                            ElementType.DATACENTER &&
+                                            this.props.permissionState
+                                              .asset_management) ||
+                                          (this.props.type ===
+                                            ElementType.MODEL &&
+                                            this.props.permissionState
+                                              .model_management) ||
+                                          (this.props.type ===
+                                            ElementType.ASSET &&
+                                            this.props.permissionState
+                                              .asset_management) ||
+                                          (this.props.type ===
+                                            ElementType.ASSET &&
+                                            isAssetObject(item) &&
+                                            this.props.permissionState.datacenter_permissions.includes(
+                                              +item.rack.datacenter.id
+                                            ))
+                                        )
                                   }
-                                  this.setState({
-                                    selected
-                                  });
-                                  if (this.props.updateBarcodes) {
-                                    this.props.updateBarcodes(
-                                      this.state.selected
-                                    );
+                                  onClick={(event: any) => {
+                                    this.handleEditButtonClick(item);
+                                    event.stopPropagation();
+                                  }}
+                                />
+                              ) : null}
+                              {!this.props.data &&
+                              !this.props.isDecommissioned ? (
+                                <AnchorButton
+                                  className="button-table"
+                                  intent="danger"
+                                  minimal
+                                  icon={
+                                    this.props.type === ElementType.ASSET
+                                      ? "remove"
+                                      : "trash"
                                   }
-                        
-                                  event.stopPropagation();
-                                }}
-                              />
-                            )}
-                          </th>
-                        ) : null}
-                        {Object.entries(item).map(([col, value]) => {
-                          if (isModelObject(value)) {
-                            return [
-                              <td style={getChangePlanRowStyle(item)}>
-                                {value.vendor}
-                              </td>,
-                              <td style={getChangePlanRowStyle(item)}>
-                                {value.model_number}
-                              </td>
-                            ];
-                          } else if (isRackObject(value)) {
-                            return [
-                              <td style={getChangePlanRowStyle(item)}>
-                                {value.row_letter + value.rack_num}
-                              </td>,
-                              <td style={getChangePlanRowStyle(item)}>
-                                {value.datacenter.name}
-                              </td>
-                            ];
-                          } else if (col === "display_color") {
-                            return (
-                              <td
-                                style={{
-                                  backgroundColor: value
-                                }}
-                              ></td>
-                            );
-                          } else if (this.shouldShowColumn(item, col)) {
-                            return (
-                              <td style={getChangePlanRowStyle(item)}>
-                                {value}
-                              </td>
-                            );
-                          }
-
-                          return null;
-                        })}
-                        <td
-                          onClick={(event: any) => {
-                            event.stopPropagation();
-                          }}
-                        >
-                          {this.props.permissionState.admin &&
-                          isUserObject(item) ? (
-                            <div className="inline-buttons-user grant-admin-button permissions-button">
-                              {" "}
-                              {/* TODO change grant-admin-button to change-permissions*/}
-                              {this.renderPermissionsButton(item)}
-                            </div>
-                          ) : null}
-                          <div className="inline-buttons">
-                            {this.props.type !== ElementType.USER &&
-                            !this.props.data &&
-                            !this.props.isDecommissioned ? (
-                              <AnchorButton
-                                className="button-table"
-                                intent="primary"
-                                minimal
-                                icon="edit"
-                                disabled={
-                                  (this.props.changePlan &&
-                                    this.props.type !== ElementType.ASSET) ||
-                                  (this.props.type ===
-                                    ElementType.CHANGEPLANS &&
-                                    isChangePlanObject(item) &&
-                                    item.execution_time)
-                                    ? true
-                                    : !(
-                                        this.props.permissionState.admin ||
-                                        (this.props.type ===
-                                          ElementType.DATACENTER &&
-                                          this.props.permissionState
-                                            .asset_management) ||
-                                        (this.props.type ===
-                                          ElementType.MODEL &&
-                                          this.props.permissionState
-                                            .model_management) ||
-                                        (this.props.type ===
-                                          ElementType.ASSET &&
-                                          this.props.permissionState
-                                            .asset_management) ||
-                                        (this.props.type ===
-                                          ElementType.ASSET &&
-                                          isAssetObject(item) &&
-                                          this.props.permissionState.datacenter_permissions.includes(
-                                            +item.rack.datacenter.id
-                                          ))
-                                      )
-                                }
-                                onClick={(event: any) => {
-                
-                                  this.handleEditButtonClick(item);
-                                  event.stopPropagation();
-                                }}
-                              />
-                            ) : null}
-                            {!this.props.data &&
-                            !this.props.isDecommissioned ? (
-                              <AnchorButton
-                                className="button-table"
-                                intent="danger"
-                                minimal
-                                icon={
-                                  this.props.type === ElementType.ASSET
-                                    ? "remove"
-                                    : "trash"
-                                }
-                                disabled={
-                                  (this.props.changePlan &&
-                                    this.props.type !== ElementType.ASSET) ||
-                                  (this.props.type ===
-                                    ElementType.CHANGEPLANS &&
-                                    isChangePlanObject(item) &&
-                                    item.execution_time)
-                                    ? true
-                                    : !(
-                                        this.props.permissionState.admin ||
-                                        (this.props.type ===
-                                          ElementType.DATACENTER &&
-                                          this.props.permissionState
-                                            .asset_management) ||
-                                        (this.props.type ===
-                                          ElementType.MODEL &&
-                                          this.props.permissionState
-                                            .model_management) ||
-                                        (this.props.type ===
-                                          ElementType.ASSET &&
-                                          this.props.permissionState
-                                            .asset_management) ||
-                                        (this.props.type ===
-                                          ElementType.ASSET &&
-                                          isAssetObject(item) &&
-                                          this.props.permissionState.datacenter_permissions.includes(
-                                            +item.rack.datacenter.id
-                                          ))
-                                      )
-                                }
-                                onClick={
-                                  this.props.type === ElementType.ASSET
-                                    ? (event: any) => {
-                                        this.handleDecommissionButtonClick(
-                                          item
-                                        );
-                                        event.stopPropagation();
-                                      }
-                                    : (event: any) => {
-                                        this.handleDeleteButtonClick(item);
-                                        event.stopPropagation();
-                                      }
-                                }
-                              />
-                            ) : null}
-                            {isAssetObject(item) &&
-                            item.rack.is_network_controlled &&
-                            !this.props.isDecommissioned ? (
-                              <AnchorButton
-                                className="button-table"
-                                intent="warning"
-                                minimal
-                                icon="offline"
-                                disabled={this.props.changePlan ? true : false}
-                                onClick={(event: any) => {
-                                  this.handlePowerButtonClick(item);
-                                  event.stopPropagation();
-                                }}
-                              />
-                            ) : null}
-                          </div>{" "}
-                          {/* TODO add logic for determining if isOwner for power button */}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
+                                  disabled={
+                                    (this.props.changePlan &&
+                                      this.props.type !== ElementType.ASSET) ||
+                                    (this.props.type ===
+                                      ElementType.CHANGEPLANS &&
+                                      isChangePlanObject(item) &&
+                                      item.execution_time)
+                                      ? true
+                                      : !(
+                                          this.props.permissionState.admin ||
+                                          (this.props.type ===
+                                            ElementType.DATACENTER &&
+                                            this.props.permissionState
+                                              .asset_management) ||
+                                          (this.props.type ===
+                                            ElementType.MODEL &&
+                                            this.props.permissionState
+                                              .model_management) ||
+                                          (this.props.type ===
+                                            ElementType.ASSET &&
+                                            this.props.permissionState
+                                              .asset_management) ||
+                                          (this.props.type ===
+                                            ElementType.ASSET &&
+                                            isAssetObject(item) &&
+                                            this.props.permissionState.datacenter_permissions.includes(
+                                              +item.rack.datacenter.id
+                                            ))
+                                        )
+                                  }
+                                  onClick={
+                                    this.props.type === ElementType.ASSET
+                                      ? (event: any) => {
+                                          this.handleDecommissionButtonClick(
+                                            item
+                                          );
+                                          event.stopPropagation();
+                                        }
+                                      : (event: any) => {
+                                          this.handleDeleteButtonClick(item);
+                                          event.stopPropagation();
+                                        }
+                                  }
+                                />
+                              ) : null}
+                              {isAssetObject(item) &&
+                              item.rack.is_network_controlled &&
+                              !this.props.isDecommissioned ? (
+                                <AnchorButton
+                                  className="button-table"
+                                  intent="warning"
+                                  minimal
+                                  icon="offline"
+                                  disabled={
+                                    this.props.changePlan ? true : false
+                                  }
+                                  onClick={(event: any) => {
+                                    this.handlePowerButtonClick(item);
+                                    event.stopPropagation();
+                                  }}
+                                />
+                              ) : null}
+                            </div>{" "}
+                            {/* TODO add logic for determining if isOwner for power button */}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                ) : null
               ) : null
-            ) : null
-            // <Spinner
-            //   className="table-spinner"
-            //   size={Spinner.SIZE_STANDARD}
-            // />
-            // <h4 className="no-data-text">no {this.props.type} found </h4>
+              // <Spinner
+              //   className="table-spinner"
+              //   size={Spinner.SIZE_STANDARD}
+              // />
+              // <h4 className="no-data-text">no {this.props.type} found </h4>
             }
           </table>
 
@@ -1369,13 +1368,13 @@ const mapStateToProps = (state: any) => {
     token: state.token,
     isAdmin: state.admin,
     changePlan: state.changePlan,
-    permissionState: state.permissionState
+    permissionState: state.permissionState,
   };
 };
 const mapDispatchToProps = (dispatch: any) => {
   return {
     updateChangePlans: (status: boolean) =>
-      dispatch(actions.updateChangePlans(status))
+      dispatch(actions.updateChangePlans(status)),
   };
 };
 export default connect(
