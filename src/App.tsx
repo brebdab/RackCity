@@ -7,7 +7,7 @@ import {
   BrowserRouter,
   Redirect,
   Route,
-  RouteComponentProps
+  RouteComponentProps,
 } from "react-router-dom";
 import AssetView from "./components/elementView/detailedView/assetView/assetView";
 import ModelView from "./components/elementView/detailedView/modelView/modelView";
@@ -15,7 +15,7 @@ import RackView from "./components/elementView/detailedView/rackView/rackView";
 import BarcodeView from "./components/elementView/detailedView/assetView/barcodeView";
 import Fallback, {
   NotAuthorized,
-  NotAuthorizedAdmin
+  NotAuthorizedAdmin,
 } from "./components/fallback";
 import BulkImport from "./components/import/import";
 import LandingView from "./components/landingView/landingView";
@@ -28,12 +28,12 @@ import LoginView from "./forms/auth/loginView";
 // import BulkExport from "./components/export/export";
 import "./index.scss";
 import * as actions from "./store/actions/state";
-import { ROUTES} from "./utils/utils";
+import { ROUTES } from "./utils/utils";
 import CPDetailView from "./components/changePlanner/CPDetailView";
-import {PermissionState} from "./utils/permissionUtils";
+import { PermissionState } from "./utils/permissionUtils";
 
 var console: any = {};
-console.log = function () { };
+console.log = function () {};
 export interface AppProps {
   isAuthenticated?: boolean;
   onTryAutoSignup: any;
@@ -52,10 +52,10 @@ class App extends React.Component<AppProps> {
     return this.props.isAuthenticated ? (
       <Route {...rest} />
     ) : (
-        <Route {...rest}>
-          <Redirect to={ROUTES.LOGIN} />
-        </Route>
-      );
+      <Route {...rest}>
+        <Redirect to={ROUTES.LOGIN} />
+      </Route>
+    );
   };
 
   PrivateRoute = ({ path, component, render, ...rest }: any) => {
@@ -150,7 +150,7 @@ const mapStateToProps = (state: any) => {
     isAuthenticated: state.token !== null,
     isAdmin: state.admin,
     permissionState: state.permissionState,
-    loading: state.loading
+    loading: state.loading,
   };
 };
 
@@ -158,7 +158,7 @@ const mapDispatchToProps = (dispatch: any) => {
   return {
     onTryAutoSignup: () => {
       dispatch(actions.authCheckState());
-    }
+    },
   };
 };
 

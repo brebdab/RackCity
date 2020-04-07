@@ -1,6 +1,6 @@
 import axios from "axios";
-import {API_ROOT} from "./api-config";
-import {IFilter, ITableSort} from "../components/elementView/elementUtils";
+import { API_ROOT } from "./api-config";
+import { IFilter, ITableSort } from "../components/elementView/elementUtils";
 
 export interface ElementObject {
   id: string;
@@ -19,7 +19,7 @@ export enum ROUTES {
   BULK_IMPORT = "/dashboard/bulk-upload/:resourceType",
   USERS = "/dashboard/users",
   CHANGE_PLAN = "/dashboard/change-plans",
-  BARCODE_PRINT = "/assets/barcode-print"
+  BARCODE_PRINT = "/assets/barcode-print",
 }
 export enum ElementType {
   RACK = "racks",
@@ -27,11 +27,11 @@ export enum ElementType {
   MODEL = "models",
   USER = "users",
   DATACENTER = "datacenters",
-  CHANGEPLANS = "change-plans"
+  CHANGEPLANS = "change-plans",
 }
 export enum PowerSide {
   LEFT = "L",
-  RIGHT = "R"
+  RIGHT = "R",
 }
 export interface ChangePlan extends ElementObject {
   name: string;
@@ -101,12 +101,12 @@ export const AssetFieldsTable: any = {
   owner: "Owner",
   comment: "Comment",
   decommissioning_user: "Decommissioning User",
-  time_decommissioned: "Time Decommissioned"
+  time_decommissioned: "Time Decommissioned",
 };
 
 export const DecommissionedFieldsTable: any = {
   decommissioning_user: "User",
-  time_decommissioned: "Time"
+  time_decommissioned: "Time",
 };
 
 export const ModelFieldsTable: any = {
@@ -120,7 +120,7 @@ export const ModelFieldsTable: any = {
   cpu: "CPU",
   memory_gb: "Memory (GB)",
   storage: "Storage",
-  comment: "Comment"
+  comment: "Comment",
 };
 
 export enum AssetFormLabels {
@@ -133,7 +133,7 @@ export enum AssetFormLabels {
   owner = "Owner",
   comment = "Comment",
   network_ports = "Network Ports",
-  power_connections = "Power Connections"
+  power_connections = "Power Connections",
 }
 export interface Link {
   to: number;
@@ -303,15 +303,15 @@ export function isAssetCPObject(obj: any): obj is AssetCPObject {
 export const getHeaders = (token: string) => {
   return {
     headers: {
-      Authorization: "Token " + token
-    }
+      Authorization: "Token " + token,
+    },
   };
 };
 
 export const getChangePlanRowStyle = (item: any) => {
   return {
     fontWeight: isAssetCP(item) ? ("bold" as any) : ("normal" as any),
-    color: isAssetCP(item) ? "#bf8c0a" : "white"
+    color: isAssetCP(item) ? "#bf8c0a" : "white",
   };
 };
 
@@ -323,12 +323,12 @@ export const isAdmin = (headers: any) => {
   let isAdmin = false;
   axios
     .get(API_ROOT + "api/iamadmin", headers)
-    .then(res => {
+    .then((res) => {
       if (res.data.is_admin) {
         isAdmin = true;
       }
     })
-    .catch(err => {
+    .catch((err) => {
       console.log(err);
     });
   return isAdmin;
@@ -341,7 +341,7 @@ export function getFields(type: string, headers: any) {
       { sort_by: [], filters: [] },
       headers
     )
-    .then(res => {
+    .then((res) => {
       let items: Array<string>;
       if (type === ElementType.MODEL) {
         items = Object.keys(res.data.models[0]);

@@ -28,7 +28,7 @@ class DecommissionedPropertiesView extends React.PureComponent<
   };
   public state: AlertState = {
     isDeleteOpen: false,
-    fields: this.setFieldNamesFromData()
+    fields: this.setFieldNamesFromData(),
   };
   renderData(fields: Array<any>, data: any) {
     return fields.map((item: string) => {

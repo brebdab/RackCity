@@ -3,7 +3,7 @@ import {
   DragDropContext,
   Draggable,
   Droppable,
-  DropResult
+  DropResult,
 } from "react-beautiful-dnd";
 import { Callout } from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
@@ -32,7 +32,7 @@ const getItemStyle = (isDragging: boolean, draggableStyle: any) => ({
   background: isDragging ? "#202B33" : "#30404D",
 
   // styles we need to apply on draggables
-  ...draggableStyle
+  ...draggableStyle,
 });
 
 const getListStyle = (isDraggingOver: boolean) => ({
@@ -43,11 +43,11 @@ const getListStyle = (isDraggingOver: boolean) => ({
   minHeight: 40,
   width: "100%",
   overflow: "auto",
-  margin: 5
+  margin: 5,
 });
 export enum DragDropListTypes {
   FILTER = "filter",
-  SORT = "sort"
+  SORT = "sort",
 }
 export interface DragDropListProps {
   items: Array<any>;
@@ -77,7 +77,7 @@ class DragDropList extends React.Component<DragDropListProps> {
     );
 
     this.setState({
-      items
+      items,
     });
     if (this.props.onChange) {
       this.props.onChange(items);

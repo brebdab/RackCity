@@ -10,7 +10,7 @@ import { updateObject } from "../../store/utility";
 import {
   DatacenterObject,
   getHeaders,
-  RackRangeFields
+  RackRangeFields,
 } from "../../utils/utils";
 import "./elementView.scss";
 interface RackSelectViewState {
@@ -20,7 +20,7 @@ interface RackSelectViewState {
   errors: Array<string>;
 }
 var console: any = {};
-console.log = function() {};
+console.log = function () {};
 
 interface RackSelectViewProps {
   token: string;
@@ -41,7 +41,7 @@ class RackSelectView extends React.Component<
     viewRange: false,
     values: {} as RackRangeFields,
 
-    errors: []
+    errors: [],
   };
   componentWillReceiveProps(nextProps: RackSelectViewProps) {
     console.log(nextProps.currDatacenter, this.props.currDatacenter);
@@ -53,19 +53,19 @@ class RackSelectView extends React.Component<
           letter_end: "",
           num_start: "",
           num_end: "",
-          datacenter: ""
-        } as RackRangeFields
+          datacenter: "",
+        } as RackRangeFields,
       });
     }
   }
-  private handleSwitchChange = handleBooleanChange(viewRange => {
+  private handleSwitchChange = handleBooleanChange((viewRange) => {
     this.setState({ viewRange: viewRange });
     if (!viewRange) {
       this.setState({
         values: updateObject(this.state.values, {
           letter_end: undefined,
-          num_end: undefined
-        })
+          num_end: undefined,
+        }),
       });
     }
   });
@@ -73,14 +73,14 @@ class RackSelectView extends React.Component<
   handleChange = (field: { [key: string]: any }) => {
     this.setState({
       values: updateObject(this.state.values, {
-        ...field
-      })
+        ...field,
+      }),
     });
   };
 
   handleSubmit = (e: any) => {
     this.setState({
-      errors: []
+      errors: [],
     });
 
     e.preventDefault();
@@ -94,12 +94,12 @@ class RackSelectView extends React.Component<
     const headers = getHeaders(this.props.token);
     const resp = this.props.submitForm(values, headers, true);
     if (resp) {
-      resp.catch(err => {
+      resp.catch((err) => {
         console.log(err.response.data.failure_message);
         let errors: Array<string> = this.state.errors;
         errors.push(err.response.data.failure_message as string);
         this.setState({
-          errors: errors
+          errors: errors,
         });
       });
     }
@@ -143,7 +143,7 @@ class RackSelectView extends React.Component<
 const mapStateToProps = (state: any) => {
   return {
     token: state.token,
-    isAdmin: state.admin
+    isAdmin: state.admin,
   };
 };
 

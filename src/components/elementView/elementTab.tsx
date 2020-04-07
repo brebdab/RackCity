@@ -435,8 +435,9 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                 disabled={
                   this.props.changePlan
                     ? true
-                    : !(
-                        hasAddElementPermission(this.props.element, this.props.permissionState)
+                    : !hasAddElementPermission(
+                        this.props.element,
+                        this.props.permissionState
                       )
                 }
                 onClick={() => {

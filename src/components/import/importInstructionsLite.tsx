@@ -7,7 +7,7 @@ interface InstructionsLiteProps {
 }
 
 var console: any = {};
-console.log = function() {};
+console.log = function () {};
 export class InstructionsLite extends React.PureComponent<
   InstructionsLiteProps
 > {

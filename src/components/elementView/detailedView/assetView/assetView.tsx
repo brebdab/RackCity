@@ -6,7 +6,7 @@ import {
   Intent,
   IToastProps,
   Position,
-  Toaster
+  Toaster,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -27,12 +27,12 @@ import {
   ChangePlan,
   AssetCPObject,
   getChangePlanRowStyle,
-  isAssetCPObject
+  isAssetCPObject,
 } from "../../../../utils/utils";
 import {
   deleteAsset,
   decommissionAsset,
-  modifyAsset
+  modifyAsset,
 } from "../../elementUtils";
 import PropertiesView from "../propertiesView";
 import DecommissionedPropertiesView from "../decommissionedPropertiesView";
@@ -42,7 +42,7 @@ import PowerView from "../../powerView/powerView";
 import { ALL_DATACENTERS } from "../../elementTabContainer";
 import { IconNames } from "@blueprintjs/icons";
 import { isNullOrUndefined } from "util";
-import {PermissionState} from "../../../../utils/permissionUtils";
+import { PermissionState } from "../../../../utils/permissionUtils";
 export interface AssetViewProps {
   token: string;
   isAdmin: boolean;
@@ -60,13 +60,13 @@ function getData(assetkey: string, token: string, changePlan: ChangePlan) {
   }
   const config = {
     headers: {
-      Authorization: "Token " + token
+      Authorization: "Token " + token,
     },
 
-    params: params
+    params: params,
   };
 
-  return axios.get(API_ROOT + "api/assets/" + assetkey, config).then(res => {
+  return axios.get(API_ROOT + "api/assets/" + assetkey, config).then((res) => {
     const data = res.data;
     return data;
   });
@@ -93,12 +93,12 @@ export class AssetView extends React.PureComponent<
     isDecommissionOpen: false,
     isAlertOpen: false,
     datacenters: [],
-    powerShouldUpdate: false
+    powerShouldUpdate: false,
   };
   private updateAsset = (asset: AssetObject, headers: any): Promise<any> => {
     let params: any;
     params = this.props.match.params;
-    return modifyAsset(asset, headers, this.props.changePlan).then(res => {
+    return modifyAsset(asset, headers, this.props.changePlan).then((res) => {
       if (res.data.warning_message) {
         this.addWarnToast("Modifed asset. " + res.data.warning_message);
       } else {
@@ -106,10 +106,10 @@ export class AssetView extends React.PureComponent<
       }
 
       getData(params.rid, this.props.token, this.props.changePlan).then(
-        result => {
+        (result) => {
           this.setState({
             asset: result,
-            powerShouldUpdate: true
+            powerShouldUpdate: true,
           });
         }
       );
@@ -124,7 +124,7 @@ export class AssetView extends React.PureComponent<
   }
 
   private refHandlers = {
-    toaster: (ref: Toaster) => (this.toaster = ref)
+    toaster: (ref: Toaster) => (this.toaster = ref),
   };
 
   private addSuccessToast = (message: string) => {
@@ -136,25 +136,25 @@ export class AssetView extends React.PureComponent<
       intent: Intent.WARNING,
       action: {
         onClick: () => this.setState({ isFormOpen: true }),
-        text: "Edit values"
-      }
+        text: "Edit values",
+      },
     });
   };
   private addErrorToast = (message: string) => {
     this.addToast({ message: message, intent: Intent.DANGER });
   };
   public updateAssetData = (rid: string) => {
-    getData(rid, this.props.token, this.props.changePlan).then(result => {
+    getData(rid, this.props.token, this.props.changePlan).then((result) => {
       this.setState({
-        asset: result
+        asset: result,
       });
     });
   };
 
   public updateAssetDataCP = (rid: string, changePlan: ChangePlan) => {
-    getData(rid, this.props.token, changePlan).then(result => {
+    getData(rid, this.props.token, changePlan).then((result) => {
       this.setState({
-        asset: result
+        asset: result,
       });
     });
   };
@@ -185,14 +185,14 @@ export class AssetView extends React.PureComponent<
 
     axios
       .post(API_ROOT + "api/datacenters/get-many", {}, headers)
-      .then(res => {
+      .then((res) => {
         const datacenters = res.data.datacenters as Array<DatacenterObject>;
         datacenters.push(ALL_DATACENTERS);
         this.setState({
-          datacenters
+          datacenters,
         });
       })
-      .catch(err => {});
+      .catch((err) => {});
   };
   public render() {
     if (Object.keys(this.state.asset).length === 0) {
@@ -394,7 +394,7 @@ export class AssetView extends React.PureComponent<
                                 style={getChangePlanRowStyle(this.state.asset)}
                               >
                                 {connection.destination_port}
-                              </td>
+                              </td>,
                             ]
                           : [<td></td>, <td></td>]}
                       </tr>
@@ -455,12 +455,12 @@ export class AssetView extends React.PureComponent<
 
   private handleFormOpen = () => {
     this.setState({
-      isFormOpen: true
+      isFormOpen: true,
     });
   };
   handleFormSubmit = () => {
     this.setState({
-      isFormOpen: false
+      isFormOpen: false,
     });
   };
 
@@ -469,15 +469,15 @@ export class AssetView extends React.PureComponent<
   private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
   private handleDelete = () => {
     deleteAsset(this.state.asset!, getHeaders(this.props.token))
-      .then(res => {
+      .then((res) => {
         this.setState({ isDeleteOpen: false });
         this.addSuccessToast(res.data.success_message);
         this.props.history.push(ROUTES.DASHBOARD);
       })
-      .catch(err => {
+      .catch((err) => {
         this.addToast({
           message: err.response.data.failure_message,
-          intent: Intent.DANGER
+          intent: Intent.DANGER,
         });
       });
   };
@@ -491,17 +491,17 @@ export class AssetView extends React.PureComponent<
       getHeaders(this.props.token),
       this.props.changePlan
     )
-      .then(res => {
+      .then((res) => {
         this.setState({ isDecommissionOpen: false });
         this.addSuccessToast("Successfully Decommissioned Asset");
         let params: any;
         params = this.props.match.params;
         this.updateAssetData(params.rid);
       })
-      .catch(err => {
+      .catch((err) => {
         this.addToast({
           message: err.response.data.failure_message,
-          intent: Intent.DANGER
+          intent: Intent.DANGER,
         });
       });
   };
@@ -512,7 +512,7 @@ const mapStatetoProps = (state: any) => {
     token: state.token,
     isAdmin: state.admin,
     changePlan: state.changePlan,
-    permissionState: state.permissionState
+    permissionState: state.permissionState,
   };
 };
 

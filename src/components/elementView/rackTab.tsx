@@ -10,7 +10,7 @@ import {
   Position,
   Toaster,
   Card,
-  Classes
+  Classes,
 } from "@blueprintjs/core";
 import axios from "axios";
 import * as React from "react";
@@ -20,7 +20,7 @@ import {
   DatacenterSelect,
   filterDatacenter,
   FormTypes,
-  renderDatacenterItem
+  renderDatacenterItem,
 } from "../../forms/formUtils";
 import { updateObject } from "../../store/utility";
 import { API_ROOT } from "../../utils/api-config";
@@ -31,14 +31,14 @@ import {
   RackResponseObject,
   getHeaders,
   ROUTES,
-  ChangePlan
+  ChangePlan,
 } from "../../utils/utils";
 import RackView from "./detailedView/rackView/rackView";
 import { ALL_DATACENTERS } from "./elementTabContainer";
 import RackSelectView from "./rackSelectView";
 import { RouteComponentProps, withRouter } from "react-router";
 import { Link } from "react-router-dom";
-import {PermissionState} from "../../utils/permissionUtils";
+import { PermissionState } from "../../utils/permissionUtils";
 
 interface RackTabState {
   isOpen: boolean;
@@ -62,11 +62,11 @@ interface RackTabProps {
   permissionState: PermissionState;
 }
 var console: any = {};
-console.log = function () { };
+console.log = function () {};
 class RackTab extends React.Component<
   RackTabProps & RouteComponentProps,
   RackTabState
-  > {
+> {
   state = {
     isOpen: false,
     isDeleteOpen: false,
@@ -77,7 +77,7 @@ class RackTab extends React.Component<
     racks: [],
     loading: false,
     viewAll: false,
-    submitInProgress: false
+    submitInProgress: false,
   };
   private toaster: Toaster = {} as Toaster;
   private addToast(toast: IToastProps) {
@@ -86,7 +86,7 @@ class RackTab extends React.Component<
   }
 
   private refHandlers = {
-    toaster: (ref: Toaster) => (this.toaster = ref)
+    toaster: (ref: Toaster) => (this.toaster = ref),
   };
 
   private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
@@ -100,53 +100,53 @@ class RackTab extends React.Component<
   viewRackForm = (rack: RackRangeFields, headers: any, showError: boolean) => {
     this.setState({
       loading: true,
-      selectedRackRange: rack
+      selectedRackRange: rack,
     });
     let rack_datacenter = updateObject(rack, {
-      datacenter: this.props.currDatacenter.id
+      datacenter: this.props.currDatacenter.id,
     });
 
     return axios
       .post(API_ROOT + "api/racks/get", rack_datacenter, headers)
-      .then(res => {
+      .then((res) => {
         this.setState({
           racks: res.data.racks,
-          loading: false
+          loading: false,
         });
       })
-      .catch(err => {
+      .catch((err) => {
         this.setState({
           loading: false,
-          racks: []
+          racks: [],
         });
         if (showError) {
           this.addToast({
             message: err.response.data.failure_message,
-            intent: Intent.DANGER
+            intent: Intent.DANGER,
           });
         }
       });
   };
   private handleOpen = () => {
     this.setState({
-      isOpen: true
+      isOpen: true,
     });
     console.log(this.state);
   };
 
   deleteRack = (rack: RackRangeFields, headers: any) => {
     const rack_new = updateObject(rack, {
-      datacenter: this.props.currDatacenter.id
+      datacenter: this.props.currDatacenter.id,
     });
     this.setState({
       deleteRackInfo: rack_new,
-      headers
+      headers,
     });
     this.handleConfirmationOpen();
   };
   actuallyDelete = () => {
     this.setState({
-      submitInProgress: true
+      submitInProgress: true,
     });
     return axios
       .post(
@@ -154,28 +154,28 @@ class RackTab extends React.Component<
         this.state.deleteRackInfo,
         this.state.headers
       )
-      .then(res => {
+      .then((res) => {
         this.addToast({
           message: res.data.success_message,
-          intent: Intent.PRIMARY
+          intent: Intent.PRIMARY,
         });
         this.updateRackData(false);
         this.setState({
           isDeleteOpen: false,
           isConfirmationOpen: false,
-          submitInProgress: false
+          submitInProgress: false,
         });
       })
-      .catch(err => {
+      .catch((err) => {
         console.log(err.response);
         this.addToast({
           message: err.response.data.failure_message,
-          intent: Intent.DANGER
+          intent: Intent.DANGER,
         });
         this.setState({
           isDeleteOpen: true,
           isConfirmationOpen: false,
-          submitInProgress: false
+          submitInProgress: false,
         });
       });
   };
@@ -195,30 +195,30 @@ class RackTab extends React.Component<
     if (nextProps.currDatacenter !== this.props.currDatacenter) {
       this.setState({
         racks: [],
-        selectedRackRange: {} as RackRangeFields
+        selectedRackRange: {} as RackRangeFields,
       });
     }
   }
   createRack = (rack: RackRangeFields, headers: any) => {
     this.setState({
-      submitInProgress: true
+      submitInProgress: true,
     });
     const rack_new = updateObject(rack, {
-      datacenter: this.props.currDatacenter.id
+      datacenter: this.props.currDatacenter.id,
     });
     return axios
       .post(API_ROOT + "api/racks/create", rack_new, headers)
-      .then(res => {
+      .then((res) => {
         this.setState({ isOpen: false, submitInProgress: false });
         this.updateRackData(true);
         this.addToast({
           message: res.data.success_message,
-          intent: Intent.PRIMARY
+          intent: Intent.PRIMARY,
         });
       })
-      .catch(err => {
+      .catch((err) => {
         this.setState({
-          submitInProgress: false
+          submitInProgress: false,
         });
 
         this.addErrorToast(err.data.failure_message);
@@ -232,35 +232,35 @@ class RackTab extends React.Component<
     console.log(this.props);
     this.setState({
       loading: true,
-      viewAll: true
+      viewAll: true,
     });
     const config = {
       headers: {
-        Authorization: "Token " + this.props.token
+        Authorization: "Token " + this.props.token,
       },
       params: {
-        datacenter: datacenter.id
-      }
+        datacenter: datacenter.id,
+      },
     };
     axios
       .get(API_ROOT + "api/racks/get-all", config)
-      .then(res => {
+      .then((res) => {
         console.log("GOT RACKS", res.data, this.state.racks);
         this.setState({
           racks: res.data.racks,
-          loading: false
+          loading: false,
         });
       })
-      .catch(err => {
+      .catch((err) => {
         console.log("failed to get racks");
         this.setState({
           loading: false,
-          racks: []
+          racks: [],
         });
 
         this.addToast({
           message: err.response.data.failure_message,
-          intent: Intent.DANGER
+          intent: Intent.DANGER,
         });
       });
   };
@@ -281,7 +281,7 @@ class RackTab extends React.Component<
                 popoverProps={{
                   minimal: true,
                   popoverClassName: "dropdown",
-                  usePortal: true
+                  usePortal: true,
                 }}
                 items={this.props.datacenters!}
                 onItemSelect={(datacenter: DatacenterObject) => {
@@ -334,71 +334,75 @@ class RackTab extends React.Component<
           <p>Are you sure you want to delete?</p>
         </Alert>
         {this.props.currDatacenter &&
-          this.props.currDatacenter.name !== ALL_DATACENTERS.name ? (
-            <div className="rack-tab-panel">
-              {this.props.changePlan ? (
-                <Callout
-                  intent={Intent.WARNING}
-                  title="Rack Management on a change plan"
-                >
-                  <em>All changes made to racks will be live in the database </em>
-                </Callout>
-              ) : null}
-              <div className=" element-tab-buttons">
-                <AnchorButton
-                  className="add"
-                  text={"Add Rack(s)"}
-                  icon="add"
-                  minimal
-                  intent={Intent.PRIMARY}
-                  onClick={this.handleOpen}
-                  disabled={
-                    !(
-                      this.props.permissionState.admin
-                      || this.props.permissionState.asset_management
-                      || this.props.permissionState.datacenter_permissions.includes(+this.props.currDatacenter.id)
+        this.props.currDatacenter.name !== ALL_DATACENTERS.name ? (
+          <div className="rack-tab-panel">
+            {this.props.changePlan ? (
+              <Callout
+                intent={Intent.WARNING}
+                title="Rack Management on a change plan"
+              >
+                <em>All changes made to racks will be live in the database </em>
+              </Callout>
+            ) : null}
+            <div className=" element-tab-buttons">
+              <AnchorButton
+                className="add"
+                text={"Add Rack(s)"}
+                icon="add"
+                minimal
+                intent={Intent.PRIMARY}
+                onClick={this.handleOpen}
+                disabled={
+                  !(
+                    this.props.permissionState.admin ||
+                    this.props.permissionState.asset_management ||
+                    this.props.permissionState.datacenter_permissions.includes(
+                      +this.props.currDatacenter.id
                     )
+                  )
+                }
+              />
+              <AnchorButton
+                className="add "
+                text={"Delete Rack(s)"}
+                icon="trash"
+                minimal
+                intent={Intent.DANGER}
+                onClick={this.handleDeleteOpen}
+                disabled={
+                  !(
+                    this.props.permissionState.admin ||
+                    this.props.permissionState.asset_management ||
+                    this.props.permissionState.datacenter_permissions.includes(
+                      +this.props.currDatacenter.id
+                    )
+                  )
+                }
+              />
+            </div>
+
+            <Card>
+              <div className="rack-view-options">
+                <Button
+                  className="all-racks"
+                  text="View All Racks"
+                  onClick={(e: any) =>
+                    this.getAllRacks(this.props.currDatacenter)
                   }
                 />
-                <AnchorButton
-                  className="add "
-                  text={"Delete Rack(s)"}
-                  icon="trash"
-                  minimal
-                  intent={Intent.DANGER}
-                  onClick={this.handleDeleteOpen}
-                  disabled={
-                    !(
-                      this.props.permissionState.admin
-                      || this.props.permissionState.asset_management
-                      || this.props.permissionState.datacenter_permissions.includes(+this.props.currDatacenter.id)
-                    )
-                  }
+                <p className="or">or </p>
+                <RackSelectView
+                  currDatacenter={this.props.currDatacenter}
+                  submitForm={this.viewRackForm}
                 />
               </div>
-
-              <Card>
-                <div className="rack-view-options">
-                  <Button
-                    className="all-racks"
-                    text="View All Racks"
-                    onClick={(e: any) =>
-                      this.getAllRacks(this.props.currDatacenter)
-                    }
-                  />
-                  <p className="or">or </p>
-                  <RackSelectView
-                    currDatacenter={this.props.currDatacenter}
-                    submitForm={this.viewRackForm}
-                  />
-                </div>
-              </Card>
-            </div>
-          ) : (
-            <Callout title="No Datacenter Selected">
-              <em>Please select a datacenter to view rack information</em>
-            </Callout>
-          )}
+            </Card>
+          </div>
+        ) : (
+          <Callout title="No Datacenter Selected">
+            <em>Please select a datacenter to view rack information</em>
+          </Callout>
+        )}
 
         {this.state.racks.length !== 0 ? (
           <Link
