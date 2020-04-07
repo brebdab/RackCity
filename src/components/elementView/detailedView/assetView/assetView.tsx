@@ -27,7 +27,6 @@ import {
   ChangePlan,
   AssetCPObject,
   getChangePlanRowStyle,
-  PermissionState,
   isAssetCPObject
 } from "../../../../utils/utils";
 import {
@@ -43,6 +42,7 @@ import PowerView from "../../powerView/powerView";
 import { ALL_DATACENTERS } from "../../elementTabContainer";
 import { IconNames } from "@blueprintjs/icons";
 import { isNullOrUndefined } from "util";
+import {PermissionState} from "../../../../utils/permissionUtils";
 export interface AssetViewProps {
   token: string;
   isAdmin: boolean;

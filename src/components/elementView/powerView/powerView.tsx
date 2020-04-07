@@ -19,11 +19,11 @@ import {
   AssetObject,
   getHeaders,
   getChangePlanRowStyle,
-  ChangePlan,
-  PermissionState
+  ChangePlan
 } from "../../../utils/utils";
 import "./powerView.scss";
 import { IconNames } from "@blueprintjs/icons";
+import {PermissionState} from "../../../utils/permissionUtils";
 
 interface PowerViewProps {
   token: string;

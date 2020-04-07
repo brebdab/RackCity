@@ -8,12 +8,12 @@ import { connect } from "react-redux";
 import {
   ElementType,
   DatacenterObject,
-  getHeaders,
-  PermissionState
+  getHeaders
 } from "../../utils/utils";
 import RackTab from "./rackTab";
 import { API_ROOT } from "../../utils/api-config";
 import axios from "axios";
+import {PermissionState} from "../../utils/permissionUtils";
 
 interface ElementTabContainerProps {
   isAdmin: boolean;

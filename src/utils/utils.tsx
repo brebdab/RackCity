@@ -1,6 +1,7 @@
 import axios from "axios";
-import { API_ROOT } from "./api-config";
-import { ITableSort, IFilter } from "../components/elementView/elementUtils";
+import {API_ROOT} from "./api-config";
+import {IFilter, ITableSort} from "../components/elementView/elementUtils";
+
 export interface ElementObject {
   id: string;
 }
@@ -35,14 +36,6 @@ export enum PowerSide {
 export interface ChangePlan extends ElementObject {
   name: string;
   execution_time?: string;
-}
-export interface PermissionState {
-  model_management: boolean;
-  asset_management: boolean;
-  power_control: boolean;
-  audit_read: boolean;
-  admin: boolean;
-  datacenter_permissions: Array<number>;
 }
 export interface AssetObjectOld extends ElementObject {
   hostname: string;

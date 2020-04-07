@@ -69,6 +69,7 @@
   },
   "proxy": "http://localhost:8000",
   "devDependencies": {
-    "@types/jquery": "^3.3.32"
+    "@types/jquery": "^3.3.32",
+    "prettier": "2.0.4"
   }
 }

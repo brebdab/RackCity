@@ -31,14 +31,14 @@ import {
   RackResponseObject,
   getHeaders,
   ROUTES,
-  ChangePlan,
-  PermissionState
+  ChangePlan
 } from "../../utils/utils";
 import RackView from "./detailedView/rackView/rackView";
 import { ALL_DATACENTERS } from "./elementTabContainer";
 import RackSelectView from "./rackSelectView";
 import { RouteComponentProps, withRouter } from "react-router";
 import { Link } from "react-router-dom";
+import {PermissionState} from "../../utils/permissionUtils";
 
 interface RackTabState {
   isOpen: boolean;

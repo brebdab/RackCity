@@ -28,8 +28,9 @@ import LoginView from "./forms/auth/loginView";
 // import BulkExport from "./components/export/export";
 import "./index.scss";
 import * as actions from "./store/actions/state";
-import { ROUTES, PermissionState } from "./utils/utils";
+import { ROUTES} from "./utils/utils";
 import CPDetailView from "./components/changePlanner/CPDetailView";
+import {PermissionState} from "./utils/permissionUtils";
 
 var console: any = {};
 console.log = function () { };

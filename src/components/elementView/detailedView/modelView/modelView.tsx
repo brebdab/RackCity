@@ -21,12 +21,12 @@ import {
   getHeaders,
   ModelObject,
   ROUTES,
-  ChangePlan,
-  PermissionState
+  ChangePlan
 } from "../../../../utils/utils";
 import ElementTable from "../../elementTable";
 import { deleteModel, modifyModel } from "../../elementUtils";
 import PropertiesView from "../propertiesView";
+import {PermissionState} from "../../../../utils/permissionUtils";
 
 export interface ModelViewProps {
   token: string;

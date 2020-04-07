@@ -1,6 +1,7 @@
 import * as actionTypes from "../actions/actionTypes";
 import { updateObject } from "../utility";
-import { ChangePlan, PermissionState } from "../../utils/utils";
+import { ChangePlan} from "../../utils/utils";
+import {PermissionState} from "../../utils/permissionUtils";
 interface ReduxState {
   token: string | null;
   error: string | null;

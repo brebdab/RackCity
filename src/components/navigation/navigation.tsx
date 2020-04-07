@@ -28,10 +28,10 @@ import {
   ChangePlan,
   ElementType,
   getHeaders,
-  PermissionState,
   ROUTES
 } from "../../utils/utils";
 import "./navigation.scss";
+import {PermissionState} from "../../utils/permissionUtils";
 export interface NavigationProps {
   isAuthenticated: boolean;
   logout(): any;

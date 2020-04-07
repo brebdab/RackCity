@@ -43,8 +43,7 @@ import {
   ROUTES,
   isChangePlanObject,
   ChangePlan,
-  getChangePlanRowStyle,
-  PermissionState
+  getChangePlanRowStyle
 } from "../../utils/utils";
 import * as actions from "../../store/actions/state";
 import DragDropList, { DragDropListTypes } from "./dragDropList";
@@ -77,6 +76,7 @@ import FilterSelect from "./filterSelect";
 import { PowerView } from "./powerView/powerView";
 import "./powerView/powerView.scss";
 import { isNullOrUndefined } from "util";
+import {PermissionState} from "../../utils/permissionUtils";
 
 interface ElementTableState {
   items: Array<ElementObjectType>;
