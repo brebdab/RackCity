@@ -16,7 +16,7 @@ from rackcity.utils.errors_utils import (
     get_rack_failure_message,
     get_rack_exist_failure,
     get_rack_with_asset_failure,
-    get_rack_do_not_exist_failure
+    get_rack_do_not_exist_failure,
 )
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
@@ -24,27 +24,26 @@ from http import HTTPStatus
 from rackcity.utils.rackcity_utils import get_rack_detailed_response
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def rack_get_all(request):
     """
     List all racks
     """
-    datacenter_id = request.query_params.get('datacenter')
+    datacenter_id = request.query_params.get("datacenter")
     if not datacenter_id:
         return JsonResponse(
             {
-                "failure_message":
-                    Status.ERROR.value + "Must specifiy datacenter",
-                "errors": "Query parameter 'datacenter' is required"
+                "failure_message": Status.ERROR.value + "Must specifiy datacenter",
+                "errors": "Query parameter 'datacenter' is required",
             },
-            status=HTTPStatus.BAD_REQUEST
+            status=HTTPStatus.BAD_REQUEST,
         )
     racks = Rack.objects.filter(datacenter=datacenter_id)
     return get_rack_detailed_response(racks)
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def rack_get(request):
     """
@@ -55,10 +54,9 @@ def rack_get(request):
     if not range_serializer.is_valid():
         return JsonResponse(
             {
-                "failure_message":
-                    Status.INVALID_INPUT.value +
-                    parse_serializer_errors(range_serializer.errors),
-                "errors": str(range_serializer.errors)
+                "failure_message": Status.INVALID_INPUT.value
+                + parse_serializer_errors(range_serializer.errors),
+                "errors": str(range_serializer.errors),
             },
             status=HTTPStatus.BAD_REQUEST,
         )
@@ -72,7 +70,7 @@ def rack_get(request):
     return get_rack_detailed_response(racks)
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def rack_create(request):
     """
@@ -82,28 +80,23 @@ def rack_create(request):
     if not range_serializer.is_valid():
         return JsonResponse(
             {
-                "failure_message":
-                    Status.INVALID_INPUT.value +
-                    parse_serializer_errors(range_serializer.errors),
-                "errors": str(range_serializer.errors)
+                "failure_message": Status.INVALID_INPUT.value
+                + parse_serializer_errors(range_serializer.errors),
+                "errors": str(range_serializer.errors),
             },
             status=HTTPStatus.BAD_REQUEST,
         )
     datacenter_id = range_serializer.get_datacenter()
-    if not user_has_asset_permission(
-        request.user,
-        datacenter_id,
-    ):
+    if not user_has_asset_permission(request.user, datacenter_id,):
         return JsonResponse(
             {
-                "failure_message":
-                    Status.AUTH_ERROR.value + AuthFailure.RACK.value,
-                "errors":
-                    "User " + request.user.username +
-                    " does not have asset permission in datacenter id="
-                    + str(datacenter_id)
+                "failure_message": Status.AUTH_ERROR.value + AuthFailure.RACK.value,
+                "errors": "User "
+                + request.user.username
+                + " does not have asset permission in datacenter id="
+                + str(datacenter_id),
             },
-            status=HTTPStatus.UNAUTHORIZED
+            status=HTTPStatus.UNAUTHORIZED,
         )
     racks = Rack.objects.filter(
         datacenter=range_serializer.get_datacenter(),
@@ -113,10 +106,9 @@ def rack_create(request):
     if racks.count() > 0:
         return JsonResponse(
             {
-                "failure_message":
-                    Status.CREATE_ERROR.value +
-                    get_rack_failure_message(range_serializer, 'created') +
-                    get_rack_exist_failure(racks)
+                "failure_message": Status.CREATE_ERROR.value
+                + get_rack_failure_message(range_serializer, "created")
+                + get_rack_exist_failure(racks)
             },
             status=HTTPStatus.BAD_REQUEST,
         )
@@ -127,7 +119,7 @@ def rack_create(request):
             rack = Rack(
                 datacenter=range_serializer.get_datacenter(),
                 row_letter=row,
-                rack_num=num
+                rack_num=num,
             )
             rack.save()
     related_racks = range_serializer.get_range_as_string()
@@ -135,20 +127,21 @@ def rack_create(request):
         request.user,
         Action.CREATE,
         related_racks,
-        range_serializer.get_datacenter().abbreviation
+        range_serializer.get_datacenter().abbreviation,
     )
     return JsonResponse(
         {
-            "success_message":
-                Status.SUCCESS.value +
-                "Racks " + related_racks + " were created in datacenter " +
-                range_serializer.get_datacenter().abbreviation
+            "success_message": Status.SUCCESS.value
+            + "Racks "
+            + related_racks
+            + " were created in datacenter "
+            + range_serializer.get_datacenter().abbreviation
         },
-        status=HTTPStatus.OK
+        status=HTTPStatus.OK,
     )
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def rack_delete(request):
     """
@@ -158,28 +151,23 @@ def rack_delete(request):
     if not range_serializer.is_valid():
         return JsonResponse(
             {
-                "failure_message":
-                    Status.INVALID_INPUT.value +
-                    parse_serializer_errors(range_serializer.errors),
-                "errors": str(range_serializer.errors)
+                "failure_message": Status.INVALID_INPUT.value
+                + parse_serializer_errors(range_serializer.errors),
+                "errors": str(range_serializer.errors),
             },
             status=HTTPStatus.BAD_REQUEST,
         )
     datacenter_id = range_serializer.get_datacenter()
-    if not user_has_asset_permission(
-        request.user,
-        datacenter_id,
-    ):
+    if not user_has_asset_permission(request.user, datacenter_id,):
         return JsonResponse(
             {
-                "failure_message":
-                    Status.AUTH_ERROR.value + AuthFailure.RACK.value,
-                "errors":
-                    "User " + request.user.username +
-                    " does not have asset permission in datacenter id="
-                    + str(datacenter_id)
+                "failure_message": Status.AUTH_ERROR.value + AuthFailure.RACK.value,
+                "errors": "User "
+                + request.user.username
+                + " does not have asset permission in datacenter id="
+                + str(datacenter_id),
             },
-            status=HTTPStatus.UNAUTHORIZED
+            status=HTTPStatus.UNAUTHORIZED,
         )
     nonexistent_rack_names = []
     unempty_racks = []
@@ -199,22 +187,20 @@ def rack_delete(request):
     if len(unempty_racks) > 0:
         return JsonResponse(
             {
-                "failure_message":
-                    Status.DELETE_ERROR.value +
-                    get_rack_failure_message(range_serializer, 'deleted') +
-                    get_rack_with_asset_failure(unempty_racks)
+                "failure_message": Status.DELETE_ERROR.value
+                + get_rack_failure_message(range_serializer, "deleted")
+                + get_rack_with_asset_failure(unempty_racks)
             },
-            status=HTTPStatus.BAD_REQUEST
+            status=HTTPStatus.BAD_REQUEST,
         )
     if len(nonexistent_rack_names) > 0:
         return JsonResponse(
             {
-                "failure_message":
-                    Status.DELETE_ERROR.value +
-                    get_rack_failure_message(range_serializer, 'deleted') +
-                    get_rack_do_not_exist_failure(nonexistent_rack_names)
+                "failure_message": Status.DELETE_ERROR.value
+                + get_rack_failure_message(range_serializer, "deleted")
+                + get_rack_do_not_exist_failure(nonexistent_rack_names)
             },
-            status=HTTPStatus.BAD_REQUEST
+            status=HTTPStatus.BAD_REQUEST,
         )
     racks = Rack.objects.filter(
         datacenter=range_serializer.get_datacenter(),
@@ -226,11 +212,10 @@ def rack_delete(request):
     except Exception as error:
         return JsonResponse(
             {
-                "failure_message":
-                    Status.DELETE_ERROR.value +
-                    "Rack(s)" +
-                    GenericFailure.ON_DELETE.value,
-                "errors": str(error)
+                "failure_message": Status.DELETE_ERROR.value
+                + "Rack(s)"
+                + GenericFailure.ON_DELETE.value,
+                "errors": str(error),
             },
             status=HTTPStatus.BAD_REQUEST,
         )
@@ -239,31 +224,31 @@ def rack_delete(request):
         request.user,
         Action.DELETE,
         related_racks,
-        range_serializer.get_datacenter().abbreviation
+        range_serializer.get_datacenter().abbreviation,
     )
     return JsonResponse(
         {
-            "success_message":
-                Status.SUCCESS.value +
-                "Racks " + related_racks + " were deleted in datacenter" +
-                range_serializer.get_datacenter().abbreviation
+            "success_message": Status.SUCCESS.value
+            + "Racks "
+            + related_racks
+            + " were deleted in datacenter"
+            + range_serializer.get_datacenter().abbreviation
         },
-        status=HTTPStatus.OK
+        status=HTTPStatus.OK,
     )
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def rack_summary(request):
-    datacenter_id = request.query_params.get('datacenter')
+    datacenter_id = request.query_params.get("datacenter")
     if not datacenter_id:
         return JsonResponse(
             {
-                "failure_message":
-                    Status.ERROR.value + "Must specifiy datacenter",
-                "errors": "Query parameter 'datacenter' is required"
+                "failure_message": Status.ERROR.value + "Must specifiy datacenter",
+                "errors": "Query parameter 'datacenter' is required",
             },
-            status=HTTPStatus.BAD_REQUEST
+            status=HTTPStatus.BAD_REQUEST,
         )
     racks = Rack.objects.filter(datacenter=datacenter_id)
     serializer = RackSerializer(racks, many=True)

@@ -5,18 +5,10 @@ from rackcity.models import ChangePlan
 class AddChangePlanSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChangePlan
-        fields = (
-            'name',
-            'execution_time',
-            'owner'
-        )
+        fields = ("name", "execution_time", "owner")
 
 
 class GetChangePlanSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChangePlan
-        fields = (
-            'name',
-            'execution_time',
-            'id'
-        )
+        fields = ("name", "execution_time", "id")
