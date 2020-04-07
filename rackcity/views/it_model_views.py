@@ -300,30 +300,26 @@ def model_detail(request, id):
     try:
         model = ITModel.objects.get(id=id)
         model_serializer = ITModelSerializer(model)
-        assets_cp = []
-        change_plan = None
-        if request.query_params.get("change_plan"):
-            (change_plan, response) = get_change_plan(
-                request.query_params.get("change_plan")
-            )
-            if response:
-                return response
+        (change_plan, failure_response) = get_change_plan(
+            request.query_params.get("change_plan")
+        )
+        if failure_response:
+            return failure_response
+        if change_plan:
             assets, assets_cp = get_assets_for_cp(change_plan.id)
             assets = assets.filter(model=id)
             assets_cp = assets_cp.filter(model=id, change_plan=change_plan.id)
             assets_cp_serializer = RecursiveAssetCPSerializer(assets_cp, many=True)
-
         else:
             assets = Asset.objects.filter(model=id)
-        assets_serializer = RecursiveAssetSerializer(assets, many=True,)
-
+        assets_serializer = RecursiveAssetSerializer(assets, many=True)
         if change_plan:
             asset_data = assets_serializer.data + assets_cp_serializer.data
         else:
             asset_data = assets_serializer.data
         model_detail = {"model": model_serializer.data, "assets": asset_data}
         return JsonResponse(model_detail, status=HTTPStatus.OK)
-    except ITModel.DoesNotExist:
+    except ObjectDoesNotExist:
         return JsonResponse(
             {
                 "failure_message": Status.ERROR.value
