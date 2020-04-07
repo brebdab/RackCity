@@ -5,7 +5,7 @@ import re
 from django.contrib.postgres.fields import ArrayField
 
 
-DEFAULT_DISPLAY_COLOR = '#394B59'
+DEFAULT_DISPLAY_COLOR = "#394B59"
 
 
 def validate_display_color(value):
@@ -20,15 +20,9 @@ class ITModel(models.Model):
     model_number = models.CharField(max_length=150)
     height = models.PositiveIntegerField()
     display_color = models.CharField(
-        max_length=7,
-        default='#394B59',
-        validators=[validate_display_color],
+        max_length=7, default="#394B59", validators=[validate_display_color],
     )
-    network_ports = ArrayField(
-        models.CharField(max_length=150),
-        null=True,
-        blank=True,
-    )
+    network_ports = ArrayField(models.CharField(max_length=150), null=True, blank=True)
     num_network_ports = RCPositiveIntegerField(null=True, blank=True)
     num_power_ports = RCPositiveIntegerField(null=True, blank=True)
     cpu = models.CharField(max_length=150, null=True, blank=True)
@@ -37,13 +31,13 @@ class ITModel(models.Model):
     comment = models.TextField(null=True, blank=True)
 
     class Meta:
-        ordering = ['vendor', 'model_number']
+        ordering = ["vendor", "model_number"]
         constraints = [
             models.UniqueConstraint(
-                fields=['vendor', 'model_number'],
-                name='unique vendor model number'),
+                fields=["vendor", "model_number"], name="unique vendor model number"
+            ),
         ]
-        verbose_name = 'model'
+        verbose_name = "model"
 
     def save(self, *args, **kwargs):
         try:
@@ -51,6 +45,6 @@ class ITModel(models.Model):
         except ValidationError as valid_error:
             raise valid_error
         else:
-            if (self.network_ports):
+            if self.network_ports:
                 self.num_network_ports = len(self.network_ports)
             super(ITModel, self).save(*args, **kwargs)

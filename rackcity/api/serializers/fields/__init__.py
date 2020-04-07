@@ -1,3 +1,1 @@
-from .rackcity_serializer_fields import (
-    RCIntegerField
-)
+from .rackcity_serializer_fields import RCIntegerField
