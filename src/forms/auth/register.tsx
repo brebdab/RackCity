@@ -3,7 +3,7 @@ import {
   Callout,
   Classes,
   InputGroup,
-  Intent
+  Intent,
 } from "@blueprintjs/core";
 import { Form } from "antd";
 import { FormComponentProps } from "antd/lib/form";
@@ -24,7 +24,7 @@ interface RegistrationFormSubmitProps {
   authSignup(user: CreateUserObject, headers: any): Promise<any> | void;
 }
 var console: any = {};
-console.log = function() {};
+console.log = function () {};
 
 interface RegistrationFormState {
   errors: Array<string>;
@@ -40,7 +40,7 @@ class RegistrationForm extends React.Component<
 > {
   public state = {
     confirmDirty: false,
-    errors: []
+    errors: [],
   };
 
   handleSubmit = (e: any) => {
@@ -53,12 +53,12 @@ class RegistrationForm extends React.Component<
         first_name: values.firstName,
         last_name: values.lastName,
         password1: values.password,
-        password2: values.confirm
+        password2: values.confirm,
       };
       if (!err) {
         const resp = this.props.authSignup(user, getHeaders(this.props.token));
         if (resp) {
-          resp.catch(err => {
+          resp.catch((err) => {
             console.log(err);
             let errors: Array<string> = [];
 
@@ -67,7 +67,7 @@ class RegistrationForm extends React.Component<
             });
 
             this.setState({
-              errors: errors
+              errors: errors,
             });
             console.log(errors);
             // dispatch(authFail(err));
@@ -119,22 +119,22 @@ class RegistrationForm extends React.Component<
           <FormItem label="Username*">
             {getFieldDecorator("userName", {
               rules: [
-                { required: true, message: "Please input your username!" }
-              ]
+                { required: true, message: "Please input your username!" },
+              ],
             })(<InputGroup placeholder="Username" />)}
           </FormItem>
           <FormItem label="First Name*">
             {getFieldDecorator("firstName", {
               rules: [
-                { required: true, message: "Please input your first name!" }
-              ]
+                { required: true, message: "Please input your first name!" },
+              ],
             })(<InputGroup placeholder="first name" />)}
           </FormItem>
           <FormItem label="Last Name*">
             {getFieldDecorator("lastName", {
               rules: [
-                { required: true, message: "Please input your last name!" }
-              ]
+                { required: true, message: "Please input your last name!" },
+              ],
             })(<InputGroup placeholder="last name" />)}
           </FormItem>
 
@@ -143,13 +143,13 @@ class RegistrationForm extends React.Component<
               rules: [
                 {
                   type: "email",
-                  message: "The input is not valid E-mail!"
+                  message: "The input is not valid E-mail!",
                 },
                 {
                   required: true,
-                  message: "Please input your E-mail!"
-                }
-              ]
+                  message: "Please input your E-mail!",
+                },
+              ],
             })(<InputGroup placeholder="email" />)}
           </FormItem>
 
@@ -158,12 +158,12 @@ class RegistrationForm extends React.Component<
               rules: [
                 {
                   required: true,
-                  message: "Please input your password!"
+                  message: "Please input your password!",
                 },
                 {
-                  validator: this.validateToNextPassword
-                }
-              ]
+                  validator: this.validateToNextPassword,
+                },
+              ],
             })(<InputGroup type="password" placeholder="Password" />)}
           </FormItem>
 
@@ -172,12 +172,12 @@ class RegistrationForm extends React.Component<
               rules: [
                 {
                   required: true,
-                  message: "Please confirm your password!"
+                  message: "Please confirm your password!",
                 },
                 {
-                  validator: this.compareToFirstPassword
-                }
-              ]
+                  validator: this.compareToFirstPassword,
+                },
+              ],
             })(
               <InputGroup
                 type="password"
@@ -211,7 +211,7 @@ const mapStateToProps = (state: any) => {
   return {
     loading: state.loading,
     error: state.error,
-    token: state.token
+    token: state.token,
   };
 };
 

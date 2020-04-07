@@ -7,7 +7,7 @@ import {
   Position,
   Intent,
   Spinner,
-  Callout
+  Callout,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -20,10 +20,10 @@ import {
   getHeaders,
   getChangePlanRowStyle,
   ChangePlan,
-  PermissionState
 } from "../../../utils/utils";
 import "./powerView.scss";
 import { IconNames } from "@blueprintjs/icons";
+import { PermissionState } from "../../../utils/permissionUtils";
 
 interface PowerViewProps {
   token: string;
@@ -66,7 +66,7 @@ export class PowerView extends React.PureComponent<
   };
 
   private refHandlers = {
-    toaster: (ref: Toaster) => (this.toaster = ref)
+    toaster: (ref: Toaster) => (this.toaster = ref),
   };
 
   public state: PowerViewState = {
@@ -74,70 +74,68 @@ export class PowerView extends React.PureComponent<
     powerStatus: undefined,
     statusLoaded: true,
     alertOpen: false,
-    confirmationMessage: ""
+    confirmationMessage: "",
   };
 
   componentDidMount() {
     if (!this.props.assetIsDecommissioned && !this.props.changePlan) {
       this.setState({
-        statusLoaded: true
+        statusLoaded: true,
       });
       axios
         .get(
           API_ROOT + "api/power/get-state/" + this.props.asset!.id,
           getHeaders(this.props.token)
         )
-        .then(res => {
+        .then((res) => {
           this.setState({
             powerConnections: res.data.power_connections,
             powerStatus: res.data.power_status,
-            statusLoaded: true
+            statusLoaded: true,
           });
         })
-        .catch(err => {
+        .catch((err) => {
           this.addErrorToast(err.response.data.failure_message);
           this.setState({
-            statusLoaded: true
+            statusLoaded: true,
           });
         });
     } else {
       this.setState({
-        statusLoaded: true
+        statusLoaded: true,
       });
     }
     this.getUsername(this.props.token);
   }
 
   componentDidUpdate() {
-
     if (this.props.shouldUpdate) {
-
       if (!this.props.assetIsDecommissioned && !this.props.changePlan) {
         axios
           .get(
             API_ROOT + "api/power/get-state/" + this.props.asset!.id,
             getHeaders(this.props.token)
           )
-          .then(res => {
+          .then((res) => {
             this.setState({
               powerConnections: res.data.power_connections,
               powerStatus: res.data.power_status,
-              statusLoaded: true
+              statusLoaded: true,
             });
           })
-          .catch(err => {
+          .catch((err) => {
             this.addErrorToast(err.response.data.failure_message);
             this.setState({
-              statusLoaded: true
+              statusLoaded: true,
             });
           });
         this.setState({
-          statusLoaded: true
+          statusLoaded: true,
         });
       }
     } else {
       this.setState({
-        statusLoaded: true
+        statusLoaded: true,
       });
     }
     this.props.updated();
@@ -146,17 +144,15 @@ export class PowerView extends React.PureComponent<
   getUsername(token: string) {
     const headers = {
       headers: {
-        Authorization: "Token " + token
-      }
+        Authorization: "Token " + token,
+      },
     };
     axios
       .get(API_ROOT + "api/users/who-am-i", headers)
-      .then(res => {
+      .then((res) => {
         this.setState({ username: res.data.username });
       })
-      .catch(err => {
-
-      });
+      .catch((err) => {});
   }
 
   getPowerPortRows() {
@@ -220,7 +216,7 @@ export class PowerView extends React.PureComponent<
                     this.setState({
                       powerConnections: undefined,
                       powerStatus: undefined,
-                      statusLoaded: false
+                      statusLoaded: false,
                     });
                     this.props.callback!();
                   }}
@@ -276,7 +272,7 @@ export class PowerView extends React.PureComponent<
                     ] === "OFF"
                       ? () => {
                           this.setState({
-                            statusLoaded: !this.state.statusLoaded
+                            statusLoaded: !this.state.statusLoaded,
                           });
                           axios
                             .post(
@@ -284,20 +280,20 @@ export class PowerView extends React.PureComponent<
                               { id: this.props.asset!.id },
                               getHeaders(this.props.token)
                             )
-                            .then(res => {
+                            .then((res) => {
                               this.setState({
                                 alertOpen: true,
-                                confirmationMessage: res.data.success_message
+                                confirmationMessage: res.data.success_message,
                               });
                               this.componentDidMount();
                             })
-                            .catch(err => {
+                            .catch((err) => {
                               alert(err);
                             });
                         }
                       : () => {
                           this.setState({
-                            statusLoaded: !this.state.statusLoaded
+                            statusLoaded: !this.state.statusLoaded,
                           });
                           axios
                             .post(
@@ -305,14 +301,14 @@ export class PowerView extends React.PureComponent<
                               { id: this.props.asset!.id },
                               getHeaders(this.props.token)
                             )
-                            .then(res => {
+                            .then((res) => {
                               this.setState({
                                 alertOpen: true,
-                                confirmationMessage: res.data.success_message
+                                confirmationMessage: res.data.success_message,
                               });
                               this.componentDidMount();
                             })
-                            .catch(err => {
+                            .catch((err) => {
                               alert(err);
                             });
                         }
@@ -338,7 +334,7 @@ export class PowerView extends React.PureComponent<
                   }
                   onClick={() => {
                     this.setState({
-                      statusLoaded: !this.state.statusLoaded
+                      statusLoaded: !this.state.statusLoaded,
                     });
                     axios
                       .post(
@@ -346,14 +342,14 @@ export class PowerView extends React.PureComponent<
                         { id: this.props.asset!.id },
                         getHeaders(this.props.token)
                       )
-                      .then(res => {
+                      .then((res) => {
                         this.setState({
                           alertOpen: true,
-                          confirmationMessage: res.data.success_message
+                          confirmationMessage: res.data.success_message,
                         });
                         this.componentDidMount();
                       })
-                      .catch(err => {
+                      .catch((err) => {
                         alert(err);
                       });
                   }}
@@ -369,7 +365,7 @@ export class PowerView extends React.PureComponent<
                     this.setState({
                       powerConnections: undefined,
                       powerStatus: undefined,
-                      statusLoaded: false
+                      statusLoaded: false,
                     });
                     this.props.callback!();
                   }}
@@ -386,12 +382,12 @@ export class PowerView extends React.PureComponent<
           isOpen={this.state.alertOpen}
           onConfirm={() => {
             this.setState({
-              alertOpen: false
+              alertOpen: false,
             });
           }}
           onClose={() => {
             this.setState({
-              alertOpen: false
+              alertOpen: false,
             });
           }}
         >
@@ -413,7 +409,7 @@ const mapStatetoProps = (state: any) => {
     token: state.token,
     isAdmin: state.admin,
     changePlan: state.changePlan,
-    permissionState: state.permissionState
+    permissionState: state.permissionState,
   };
 };
 

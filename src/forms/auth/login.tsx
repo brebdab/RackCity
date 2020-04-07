@@ -4,7 +4,7 @@ import {
   InputGroup,
   Callout,
   Intent,
-  Spinner
+  Spinner,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { Form } from "antd";
@@ -21,7 +21,7 @@ interface LoginFormProps {
   onAuth(username: string, password: string): any;
 }
 var console: any = {};
-console.log = function() {};
+console.log = function () {};
 class NormalLoginForm extends React.Component<
   LoginFormProps & FormComponentProps & RouteComponentProps
 > {
@@ -58,15 +58,15 @@ class NormalLoginForm extends React.Component<
               <Form.Item>
                 {getFieldDecorator("username", {
                   rules: [
-                    { required: true, message: "Please input your username!" }
-                  ]
+                    { required: true, message: "Please input your username!" },
+                  ],
                 })(<InputGroup id="username" placeholder="username" />)}
               </Form.Item>
               <Form.Item>
                 {getFieldDecorator("password", {
                   rules: [
-                    { required: true, message: "Please input your Password!" }
-                  ]
+                    { required: true, message: "Please input your Password!" },
+                  ],
                 })(
                   <InputGroup
                     type="password"
@@ -94,7 +94,7 @@ const mapStatetoProps = (state: any) => {
   return {
     loading: state.loading,
     error: state.error,
-    token: state.token
+    token: state.token,
   };
 };
 const WrappedNormalLoginForm = Form.create({ name: "normal_login" })(
@@ -103,7 +103,7 @@ const WrappedNormalLoginForm = Form.create({ name: "normal_login" })(
 const mapDispatchToProps = (dispatch: any) => {
   return {
     onAuth: (username: string, password: string) =>
-      dispatch(actions.authLogin(username, password))
+      dispatch(actions.authLogin(username, password)),
   };
 };
 export default connect(

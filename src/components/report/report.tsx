@@ -10,7 +10,7 @@ import {
   Tabs,
   TabId,
   Alert,
-  Spinner
+  Spinner,
 } from "@blueprintjs/core";
 import * as React from "react";
 import "@blueprintjs/core/lib/css/blueprint.css";
@@ -22,7 +22,7 @@ import "./report.scss";
 import {
   DatacenterSelect,
   filterDatacenter,
-  renderDatacenterItem
+  renderDatacenterItem,
 } from "../../forms/formUtils";
 import { DatacenterObject, getHeaders } from "../../utils/utils";
 
@@ -61,7 +61,7 @@ interface ReportState {
   no_data: boolean;
 }
 var console: any = {};
-console.log = function() {};
+console.log = function () {};
 
 export class Report extends React.PureComponent<
   ReportProps & RouteComponentProps
@@ -75,21 +75,21 @@ export class Report extends React.PureComponent<
     selectedTab: "global",
     datacenter_loaded: false,
     datacenterSelectionAlert: false,
-    no_data: false
+    no_data: false,
   };
 
   private modelFields = {
     vendor: "Vendor",
     model_number: "Model Number",
-    allocation_percent: "Allocation %"
+    allocation_percent: "Allocation %",
   };
   private ownerFields = {
     owner: "Owner",
-    allocation_percent: "Allocation %"
+    allocation_percent: "Allocation %",
   };
   private vendorFields = {
     vendor: "Vendor",
-    allocation_percent: "Allocation %"
+    allocation_percent: "Allocation %",
   };
 
   showReport = (field: string) => {
@@ -160,7 +160,7 @@ export class Report extends React.PureComponent<
                 popoverProps={{
                   minimal: true,
                   popoverClassName: "dropdown",
-                  usePortal: true
+                  usePortal: true,
                 }}
                 items={this.state.datacenters!}
                 onItemSelect={(datacenter: DatacenterObject) => {
@@ -187,23 +187,23 @@ export class Report extends React.PureComponent<
             onClick={() => {
               if (!this.state.datacenter) {
                 this.setState({
-                  datacenterSelectionAlert: true
+                  datacenterSelectionAlert: true,
                 });
               } else {
                 this.setState({
-                  datacenter_loaded: true
+                  datacenter_loaded: true,
                 });
                 getDatacenterReport(
                   this.props.token,
                   this.state.datacenter
-                ).then(result => {
+                ).then((result) => {
                   if (
                     result.free_rackspace_percent === null ||
                     result.free_rackspace_percent === undefined
                   ) {
                     this.setState({
                       state_loaded: true,
-                      no_data: true
+                      no_data: true,
                     });
                   } else {
                     this.setState({
@@ -211,7 +211,7 @@ export class Report extends React.PureComponent<
                       model_allocation: result.model_allocation,
                       owner_allocation: result.owner_allocation,
                       vendor_allocation: result.vendor_allocation,
-                      state_loaded: true
+                      state_loaded: true,
                     });
                   }
                 });
@@ -228,7 +228,7 @@ export class Report extends React.PureComponent<
 
   onDatacenterSelect = (datacenter: DatacenterObject) => {
     this.setState({
-      datacenter: datacenter
+      datacenter: datacenter,
     });
   };
 
@@ -239,18 +239,18 @@ export class Report extends React.PureComponent<
         {},
         getHeaders(this.props.token)
       )
-      .then(res => {
+      .then((res) => {
         const dcs = res.data.datacenters as Array<DatacenterObject>;
         this.setState({
-          datacenters: dcs
+          datacenters: dcs,
         });
-        getGlobalReport(this.props.token).then(result => {
+        getGlobalReport(this.props.token).then((result) => {
           this.setState({
             freeRack: result.free_rackspace_percent,
             model_allocation: result.model_allocation,
             owner_allocation: result.owner_allocation,
             vendor_allocation: result.vendor_allocation,
-            state_loaded: true
+            state_loaded: true,
           });
         });
       });
@@ -272,17 +272,17 @@ export class Report extends React.PureComponent<
               vendor_allocation: [],
               state_loaded: false,
               datacenter_loaded: false,
-              no_data: false
+              no_data: false,
             });
             if (newTab === "global") {
-              getGlobalReport(this.props.token).then(result => {
+              getGlobalReport(this.props.token).then((result) => {
                 if (
                   result.free_rackspace_percent === null ||
                   result.free_rackspace_percent === undefined
                 ) {
                   this.setState({
                     state_loaded: true,
-                    no_data: true
+                    no_data: true,
                   });
                 } else {
                   this.setState({
@@ -290,14 +290,14 @@ export class Report extends React.PureComponent<
                     model_allocation: result.model_allocation,
                     owner_allocation: result.owner_allocation,
                     vendor_allocation: result.vendor_allocation,
-                    state_loaded: true
+                    state_loaded: true,
                   });
                 }
               });
             } else {
               this.setState({
                 datacenter: undefined,
-                datacenter_loaded: false
+                datacenter_loaded: false,
               });
             }
             this.setState({ selectedTab: newTab });
@@ -322,7 +322,7 @@ export class Report extends React.PureComponent<
           confirmButtonText={"OK"}
           onConfirm={() => {
             this.setState({
-              datacenterSelectionAlert: false
+              datacenterSelectionAlert: false,
             });
           }}
         >
@@ -377,12 +377,14 @@ class Tabular extends React.PureComponent<TabProps> {
 async function getGlobalReport(token: string) {
   const headers = {
     headers: {
-      Authorization: "Token " + token
-    }
+      Authorization: "Token " + token,
+    },
   };
-  return await axios.get(API_ROOT + "api/report/global", headers).then(res => {
-    return res.data;
-  });
+  return await axios
+    .get(API_ROOT + "api/report/global", headers)
+    .then((res) => {
+      return res.data;
+    });
 }
 
 async function getDatacenterReport(
@@ -391,19 +393,19 @@ async function getDatacenterReport(
 ) {
   const headers = {
     headers: {
-      Authorization: "Token " + token
-    }
+      Authorization: "Token " + token,
+    },
   };
   return await axios
     .get(API_ROOT + "api/report/datacenter/" + datacenter.id, headers)
-    .then(res => {
+    .then((res) => {
       return res.data;
     });
 }
 
 const mapStatetoProps = (state: any) => {
   return {
-    token: state.token
+    token: state.token,
   };
 };
 

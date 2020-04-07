@@ -11,7 +11,7 @@ import {
   RadioGroup,
   Alignment,
   Spinner,
-  Position
+  Position,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
@@ -20,7 +20,7 @@ import axios from "axios";
 import {
   getHeaders,
   UserPermissionsObject,
-  DatacenterObject
+  DatacenterObject,
 } from "../utils/utils";
 import "./forms.scss";
 import { FormTypes } from "./formUtils";
@@ -28,7 +28,7 @@ import { API_ROOT } from "../utils/api-config";
 import { modifyUser } from "../components/elementView/elementUtils";
 
 var console: any = {};
-console.log = function() {};
+console.log = function () {};
 
 export interface UserFormProps {
   userId: string;
@@ -54,7 +54,7 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
   }
 
   private refHandlers = {
-    toaster: (ref: Toaster) => (this.toaster = ref)
+    toaster: (ref: Toaster) => (this.toaster = ref),
   };
 
   public state = {
@@ -64,7 +64,7 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
       power_control: false,
       audit_read: false,
       admin: false,
-      datacenter_permissions: [] as Array<string>
+      datacenter_permissions: [] as Array<string>,
     },
     errors: [] as Array<string>,
     permissions: {
@@ -73,12 +73,12 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
       power_control: false,
       audit_read: false,
       admin: false,
-      datacenter_permissions: [""] as Array<string>
+      datacenter_permissions: [""] as Array<string>,
     },
     datacenters: [] as Array<DatacenterObject>,
     datacenter_selection: "Global",
     loading: true,
-    show_asset_options: false
+    show_asset_options: false,
   };
 
   private handleSubmit = (e: any) => {
@@ -87,11 +87,11 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
       updatedPermissions.asset_management = false;
       updatedPermissions.datacenter_permissions = [] as Array<string>;
       this.setState({
-        permissions: updatedPermissions
+        permissions: updatedPermissions,
       });
     }
     this.setState({
-      errors: []
+      errors: [],
     });
     e.preventDefault();
     console.log("submitting");
@@ -103,34 +103,34 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
       power_control: this.state.permissions.power_control,
       audit_read: this.state.permissions.audit_read,
       admin: this.state.permissions.admin,
-      datacenter_permissions: this.state.permissions.datacenter_permissions
+      datacenter_permissions: this.state.permissions.datacenter_permissions,
     };
     modifyUser(body, getHeaders(this.props.token))
       .then(this.props.submitForm())
-      .catch(err => {
+      .catch((err) => {
         console.log(err.response.data.failure_message);
         let errors: Array<string> = this.state.errors;
         errors.push(err.response.data.failure_message as string);
         this.setState({
-          errors: errors
+          errors: errors,
         });
       });
   };
 
   componentDidMount() {
     this.getDatacenters()
-      .then(res => {
+      .then((res) => {
         var data = res.datacenters as Array<DatacenterObject>;
         data.sort(this.compare);
         this.setState({
-          datacenters: data
+          datacenters: data,
         });
         this.getUserPermissions(this.props.userId);
       })
-      .catch(err => {
+      .catch((err) => {
         this.addToast({
           message: err.response.data.failure_message,
-          intent: Intent.DANGER
+          intent: Intent.DANGER,
         });
       });
   }
@@ -171,11 +171,11 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
                       audit_read: this.state.permissions.audit_read,
                       admin: !this.state.permissions.admin,
                       datacenter_permissions: this.state.permissions
-                        .datacenter_permissions
+                        .datacenter_permissions,
                     };
                     this.setState({
                       permissions: updatedPermissions,
-                      show_asset_options: false
+                      show_asset_options: false,
                     });
                   }}
                 ></Checkbox>
@@ -194,7 +194,7 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
                     this.setState({
                       permissions: this.updateBooleanPermissions(
                         "model_management"
-                      )
+                      ),
                     });
                   }}
                 ></Checkbox>
@@ -213,7 +213,7 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
                     this.setState({
                       permissions: this.updateBooleanPermissions(
                         "power_control"
-                      )
+                      ),
                     });
                   }}
                 ></Checkbox>
@@ -230,7 +230,7 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
                   disabled={this.state.permissions.admin}
                   onChange={() => {
                     this.setState({
-                      permissions: this.updateBooleanPermissions("audit_read")
+                      permissions: this.updateBooleanPermissions("audit_read"),
                     });
                   }}
                 ></Checkbox>
@@ -247,7 +247,7 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
                   disabled={this.state.permissions.admin}
                   onChange={() => {
                     this.setState({
-                      show_asset_options: !this.state.show_asset_options
+                      show_asset_options: !this.state.show_asset_options,
                     });
                   }}
                 ></Checkbox>
@@ -265,7 +265,7 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
                       updatedPermissions.asset_management = false;
                       this.setState({
                         datacenter_selection: "Per Datacenter",
-                        permissions: updatedPermissions
+                        permissions: updatedPermissions,
                       });
                     } else {
                       let permissions: Array<string>;
@@ -277,7 +277,7 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
                       updatedPermissions.asset_management = this.state.show_asset_options;
                       this.setState({
                         datacenter_selection: "Global",
-                        permissions: updatedPermissions
+                        permissions: updatedPermissions,
                       });
                     }
                   }}
@@ -348,7 +348,7 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
               updatedPermissions.datacenter_permissions.push(datacenter.id);
             }
             this.setState({
-              permissions: updatedPermissions
+              permissions: updatedPermissions,
             });
           }}
         ></Checkbox>
@@ -359,7 +359,7 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
   private getDatacenters() {
     const body = {
       sort_by: [],
-      filters: []
+      filters: [],
     };
     return axios
       .post(
@@ -367,20 +367,20 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
         body,
         getHeaders(this.props.token)
       )
-      .then(res => {
+      .then((res) => {
         return res.data;
       })
-      .catch(err => {
+      .catch((err) => {
         this.addToast({
           message: err.response.data.failure_message,
-          intent: Intent.DANGER
+          intent: Intent.DANGER,
         });
       });
   }
 
   private getUserPermissions(id: string) {
     const body = {
-      id: id
+      id: id,
     };
     axios
       .post(
@@ -388,32 +388,32 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
         body,
         getHeaders(this.props.token)
       )
-      .then(res => {
+      .then((res) => {
         console.log(res.data);
         this.setState({
           initialValues: res.data,
-          permissions: res.data
+          permissions: res.data,
         });
         if (res.data.asset_management) {
           this.setState({
-            datacenter_selection: "Global"
+            datacenter_selection: "Global",
           });
         } else {
           this.setState({
-            datacenter_selection: "Per Datacenter"
+            datacenter_selection: "Per Datacenter",
           });
         }
         this.setState({
           loading: false,
           show_asset_options:
             this.state.permissions.asset_management ||
-            this.state.permissions.datacenter_permissions.length > 0
+            this.state.permissions.datacenter_permissions.length > 0,
         });
       })
-      .catch(err => {
+      .catch((err) => {
         this.addToast({
           message: err.response.data.failure_message,
-          intent: Intent.DANGER
+          intent: Intent.DANGER,
         });
       });
   }
@@ -428,7 +428,7 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
 
 const mapStateToProps = (state: any) => {
   return {
-    token: state.token
+    token: state.token,
   };
 };
 export default connect(mapStateToProps)(UserForm);

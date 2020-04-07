@@ -91,7 +91,7 @@ class BarcodeView extends React.PureComponent<
 const mapStatetoProps = (state: any) => {
   return {
     token: state.token,
-    isAdmin: state.admin
+    isAdmin: state.admin,
   };
 };
 

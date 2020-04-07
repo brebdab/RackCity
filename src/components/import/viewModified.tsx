@@ -17,7 +17,7 @@ interface ModifierProps {
   operation: string;
 }
 var console: any = {};
-console.log = function() {};
+console.log = function () {};
 
 export interface AssetObject {
   [key: string]: any;
@@ -73,7 +73,7 @@ export class Modifier extends React.PureComponent<
   ModifierState
 > {
   public state: ModifierState = {
-    modifiedModels: []
+    modifiedModels: [],
   };
 
   renderOneModification(obj: any, fields: any, model: any) {
@@ -215,7 +215,7 @@ export class Modifier extends React.PureComponent<
               check = this.state.modifiedModels;
               check[index].checked = !check[index].checked;
               this.setState({
-                modifiedModels: check
+                modifiedModels: check,
               });
               // this.state.modifiedModels[index].checked = !this.state.modifiedModels[index].checked
             }}
@@ -258,7 +258,7 @@ export class Modifier extends React.PureComponent<
           network_port_name_1: "Network Port #1 Name",
           network_port_name_2: "Network Port #2 Name",
           network_port_name_3: "Network Port #3 Name",
-          network_port_name_4: "Network Port #4 Name"
+          network_port_name_4: "Network Port #4 Name",
         };
       } else if (this.props.operation === "assets") {
         fields = {
@@ -272,7 +272,7 @@ export class Modifier extends React.PureComponent<
           comment: "Comments",
           id: "",
           power_port_connection_1: "Power Port #1 Connection",
-          power_port_connection_2: "Power Port #2 Connection"
+          power_port_connection_2: "Power Port #2 Connection",
         };
       } else if (this.props.operation === "network") {
         fields = {
@@ -280,7 +280,7 @@ export class Modifier extends React.PureComponent<
           src_port: "Source Port",
           src_mac: "Source MAC",
           dest_hostname: "Destination Hostname",
-          dest_port: "Destination Port"
+          dest_port: "Destination Port",
         };
       }
 
@@ -310,7 +310,7 @@ export class Modifier extends React.PureComponent<
                   this.props.token,
                   this.props.operation
                 ).then(
-                  res => {
+                  (res) => {
                     console.log(this.props);
                     let toasts: Array<string>;
                     toasts = [];
@@ -332,11 +332,11 @@ export class Modifier extends React.PureComponent<
                       types.push(Intent.WARNING);
                     }
                     this.setState({
-                      modifiedModels: []
+                      modifiedModels: [],
                     });
                     this.props.callback(toasts, types);
                   },
-                  err => {
+                  (err) => {
                     this.props.callback(
                       [err.response.data.failure_message],
                       [Intent.DANGER]
@@ -359,7 +359,7 @@ export class Modifier extends React.PureComponent<
                   this.props.token,
                   this.props.operation
                 ).then(
-                  res => {
+                  (res) => {
                     let toasts: Array<string>;
                     toasts = [];
                     let types: Array<string>;
@@ -380,11 +380,11 @@ export class Modifier extends React.PureComponent<
                       types.push(Intent.WARNING);
                     }
                     this.setState({
-                      modifiedModels: []
+                      modifiedModels: [],
                     });
                     this.props.callback(toasts, types);
                   },
-                  err => {
+                  (err) => {
                     this.props.callback(
                       [err.response.data.failure_message],
                       [Intent.DANGER]
@@ -403,7 +403,7 @@ export class Modifier extends React.PureComponent<
                   this.props.token,
                   this.props.operation
                 ).then(
-                  res => {
+                  (res) => {
                     // this.addSuccessToast(
                     //   "Success! Modified: " +
                     //     modified.length +
@@ -434,11 +434,11 @@ export class Modifier extends React.PureComponent<
                       types.push(Intent.WARNING);
                     }
                     this.setState({
-                      modifiedModels: []
+                      modifiedModels: [],
                     });
                     this.props.callback(toasts, types);
                   },
-                  err => {
+                  (err) => {
                     this.props.callback(
                       [err.response.data.failure_message],
                       [Intent.DANGER]
@@ -466,8 +466,8 @@ async function uploadModified(
   console.log(modelList);
   const headers = {
     headers: {
-      Authorization: "Token " + token
-    }
+      Authorization: "Token " + token,
+    },
   };
   if (operation === "network") {
     return await axios
@@ -476,7 +476,7 @@ async function uploadModified(
         { approved_modifications: modelList },
         headers
       )
-      .then(res => {
+      .then((res) => {
         const data = res.data;
         return data;
       });
@@ -487,7 +487,7 @@ async function uploadModified(
       { approved_modifications: modelList },
       headers
     )
-    .then(res => {
+    .then((res) => {
       console.log(res.data);
       const data = res.data;
       return data;
@@ -522,7 +522,7 @@ class Checks extends React.PureComponent<RouteComponentProps & CheckboxProps> {
 
 const mapStatetoProps = (state: any) => {
   return {
-    token: state.token
+    token: state.token,
   };
 };
 
