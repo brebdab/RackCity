@@ -150,7 +150,8 @@ export class AssetView extends React.PureComponent<
     getData(rid, this.props.token, this.props.changePlan).then(result => {
       console.log(result);
       this.setState({
-        asset: result
+        asset: result,
+        powerShouldUpdate: true
       });
     });
     console.log(this.state.asset);
@@ -501,7 +502,9 @@ export class AssetView extends React.PureComponent<
       this.props.changePlan
     )
       .then(res => {
-        this.setState({ isDecommissionOpen: false });
+        this.setState({
+          isDecommissionOpen: false
+        });
         this.addSuccessToast("Successfully Decommissioned Asset");
         let params: any;
         params = this.props.match.params;
