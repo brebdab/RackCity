@@ -9,13 +9,6 @@ export interface PermissionState {
   datacenter_permissions: Array<number>;
 }
 
-export function hasAssetManagementPermission(
-  elementType: ElementType,
-  permissions: PermissionState
-) {
-  return elementType === ElementType.DATACENTER && permissions.asset_management;
-}
-
 export function hasAddElementPermission(
   elementType: ElementType,
   permissions: PermissionState
