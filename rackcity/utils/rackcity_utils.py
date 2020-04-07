@@ -19,45 +19,37 @@ def get_rack_detailed_response(racks):
     racks_with_assets = []
     for rack in racks:
         rack_serializer = RackSerializer(rack)
-        assets = Asset.objects \
-            .filter(rack=rack.id) \
-            .order_by("rack_position")
-        assets_serializer = RecursiveAssetSerializer(
-            assets,
-            many=True
-        )
+        assets = Asset.objects.filter(rack=rack.id).order_by("rack_position")
+        assets_serializer = RecursiveAssetSerializer(assets, many=True)
         rack_detail = {
             "rack": rack_serializer.data,
             "assets": assets_serializer.data,
         }
         racks_with_assets.append(rack_detail)
 
-    return JsonResponse(
-        {"racks": racks_with_assets},
-        status=HTTPStatus.OK
-    )
+    return JsonResponse({"racks": racks_with_assets}, status=HTTPStatus.OK)
 
 
 def validate_asset_datacenter_move(data, asset):
     old_datacenter = asset.rack.datacenter
-    if 'rack' not in data:
+    if "rack" not in data:
         return
-    new_datacenter = Rack.objects.get(id=data['rack']).datacenter
+    new_datacenter = Rack.objects.get(id=data["rack"]).datacenter
     if old_datacenter == new_datacenter:
         return
     power_ports = PowerPort.objects.filter(asset=asset.id)
     for power_port in power_ports:
         if power_port.power_connection is not None:
             raise LocationException(
-                "Cannot move asset with existing power connections " +
-                "to different datacenter."
+                "Cannot move asset with existing power connections "
+                + "to different datacenter."
             )
     network_ports = NetworkPort.objects.filter(asset=asset.id)
     for network_port in network_ports:
         if network_port.connected_port is not None:
             raise LocationException(
-                "Cannot move asset with existing network connections " +
-                "to different datacenter."
+                "Cannot move asset with existing network connections "
+                + "to different datacenter."
             )
 
 
@@ -67,11 +59,9 @@ def validate_asset_location(
     asset_height,
     asset_id=None,
     change_plan=None,
-    related_asset_id=None
+    related_asset_id=None,
 ):
-    new_asset_location_range = [
-        asset_rack_position + i for i in range(asset_height)
-    ]
+    new_asset_location_range = [asset_rack_position + i for i in range(asset_height)]
     rack_height = Rack.objects.get(id=rack_id).height
     for location in new_asset_location_range:
         if location <= 0 or location > rack_height:
@@ -85,19 +75,21 @@ def validate_asset_location(
         # Ignore if asset being modified conflicts with its old location
         is_valid_conflict = asset_id is None or asset_in_rack.id != asset_id
         if change_plan:
-            is_valid_conflict = related_asset_id is not None and asset_in_rack.id != related_asset_id
+            is_valid_conflict = (
+                related_asset_id is not None and asset_in_rack.id != related_asset_id
+            )
 
         if is_valid_conflict:
             for occupied_location in [
-                asset_in_rack.rack_position + i for i
-                    in range(asset_in_rack.model.height)
+                asset_in_rack.rack_position + i
+                for i in range(asset_in_rack.model.height)
             ]:
                 if occupied_location in new_asset_location_range:
                     if asset_in_rack.asset_number:
                         raise LocationException(
-                            "Asset location conflicts with another asset: '" +
-                            str(asset_in_rack.asset_number) +
-                            "'. "
+                            "Asset location conflicts with another asset: '"
+                            + str(asset_in_rack.asset_number)
+                            + "'. "
                         )
                     else:
                         raise LocationException(
@@ -108,15 +100,15 @@ def validate_asset_location(
             # Ignore if asset being modified conflicts with its old location
             if (asset_id is None) or (asset_in_rack.id != asset_id):
                 for occupied_location in [
-                    asset_in_rack.rack_position + i for i
-                        in range(asset_in_rack.model.height)
+                    asset_in_rack.rack_position + i
+                    for i in range(asset_in_rack.model.height)
                 ]:
                     if occupied_location in new_asset_location_range:
                         if asset_in_rack.asset_number:
                             raise LocationException(
-                                "Asset location conflicts with another asset: '" +
-                                str(asset_in_rack.asset_number) +
-                                "'. "
+                                "Asset location conflicts with another asset: '"
+                                + str(asset_in_rack.asset_number)
+                                + "'. "
                             )
                         else:
                             raise LocationException(
@@ -128,38 +120,35 @@ def validate_location_modification(data, existing_asset, user, change_plan=None)
     asset_id = existing_asset.id
     rack_id = existing_asset.rack_id
     related_asset_id = None
-    print(existing_asset)
     if hasattr(existing_asset, "related_asset") and existing_asset.related_asset:
-        print(existing_asset.related_asset)
         related_asset_id = existing_asset.related_asset.id
-    print("here")
     asset_rack_position = existing_asset.rack_position
     asset_height = existing_asset.model.height
-    if 'rack_position' in data:
+    if "rack_position" in data:
         try:
-            asset_rack_position = int(data['rack_position'])
+            asset_rack_position = int(data["rack_position"])
         except ValueError:
             raise Exception("Field 'rack_position' must be of type int.")
 
-    if 'model' in data:
+    if "model" in data:
         try:
-            asset_height = ITModel.objects.get(id=data['model']).height
+            asset_height = ITModel.objects.get(id=data["model"]).height
         except Exception:
-            raise Exception("No existing model with id=" +
-                            str(data['model']) + ".")
+            raise Exception("No existing model with id=" + str(data["model"]) + ".")
 
-    if 'rack' in data:
+    if "rack" in data:
         try:
-            rack = Rack.objects.get(id=data['rack'])
+            rack = Rack.objects.get(id=data["rack"])
             rack_id = rack.id
         except Exception:
-            raise Exception("No existing rack with id=" +
-                            str(data['rack']) + ".")
+            raise Exception("No existing rack with id=" + str(data["rack"]) + ".")
         else:
             if not user_has_asset_permission(user, rack.datacenter):
                 raise Exception(
-                    "You do not have permission to move assets to " +
-                    "datacenter " + rack.datacenter.abbreviation + "."
+                    "You do not have permission to move assets to "
+                    + "datacenter "
+                    + rack.datacenter.abbreviation
+                    + "."
                 )
 
     try:
@@ -185,13 +174,10 @@ def records_are_identical(existing_data, new_data):
             and existing_data[key] != ""
             and existing_data[key] != []
             and existing_data[key] != {}
-            and key != 'id'
+            and key != "id"
         ):
             return False
-        if (
-            key in new_keys
-            and new_data[key] != existing_data[key]
-        ):
+        if (key in new_keys) and (new_data[key] != existing_data[key]):
             if not (
                 int_string_comparison(existing_data[key], new_data[key])
                 or empty_vs_null_comparison(existing_data[key], new_data[key])
@@ -227,9 +213,9 @@ def no_infile_location_conflicts(asset_datas):
     location_occupied_by = {}
     unnamed_asset_count = 0
     for asset_data in asset_datas:
-        rack = asset_data['rack']
-        height = ITModel.objects.get(id=asset_data['model']).height
-        rack_position = int(asset_data['rack_position'])
+        rack = asset_data["rack"]
+        height = ITModel.objects.get(id=asset_data["model"]).height
+        rack_position = int(asset_data["rack_position"])
         asset_location_range = [  # THIS IS REPEATED! FACTOR OUT.
             rack_position + i for i in range(height)
         ]
@@ -238,18 +224,19 @@ def no_infile_location_conflicts(asset_datas):
         for location in asset_location_range:
             if location in location_occupied_by[rack]:
                 raise LocationException(
-                    "Asset '" +
-                    str(asset_data['asset_number']) +
-                    "' conflicts with asset '" +
-                    location_occupied_by[rack][location] +
-                    "'. ")
+                    "Asset '"
+                    + str(asset_data["asset_number"])
+                    + "' conflicts with asset '"
+                    + location_occupied_by[rack][location]
+                    + "'. "
+                )
             else:
-                if 'asset_number' in asset_data and asset_data['asset_number']:
-                    asset_name = asset_data['asset_number']
-                elif 'hostname' in asset_data and asset_data['hostname']:
-                    asset_name = asset_data['hostname']
+                if ("asset_number" in asset_data) and (asset_data["asset_number"]):
+                    asset_name = asset_data["asset_number"]
+                elif ("hostname" in asset_data) and (asset_data["hostname"]):
+                    asset_name = asset_data["hostname"]
                 else:
-                    asset_name = "unnamed_asset_"+str(unnamed_asset_count)
+                    asset_name = "unnamed_asset_" + str(unnamed_asset_count)
                     unnamed_asset_count += 1
                 location_occupied_by[rack][location] = asset_name
     return
@@ -262,4 +249,5 @@ def close_old_connections_decorator(func):
         value = func(*args, **kwargs)
         close_old_connections()
         return value
+
     return wrapper_decorator
