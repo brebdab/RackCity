@@ -1,6 +1,6 @@
 from django.db import models
 from .asset import Asset, AssetCP
-from .pdu_port import PDUPort,PDUPortCP
+from .pdu_port import PDUPort, PDUPortCP
 from .change_plan import ChangePlan
 
 
@@ -15,45 +15,30 @@ class AbstractPowerPort(models.Model):
 
 
 class PowerPort(AbstractPowerPort):
-    asset = models.ForeignKey(
-        Asset,
-        on_delete=models.CASCADE,
-        verbose_name="asset",
-    )
+    asset = models.ForeignKey(Asset, on_delete=models.CASCADE, verbose_name="asset")
     power_connection = models.OneToOneField(
-        PDUPort,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
+        PDUPort, on_delete=models.CASCADE, null=True, blank=True,
     )
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['asset', 'port_name'],
-                name='unique power port names on assets'),
+                fields=["asset", "port_name"], name="unique power port names on assets"
+            ),
         ]
 
 
 class PowerPortCP(AbstractPowerPort):
-    asset = models.ForeignKey(
-        AssetCP,
-        on_delete=models.CASCADE,
-        verbose_name="asset",
-    )
-    change_plan = models.ForeignKey(
-        ChangePlan,
-        on_delete=models.CASCADE,
-    )
+    asset = models.ForeignKey(AssetCP, on_delete=models.CASCADE, verbose_name="asset")
+    change_plan = models.ForeignKey(ChangePlan, on_delete=models.CASCADE,)
     power_connection = models.OneToOneField(
-        PDUPortCP,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
+        PDUPortCP, on_delete=models.CASCADE, null=True, blank=True,
     )
+
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['asset', 'port_name', 'change_plan'],
-                name='unique power port names on change plan assets'),
+                fields=["asset", "port_name", "change_plan"],
+                name="unique power port names on change plan assets",
+            ),
         ]
