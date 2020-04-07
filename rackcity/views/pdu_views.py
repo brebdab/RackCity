@@ -53,7 +53,7 @@ def power_status(request, id):
 
     # get string parameter representing rack number (i.e. A01<L/R>)
     rack_str = str(asset.rack.row_letter)
-    if asset.rack.rack_num / 10 < 1:
+    if (asset.rack.rack_num / 10) < 1:
         rack_str = rack_str + "0"
     rack_str = rack_str + str(asset.rack.rack_num)
 
@@ -408,7 +408,7 @@ def regex_power_status(html, port):
 
 def get_pdu_status_ext(asset, left_right):
     rack_str = str(asset.rack.row_letter)
-    if asset.rack.rack_num / 10 < 1:
+    if (asset.rack.rack_num / 10) < 1:
         rack_str = rack_str + "0"
     rack_str = rack_str + str(asset.rack.rack_num)
 
