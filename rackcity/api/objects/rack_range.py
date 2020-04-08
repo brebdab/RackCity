@@ -1,11 +1,11 @@
 from rest_framework import serializers
 from rackcity.models.rack import validate_row_letter
-from rackcity.models import Datacenter
+from rackcity.models import Site
 
 
 class RackRangeSerializer(serializers.Serializer):
     datacenter = serializers.PrimaryKeyRelatedField(
-        label="datacenter", queryset=Datacenter.objects.all(), required=False
+        label="datacenter", queryset=Site.objects.all(), required=False
     )
     letter_start = serializers.CharField(required=True, max_length=1)
     letter_end = serializers.CharField(required=False, max_length=1)

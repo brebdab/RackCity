@@ -1,6 +1,6 @@
 from django.core.exceptions import ValidationError
 from django.db import models
-from .datacenter import Datacenter
+from .site import Site
 import re
 
 
@@ -12,7 +12,7 @@ def validate_row_letter(value):
 
 class Rack(models.Model):
     datacenter = models.ForeignKey(
-        Datacenter, on_delete=models.CASCADE, verbose_name="datacenter",
+        Site, on_delete=models.CASCADE, verbose_name="datacenter",
     )
     row_letter = models.CharField(max_length=1, validators=[validate_row_letter])
     rack_num = models.PositiveIntegerField()

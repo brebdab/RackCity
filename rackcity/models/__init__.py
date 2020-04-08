@@ -2,7 +2,7 @@ from .asset import Asset, AbstractAsset, AssetCP, AssetID
 from .log import Log
 from .it_model import ITModel
 from .rack import Rack
-from .datacenter import Datacenter
+from .site import Site
 from .network_port import NetworkPort, NetworkPortCP
 from .power_port import PowerPort, PowerPortCP
 from .pdu_port import PDUPort, PDUPortCP

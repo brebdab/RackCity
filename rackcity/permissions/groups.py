@@ -1,7 +1,7 @@
 from django.contrib.auth.models import Group, User
 from django.core.exceptions import ObjectDoesNotExist
 from enum import Enum
-from rackcity.models import Datacenter, RackCityPermission
+from rackcity.models import Site, RackCityPermission
 from rackcity.permissions.permissions import PermissionName, get_permission
 from typing import Tuple
 
@@ -88,7 +88,7 @@ def update_user_datacenter_permissions(user, datacenter_permissions):
     datacenters_to_add = []
     for datacenter_id in datacenter_permissions:
         try:
-            datacenter = Datacenter.objects.get(id=datacenter_id)
+            datacenter = Site.objects.get(id=datacenter_id)
         except ObjectDoesNotExist:
             raise ObjectDoesNotExist
         else:

@@ -20,7 +20,7 @@ from rackcity.models import (
     DecommissionedAsset,
     ITModel,
     Rack,
-    Datacenter,
+    Site,
 )
 from rackcity.models.asset import (
     get_assets_for_cp,
@@ -495,7 +495,7 @@ def asset_bulk_upload(request):
         del asset_data["vendor"]
         del asset_data["model_number"]
         try:
-            datacenter = Datacenter.objects.get(abbreviation=asset_data["datacenter"])
+            datacenter = Site.objects.get(abbreviation=asset_data["datacenter"])
         except ObjectDoesNotExist:
             failure_message = (
                 Status.IMPORT_ERROR.value
