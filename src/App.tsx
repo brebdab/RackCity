@@ -40,11 +40,16 @@ export interface AppProps {
   isAdmin: boolean;
   loading: boolean;
   permissionState: PermissionState;
+  isMobile: boolean;
+  setMobile: any;
 }
 
 class App extends React.Component<AppProps> {
   componentDidMount() {
     console.log(this.props.isAuthenticated);
+    if (this.detectMob()) {
+      this.props.setMobile();
+    }
     this.props.onTryAutoSignup();
   }
 
@@ -167,6 +172,7 @@ const mapStateToProps = (state: any) => {
     isAdmin: state.admin,
     permissionState: state.permissionState,
     loading: state.loading,
+    isMobile: state.isMobile,
   };
 };
 
@@ -174,6 +180,9 @@ const mapDispatchToProps = (dispatch: any) => {
   return {
     onTryAutoSignup: () => {
       dispatch(actions.authCheckState());
+    },
+    setMobile: () => {
+      dispatch(actions.checkBrowserType())
     },
   };
 };

@@ -16,7 +16,7 @@ ALLOWED_HOSTS = [
     'rack-city-prod.herokuapp.com',
     '127.0.0.1',
     'localhost',
-    '192.168.1.17'
+    '192.168.1.17',
 ]
 
 INSTALLED_APPS = [
@@ -111,7 +111,7 @@ CORS_ORIGIN_WHITELIST = (
     'https://localhost:3000',
     'http://localhost:3000',
     'http://127.0.0.1:3000',
-    'http://192.168.1.17:3000'
+    'http://192.168.1.17:3000',
 )
 
 CSRF_COOKIE_NAME = "csrftoken"

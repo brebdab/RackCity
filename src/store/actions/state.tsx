@@ -187,3 +187,15 @@ export const authCheckState = () => {
     }
   };
 };
+
+export const isMobile = () => {
+  return {
+    type: actionTypes.SET_BROWSER_TYPE,
+  };
+};
+
+export const checkBrowserType = () => {
+  return (dispatch: any) => {
+    dispatch(isMobile());
+  }
+}
