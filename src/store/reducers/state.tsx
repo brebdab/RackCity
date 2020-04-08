@@ -1,6 +1,7 @@
 import * as actionTypes from "../actions/actionTypes";
 import { updateObject } from "../utility";
-import { ChangePlan, PermissionState } from "../../utils/utils";
+import { ChangePlan } from "../../utils/utils";
+import { PermissionState } from "../../utils/permissionUtils";
 interface ReduxState {
   token: string | null;
   error: string | null;
@@ -19,29 +20,29 @@ const initialState: ReduxState = {
     power_control: false,
     audit_read: false,
     admin: false,
-    datacenter_permissions: []
-  } as PermissionState
+    datacenter_permissions: [],
+  } as PermissionState,
 };
 const setChangePlan = (state: any, action: any) => {
   return updateObject(state, {
-    changePlan: action.changePlan
+    changePlan: action.changePlan,
   });
 };
 const updateChangePlans = (state: any, action: any) => {
   return updateObject(state, {
-    updateChangePlansBoolean: action.updateChangePlansBoolean
+    updateChangePlansBoolean: action.updateChangePlansBoolean,
   });
 };
 
 const setPermissionState = (state: any, action: any) => {
   return updateObject(state, {
-    permissionState: action.permissionState
+    permissionState: action.permissionState,
   });
 };
 const authStart = (state: any, action: any) => {
   return updateObject(state, {
     error: null,
-    loading: true
+    loading: true,
   });
 };
 
@@ -49,27 +50,27 @@ const authSuccess = (state: any, action: any) => {
   return updateObject(state, {
     token: action.token,
     error: null,
-    loading: false
+    loading: false,
   });
 };
 
 const authFail = (state: any, action: any) => {
   return updateObject(state, {
     error: action.error,
-    loading: false
+    loading: false,
   });
 };
 
 const authLogout = (state: any, action: any) => {
   return updateObject(state, {
     token: null,
-    admin: null
+    admin: null,
   });
 };
 
 const authAdmin = (state: any, aciton: any) => {
   return updateObject(state, {
-    admin: true
+    admin: true,
   });
 };
 

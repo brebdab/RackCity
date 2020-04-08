@@ -8,7 +8,7 @@ import {
   FormObjectType,
   isDatacenterObject,
   DatacenterObject,
-  isChangePlanObject
+  isChangePlanObject,
 } from "../utils/utils";
 import { ALL_DATACENTERS } from "../components/elementView/elementTabContainer";
 import RackSelectView from "../components/elementView/rackSelectView";
@@ -20,7 +20,7 @@ import { FormTypes } from "./formUtils";
 import ChangePlanForm from "./changePlanForm";
 import UserForm from "./userForm";
 
-interface FormPopupState { }
+interface FormPopupState {}
 interface FormPopupProps {
   isOpen: boolean;
   type: FormTypes;
@@ -35,7 +35,7 @@ interface FormPopupProps {
 }
 
 var console: any = {};
-console.log = function () { };
+console.log = function () {};
 class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
   render() {
     return (

@@ -13,7 +13,7 @@ export interface LoginViewProps {
   onAuth(acess_token: string): any;
 }
 var console: any = {};
-console.log = function() {};
+console.log = function () {};
 export class LoginView extends React.PureComponent<
   RouteComponentProps & LoginViewProps
 > {
@@ -48,13 +48,13 @@ export class LoginView extends React.PureComponent<
 }
 const mapStatetoProps = (state: any) => {
   return {
-    token: state.token
+    token: state.token,
   };
 };
 const mapDispatchToProps = (dispatch: any) => {
   return {
     onAuth: (acess_token: string) =>
-      dispatch(actions.netidAuthLogin(acess_token))
+      dispatch(actions.netidAuthLogin(acess_token)),
   };
 };
 export default connect(

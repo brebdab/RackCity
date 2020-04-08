@@ -11,7 +11,9 @@ class Fallback extends React.Component<RouteComponentProps> {
     if (regex.exec(this.props.location.pathname)) {
       return true;
     }
-    return Object.values(ROUTES).some(v => v === this.props.location.pathname);
+    return Object.values(ROUTES).some(
+      (v) => v === this.props.location.pathname
+    );
   }
   render() {
     return this.isExistingPath() ? null : NotFound;

@@ -11,7 +11,7 @@ import {
   Pre,
   Spinner,
   Toaster,
-  Checkbox
+  Checkbox,
 } from "@blueprintjs/core";
 import axios from "axios";
 import * as React from "react";
@@ -30,7 +30,7 @@ import {
   isModelObject,
   isObject,
   isRackObject,
-  ROUTES
+  ROUTES,
 } from "../../utils/utils";
 import "./changePlanner.scss";
 interface CPDetailViewProps {
@@ -41,7 +41,7 @@ interface CPDetailViewProps {
 enum ModificationType {
   MODIFY = "Modify",
   CREATE = "Create",
-  DECOMMISSION = "Decommission"
+  DECOMMISSION = "Decommission",
 }
 
 interface Conflict {
@@ -84,7 +84,7 @@ class CPDetailView extends React.Component<
     modifications: [],
     isAlertOpen: false,
     username: "",
-    disableButtons: false
+    disableButtons: false,
   };
   printWorkOrder = () => {
     this.getUsername(this.props.token);
@@ -92,7 +92,7 @@ class CPDetailView extends React.Component<
       return true;
     });
     this.setState({
-      isOpen
+      isOpen,
     });
     this.openPrint = true;
   };
@@ -113,7 +113,7 @@ class CPDetailView extends React.Component<
       }
     });
     this.setState({
-      disableButtons: disable
+      disableButtons: disable,
     });
   }
   removeModification(modification: Modification) {
@@ -126,7 +126,7 @@ class CPDetailView extends React.Component<
         { asset_cp: modification.asset_cp.id },
         getHeaders(this.props.token)
       )
-      .then(res => {
+      .then((res) => {
         this.addSuccessToast(res.data.success_message);
         this.updateData();
 
@@ -141,14 +141,14 @@ class CPDetailView extends React.Component<
         //     isOpen
         //   });
       })
-      .catch(err => {
+      .catch((err) => {
         this.addErrorToast(err.response.data.failure_message);
       });
   }
   updateData() {
     this.loading = true;
     getChangePlanDetail(this.props.token, this.route_id)
-      .then(res => {
+      .then((res) => {
         this.loading = false;
         this.dataLoaded = true;
         const changePlan: ChangePlan = res.data.change_plan;
@@ -161,10 +161,10 @@ class CPDetailView extends React.Component<
         this.setState({
           changePlan: res.data.change_plan,
           modifications: res.data.modifications,
-          isOpen
+          isOpen,
         });
       })
-      .catch(err => {
+      .catch((err) => {
         this.loading = false;
         this.addErrorToast(err.response.data.failure_message);
       });
@@ -184,7 +184,7 @@ class CPDetailView extends React.Component<
         { asset_cp: modification.asset_cp.id, override_live },
         getHeaders(this.props.token)
       )
-      .then(res => {
+      .then((res) => {
         this.addSuccessToast(res.data.success_message);
         this.updateData();
 
@@ -209,13 +209,13 @@ class CPDetailView extends React.Component<
         //   modifications
         // });
       })
-      .catch(err => {
+      .catch((err) => {
         this.addErrorToast(err.response.data.failure_message);
       });
   }
   handleExecuteCancel() {
     this.setState({
-      isAlertOpen: false
+      isAlertOpen: false,
     });
   }
   handleExecute() {
@@ -225,21 +225,21 @@ class CPDetailView extends React.Component<
         {},
         getHeaders(this.props.token)
       )
-      .then(res => {
+      .then((res) => {
         this.addSuccessToast(res.data.success_message);
         this.setState({
-          isAlertOpen: false
+          isAlertOpen: false,
         });
         this.setState({
-          disableButtons: true
+          disableButtons: true,
         });
 
         this.updateData();
       })
-      .catch(err => {
+      .catch((err) => {
         this.addErrorToast(err.response.data.failure_message);
         this.setState({
-          isAlertOpen: false
+          isAlertOpen: false,
         });
       });
   }
@@ -248,7 +248,7 @@ class CPDetailView extends React.Component<
     const isOpen = this.state.isOpen;
     isOpen[index] = !isOpen[index];
     this.setState({
-      isOpen
+      isOpen,
     });
   }
   getHighlightStyle(modification: Modification, col: string) {
@@ -257,7 +257,7 @@ class CPDetailView extends React.Component<
 
     return {
       fontWeight: highlight ? ("bold" as any) : ("normal" as any),
-      color: highlight ? "#bf8c0a" : "white"
+      color: highlight ? "#bf8c0a" : "white",
     };
   }
   private toaster: Toaster = {} as Toaster;
@@ -267,7 +267,7 @@ class CPDetailView extends React.Component<
   }
 
   private refHandlers = {
-    toaster: (ref: Toaster) => (this.toaster = ref)
+    toaster: (ref: Toaster) => (this.toaster = ref),
   };
 
   private addSuccessToast = (message: string) => {
@@ -276,7 +276,7 @@ class CPDetailView extends React.Component<
   private addWarnToast = (message: string) => {
     this.addToast({
       message: message,
-      intent: Intent.WARNING
+      intent: Intent.WARNING,
     });
   };
   private addErrorToast = (message: string) => {
@@ -298,7 +298,7 @@ class CPDetailView extends React.Component<
               <td
                 style={this.getHighlightStyle(modification, col)}
                 className="clickable"
-                onClick={e =>
+                onClick={(e) =>
                   this.props.history.push(ROUTES.MODELS + "/" + value.id)
                 }
               >
@@ -327,7 +327,7 @@ class CPDetailView extends React.Component<
                 <td style={this.getHighlightStyle(modification, col)}>
                   {value.datacenter.name}
                 </td>
-              </tr>
+              </tr>,
             ];
           } else if (col === "comment") {
             field = (
@@ -387,7 +387,7 @@ class CPDetailView extends React.Component<
     if (!this.dataLoaded && this.route_id) {
       this.loading = true;
       getChangePlanDetail(this.props.token, this.route_id)
-        .then(res => {
+        .then((res) => {
           this.loading = false;
           this.dataLoaded = true;
 
@@ -402,10 +402,10 @@ class CPDetailView extends React.Component<
           this.setState({
             changePlan: res.data.change_plan,
             modifications: res.data.modifications,
-            isOpen
+            isOpen,
           });
         })
-        .catch(err => {
+        .catch((err) => {
           this.loading = false;
           this.addErrorToast(err.response.data.failure_message);
         });
@@ -414,16 +414,15 @@ class CPDetailView extends React.Component<
   getUsername(token: string) {
     const headers = {
       headers: {
-        Authorization: "Token " + token
-      }
+        Authorization: "Token " + token,
+      },
     };
     axios
       .get(API_ROOT + "api/users/who-am-i", headers)
-      .then(res => {
+      .then((res) => {
         this.setState({ username: res.data.username });
       })
-      .catch(err => {
-      });
+      .catch((err) => {});
   }
   public render() {
     if (
@@ -438,7 +437,7 @@ class CPDetailView extends React.Component<
     if (!this.dataLoaded && this.route_id) {
       this.loading = true;
       getChangePlanDetail(this.props.token, this.route_id)
-        .then(res => {
+        .then((res) => {
           this.loading = false;
           this.dataLoaded = true;
           const changePlan: ChangePlan = res.data.change_plan;
@@ -452,10 +451,10 @@ class CPDetailView extends React.Component<
           this.setState({
             changePlan: res.data.change_plan,
             modifications: res.data.modifications,
-            isOpen
+            isOpen,
           });
         })
-        .catch(err => {
+        .catch((err) => {
           this.loading = false;
           this.addErrorToast(err.response.data.failure_message);
         });
@@ -513,7 +512,7 @@ class CPDetailView extends React.Component<
                           : Intent.NONE
                       }
                       className="change-plan-item"
-                      onClick={e => this.toggleCollapse(index)}
+                      onClick={(e) => this.toggleCollapse(index)}
                     >
                       <Checkbox className="print" />
                       {modification.title}
@@ -652,7 +651,7 @@ class CPDetailView extends React.Component<
                 text="Execute Change Plan"
                 onClick={() =>
                   this.setState({
-                    isAlertOpen: true
+                    isAlertOpen: true,
                   })
                 }
               />
@@ -666,7 +665,7 @@ class CPDetailView extends React.Component<
 
 const mapStatetoProps = (state: any) => {
   return {
-    token: state.token
+    token: state.token,
   };
 };
 const mapDispatchToProps = (dispatch: any) => {
@@ -676,7 +675,7 @@ const mapDispatchToProps = (dispatch: any) => {
       dispatch(actions.updateChangePlans(status)),
 
     setChangePlan: (changePlan: ChangePlan) =>
-      dispatch(actions.setChangePlan(changePlan))
+      dispatch(actions.setChangePlan(changePlan)),
   };
 };
 

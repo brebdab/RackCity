@@ -25,7 +25,7 @@ class ChangePlannerView extends React.Component<
 
 const mapStateToProps = (state: any) => {
   return {
-    isAdmin: state.admin
+    isAdmin: state.admin,
   };
 };
 

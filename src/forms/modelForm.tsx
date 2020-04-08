@@ -6,7 +6,7 @@ import {
   Intent,
   MenuItem,
   InputGroup,
-  Spinner
+  Spinner,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -22,12 +22,12 @@ import {
   filterString,
   renderStringItem,
   StringSuggest,
-  FormTypes
+  FormTypes,
 } from "./formUtils";
 
 //TO DO : add validation of types!!!
 var console: any = {};
-console.log = function() {};
+console.log = function () {};
 
 interface ModelFormProps {
   token: string;
@@ -65,12 +65,12 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
     errors: [],
     networkPortsTemp: this.initialState.network_ports
       ? this.initialState.network_ports
-      : []
+      : [],
   };
   headers = {
     headers: {
-      Authorization: "Token " + this.props.token
-    }
+      Authorization: "Token " + this.props.token,
+    },
   };
 
   private handleSubmit = (e: any) => {
@@ -78,30 +78,30 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
     if (this.state.values) {
       this.setState({
         errors: [],
-        loading: true
+        loading: true,
       });
       if (this.props.initialValues) {
         this.setState({
           values: updateObject(this.state.values, {
-            id: this.props.initialValues.id
-          })
+            id: this.props.initialValues.id,
+          }),
         });
       }
 
       const resp = this.props.submitForm(this.state.values, this.headers);
       if (resp) {
-        resp.then(res =>
+        resp.then((res) =>
           this.setState({
-            loading: false
+            loading: false,
           })
         );
-        resp.catch(err => {
+        resp.catch((err) => {
           $(".bp3-overlay-scroll-container").scrollTop(0);
           let errors: Array<string> = this.state.errors;
           errors.push(err.response.data.failure_message as string);
           this.setState({
             errors: errors,
-            loading: false
+            loading: false,
           });
         });
       }
@@ -112,13 +112,13 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
     axios
       //.get("https://rack-city-dev.herokuapp.com/api/" + path)
       .get(API_ROOT + "api/models/vendors", this.headers)
-      .then(res => {
+      .then((res) => {
         const vendors: Array<string> = res.data.vendors;
         this.setState({
-          vendors: vendors
+          vendors: vendors,
         });
       })
-      .catch(err => {
+      .catch((err) => {
         console.log(err);
       });
   }
@@ -151,7 +151,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
     } else if (field["num_network_ports"] === "") {
       console.log(network_ports);
       this.setState({
-        networkPortsTemp: network_ports
+        networkPortsTemp: network_ports,
       });
       network_ports = [];
     }
@@ -159,8 +159,8 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
     this.setState({
       values: updateObject(this.state.values, {
         ...field,
-        network_ports
-      })
+        network_ports,
+      }),
     });
 
     console.log(this.props.initialValues);
@@ -174,13 +174,13 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
     network_ports[index] = name;
     this.setState({
       values: updateObject(this.state.values, {
-        ...network_ports
-      })
+        ...network_ports,
+      }),
     });
   };
   selectText = (event: any) => event.target.select();
   componentDidMount = () => {
-    $(".suggest").keydown(function(event) {
+    $(".suggest").keydown(function (event) {
       if (event.keyCode === 13) {
         event.preventDefault();
         return false;
@@ -206,12 +206,12 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
           <FormGroup className="suggest" label="Vendor (required)">
             <StringSuggest
               inputProps={{
-                placeholder: "vendor"
+                placeholder: "vendor",
               }}
               popoverProps={{
                 minimal: true,
                 popoverClassName: "dropdown",
-                usePortal: true
+                usePortal: true,
               }}
               defaultSelectedItem={this.state.values.vendor}
               inputValueRenderer={(vendor: string) => this.state.values.vendor}
@@ -219,13 +219,13 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
               onItemSelect={(vendor: string) => {
                 console.log("item selected ");
                 this.setState({
-                  values: updateObject(values, { vendor: vendor })
+                  values: updateObject(values, { vendor: vendor }),
                 });
               }}
               onQueryChange={(vendor: string) => {
                 console.log("CHANGE", vendor);
                 this.setState({
-                  values: updateObject(values, { vendor: vendor })
+                  values: updateObject(values, { vendor: vendor }),
                 });
               }}
               itemRenderer={renderStringItem}
@@ -362,7 +362,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
 
 const mapStateToProps = (state: any) => {
   return {
-    token: state.token
+    token: state.token,
   };
 };
 export default connect(mapStateToProps)(ModelForm);
