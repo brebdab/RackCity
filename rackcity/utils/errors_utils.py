@@ -119,7 +119,7 @@ def get_rack_list(racks):
 
 
 def get_user_permission_success(
-    groups_added, groups_removed, current_groups, current_datacenters,
+    groups_added, groups_removed, current_groups, current_sites,
 ):
     success_message = ""
     if len(groups_added) > 0:
@@ -136,10 +136,10 @@ def get_user_permission_success(
         )
     else:
         success_message += "User is now in no groups. "
-    if len(current_datacenters) > 0:
+    if len(current_sites) > 0:
         success_message += (
-            "User now has write access to assets in datacenter(s): "
-            + ", ".join(current_datacenters)
+            "User now has write access to assets in site(s): "
+            + ", ".join(current_sites)
             + "."
         )
     return success_message

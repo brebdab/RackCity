@@ -5,4 +5,4 @@ from rackcity.models import Site
 
 class RackCityPermission(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    datacenter_permissions = models.ManyToManyField(Site)
+    site_permissions = models.ManyToManyField(Site)

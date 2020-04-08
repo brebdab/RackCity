@@ -67,16 +67,16 @@ def get_permission(permission_name: PermissionName) -> Permission:
     return permission
 
 
-def user_has_asset_permission(user, datacenter=None):
+def user_has_asset_permission(user, site=None):
     if user.has_perm(PermissionPath.ASSET_WRITE.value):
         return True
-    if datacenter:
+    if site:
         try:
             permission = RackCityPermission.objects.get(user=user.id)
         except ObjectDoesNotExist:
             return False
         else:
-            if datacenter in permission.datacenter_permissions.all():
+            if site in permission.site_permissions.all():
                 return True
     return False
 
