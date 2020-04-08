@@ -195,30 +195,12 @@ export interface RackObject extends ElementObject {
 
 export interface RackResponseObject {
   rack: RackObject;
-  assets: Array<AssetObjectOld>;
+  assets: Array<AssetObject>;
 }
 
 export interface DatacenterObject extends ElementObject {
   name: string;
   abbreviation: string;
-}
-
-export interface ModificationsObject {
-  existing: Array<ModelObjectOld>;
-  modified: Array<ModelObjectOld>;
-}
-
-export interface ModelObjectOld extends ElementObject {
-  vendor: string;
-  model_number: string;
-  height: string;
-  display_color?: string;
-  num_ethernet_ports?: string; //
-  num_power_ports?: string; //
-  cpu?: string;
-  memory_gb?: string; //
-  storage?: string;
-  comment?: string;
 }
 
 export interface ModelObject extends ElementObject {
@@ -234,10 +216,6 @@ export interface ModelObject extends ElementObject {
   storage?: string;
   comment?: string;
 }
-export interface ModelDetailObject {
-  model: ModelObjectOld;
-  assets: Array<AssetObjectOld>;
-}
 
 export interface UserPermissionsObject {
   [index: string]: any;
@@ -250,10 +228,8 @@ export interface UserPermissionsObject {
 }
 
 export type ElementObjectType =
-  | ModelObjectOld
   | ModelObject
   | RackObject
-  | AssetObjectOld
   | AssetObject
   | ShallowAssetObject
   | UserInfoObject
@@ -261,10 +237,9 @@ export type ElementObjectType =
   | ChangePlan;
 
 export type FormObjectType =
-  | ModelObjectOld
   | RackObject
-  | AssetObjectOld
   | AssetObject
+  | ModelObject
   | DatacenterObject
   | RackRangeFields
   | ShallowAssetObject

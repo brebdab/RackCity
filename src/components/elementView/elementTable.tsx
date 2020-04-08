@@ -1113,6 +1113,7 @@ class ElementTable extends React.Component<
                 !this.state.getDataInProgress ? (
                   <tbody>
                     {this.state.items.map((item: ElementObjectType) => {
+                      console.log(item)
                       return (
                         <tr
                           key={item.id}
@@ -1171,6 +1172,7 @@ class ElementTable extends React.Component<
                             </th>
                           ) : null}
                           {Object.entries(item).map(([col, value]) => {
+
                             if (isModelObject(value)) {
                               return [
                                 <td style={getChangePlanRowStyle(item)}>

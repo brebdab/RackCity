@@ -36,7 +36,7 @@ class AssetCPSerializer(serializers.ModelSerializer):
             "cpu",
             "storage",
             "display_color",
-            "memory_gb"
+            "memory_gb",
         )
 
 
@@ -65,7 +65,7 @@ class AssetSerializer(serializers.ModelSerializer):
             "cpu",
             "storage",
             "display_color",
-            "memory_gb"
+            "memory_gb",
         )
 
 
@@ -191,6 +191,7 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
     network_connections = serializers.SerializerMethodField()
     network_graph = serializers.SerializerMethodField()
     related_asset = AssetSerializer()
+
     class Meta:
         model = AssetCP
         fields = (
@@ -216,7 +217,7 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
             "cpu",
             "storage",
             "display_color",
-            "memory_gb"
+            "memory_gb",
         )
 
     def get_mac_addresses(self, assetCP):
