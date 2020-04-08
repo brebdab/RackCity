@@ -1,18 +1,8 @@
 from django.core.exceptions import ValidationError
 from django.db import models
 from rackcity.models.fields import RCPositiveIntegerField
-import re
 from django.contrib.postgres.fields import ArrayField
-
-
-DEFAULT_DISPLAY_COLOR = "#394B59"
-
-
-def validate_display_color(value):
-    if value:
-        color_pattern = re.compile("#[A-Fa-f0-9]{6}")
-        if color_pattern.fullmatch(value) is None:
-            raise ValidationError(value + " is not a valid hex color")
+from rackcity.models.model_utils import DEFAULT_DISPLAY_COLOR, validate_display_color
 
 
 class ITModel(models.Model):
@@ -20,7 +10,9 @@ class ITModel(models.Model):
     model_number = models.CharField(max_length=150)
     height = models.PositiveIntegerField()
     display_color = models.CharField(
-        max_length=7, default="#394B59", validators=[validate_display_color],
+        max_length=7,
+        default=DEFAULT_DISPLAY_COLOR,
+        validators=[validate_display_color],
     )
     network_ports = ArrayField(models.CharField(max_length=150), null=True, blank=True)
     num_network_ports = RCPositiveIntegerField(null=True, blank=True)
