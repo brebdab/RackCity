@@ -58,6 +58,10 @@ class AssetSerializer(serializers.ModelSerializer):
             "rack_position",
             "owner",
             "comment",
+            "cpu",
+            "storage",
+            "display_color",
+            "memory_gb"
         )
 
 
