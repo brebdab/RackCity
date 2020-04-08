@@ -54,7 +54,7 @@ def validate_height(model_type, height):
 class ITModel(models.Model):
     vendor = models.CharField(max_length=150)
     model_number = models.CharField(max_length=150)
-    height = models.PositiveIntegerField(null=True, blank=True)
+    height = RCPositiveIntegerField(null=True, blank=True)
     display_color = models.CharField(
         max_length=7,
         default=DEFAULT_DISPLAY_COLOR,

@@ -5,7 +5,9 @@ from rackcity.api.serializers.fields import RCIntegerField
 
 
 class ITModelSerializer(serializers.ModelSerializer):
-
+    height = RCIntegerField(
+        allow_null=True, max_value=2147483647, min_value=0, required=False
+    )
     num_network_ports = RCIntegerField(
         allow_null=True, max_value=2147483647, min_value=0, required=False
     )

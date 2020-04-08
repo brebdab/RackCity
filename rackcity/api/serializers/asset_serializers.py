@@ -12,6 +12,7 @@ from rackcity.models import (
 from .it_model_serializers import ITModelSerializer
 from .rack_serializers import RackSerializer
 from .change_plan_serializers import GetChangePlanSerializer
+from rackcity.api.serializers.fields import RCIntegerField
 import copy
 
 
@@ -20,7 +21,12 @@ class AssetCPSerializer(serializers.ModelSerializer):
     Serializes all fields on Asset model, where model and rack fields are
     defined by their pk only.
     """
-
+    rack_position = RCIntegerField(
+        allow_null=True, max_value=2147483647, min_value=0, required=False
+    )
+    chassis_slot = RCIntegerField(
+        allow_null=True, max_value=2147483647, min_value=0, required=False
+    )
     class Meta:
         model = AssetCP
         fields = (
@@ -48,6 +54,12 @@ class AssetSerializer(serializers.ModelSerializer):
         validators=[UniqueValidator(queryset=Asset.objects.all(), lookup="iexact")],
         required=False,
     )
+    rack_position = RCIntegerField(
+        allow_null=True, max_value=2147483647, min_value=0, required=False
+    )
+    chassis_slot = RCIntegerField(
+        allow_null=True, max_value=2147483647, min_value=0, required=False
+    )
 
     class Meta:
         model = Asset
@@ -73,7 +85,13 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
 
     model = ITModelSerializer()
     rack = RackSerializer()
+    rack_position = RCIntegerField(
+        allow_null=True, max_value=2147483647, min_value=0, required=False
+    )
     chassis = AssetSerializer()
+    chassis_slot = RCIntegerField(
+        allow_null=True, max_value=2147483647, min_value=0, required=False
+    )
     mac_addresses = serializers.SerializerMethodField()
     power_connections = serializers.SerializerMethodField()
     network_connections = serializers.SerializerMethodField()
