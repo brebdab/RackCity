@@ -44,10 +44,10 @@ def validate_ports(model_type, num_power_ports, network_ports):
 def validate_height(model_type, height):
     if model_type == ModelType.BLADE_ASSET.value:
         if height:
-            raise ValidationError("Blade assets may not have a height. ")
+            raise ValidationError("Blade models may not have a height. ")
     else:
         if not height:
-            raise ValidationError("Rackmount assets must have a height. ")
+            raise ValidationError("Rackmount models must have a height. ")
     return
 
 
@@ -88,17 +88,13 @@ class ITModel(models.Model):
                 validate_ports(
                     self.model_type, self.num_power_ports, self.network_ports
                 )
+                validate_height(self.model_type, self.height)
             except ValidationError as validation_eror:
                 raise validation_eror
             else:
-                try:
-                    validate_height(self.model_type, self.height)
-                except ValidationError as validation_eror:
-                    raise validation_eror
-                else:
-                    if self.network_ports:
-                        self.num_network_ports = len(self.network_ports)
-                    super(ITModel, self).save(*args, **kwargs)
+                if self.network_ports:
+                    self.num_network_ports = len(self.network_ports)
+                super(ITModel, self).save(*args, **kwargs)
 
     def is_blade_chassis(self):
         return self.model_type == ModelType.BLADE_CHASSIS.value

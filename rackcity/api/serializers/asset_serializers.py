@@ -30,6 +30,8 @@ class AssetCPSerializer(serializers.ModelSerializer):
             "model",
             "rack",
             "rack_position",
+            "chassis",
+            "chassis_slot",
             "owner",
             "comment",
             "change_plan",
@@ -56,6 +58,8 @@ class AssetSerializer(serializers.ModelSerializer):
             "model",
             "rack",
             "rack_position",
+            "chassis",
+            "chassis_slot",
             "owner",
             "comment",
         )
@@ -69,6 +73,7 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
 
     model = ITModelSerializer()
     rack = RackSerializer()
+    chassis = AssetSerializer()
     mac_addresses = serializers.SerializerMethodField()
     power_connections = serializers.SerializerMethodField()
     network_connections = serializers.SerializerMethodField()
@@ -83,6 +88,8 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
             "model",
             "rack",
             "rack_position",
+            "chassis",
+            "chassis_slot",
             "owner",
             "comment",
             "mac_addresses",
@@ -121,6 +128,7 @@ class BulkAssetSerializer(serializers.ModelSerializer):
     )
     # by default, calls get_<field> - in this case, get_rack
     rack = serializers.SerializerMethodField()
+    # TODO: add chassis
     power_port_connection_1 = serializers.SerializerMethodField()
     power_port_connection_2 = serializers.SerializerMethodField()
 
@@ -170,6 +178,7 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
 
     model = ITModelSerializer()
     rack = RackSerializer()
+    chassis = AssetSerializer()
     asset_conflict_hostname = AssetSerializer()
     asset_conflict_location = AssetSerializer()
     asset_conflict_asset_number = AssetSerializer()
@@ -188,6 +197,8 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
             "model",
             "rack",
             "rack_position",
+            "chassis",
+            "chassis_slot",
             "owner",
             "comment",
             "mac_addresses",
