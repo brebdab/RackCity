@@ -1,24 +1,26 @@
 import {
+  Alert,
   AnchorButton,
   Callout,
   Classes,
   Collapse,
+  Divider,
   Intent,
   IToastProps,
+  Position,
   Pre,
   Spinner,
   Toaster,
-  Position,
-  Alert,
-  Divider
+  Checkbox,
 } from "@blueprintjs/core";
 import axios from "axios";
 import * as React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps } from "react-router";
 import { withRouter } from "react-router-dom";
-import { API_ROOT } from "../../utils/api-config";
+import { isNullOrUndefined } from "util";
 import * as actions from "../../store/actions/state";
+import { API_ROOT } from "../../utils/api-config";
 import {
   AssetCPObject,
   AssetFieldsTable,
@@ -28,11 +30,9 @@ import {
   isModelObject,
   isObject,
   isRackObject,
-  ROUTES
+  ROUTES,
 } from "../../utils/utils";
 import "./changePlanner.scss";
-import { isNullOrUndefined } from "util";
-
 interface CPDetailViewProps {
   token: string;
   updateChangePlans(status: boolean): void;
@@ -41,7 +41,7 @@ interface CPDetailViewProps {
 enum ModificationType {
   MODIFY = "Modify",
   CREATE = "Create",
-  DECOMMISSION = "Decommission"
+  DECOMMISSION = "Decommission",
 }
 
 interface Conflict {
@@ -62,11 +62,11 @@ interface CPDetailViewState {
   isAlertOpen: boolean;
   changePlan: ChangePlan;
   modifications: Array<Modification>;
+  username: string;
   disableButtons: boolean;
 }
 
 function getChangePlanDetail(token: string, id: string) {
-  console.log("getting change plan detail");
   return axios.get(API_ROOT + "api/change-plans/" + id, getHeaders(token));
 }
 class CPDetailView extends React.Component<
@@ -77,17 +77,26 @@ class CPDetailView extends React.Component<
   loading = false;
 
   dataLoaded = false;
-
-  getConflictWarning = () => {
-    return <div></div>;
-  };
+  openPrint = false;
   public state = {
-    isOpen: [false, false],
+    isOpen: [] as Array<boolean>,
     changePlan: {} as ChangePlan,
     modifications: [],
     isAlertOpen: false,
-    disableButtons: true
+    username: "",
+    disableButtons: false,
   };
+  printWorkOrder = () => {
+    this.getUsername(this.props.token);
+    const isOpen = this.state.isOpen.map(() => {
+      return true;
+    });
+    this.setState({
+      isOpen,
+    });
+    this.openPrint = true;
+  };
+
   setButtonState() {
     let disable = false;
     if (
@@ -104,7 +113,7 @@ class CPDetailView extends React.Component<
       }
     });
     this.setState({
-      disableButtons: disable
+      disableButtons: disable,
     });
   }
   removeModification(modification: Modification) {
@@ -117,22 +126,46 @@ class CPDetailView extends React.Component<
         { asset_cp: modification.asset_cp.id },
         getHeaders(this.props.token)
       )
-      .then(res => {
+      .then((res) => {
         this.addSuccessToast(res.data.success_message);
+        this.updateData();
 
-        const modifications: Array<Modification> = this.state.modifications.slice();
-        const index = modifications.indexOf(modification);
-        modifications.splice(index, 1);
-        console.log(modifications, index);
-        const isOpen = this.state.isOpen;
-        isOpen.splice(index, 1);
-
+        // const modifications: Array<Modification> = this.state.modifications.slice();
+        // const index = modifications.indexOf(modification);
+        // modifications.splice(index, 1);
+        // console.log(modifications, index);
+        // const isOpen = this.state.isOpen;
+        // isOpen.splice(index, 1);
+        //   this.setState({
+        //     modifications,
+        //     isOpen
+        //   });
+      })
+      .catch((err) => {
+        this.addErrorToast(err.response.data.failure_message);
+      });
+  }
+  updateData() {
+    this.loading = true;
+    getChangePlanDetail(this.props.token, this.route_id)
+      .then((res) => {
+        this.loading = false;
+        this.dataLoaded = true;
+        const changePlan: ChangePlan = res.data.change_plan;
+        if (isNullOrUndefined(changePlan.execution_time)) {
+          this.props.setChangePlan(changePlan);
+        } else {
+          this.props.setChangePlan(null);
+        }
+        const isOpen = new Array(res.data.modifications.length).fill(false);
         this.setState({
-          modifications,
-          isOpen
+          changePlan: res.data.change_plan,
+          modifications: res.data.modifications,
+          isOpen,
         });
       })
-      .catch(err => {
+      .catch((err) => {
+        this.loading = false;
         this.addErrorToast(err.response.data.failure_message);
       });
   }
@@ -151,37 +184,38 @@ class CPDetailView extends React.Component<
         { asset_cp: modification.asset_cp.id, override_live },
         getHeaders(this.props.token)
       )
-      .then(res => {
+      .then((res) => {
         this.addSuccessToast(res.data.success_message);
+        this.updateData();
 
-        const modifications: Array<Modification> = this.state.modifications.slice();
-        const index = modifications.indexOf(modification);
-        if (override_live) {
-          modification.conflicts.splice(
-            modification.conflicts.indexOf(conflict),
-            1
-          );
+        // const modifications: Array<Modification> = this.state.modifications.slice();
+        // const index = modifications.indexOf(modification);
+        // if (override_live) {
+        //   modification.conflicts.splice(
+        //     modification.conflicts.indexOf(conflict),
+        //     1
+        //   );
 
-          modifications[index] = modification;
-        } else {
-          modifications.splice(index, 1);
-          const isOpen = this.state.isOpen;
-          isOpen.splice(index, 1);
-          this.setState({
-            isOpen
-          });
-        }
-        this.setState({
-          modifications
-        });
+        //   modifications[index] = modification;
+        // } else {
+        //   modifications.splice(index, 1);
+        //   const isOpen = this.state.isOpen;
+        //   isOpen.splice(index, 1);
+        //   this.setState({
+        //     isOpen
+        //   });
+        // }
+        // this.setState({
+        //   modifications
+        // });
       })
-      .catch(err => {
+      .catch((err) => {
         this.addErrorToast(err.response.data.failure_message);
       });
   }
   handleExecuteCancel() {
     this.setState({
-      isAlertOpen: false
+      isAlertOpen: false,
     });
   }
   handleExecute() {
@@ -191,41 +225,21 @@ class CPDetailView extends React.Component<
         {},
         getHeaders(this.props.token)
       )
-      .then(res => {
+      .then((res) => {
         this.addSuccessToast(res.data.success_message);
         this.setState({
-          isAlertOpen: false
+          isAlertOpen: false,
         });
         this.setState({
-          disableButtons: true
+          disableButtons: true,
         });
 
-        this.loading = true;
-        getChangePlanDetail(this.props.token, this.route_id)
-          .then(res => {
-            this.loading = false;
-            this.dataLoaded = true;
-            const changePlan: ChangePlan = res.data.change_plan;
-            if (isNullOrUndefined(changePlan.execution_time)) {
-              this.props.setChangePlan(changePlan);
-            } else {
-              this.props.setChangePlan(null);
-            }
-
-            this.setState({
-              changePlan: changePlan,
-              modifications: res.data.modifications
-            });
-          })
-          .catch(err => {
-            this.loading = false;
-            this.addErrorToast(err.response.data.failure_message);
-          });
+        this.updateData();
       })
-      .catch(err => {
+      .catch((err) => {
         this.addErrorToast(err.response.data.failure_message);
         this.setState({
-          isAlertOpen: false
+          isAlertOpen: false,
         });
       });
   }
@@ -234,7 +248,7 @@ class CPDetailView extends React.Component<
     const isOpen = this.state.isOpen;
     isOpen[index] = !isOpen[index];
     this.setState({
-      isOpen
+      isOpen,
     });
   }
   getHighlightStyle(modification: Modification, col: string) {
@@ -243,7 +257,7 @@ class CPDetailView extends React.Component<
 
     return {
       fontWeight: highlight ? ("bold" as any) : ("normal" as any),
-      color: highlight ? "#bf8c0a" : "white"
+      color: highlight ? "#bf8c0a" : "white",
     };
   }
   private toaster: Toaster = {} as Toaster;
@@ -253,7 +267,7 @@ class CPDetailView extends React.Component<
   }
 
   private refHandlers = {
-    toaster: (ref: Toaster) => (this.toaster = ref)
+    toaster: (ref: Toaster) => (this.toaster = ref),
   };
 
   private addSuccessToast = (message: string) => {
@@ -262,7 +276,7 @@ class CPDetailView extends React.Component<
   private addWarnToast = (message: string) => {
     this.addToast({
       message: message,
-      intent: Intent.WARNING
+      intent: Intent.WARNING,
     });
   };
   private addErrorToast = (message: string) => {
@@ -284,7 +298,7 @@ class CPDetailView extends React.Component<
               <td
                 style={this.getHighlightStyle(modification, col)}
                 className="clickable"
-                onClick={e =>
+                onClick={(e) =>
                   this.props.history.push(ROUTES.MODELS + "/" + value.id)
                 }
               >
@@ -298,7 +312,9 @@ class CPDetailView extends React.Component<
                   {AssetFieldsTable[col]}:
                 </td>
 
-                <td>{value.row_letter + "" + value.rack_num}</td>
+                <td style={this.getHighlightStyle(modification, col)}>
+                  {value.row_letter + "" + value.rack_num}
+                </td>
               </tr>,
               <tr>
                 <td
@@ -311,7 +327,7 @@ class CPDetailView extends React.Component<
                 <td style={this.getHighlightStyle(modification, col)}>
                   {value.datacenter.name}
                 </td>
-              </tr>
+              </tr>,
             ];
           } else if (col === "comment") {
             field = (
@@ -371,9 +387,10 @@ class CPDetailView extends React.Component<
     if (!this.dataLoaded && this.route_id) {
       this.loading = true;
       getChangePlanDetail(this.props.token, this.route_id)
-        .then(res => {
+        .then((res) => {
           this.loading = false;
           this.dataLoaded = true;
+
           const changePlan: ChangePlan = res.data.change_plan;
           if (isNullOrUndefined(changePlan.execution_time)) {
             this.props.setChangePlan(changePlan);
@@ -381,23 +398,46 @@ class CPDetailView extends React.Component<
             this.props.setChangePlan(null);
           }
           this.setButtonState();
+          const isOpen = new Array(res.data.modifications.length).fill(false);
           this.setState({
-            changePlan: changePlan,
-            modifications: res.data.modifications
+            changePlan: res.data.change_plan,
+            modifications: res.data.modifications,
+            isOpen,
           });
         })
-        .catch(err => {
+        .catch((err) => {
           this.loading = false;
           this.addErrorToast(err.response.data.failure_message);
         });
     }
   }
+  getUsername(token: string) {
+    const headers = {
+      headers: {
+        Authorization: "Token " + token,
+      },
+    };
+    axios
+      .get(API_ROOT + "api/users/who-am-i", headers)
+      .then((res) => {
+        this.setState({ username: res.data.username });
+      })
+      .catch((err) => {});
+  }
   public render() {
-    console.log(this.props.match);
+    if (
+      this.openPrint &&
+      this.state.isOpen.every((item: boolean) => item === true)
+    ) {
+      this.openPrint = false;
+      setTimeout(() => {
+        window.print();
+      }, 1000);
+    }
     if (!this.dataLoaded && this.route_id) {
       this.loading = true;
       getChangePlanDetail(this.props.token, this.route_id)
-        .then(res => {
+        .then((res) => {
           this.loading = false;
           this.dataLoaded = true;
           const changePlan: ChangePlan = res.data.change_plan;
@@ -407,12 +447,14 @@ class CPDetailView extends React.Component<
             this.props.setChangePlan(null);
           }
           this.setButtonState();
+          const isOpen = new Array(res.data.modifications.length).fill(false);
           this.setState({
-            changePlan: changePlan,
-            modifications: res.data.modifications
+            changePlan: res.data.change_plan,
+            modifications: res.data.modifications,
+            isOpen,
           });
         })
-        .catch(err => {
+        .catch((err) => {
           this.loading = false;
           this.addErrorToast(err.response.data.failure_message);
         });
@@ -439,16 +481,20 @@ class CPDetailView extends React.Component<
           position={Position.TOP}
           ref={this.refHandlers.toaster}
         />
-        <h1>
-          Change Plan:
+        <h1 className={Classes.DARK}>
+          Change Plan:{" "}
           {this.state.changePlan ? this.state.changePlan.name : null}
         </h1>
 
         {this.loading ? <Spinner /> : null}
         <ul className="bp3-list-unstyled">
+          <Callout className="print" intent="primary">
+            This work order was generated by user {this.state.username} on{" "}
+            {new Date().toString()}
+          </Callout>
           {this.state.changePlan && this.state.changePlan.execution_time ? (
             <Callout intent="primary">
-              This change plan was executed at:
+              This change plan was executed at:{" "}
               {this.state.changePlan.execution_time}
             </Callout>
           ) : null}
@@ -466,8 +512,9 @@ class CPDetailView extends React.Component<
                           : Intent.NONE
                       }
                       className="change-plan-item"
-                      onClick={e => this.toggleCollapse(index)}
+                      onClick={(e) => this.toggleCollapse(index)}
                     >
+                      <Checkbox className="print" />
                       {modification.title}
                       <AnchorButton
                         className="cp-remove"
@@ -584,6 +631,7 @@ class CPDetailView extends React.Component<
           <div className={"detail-buttons-cp"}>
             <div>
               <AnchorButton
+                onClick={() => this.printWorkOrder()}
                 disabled={this.state.disableButtons}
                 intent="none"
                 icon="document-open"
@@ -603,7 +651,7 @@ class CPDetailView extends React.Component<
                 text="Execute Change Plan"
                 onClick={() =>
                   this.setState({
-                    isAlertOpen: true
+                    isAlertOpen: true,
                   })
                 }
               />
@@ -617,7 +665,7 @@ class CPDetailView extends React.Component<
 
 const mapStatetoProps = (state: any) => {
   return {
-    token: state.token
+    token: state.token,
   };
 };
 const mapDispatchToProps = (dispatch: any) => {
@@ -627,7 +675,7 @@ const mapDispatchToProps = (dispatch: any) => {
       dispatch(actions.updateChangePlans(status)),
 
     setChangePlan: (changePlan: ChangePlan) =>
-      dispatch(actions.setChangePlan(changePlan))
+      dispatch(actions.setChangePlan(changePlan)),
   };
 };
 

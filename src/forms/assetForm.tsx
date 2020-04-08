@@ -13,7 +13,7 @@ import {
   MenuItem,
   Spinner,
   Tooltip,
-  Card
+  Card,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { IconNames } from "@blueprintjs/icons";
@@ -26,7 +26,7 @@ import {
   FilterTypes,
   IFilter,
   PagingTypes,
-  TextFilterTypes
+  TextFilterTypes,
 } from "../components/elementView/elementUtils";
 import { updateObject } from "../store/utility";
 import { API_ROOT } from "../utils/api-config";
@@ -47,7 +47,7 @@ import {
   PowerSide,
   RackObject,
   ShallowAssetObject,
-  ChangePlan
+  ChangePlan,
 } from "../utils/utils";
 import Field from "./field";
 import "./forms.scss";
@@ -69,7 +69,7 @@ import {
   renderModelItem,
   renderRackItem,
   renderStringItem,
-  StringSelect
+  StringSelect,
 } from "./formUtils";
 import $ from "jquery";
 
@@ -111,7 +111,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   private setPowerPortInputState = () => {
     const power_ports_default: { [port: string]: boolean } = {};
     if (this.state.values && this.state.values.power_connections) {
-      Object.keys(this.state.values.power_connections).forEach(port => {
+      Object.keys(this.state.values.power_connections).forEach((port) => {
         power_ports_default[port] = true;
       });
     }
@@ -148,7 +148,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     isAlertOpen: false,
     warningMessage: "",
     selectedValue: undefined,
-    loading: false
+    loading: false,
   };
 
   getPowerPortAvailability(rack: RackObject) {
@@ -159,12 +159,12 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     }
     const config = {
       headers: {
-        Authorization: "Token " + this.props.token
+        Authorization: "Token " + this.props.token,
       },
 
-      params: params
+      params: params,
     };
-    axios.get(API_ROOT + "api/power/availability", config).then(res => {
+    axios.get(API_ROOT + "api/power/availability", config).then((res) => {
       this.gettingPowerPortsInProgress = false;
       this.setState({ power_ports: res.data });
     });
@@ -177,14 +177,12 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     body: any,
     token: string
   ): Promise<Array<ElementObjectType>> {
-    console.log(API_ROOT + "api/" + path + "/get-many");
-
     const params: any =
       page_type === PagingTypes.ALL
         ? {}
         : {
             page_size: page_type,
-            page
+            page,
           };
 
     if (this.props.changePlan) {
@@ -192,15 +190,15 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     }
     const config = {
       headers: {
-        Authorization: "Token " + token
+        Authorization: "Token " + token,
       },
 
-      params: params
+      params: params,
     };
 
     return axios
       .post(API_ROOT + "api/" + path + "/get-many", body, config)
-      .then(res => {
+      .then((res) => {
         const items = res.data[path];
 
         return items;
@@ -212,8 +210,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       .then((res: any) => {
         this.setState({
           values: updateObject(this.state.values, {
-            asset_number: res.data.asset_number
-          })
+            asset_number: res.data.asset_number,
+          }),
         });
       });
   }
@@ -230,11 +228,11 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     if (!this.props.initialValues) {
       values = updateObject(values, {
         power_connections: {},
-        mac_addresses: {}
+        mac_addresses: {},
       });
     }
     this.setState({
-      values
+      values,
     });
     this.getValidAssets(this.state.currDatacenter!);
     this.getRacks(this.state.currDatacenter!);
@@ -249,7 +247,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       mac_addresses,
       network_connections,
       power_connections,
-      comment
+      comment,
     } = asset;
     const model = asset.model ? asset.model.id : null;
     const rack = asset.rack ? asset.rack.id : null;
@@ -264,7 +262,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       comment,
       mac_addresses,
       network_connections,
-      power_connections
+      power_connections,
     };
 
     return valuesToSend;
@@ -275,7 +273,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     if (this.state.values) {
       this.setState({
         errors: [],
-        loading: true
+        loading: true,
       });
 
       if (!this.validateMacAddresses()) {
@@ -294,27 +292,26 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         newValues.id = this.props.initialValues.id;
       }
       this.setState({
-        values: newValues
+        values: newValues,
       });
 
-      console.log("submitting form");
       const resp = this.props.submitForm(
         this.mapAssetObject(newValues),
         getHeaders(this.props.token)
       );
       if (resp) {
-        resp.then(res =>
+        resp.then((res) =>
           this.setState({
-            loading: false
+            loading: false,
           })
         );
-        resp.catch(err => {
+        resp.catch((err) => {
           $(".bp3-overlay-scroll-container").scrollTop(0);
           let errors: Array<string> = this.state.errors;
           errors.push(err.response.data.failure_message as string);
           this.setState({
             errors: errors,
-            loading: false
+            loading: false,
           });
         });
       }
@@ -343,7 +340,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
           );
           this.setState({
             errors,
-            loading: false
+            loading: false,
           });
         }
       }
@@ -353,49 +350,43 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   handleChange = (field: { [key: string]: any }) => {
     this.setState({
       values: updateObject(this.state.values, {
-        ...field
-      })
+        ...field,
+      }),
     });
   };
   getUsers = () => {
     const headers = getHeaders(this.props.token);
     axios
       .get(API_ROOT + "api/usernames", headers)
-      .then(res => {
+      .then((res) => {
         this.setState({
-          users: res.data.usernames
+          users: res.data.usernames,
         });
       })
-      .catch(err => {
-        console.log(err);
-      });
+      .catch((err) => {});
   };
   getRacks = (datacenter: DatacenterObject) => {
-    console.log("GETTING RACKS for ", datacenter);
     if (datacenter) {
       this.gettingRacksInProgress = true;
       const config = {
         headers: {
-          Authorization: "Token " + this.props.token
+          Authorization: "Token " + this.props.token,
         },
         params: {
-          datacenter: datacenter ? datacenter.id : undefined
-        }
+          datacenter: datacenter ? datacenter.id : undefined,
+        },
       };
-      console.log(API_ROOT + "api/racks/summary");
+
       axios
         .get(API_ROOT + "api/racks/summary", config)
-        .then(res => {
-          console.log(res.data.racks);
+        .then((res) => {
           this.initialGetRacks = true;
           this.gettingRacksInProgress = false;
           this.setState({
-            racks: res.data.racks as Array<RackObject>
+            racks: res.data.racks as Array<RackObject>,
           });
         })
-        .catch(err => {
-          console.log(err);
-        });
+        .catch((err) => {});
     }
   };
   getModels = () => {
@@ -405,15 +396,15 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       PagingTypes.ALL,
       {},
       this.props.token
-    ).then(res => {
+    ).then((res) => {
       this.setState({
-        models: res as Array<ModelObject>
+        models: res as Array<ModelObject>,
       });
     });
   };
   getValidAssets = (currDatacenter: DatacenterObject) => {
     this.gettingAssetsInProgress = true;
-    console.log("getting assets from this datacenter", currDatacenter);
+
     let body = {};
     const filters: Array<IFilter> = [];
     let datacenterName;
@@ -424,7 +415,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
           id: "",
           field: "rack__datacenter__name",
           filter_type: FilterTypes.TEXT,
-          filter: { value: datacenterName, match_type: TextFilterTypes.EXACT }
+          filter: { value: datacenterName, match_type: TextFilterTypes.EXACT },
         });
         body = updateObject(body, { filters });
       }
@@ -436,10 +427,9 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       PagingTypes.ALL,
       body,
       this.props.token
-    ).then(res => {
-      console.log(res);
+    ).then((res) => {
       let assetsWithHostname: Array<AssetObject> = res as Array<AssetObject>;
-      assetsWithHostname = assetsWithHostname.filter(asset => {
+      assetsWithHostname = assetsWithHostname.filter((asset) => {
         if (
           asset.hostname === "" ||
           asset.hostname === this.state.values.hostname
@@ -448,10 +438,9 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         }
         return true;
       });
-      console.log("got assets", assetsWithHostname);
 
       this.setState({
-        assets: assetsWithHostname as Array<AssetObject>
+        assets: assetsWithHostname as Array<AssetObject>,
       });
       this.gettingAssetsInProgress = false;
     });
@@ -504,45 +493,45 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       if (port === 1) {
         power_connections[port] = updateObject(power_connections, {
           left_right: PowerSide.LEFT,
-          port_number: this.state.power_ports.left_suggest
+          port_number: this.state.power_ports.left_suggest,
         });
         this.setState({
           values: updateObject(this.state.values, {
-            power_connections
-          })
+            power_connections,
+          }),
         });
       } else if (port === 2) {
         power_connections[port] = updateObject(power_connections, {
           left_right: PowerSide.RIGHT,
-          port_number: this.state.power_ports.right_suggest
+          port_number: this.state.power_ports.right_suggest,
         });
         this.setState({
           values: updateObject(this.state.values, {
-            power_connections
-          })
+            power_connections,
+          }),
         });
       }
     } else {
       power_connections[port] = updateObject(power_connections, {
         left_right: undefined,
-        port_number: undefined
+        port_number: undefined,
       });
       this.setState({
         values: updateObject(this.state.values, {
-          power_connections
-        })
+          power_connections,
+        }),
       });
     }
   };
 
   changeCheckBoxState = (port: number, state: boolean) => {
     const power_ports_default = {
-      ...this.state.power_ports_default
+      ...this.state.power_ports_default,
     };
 
     power_ports_default[port] = state;
     this.setState({
-      power_ports_default: power_ports_default
+      power_ports_default: power_ports_default,
     });
   };
   getClearedPowerSelections() {
@@ -574,8 +563,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
       this.setState({
         values: updateObject(this.state.values, {
-          power_connections
-        })
+          power_connections,
+        }),
       });
     }
   };
@@ -636,14 +625,14 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                         power_connections[i],
                         {
                           left_right: PowerSide.LEFT,
-                          port_number: null
+                          port_number: null,
                         }
                       );
                       this.changeCheckBoxState(i, false);
                       this.setState({
                         values: updateObject(this.state.values, {
-                          power_connections
-                        })
+                          power_connections,
+                        }),
                       });
                     }
                   }}
@@ -658,13 +647,13 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                       .power_connections;
                     power_connections[i] = updateObject(power_connections[i], {
                       left_right: PowerSide.RIGHT,
-                      port_number: null
+                      port_number: null,
                     });
                     this.changeCheckBoxState(i, false);
                     this.setState({
                       values: updateObject(this.state.values, {
-                        power_connections
-                      })
+                        power_connections,
+                      }),
                     });
                   }}
                 />
@@ -674,7 +663,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                   popoverProps={{
                     minimal: true,
                     popoverClassName: "dropdown",
-                    usePortal: true
+                    usePortal: true,
                   }}
                   disabled={this.shouldDisablePowerPort(i)}
                   items={this.getPortsForSide(i)}
@@ -683,12 +672,12 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                     const power_connections = this.state.values
                       .power_connections;
                     power_connections[i] = updateObject(power_connections[i], {
-                      port_number: port
+                      port_number: port,
                     });
                     this.setState({
                       values: updateObject(this.state.values, {
-                        power_connections
-                      })
+                        power_connections,
+                      }),
                     });
                   }}
                   itemRenderer={renderStringItem}
@@ -725,7 +714,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
   getValidDatacenters() {
     return this.props.datacenters.filter(
-      datacenter => datacenter !== ALL_DATACENTERS
+      (datacenter) => datacenter !== ALL_DATACENTERS
     );
   }
 
@@ -735,12 +724,12 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     const newValues = updateObject(this.state.values, {
       rack: undefined,
       power_connections: clearedPowerConnections,
-      network_connections: clearedNetworkConnections
+      network_connections: clearedNetworkConnections,
     });
-    console.log("SELECTER DATACENTER", datacenter, newValues);
+
     this.setState({
       currDatacenter: datacenter,
-      values: newValues
+      values: newValues,
     });
 
     this.getValidAssets(datacenter);
@@ -748,14 +737,12 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   }
 
   handleRackSelect(rack: RackObject) {
-    console.log("SELECTED RACK:", rack);
-
     const clearedPowerConnections = this.getClearedPowerSelections();
     this.setState({
       values: updateObject(this.state.values, {
         rack: rack,
-        power_connections: clearedPowerConnections
-      })
+        power_connections: clearedPowerConnections,
+      }),
     });
 
     this.getPowerPortAvailability(rack);
@@ -764,15 +751,10 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     source_port: string,
     destination_hostname: string | undefined
   ) {
-    console.log(
-      "network connection asset selected",
-      source_port,
-      destination_hostname
-    );
     const newNetworkConnection: NetworkConnection = {
       source_port,
       destination_hostname,
-      destination_port: null
+      destination_port: null,
     };
     let modification = false;
     let networkConnections: Array<NetworkConnection> = [];
@@ -782,11 +764,10 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       networkConnections = networkConnections.map(
         (connection: NetworkConnection) => {
           if (connection.source_port === source_port) {
-            console.log("updating network connection");
             modification = true;
             return updateObject(connection, {
               destination_hostname: destination_hostname,
-              destination_port: null
+              destination_port: null,
             });
           } else {
             return connection;
@@ -796,16 +777,16 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     } else {
       networkConnections = [] as Array<NetworkConnection>;
     }
-    console.log("UPDADTING NEWORK CONNECTIONS", networkConnections);
+
     if (!modification) {
       //add a new network connection
       networkConnections.push(newNetworkConnection);
     }
-    console.log("new network connections", networkConnections);
+
     this.setState({
       values: updateObject(this.state.values, {
-        network_connections: networkConnections
-      })
+        network_connections: networkConnections,
+      }),
     });
   }
 
@@ -815,7 +796,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         (connection: NetworkConnection) => {
           return updateObject(connection, {
             destination_hostname: null,
-            destination_port: null
+            destination_port: null,
           });
         }
       );
@@ -832,7 +813,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
           if (connection.source_port === source_port) {
             return updateObject(connection, {
               destination_hostname: null,
-              destination_port: null
+              destination_port: null,
             });
           } else {
             return connection;
@@ -845,8 +826,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
     this.setState({
       values: updateObject(this.state.values, {
-        network_connections: networkConnections
-      })
+        network_connections: networkConnections,
+      }),
     });
   }
   handleNetworkConnectionPortSelection(
@@ -872,8 +853,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
     this.setState({
       values: updateObject(this.state.values, {
-        network_connections: networkConnections
-      })
+        network_connections: networkConnections,
+      }),
     });
   }
   getSelectedPort = (source_port: string) => {
@@ -907,7 +888,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
   getPortsFromHostname(hostname: string) {
     const asset = this.getAssetObjectFromHostname(hostname);
-    console.log("getting ports for " + hostname);
     if (isAssetObject(asset)) {
       return asset.model.network_ports ? asset.model.network_ports : [];
     } else {
@@ -933,7 +913,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
   handleChangeDecline = () => {
     this.setState({
-      isAlertOpen: false
+      isAlertOpen: false,
     });
   };
 
@@ -941,7 +921,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     this.setState({
       warningMessage,
       selectedValue,
-      isAlertOpen: true
+      isAlertOpen: true,
     });
   }
 
@@ -956,7 +936,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       this.handleRackSelect(this.state.selectedValue!);
     }
     this.setState({
-      isAlertOpen: false
+      isAlertOpen: false,
     });
   };
 
@@ -976,7 +956,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       this.getRacks(this.state.currDatacenter);
     }
 
-    console.log(this.state.values);
     const { values } = this.state;
     return (
       <div className={Classes.DARK + " login-container"}>
@@ -1025,7 +1004,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                 popoverProps={{
                   minimal: true,
                   popoverClassName: "dropdown",
-                  usePortal: true
+                  usePortal: true,
                 }}
                 items={this.getValidDatacenters()}
                 onItemSelect={(datacenter: DatacenterObject) => {
@@ -1061,7 +1040,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                   popoverProps={{
                     minimal: true,
                     popoverClassName: "dropdown",
-                    usePortal: true
+                    usePortal: true,
                   }}
                   items={this.state.racks}
                   onItemSelect={(rack: RackObject) => {
@@ -1112,13 +1091,13 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                   popoverProps={{
                     minimal: true,
                     popoverClassName: "dropdown",
-                    usePortal: true
+                    usePortal: true,
                   }}
                   disabled={!isNullOrUndefined(this.initialState.model)}
                   items={this.state.models}
                   onItemSelect={(model: ModelObject) =>
                     this.setState({
-                      values: updateObject(values, { model: model })
+                      values: updateObject(values, { model: model }),
                     })
                   }
                   itemRenderer={renderModelItem}
@@ -1182,8 +1161,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
                                 this.setState({
                                   values: updateObject(this.state.values, {
-                                    mac_addresses
-                                  })
+                                    mac_addresses,
+                                  }),
                                 });
                               }}
                             />
@@ -1197,7 +1176,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                               popoverProps={{
                                 minimal: true,
                                 popoverClassName: "dropdown",
-                                usePortal: true
+                                usePortal: true,
                               }}
                               items={this.state.assets}
                               onItemSelect={(asset: AssetObject) => {
@@ -1244,7 +1223,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                               popoverProps={{
                                 minimal: true,
                                 popoverClassName: "dropdown",
-                                usePortal: true
+                                usePortal: true,
                               }}
                               disabled={
                                 this.getSelectedNetworkConnectionAsset(port)
@@ -1345,12 +1324,12 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                 popoverProps={{
                   minimal: true,
                   popoverClassName: "dropdown",
-                  usePortal: true
+                  usePortal: true,
                 }}
                 items={this.state.users}
                 onItemSelect={(owner: string) =>
                   this.setState({
-                    values: updateObject(values, { owner: owner })
+                    values: updateObject(values, { owner: owner }),
                   })
                 }
                 itemRenderer={renderStringItem}
@@ -1394,7 +1373,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 const mapStateToProps = (state: any) => {
   return {
     token: state.token,
-    changePlan: state.changePlan
+    changePlan: state.changePlan,
   };
 };
 export default connect(mapStateToProps)(AssetForm);

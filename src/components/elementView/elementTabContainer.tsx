@@ -5,10 +5,11 @@ import ElementTab from "./elementTab";
 import { RouteComponentProps } from "react-router";
 import "./elementView.scss";
 import { connect } from "react-redux";
-import { ElementType, DatacenterObject, getHeaders, PermissionState } from "../../utils/utils";
+import { ElementType, DatacenterObject, getHeaders } from "../../utils/utils";
 import RackTab from "./rackTab";
 import { API_ROOT } from "../../utils/api-config";
 import axios from "axios";
+import { PermissionState } from "../../utils/permissionUtils";
 
 interface ElementTabContainerProps {
   isAdmin: boolean;
@@ -22,7 +23,7 @@ interface ElementTabContainerState {
 export const ALL_DATACENTERS: DatacenterObject = {
   id: "",
   name: "All datacenters",
-  abbreviation: "ALL"
+  abbreviation: "ALL",
 };
 // var console: any = {};
 // console.log = function() {};
@@ -30,36 +31,31 @@ export const ALL_DATACENTERS: DatacenterObject = {
 class ElementTabContainer extends React.Component<
   ElementTabContainerProps & RouteComponentProps,
   ElementTabContainerState
-  > {
+> {
   state = {
     datacenters: [],
-    currDatacenter: ALL_DATACENTERS
+    currDatacenter: ALL_DATACENTERS,
   };
 
   onDatacenterSelect = (datacenter: DatacenterObject) => {
     this.setState({
-      currDatacenter: datacenter
+      currDatacenter: datacenter,
     });
   };
   getDatacenters = () => {
     const headers = getHeaders(this.props.token);
-    // console.log(API_ROOT + "api/datacenters/get-all");
     axios
       .post(API_ROOT + "api/datacenters/get-many", {}, headers)
-      .then(res => {
-        console.log(res.data.datacenters);
+      .then((res) => {
         const datacenters = res.data.datacenters as Array<DatacenterObject>;
         datacenters.push(ALL_DATACENTERS);
         this.setState({
-          datacenters
+          datacenters,
         });
       })
-      .catch(err => {
-        console.log(err);
-      });
+      .catch((err) => {});
   };
   componentDidMount = () => {
-    console.log("tab container mounted");
     this.getDatacenters();
   };
 
@@ -75,7 +71,6 @@ class ElementTabContainer extends React.Component<
   };
 
   public render() {
-    console.log(this.props.match, this.props.location);
     return (
       <Tabs
         className={Classes.DARK + " element-view "}
@@ -128,8 +123,9 @@ class ElementTabContainer extends React.Component<
           id="datacenters"
           title="Datacenters"
           disabled={
-            !(this.props.permissionState.admin
-              || this.props.permissionState.asset_management
+            !(
+              this.props.permissionState.admin ||
+              this.props.permissionState.asset_management
             )
           }
           panel={
@@ -151,7 +147,7 @@ const mapStateToProps = (state: any) => {
   return {
     isAdmin: state.admin,
     permissionState: state.permissionState,
-    token: state.token
+    token: state.token,
   };
 };
 

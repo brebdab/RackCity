@@ -10,7 +10,7 @@ import { FormTypes } from "./formUtils";
 
 //TO DO : add validation of types!!!
 var console: any = {};
-console.log = function() {};
+console.log = function () {};
 
 export interface DatacenterFormProps {
   token: string;
@@ -42,17 +42,17 @@ class DatacenterForm extends React.Component<
     : ({} as DatacenterObject);
   public state = {
     values: this.initialState,
-    errors: []
+    errors: [],
   };
   headers = {
     headers: {
-      Authorization: "Token " + this.props.token
-    }
+      Authorization: "Token " + this.props.token,
+    },
   };
 
   private handleSubmit = (e: any) => {
     this.setState({
-      errors: []
+      errors: [],
     });
     e.preventDefault();
     console.log(this.state);
@@ -61,19 +61,19 @@ class DatacenterForm extends React.Component<
         console.log(this.props.initialValues);
         this.setState({
           values: updateObject(this.state.values, {
-            id: this.props.initialValues.id
-          })
+            id: this.props.initialValues.id,
+          }),
         });
       }
 
       const resp = this.props.submitForm(this.state.values, this.headers);
       if (resp) {
-        resp.catch(err => {
+        resp.catch((err) => {
           console.log(err.response.data.failure_message);
           let errors: Array<string> = this.state.errors;
           errors.push(err.response.data.failure_message as string);
           this.setState({
-            errors: errors
+            errors: errors,
           });
         });
       }
@@ -83,8 +83,8 @@ class DatacenterForm extends React.Component<
   handleChange = (field: { [key: string]: any }) => {
     this.setState({
       values: updateObject(this.state.values, {
-        ...field
-      })
+        ...field,
+      }),
     });
   };
   selectText = (event: any) => event.target.select();
@@ -128,7 +128,7 @@ class DatacenterForm extends React.Component<
 
 const mapStateToProps = (state: any) => {
   return {
-    token: state.token
+    token: state.token,
   };
 };
 export default connect(mapStateToProps)(DatacenterForm);

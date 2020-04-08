@@ -5,4 +5,4 @@ def is_netid_user(user):
     NetID users are authenticated by access token and their associated
     passwords are empty strings.
     """
-    return (not user.password)
+    return not user.password

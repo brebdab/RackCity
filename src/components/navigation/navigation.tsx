@@ -7,7 +7,7 @@ import {
   Navbar,
   NavbarDivider,
   NavbarGroup,
-  NavbarHeading
+  NavbarHeading,
 } from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
 import axios from "axios";
@@ -20,18 +20,13 @@ import { isNullOrUndefined } from "util";
 import {
   ChangePlanSelect,
   filterChangePlan,
-  renderChangePlanItem
+  renderChangePlanItem,
 } from "../../forms/formUtils";
 import * as actions from "../../store/actions/state";
 import { API_ROOT } from "../../utils/api-config";
-import {
-  ChangePlan,
-  ElementType,
-  getHeaders,
-  PermissionState,
-  ROUTES
-} from "../../utils/utils";
+import { ChangePlan, ElementType, getHeaders, ROUTES } from "../../utils/utils";
 import "./navigation.scss";
+import { PermissionState } from "../../utils/permissionUtils";
 export interface NavigationProps {
   isAuthenticated: boolean;
   logout(): any;
@@ -64,24 +59,22 @@ export class Navigation extends React.Component<
 > {
   public state = {
     username: undefined,
-    changePlans: []
+    changePlans: [],
   };
 
   sucessfulChangePlanRequest = false;
   getUsername(token: string) {
     const headers = {
       headers: {
-        Authorization: "Token " + token
-      }
+        Authorization: "Token " + token,
+      },
     };
     axios
       .get(API_ROOT + "api/users/who-am-i", headers)
-      .then(res => {
+      .then((res) => {
         this.setState({ username: res.data.username });
       })
-      .catch(err => {
-        console.log(err);
-      });
+      .catch((err) => {});
   }
   clearUsernameAndLogout() {
     this.setState({ username: undefined });
@@ -96,17 +89,16 @@ export class Navigation extends React.Component<
       !this.sucessfulChangePlanRequest ||
       this.props.updateChangePlansBoolean
     ) {
-      getChangePlanList(this.props.token).then(res => {
+      getChangePlanList(this.props.token).then((res) => {
         this.sucessfulChangePlanRequest = true;
         this.props.updateChangePlans(false);
         let items: Array<ChangePlan> = res.data[ElementType.CHANGEPLANS];
-        items = items.filter(changePlan =>
+        items = items.filter((changePlan) =>
           isNullOrUndefined(changePlan.execution_time)
         );
         this.setState({
-          changePlans: items
+          changePlans: items,
         });
-        console.log("GETTING NEW CHANGE PLANS", items);
       });
     }
 
@@ -186,7 +178,7 @@ export class Navigation extends React.Component<
                     popoverProps={{
                       minimal: true,
                       popoverClassName: "dropdown",
-                      usePortal: true
+                      usePortal: true,
                     }}
                     disabled={this.props.location.pathname.includes(
                       "/dashboard/change-plans/"
@@ -274,7 +266,7 @@ const mapStateToProps = (state: any) => {
     token: state.token,
     changePlan: state.changePlan,
     updateChangePlansBoolean: state.updateChangePlansBoolean,
-    permissionState: state.permissionState
+    permissionState: state.permissionState,
   };
 };
 
@@ -285,7 +277,7 @@ const mapDispatchToProps = (dispatch: any) => {
       dispatch(actions.updateChangePlans(status)),
 
     setChangePlan: (changePlan: ChangePlan) =>
-      dispatch(actions.setChangePlan(changePlan))
+      dispatch(actions.setChangePlan(changePlan)),
   };
 };
 export default withRouter(

@@ -12,31 +12,29 @@ interface RackRangeFormState {
 }
 
 var console: any = {};
-console.log = function() {};
+console.log = function () {};
 class RackRangeForm extends React.Component<
   RackRangeFormProps,
   RackRangeFormState
 > {
   public state = {
-    values: {} as RackRangeFields
+    values: {} as RackRangeFields,
   };
   componentDidMount = () => {
     this.setState({
-      values: JSON.parse(JSON.stringify(this.props.values))
+      values: JSON.parse(JSON.stringify(this.props.values)),
     });
   };
   componentWillReceiveProps = (nextProps: RackRangeFormProps) => {
     if (
       JSON.stringify(nextProps.values) !== JSON.stringify(this.props.values)
     ) {
-      console.log("new props", nextProps.values);
       this.setState({
-        values: JSON.parse(JSON.stringify(nextProps.values))
+        values: JSON.parse(JSON.stringify(nextProps.values)),
       });
     }
   };
   render() {
-    console.log("rack range form new values", this.state.values);
     return (
       <div className={this.props.className + " rack-range"}>
         <div className="rack-letter">

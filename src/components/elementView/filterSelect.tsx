@@ -13,7 +13,7 @@ import {
   renderModelFieldItem,
   renderStringItem,
   filterModelField,
-  filterString
+  filterString,
 } from "../../forms/formUtils";
 import RackRangeForm from "../../forms/rackRangeForm";
 import { updateObject } from "../../store/utility";
@@ -21,7 +21,7 @@ import {
   AssetFieldsTable,
   isRackRangeFields,
   RackRangeFields,
-  ModelFieldsTable
+  ModelFieldsTable,
 } from "../../utils/utils";
 import {
   FilterTypes,
@@ -30,7 +30,7 @@ import {
   NumericFilter,
   TextFilter,
   TextFilterTypes,
-  DatetimeFilter
+  DatetimeFilter,
 } from "./elementUtils";
 import "./elementView.scss";
 
@@ -46,12 +46,12 @@ interface FilterSelectProps {
 class FilterSelect extends React.Component<
   FilterSelectProps & RouteComponentProps,
   IFilter
-  > {
+> {
   state = {
     id: "",
     field: "",
     filter: {} as TextFilter | NumericFilter | RackRangeFields | DatetimeFilter,
-    filter_type: FilterTypes.TEXT
+    filter_type: FilterTypes.TEXT,
   };
   renderFilterOptions(field: string | undefined) {
     const type = getFilterType(field);
@@ -96,6 +96,7 @@ class FilterSelect extends React.Component<
           singleMonthOnly={true}
           closeOnSelection={false}
           timePrecision="minute"
+          timePickerProps={{ useAmPm: true }}
         />
       </FormGroup>
     );
@@ -141,61 +142,61 @@ class FilterSelect extends React.Component<
   setFilterType(field: string) {
     this.setState({
       field: field,
-      filter_type: getFilterType(field)
+      filter_type: getFilterType(field),
     });
     const type = getFilterType(field);
     if (type === FilterTypes.TEXT) {
       const filter: TextFilter = {
-        match_type: TextFilterTypes.CONTAINS
+        match_type: TextFilterTypes.CONTAINS,
       };
       console.log(updateObject(this.state.filter, { ...filter }));
       this.setState({
-        filter: filter
+        filter: filter,
       });
     }
     if (type === FilterTypes.NUMERIC) {
       const filter: NumericFilter = {};
       this.setState({
-        filter: filter
+        filter: filter,
       });
     }
     if (type === FilterTypes.RACKRANGE) {
       const filter: RackRangeFields = { letter_start: "" } as RackRangeFields;
       this.setState({
-        filter: filter
+        filter: filter,
       });
     }
     if (type === FilterTypes.DATETIME) {
-      console.log("set type to datetime")
+      console.log("set type to datetime");
       const filter: DatetimeFilter = {};
       this.setState({
-        filter: filter
+        filter: filter,
       });
     }
   }
   handleChange = (field: { [key: string]: any }) => {
     const test = updateObject(this.state.filter, {
-      ...field
+      ...field,
     });
     console.log(
       updateObject(this.state.filter, {
-        ...field
+        ...field,
       })
     );
     this.setState({
-      filter: test
+      filter: test,
     });
   };
   handleDatetimeChange = (range: DateRange) => {
-    console.log("handling datetime change")
+    console.log("handling datetime change");
     let filter: DatetimeFilter = {
       after: range[0] ? range[0].toISOString() : undefined,
       before: range[1] ? range[1].toISOString() : undefined,
-    }
-    this.setState({ filter: filter })
-    console.log("datetime filter: ")
-    console.log(this.state.filter)
-  }
+    };
+    this.setState({ filter: filter });
+    console.log("datetime filter: ");
+    console.log(this.state.filter);
+  };
   handleSubmit = (e: any) => {
     e.preventDefault();
     console.log("test");
@@ -203,7 +204,7 @@ class FilterSelect extends React.Component<
       field: this.state.field,
       filter_type: this.state.filter_type,
       filter: this.state.filter,
-      id: this.state.field + JSON.stringify(this.state.filter)
+      id: this.state.field + JSON.stringify(this.state.filter),
     };
     console.log(filter);
 
@@ -246,7 +247,7 @@ class FilterSelect extends React.Component<
               popoverProps={{
                 minimal: true,
                 popoverClassName: "dropdown",
-                usePortal: true
+                usePortal: true,
               }}
               // inputValueRenderer={(letter: string) => letter}
               itemRenderer={this.getItemRenderer()}
@@ -268,13 +269,13 @@ class FilterSelect extends React.Component<
 
           {this.state.field
             ? [
-              this.renderFilterOptions(this.state.field),
-              <div className="add-filter">
-                <Button icon="filter" type="submit">
-                  Add Filter
+                this.renderFilterOptions(this.state.field),
+                <div className="add-filter">
+                  <Button icon="filter" type="submit">
+                    Add Filter
                   </Button>
-              </div>
-            ]
+                </div>,
+              ]
             : null}
         </form>
       </div>
@@ -287,7 +288,7 @@ const FieldSelect = Select.ofType<string>();
 const mapStateToProps = (state: any) => {
   return {
     token: state.token,
-    isAdmin: state.admin
+    isAdmin: state.admin,
   };
 };
 

@@ -5,7 +5,7 @@ import {
   DatacenterObject,
   UserInfoObject,
   ChangePlan,
-  UserPermissionsObject
+  UserPermissionsObject,
 } from "../../utils/utils";
 import { API_ROOT } from "../../utils/api-config";
 import axios from "axios";
@@ -20,25 +20,25 @@ export enum ElementTableOpenAlert {
   DELETE = "delete",
   DECOMMISSION = "decommission",
   GRANT_ADMIN = "grant_admin",
-  REVOKE_ADMIN = "revoke_admin"
+  REVOKE_ADMIN = "revoke_admin",
 }
 
 export enum FilterTypes {
   TEXT = "text",
   NUMERIC = "numeric",
   RACKRANGE = "rack_range",
-  DATETIME = "datetime"
+  DATETIME = "datetime",
 }
 
 export enum PagingTypes {
   TEN = 10,
   FIFTY = 50,
   HUNDRED = 100,
-  ALL = "View All"
+  ALL = "View All",
 }
 export enum TextFilterTypes {
   EXACT = "exact",
-  CONTAINS = "contains"
+  CONTAINS = "contains",
 }
 
 export interface IFilter {
@@ -53,7 +53,7 @@ const numberFields = [
   "num_ethernet_ports",
   "num_power_ports",
   "memory_gb",
-  "num_network_ports"
+  "num_network_ports",
 ];
 
 export function getFilterType(field: string | undefined) {
@@ -103,12 +103,13 @@ export const renderRackRangeFilterItem = (item: RackRangeFields) => {
 };
 
 export const renderDatetimeFilterItem = (item: DatetimeFilter) => {
-  const after: Date | undefined = item.after ? new Date(item.after) : undefined
-  const before: Date | undefined = item.before ? new Date(item.before) : undefined
+  const after: Date | undefined = item.after ? new Date(item.after) : undefined;
+  const before: Date | undefined = item.before
+    ? new Date(item.before)
+    : undefined;
   if (after && before) {
     return `from ${after.toLocaleString()} to ${before.toLocaleString()}`;
-  }
-  else if (after) {
+  } else if (after) {
     return `after ${after.toLocaleString()}`;
   } else if (before) {
     return `before ${before.toLocaleString()}`;
@@ -123,7 +124,6 @@ export const deleteModel = (model: ModelObject, headers: any) => {
   return axios.post(API_ROOT + "api/models/delete", data, headers);
 };
 export const deleteAsset = (asset: AssetObject, headers: any) => {
-  console.log("Deleting asset");
   const data = { id: asset.id };
   return axios.post(API_ROOT + "api/assets/delete", data, headers);
 };
@@ -139,8 +139,8 @@ export const modifyAsset = (
     config = {
       headers: headers["headers"],
       params: {
-        change_plan: changePlan.id
-      }
+        change_plan: changePlan.id,
+      },
     };
   }
   return axios.post(API_ROOT + "api/assets/modify", asset, config);
@@ -157,11 +157,11 @@ export const decommissionAsset = (
     config = {
       headers: headers["headers"],
       params: {
-        change_plan: changePlan.id
-      }
+        change_plan: changePlan.id,
+      },
     };
   }
-  console.log("Decommissioning asset");
+
   const data = { id: asset.id };
   return axios.post(API_ROOT + "api/assets/decommission", data, config);
 };

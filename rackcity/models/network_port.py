@@ -14,9 +14,10 @@ def format_mac_address(mac_address):
     mac_address = mac_address.replace(",", ":")
     mac_address = mac_address.replace(";", ":")
     # if contains no delimiters:
-    if (not mac_address.__contains__(":")):
-        mac_address = ':'.join(
-            a+b for a, b in zip(mac_address[::2], mac_address[1::2]))
+    if not (mac_address.__contains__(":")):
+        mac_address = ":".join(
+            a + b for a, b in zip(mac_address[::2], mac_address[1::2])
+        )
     return mac_address
 
 
@@ -32,17 +33,12 @@ class AbstractNetworkPort(models.Model):
         # force this to lowercase and make delimeters :
     )
     connected_port = models.OneToOneField(
-        'self',
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
+        "self", on_delete=models.CASCADE, null=True, blank=True,
     )
+
     def create_network_connection(self, destination_port):
-        if (
-            destination_port.connected_port
-            and destination_port.connected_port != self
-        ):
-            from rackcity.views.rackcity_utils import NetworkConnectionException
+        if destination_port.connected_port and destination_port.connected_port != self:
+            from rackcity.utils.exceptions import NetworkConnectionException
 
             raise NetworkConnectionException(
                 "Destination port '"
@@ -82,12 +78,7 @@ class AbstractNetworkPort(models.Model):
 
 
 class NetworkPort(AbstractNetworkPort):
-    asset = models.ForeignKey(
-        Asset,
-        on_delete=models.CASCADE,
-        verbose_name="asset",
-        
-    )
+    asset = models.ForeignKey(Asset, on_delete=models.CASCADE, verbose_name="asset",)
 
     class Meta:
         constraints = [
@@ -99,15 +90,8 @@ class NetworkPort(AbstractNetworkPort):
 
 
 class NetworkPortCP(AbstractNetworkPort):
-    asset = models.ForeignKey(
-        AssetCP,
-        on_delete=models.CASCADE,
-        verbose_name="asset",
-    )
-    change_plan = models.ForeignKey(
-        ChangePlan,
-        on_delete=models.CASCADE,
-    )
+    asset = models.ForeignKey(AssetCP, on_delete=models.CASCADE, verbose_name="asset",)
+    change_plan = models.ForeignKey(ChangePlan, on_delete=models.CASCADE,)
 
     class Meta:
         constraints = [

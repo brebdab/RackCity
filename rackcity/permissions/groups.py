@@ -7,26 +7,26 @@ from typing import Tuple
 
 
 class GroupName(Enum):
-    MODEL = 'model_management'
-    ASSET = 'asset_management'
-    POWER = 'power_control'
-    AUDIT = 'audit_read'
-    ADMIN = 'admin'
+    MODEL = "model_management"
+    ASSET = "asset_management"
+    POWER = "power_control"
+    AUDIT = "audit_read"
+    ADMIN = "admin"
 
 
 def set_group_permissions(group: Group, group_name: GroupName):
     """
     Adds correct permissions to a newly created Django Group.
     """
-    if (group_name == GroupName.MODEL):
+    if group_name == GroupName.MODEL:
         group.permissions.add(get_permission(PermissionName.MODEL_WRITE))
-    elif (group_name == GroupName.ASSET):
+    elif group_name == GroupName.ASSET:
         group.permissions.add(get_permission(PermissionName.ASSET_WRITE))
-    elif (group_name == GroupName.POWER):
+    elif group_name == GroupName.POWER:
         group.permissions.add(get_permission(PermissionName.POWER_WRITE))
-    elif (group_name == GroupName.AUDIT):
+    elif group_name == GroupName.AUDIT:
         group.permissions.add(get_permission(PermissionName.AUDIT_READ))
-    elif (group_name == GroupName.ADMIN):
+    elif group_name == GroupName.ADMIN:
         group.permissions.add(get_permission(PermissionName.MODEL_WRITE))
         group.permissions.add(get_permission(PermissionName.ASSET_WRITE))
         group.permissions.add(get_permission(PermissionName.POWER_WRITE))
@@ -47,7 +47,7 @@ def get_group(group_name: GroupName) -> Tuple[Group, bool]:
 
 def add_user_to_group(user: User, group_name: GroupName) -> bool:
     group, created = get_group(group_name)
-    added = (created or not user.groups.filter(name=group.name).exists())
+    added = created or not user.groups.filter(name=group.name).exists()
     if added:
         user.groups.add(group)
     return added
@@ -55,7 +55,7 @@ def add_user_to_group(user: User, group_name: GroupName) -> bool:
 
 def remove_user_from_group(user: User, group_name: GroupName) -> bool:
     group, _ = get_group(group_name)
-    removed = (user.groups.filter(name=group.name).exists())
+    removed = user.groups.filter(name=group.name).exists()
     if removed:
         user.groups.remove(group)
     return removed

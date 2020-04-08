@@ -5,7 +5,7 @@ import {
   Intent,
   IToastProps,
   Position,
-  Toaster
+  Toaster,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -22,11 +22,11 @@ import {
   ModelObject,
   ROUTES,
   ChangePlan,
-  PermissionState
 } from "../../../../utils/utils";
 import ElementTable from "../../elementTable";
 import { deleteModel, modifyModel } from "../../elementUtils";
 import PropertiesView from "../propertiesView";
+import { PermissionState } from "../../../../utils/permissionUtils";
 
 export interface ModelViewProps {
   token: string;
@@ -36,9 +36,8 @@ export interface ModelViewProps {
   permissionState: PermissionState;
 }
 
-
-// var console: any = {};
-// console.log = function() {};
+var console: any = {};
+console.log = function () {};
 interface ModelViewState {
   assets: Array<AssetObject>;
   model: ModelObject;
@@ -51,21 +50,20 @@ async function getData(
   token: string,
   changePlan: ChangePlan
 ) {
-  console.log(API_ROOT + "api/models/" + modelkey);
   const params: any = {};
   if (changePlan) {
     params["change_plan"] = changePlan.id;
   }
   const config = {
     headers: {
-      Authorization: "Token " + token
+      Authorization: "Token " + token,
     },
-    params
+    params,
   };
-  console.log(config);
+
   return await axios
     .get(API_ROOT + "api/models/" + modelkey, config)
-    .then(res => {
+    .then((res) => {
       const data = res.data;
       return data;
     });
@@ -74,42 +72,39 @@ async function getData(
 export class ModelView extends React.PureComponent<
   RouteComponentProps & ModelViewProps,
   ModelViewState
-  > {
+> {
   public state: ModelViewState = {
     assets: [],
     model: {} as ModelObject,
     isFormOpen: false,
-    isDeleteOpen: false
+    isDeleteOpen: false,
   };
 
   private updateModel = (model: ModelObject, headers: any): Promise<any> => {
-    return modifyModel(model, headers).then(res => {
-      console.log("success");
+    return modifyModel(model, headers).then((res) => {
       let params: any;
       params = this.props.match.params;
       getData(params.rid, this.props.token, this.props.changePlan).then(
-        result => {
-          console.log("result", result);
+        (result) => {
           this.setState({
             model: result.model,
-            assets: result.assets
+            assets: result.assets,
           });
         }
       );
       this.handleFormClose();
-      console.log(this.state.isFormOpen);
     });
   };
   private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
   private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
   private handleFormOpen = () => {
     this.setState({
-      isFormOpen: true
+      isFormOpen: true,
     });
   };
   handleFormSubmit = () => {
     this.setState({
-      isFormOpen: false
+      isFormOpen: false,
     });
   };
   private toaster: Toaster = {} as Toaster;
@@ -119,58 +114,53 @@ export class ModelView extends React.PureComponent<
   }
 
   private refHandlers = {
-    toaster: (ref: Toaster) => (this.toaster = ref)
+    toaster: (ref: Toaster) => (this.toaster = ref),
   };
 
   private handleFormClose = () => this.setState({ isFormOpen: false });
   private handleDelete = () => {
     deleteModel(this.state.model!, getHeaders(this.props.token))
-      .then(res => {
+      .then((res) => {
         this.setState({ isDeleteOpen: false });
         this.addToast({
           message: "Succesfully Deleted Model",
-          intent: Intent.PRIMARY
+          intent: Intent.PRIMARY,
         });
         this.props.history.push(ROUTES.DASHBOARD);
       })
-      .catch(err => {
-        console.log("ERROR", err);
+      .catch((err) => {
         this.addToast({
           message: err.response.data.failure_message,
-          intent: Intent.DANGER
+          intent: Intent.DANGER,
         });
         this.handleDeleteCancel();
       });
   };
 
   componentWillReceiveProps(nextProps: ModelViewProps & RouteComponentProps) {
-    console.log("new change plan", nextProps.changePlan);
     if (nextProps.changePlan !== this.props.changePlan) {
       let params: any;
       params = this.props.match.params;
-      console.log("new change plan", nextProps.changePlan);
+
       getData(params.rid, this.props.token, nextProps.changePlan).then(
-        result => {
-          console.log("result", result);
+        (result) => {
           this.setState({
             model: result.model,
-            assets: result.assets
+            assets: result.assets,
           });
         }
       );
     }
   }
   public render() {
-    console.log(this.state.assets);
     let params: any;
     params = this.props.match.params;
     if (Object.keys(this.state.model).length === 0) {
       getData(params.rid, this.props.token, this.props.changePlan).then(
-        result => {
-          console.log("result", result);
+        (result) => {
           this.setState({
             model: result.model,
-            assets: result.assets
+            assets: result.assets,
           });
         }
       );
@@ -195,8 +185,8 @@ export class ModelView extends React.PureComponent<
               onClick={() => this.handleFormOpen()}
               disabled={
                 !(
-                  this.props.permissionState.admin
-                  || this.props.permissionState.model_management
+                  this.props.permissionState.admin ||
+                  this.props.permissionState.model_management
                 )
               }
             />
@@ -217,8 +207,8 @@ export class ModelView extends React.PureComponent<
               onClick={this.handleDeleteOpen}
               disabled={
                 !(
-                  this.props.permissionState.admin
-                  || this.props.permissionState.model_management
+                  this.props.permissionState.admin ||
+                  this.props.permissionState.model_management
                 )
               }
             />
@@ -257,7 +247,7 @@ const mapStatetoProps = (state: any) => {
     token: state.token,
     isAdmin: state.admin,
     changePlan: state.changePlan,
-    permissionState: state.permissionState
+    permissionState: state.permissionState,
   };
 };
 

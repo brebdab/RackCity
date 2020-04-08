@@ -10,7 +10,7 @@ import {
   IToastProps,
   MenuItem,
   Position,
-  Toaster
+  Toaster,
 } from "@blueprintjs/core";
 import * as actions from "../../store/actions/state";
 import "@blueprintjs/core/lib/css/blueprint.css";
@@ -23,7 +23,7 @@ import {
   DatacenterSelect,
   filterDatacenter,
   FormTypes,
-  renderDatacenterItem
+  renderDatacenterItem,
 } from "../../forms/formUtils";
 import { updateObject } from "../../store/utility";
 import { API_ROOT } from "../../utils/api-config";
@@ -36,8 +36,7 @@ import {
   ShallowAssetObject,
   SortFilterBody,
   ChangePlan,
-  PermissionState,
-  ROUTES
+  ROUTES,
 } from "../../utils/utils";
 import { ALL_DATACENTERS } from "./elementTabContainer";
 import ElementTable from "./elementTable";
@@ -45,10 +44,14 @@ import {
   FilterTypes,
   IFilter,
   PagingTypes,
-  TextFilterTypes
+  TextFilterTypes,
 } from "./elementUtils";
 import "./elementView.scss";
 import { Link } from "react-router-dom";
+import {
+  hasAddElementPermission,
+  PermissionState,
+} from "../../utils/permissionUtils";
 
 // var console: any = {};
 // console.log = function() {};
@@ -88,7 +91,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     networkFileName: "",
     updateTable: false,
     barcodes: [],
-    isDecommissioned: false
+    isDecommissioned: false,
   };
 
   getExportData = (
@@ -100,8 +103,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
   ) => {
     const config = {
       headers: {
-        Authorization: "Token " + token
-      }
+        Authorization: "Token " + token,
+      },
     };
     let filtersCopy = filters.slice();
     if (path === "assets") {
@@ -113,34 +116,35 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             id: "",
             field: "rack__datacenter__name",
             filter_type: FilterTypes.TEXT,
-            filter: { value: datacenterName, match_type: TextFilterTypes.EXACT }
+            filter: {
+              value: datacenterName,
+              match_type: TextFilterTypes.EXACT,
+            },
           });
         }
       }
     }
     const body = {
       sort_by: [],
-      filters: filtersCopy
+      filters: filtersCopy,
     };
 
     axios
       .post(API_ROOT + "api/" + path + "/bulk-export", body, config)
-      .then(res => {
-        console.log(res.data);
+      .then((res) => {
         fs(res.data.export_csv, file);
         return 0;
       })
-      .catch(err => this.addErrorToast("Failed to export data to " + file));
+      .catch((err) => this.addErrorToast("Failed to export data to " + file));
 
     if (path === "assets") {
       axios
         .post(API_ROOT + "api/" + path + "/network-bulk-export", body, config)
-        .then(res => {
-          console.log(res.data);
+        .then((res) => {
           fs(res.data.export_csv, networkFile);
           return 0;
         })
-        .catch(err => this.addErrorToast("Failed to export data to " + file));
+        .catch((err) => this.addErrorToast("Failed to export data to " + file));
     }
   };
   getPages = (
@@ -155,10 +159,10 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     }
     const config = {
       headers: {
-        Authorization: "Token " + token
+        Authorization: "Token " + token,
       },
 
-      params: params
+      params: params,
     };
     const filtersCopy = filters.slice();
     let datacenterName;
@@ -169,7 +173,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
           id: "",
           field: "rack__datacenter__name",
           filter_type: FilterTypes.TEXT,
-          filter: { value: datacenterName, match_type: TextFilterTypes.EXACT }
+          filter: { value: datacenterName, match_type: TextFilterTypes.EXACT },
         });
       }
     }
@@ -178,7 +182,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       : "api/" + path + "/pages";
     return axios
       .post(API_ROOT + url, { filters: filtersCopy }, config)
-      .then(res => {
+      .then((res) => {
         return res.data.page_count;
       });
   };
@@ -189,7 +193,6 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     body: SortFilterBody,
     token: string
   ): Promise<Array<ElementObjectType>> => {
-    console.log(API_ROOT + "api/" + path + "/get-many");
     this.handleDataUpdate(false);
 
     const params: any =
@@ -197,17 +200,17 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
         ? {}
         : {
             page_size: page_type,
-            page
+            page,
           };
     if (this.props.changePlan) {
       params["change_plan"] = this.props.changePlan.id;
     }
     const config = {
       headers: {
-        Authorization: "Token " + token
+        Authorization: "Token " + token,
       },
 
-      params: params
+      params: params,
     };
     let bodyCopy = JSON.parse(JSON.stringify(body));
     const { filters } = bodyCopy;
@@ -219,7 +222,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
           id: "",
           field: "rack__datacenter__name",
           filter_type: FilterTypes.TEXT,
-          filter: { value: datacenterName, match_type: TextFilterTypes.EXACT }
+          filter: { value: datacenterName, match_type: TextFilterTypes.EXACT },
         });
         bodyCopy = updateObject(bodyCopy, { filters });
       }
@@ -228,9 +231,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       ? API_ROOT + "api/assets/get-many-decommissioned"
       : API_ROOT + "api/" + path + "/get-many";
 
-    return axios.post(url, bodyCopy, config).then(res => {
+    return axios.post(url, bodyCopy, config).then((res) => {
       const items = res.data[path];
-      console.log(items);
 
       return items;
     });
@@ -238,31 +240,30 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
 
   public handleDataUpdate = (status: boolean) => {
     this.setState({
-      updateTable: status
+      updateTable: status,
     });
   };
   private handleOpen = () => {
     this.setState({
-      isOpen: true
+      isOpen: true,
     });
   };
   private handleClose = () => this.setState({ isOpen: false });
 
   private createModel = (model: ModelObject, headers: any): Promise<any> => {
-    return axios.post(API_ROOT + "api/models/add", model, headers).then(res => {
-      console.log("success");
-      this.handleDataUpdate(true);
-      this.handleClose();
-      this.addSuccessToast(res.data.success_message);
-      console.log(this.state.isOpen);
-    });
+    return axios
+      .post(API_ROOT + "api/models/add", model, headers)
+      .then((res) => {
+        this.handleDataUpdate(true);
+        this.handleClose();
+        this.addSuccessToast(res.data.success_message);
+      });
   };
 
   private createAsset = (
     asset: ShallowAssetObject,
     headers: any
   ): Promise<any> => {
-    console.log("api/assets/add");
     let config;
     if (!this.props.changePlan) {
       config = headers;
@@ -270,27 +271,27 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       config = {
         headers: headers["headers"],
         params: {
-          change_plan: this.props.changePlan.id
-        }
+          change_plan: this.props.changePlan.id,
+        },
       };
     }
 
-    return axios.post(API_ROOT + "api/assets/add", asset, config).then(res => {
-      this.handleDataUpdate(true);
-      this.handleClose();
-      if (res.data.warning_message) {
-        this.addWarnToast("Created asset. " + res.data.warning_message);
-      } else {
-        this.addSuccessToast(res.data.success_message);
-      }
-
-      console.log(this.state.isOpen);
-    });
+    return axios
+      .post(API_ROOT + "api/assets/add", asset, config)
+      .then((res) => {
+        this.handleDataUpdate(true);
+        this.handleClose();
+        if (res.data.warning_message) {
+          this.addWarnToast("Created asset. " + res.data.warning_message);
+        } else {
+          this.addSuccessToast(res.data.success_message);
+        }
+      });
   };
   private addWarnToast = (message: string) => {
     this.addToast({
       message: message,
-      intent: Intent.WARNING
+      intent: Intent.WARNING,
     });
   };
   componentWillReceiveProps(nextProps: ElementTabProps & RouteComponentProps) {
@@ -303,30 +304,23 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     dc: DatacenterObject,
     headers: any
   ): Promise<any> => {
-    console.log("api/dataceneters/add");
     return axios
       .post(API_ROOT + "api/datacenters/add", dc, headers)
-      .then(res => {
+      .then((res) => {
         this.handleDataUpdate(true);
         this.handleClose();
         this.addSuccessToast(res.data.success_message);
         if (this.props.updateDatacenters) {
           this.props.updateDatacenters();
         }
-
-        console.log(this.state.isOpen);
       });
   };
 
   private createUser = (user: CreateUserObject, headers: any): Promise<any> => {
-    console.log("api/users/add");
-    return axios.post(API_ROOT + "api/users/add", user, headers).then(res => {
-      console.log("success");
-
+    return axios.post(API_ROOT + "api/users/add", user, headers).then((res) => {
       this.handleDataUpdate(true);
       this.handleClose();
       this.addSuccessToast(res.data.success_message);
-      console.log(this.state.isOpen);
     });
   };
 
@@ -336,15 +330,13 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
   ): Promise<any> => {
     return axios
       .post(API_ROOT + "api/change-plans/add", changePlan, headers)
-      .then(res => {
-        console.log("success");
+      .then((res) => {
         this.props.updateChangePlans(true);
 
         this.handleDataUpdate(true);
         this.handleClose();
 
         this.addSuccessToast(res.data.success_message);
-        console.log(this.state.isOpen);
       });
   };
   private toaster: Toaster = {} as Toaster;
@@ -360,11 +352,10 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
   }
 
   private refHandlers = {
-    toaster: (ref: Toaster) => (this.toaster = ref)
+    toaster: (ref: Toaster) => (this.toaster = ref),
   };
 
   public render() {
-    console.log(this.props);
     return (
       <div className="element-tab">
         <Toaster
@@ -381,7 +372,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                   popoverProps={{
                     minimal: true,
                     popoverClassName: "dropdown",
-                    usePortal: true
+                    usePortal: true,
                   }}
                   items={this.props.datacenters!}
                   onItemSelect={(datacenter: DatacenterObject) => {
@@ -433,7 +424,6 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                 onClick={() => {
                   /* handle data based on state */
                   this.setState({ fileNameIsOpen: true });
-                  console.log(this.state.filters);
                 }}
               />
             ) : (
@@ -445,15 +435,9 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                 disabled={
                   this.props.changePlan
                     ? true
-                    : !(
-                        this.props.permissionState.admin ||
-                        (this.props.element === ElementType.MODEL &&
-                          this.props.permissionState.model_management) ||
-                        (this.props.element === ElementType.ASSET &&
-                          this.props.permissionState.asset_management) ||
-                        (this.props.element === ElementType.ASSET &&
-                          this.props.permissionState.datacenter_permissions
-                            .length > 0)
+                    : !hasAddElementPermission(
+                        this.props.element,
+                        this.props.permissionState
                       )
                 }
                 onClick={() => {
@@ -491,17 +475,13 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                 } else {
                   let fileRegEx = /.*\.(\w+)/;
                   let extension = this.state.fileName.match(fileRegEx);
-                  console.log(extension);
                   let ext = extension ? extension[extension.length - 1] : null;
-                  console.log(ext);
                   let networkExtension = this.state.networkFileName.match(
                     fileRegEx
                   );
-                  console.log(networkExtension);
                   let networkExt = networkExtension
                     ? networkExtension[networkExtension.length - 1]
                     : null;
-                  console.log(networkExt);
                   if (
                     (networkExt && (ext !== "csv" || networkExt !== "csv")) ||
                     (!networkExt && ext !== "csv")
@@ -524,11 +504,11 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                       this.state.fileName,
                       this.state.networkFileName
                     );
-                    console.log("finished both exports");
+
                     this.setState({
                       fileNameIsOpen: false,
                       fileName: "",
-                      networkFileName: ""
+                      networkFileName: "",
                     });
                   }
                 }
@@ -552,7 +532,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                     <InputGroup
                       onChange={(event: any) => {
                         this.setState({
-                          networkFileName: event.currentTarget.value
+                          networkFileName: event.currentTarget.value,
                         });
                       }}
                       fill={true}
@@ -573,17 +553,9 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                 this.props.element !== ElementType.ASSET &&
                 this.props.changePlan
                   ? true
-                  : !(
-                      this.props.permissionState.admin ||
-                      (this.props.element === ElementType.DATACENTER &&
-                        this.props.permissionState.asset_management) ||
-                      (this.props.element === ElementType.MODEL &&
-                        this.props.permissionState.model_management) ||
-                      (this.props.element === ElementType.ASSET &&
-                        this.props.permissionState.asset_management) ||
-                      (this.props.element === ElementType.ASSET &&
-                        this.props.permissionState.datacenter_permissions
-                          .length > 0)
+                  : !hasAddElementPermission(
+                      this.props.element,
+                      this.props.permissionState
                     )
               }
             />
@@ -630,7 +602,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             getPages={this.getPages}
             updateBarcodes={(data: Array<string>) => {
               this.setState({
-                barcodes: data
+                barcodes: data,
               });
             }}
             callback={(data: Array<any>) => {
@@ -688,13 +660,13 @@ const mapStateToProps = (state: any) => {
     token: state.token,
     isAdmin: state.admin,
     permissionState: state.permissionState,
-    changePlan: state.changePlan
+    changePlan: state.changePlan,
   };
 };
 const mapDispatchToProps = (dispatch: any) => {
   return {
     updateChangePlans: (status: boolean) =>
-      dispatch(actions.updateChangePlans(status))
+      dispatch(actions.updateChangePlans(status)),
   };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(ElementTab);

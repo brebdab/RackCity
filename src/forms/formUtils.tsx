@@ -2,7 +2,7 @@ import {
   ItemPredicate,
   ItemRenderer,
   Suggest,
-  Select
+  Select,
 } from "@blueprintjs/select";
 import React from "react";
 import { MenuItem } from "@blueprintjs/core";
@@ -13,13 +13,13 @@ import {
   AssetObject,
   AssetFieldsTable,
   ModelFieldsTable,
-  ChangePlan
+  ChangePlan,
 } from "../utils/utils";
 
 export enum FormTypes {
   CREATE = "create",
   MODIFY = "modify",
-  DELETE = "delete"
+  DELETE = "delete",
 }
 export function escapeRegExpChars(text: string) {
   // eslint-disable-next-line
@@ -58,7 +58,6 @@ export const filterAssetField: ItemPredicate<string> = (
   _index,
   exactMatch
 ) => {
-  console.log(AssetFieldsTable[field], field);
   let normalizedTitle;
   if (AssetFieldsTable[field]) {
     normalizedTitle = AssetFieldsTable[field].toLowerCase();
@@ -206,7 +205,7 @@ function highlightText(text: string, query: string) {
   let lastIndex = 0;
   const words = query
     .split(/\s+/)
-    .filter(word => word.length > 0)
+    .filter((word) => word.length > 0)
     .map(escapeRegExpChars);
   if (words.length === 0) {
     return [text];

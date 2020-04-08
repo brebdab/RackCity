@@ -28,8 +28,7 @@ class BarcodeView extends React.PureComponent<
     const barcodeString = localStorage.getItem("barcodes")!;
     let barcodes: Array<string>;
     barcodes = barcodeString.split(",");
-    const element = <Barcode value={100000} />;
-    console.log(element);
+
     return (
       <div className={Classes.DARK}>
         <table>
@@ -92,7 +91,7 @@ class BarcodeView extends React.PureComponent<
 const mapStatetoProps = (state: any) => {
   return {
     token: state.token,
-    isAdmin: state.admin
+    isAdmin: state.admin,
   };
 };
 

@@ -11,7 +11,7 @@ import {
   isObject,
   ModelFieldsTable,
   ROUTES,
-  ChangePlan
+  ChangePlan,
 } from "../../../utils/utils";
 import "./propertiesView.scss";
 import { connect } from "react-redux";
@@ -48,12 +48,11 @@ class PropertiesView extends React.PureComponent<
         fields.push(col);
       }
     });
-    console.log("FIELDS", this.props.data, fields);
     return fields;
   };
   public state: AlertState = {
     isDeleteOpen: false,
-    fields: this.setFieldNamesFromData()
+    fields: this.setFieldNamesFromData(),
   };
 
   renderData(fields: Array<any>, data: any) {
@@ -64,17 +63,15 @@ class PropertiesView extends React.PureComponent<
           <p
             className="color"
             style={{
-              backgroundColor: data[item]
+              backgroundColor: data[item],
             }}
           >
             {data[item]}
           </p>
         );
       } else if (item === "network_ports") {
-        console.log(item, data[item]);
         if (data[item]) {
           const network_ports: Array<string> = data[item];
-          console.log(network_ports.toString());
           dat = <p>{network_ports.toString()}</p>;
         }
       } else if (item === "model") {
@@ -115,7 +112,7 @@ class PropertiesView extends React.PureComponent<
               {" "}
               <p>{data[item].datacenter.name}</p>
             </td>
-          </tr>
+          </tr>,
         ];
       } else if (item === "comment") {
         dat = <p className="comment">{data[item]}</p>;
@@ -160,14 +157,12 @@ class PropertiesView extends React.PureComponent<
   }
 
   public render() {
-    console.log(this.props.data);
     if (
       this.state.fields.length === 0 &&
       Object.keys(this.props.data).length !== 0
     ) {
-      console.log(this.setFieldNamesFromData());
       this.setState({
-        fields: this.setFieldNamesFromData()
+        fields: this.setFieldNamesFromData(),
       });
     }
     const length = Math.ceil(this.state.fields.length / 4);
@@ -175,47 +170,49 @@ class PropertiesView extends React.PureComponent<
     return (
       <div className={Classes.DARK + " propsview"}>
         <h3>Properties</h3>
-        <div className="propsdetail">
-          <div className="props-column">
-            <table className="bp3-html-table">
-              {this.renderData(
-                this.state.fields.slice(0, length),
-                this.props.data
-              )}
-            </table>
+        {Object.keys(this.props.data).length !== 0 ? (
+          <div className="propsdetail">
+            <div className="props-column">
+              <table className="bp3-html-table">
+                {this.renderData(
+                  this.state.fields.slice(0, length),
+                  this.props.data
+                )}
+              </table>
+            </div>
+            <div className="props-column">
+              <table className="bp3-html-table">
+                {this.renderData(
+                  this.state.fields.slice(length, 2 * length),
+                  this.props.data
+                )}
+              </table>
+            </div>
+            <div className="props-column">
+              <table className="bp3-html-table">
+                {this.renderData(
+                  this.state.fields.slice(2 * length, 3 * length),
+                  this.props.data
+                )}
+              </table>
+            </div>
+            <div className="props-column">
+              <table className="bp3-html-table">
+                {this.renderData(
+                  this.state.fields.slice(3 * length),
+                  this.props.data
+                )}
+              </table>
+            </div>
           </div>
-          <div className="props-column">
-            <table className="bp3-html-table">
-              {this.renderData(
-                this.state.fields.slice(length, 2 * length),
-                this.props.data
-              )}
-            </table>
-          </div>
-          <div className="props-column">
-            <table className="bp3-html-table">
-              {this.renderData(
-                this.state.fields.slice(2 * length, 3 * length),
-                this.props.data
-              )}
-            </table>
-          </div>
-          <div className="props-column">
-            <table className="bp3-html-table">
-              {this.renderData(
-                this.state.fields.slice(3 * length),
-                this.props.data
-              )}
-            </table>
-          </div>
-        </div>
+        ) : null}
       </div>
     );
   }
 }
 const mapStateToProps = (state: any) => {
   return {
-    changePlan: state.changePlan
+    changePlan: state.changePlan,
   };
 };
 export default connect(mapStateToProps)(withRouter(PropertiesView));
