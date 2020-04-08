@@ -1,8 +1,8 @@
 from django.core.exceptions import ValidationError
 from django.db import models
 from rackcity.models.fields import RCPositiveIntegerField
-import re
 from django.contrib.postgres.fields import ArrayField
+from rackcity.models.model_utils import DEFAULT_DISPLAY_COLOR, validate_display_color
 from enum import Enum
 
 
@@ -56,7 +56,9 @@ class ITModel(models.Model):
     model_number = models.CharField(max_length=150)
     height = models.PositiveIntegerField(null=True, blank=True)
     display_color = models.CharField(
-        max_length=7, default="#394B59", validators=[validate_display_color],
+        max_length=7,
+        default=DEFAULT_DISPLAY_COLOR,
+        validators=[validate_display_color],
     )
     network_ports = ArrayField(models.CharField(max_length=150), null=True, blank=True)
     num_network_ports = RCPositiveIntegerField(null=True, blank=True)

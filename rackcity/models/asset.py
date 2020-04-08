@@ -8,6 +8,8 @@ from .decommissioned_asset import DecommissionedAsset
 from .rack import Rack
 from .change_plan import ChangePlan
 from django.db.models import Q
+from rackcity.models.model_utils import DEFAULT_DISPLAY_COLOR, validate_display_color
+from rackcity.models.fields import RCPositiveIntegerField
 
 
 def get_next_available_asset_number():
@@ -130,6 +132,13 @@ class AbstractAsset(AssetID):
         max_length=150, null=True, blank=True, validators=[validate_owner]
     )
     comment = models.TextField(null=True, blank=True)
+
+    cpu = models.CharField(max_length=150, default="", blank=True)
+    display_color = models.CharField(
+        max_length=7, validators=[validate_display_color], default="", blank=True
+    )
+    storage = models.CharField(max_length=150, blank=True, default="")
+    memory_gb = RCPositiveIntegerField(null=True, blank=True)
 
     class Meta:
         abstract = True
