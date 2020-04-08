@@ -133,11 +133,11 @@ class AbstractAsset(AssetID):
     )
     comment = models.TextField(null=True, blank=True)
 
-    cpu = models.CharField(max_length=150, blank=True)
+    cpu = models.CharField(max_length=150, default="", blank=True)
     display_color = models.CharField(
-        max_length=7, validators=[validate_display_color], blank=True
+        max_length=7, validators=[validate_display_color], default="", blank=True
     )
-    storage = models.CharField(max_length=150, blank=True)
+    storage = models.CharField(max_length=150, blank=True, default="")
     memory_gb = RCPositiveIntegerField(null=True, blank=True)
 
     class Meta:
