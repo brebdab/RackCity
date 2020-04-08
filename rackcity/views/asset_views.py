@@ -197,7 +197,6 @@ def asset_add(request):
             status=HTTPStatus.UNAUTHORIZED,
         )
     except Exception as error:
-        print("this error")
         return JsonResponse(
             {"failure_message": Status.MODIFY_ERROR.value + str(error)},
             status=HTTPStatus.BAD_REQUEST,
