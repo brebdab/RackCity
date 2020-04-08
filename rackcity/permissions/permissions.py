@@ -87,7 +87,7 @@ def validate_user_asset_permission_to_add(user, validated_data):
         rack = Rack.objects.get(id=rack_id)
     except ObjectDoesNotExist:
         raise Exception("Rack '" + str(rack_id) + "' does not exist")
-    if not user_has_asset_permission(user, rack.datacenter):
+    if not user_has_asset_permission(user, site=rack.datacenter):
         raise UserAssetPermissionException(
             "User '"
             + user.username
@@ -98,7 +98,7 @@ def validate_user_asset_permission_to_add(user, validated_data):
 
 
 def validate_user_asset_permission_to_modify_or_delete(user, asset):
-    if asset.rack and not user_has_asset_permission(user, asset.rack.datacenter):
+    if asset.rack and not user_has_asset_permission(user, site=asset.rack.datacenter):
         raise UserAssetPermissionException(
             "User '"
             + user.username

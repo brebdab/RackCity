@@ -614,7 +614,7 @@ def asset_bulk_upload(request):
         else:
             # asset number not provided or it is new
             rack = asset_serializer.validated_data["rack"]
-            if not user_has_asset_permission(request.user, rack.datacenter):
+            if not user_has_asset_permission(request.user, site=rack.datacenter):
                 return JsonResponse(
                     {
                         "failure_message": Status.AUTH_ERROR.value
