@@ -193,25 +193,32 @@ def asset_add(request):
         validate_user_asset_permission_to_add(request.user, serializer.validated_data)
     except UserAssetPermissionException as auth_error:
         return JsonResponse(
-            {"failure_message": Status.AUTH_ERROR + str(auth_error)},
+            {"failure_message": Status.AUTH_ERROR.value + str(auth_error)},
             status=HTTPStatus.UNAUTHORIZED,
         )
     except Exception as error:
         return JsonResponse(
-            {"failure_message": Status.MODIFY_ERROR + str(error)},
-            status=HTTPStatus.BAD_REQUEST,
-        )
-
-    rack_id = serializer.validated_data["rack"].id
-    rack_position = serializer.validated_data["rack_position"]
-    height = serializer.validated_data["model"].height
-    try:
-        validate_asset_location(rack_id, rack_position, height, change_plan=change_plan)
-    except LocationException as error:
-        return JsonResponse(
             {"failure_message": Status.CREATE_ERROR.value + str(error)},
             status=HTTPStatus.BAD_REQUEST,
         )
+
+    if (
+        serializer.validated_data["model"].is_rackmount()
+        and "rack" in serializer.validated_data
+        and "rack_position" in serializer.validated_data
+    ):
+        rack_id = serializer.validated_data["rack"].id
+        rack_position = serializer.validated_data["rack_position"]
+        height = serializer.validated_data["model"].height
+        try:
+            validate_asset_location(
+                rack_id, rack_position, height, change_plan=change_plan
+            )
+        except LocationException as error:
+            return JsonResponse(
+                {"failure_message": Status.CREATE_ERROR.value + str(error)},
+                status=HTTPStatus.BAD_REQUEST,
+            )
 
     try:
         asset = serializer.save()

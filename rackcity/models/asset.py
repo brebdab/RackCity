@@ -121,13 +121,34 @@ def validate_owner(value):
         )
 
 
+def validate_location_type(model, rack, rack_position, chassis, chassis_slot):
+    if model.is_rackmount():
+        if not rack or not rack_position:
+            raise ValidationError(
+                "Rackmount assets must have a rack and rack position. "
+            )
+            # WRONG! What if they're offline?! You fool
+        if chassis or chassis_slot:
+            raise ValidationError(
+                "Rackmount assets must not have a chassis or chassis slot. "
+            )
+    else:
+        if not chassis or not chassis_slot:
+            raise ValidationError("Blade assets must have a chassis and chassis slot. ")
+            # WRONG! What if they're offline?! You fool
+        if rack or rack_position:
+            raise ValidationError(
+                "Rackmount assets must not have a rack or rack position. "
+            )
+
+
 class AssetID(models.Model):
     id = models.AutoField(primary_key=True)
 
 
 class AbstractAsset(AssetID):
-    rack_position = models.PositiveIntegerField()
-
+    rack_position = RCPositiveIntegerField(null=True, blank=True,)
+    chassis_slot = RCPositiveIntegerField(null=True, blank=True,)
     owner = models.CharField(
         max_length=150, null=True, blank=True, validators=[validate_owner]
     )
@@ -161,7 +182,18 @@ class Asset(AbstractAsset):
         ITModel, on_delete=models.CASCADE, verbose_name="related model",
     )
     rack = models.ForeignKey(
-        Rack, on_delete=models.CASCADE, verbose_name="related rack",
+        Rack,
+        on_delete=models.CASCADE,
+        verbose_name="related rack",
+        null=True,
+        blank=True,
+    )
+    chassis = models.ForeignKey(
+        "self",
+        on_delete=models.PROTECT,
+        verbose_name="blade chassis",
+        null=True,
+        blank=True,
     )
 
     class Meta:
@@ -172,6 +204,13 @@ class Asset(AbstractAsset):
         try:
             validate_hostname(self.hostname)
             validate_owner(self.owner)
+            validate_location_type(
+                model=self.model,
+                rack=self.rack,
+                rack_position=self.rack_position,
+                chassis=self.chassis,
+                chassis_slot=self.chassis_slot,
+            )
         except ValidationError as valid_error:
             raise valid_error
         else:
@@ -250,7 +289,18 @@ class AssetCP(AbstractAsset):
         ITModel, on_delete=models.SET_NULL, null=True, verbose_name="related model",
     )
     rack = models.ForeignKey(
-        Rack, on_delete=models.SET_NULL, null=True, verbose_name="related rack",
+        Rack,
+        on_delete=models.SET_NULL,
+        verbose_name="related rack",
+        null=True,
+        blank=True,
+    )
+    chassis = models.ForeignKey(
+        "self",
+        on_delete=models.PROTECT,
+        verbose_name="blade chassis",
+        null=True,
+        blank=True,
     )
 
     class Meta:
@@ -298,6 +348,13 @@ class AssetCP(AbstractAsset):
                     self.asset_number, self.id, self.change_plan, self.related_asset
                 )
                 validate_owner(self.owner)
+                validate_location_type(
+                    model=self.model,
+                    rack=self.rack,
+                    rack_position=self.rack_position,
+                    chassis=self.chassis,
+                    chassis_slot=self.chassis_slot,
+                )
         except ValidationError as valid_error:
             raise valid_error
         else:

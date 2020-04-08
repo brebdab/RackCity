@@ -170,40 +170,42 @@ class PropertiesView extends React.PureComponent<
     return (
       <div className={Classes.DARK + " propsview"}>
         <h3>Properties</h3>
-        <div className="propsdetail">
-          <div className="props-column">
-            <table className="bp3-html-table">
-              {this.renderData(
-                this.state.fields.slice(0, length),
-                this.props.data
-              )}
-            </table>
+        {Object.keys(this.props.data).length !== 0 ? (
+          <div className="propsdetail">
+            <div className="props-column">
+              <table className="bp3-html-table">
+                {this.renderData(
+                  this.state.fields.slice(0, length),
+                  this.props.data
+                )}
+              </table>
+            </div>
+            <div className="props-column">
+              <table className="bp3-html-table">
+                {this.renderData(
+                  this.state.fields.slice(length, 2 * length),
+                  this.props.data
+                )}
+              </table>
+            </div>
+            <div className="props-column">
+              <table className="bp3-html-table">
+                {this.renderData(
+                  this.state.fields.slice(2 * length, 3 * length),
+                  this.props.data
+                )}
+              </table>
+            </div>
+            <div className="props-column">
+              <table className="bp3-html-table">
+                {this.renderData(
+                  this.state.fields.slice(3 * length),
+                  this.props.data
+                )}
+              </table>
+            </div>
           </div>
-          <div className="props-column">
-            <table className="bp3-html-table">
-              {this.renderData(
-                this.state.fields.slice(length, 2 * length),
-                this.props.data
-              )}
-            </table>
-          </div>
-          <div className="props-column">
-            <table className="bp3-html-table">
-              {this.renderData(
-                this.state.fields.slice(2 * length, 3 * length),
-                this.props.data
-              )}
-            </table>
-          </div>
-          <div className="props-column">
-            <table className="bp3-html-table">
-              {this.renderData(
-                this.state.fields.slice(3 * length),
-                this.props.data
-              )}
-            </table>
-          </div>
-        </div>
+        ) : null}
       </div>
     );
   }
