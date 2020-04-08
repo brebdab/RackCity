@@ -44,6 +44,7 @@ import {
   isChangePlanObject,
   ChangePlan,
   getChangePlanRowStyle,
+  isAssetCPObject,
 } from "../../utils/utils";
 import * as actions from "../../store/actions/state";
 import DragDropList, { DragDropListTypes } from "./dragDropList";
@@ -880,6 +881,18 @@ class ElementTable extends React.Component<
     );
   };
 
+  routeToDetailView(item: ElementObjectType) {
+    if (isAssetCPObject(item) && item.related_asset) {
+      this.props.history.push(
+        ROUTES.DASHBOARD + "/" + this.props.type + "/" + item.related_asset.id
+      );
+    } else {
+      this.props.history.push(
+        ROUTES.DASHBOARD + "/" + this.props.type + "/" + item.id
+      );
+    }
+  }
+
   render() {
     if (
       this.props.data &&
@@ -1108,13 +1121,7 @@ class ElementTable extends React.Component<
                             this.props.type === ElementType.USER
                               ? () => {}
                               : () => {
-                                  this.props.history.push(
-                                    ROUTES.DASHBOARD +
-                                      "/" +
-                                      this.props.type +
-                                      "/" +
-                                      item.id
-                                  );
+                                  this.routeToDetailView(item);
                                 }
                           }
                           style={getChangePlanRowStyle(item)}
