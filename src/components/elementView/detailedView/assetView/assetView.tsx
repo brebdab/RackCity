@@ -42,6 +42,7 @@ import PowerView from "../../powerView/powerView";
 import { ALL_DATACENTERS } from "../../elementTabContainer";
 import { isNullOrUndefined } from "util";
 import { PermissionState } from "../../../../utils/permissionUtils";
+import { IconNames } from "@blueprintjs/icons";
 export interface AssetViewProps {
   token: string;
   isAdmin: boolean;
@@ -194,6 +195,7 @@ export class AssetView extends React.PureComponent<
       .catch((err) => {});
   };
   public render() {
+    console.log(this.state.asset);
     if (!this.successfullyLoadedData && this.props.token) {
       let params: any;
       params = this.props.match.params;
@@ -337,7 +339,27 @@ export class AssetView extends React.PureComponent<
             Please go to change plan detail view for more details
           </Callout>
         ) : null}
-        <PropertiesView data={this.state.asset} />
+        <PropertiesView data={this.state.asset} title="Asset Properties" />
+        {this.state.asset.model ? (
+          <div>
+            <AnchorButton
+              onClick={() =>
+                this.props.history.push(
+                  ROUTES.MODELS + "/" + this.state.asset.model.id
+                )
+              }
+              className="model-detail"
+              minimal
+              icon={IconNames.DOCUMENT_OPEN}
+              text="Go to model detail page"
+            />
+            <PropertiesView
+              data={this.state.asset.model}
+              title="Model Properties"
+              data_override={this.state.asset}
+            />
+          </div>
+        ) : null}
         <div className="propsview">
           <h3>Network Connections</h3>
 

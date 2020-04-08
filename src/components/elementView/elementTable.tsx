@@ -749,9 +749,9 @@ class ElementTable extends React.Component<
 
   //DELETE LOGIC
   private shouldShowColumn = (item: any, col: string) => {
-    console.log(item,col)
+
     if (isAssetObject(item)) {
-      console.log( AssetFieldsTable[col] && col !== "comment")
+
       return AssetFieldsTable[col] && col !== "comment";
     }
     return (
