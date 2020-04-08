@@ -14,6 +14,7 @@ import {
   Spinner,
   Tooltip,
   Card,
+  Switch,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { IconNames } from "@blueprintjs/icons";
@@ -72,6 +73,7 @@ import {
   StringSelect,
 } from "./formUtils";
 import $ from "jquery";
+import FormPopup from "./formPopup";
 
 export interface AssetFormProps {
   token: string;
@@ -100,6 +102,7 @@ interface AssetFormState {
   warningMessage: string;
   selectedValue: any;
   loading: boolean;
+  customizeModel: boolean;
 }
 // var console: any = {};
 // console.log = function() {};
@@ -136,14 +139,10 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     assets: [],
     left_ports: [],
     right_ports: [],
-    //TODO, call endpoint, don't hard code
+    customizeModel: false,
+
     power_ports: {} as PowerPortAvailability,
-    // power_ports: {
-    //   left_suggest: "12",
-    //   left_available: ["1", "2", "12"],
-    //   right_suggest: "12",
-    //   right_available: ["1", "2", "12", "13"]
-    // },
+
     power_ports_default: {} as { [port: string]: boolean },
     isAlertOpen: false,
     warningMessage: "",
@@ -248,6 +247,10 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       network_connections,
       power_connections,
       comment,
+      memory_gb,
+      storage,
+      cpu,
+      display_color,
     } = asset;
     const model = asset.model ? asset.model.id : null;
     const rack = asset.rack ? asset.rack.id : null;
@@ -263,6 +266,10 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       mac_addresses,
       network_connections,
       power_connections,
+      memory_gb,
+      storage,
+      cpu,
+      display_color,
     };
 
     return valuesToSend;
@@ -281,6 +288,13 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         return;
       }
       let newValues = this.state.values;
+      if (!this.state.customizeModel){
+        newValues.display_color = null;
+        newValues.cpu = null;
+        newValues.storage = null;
+        newValues.memory_gb =null;
+      }
+
 
       if (this.state.values.hostname === "") {
         delete newValues.hostname;
@@ -749,7 +763,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   }
   handleNetworkConnectionAssetSelection(
     source_port: string,
-    destination_hostname: string | undefined
+    destination_hostname: string | undefined |null
   ) {
     const newNetworkConnection: NetworkConnection = {
       source_port,
@@ -1116,6 +1130,56 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                     }
                   />
                 </ModelSelect>
+                {values.model ? (
+                  <Switch
+                    checked={this.state.customizeModel}
+                    label="Customize model values"
+                    onChange={() => {
+                      this.setState({
+                        customizeModel: !this.state.customizeModel,
+                      });
+                    }}
+                  />
+                ) : null}
+                {values.model && this.state.customizeModel ? (
+                  <div>
+                    <FormGroup label="Display Color">
+                      <Field
+                        field="display_color"
+                        type="color"
+                        value={
+                          values.display_color? values.display_color: values.model.display_color
+
+                        }
+                        onChange={this.handleChange}
+                      />
+                    </FormGroup>
+                    <FormGroup label="CPU" inline={false}>
+                      <Field
+                        field="cpu"
+                        placeholder="cpu"
+                        value={values.cpu?  values.cpu :values.model.cpu}
+                        onChange={this.handleChange}
+                      />
+                    </FormGroup>
+                    <FormGroup label="Memory(GB)" inline={false}>
+                      <Field
+                        field="memory_gb"
+                        placeholder="memory_gb"
+                        value={values.memory_gb ? values.memory_gb:values.model.memory_gb}
+                        onChange={this.handleChange}
+                      />
+                    </FormGroup>
+                    <FormGroup label="Storage" inline={false}>
+                      <Field
+                        field="storage"
+                        placeholder="storage"
+                        value={values.model.storage}
+                        onChange={this.handleChange}
+                      />
+                    </FormGroup>
+                  </div>
+                ) : null}
               </FormGroup>
             </Card>
             <Collapse

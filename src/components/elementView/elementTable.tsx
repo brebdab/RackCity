@@ -76,7 +76,7 @@ import "./elementView.scss";
 import FilterSelect from "./filterSelect";
 import { PowerView } from "./powerView/powerView";
 import "./powerView/powerView.scss";
-import { isNullOrUndefined } from "util";
+import {isNull, isNullOrUndefined} from "util";
 import { PermissionState } from "../../utils/permissionUtils";
 
 interface ElementTableState {
@@ -1030,7 +1030,7 @@ class ElementTable extends React.Component<
                             const selected = this.state.selected;
                             const selectedAll = !this.state.selectedAll;
                             this.state.items.forEach((item) => {
-                              if (isAssetObject(item)) {
+                              if (isAssetObject(item) && item.asset_number) {
                                 if (
                                   selected.includes(item.asset_number) &&
                                   !selectedAll
@@ -1142,14 +1142,15 @@ class ElementTable extends React.Component<
                                 event.stopPropagation();
                               }}
                             >
-                              {this.props.isDecommissioned ? null : (
+                              {this.props.isDecommissioned  ? null : (
                                 <Checkbox
-                                  checked={this.state.selected.includes(
+                                    disabled = {isNullOrUndefined((item.asset_number))}
+                                  checked={item.asset_number? this.state.selected.includes(
                                     item.asset_number
-                                  )}
+                                  ):false}
                                   onClick={(event: any) => {
                                     const selected = this.state.selected;
-                                    if (selected.includes(item.asset_number)) {
+                                    if (item.asset_number && selected.includes(item.asset_number)) {
                                       if (this.state.selectedAll) {
                                         this.setState({
                                           selectedAll: false,
@@ -1159,7 +1160,7 @@ class ElementTable extends React.Component<
                                         selected.indexOf(item.asset_number),
                                         1
                                       );
-                                    } else {
+                                    } else if (item.asset_number) {
                                       selected.push(item.asset_number);
                                     }
                                     this.setState({

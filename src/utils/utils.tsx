@@ -51,6 +51,7 @@ export interface AssetObject extends ParentAssetObject {
   model: ModelObject;
   rack: RackObject;
   network_graph: NetworkGraphData;
+
 }
 export interface AssetCPObject extends AssetObject {
   change_plan: ChangePlan;
@@ -62,8 +63,8 @@ export interface AssetCPObject extends AssetObject {
   is_decommissioned: boolean;
 }
 interface ParentAssetObject extends ElementObject {
-  asset_number: string;
-  hostname: string;
+  asset_number: string |null;
+  hostname: string | null;
   rack_position: string;
   mac_addresses: { [port: string]: string };
   network_connections: Array<NetworkConnection>;
@@ -72,6 +73,10 @@ interface ParentAssetObject extends ElementObject {
   comment: string;
   decommissioning_user?: string;
   time_decommissioned?: string;
+  cpu:string |null;
+  storage:string|null;
+  display_color:string|null;
+  memory_gb:string|null;
 }
 
 export interface RackRangeFields {
