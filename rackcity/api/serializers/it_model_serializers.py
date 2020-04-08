@@ -22,6 +22,7 @@ class ITModelSerializer(serializers.ModelSerializer):
             "id",
             "vendor",
             "model_number",
+            "model_type",
             "height",
             "display_color",
             "num_network_ports",
@@ -71,6 +72,7 @@ class BulkITModelSerializer(serializers.ModelSerializer):
         fields = (
             "vendor",
             "model_number",
+            "model_type",
             "height",
             "display_color",
             "network_ports",
