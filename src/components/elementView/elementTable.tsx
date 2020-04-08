@@ -1324,6 +1324,7 @@ class ElementTable extends React.Component<
                                 />
                               ) : null}
                               {isAssetObject(item) &&
+                              item.rack &&
                               item.rack.is_network_controlled &&
                               !this.props.isDecommissioned ? (
                                 <AnchorButton
