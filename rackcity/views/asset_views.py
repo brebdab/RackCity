@@ -198,7 +198,7 @@ def asset_add(request):
         )
     except Exception as error:
         return JsonResponse(
-            {"failure_message": Status.MODIFY_ERROR + str(error)},
+            {"failure_message": Status.CREATE_ERROR + str(error)},
             status=HTTPStatus.BAD_REQUEST,
         )
 

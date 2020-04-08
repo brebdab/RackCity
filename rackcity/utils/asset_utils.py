@@ -410,6 +410,7 @@ def save_all_connection_data(data, asset, user, change_plan=None):
 
 
 def save_all_field_data(data, asset, change_plan=None):
+    id = data[id]
     for field in data.keys():
         if field == "model":
             value = ITModel.objects.get(id=data[field])
