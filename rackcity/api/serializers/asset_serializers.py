@@ -74,6 +74,10 @@ class AssetSerializer(serializers.ModelSerializer):
             "chassis_slot",
             "owner",
             "comment",
+            "cpu",
+            "storage",
+            "display_color",
+            "memory_gb"
         )
 
 
@@ -205,7 +209,7 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
     power_connections = serializers.SerializerMethodField()
     network_connections = serializers.SerializerMethodField()
     network_graph = serializers.SerializerMethodField()
-
+    related_asset = AssetSerializer()
     class Meta:
         model = AssetCP
         fields = (
@@ -229,6 +233,7 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
             "asset_conflict_hostname",
             "asset_conflict_location",
             "asset_conflict_asset_number",
+            "related_asset",
         )
 
     def get_mac_addresses(self, assetCP):

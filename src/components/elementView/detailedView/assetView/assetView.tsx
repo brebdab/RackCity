@@ -40,7 +40,6 @@ import "./assetView.scss";
 import NetworkGraph from "./graph";
 import PowerView from "../../powerView/powerView";
 import { ALL_DATACENTERS } from "../../elementTabContainer";
-import { IconNames } from "@blueprintjs/icons";
 import { isNullOrUndefined } from "util";
 import { PermissionState } from "../../../../utils/permissionUtils";
 export interface AssetViewProps {
@@ -53,24 +52,6 @@ export interface AssetViewProps {
 
 // var console: any = {};
 // console.log = function() {};
-function getData(assetkey: string, token: string, changePlan: ChangePlan) {
-  const params: any = {};
-  if (changePlan) {
-    params["change_plan"] = changePlan.id;
-  }
-  const config = {
-    headers: {
-      Authorization: "Token " + token,
-    },
-
-    params: params,
-  };
-
-  return axios.get(API_ROOT + "api/assets/" + assetkey, config).then((res) => {
-    const data = res.data;
-    return data;
-  });
-}
 
 interface AssetViewState {
   asset: AssetObject | AssetCPObject;
@@ -95,6 +76,7 @@ export class AssetView extends React.PureComponent<
     datacenters: [],
     powerShouldUpdate: false,
   };
+  successfullyLoadedData = false;
   private updateAsset = (asset: AssetObject, headers: any): Promise<any> => {
     let params: any;
     params = this.props.match.params;
@@ -105,14 +87,7 @@ export class AssetView extends React.PureComponent<
         this.addSuccessToast(res.data.success_message);
       }
 
-      getData(params.rid, this.props.token, this.props.changePlan).then(
-        (result) => {
-          this.setState({
-            asset: result,
-            powerShouldUpdate: true,
-          });
-        }
-      );
+      this.getData(params.rid, this.props.changePlan);
 
       this.handleFormClose();
     });
@@ -127,6 +102,38 @@ export class AssetView extends React.PureComponent<
     toaster: (ref: Toaster) => (this.toaster = ref),
   };
 
+  getData(assetKey: string, changePlan: ChangePlan) {
+    const params: any = {};
+    if (changePlan) {
+      params["change_plan"] = changePlan.id;
+    }
+    const config = {
+      headers: {
+        Authorization: "Token " + this.props.token,
+      },
+
+      params: params,
+    };
+
+    axios
+      .get(API_ROOT + "api/assets/" + assetKey, config)
+      .then((res) => {
+        const data = res.data;
+        return data;
+      })
+      .then((result) => {
+        this.setState({
+          asset: result,
+          powerShouldUpdate: true,
+        });
+      })
+      .catch((err) => {
+        this.setState({
+          asset: {} as AssetObject,
+        });
+        this.addErrorToast(err.response.data.failure_message);
+      });
+  }
   private addSuccessToast = (message: string) => {
     this.addToast({ message: message, intent: Intent.PRIMARY });
   };
@@ -144,19 +151,11 @@ export class AssetView extends React.PureComponent<
     this.addToast({ message: message, intent: Intent.DANGER });
   };
   public updateAssetData = (rid: string) => {
-    getData(rid, this.props.token, this.props.changePlan).then((result) => {
-      this.setState({
-        asset: result,
-      });
-    });
+    this.getData(rid, this.props.changePlan);
   };
 
   public updateAssetDataCP = (rid: string, changePlan: ChangePlan) => {
-    getData(rid, this.props.token, changePlan).then((result) => {
-      this.setState({
-        asset: result,
-      });
-    });
+    this.getData(rid, changePlan);
   };
 
   componentWillReceiveProps(nextProps: AssetViewProps & RouteComponentProps) {
@@ -195,10 +194,11 @@ export class AssetView extends React.PureComponent<
       .catch((err) => {});
   };
   public render() {
-    if (Object.keys(this.state.asset).length === 0) {
+    if (!this.successfullyLoadedData && this.props.token) {
       let params: any;
       params = this.props.match.params;
       this.updateAssetData(params.rid);
+      this.successfullyLoadedData = true;
     }
     if (this.state.datacenters.length === 0) {
       this.getDatacenters();
@@ -411,12 +411,7 @@ export class AssetView extends React.PureComponent<
                 }
               />
             </div>
-          ) : (
-            <Callout
-              title="No network ports"
-              icon={IconNames.INFO_SIGN}
-            ></Callout>
-          )}
+          ) : null}
         </div>
 
         {Object.keys(this.state.asset).length !== 0 ? this.renderPower() : null}
