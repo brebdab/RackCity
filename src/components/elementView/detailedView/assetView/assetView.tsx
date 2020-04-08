@@ -196,11 +196,10 @@ export class AssetView extends React.PureComponent<
   };
   public render() {
     if (!this.successfullyLoadedData && this.props.token) {
-      console.log("render")
       let params: any;
       params = this.props.match.params;
       this.updateAssetData(params.rid);
-      this.successfullyLoadedData=true;
+      this.successfullyLoadedData = true;
     }
     if (this.state.datacenters.length === 0) {
       this.getDatacenters();
