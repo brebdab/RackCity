@@ -157,6 +157,7 @@ class PropertiesView extends React.PureComponent<
   }
 
   public render() {
+    console.log(this.props.data)
     if (
       this.state.fields.length === 0 &&
       Object.keys(this.props.data).length !== 0
@@ -170,6 +171,8 @@ class PropertiesView extends React.PureComponent<
     return (
       <div className={Classes.DARK + " propsview"}>
         <h3>Properties</h3>
+        { Object.keys(this.props.data).length !== 0 ?
+
         <div className="propsdetail">
           <div className="props-column">
             <table className="bp3-html-table">
@@ -203,7 +206,7 @@ class PropertiesView extends React.PureComponent<
               )}
             </table>
           </div>
-        </div>
+        </div>:null}
       </div>
     );
   }
