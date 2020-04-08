@@ -434,3 +434,9 @@ def toggle_power(asset, asset_port_number, goal_state):
             status=HTTPStatus.REQUEST_TIMEOUT,
         )
     return
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def contact_bmi(request):
+    return JsonResponse({}, status=HTTPStatus.OK)

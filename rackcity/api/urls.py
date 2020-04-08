@@ -63,6 +63,7 @@ urlpatterns = [
     path("power/mask-off", views.power_off),
     path("power/cycle", views.power_cycle),
     path("power/availability", views.power_availability),
+    path("power/bmi", views.contact_bmi),
     path("change-plans/get-many", views.change_plan_many),
     path("change-plans/add", views.change_plan_add),
     path("change-plans/modify", views.change_plan_modify),
