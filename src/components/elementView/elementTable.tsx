@@ -749,9 +749,9 @@ class ElementTable extends React.Component<
 
   //DELETE LOGIC
   private shouldShowColumn = (item: any, col: string) => {
-    console.log(item, col);
+    console.log(item,col)
     if (isAssetObject(item)) {
-      console.log(AssetFieldsTable[col] && col !== "comment");
+      console.log( AssetFieldsTable[col] && col !== "comment")
       return AssetFieldsTable[col] && col !== "comment";
     }
     return (
@@ -1077,18 +1077,20 @@ class ElementTable extends React.Component<
                         </div>
                       </th>,
                     ];
-                  } else if (
-                    this.props.type === ElementType.ASSET &&
-                    AssetFieldsTable[col]
-                  ) {
-                    return (
-                      <th className="header-cell">
-                        <div className="header-text">
-                          <span>{AssetFieldsTable[col]}</span>
-                          {this.getScrollIcon(col)}
-                        </div>
-                      </th>
-                    );
+                  } else if (this.props.type === ElementType.ASSET) {
+                    if (AssetFieldsTable[col]) {
+                      return (
+
+                          <th className="header-cell">
+                            <div className="header-text">
+                              <span>{AssetFieldsTable[col]}</span>
+                              {this.getScrollIcon(col)}
+                            </div>
+                          </th>
+                      );
+
+                    }
+                    return null;
                   } else if (this.props.type === ElementType.MODEL) {
                     return (
                       <th className="header-cell">
@@ -1176,6 +1178,7 @@ class ElementTable extends React.Component<
                             </th>
                           ) : null}
                           {Object.entries(item).map(([col, value]) => {
+
                             if (isModelObject(value)) {
                               return [
                                 <td style={getChangePlanRowStyle(item)}>
@@ -1194,15 +1197,17 @@ class ElementTable extends React.Component<
                                   {value.datacenter.name}
                                 </td>,
                               ];
-                            } else if (col === "rack") {
-                              return [
-                                <td style={getChangePlanRowStyle(item)}></td>,
-                                <td style={getChangePlanRowStyle(item)}></td>,
+                            } else if(col ==="rack"){
+                               return [
+                                <td style={getChangePlanRowStyle(item)}>
+
+                                </td>,
+                                <td style={getChangePlanRowStyle(item)}>
+
+                                </td>,
                               ];
-                            } else if (
-                              isModelObject(item) &&
-                              col === "display_color"
-                            ) {
+                            }
+                              else if (isModelObject(item) && col === "display_color") {
                               return (
                                 <td
                                   style={{
