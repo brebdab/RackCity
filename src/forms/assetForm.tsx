@@ -104,8 +104,6 @@ interface AssetFormState {
   loading: boolean;
   customizeModel: boolean;
 }
-// var console: any = {};
-// console.log = function() {};
 
 class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   initialState: AssetObject = this.props.initialValues
@@ -497,7 +495,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   };
   getPortsForSide = (port: number) => {
     let side;
-    // console.log(this.state.values.power_connections, this.state.power_ports);
     if (
       this.state.values.power_connections &&
       this.state.values.power_connections[port] &&
@@ -986,7 +983,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   };
 
   render() {
-    console.log(this.initialState);
     if (this.state.models.length === 0) {
       this.getModels();
     }

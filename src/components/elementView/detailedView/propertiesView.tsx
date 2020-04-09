@@ -19,8 +19,6 @@ export interface AlertState {
   isDeleteOpen: boolean;
   fields: Array<string>;
 }
-// var console: any = {};
-// console.log = function() {};
 
 interface PropertiesViewProps {
   data: ElementObjectType;
@@ -34,7 +32,6 @@ class PropertiesView extends React.PureComponent<
   AlertState
 > {
   setFieldNamesFromData = () => {
-    console.log(this.props.data, this.props.data_override);
     let fields: Array<string> = [];
     Object.keys(this.props.data).forEach((col: string) => {
       if (
@@ -59,7 +56,7 @@ class PropertiesView extends React.PureComponent<
 
   renderData(fields: Array<any>, data: any) {
     return fields.map((item: string) => {
-       var dat;
+      var dat;
       if (item === "display_color") {
         const isCustomField =
           this.props.data_override && this.props.data_override[item];
@@ -146,7 +143,7 @@ class PropertiesView extends React.PureComponent<
               </p>
             </td>
 
-            {isCustomField  && item !== "display_color"? (
+            {isCustomField && item !== "display_color" ? (
               <td>{this.props.data_override[item]}</td>
             ) : (
               <td>{dat}</td>

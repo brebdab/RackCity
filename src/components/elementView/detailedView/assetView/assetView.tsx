@@ -49,10 +49,6 @@ export interface AssetViewProps {
   changePlan: ChangePlan;
   permissionState: PermissionState;
 }
-// Given an rid, will perform a GET request of that rid and display info about that instnace
-
-// var console: any = {};
-// console.log = function() {};
 
 interface AssetViewState {
   asset: AssetObject | AssetCPObject;
@@ -195,7 +191,6 @@ export class AssetView extends React.PureComponent<
       .catch((err) => {});
   };
   public render() {
-    console.log(this.state.asset);
     if (!this.successfullyLoadedData && this.props.token) {
       let params: any;
       params = this.props.match.params;

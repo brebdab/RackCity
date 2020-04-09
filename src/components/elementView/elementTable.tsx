@@ -134,8 +134,7 @@ interface ElementTableProps {
   changePlan: ChangePlan;
 }
 
-// var console: any = {};
-// console.log = function() {};
+
 class ElementTable extends React.Component<
   ElementTableProps & RouteComponentProps,
   ElementTableState
