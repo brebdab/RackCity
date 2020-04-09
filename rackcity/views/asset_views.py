@@ -20,7 +20,7 @@ from rackcity.models import (
     DecommissionedAsset,
     ITModel,
     Rack,
-    Datacenter,
+    Site,
 )
 from rackcity.models.asset import (
     get_assets_for_cp,
@@ -193,25 +193,32 @@ def asset_add(request):
         validate_user_asset_permission_to_add(request.user, serializer.validated_data)
     except UserAssetPermissionException as auth_error:
         return JsonResponse(
-            {"failure_message": Status.AUTH_ERROR + str(auth_error)},
+            {"failure_message": Status.AUTH_ERROR.value + str(auth_error)},
             status=HTTPStatus.UNAUTHORIZED,
         )
     except Exception as error:
         return JsonResponse(
-            {"failure_message": Status.MODIFY_ERROR + str(error)},
-            status=HTTPStatus.BAD_REQUEST,
-        )
-
-    rack_id = serializer.validated_data["rack"].id
-    rack_position = serializer.validated_data["rack_position"]
-    height = serializer.validated_data["model"].height
-    try:
-        validate_asset_location(rack_id, rack_position, height, change_plan=change_plan)
-    except LocationException as error:
-        return JsonResponse(
             {"failure_message": Status.CREATE_ERROR.value + str(error)},
             status=HTTPStatus.BAD_REQUEST,
         )
+
+    if (
+        serializer.validated_data["model"].is_rackmount()
+        and "rack" in serializer.validated_data
+        and "rack_position" in serializer.validated_data
+    ):
+        rack_id = serializer.validated_data["rack"].id
+        rack_position = serializer.validated_data["rack_position"]
+        height = serializer.validated_data["model"].height
+        try:
+            validate_asset_location(
+                rack_id, rack_position, height, change_plan=change_plan
+            )
+        except LocationException as error:
+            return JsonResponse(
+                {"failure_message": Status.CREATE_ERROR.value + str(error)},
+                status=HTTPStatus.BAD_REQUEST,
+            )
 
     try:
         asset = serializer.save()
@@ -495,7 +502,7 @@ def asset_bulk_upload(request):
         del asset_data["vendor"]
         del asset_data["model_number"]
         try:
-            datacenter = Datacenter.objects.get(abbreviation=asset_data["datacenter"])
+            datacenter = Site.objects.get(abbreviation=asset_data["datacenter"])
         except ObjectDoesNotExist:
             failure_message = (
                 Status.IMPORT_ERROR.value
@@ -614,7 +621,7 @@ def asset_bulk_upload(request):
         else:
             # asset number not provided or it is new
             rack = asset_serializer.validated_data["rack"]
-            if not user_has_asset_permission(request.user, rack.datacenter):
+            if not user_has_asset_permission(request.user, site=rack.datacenter):
                 return JsonResponse(
                     {
                         "failure_message": Status.AUTH_ERROR.value

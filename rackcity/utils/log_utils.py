@@ -1,7 +1,7 @@
 from datetime import datetime
 from django.contrib.auth.models import User
 from enum import Enum
-from rackcity.models import Log, Asset, ITModel, Datacenter
+from rackcity.models import Log, Asset, ITModel, Site
 
 
 class Action(Enum):
@@ -52,7 +52,7 @@ def log_action(user, related_element, action, change_plan=None):
     elif isinstance(related_element, User):
         element_type = ElementType.USER.value
         element_name = related_element.username
-    elif isinstance(related_element, Datacenter):
+    elif isinstance(related_element, Site):
         element_type = ElementType.DATACENTER.value
         element_name = related_element.abbreviation
     elif related_element is not None:

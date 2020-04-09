@@ -1,7 +1,7 @@
 from django.contrib.auth.models import Group, User
 from django.core.exceptions import ObjectDoesNotExist
 from enum import Enum
-from rackcity.models import Datacenter, RackCityPermission
+from rackcity.models import Site, RackCityPermission
 from rackcity.permissions.permissions import PermissionName, get_permission
 from typing import Tuple
 
@@ -79,24 +79,24 @@ def update_user_groups(user, data):
     return groups_added, groups_removed, current_groups
 
 
-def update_user_datacenter_permissions(user, datacenter_permissions):
+def update_user_site_permissions(user, site_permissions):
     try:
         permission = RackCityPermission.objects.get(user=user.id)
     except ObjectDoesNotExist:
         permission = RackCityPermission(user=user)
         permission.save()
-    datacenters_to_add = []
-    for datacenter_id in datacenter_permissions:
+    sites_to_add = []
+    for site_id in site_permissions:
         try:
-            datacenter = Datacenter.objects.get(id=datacenter_id)
+            site = Site.objects.get(id=site_id)
         except ObjectDoesNotExist:
             raise ObjectDoesNotExist
         else:
-            datacenters_to_add.append(datacenter)
-    permission.datacenter_permissions.clear()
-    permission.datacenter_permissions.add(*datacenters_to_add)
+            sites_to_add.append(site)
+    permission.site_permissions.clear()
+    permission.site_permissions.add(*sites_to_add)
     permission.save()
-    current_datacenters = [
-        dc.abbreviation for dc in permission.datacenter_permissions.all()
+    current_sites = [
+        site.abbreviation for site in permission.site_permissions.all()
     ]
-    return current_datacenters
+    return current_sites
