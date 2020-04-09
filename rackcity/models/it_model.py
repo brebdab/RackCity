@@ -6,13 +6,11 @@ from rackcity.models.model_utils import DEFAULT_DISPLAY_COLOR, validate_display_
 from enum import Enum
 
 
-DEFAULT_DISPLAY_COLOR = "#394B59"
-
 
 class ModelType(Enum):
-    RACKMOUNT_ASSET = "RACKMOUNT_ASSET"
-    BLADE_CHASSIS = "BLADE_CHASSIS"
-    BLADE_ASSET = "BLADE_ASSET"
+    RACKMOUNT_ASSET = "Asset"
+    BLADE_CHASSIS = "Blade Chassis"
+    BLADE_ASSET = "Blade Server "
 
 
 MODEL_TYPE_CHOICES = [
@@ -20,13 +18,6 @@ MODEL_TYPE_CHOICES = [
     (ModelType.BLADE_CHASSIS.value, ModelType.BLADE_CHASSIS.value),
     (ModelType.BLADE_ASSET.value, ModelType.BLADE_ASSET.value),
 ]
-
-
-def validate_display_color(value):
-    if value:
-        color_pattern = re.compile("#[A-Fa-f0-9]{6}")
-        if color_pattern.fullmatch(value) is None:
-            raise ValidationError(value + " is not a valid hex color")
 
 
 def validate_ports(model_type, num_power_ports, network_ports):
