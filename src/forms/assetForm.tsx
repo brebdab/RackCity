@@ -996,7 +996,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   };
 
   render() {
-    console.log(this.props.initialValues, this.initialState, this.state.values);
     if (this.state.models.length === 0) {
       this.getModels();
     }
@@ -1154,12 +1153,9 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                   onItemSelect={(model: ModelObject) => {
                     const values = this.state.values;
                     values.model = model;
-                    values.cpu = model.cpu as string;
-                    values.display_color = model.display_color as string;
-                    values.memory_gb = model.memory_gb as string | null;
-                    values.storage = model.storage as string;
+
                     this.setState({
-                      values,
+                      values: this.resetCustomValuesToDefault(values),
                     });
                   }}
                   itemRenderer={renderModelItem}

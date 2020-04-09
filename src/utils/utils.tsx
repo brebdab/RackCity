@@ -65,7 +65,7 @@ interface ParentAssetObject extends ElementObject {
   comment: string;
   decommissioning_user?: string;
   time_decommissioned?: string;
-  cpu:string ;
+  cpu:string;
   storage:string;
   display_color:string;
   memory_gb:string |null;
