@@ -283,10 +283,10 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       let newValues = this.state.values;
 
       if (this.state.values.hostname === "") {
-        newValues.hostname = null;
+        delete newValues.hostname;
       }
       if (this.state.values.asset_number === "") {
-        newValues.asset_number = null;
+        delete newValues.asset_number;
       }
       if (this.props.initialValues) {
         newValues.id = this.props.initialValues.id;
