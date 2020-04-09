@@ -1,24 +1,16 @@
 .detail-buttons {
   float: right;
 }
+.model-detail{
+  float:right;
+  margin-right:50pt;
+  margin-top:10pt;
+}
 .detail-buttons-wrapper {
   padding-top: 10pt;
   padding-right: 10pt;
   padding-bottom: 20pt;
 }
-
-// .column {
-//   text-align: center;
-//   flex: 50%;
-//   float: right;
-// }
-
-// .column-right {
-//   text-align: center;
-//   float: right;
-//   flex: 50%;
-//   border-left: 1px solid white;
-// }
 
 .asset-link:hover {
   background-color: #5c7080 !important;
