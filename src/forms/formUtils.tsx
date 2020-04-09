@@ -17,9 +17,9 @@ import {
 } from "../utils/utils";
 
 export enum FormTypes {
-  CREATE = "create",
-  MODIFY = "modify",
-  DELETE = "delete",
+  CREATE = "Create",
+  MODIFY = "Modify",
+  DELETE = "Delete",
 }
 export function escapeRegExpChars(text: string) {
   // eslint-disable-next-line
