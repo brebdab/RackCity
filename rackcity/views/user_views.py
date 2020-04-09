@@ -366,10 +366,10 @@ def user_set_groups(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     groups_added, groups_removed, current_groups = update_user_groups(user, data)
-    if "site_permissions" in data:
+    if "datacenter_permissions" in data:
         try:
             current_sites = update_user_site_permissions(
-                user, data["site_permissions"],
+                user, data["datacenter_permissions"],
             )
         except ObjectDoesNotExist:
             return JsonResponse(
@@ -446,7 +446,7 @@ def get_permissions(user):
         site_list = []
     else:
         site_list = [site.id for site in permission.site_permissions.all()]
-    permissions["site_permissions"] = site_list
+    permissions["datacenter_permissions"] = site_list
     return permissions
 
 
