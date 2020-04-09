@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ObjectDoesNotExist
 from http import HTTPStatus
 from rackcity.api.serializers import DatacenterSerializer
-from rackcity.models import Datacenter, Rack
+from rackcity.models import Site, Rack
 from rackcity.permissions.permissions import PermissionPath
 from rackcity.utils.errors_utils import Status, GenericFailure, parse_serializer_errors
 from rackcity.utils.log_utils import log_action, log_delete, ElementType, Action
@@ -19,7 +19,7 @@ def datacenter_all(request):
     """
     Return List of all datacenters.
     """
-    datacenters = Datacenter.objects.all()
+    datacenters = Site.objects.all()
     serializer = DatacenterSerializer(datacenters, many=True)
     return JsonResponse({"datacenters": serializer.data}, status=HTTPStatus.OK)
 
@@ -100,7 +100,7 @@ def datacenter_delete(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     try:
-        existing_dc = Datacenter.objects.get(id=id)
+        existing_dc = Site.objects.get(id=id)
     except ObjectDoesNotExist:
         return JsonResponse(
             {
@@ -140,7 +140,7 @@ def datacenter_page_count(request):
     specified as query parameter.
     """
     return get_page_count_response(
-        Datacenter, request.query_params, data_for_filters=request.data,
+        Site, request.query_params, data_for_filters=request.data,
     )
 
 
@@ -162,7 +162,7 @@ def datacenter_modify(request):
         )
     id = data["id"]
     try:
-        existing_dc = Datacenter.objects.get(id=id)
+        existing_dc = Site.objects.get(id=id)
     except ObjectDoesNotExist:
         return JsonResponse(
             {
@@ -186,9 +186,9 @@ def datacenter_modify(request):
                     status=HTTPStatus.BAD_REQUEST,
                 )
             if field == "name":
-                dc_with_name = Datacenter.objects.filter(name__iexact=data[field])
+                dc_with_name = Site.objects.filter(name__iexact=data[field])
             else:
-                dc_with_name = Datacenter.objects.filter(
+                dc_with_name = Site.objects.filter(
                     abbreviation__iexact=data[field]
                 )
             if len(dc_with_name) > 0 and dc_with_name[0].id != id:

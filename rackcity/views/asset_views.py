@@ -20,7 +20,7 @@ from rackcity.models import (
     DecommissionedAsset,
     ITModel,
     Rack,
-    Datacenter,
+    Site,
 )
 from rackcity.models.asset import (
     get_assets_for_cp,
@@ -502,7 +502,7 @@ def asset_bulk_upload(request):
         del asset_data["vendor"]
         del asset_data["model_number"]
         try:
-            datacenter = Datacenter.objects.get(abbreviation=asset_data["datacenter"])
+            datacenter = Site.objects.get(abbreviation=asset_data["datacenter"])
         except ObjectDoesNotExist:
             failure_message = (
                 Status.IMPORT_ERROR.value
@@ -621,7 +621,7 @@ def asset_bulk_upload(request):
         else:
             # asset number not provided or it is new
             rack = asset_serializer.validated_data["rack"]
-            if not user_has_asset_permission(request.user, rack.datacenter):
+            if not user_has_asset_permission(request.user, site=rack.datacenter):
                 return JsonResponse(
                     {
                         "failure_message": Status.AUTH_ERROR.value

@@ -111,7 +111,7 @@ def network_bulk_upload(request):
             return JsonResponse(
                 {"failure_message": failure_message}, status=HTTPStatus.BAD_REQUEST
             )
-        if not user_has_asset_permission(request.user, source_asset.rack.datacenter):
+        if not user_has_asset_permission(request.user, site=source_asset.rack.datacenter):
             return JsonResponse(
                 {
                     "failure_message": Status.AUTH_ERROR.value

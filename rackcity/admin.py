@@ -9,7 +9,7 @@ from .models import (
     PDUPort,
     NetworkPort,
     Log,
-    Datacenter,
+    Site,
     ChangePlan,
     RackCityPermission,
 )
@@ -23,6 +23,6 @@ admin.site.register(PowerPort)
 admin.site.register(PDUPort)
 admin.site.register(NetworkPort)
 admin.site.register(Log)
-admin.site.register(Datacenter)
+admin.site.register(Site)
 admin.site.register(ChangePlan)
 admin.site.register(RackCityPermission)

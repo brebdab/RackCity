@@ -1,15 +1,16 @@
-import re
+from .change_plan import ChangePlan
+from .decommissioned_asset import DecommissionedAsset
+from .it_model import ITModel
+from .rack import Rack
+from .site import Site
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from .it_model import ITModel
-from .decommissioned_asset import DecommissionedAsset
-from .rack import Rack
-from .change_plan import ChangePlan
 from django.db.models import Q
 from rackcity.models.model_utils import DEFAULT_DISPLAY_COLOR, validate_display_color
 from rackcity.models.fields import RCPositiveIntegerField
+import re
 
 
 def get_next_available_asset_number():
@@ -121,24 +122,34 @@ def validate_owner(value):
         )
 
 
-def validate_location_type(model, rack, rack_position, chassis, chassis_slot):
+def validate_location_type(
+    model, rack, rack_position, chassis, chassis_slot, offline_storage_site,
+):
     if model.is_rackmount():
-        if not rack or not rack_position:
+        if offline_storage_site and (rack or rack_position):
             raise ValidationError(
-                "Rackmount assets must have a rack and rack position. "
+                "Rackmount assets in storage must not have a rack or rack position. "
             )
-            # WRONG! What if they're offline?! You fool
+        if (not offline_storage_site) and (not rack or not rack_position):
+            raise ValidationError(
+                "Rackmount assets not in storage must have a rack and rack position. "
+            )
         if chassis or chassis_slot:
             raise ValidationError(
                 "Rackmount assets must not have a chassis or chassis slot. "
             )
     else:
-        if not chassis or not chassis_slot:
-            raise ValidationError("Blade assets must have a chassis and chassis slot. ")
-            # WRONG! What if they're offline?! You fool
+        if offline_storage_site and (chassis or chassis_slot):
+            raise ValidationError(
+                "Blade assets in storage must not have a chassis or chassis slot. "
+            )
+        if (not offline_storage_site) and (not chassis or not chassis_slot):
+            raise ValidationError(
+                "Blade assets not in storage must have a chassis and chassis slot. "
+            )
         if rack or rack_position:
             raise ValidationError(
-                "Rackmount assets must not have a rack or rack position. "
+                "Blade assets must not have a rack or rack position. "
             )
 
 
@@ -153,13 +164,19 @@ class AbstractAsset(AssetID):
         max_length=150, null=True, blank=True, validators=[validate_owner]
     )
     comment = models.TextField(null=True, blank=True)
-
     cpu = models.CharField(max_length=150, default="", blank=True)
     display_color = models.CharField(
         max_length=7, validators=[validate_display_color], default="", blank=True
     )
     storage = models.CharField(max_length=150, blank=True, default="")
     memory_gb = RCPositiveIntegerField(null=True, blank=True)
+    offline_storage_site = models.ForeignKey(
+        Site,
+        on_delete=models.PROTECT,
+        verbose_name="offline storage site",
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         abstract = True
@@ -210,6 +227,7 @@ class Asset(AbstractAsset):
                 rack_position=self.rack_position,
                 chassis=self.chassis,
                 chassis_slot=self.chassis_slot,
+                offline_storage_site=self.offline_storage_site,
             )
         except ValidationError as valid_error:
             raise valid_error
@@ -354,6 +372,7 @@ class AssetCP(AbstractAsset):
                     rack_position=self.rack_position,
                     chassis=self.chassis,
                     chassis_slot=self.chassis_slot,
+                    offline_storage_site=self.offline_storage_site,
                 )
         except ValidationError as valid_error:
             raise valid_error

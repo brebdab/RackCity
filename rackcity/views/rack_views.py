@@ -87,7 +87,7 @@ def rack_create(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     datacenter_id = range_serializer.get_datacenter()
-    if not user_has_asset_permission(request.user, datacenter_id,):
+    if not user_has_asset_permission(request.user, site=datacenter_id,):
         return JsonResponse(
             {
                 "failure_message": Status.AUTH_ERROR.value + AuthFailure.RACK.value,
@@ -158,7 +158,7 @@ def rack_delete(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     datacenter_id = range_serializer.get_datacenter()
-    if not user_has_asset_permission(request.user, datacenter_id,):
+    if not user_has_asset_permission(request.user, site=datacenter_id,):
         return JsonResponse(
             {
                 "failure_message": Status.AUTH_ERROR.value + AuthFailure.RACK.value,

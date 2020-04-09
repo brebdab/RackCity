@@ -67,16 +67,16 @@ def get_permission(permission_name: PermissionName) -> Permission:
     return permission
 
 
-def user_has_asset_permission(user, datacenter=None):
+def user_has_asset_permission(user, site=None):
     if user.has_perm(PermissionPath.ASSET_WRITE.value):
         return True
-    if datacenter:
+    if site:
         try:
             permission = RackCityPermission.objects.get(user=user.id)
         except ObjectDoesNotExist:
             return False
         else:
-            if datacenter in permission.datacenter_permissions.all():
+            if site in permission.site_permissions.all():
                 return True
     return False
 
@@ -90,7 +90,7 @@ def validate_user_asset_permission_to_add(user, validated_data):
         rack = Rack.objects.get(id=rack_id)
     except ObjectDoesNotExist:
         raise Exception("Rack '" + str(rack_id) + "' does not exist")
-    if not user_has_asset_permission(user, rack.datacenter):
+    if not user_has_asset_permission(user, site=rack.datacenter):
         raise UserAssetPermissionException(
             "User '"
             + user.username
@@ -102,7 +102,7 @@ def validate_user_asset_permission_to_add(user, validated_data):
 
 def validate_user_asset_permission_to_modify_or_delete(user, asset):
     # TODO: make this check work for blades, which don't have a rack
-    if asset.rack and not user_has_asset_permission(user, asset.rack.datacenter):
+    if asset.rack and not user_has_asset_permission(user, site=asset.rack.datacenter):
         raise UserAssetPermissionException(
             "User '"
             + user.username
