@@ -27,6 +27,9 @@ class AssetCPSerializer(serializers.ModelSerializer):
     chassis_slot = RCIntegerField(
         allow_null=True, max_value=2147483647, min_value=0, required=False
     )
+    memory_gb = RCIntegerField(
+        allow_null=True, max_value=2147483647, min_value=0, required=False
+    )
     class Meta:
         model = AssetCP
         fields = (
@@ -62,6 +65,9 @@ class AssetSerializer(serializers.ModelSerializer):
         allow_null=True, max_value=2147483647, min_value=0, required=False
     )
     chassis_slot = RCIntegerField(
+        allow_null=True, max_value=2147483647, min_value=0, required=False
+    )
+    memory_gb = RCIntegerField(
         allow_null=True, max_value=2147483647, min_value=0, required=False
     )
 
