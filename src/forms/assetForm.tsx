@@ -123,13 +123,12 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     }
     return asset;
   }
-  resetCustomValuesToDefault(asset:AssetObject){
+  resetCustomValuesToDefault(asset: AssetObject) {
     asset.cpu = asset.model.cpu as string;
-    asset.display_color= asset.model.display_color as string;
+    asset.display_color = asset.model.display_color as string;
     asset.memory_gb = asset.memory_gb as string;
     asset.storage = asset.storage as string;
-    return asset
-
+    return asset;
   }
 
   private setPowerPortInputState = () => {
@@ -339,9 +338,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       if (this.props.initialValues) {
         newValues.id = this.props.initialValues.id;
       }
-      // this.setState({
-      //   values: newValues,
-      // });
 
       const resp = this.props.submitForm(
         newValues,
