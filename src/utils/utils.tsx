@@ -55,7 +55,7 @@ export interface AssetCPObject extends AssetObject {
   is_decommissioned: boolean;
 }
 interface ParentAssetObject extends ElementObject {
-  asset_number: string;
+  asset_number: string|null;
   hostname: string|null;
   rack_position: string;
   mac_addresses: { [port: string]: string };
