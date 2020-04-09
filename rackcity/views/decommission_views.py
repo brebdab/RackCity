@@ -93,7 +93,7 @@ def decommission_asset(request):
                     status=HTTPStatus.BAD_REQUEST,
                 )
         if not user_has_asset_permission(
-            request.user, decommissioned_asset_cp.rack.datacenter
+            request.user, site=decommissioned_asset_cp.rack.datacenter
         ):
             return JsonResponse(
                 {
@@ -119,7 +119,7 @@ def decommission_asset(request):
                 },
                 status=HTTPStatus.BAD_REQUEST,
             )
-        if not user_has_asset_permission(request.user, asset.rack.datacenter):
+        if not user_has_asset_permission(request.user, site=asset.rack.datacenter):
             return JsonResponse(
                 {
                     "failure_message": Status.AUTH_ERROR.value

@@ -1,19 +1,18 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from rackcity.models import Datacenter
+from rackcity.models import Site
 
 
 class DatacenterSerializer(serializers.ModelSerializer):
-
     abbreviation = serializers.CharField(
-        validators=[UniqueValidator(queryset=Datacenter.objects.all(), lookup="iexact")]
+        validators=[UniqueValidator(queryset=Site.objects.all(), lookup="iexact")]
     )
     name = serializers.CharField(
-        validators=[UniqueValidator(queryset=Datacenter.objects.all(), lookup="iexact")]
+        validators=[UniqueValidator(queryset=Site.objects.all(), lookup="iexact")]
     )
 
     class Meta:
-        model = Datacenter
+        model = Site
         fields = (
             "id",
             "abbreviation",

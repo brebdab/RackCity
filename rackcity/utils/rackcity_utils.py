@@ -143,7 +143,7 @@ def validate_location_modification(data, existing_asset, user, change_plan=None)
         except Exception:
             raise Exception("No existing rack with id=" + str(data["rack"]) + ".")
         else:
-            if not user_has_asset_permission(user, rack.datacenter):
+            if not user_has_asset_permission(user, site=rack.datacenter):
                 raise Exception(
                     "You do not have permission to move assets to "
                     + "datacenter "

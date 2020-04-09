@@ -9,7 +9,7 @@ from rackcity.models import Asset, RackCityPermission
 from rackcity.permissions.groups import (
     GroupName,
     update_user_groups,
-    update_user_datacenter_permissions,
+    update_user_site_permissions,
 )
 from rackcity.permissions.permissions import PermissionPath
 from rackcity.utils.query_utils import (
@@ -368,24 +368,24 @@ def user_set_groups(request):
     groups_added, groups_removed, current_groups = update_user_groups(user, data)
     if "datacenter_permissions" in data:
         try:
-            current_datacenters = update_user_datacenter_permissions(
+            current_sites = update_user_site_permissions(
                 user, data["datacenter_permissions"],
             )
         except ObjectDoesNotExist:
             return JsonResponse(
                 {
                     "failure_message": Status.MODIFY_ERROR.value
-                    + "Datacenter"
+                    + "Site"
                     + GenericFailure.DOES_NOT_EXIST.value,
-                    "errors": "No existing datacenter with id",
+                    "errors": "No existing site with id",
                 },
                 status=HTTPStatus.BAD_REQUEST,
             )
     else:
-        current_datacenters = []
+        current_sites = []
 
     success_message = get_user_permission_success(
-        groups_added, groups_removed, current_groups, current_datacenters,
+        groups_added, groups_removed, current_groups, current_sites,
     )
     return JsonResponse(
         {"success_message": Status.SUCCESS.value + success_message},
@@ -443,10 +443,10 @@ def get_permissions(user):
     try:
         permission = RackCityPermission.objects.get(user=user.id)
     except ObjectDoesNotExist:
-        datacenter_list = []
+        site_list = []
     else:
-        datacenter_list = [dc.id for dc in permission.datacenter_permissions.all()]
-    permissions["datacenter_permissions"] = datacenter_list
+        site_list = [site.id for site in permission.site_permissions.all()]
+    permissions["datacenter_permissions"] = site_list
     return permissions
 
 

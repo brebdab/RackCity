@@ -12,6 +12,7 @@ from rackcity.models import (
 from .it_model_serializers import ITModelSerializer
 from .rack_serializers import RackSerializer
 from .change_plan_serializers import GetChangePlanSerializer
+from rackcity.api.serializers.fields import RCIntegerField
 import copy
 
 
@@ -20,7 +21,12 @@ class AssetCPSerializer(serializers.ModelSerializer):
     Serializes all fields on Asset model, where model and rack fields are
     defined by their pk only.
     """
-
+    rack_position = RCIntegerField(
+        allow_null=True, max_value=2147483647, min_value=0, required=False
+    )
+    chassis_slot = RCIntegerField(
+        allow_null=True, max_value=2147483647, min_value=0, required=False
+    )
     class Meta:
         model = AssetCP
         fields = (
@@ -30,6 +36,8 @@ class AssetCPSerializer(serializers.ModelSerializer):
             "model",
             "rack",
             "rack_position",
+            "chassis",
+            "chassis_slot",
             "owner",
             "comment",
             "change_plan",
@@ -50,6 +58,12 @@ class AssetSerializer(serializers.ModelSerializer):
         validators=[UniqueValidator(queryset=Asset.objects.all(), lookup="iexact")],
         required=False,
     )
+    rack_position = RCIntegerField(
+        allow_null=True, max_value=2147483647, min_value=0, required=False
+    )
+    chassis_slot = RCIntegerField(
+        allow_null=True, max_value=2147483647, min_value=0, required=False
+    )
 
     class Meta:
         model = Asset
@@ -60,6 +74,8 @@ class AssetSerializer(serializers.ModelSerializer):
             "model",
             "rack",
             "rack_position",
+            "chassis",
+            "chassis_slot",
             "owner",
             "comment",
             "cpu",
@@ -77,6 +93,13 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
 
     model = ITModelSerializer()
     rack = RackSerializer()
+    rack_position = RCIntegerField(
+        allow_null=True, max_value=2147483647, min_value=0, required=False
+    )
+    chassis = AssetSerializer()
+    chassis_slot = RCIntegerField(
+        allow_null=True, max_value=2147483647, min_value=0, required=False
+    )
     mac_addresses = serializers.SerializerMethodField()
     power_connections = serializers.SerializerMethodField()
     network_connections = serializers.SerializerMethodField()
@@ -91,6 +114,8 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
             "model",
             "rack",
             "rack_position",
+            "chassis",
+            "chassis_slot",
             "owner",
             "comment",
             "mac_addresses",
@@ -133,6 +158,7 @@ class BulkAssetSerializer(serializers.ModelSerializer):
     )
     # by default, calls get_<field> - in this case, get_rack
     rack = serializers.SerializerMethodField()
+    # TODO: add chassis
     power_port_connection_1 = serializers.SerializerMethodField()
     power_port_connection_2 = serializers.SerializerMethodField()
 
@@ -182,6 +208,7 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
 
     model = ITModelSerializer()
     rack = RackSerializer()
+    chassis = AssetSerializer()
     asset_conflict_hostname = AssetSerializer()
     asset_conflict_location = AssetSerializer()
     asset_conflict_asset_number = AssetSerializer()
@@ -201,6 +228,8 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
             "model",
             "rack",
             "rack_position",
+            "chassis",
+            "chassis_slot",
             "owner",
             "comment",
             "mac_addresses",

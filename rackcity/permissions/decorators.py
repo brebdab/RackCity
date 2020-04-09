@@ -47,7 +47,7 @@ def asset_permission_required():
     is located in.
     """
 
-    def check_asset_perm(user, asset, datacenter):
+    def check_asset_perm(user, asset, site):
         if user.has_perm(PermissionPath.ASSET_WRITE.value):
             return True
         try:
@@ -55,7 +55,7 @@ def asset_permission_required():
         except ObjectDoesNotExist:
             raise PermissionDenied
         else:
-            if datacenter in permission.datacenter_permissions.all():
+            if site in permission.site_permissions.all():
                 return True
         raise PermissionDenied
 
