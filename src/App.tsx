@@ -7,7 +7,7 @@ import {
   BrowserRouter,
   Redirect,
   Route,
-  RouteComponentProps
+  RouteComponentProps,
 } from "react-router-dom";
 import AssetView from "./components/elementView/detailedView/assetView/assetView";
 import ModelView from "./components/elementView/detailedView/modelView/modelView";
@@ -15,7 +15,7 @@ import RackView from "./components/elementView/detailedView/rackView/rackView";
 import BarcodeView from "./components/elementView/detailedView/assetView/barcodeView";
 import Fallback, {
   NotAuthorized,
-  NotAuthorizedAdmin
+  NotAuthorizedAdmin,
 } from "./components/fallback";
 import BulkImport from "./components/import/import";
 import LandingView from "./components/landingView/landingView";
@@ -104,10 +104,10 @@ class App extends React.Component<AppProps> {
       /iPad/i,
       /iPod/i,
       /BlackBerry/i,
-      /Windows Phone/i
+      /Windows Phone/i,
     ];
 
-    return toMatch.some(toMatchItem => {
+    return toMatch.some((toMatchItem) => {
       return navigator.userAgent.match(toMatchItem);
     });
   }
@@ -194,7 +194,7 @@ const mapStateToProps = (state: any) => {
     isAdmin: state.admin,
     permissionState: state.permissionState,
     loading: state.loading,
-    isMobile: state.isMobile
+    isMobile: state.isMobile,
   };
 };
 
@@ -205,7 +205,7 @@ const mapDispatchToProps = (dispatch: any) => {
     },
     setMobile: () => {
       dispatch(actions.checkBrowserType());
-    }
+    },
   };
 };
 
