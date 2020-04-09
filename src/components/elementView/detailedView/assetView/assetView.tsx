@@ -338,7 +338,7 @@ export class AssetView extends React.PureComponent<
         {this.state.asset.model  ? (
           <div>
             <AnchorButton
-                disabled = {isNullOrUndefined(this.state.asset.decommissioning_user) }
+                disabled = {!isNullOrUndefined(this.state.asset.decommissioning_user) }
               onClick={() =>
                 this.props.history.push(
                   ROUTES.MODELS + "/" + this.state.asset.model.id

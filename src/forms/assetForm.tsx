@@ -109,6 +109,29 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     ? JSON.parse(JSON.stringify(this.props.initialValues))
     : ({} as AssetObject);
 
+  initializeCustomValues(asset: AssetObject) {
+    if (this.props.initialValues) {
+      const model = this.props.initialValues.model;
+      asset.cpu = this.initialState.cpu ? asset.cpu : (model.cpu as string);
+      asset.display_color = asset.display_color
+        ? asset.display_color
+        : (model.display_color as string);
+      asset.memory_gb = asset.memory_gb
+        ? asset.memory_gb
+        : (model.memory_gb as string | null);
+      asset.storage = asset.storage ? asset.storage : (model.storage as string);
+    }
+    return asset;
+  }
+  resetCustomValuesToDefault(asset:AssetObject){
+    asset.cpu = asset.model.cpu as string;
+    asset.display_color= asset.model.display_color as string;
+    asset.memory_gb = asset.memory_gb as string;
+    asset.storage = asset.storage as string;
+    return asset
+
+  }
+
   private setPowerPortInputState = () => {
     const power_ports_default: { [port: string]: boolean } = {};
     if (this.state.values && this.state.values.power_connections) {
@@ -124,7 +147,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   gettingPowerPortsInProgress = false;
 
   public state = {
-    values: this.initialState,
+    values: this.initializeCustomValues(this.initialState),
     currDatacenter: this.initialState.rack
       ? this.initialState.rack.datacenter
       : this.props.currDatacenter === ALL_DATACENTERS
@@ -138,10 +161,11 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     left_ports: [],
     right_ports: [],
     customizeModel:
-      this.initialState.memory_gb !== null ||
-      this.initialState.display_color !== "" ||
-      this.initialState.cpu !== "" ||
-      this.initialState.storage !== "",
+      this.props.initialValues !== undefined &&
+      (this.props.initialValues.memory_gb !== null ||
+        this.props.initialValues.display_color !== "" ||
+        this.props.initialValues.cpu !== "" ||
+        this.props.initialValues.storage !== ""),
 
     power_ports: {} as PowerPortAvailability,
 
@@ -289,7 +313,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         $(".bp3-overlay-scroll-container").scrollTop(0);
         return;
       }
-      let newValues = this.state.values;
+      let newValues = this.mapAssetObject(this.state.values);
       if (
         this.state.values.display_color ===
         this.state.values.model.display_color
@@ -315,12 +339,12 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       if (this.props.initialValues) {
         newValues.id = this.props.initialValues.id;
       }
-      this.setState({
-        values: newValues,
-      });
+      // this.setState({
+      //   values: newValues,
+      // });
 
       const resp = this.props.submitForm(
-        this.mapAssetObject(newValues),
+        newValues,
         getHeaders(this.props.token)
       );
       if (resp) {
@@ -941,14 +965,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   };
   handleCustomizeModelSwitch = () => {
     if (this.state.customizeModel) {
-      const values = this.state.values;
-      values.display_color = "";
-      values.cpu = "";
-      values.storage = "";
-      values.memory_gb = null;
-
       this.setState({
-        values,
+        values: this.resetCustomValuesToDefault(this.state.values),
         customizeModel: false,
       });
     } else {
@@ -982,6 +1000,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   };
 
   render() {
+    console.log(this.props.initialValues, this.initialState, this.state.values);
     if (this.state.models.length === 0) {
       this.getModels();
     }
@@ -1136,11 +1155,17 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                   }}
                   disabled={!isNullOrUndefined(this.initialState.model)}
                   items={this.state.models}
-                  onItemSelect={(model: ModelObject) =>
+                  onItemSelect={(model: ModelObject) => {
+                    const values = this.state.values;
+                    values.model = model;
+                    values.cpu = model.cpu as string;
+                    values.display_color = model.display_color as string;
+                    values.memory_gb = model.memory_gb as string | null;
+                    values.storage = model.storage as string;
                     this.setState({
-                      values: updateObject(values, { model: model }),
-                    })
-                  }
+                      values,
+                    });
+                  }}
                   itemRenderer={renderModelItem}
                   itemPredicate={filterModel}
                   noResults={<MenuItem disabled={true} text="No results." />}
@@ -1164,50 +1189,60 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                     onChange={this.handleCustomizeModelSwitch}
                   />
                 ) : null}
-                {values.model && this.state.customizeModel ? (
-                  <div>
-                    <FormGroup label="Display Color">
-                      <Field
-                        field="display_color"
-                        type="color"
-                        value={
-                          values.display_color
-                            ? values.display_color
-                            : values.model.display_color
-                        }
-                        onChange={this.handleChange}
-                      />
-                    </FormGroup>
-                    <FormGroup label="CPU" inline={false}>
-                      <Field
-                        field="cpu"
-                        placeholder="cpu"
-                        value={values.cpu ? values.cpu : values.model.cpu}
-                        onChange={this.handleChange}
-                      />
-                    </FormGroup>
-                    <FormGroup label="Memory(GB)" inline={false}>
-                      <Field
-                        field="memory_gb"
-                        placeholder="memory_gb"
-                        value={
-                          values.memory_gb
-                            ? values.memory_gb
-                            : values.model.memory_gb
-                        }
-                        onChange={this.handleChange}
-                      />
-                    </FormGroup>
-                    <FormGroup label="Storage" inline={false}>
-                      <Field
-                        field="storage"
-                        placeholder="storage"
-                        value={values.model.storage}
-                        onChange={this.handleChange}
-                      />
-                    </FormGroup>
-                  </div>
-                ) : null}
+
+                <div>
+                  <FormGroup
+                    label="Display Color"
+                    disabled={values.model && !this.state.customizeModel}
+                  >
+                    <Field
+                      disabled={values.model && !this.state.customizeModel}
+                      field="display_color"
+                      type="color"
+                      value={values.display_color}
+                      onChange={this.handleChange}
+                    />
+                  </FormGroup>
+                  <FormGroup
+                    label="CPU"
+                    inline={false}
+                    disabled={values.model && !this.state.customizeModel}
+                  >
+                    <Field
+                      disabled={values.model && !this.state.customizeModel}
+                      field="cpu"
+                      placeholder="cpu"
+                      value={values.cpu}
+                      onChange={this.handleChange}
+                    />
+                  </FormGroup>
+                  <FormGroup
+                    label="Memory(GB)"
+                    inline={false}
+                    disabled={values.model && !this.state.customizeModel}
+                  >
+                    <Field
+                      disabled={values.model && !this.state.customizeModel}
+                      field="memory_gb"
+                      placeholder="memory_gb"
+                      value={values.memory_gb}
+                      onChange={this.handleChange}
+                    />
+                  </FormGroup>
+                  <FormGroup
+                    label="Storage"
+                    inline={false}
+                    disabled={values.model && !this.state.customizeModel}
+                  >
+                    <Field
+                      disabled={values.model && !this.state.customizeModel}
+                      field="storage"
+                      placeholder="storage"
+                      value={values.storage}
+                      onChange={this.handleChange}
+                    />
+                  </FormGroup>
+                </div>
               </FormGroup>
             </Card>
             <Collapse
