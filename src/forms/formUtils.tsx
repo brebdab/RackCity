@@ -241,13 +241,16 @@ export const renderAssetFieldItem: ItemRenderer<string> = (
     return null;
   }
   const text = AssetFieldsTable[field];
-  return (
-    <MenuItem
-      active={modifiers.active}
-      text={highlightText(text, query)}
-      onClick={handleClick}
-    />
-  );
+  if(text) {
+    return (
+        <MenuItem
+            active={modifiers.active}
+            text={highlightText(text, query)}
+            onClick={handleClick}
+        />
+    );
+  }
+  return null;
 };
 export const renderModelFieldItem: ItemRenderer<string> = (
   field,
