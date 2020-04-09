@@ -104,6 +104,7 @@ interface AssetFormState {
   customizeModel: boolean;
 }
 
+
 class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   initialState: AssetObject = this.props.initialValues
     ? JSON.parse(JSON.stringify(this.props.initialValues))
