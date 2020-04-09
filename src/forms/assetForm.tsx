@@ -111,6 +111,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   initialState: AssetObject = this.props.initialValues
     ? JSON.parse(JSON.stringify(this.props.initialValues))
     : ({} as AssetObject);
+
   private setPowerPortInputState = () => {
     const power_ports_default: { [port: string]: boolean } = {};
     if (this.state.values && this.state.values.power_connections) {
@@ -139,7 +140,11 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     assets: [],
     left_ports: [],
     right_ports: [],
-    customizeModel: false,
+    customizeModel:
+      this.initialState.memory_gb !== null ||
+      this.initialState.display_color !== "" ||
+      this.initialState.cpu !== "" ||
+      this.initialState.storage !== "",
 
     power_ports: {} as PowerPortAvailability,
 
@@ -288,13 +293,21 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         return;
       }
       let newValues = this.state.values;
-      if (!this.state.customizeModel){
-        newValues.display_color = null;
-        newValues.cpu = null;
-        newValues.storage = null;
-        newValues.memory_gb =null;
+      if (
+        this.state.values.display_color ===
+        this.state.values.model.display_color
+      ) {
+        newValues.display_color = "";
       }
-
+      if (this.state.values.cpu === this.state.values.model.cpu) {
+        newValues.cpu = "";
+      }
+      if (this.state.values.storage === this.state.values.model.storage) {
+        newValues.storage = "";
+      }
+      if (this.state.values.memory_gb === this.state.values.model.memory_gb) {
+        newValues.memory_gb = null;
+      }
 
       if (this.state.values.hostname === "") {
         delete newValues.hostname;
@@ -763,7 +776,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   }
   handleNetworkConnectionAssetSelection(
     source_port: string,
-    destination_hostname: string | undefined |null
+    destination_hostname: string | undefined | null
   ) {
     const newNetworkConnection: NetworkConnection = {
       source_port,
@@ -930,6 +943,24 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       isAlertOpen: false,
     });
   };
+  handleCustomizeModelSwitch = () => {
+    if (this.state.customizeModel) {
+      const values = this.state.values;
+      values.display_color = "";
+      values.cpu = "";
+      values.storage = "";
+      values.memory_gb = null;
+
+      this.setState({
+        values,
+        customizeModel: false,
+      });
+    } else {
+      this.setState({
+        customizeModel: true,
+      });
+    }
+  };
 
   showChangeWarningAlert(warningMessage: string, selectedValue: any) {
     this.setState({
@@ -955,6 +986,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   };
 
   render() {
+    console.log(this.initialState);
     if (this.state.models.length === 0) {
       this.getModels();
     }
@@ -1134,11 +1166,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                   <Switch
                     checked={this.state.customizeModel}
                     label="Customize model values"
-                    onChange={() => {
-                      this.setState({
-                        customizeModel: !this.state.customizeModel,
-                      });
-                    }}
+                    onChange={this.handleCustomizeModelSwitch}
                   />
                 ) : null}
                 {values.model && this.state.customizeModel ? (
@@ -1148,8 +1176,9 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                         field="display_color"
                         type="color"
                         value={
-                          values.display_color? values.display_color: values.model.display_color
-
+                          values.display_color
+                            ? values.display_color
+                            : values.model.display_color
                         }
                         onChange={this.handleChange}
                       />
@@ -1158,7 +1187,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                       <Field
                         field="cpu"
                         placeholder="cpu"
-                        value={values.cpu?  values.cpu :values.model.cpu}
+                        value={values.cpu ? values.cpu : values.model.cpu}
                         onChange={this.handleChange}
                       />
                     </FormGroup>
@@ -1166,7 +1195,11 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                       <Field
                         field="memory_gb"
                         placeholder="memory_gb"
-                        value={values.memory_gb ? values.memory_gb:values.model.memory_gb}
+                        value={
+                          values.memory_gb
+                            ? values.memory_gb
+                            : values.model.memory_gb
+                        }
                         onChange={this.handleChange}
                       />
                     </FormGroup>
