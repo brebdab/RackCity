@@ -73,7 +73,6 @@ import {
   StringSelect,
 } from "./formUtils";
 import $ from "jquery";
-import FormPopup from "./formPopup";
 
 export interface AssetFormProps {
   token: string;

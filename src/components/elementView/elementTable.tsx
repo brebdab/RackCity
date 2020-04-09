@@ -76,7 +76,7 @@ import "./elementView.scss";
 import FilterSelect from "./filterSelect";
 import { PowerView } from "./powerView/powerView";
 import "./powerView/powerView.scss";
-import {isNull, isNullOrUndefined} from "util";
+import { isNullOrUndefined} from "util";
 import { PermissionState } from "../../utils/permissionUtils";
 
 interface ElementTableState {
