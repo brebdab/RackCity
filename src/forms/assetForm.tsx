@@ -14,7 +14,6 @@ import {
   Spinner,
   Tooltip,
   Card,
-  Switch,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { IconNames } from "@blueprintjs/icons";
@@ -101,36 +100,14 @@ interface AssetFormState {
   warningMessage: string;
   selectedValue: any;
   loading: boolean;
-  customizeModel: boolean;
 }
+// var console: any = {};
+// console.log = function() {};
 
 class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   initialState: AssetObject = this.props.initialValues
     ? JSON.parse(JSON.stringify(this.props.initialValues))
     : ({} as AssetObject);
-
-  initializeCustomValues(asset: AssetObject) {
-    if (this.props.initialValues) {
-      const model = this.props.initialValues.model;
-      asset.cpu = this.initialState.cpu ? asset.cpu : (model.cpu as string);
-      asset.display_color = asset.display_color
-        ? asset.display_color
-        : (model.display_color as string);
-      asset.memory_gb = asset.memory_gb
-        ? asset.memory_gb
-        : (model.memory_gb as string | null);
-      asset.storage = asset.storage ? asset.storage : (model.storage as string);
-    }
-    return asset;
-  }
-  resetCustomValuesToDefault(asset: AssetObject) {
-    asset.cpu = asset.model.cpu as string;
-    asset.display_color = asset.model.display_color as string;
-    asset.memory_gb = asset.memory_gb as string;
-    asset.storage = asset.storage as string;
-    return asset;
-  }
-
   private setPowerPortInputState = () => {
     const power_ports_default: { [port: string]: boolean } = {};
     if (this.state.values && this.state.values.power_connections) {
@@ -146,7 +123,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   gettingPowerPortsInProgress = false;
 
   public state = {
-    values: this.initializeCustomValues(this.initialState),
+    values: this.initialState,
     currDatacenter: this.initialState.rack
       ? this.initialState.rack.datacenter
       : this.props.currDatacenter === ALL_DATACENTERS
@@ -159,15 +136,14 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     assets: [],
     left_ports: [],
     right_ports: [],
-    customizeModel:
-      this.props.initialValues !== undefined &&
-      (this.props.initialValues.memory_gb !== null ||
-        this.props.initialValues.display_color !== "" ||
-        this.props.initialValues.cpu !== "" ||
-        this.props.initialValues.storage !== ""),
-
+    //TODO, call endpoint, don't hard code
     power_ports: {} as PowerPortAvailability,
-
+    // power_ports: {
+    //   left_suggest: "12",
+    //   left_available: ["1", "2", "12"],
+    //   right_suggest: "12",
+    //   right_available: ["1", "2", "12", "13"]
+    // },
     power_ports_default: {} as { [port: string]: boolean },
     isAlertOpen: false,
     warningMessage: "",
@@ -272,10 +248,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       network_connections,
       power_connections,
       comment,
-      memory_gb,
-      storage,
-      cpu,
-      display_color,
     } = asset;
     const model = asset.model ? asset.model.id : null;
     const rack = asset.rack ? asset.rack.id : null;
@@ -291,10 +263,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       mac_addresses,
       network_connections,
       power_connections,
-      memory_gb,
-      storage,
-      cpu,
-      display_color,
     };
 
     return valuesToSend;
@@ -312,22 +280,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         $(".bp3-overlay-scroll-container").scrollTop(0);
         return;
       }
-      let newValues = this.mapAssetObject(this.state.values);
-      if (
-        this.state.values.display_color ===
-        this.state.values.model.display_color
-      ) {
-        newValues.display_color = "";
-      }
-      if (this.state.values.cpu === this.state.values.model.cpu) {
-        newValues.cpu = "";
-      }
-      if (this.state.values.storage === this.state.values.model.storage) {
-        newValues.storage = "";
-      }
-      if (this.state.values.memory_gb === this.state.values.model.memory_gb) {
-        newValues.memory_gb = null;
-      }
+      let newValues = this.state.values;
 
       if (this.state.values.hostname === "") {
         newValues.hostname = null;
@@ -338,9 +291,12 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       if (this.props.initialValues) {
         newValues.id = this.props.initialValues.id;
       }
+      this.setState({
+        values: newValues,
+      });
 
       const resp = this.props.submitForm(
-        newValues,
+        this.mapAssetObject(newValues),
         getHeaders(this.props.token)
       );
       if (resp) {
@@ -514,6 +470,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   };
   getPortsForSide = (port: number) => {
     let side;
+    // console.log(this.state.values.power_connections, this.state.power_ports);
     if (
       this.state.values.power_connections &&
       this.state.values.power_connections[port] &&
@@ -792,7 +749,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   }
   handleNetworkConnectionAssetSelection(
     source_port: string,
-    destination_hostname: string | undefined | null
+    destination_hostname: string | undefined
   ) {
     const newNetworkConnection: NetworkConnection = {
       source_port,
@@ -958,18 +915,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     this.setState({
       isAlertOpen: false,
     });
-  };
-  handleCustomizeModelSwitch = () => {
-    if (this.state.customizeModel) {
-      this.setState({
-        values: this.resetCustomValuesToDefault(this.state.values),
-        customizeModel: false,
-      });
-    } else {
-      this.setState({
-        customizeModel: true,
-      });
-    }
   };
 
   showChangeWarningAlert(warningMessage: string, selectedValue: any) {
@@ -1150,14 +1095,11 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                   }}
                   disabled={!isNullOrUndefined(this.initialState.model)}
                   items={this.state.models}
-                  onItemSelect={(model: ModelObject) => {
-                    const values = this.state.values;
-                    values.model = model;
-
+                  onItemSelect={(model: ModelObject) =>
                     this.setState({
-                      values: this.resetCustomValuesToDefault(values),
-                    });
-                  }}
+                      values: updateObject(values, { model: model }),
+                    })
+                  }
                   itemRenderer={renderModelItem}
                   itemPredicate={filterModel}
                   noResults={<MenuItem disabled={true} text="No results." />}
@@ -1174,67 +1116,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                     }
                   />
                 </ModelSelect>
-                {values.model ? (
-                  <Switch
-                    checked={this.state.customizeModel}
-                    label="Customize model values"
-                    onChange={this.handleCustomizeModelSwitch}
-                  />
-                ) : null}
-
-                <div>
-                  <FormGroup
-                    label="Display Color"
-                    disabled={values.model && !this.state.customizeModel}
-                  >
-                    <Field
-                      disabled={values.model && !this.state.customizeModel}
-                      field="display_color"
-                      type="color"
-                      value={values.display_color}
-                      onChange={this.handleChange}
-                    />
-                  </FormGroup>
-                  <FormGroup
-                    label="CPU"
-                    inline={false}
-                    disabled={values.model && !this.state.customizeModel}
-                  >
-                    <Field
-                      disabled={values.model && !this.state.customizeModel}
-                      field="cpu"
-                      placeholder="cpu"
-                      value={values.cpu}
-                      onChange={this.handleChange}
-                    />
-                  </FormGroup>
-                  <FormGroup
-                    label="Memory(GB)"
-                    inline={false}
-                    disabled={values.model && !this.state.customizeModel}
-                  >
-                    <Field
-                      disabled={values.model && !this.state.customizeModel}
-                      field="memory_gb"
-                      placeholder="memory_gb"
-                      value={values.memory_gb}
-                      onChange={this.handleChange}
-                    />
-                  </FormGroup>
-                  <FormGroup
-                    label="Storage"
-                    inline={false}
-                    disabled={values.model && !this.state.customizeModel}
-                  >
-                    <Field
-                      disabled={values.model && !this.state.customizeModel}
-                      field="storage"
-                      placeholder="storage"
-                      value={values.storage}
-                      onChange={this.handleChange}
-                    />
-                  </FormGroup>
-                </div>
               </FormGroup>
             </Card>
             <Collapse

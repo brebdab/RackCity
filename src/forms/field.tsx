@@ -7,7 +7,6 @@ export interface IFieldProps {
   placeholder?: string;
   value?: any;
   type?: string;
-  disabled?: boolean;
   onChange(field: { [key: string]: any }): void;
 }
 
@@ -15,7 +14,6 @@ class Field extends React.Component<IFieldProps> {
   render() {
     return (
       <InputGroup
-        disabled={this.props.disabled}
         type={this.props.type}
         className={this.props.className}
         placeholder={this.props.placeholder}

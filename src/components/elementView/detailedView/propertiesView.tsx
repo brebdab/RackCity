@@ -10,6 +10,7 @@ import {
   isModelObject,
   isObject,
   ModelFieldsTable,
+  ROUTES,
   ChangePlan,
 } from "../../../utils/utils";
 import "./propertiesView.scss";
@@ -19,12 +20,12 @@ export interface AlertState {
   isDeleteOpen: boolean;
   fields: Array<string>;
 }
+// var console: any = {};
+// console.log = function() {};
 
 interface PropertiesViewProps {
   data: ElementObjectType;
   changePlan: ChangePlan;
-  title?: string;
-  data_override?: any;
 }
 
 class PropertiesView extends React.PureComponent<
@@ -56,22 +57,16 @@ class PropertiesView extends React.PureComponent<
 
   renderData(fields: Array<any>, data: any) {
     return fields.map((item: string) => {
-      var dat;
       if (item === "display_color") {
-        const isCustomField =
-          this.props.data_override && this.props.data_override[item];
-        const color = isCustomField
-          ? this.props.data_override[item]
-          : data[item];
-
+        var dat;
         dat = (
           <p
             className="color"
             style={{
-              backgroundColor: color,
+              backgroundColor: data[item],
             }}
           >
-            {color}
+            {data[item]}
           </p>
         );
       } else if (item === "network_ports") {
@@ -80,7 +75,20 @@ class PropertiesView extends React.PureComponent<
           dat = <p>{network_ports.toString()}</p>;
         }
       } else if (item === "model") {
-        dat = <p>{data[item].vendor + " " + data[item].model_number}</p>;
+        const isDecommissioned = data["decommissioning_user"];
+        dat = (
+          <p
+            className={isDecommissioned ? undefined : "model-link"}
+            onClick={
+              isDecommissioned
+                ? undefined
+                : () =>
+                    this.props.history.push(ROUTES.MODELS + "/" + data[item].id)
+            }
+          >
+            {data[item].vendor + " " + data[item].model_number}
+          </p>
+        );
       } else if (item === "rack") {
         return [
           <tr>
@@ -125,29 +133,13 @@ class PropertiesView extends React.PureComponent<
         ) : null;
       }
       if (isModelObject(this.props.data)) {
-        const isCustomField =
-          this.props.data_override && this.props.data_override[item];
         return (
           <tr>
             <td key={item}>
-              <p
-                className="label"
-                style={{
-                  fontWeight: isCustomField
-                    ? ("bold" as any)
-                    : ("normal" as any),
-                  color: isCustomField ? "#48AFF0" : "#bfccd6",
-                }}
-              >
-                {ModelFieldsTable[item]}:
-              </p>
+              <p className="label">{ModelFieldsTable[item]}:</p>
             </td>
 
-            {isCustomField && item !== "display_color" ? (
-              <td>{this.props.data_override[item]}</td>
-            ) : (
-              <td>{dat}</td>
-            )}
+            <td>{dat}</td>
           </tr>
         );
       } else {
@@ -177,8 +169,7 @@ class PropertiesView extends React.PureComponent<
 
     return (
       <div className={Classes.DARK + " propsview"}>
-        <h3>{this.props.title ? this.props.title : "Properties"}</h3>
-
+        <h3>Properties</h3>
         {Object.keys(this.props.data).length !== 0 ? (
           <div className="propsdetail">
             <div className="props-column">
@@ -215,11 +206,6 @@ class PropertiesView extends React.PureComponent<
             </div>
           </div>
         ) : null}
-        <p className="custom-message">
-          {this.props.data_override
-            ? "*Custom fields highlighted in blue"
-            : null}
-        </p>
       </div>
     );
   }

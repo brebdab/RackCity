@@ -37,13 +37,20 @@ export interface ChangePlan extends ElementObject {
   name: string;
   execution_time?: string;
 }
-
+export interface AssetObjectOld extends ElementObject {
+  hostname: string;
+  rack_position: string;
+  model?: ModelObject;
+  rack?: RackObject;
+  network_connections: {};
+  owner?: string;
+  comment?: string;
+}
 
 export interface AssetObject extends ParentAssetObject {
   model: ModelObject;
   rack: RackObject;
   network_graph: NetworkGraphData;
-
 }
 export interface AssetCPObject extends AssetObject {
   change_plan: ChangePlan;
@@ -65,10 +72,6 @@ interface ParentAssetObject extends ElementObject {
   comment: string;
   decommissioning_user?: string;
   time_decommissioned?: string;
-  cpu:string;
-  storage:string;
-  display_color:string;
-  memory_gb:string |null;
 }
 
 export interface RackRangeFields {
@@ -92,6 +95,7 @@ export const AssetFieldsTable: any = {
   model__vendor: "Model Vendor",
   model__model_number: "Model Number",
   rack: "Rack",
+
   rack__datacenter__name: "Datacenter",
   rack_position: "Rack Position",
   owner: "Owner",
@@ -191,12 +195,30 @@ export interface RackObject extends ElementObject {
 
 export interface RackResponseObject {
   rack: RackObject;
-  assets: Array<AssetObject>;
+  assets: Array<AssetObjectOld>;
 }
 
 export interface DatacenterObject extends ElementObject {
   name: string;
   abbreviation: string;
+}
+
+export interface ModificationsObject {
+  existing: Array<ModelObjectOld>;
+  modified: Array<ModelObjectOld>;
+}
+
+export interface ModelObjectOld extends ElementObject {
+  vendor: string;
+  model_number: string;
+  height: string;
+  display_color?: string;
+  num_ethernet_ports?: string; //
+  num_power_ports?: string; //
+  cpu?: string;
+  memory_gb?: string; //
+  storage?: string;
+  comment?: string;
 }
 
 export interface ModelObject extends ElementObject {
@@ -212,6 +234,10 @@ export interface ModelObject extends ElementObject {
   storage?: string;
   comment?: string;
 }
+export interface ModelDetailObject {
+  model: ModelObjectOld;
+  assets: Array<AssetObjectOld>;
+}
 
 export interface UserPermissionsObject {
   [index: string]: any;
@@ -224,8 +250,10 @@ export interface UserPermissionsObject {
 }
 
 export type ElementObjectType =
+  | ModelObjectOld
   | ModelObject
   | RackObject
+  | AssetObjectOld
   | AssetObject
   | ShallowAssetObject
   | UserInfoObject
@@ -233,9 +261,10 @@ export type ElementObjectType =
   | ChangePlan;
 
 export type FormObjectType =
+  | ModelObjectOld
   | RackObject
+  | AssetObjectOld
   | AssetObject
-  | ModelObject
   | DatacenterObject
   | RackRangeFields
   | ShallowAssetObject
