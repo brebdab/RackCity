@@ -31,6 +31,7 @@ import * as actions from "./store/actions/state";
 import { ROUTES } from "./utils/utils";
 import CPDetailView from "./components/changePlanner/CPDetailView";
 import { PermissionState } from "./utils/permissionUtils";
+import { BarcodeScanner } from "./components/mobile/barcodeScanner";
 
 var console: any = {};
 console.log = function () {};
@@ -121,9 +122,7 @@ class App extends React.Component<AppProps> {
             <div className="mobile">
               <this.PrivateRoute
                 path={ROUTES.SCANNER}
-                render={() => {
-                  return <p>Test</p>;
-                }}
+                component={BarcodeScanner}
               />
               <this.RedirectToLoginRoute exact path="/">
                 {" "}
