@@ -297,7 +297,12 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
               </table>
             )}
 
-
+            {/* <Field
+              field="num_ethernet_ports"
+              placeholder="num_ethernet_ports"
+              value={values.num_ethernet_ports}
+              onChange={this.handleChange}
+            /> */}
           </FormGroup>
           <FormGroup label="# Power Ports" inline={false}>
             <Field

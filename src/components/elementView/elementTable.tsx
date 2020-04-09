@@ -76,7 +76,7 @@ import "./elementView.scss";
 import FilterSelect from "./filterSelect";
 import { PowerView } from "./powerView/powerView";
 import "./powerView/powerView.scss";
-import { isNullOrUndefined} from "util";
+import { isNullOrUndefined } from "util";
 import { PermissionState } from "../../utils/permissionUtils";
 
 interface ElementTableState {
@@ -134,7 +134,8 @@ interface ElementTableProps {
   changePlan: ChangePlan;
 }
 
-
+// var console: any = {};
+// console.log = function() {};
 class ElementTable extends React.Component<
   ElementTableProps & RouteComponentProps,
   ElementTableState
@@ -748,9 +749,7 @@ class ElementTable extends React.Component<
 
   //DELETE LOGIC
   private shouldShowColumn = (item: any, col: string) => {
-
     if (isAssetObject(item)) {
-
       return AssetFieldsTable[col] && col !== "comment";
     }
     return (
@@ -1029,7 +1028,7 @@ class ElementTable extends React.Component<
                             const selected = this.state.selected;
                             const selectedAll = !this.state.selectedAll;
                             this.state.items.forEach((item) => {
-                              if (isAssetObject(item) && item.asset_number) {
+                              if (isAssetObject(item)) {
                                 if (
                                   selected.includes(item.asset_number) &&
                                   !selectedAll
@@ -1077,19 +1076,14 @@ class ElementTable extends React.Component<
                       </th>,
                     ];
                   } else if (this.props.type === ElementType.ASSET) {
-                    if (AssetFieldsTable[col]) {
-                      return (
-
-                          <th className="header-cell">
-                            <div className="header-text">
-                              <span>{AssetFieldsTable[col]}</span>
-                              {this.getScrollIcon(col)}
-                            </div>
-                          </th>
-                      );
-
-                    }
-                    return null;
+                    return (
+                      <th className="header-cell">
+                        <div className="header-text">
+                          <span>{AssetFieldsTable[col]}</span>
+                          {this.getScrollIcon(col)}
+                        </div>
+                      </th>
+                    );
                   } else if (this.props.type === ElementType.MODEL) {
                     return (
                       <th className="header-cell">
@@ -1141,15 +1135,14 @@ class ElementTable extends React.Component<
                                 event.stopPropagation();
                               }}
                             >
-                              {this.props.isDecommissioned  ? null : (
+                              {this.props.isDecommissioned ? null : (
                                 <Checkbox
-                                    disabled = {isNullOrUndefined((item.asset_number))}
-                                  checked={item.asset_number? this.state.selected.includes(
+                                  checked={this.state.selected.includes(
                                     item.asset_number
-                                  ):false}
+                                  )}
                                   onClick={(event: any) => {
                                     const selected = this.state.selected;
-                                    if (item.asset_number && selected.includes(item.asset_number)) {
+                                    if (selected.includes(item.asset_number)) {
                                       if (this.state.selectedAll) {
                                         this.setState({
                                           selectedAll: false,
@@ -1159,7 +1152,7 @@ class ElementTable extends React.Component<
                                         selected.indexOf(item.asset_number),
                                         1
                                       );
-                                    } else if (item.asset_number) {
+                                    } else {
                                       selected.push(item.asset_number);
                                     }
                                     this.setState({
@@ -1178,7 +1171,6 @@ class ElementTable extends React.Component<
                             </th>
                           ) : null}
                           {Object.entries(item).map(([col, value]) => {
-
                             if (isModelObject(value)) {
                               return [
                                 <td style={getChangePlanRowStyle(item)}>
@@ -1188,7 +1180,7 @@ class ElementTable extends React.Component<
                                   {value.model_number}
                                 </td>,
                               ];
-                            } else if (col === "rack" && isRackObject(value)) {
+                            } else if (isRackObject(value)) {
                               return [
                                 <td style={getChangePlanRowStyle(item)}>
                                   {value.row_letter + value.rack_num}
@@ -1197,17 +1189,7 @@ class ElementTable extends React.Component<
                                   {value.datacenter.name}
                                 </td>,
                               ];
-                            } else if(col ==="rack"){
-                               return [
-                                <td style={getChangePlanRowStyle(item)}>
-
-                                </td>,
-                                <td style={getChangePlanRowStyle(item)}>
-
-                                </td>,
-                              ];
-                            }
-                              else if (isModelObject(item) && col === "display_color") {
+                            } else if (col === "display_color") {
                               return (
                                 <td
                                   style={{
