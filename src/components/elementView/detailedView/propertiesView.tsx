@@ -59,13 +59,14 @@ class PropertiesView extends React.PureComponent<
 
   renderData(fields: Array<any>, data: any) {
     return fields.map((item: string) => {
+       var dat;
       if (item === "display_color") {
         const isCustomField =
           this.props.data_override && this.props.data_override[item];
         const color = isCustomField
           ? this.props.data_override[item]
           : data[item];
-        var dat;
+
         dat = (
           <p
             className="color"
@@ -145,7 +146,7 @@ class PropertiesView extends React.PureComponent<
               </p>
             </td>
 
-            {isCustomField ? (
+            {isCustomField  && item !== "display_color"? (
               <td>{this.props.data_override[item]}</td>
             ) : (
               <td>{dat}</td>
