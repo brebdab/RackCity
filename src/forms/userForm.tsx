@@ -36,12 +36,16 @@ export interface UserFormProps {
   type?: FormTypes;
   submitForm: Function;
 }
+export enum AssetPermissionSelection {
+  GLOBAL = "Global",
+  PER_SITE = "Per-Site",
+}
 interface UserFormState {
   initialValues: UserPermissionsObject;
   errors: Array<string>;
   permissions: UserPermissionsObject;
   datacenters: Array<DatacenterObject>;
-  datacenter_selection: string;
+  asset_permission_selection: AssetPermissionSelection;
   show_asset_options: boolean;
   loading: boolean;
 }
@@ -76,7 +80,7 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
       datacenter_permissions: [""] as Array<string>,
     },
     datacenters: [] as Array<DatacenterObject>,
-    datacenter_selection: "Global",
+    asset_permission_selection: AssetPermissionSelection.GLOBAL,
     loading: true,
     show_asset_options: false,
   };
@@ -260,11 +264,11 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
                     console.log("changing datacenter");
                     console.log(this.state);
                     var updatedPermissions = this.state.permissions;
-                    if (this.state.datacenter_selection === "Global") {
+                    if (this.state.asset_permission_selection === AssetPermissionSelection.GLOBAL) {
                       updatedPermissions.datacenter_permissions = this.state.initialValues.datacenter_permissions;
                       updatedPermissions.asset_management = false;
                       this.setState({
-                        datacenter_selection: "Per Datacenter",
+                        asset_permission_selection: AssetPermissionSelection.PER_SITE,
                         permissions: updatedPermissions,
                       });
                     } else {
@@ -276,19 +280,19 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
                       updatedPermissions.datacenter_permissions = permissions;
                       updatedPermissions.asset_management = this.state.show_asset_options;
                       this.setState({
-                        datacenter_selection: "Global",
+                        asset_permission_selection: AssetPermissionSelection.GLOBAL,
                         permissions: updatedPermissions,
                       });
                     }
                   }}
-                  selectedValue={this.state.datacenter_selection}
+                  selectedValue={this.state.asset_permission_selection}
                 >
-                  <Radio label="Global" value="Global" />
-                  <Radio label="Per Datacenter" value="Per Datacenter" />
+                  <Radio label={AssetPermissionSelection.GLOBAL} value={AssetPermissionSelection.GLOBAL} />
+                  <Radio label={AssetPermissionSelection.PER_SITE} value={AssetPermissionSelection.PER_SITE} />
                 </RadioGroup>
               ) : null}
               {this.state.show_asset_options &&
-              this.state.datacenter_selection === "Per Datacenter"
+              this.state.asset_permission_selection === AssetPermissionSelection.PER_SITE
                 ? this.renderDatacenterChecks()
                 : null}
               <Button className="login-button" type="submit">
@@ -396,11 +400,11 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
         });
         if (res.data.asset_management) {
           this.setState({
-            datacenter_selection: "Global",
+            asset_permission_selection: AssetPermissionSelection.GLOBAL,
           });
         } else {
           this.setState({
-            datacenter_selection: "Per Datacenter",
+            asset_permission_selection: AssetPermissionSelection.PER_SITE,
           });
         }
         this.setState({
