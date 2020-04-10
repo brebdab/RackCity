@@ -3,29 +3,25 @@ import {
   Callout,
   Classes,
   FormGroup,
+  InputGroup,
   Intent,
   MenuItem,
-  InputGroup,
-  Spinner,
-  RadioGroup,
   Radio,
+  RadioGroup,
+  Spinner,
+  Card,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
-import { connect } from "react-redux";
-import { API_ROOT } from "../utils/api-config";
-import { ModelObject, MountTypes } from "../utils/utils";
-import { updateObject } from "../store/utility";
+import {connect} from "react-redux";
+import {API_ROOT} from "../utils/api-config";
+import {ModelObject, MountTypes} from "../utils/utils";
+import {updateObject} from "../store/utility";
 import Field from "./field";
 import "./forms.scss";
 import $ from "jquery";
-import {
-  filterString,
-  renderStringItem,
-  StringSuggest,
-  FormTypes,
-} from "./formUtils";
+import {filterString, FormTypes, renderStringItem, StringSuggest,} from "./formUtils";
 
 // values mirror backend/database strings
 
@@ -198,9 +194,10 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
         })}
         <form
           onSubmit={this.handleSubmit}
-          className="create-model-form bp3-form-group"
+          className="create-form bp3-form-group"
         >
-          <FormGroup className="suggest" label="Vendor (required)">
+               <Card>
+          <FormGroup className="suggest" label="Vendor*">
             <StringSuggest
               inputProps={{
                 placeholder: "vendor",
@@ -231,7 +228,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
             />
           </FormGroup>
 
-          <FormGroup label="Model Number (required)" inline={false}>
+          <FormGroup label="Model Number*" inline={false}>
             <Field
               placeholder="model_number"
               onChange={this.handleChange}
@@ -239,8 +236,18 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
               field="model_number"
             />
           </FormGroup>
+          <FormGroup label="Display Color">
+            <Field
+              field="display_color"
+              type="color"
+              value={values.display_color ? values.display_color : "#394B59"}
+              onChange={this.handleChange}
+            />
+          </FormGroup>
+           </Card>
+                <Card>
           <RadioGroup
-            label="Mount Type"
+            label="Mount Type*"
             className="radio-group"
             onChange={(e: any) => {
               console.log(e);
@@ -259,19 +266,17 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
             />
             <Radio label={MountTypes.BLADE} value={MountTypes.BLADE} />
           </RadioGroup>
-          <FormGroup label="Height (required)" inline={false}>
+
+
+
+          {values.model_type===MountTypes.RACKMOUNT || values.model_type===MountTypes.BLADE_CHASSIS ?
+        <div>
+          <FormGroup label="Height*
+          " inline={false}>
             <Field
               field="height"
               placeholder="height"
               value={values.height}
-              onChange={this.handleChange}
-            />
-          </FormGroup>
-          <FormGroup label="Display Color">
-            <Field
-              field="display_color"
-              type="color"
-              value={values.display_color ? values.display_color : "#394B59"}
               onChange={this.handleChange}
             />
           </FormGroup>
@@ -322,6 +327,10 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
               onChange={this.handleChange}
             />
           </FormGroup>
+          </div>
+                :null}
+              </Card>
+          <Card>
           <FormGroup label="CPU" inline={false}>
             <Field
               field="cpu"
@@ -354,8 +363,9 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
               onChange={(e: any) =>
                 this.handleChange({ comment: e.currentTarget.value })
               }
-            ></textarea>
+            />
           </FormGroup>
+            </Card>
 
           <Button className="login-button" type="submit">
             {this.state.loading ? "Submitting..." : "Submit"}

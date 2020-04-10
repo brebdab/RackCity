@@ -136,6 +136,8 @@ export enum AssetFormLabels {
   network_ports = "Network Ports",
   power_connections = "Power Connections",
 }
+
+
 export interface Link {
   to: number;
   from: number;
