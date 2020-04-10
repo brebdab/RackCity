@@ -356,7 +356,7 @@ class RackTab extends React.Component<
                   !(
                     this.props.permissionState.admin ||
                     this.props.permissionState.asset_management ||
-                    this.props.permissionState.datacenter_permissions.includes(
+                    this.props.permissionState.site_permissions.includes(
                       +this.props.currDatacenter.id
                     )
                   )
@@ -373,7 +373,7 @@ class RackTab extends React.Component<
                   !(
                     this.props.permissionState.admin ||
                     this.props.permissionState.asset_management ||
-                    this.props.permissionState.datacenter_permissions.includes(
+                    this.props.permissionState.site_permissions.includes(
                       +this.props.currDatacenter.id
                     )
                   )

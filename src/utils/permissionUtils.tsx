@@ -6,7 +6,7 @@ export interface PermissionState {
   power_control: boolean;
   audit_read: boolean;
   admin: boolean;
-  datacenter_permissions: Array<number>;
+  site_permissions: Array<number>;
 }
 
 export function hasAddElementPermission(
@@ -19,7 +19,7 @@ export function hasAddElementPermission(
     (elementType === ElementType.MODEL && permissions.model_management) ||
     (elementType === ElementType.ASSET &&
       (permissions.asset_management ||
-        permissions.datacenter_permissions.length > 0)) ||
+        permissions.site_permissions.length > 0)) ||
     elementType === ElementType.CHANGEPLANS
   );
 }
