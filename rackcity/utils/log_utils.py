@@ -24,7 +24,7 @@ class PowerAction(Enum):
 
 class ElementType(Enum):
     ASSET = "asset"
-    DATACENTER = "datacenter"
+    SITE = "site"
     MODEL = "model"
     USER = "user"
     NETWORK_CONNECTIONS = "network connections"
@@ -53,7 +53,7 @@ def log_action(user, related_element, action, change_plan=None):
         element_type = ElementType.USER.value
         element_name = related_element.username
     elif isinstance(related_element, Site):
-        element_type = ElementType.DATACENTER.value
+        element_type = ElementType.SITE.value
         element_name = related_element.abbreviation
     elif related_element is not None:
         return
