@@ -44,7 +44,7 @@ interface UserFormState {
   initialValues: UserPermissionsObject;
   errors: Array<string>;
   permissions: UserPermissionsObject;
-  datacenters: Array<DatacenterObject>;
+  sites: Array<DatacenterObject>;
   asset_permission_selection: AssetPermissionSelection;
   show_asset_options: boolean;
   loading: boolean;
@@ -79,7 +79,7 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
       admin: false,
       datacenter_permissions: [""] as Array<string>,
     },
-    datacenters: [] as Array<DatacenterObject>,
+    sites: [] as Array<DatacenterObject>,
     asset_permission_selection: AssetPermissionSelection.GLOBAL,
     loading: true,
     show_asset_options: false,
@@ -127,7 +127,7 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
         var data = res.datacenters as Array<DatacenterObject>;
         data.sort(this.compare);
         this.setState({
-          datacenters: data,
+          sites: data,
         });
         this.getUserPermissions(this.props.userId);
       })
@@ -274,8 +274,8 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
                     } else {
                       let permissions: Array<string>;
                       permissions = [];
-                      for (var i = 0; i < this.state.datacenters.length; i++) {
-                        permissions.push(this.state.datacenters[i].id);
+                      for (var i = 0; i < this.state.sites.length; i++) {
+                        permissions.push(this.state.sites[i].id);
                       }
                       updatedPermissions.datacenter_permissions = permissions;
                       updatedPermissions.asset_management = this.state.show_asset_options;
@@ -318,8 +318,8 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
   private renderDatacenterChecks() {
     var checks: Array<any>;
     checks = [];
-    for (var i = 0; i < this.state.datacenters.length; i++) {
-      checks.push(this.renderDatacenter(this.state.datacenters[i]));
+    for (var i = 0; i < this.state.sites.length; i++) {
+      checks.push(this.renderDatacenter(this.state.sites[i]));
     }
     return checks;
   }
