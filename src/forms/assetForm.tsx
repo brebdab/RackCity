@@ -103,6 +103,13 @@ interface AssetFormState {
   loading: boolean;
   customizeModel: boolean;
 }
+function ifNullReturnEmptyString (value:string|null|undefined){
+  if (value===null || value===undefined){
+    return ""
+  }
+  return value;
+
+}
 
 class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   initialState: AssetObject = this.props.initialValues
@@ -112,22 +119,22 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   initializeCustomValues(asset: AssetObject) {
     if (this.props.initialValues) {
       const model = this.props.initialValues.model;
-      asset.cpu = this.initialState.cpu ? asset.cpu : (model.cpu as string);
+      asset.cpu = this.initialState.cpu ? asset.cpu : ifNullReturnEmptyString(model.cpu);
       asset.display_color = asset.display_color
         ? asset.display_color
-        : (model.display_color as string);
+        : ifNullReturnEmptyString(model.display_color);
       asset.memory_gb = asset.memory_gb
         ? asset.memory_gb
-        : (model.memory_gb as string | null);
-      asset.storage = asset.storage ? asset.storage : (model.storage as string);
+        : ifNullReturnEmptyString(model.memory_gb);
+      asset.storage = asset.storage ? asset.storage : ifNullReturnEmptyString(model.storage);
     }
     return asset;
   }
   resetCustomValuesToDefault(asset: AssetObject) {
-    asset.cpu = asset.model.cpu as string;
-    asset.display_color = asset.model.display_color as string;
-    asset.memory_gb = asset.memory_gb as string;
-    asset.storage = asset.storage as string;
+    asset.cpu = ifNullReturnEmptyString(asset.model.cpu);
+    asset.display_color = ifNullReturnEmptyString(asset.model.display_color);
+    asset.memory_gb = ifNullReturnEmptyString(asset.model.memory_gb);
+    asset.storage = ifNullReturnEmptyString(asset.model.storage);
     return asset;
   }
 
@@ -326,7 +333,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         if (this.state.values.storage === this.state.values.model.storage) {
           newValues.storage = "";
         }
-        if (this.state.values.memory_gb === this.state.values.model.memory_gb) {
+        if (this.state.values.memory_gb === this.state.values.model.memory_gb || this.state.values.memory_gb === "") {
           newValues.memory_gb = null;
         }
       }
@@ -998,6 +1005,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   };
 
   render() {
+    console.log(this.state.values)
     if (this.state.models.length === 0) {
       this.getModels();
     }
