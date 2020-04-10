@@ -121,6 +121,7 @@ export const ModelFieldsTable: any = {
   memory_gb: "Memory (GB)",
   storage: "Storage",
   comment: "Comment",
+  model_type: "Mount Type"
 };
 
 export enum AssetFormLabels {

@@ -585,27 +585,29 @@ class ElementTable extends React.Component<
 
   setFieldNamesFromData = (items: Array<ElementObjectType>) => {
     let fields: Array<string> = [];
-    Object.keys(items[0]).forEach((col: string) => {
-      if (col === "model") {
-        fields.push("model__vendor");
-        fields.push("model__model_number");
-      } else if (col === "rack") {
-        fields.push("rack");
-        fields.push("rack__datacenter__name");
-      } else if (
-        col !== "id" &&
-        col !== "decommissioned_id" &&
-        col !== "network_ports" &&
-        col !== "comment" &&
-        col !== "power_connections" &&
-        col !== "mac_addresses" &&
-        col !== "network_connections" &&
-        col !== "network_graph" &&
-        col !== "is_admin"
-      ) {
-        fields.push(col);
-      }
-    });
+    if(items.length> 0) {
+      Object.keys(items[0]).forEach((col: string) => {
+        if (col === "model") {
+          fields.push("model__vendor");
+          fields.push("model__model_number");
+        } else if (col === "rack") {
+          fields.push("rack");
+          fields.push("rack__datacenter__name");
+        } else if (
+            col !== "id" &&
+            col !== "decommissioned_id" &&
+            col !== "network_ports" &&
+            col !== "comment" &&
+            col !== "power_connections" &&
+            col !== "mac_addresses" &&
+            col !== "network_connections" &&
+            col !== "network_graph" &&
+            col !== "is_admin"
+        ) {
+          fields.push(col);
+        }
+      });
+    }
 
     this.setState({
       fields: fields,
