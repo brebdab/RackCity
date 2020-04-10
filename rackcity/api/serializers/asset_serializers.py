@@ -27,6 +27,9 @@ class AssetCPSerializer(serializers.ModelSerializer):
     chassis_slot = RCIntegerField(
         allow_null=True, max_value=2147483647, min_value=0, required=False
     )
+    memory_gb = RCIntegerField(
+        allow_null=True, max_value=2147483647, min_value=0, required=False
+    )
     class Meta:
         model = AssetCP
         fields = (
@@ -41,6 +44,10 @@ class AssetCPSerializer(serializers.ModelSerializer):
             "owner",
             "comment",
             "change_plan",
+            "cpu",
+            "storage",
+            "display_color",
+            "memory_gb",
         )
 
 
@@ -60,6 +67,9 @@ class AssetSerializer(serializers.ModelSerializer):
     chassis_slot = RCIntegerField(
         allow_null=True, max_value=2147483647, min_value=0, required=False
     )
+    memory_gb = RCIntegerField(
+        allow_null=True, max_value=2147483647, min_value=0, required=False
+    )
 
     class Meta:
         model = Asset
@@ -77,7 +87,7 @@ class AssetSerializer(serializers.ModelSerializer):
             "cpu",
             "storage",
             "display_color",
-            "memory_gb"
+            "memory_gb",
         )
 
 
@@ -118,6 +128,10 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
             "network_connections",
             "network_graph",
             "power_connections",
+            "cpu",
+            "storage",
+            "display_color",
+            "memory_gb",
         )
 
     def get_mac_addresses(self, asset):
@@ -210,6 +224,7 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
     network_connections = serializers.SerializerMethodField()
     network_graph = serializers.SerializerMethodField()
     related_asset = AssetSerializer()
+
     class Meta:
         model = AssetCP
         fields = (
@@ -234,6 +249,10 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
             "asset_conflict_location",
             "asset_conflict_asset_number",
             "related_asset",
+            "cpu",
+            "storage",
+            "display_color",
+            "memory_gb",
         )
 
     def get_mac_addresses(self, assetCP):
