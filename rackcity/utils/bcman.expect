@@ -15,8 +15,9 @@ expect  "yes/no" {
 expect "> " { send "chassis $chassis\r" }
 expect " " { send "blade $blade\r" }
 expect " " { send "power off\r" }
+expect "(*)"
 set output $expect_out(buffer)
-expect " " { send "exit\r" }
+send "exit\r"
 expect eof
 puts "hi"
 puts "$output"
