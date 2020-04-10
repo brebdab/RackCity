@@ -113,7 +113,7 @@ def site_modify(request):
         )
     for field in data.keys():
         if field != "id":
-            if len(data[field]) == 0:
+            if (isinstance(data[field], str)) and (len(data[field]) == 0):
                 return JsonResponse(
                     {
                         "failure_message": Status.MODIFY_ERROR.value
@@ -123,11 +123,16 @@ def site_modify(request):
                     },
                     status=HTTPStatus.BAD_REQUEST,
                 )
+            site_with_name = None
             if field == "name":
                 site_with_name = Site.objects.filter(name__iexact=data[field])
-            else:
+            elif field == "abbreviation":
                 site_with_name = Site.objects.filter(abbreviation__iexact=data[field])
-            if len(site_with_name) > 0 and site_with_name[0].id != id:
+            if (
+                site_with_name
+                and (len(site_with_name) > 0)
+                and (site_with_name[0].id != id)
+            ):
                 return JsonResponse(
                     {
                         "failure_message": Status.MODIFY_ERROR.value
