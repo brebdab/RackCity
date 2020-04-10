@@ -1,0 +1,23 @@
+#!/usr/bin/expect
+
+set user [lindex $argv 0]
+set host [lindex $argv 1]
+set options [lindex $argv 2]
+set password [lindex $argv 3]
+set chassis [lindex $argv 4]
+set blade [lindex $argv 5]
+
+spawn ssh $user@$host $options
+expect  "yes/no" {
+        send "yes\r"
+        expect "*?assword" { send "$password\r" }
+        } "*?assword" { send "$password\r" }
+expect "> " { send "chassis $chassis\r" }
+expect " " { send "blade $blade\r" }
+expect " " { send "power off\r" }
+set output $expect_out(buffer)
+expect " " { send "exit\r" }
+expect eof
+puts "hi"
+puts "$output"
+puts "bye"
