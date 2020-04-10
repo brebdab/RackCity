@@ -1,35 +1,8 @@
-import {
-  //   Alert,
-  //   AnchorButton,
-  //   Callout,
-  Classes
-  //   Intent,
-  //   IToastProps,
-  //   Position,
-  //   Toaster
-} from "@blueprintjs/core";
+import { Classes } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
-// import axios from "axios";
 import * as React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
-// import { API_ROOT } from "../../utils/api-config";
-// import {
-//   AssetObject,
-//   ElementType,
-//   getHeaders,
-//   NetworkConnection,
-//   Node,
-//   DatacenterObject,
-//   ROUTES
-// } from "../../utils/utils";
-// import PropertiesView from "../elementView/detailedView/propertiesView";
-// import DecommissionedPropertiesView from "../elementView/detailedView/decommissionedPropertiesView";
-// import "./assetView.scss";
-// import NetworkGraph from "../elementView/detailedView/assetView/graph";
-// import PowerView from "../elementView/powerView/powerView";
-// import { isNullOrUndefined } from "util";
-// import BarcodeReader from "react-barcode-reader";
 import Webcam from "react-webcam";
 
 interface BarcodeScannerState {
@@ -45,12 +18,12 @@ export class BarcodeScanner extends React.PureComponent<
   BarcodeScannerState
 > {
   public state = {
-    result: ""
+    result: "",
   };
 
   handleScan(data: string) {
     this.setState({
-      result: data
+      result: data,
     });
   }
   handleError(err: any) {
@@ -61,7 +34,7 @@ export class BarcodeScanner extends React.PureComponent<
     const constraints = {
       height: 720,
       width: 1280,
-      facingMode: "user"
+      facingMode: "user",
       //   facingMode: { exact: "environment" }
     };
 
@@ -100,7 +73,7 @@ export class BarcodeScanner extends React.PureComponent<
 const mapStatetoProps = (state: any) => {
   return {
     token: state.token,
-    isMobile: state.isMobile
+    isMobile: state.isMobile,
   };
 };
 
