@@ -31,6 +31,7 @@ import * as actions from "./store/actions/state";
 import { ROUTES } from "./utils/utils";
 import CPDetailView from "./components/changePlanner/CPDetailView";
 import { PermissionState } from "./utils/permissionUtils";
+import { BarcodeScanner } from "./components/mobile/barcodeScanner";
 
 var console: any = {};
 console.log = function () {};
@@ -40,11 +41,16 @@ export interface AppProps {
   isAdmin: boolean;
   loading: boolean;
   permissionState: PermissionState;
+  isMobile: boolean;
+  setMobile: any;
 }
 
 class App extends React.Component<AppProps> {
   componentDidMount() {
     console.log(this.props.isAuthenticated);
+    if (this.detectMob()) {
+      this.props.setMobile();
+    }
     this.props.onTryAutoSignup();
   }
 
@@ -90,56 +96,93 @@ class App extends React.Component<AppProps> {
     );
   };
 
+  detectMob() {
+    const toMatch = [
+      /Android/i,
+      /webOS/i,
+      /iPhone/i,
+      /iPad/i,
+      /iPod/i,
+      /BlackBerry/i,
+      /Windows Phone/i,
+    ];
+
+    return toMatch.some((toMatchItem) => {
+      return navigator.userAgent.match(toMatchItem);
+    });
+  }
+
   render() {
     return (
       <BrowserRouter basename="/">
-        <div>
-          <Navigation {...this.props} />
-
-          <Route path={ROUTES.LOGIN} component={LoginView} />
-          <div className="dashboard ">
-            <this.PrivateRoute
-              path={ROUTES.DASHBOARD}
-              render={(props: RouteComponentProps) => (
-                <LandingView {...props} />
-              )}
-            />
-            <this.RedirectToLoginRoute exact path="/">
-              {" "}
-              <Redirect to={ROUTES.DASHBOARD} />
-            </this.RedirectToLoginRoute>
-            <Route path="/" component={Fallback}></Route>
-
-            <this.PrivateRoute
-              path={ROUTES.MODELS + "/:rid"}
-              component={ModelView}
-            />
-            <this.PrivateRoute
-              path={ROUTES.ASSETS + "/:rid"}
-              component={AssetView}
-            />
-            <this.PrivateRoute
-              path={ROUTES.CHANGE_PLAN + "/:id"}
-              component={CPDetailView}
-            />
+        {this.props.isMobile ? (
+          <div>
+            <Navigation {...this.props} />
+            <Route path={ROUTES.LOGIN} component={LoginView} />
+            <div className="mobile">
+              <this.PrivateRoute
+                path={ROUTES.SCANNER}
+                component={BarcodeScanner}
+              />
+              <this.RedirectToLoginRoute exact path="/">
+                {" "}
+                <Redirect to={ROUTES.SCANNER} />
+              </this.RedirectToLoginRoute>
+              <Route path="/" component={Fallback}></Route>
+            </div>
           </div>
-          <this.PrivateRoute path={ROUTES.REPORT} component={Report} />
-          <this.PrivateRoute path={ROUTES.LOGS} component={Logs} />
-          <this.PrivateRoute path={ROUTES.RACK_PRINT} component={RackView} />
-          <this.PrivateRoute
-            path={ROUTES.BARCODE_PRINT}
-            component={BarcodeView}
-          />
-          <this.PrivateRoute
-            exact
-            path={ROUTES.CHANGE_PLAN}
-            component={ChangePlannerView}
-          />
-          <this.PrivateRoute path={ROUTES.BULK_IMPORT} component={BulkImport} />
+        ) : (
+          <div>
+            <Navigation {...this.props} />
 
-          {/* admin paths */}
-          <this.AdminRoute path={ROUTES.USERS} component={User} />
-        </div>
+            <Route path={ROUTES.LOGIN} component={LoginView} />
+            <div className="dashboard ">
+              <this.PrivateRoute
+                path={ROUTES.DASHBOARD}
+                render={(props: RouteComponentProps) => (
+                  <LandingView {...props} />
+                )}
+              />
+              <this.RedirectToLoginRoute exact path="/">
+                {" "}
+                <Redirect to={ROUTES.DASHBOARD} />
+              </this.RedirectToLoginRoute>
+              <Route path="/" component={Fallback}></Route>
+
+              <this.PrivateRoute
+                path={ROUTES.MODELS + "/:rid"}
+                component={ModelView}
+              />
+              <this.PrivateRoute
+                path={ROUTES.ASSETS + "/:rid"}
+                component={AssetView}
+              />
+              <this.PrivateRoute
+                path={ROUTES.CHANGE_PLAN + "/:id"}
+                component={CPDetailView}
+              />
+            </div>
+            <this.PrivateRoute path={ROUTES.REPORT} component={Report} />
+            <this.PrivateRoute path={ROUTES.LOGS} component={Logs} />
+            <this.PrivateRoute path={ROUTES.RACK_PRINT} component={RackView} />
+            <this.PrivateRoute
+              path={ROUTES.BARCODE_PRINT}
+              component={BarcodeView}
+            />
+            <this.PrivateRoute
+              exact
+              path={ROUTES.CHANGE_PLAN}
+              component={ChangePlannerView}
+            />
+            <this.PrivateRoute
+              path={ROUTES.BULK_IMPORT}
+              component={BulkImport}
+            />
+
+            {/* admin paths */}
+            <this.AdminRoute path={ROUTES.USERS} component={User} />
+          </div>
+        )}
       </BrowserRouter>
     );
   }
@@ -151,6 +194,7 @@ const mapStateToProps = (state: any) => {
     isAdmin: state.admin,
     permissionState: state.permissionState,
     loading: state.loading,
+    isMobile: state.isMobile,
   };
 };
 
@@ -158,6 +202,9 @@ const mapDispatchToProps = (dispatch: any) => {
   return {
     onTryAutoSignup: () => {
       dispatch(actions.authCheckState());
+    },
+    setMobile: () => {
+      dispatch(actions.checkBrowserType());
     },
   };
 };

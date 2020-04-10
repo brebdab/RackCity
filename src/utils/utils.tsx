@@ -20,6 +20,7 @@ export enum ROUTES {
   USERS = "/dashboard/users",
   CHANGE_PLAN = "/dashboard/change-plans",
   BARCODE_PRINT = "/assets/barcode-print",
+  SCANNER = "/mobile/scanner",
 }
 export enum ElementType {
   RACK = "racks",
@@ -38,12 +39,10 @@ export interface ChangePlan extends ElementObject {
   execution_time?: string;
 }
 
-
 export interface AssetObject extends ParentAssetObject {
   model: ModelObject;
   rack: RackObject;
   network_graph: NetworkGraphData;
-
 }
 export interface AssetCPObject extends AssetObject {
   change_plan: ChangePlan;
@@ -65,10 +64,10 @@ interface ParentAssetObject extends ElementObject {
   comment: string;
   decommissioning_user?: string;
   time_decommissioned?: string;
-  cpu:string;
-  storage:string;
-  display_color:string;
-  memory_gb:string |null;
+  cpu: string;
+  storage: string;
+  display_color: string;
+  memory_gb: string | null;
 }
 
 export interface RackRangeFields {
