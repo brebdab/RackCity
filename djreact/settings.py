@@ -11,12 +11,13 @@ SECRET_KEY = "-05sgp9!deq=q1nltm@^^2cc+v29i(tyybv3v2t77qi66czazj"
 DEBUG = True
 # update these to include the current domain names
 ALLOWED_HOSTS = [
-    'rack-city-dev.herokuapp.com',
-    'rack-city-staging.herokuapp.com',
-    'rack-city-prod.herokuapp.com',
-    '127.0.0.1',
-    'localhost',
-    '192.168.1.17',
+    "rack-city-dev.herokuapp.com",
+    "rack-city-staging.herokuapp.com",
+    "rack-city-prod.herokuapp.com",
+    "127.0.0.1",
+    "localhost",
+    "192.168.1.17",
+    "192.168.0.18",
 ]
 
 INSTALLED_APPS = [
@@ -108,10 +109,11 @@ REST_FRAMEWORK = {
     ),
 }
 CORS_ORIGIN_WHITELIST = (
-    'https://localhost:3000',
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'http://192.168.1.17:3000',
+    "https://localhost:3000",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://192.168.1.17:3000",
+    "http://192.168.0.18:3000",
 )
 
 CSRF_COOKIE_NAME = "csrftoken"
@@ -123,4 +125,3 @@ ACCOUNT_EMAIL_VERIFICATION = "none"
 
 # SECURE_SSL_REDIRECT = True
 # SECURE_REDIRECT_EXEMPT = ['localhost', '127.0.0.1']
-
