@@ -27,21 +27,17 @@
 .dash {
   margin-top: 5pt;
 }
-// textarea {
-//   background-color: #202b33;
-//   outline: none !important;
-//   // border: none !important;
-//   border-color: #182026;
-//   border-radius: 5px;
-//   color: white;
-// }
+
 textarea:focus {
   outline: none !important;
 }
 
-// .bp3-label {
-//   display: inline-block !important;
-// }
+.radio-group{
+  text-align: left !important;
+  width:fit-content;
+  margin:auto;
+}
+
 .tooltip-icon {
   padding-top: 0;
   margin-top: 0 !important;

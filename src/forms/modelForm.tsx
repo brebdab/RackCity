@@ -7,13 +7,15 @@ import {
   MenuItem,
   InputGroup,
   Spinner,
+  RadioGroup,
+  Radio,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
 import { connect } from "react-redux";
 import { API_ROOT } from "../utils/api-config";
-import { ModelObject } from "../utils/utils";
+import { ModelObject, MountTypes } from "../utils/utils";
 import { updateObject } from "../store/utility";
 import Field from "./field";
 import "./forms.scss";
@@ -25,9 +27,7 @@ import {
   FormTypes,
 } from "./formUtils";
 
-//TO DO : add validation of types!!!
-var console: any = {};
-console.log = function () {};
+// values mirror backend/database strings
 
 interface ModelFormProps {
   token: string;
@@ -72,7 +72,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
       Authorization: "Token " + this.props.token,
     },
   };
-
+  loadedVendors = false;
   private handleSubmit = (e: any) => {
     e.preventDefault();
     if (this.state.values) {
@@ -110,9 +110,9 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
 
   private getVendors() {
     axios
-      //.get("https://rack-city-dev.herokuapp.com/api/" + path)
       .get(API_ROOT + "api/models/vendors", this.headers)
       .then((res) => {
+        this.loadedVendors = true;
         const vendors: Array<string> = res.data.vendors;
         this.setState({
           vendors: vendors,
@@ -127,10 +127,8 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
     let network_ports: Array<string> = this.state.values.network_ports
       ? this.state.values.network_ports
       : [];
-    console.log("new change", field);
     if (field["num_network_ports"]) {
       let num_network_ports = field["num_network_ports"];
-      console.log(num_network_ports, network_ports);
       let index = network_ports.length;
       if (!isNaN(num_network_ports) && num_network_ports < 0) {
         num_network_ports = 0;
@@ -162,9 +160,6 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
         network_ports,
       }),
     });
-
-    console.log(this.props.initialValues);
-    console.log(this.state.values);
   };
 
   handleNetworkPortNameChange = (index: number, name: string) => {
@@ -189,11 +184,13 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
   };
 
   render() {
-    if (this.state.vendors.length === 0) {
+    if (!this.loadedVendors) {
+      console.log("Getting vendors")
       this.getVendors();
     }
-    const { values } = this.state;
-    console.log("vendor", this.state.values.vendor);
+
+    const values = this.state.values;
+    console.log(this.state.values);
     return (
       <div className={Classes.DARK + " login-container"}>
         {this.state.errors.map((err: string) => {
@@ -223,7 +220,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
                 });
               }}
               onQueryChange={(vendor: string) => {
-                console.log("CHANGE", vendor);
+                console.log("setting state")
                 this.setState({
                   values: updateObject(values, { vendor: vendor }),
                 });
@@ -242,6 +239,26 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
               field="model_number"
             />
           </FormGroup>
+          <RadioGroup
+            label="Mount Type"
+            className="radio-group"
+            onChange={(e: any) => {
+              console.log(e);
+              this.setState({
+                values: updateObject(values, {
+                  model_type: e.currentTarget.value,
+                }),
+              });
+            }}
+            selectedValue={values.model_type}
+          >
+            <Radio label={MountTypes.RACKMOUNT} value={MountTypes.RACKMOUNT} />
+            <Radio
+              label={MountTypes.BLADE_CHASSIS}
+              value={MountTypes.BLADE_CHASSIS}
+            />
+            <Radio label={MountTypes.BLADE} value={MountTypes.BLADE} />
+          </RadioGroup>
           <FormGroup label="Height (required)" inline={false}>
             <Field
               field="height"
@@ -296,13 +313,6 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
                 </tbody>
               </table>
             )}
-
-            {/* <Field
-              field="num_ethernet_ports"
-              placeholder="num_ethernet_ports"
-              value={values.num_ethernet_ports}
-              onChange={this.handleChange}
-            /> */}
           </FormGroup>
           <FormGroup label="# Power Ports" inline={false}>
             <Field

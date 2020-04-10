@@ -220,11 +220,16 @@ export interface ModelObjectOld extends ElementObject {
   storage?: string;
   comment?: string;
 }
-
+export enum MountTypes {
+  RACKMOUNT = "Asset",
+  BLADE_CHASSIS = "Blade Chassis",
+  BLADE = "Blade Server ",
+}
 export interface ModelObject extends ElementObject {
   vendor: string;
   model_number: string;
   height: string;
+  model_type: MountTypes;
   display_color?: string;
   num_network_ports?: string;
   network_ports?: Array<string>; //
