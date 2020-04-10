@@ -14,14 +14,19 @@ import {
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
-import {connect} from "react-redux";
-import {API_ROOT} from "../utils/api-config";
-import {ModelObject, MountTypes} from "../utils/utils";
-import {updateObject} from "../store/utility";
+import { connect } from "react-redux";
+import { API_ROOT } from "../utils/api-config";
+import { ModelObject, MountTypes } from "../utils/utils";
+import { updateObject } from "../store/utility";
 import Field from "./field";
 import "./forms.scss";
 import $ from "jquery";
-import {filterString, FormTypes, renderStringItem, StringSuggest,} from "./formUtils";
+import {
+  filterString,
+  FormTypes,
+  renderStringItem,
+  StringSuggest,
+} from "./formUtils";
 
 // values mirror backend/database strings
 
@@ -105,18 +110,13 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
   };
 
   private getVendors() {
-    axios
-      .get(API_ROOT + "api/models/vendors", this.headers)
-      .then((res) => {
-        this.loadedVendors = true;
-        const vendors: Array<string> = res.data.vendors;
-        this.setState({
-          vendors: vendors,
-        });
-      })
-      .catch((err) => {
-        console.log(err);
+    axios.get(API_ROOT + "api/models/vendors", this.headers).then((res) => {
+      this.loadedVendors = true;
+      const vendors: Array<string> = res.data.vendors;
+      this.setState({
+        vendors: vendors,
       });
+    });
   }
 
   handleChange = (field: { [key: string]: any }) => {
@@ -131,7 +131,6 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
       }
 
       while (network_ports.length < num_network_ports) {
-        console.log(index, this.state.networkPortsTemp.length);
         if (index < this.state.networkPortsTemp.length) {
           network_ports.push(this.state.networkPortsTemp[index]);
         } else {
@@ -143,7 +142,6 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
         network_ports.pop();
       }
     } else if (field["num_network_ports"] === "") {
-      console.log(network_ports);
       this.setState({
         networkPortsTemp: network_ports,
       });
@@ -181,12 +179,10 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
 
   render() {
     if (!this.loadedVendors) {
-      console.log("Getting vendors")
       this.getVendors();
     }
 
     const values = this.state.values;
-    console.log(this.state.values);
     return (
       <div className={Classes.DARK + " login-container"}>
         {this.state.errors.map((err: string) => {
@@ -196,176 +192,180 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
           onSubmit={this.handleSubmit}
           className="create-form bp3-form-group"
         >
-               <Card>
-          <FormGroup className="suggest" label="Vendor*">
-            <StringSuggest
-              inputProps={{
-                placeholder: "vendor",
-              }}
-              popoverProps={{
-                minimal: true,
-                popoverClassName: "dropdown",
-                usePortal: true,
-              }}
-              defaultSelectedItem={this.state.values.vendor}
-              inputValueRenderer={(vendor: string) => this.state.values.vendor}
-              items={this.state.vendors}
-              onItemSelect={(vendor: string) => {
-                console.log("item selected ");
-                this.setState({
-                  values: updateObject(values, { vendor: vendor }),
-                });
-              }}
-              onQueryChange={(vendor: string) => {
-                console.log("setting state")
-                this.setState({
-                  values: updateObject(values, { vendor: vendor }),
-                });
-              }}
-              itemRenderer={renderStringItem}
-              itemPredicate={filterString}
-              noResults={<MenuItem disabled={true} text="No results." />}
-            />
-          </FormGroup>
-
-          <FormGroup label="Model Number*" inline={false}>
-            <Field
-              placeholder="model_number"
-              onChange={this.handleChange}
-              value={values.model_number}
-              field="model_number"
-            />
-          </FormGroup>
-          <FormGroup label="Display Color">
-            <Field
-              field="display_color"
-              type="color"
-              value={values.display_color ? values.display_color : "#394B59"}
-              onChange={this.handleChange}
-            />
-          </FormGroup>
-           </Card>
-                <Card>
-          <RadioGroup
-            label="Mount Type*"
-            className="radio-group"
-            onChange={(e: any) => {
-              console.log(e);
-              this.setState({
-                values: updateObject(values, {
-                  model_type: e.currentTarget.value,
-                }),
-              });
-            }}
-            selectedValue={values.model_type}
-          >
-            <Radio label={MountTypes.RACKMOUNT} value={MountTypes.RACKMOUNT} />
-            <Radio
-              label={MountTypes.BLADE_CHASSIS}
-              value={MountTypes.BLADE_CHASSIS}
-            />
-            <Radio label={MountTypes.BLADE} value={MountTypes.BLADE} />
-          </RadioGroup>
-
-
-
-          {values.model_type===MountTypes.RACKMOUNT || values.model_type===MountTypes.BLADE_CHASSIS ?
-        <div>
-          <FormGroup label="Height*
-          " inline={false}>
-            <Field
-              field="height"
-              placeholder="height"
-              value={values.height}
-              onChange={this.handleChange}
-            />
-          </FormGroup>
-          <FormGroup label="Number of Network Ports " inline={false}>
-            <Field
-              field="num_network_ports"
-              value={values.num_network_ports}
-              onChange={this.handleChange}
-            />
-
-            {!(
-              values.network_ports && values.network_ports.length !== 0
-            ) ? null : (
-              <table className="port-table">
-                <thead>
-                  <th>Port Name(s) </th>
-                </thead>
-                <tbody>
-                  {values.network_ports.map((port, index) => {
-                    return (
-                      <tr>
-                        <td>
-                          <InputGroup
-                            onClick={this.selectText}
-                            value={port}
-                            type="string"
-                            className="network-name"
-                            onChange={(e: any) =>
-                              this.handleNetworkPortNameChange(
-                                index,
-                                e.currentTarget.value
-                              )
-                            }
-                          />
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            )}
-          </FormGroup>
-          <FormGroup label="# Power Ports" inline={false}>
-            <Field
-              field="num_power_ports"
-              placeholder="num_power_ports"
-              value={values.num_power_ports}
-              onChange={this.handleChange}
-            />
-          </FormGroup>
-          </div>
-                :null}
-              </Card>
           <Card>
-          <FormGroup label="CPU" inline={false}>
-            <Field
-              field="cpu"
-              placeholder="cpu"
-              value={values.cpu}
-              onChange={this.handleChange}
-            />
-          </FormGroup>
-          <FormGroup label="Memory(GB)" inline={false}>
-            <Field
-              field="memory_gb"
-              placeholder="memory_gb"
-              value={values.memory_gb}
-              onChange={this.handleChange}
-            />
-          </FormGroup>
-          <FormGroup label="Storage" inline={false}>
-            <Field
-              field="storage"
-              placeholder="storage"
-              value={values.storage}
-              onChange={this.handleChange}
-            />
-          </FormGroup>
-          <FormGroup label="Comment" inline={false}>
-            <textarea
-              className={Classes.INPUT}
-              placeholder="comment"
-              value={values.comment}
-              onChange={(e: any) =>
-                this.handleChange({ comment: e.currentTarget.value })
-              }
-            />
-          </FormGroup>
-            </Card>
+            <FormGroup className="suggest" label="Vendor*">
+              <StringSuggest
+                inputProps={{
+                  placeholder: "vendor",
+                }}
+                popoverProps={{
+                  minimal: true,
+                  popoverClassName: "dropdown",
+                  usePortal: true,
+                }}
+                defaultSelectedItem={this.state.values.vendor}
+                inputValueRenderer={(vendor: string) =>
+                  this.state.values.vendor
+                }
+                items={this.state.vendors}
+                onItemSelect={(vendor: string) => {
+                  this.setState({
+                    values: updateObject(values, { vendor: vendor }),
+                  });
+                }}
+                onQueryChange={(vendor: string) => {
+                  this.setState({
+                    values: updateObject(values, { vendor: vendor }),
+                  });
+                }}
+                itemRenderer={renderStringItem}
+                itemPredicate={filterString}
+                noResults={<MenuItem disabled={true} text="No results." />}
+              />
+            </FormGroup>
+
+            <FormGroup label="Model Number*" inline={false}>
+              <Field
+                placeholder="model_number"
+                onChange={this.handleChange}
+                value={values.model_number}
+                field="model_number"
+              />
+            </FormGroup>
+            <FormGroup label="Display Color">
+              <Field
+                field="display_color"
+                type="color"
+                value={values.display_color ? values.display_color : "#394B59"}
+                onChange={this.handleChange}
+              />
+            </FormGroup>
+          </Card>
+          <Card>
+            <RadioGroup
+              label="Mount Type*"
+              className="radio-group"
+              onChange={(e: any) => {
+                this.setState({
+                  values: updateObject(values, {
+                    model_type: e.currentTarget.value,
+                  }),
+                });
+              }}
+              selectedValue={values.model_type}
+            >
+              <Radio
+                label={MountTypes.RACKMOUNT}
+                value={MountTypes.RACKMOUNT}
+              />
+              <Radio
+                label={MountTypes.BLADE_CHASSIS}
+                value={MountTypes.BLADE_CHASSIS}
+              />
+              <Radio label={MountTypes.BLADE} value={MountTypes.BLADE} />
+            </RadioGroup>
+
+            {values.model_type === MountTypes.RACKMOUNT ||
+            values.model_type === MountTypes.BLADE_CHASSIS ? (
+              <div>
+                <FormGroup
+                  label="Height*
+          "
+                  inline={false}
+                >
+                  <Field
+                    field="height"
+                    placeholder="height"
+                    value={values.height}
+                    onChange={this.handleChange}
+                  />
+                </FormGroup>
+                <FormGroup label="Number of Network Ports " inline={false}>
+                  <Field
+                    field="num_network_ports"
+                    value={values.num_network_ports}
+                    onChange={this.handleChange}
+                  />
+
+                  {!(
+                    values.network_ports && values.network_ports.length !== 0
+                  ) ? null : (
+                    <table className="port-table">
+                      <thead>
+                        <th>Port Name(s) </th>
+                      </thead>
+                      <tbody>
+                        {values.network_ports.map((port, index) => {
+                          return (
+                            <tr>
+                              <td>
+                                <InputGroup
+                                  onClick={this.selectText}
+                                  value={port}
+                                  type="string"
+                                  className="network-name"
+                                  onChange={(e: any) =>
+                                    this.handleNetworkPortNameChange(
+                                      index,
+                                      e.currentTarget.value
+                                    )
+                                  }
+                                />
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  )}
+                </FormGroup>
+                <FormGroup label="# Power Ports" inline={false}>
+                  <Field
+                    field="num_power_ports"
+                    placeholder="num_power_ports"
+                    value={values.num_power_ports}
+                    onChange={this.handleChange}
+                  />
+                </FormGroup>
+              </div>
+            ) : null}
+          </Card>
+          <Card>
+            <FormGroup label="CPU" inline={false}>
+              <Field
+                field="cpu"
+                placeholder="cpu"
+                value={values.cpu}
+                onChange={this.handleChange}
+              />
+            </FormGroup>
+            <FormGroup label="Memory(GB)" inline={false}>
+              <Field
+                field="memory_gb"
+                placeholder="memory_gb"
+                value={values.memory_gb}
+                onChange={this.handleChange}
+              />
+            </FormGroup>
+            <FormGroup label="Storage" inline={false}>
+              <Field
+                field="storage"
+                placeholder="storage"
+                value={values.storage}
+                onChange={this.handleChange}
+              />
+            </FormGroup>
+            <FormGroup label="Comment" inline={false}>
+              <textarea
+                className={Classes.INPUT}
+                placeholder="comment"
+                value={values.comment}
+                onChange={(e: any) =>
+                  this.handleChange({ comment: e.currentTarget.value })
+                }
+              />
+            </FormGroup>
+          </Card>
 
           <Button className="login-button" type="submit">
             {this.state.loading ? "Submitting..." : "Submit"}
