@@ -174,8 +174,7 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
                       power_control: this.state.permissions.power_control,
                       audit_read: this.state.permissions.audit_read,
                       admin: !this.state.permissions.admin,
-                      site_permissions: this.state.permissions
-                        .site_permissions,
+                      site_permissions: this.state.permissions.site_permissions,
                     };
                     this.setState({
                       permissions: updatedPermissions,
@@ -264,11 +263,15 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
                     console.log("changing datacenter");
                     console.log(this.state);
                     var updatedPermissions = this.state.permissions;
-                    if (this.state.asset_permission_selection === AssetPermissionSelection.GLOBAL) {
+                    if (
+                      this.state.asset_permission_selection ===
+                      AssetPermissionSelection.GLOBAL
+                    ) {
                       updatedPermissions.site_permissions = this.state.initialValues.site_permissions;
                       updatedPermissions.asset_management = false;
                       this.setState({
-                        asset_permission_selection: AssetPermissionSelection.PER_SITE,
+                        asset_permission_selection:
+                          AssetPermissionSelection.PER_SITE,
                         permissions: updatedPermissions,
                       });
                     } else {
@@ -280,19 +283,27 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
                       updatedPermissions.site_permissions = permissions;
                       updatedPermissions.asset_management = this.state.show_asset_options;
                       this.setState({
-                        asset_permission_selection: AssetPermissionSelection.GLOBAL,
+                        asset_permission_selection:
+                          AssetPermissionSelection.GLOBAL,
                         permissions: updatedPermissions,
                       });
                     }
                   }}
                   selectedValue={this.state.asset_permission_selection}
                 >
-                  <Radio label={AssetPermissionSelection.GLOBAL} value={AssetPermissionSelection.GLOBAL} />
-                  <Radio label={AssetPermissionSelection.PER_SITE} value={AssetPermissionSelection.PER_SITE} />
+                  <Radio
+                    label={AssetPermissionSelection.GLOBAL}
+                    value={AssetPermissionSelection.GLOBAL}
+                  />
+                  <Radio
+                    label={AssetPermissionSelection.PER_SITE}
+                    value={AssetPermissionSelection.PER_SITE}
+                  />
                 </RadioGroup>
               ) : null}
               {this.state.show_asset_options &&
-              this.state.asset_permission_selection === AssetPermissionSelection.PER_SITE
+              this.state.asset_permission_selection ===
+                AssetPermissionSelection.PER_SITE
                 ? this.renderDatacenterChecks()
                 : null}
               <Button className="login-button" type="submit">
@@ -340,9 +351,7 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
             console.log(datacenter);
             var updatedPermissions = this.state.permissions;
             if (
-              this.state.permissions.site_permissions.includes(
-                datacenter.id
-              )
+              this.state.permissions.site_permissions.includes(datacenter.id)
             ) {
               const index = this.state.permissions.site_permissions.indexOf(
                 datacenter.id
