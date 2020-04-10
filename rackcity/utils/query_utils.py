@@ -322,8 +322,19 @@ def get_many_response(
 
 
 def get_page_count_response(
-    model, query_params, data_for_filters=None, or_filters=False
+    model,
+    query_params,
+    data_for_filters=None,
+    or_filters=False,
+    premade_object_query=None,
 ):
+    """
+    Returns response for a get page count view.  Optional parameters: use
+    data_for_filters to specify what filters should be applied; use or_filters
+    to specify if the filters should be applied as OR (instead of default AND);
+    use premade_object_query if custom query manipulation needs to be performed
+    before this method (instead of using the default model.objects.all()).
+    """
     if not query_params.get("page_size") or int(query_params.get("page_size")) <= 0:
         return JsonResponse(
             {
@@ -333,7 +344,10 @@ def get_page_count_response(
             status=HTTPStatus.BAD_REQUEST,
         )
     page_size = int(query_params.get("page_size"))
-    object_query = model.objects.all()
+    if premade_object_query:
+        object_query = premade_object_query
+    else:
+        object_query = model.objects.all()
     if data_for_filters:
         object_query, filter_failure_response = get_filtered_query(
             object_query, data_for_filters, or_filters=or_filters
