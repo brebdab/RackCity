@@ -313,20 +313,22 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         return;
       }
       let newValues = this.mapAssetObject(this.state.values);
-      if (
-        this.state.values.display_color ===
-        this.state.values.model.display_color
-      ) {
-        newValues.display_color = "";
-      }
-      if (this.state.values.cpu === this.state.values.model.cpu) {
-        newValues.cpu = "";
-      }
-      if (this.state.values.storage === this.state.values.model.storage) {
-        newValues.storage = "";
-      }
-      if (this.state.values.memory_gb === this.state.values.model.memory_gb) {
-        newValues.memory_gb = null;
+      if(this.state.values.model) {
+        if (
+            this.state.values.display_color ===
+            this.state.values.model.display_color
+        ) {
+          newValues.display_color = "";
+        }
+        if (this.state.values.cpu === this.state.values.model.cpu) {
+          newValues.cpu = "";
+        }
+        if (this.state.values.storage === this.state.values.model.storage) {
+          newValues.storage = "";
+        }
+        if (this.state.values.memory_gb === this.state.values.model.memory_gb) {
+          newValues.memory_gb = null;
+        }
       }
 
       if (this.state.values.hostname === "") {
@@ -1175,66 +1177,66 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                   />
                 </ModelSelect>
                 {values.model ? (
-                  <Switch
-                    checked={this.state.customizeModel}
-                    label="Customize model values"
-                    onChange={this.handleCustomizeModelSwitch}
-                  />
-                ) : null}
+                  <div>
+                    <Switch
+                      checked={this.state.customizeModel}
+                      label="Customize model values"
+                      onChange={this.handleCustomizeModelSwitch}
+                    />
 
-                <div>
-                  <FormGroup
-                    label="Display Color"
-                    disabled={values.model && !this.state.customizeModel}
-                  >
-                    <Field
+                    <FormGroup
+                      label="Display Color"
                       disabled={values.model && !this.state.customizeModel}
-                      field="display_color"
-                      type="color"
-                      value={values.display_color}
-                      onChange={this.handleChange}
-                    />
-                  </FormGroup>
-                  <FormGroup
-                    label="CPU"
-                    inline={false}
-                    disabled={values.model && !this.state.customizeModel}
-                  >
-                    <Field
+                    >
+                      <Field
+                        disabled={values.model && !this.state.customizeModel}
+                        field="display_color"
+                        type="color"
+                        value={values.display_color}
+                        onChange={this.handleChange}
+                      />
+                    </FormGroup>
+                    <FormGroup
+                      label="CPU"
+                      inline={false}
                       disabled={values.model && !this.state.customizeModel}
-                      field="cpu"
-                      placeholder="cpu"
-                      value={values.cpu}
-                      onChange={this.handleChange}
-                    />
-                  </FormGroup>
-                  <FormGroup
-                    label="Memory(GB)"
-                    inline={false}
-                    disabled={values.model && !this.state.customizeModel}
-                  >
-                    <Field
+                    >
+                      <Field
+                        disabled={values.model && !this.state.customizeModel}
+                        field="cpu"
+                        placeholder="cpu"
+                        value={values.cpu}
+                        onChange={this.handleChange}
+                      />
+                    </FormGroup>
+                    <FormGroup
+                      label="Memory(GB)"
+                      inline={false}
                       disabled={values.model && !this.state.customizeModel}
-                      field="memory_gb"
-                      placeholder="memory_gb"
-                      value={values.memory_gb}
-                      onChange={this.handleChange}
-                    />
-                  </FormGroup>
-                  <FormGroup
-                    label="Storage"
-                    inline={false}
-                    disabled={values.model && !this.state.customizeModel}
-                  >
-                    <Field
+                    >
+                      <Field
+                        disabled={values.model && !this.state.customizeModel}
+                        field="memory_gb"
+                        placeholder="memory_gb"
+                        value={values.memory_gb}
+                        onChange={this.handleChange}
+                      />
+                    </FormGroup>
+                    <FormGroup
+                      label="Storage"
+                      inline={false}
                       disabled={values.model && !this.state.customizeModel}
-                      field="storage"
-                      placeholder="storage"
-                      value={values.storage}
-                      onChange={this.handleChange}
-                    />
-                  </FormGroup>
-                </div>
+                    >
+                      <Field
+                        disabled={values.model && !this.state.customizeModel}
+                        field="storage"
+                        placeholder="storage"
+                        value={values.storage}
+                        onChange={this.handleChange}
+                      />
+                    </FormGroup>
+                  </div>
+                ) : null}
               </FormGroup>
             </Card>
             <Collapse
