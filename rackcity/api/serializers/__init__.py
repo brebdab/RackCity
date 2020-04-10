@@ -1,4 +1,4 @@
-from .datacenter_serializers import DatacenterSerializer
+from .site_serializers import SiteSerializer
 from .asset_serializers import (
     AssetSerializer,
     AssetCPSerializer,
