@@ -20,6 +20,7 @@ export enum ROUTES {
   USERS = "/dashboard/users",
   CHANGE_PLAN = "/dashboard/change-plans",
   BARCODE_PRINT = "/assets/barcode-print",
+  SCANNER = "/mobile/scanner",
 }
 export enum ElementType {
   RACK = "racks",
