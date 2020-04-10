@@ -38,12 +38,10 @@ export interface ChangePlan extends ElementObject {
   execution_time?: string;
 }
 
-
 export interface AssetObject extends ParentAssetObject {
   model: ModelObject;
   rack: RackObject;
   network_graph: NetworkGraphData;
-
 }
 export interface AssetCPObject extends AssetObject {
   change_plan: ChangePlan;
@@ -56,7 +54,7 @@ export interface AssetCPObject extends AssetObject {
 }
 interface ParentAssetObject extends ElementObject {
   asset_number: string;
-  hostname: string|null;
+  hostname: string | null;
   rack_position: string;
   mac_addresses: { [port: string]: string };
   network_connections: Array<NetworkConnection>;
@@ -65,10 +63,10 @@ interface ParentAssetObject extends ElementObject {
   comment: string;
   decommissioning_user?: string;
   time_decommissioned?: string;
-  cpu:string;
-  storage:string;
-  display_color:string;
-  memory_gb:string |null;
+  cpu: string;
+  storage: string;
+  display_color: string;
+  memory_gb: string | null;
 }
 
 export interface RackRangeFields {
