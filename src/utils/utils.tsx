@@ -125,6 +125,8 @@ export enum AssetFormLabels {
   datacenter = "Datacenter*",
   rack = "Rack*",
   rack_position = "Rack Position*",
+    chassis = "Chassis*",
+  c
   model = "Model*",
   owner = "Owner",
   comment = "Comment",
