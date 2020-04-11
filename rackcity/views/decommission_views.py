@@ -193,9 +193,9 @@ def decommission_asset_parameterized(data, query_params, user):
             return JsonResponse(
                 {
                     "failure_message": Status.DECOMMISSION_ERROR.value
-                                       + "Unable to decommission blade: '"
-                                       + str(blade.asset_number)
-                                       + "'. ",
+                    + "Unable to decommission blade: '"
+                    + str(blade.asset_number)
+                    + "'. ",
                     "errors": str(error),
                 },
                 status=HTTPStatus.BAD_REQUEST,
