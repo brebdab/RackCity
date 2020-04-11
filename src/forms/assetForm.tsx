@@ -1573,14 +1573,47 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         </AssetSelect>
       </FormGroup>,
       <FormGroup label={AssetFormLabels.chassis_slot} inline={false}>
-        <Field
-          field="chassis_slot"
-          placeholder="chassis slot"
-          value={values.chassis_slot}
-          onChange={this.handleChange}
-        />
-      </FormGroup>,
+                <StringSelect
+                  className="power-form-element"
+                  popoverProps={{
+                    minimal: true,
+                    popoverClassName: "dropdown",
+                    usePortal: true,
+                  }}
+                  disabled={isNullOrUndefined(values.chassis)}
+                  items={this.getChassisSlots()}
+                  onItemSelect={(chassis_slot: string) => {
+
+                    this.setState({
+                      values: updateObject(this.state.values, {
+                        chassis_slot,
+                      }),
+                    });
+                  }}
+                  itemRenderer={renderStringItem}
+                  itemPredicate={filterString}
+                  noResults={<MenuItem disabled={true} text="No available slots ." />}
+                >
+                  <Button
+                    disabled={isNullOrUndefined(values.chassis)}
+                    rightIcon="caret-down"
+                    text={
+                      values.chassis_slot? values.chassis_slot
+                        : "Chassis Slot"
+                    }
+                  />
+                </StringSelect>
+      </FormGroup>
     ];
+  }
+  getChassisSlots(){
+    let slots = ["1","2","3","4","5","6","7","8","9","10","11","12"]
+    if (this.state.values.chassis && this.state.values.chassis.blades){
+      this.state.values.chassis.blades.forEach((asset:AssetObject) => {
+        slots = slots.filter((slot:string)=> slot!= asset.chassis_slot)
+      })
+    }
+    return slots;
   }
 }
 

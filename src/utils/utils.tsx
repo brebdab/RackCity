@@ -44,6 +44,7 @@ export interface AssetObject extends ParentAssetObject {
   model: ModelObject;
   rack: RackObject;
   network_graph: NetworkGraphData;
+  blades: Array<AssetObject>;
 }
 export interface AssetCPObject extends AssetObject {
   change_plan: ChangePlan;
