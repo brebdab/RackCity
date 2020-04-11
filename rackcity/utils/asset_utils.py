@@ -490,4 +490,4 @@ def save_all_field_data_cp(data, asset, change_plan, create_asset_cp):
             asset.save()
             return asset, None
     except Exception as error:
-        return parse_save_validation_error(error, "Asset")
+        return None, parse_save_validation_error(error, "Asset")
