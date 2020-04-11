@@ -370,6 +370,7 @@ class AssetCP(AbstractAsset):
                     self.asset_number, self.id, self.change_plan, self.related_asset
                 )
                 validate_owner(self.owner)
+                print("location validation")
                 validate_location_type(
                     model=self.model,
                     rack=self.rack,
@@ -381,6 +382,10 @@ class AssetCP(AbstractAsset):
         except ValidationError as valid_error:
             raise valid_error
         else:
+            print("Saving")
             super(AssetCP, self).save(*args, **kwargs)
+
             self.add_network_ports()
+            print("network ports")
             self.add_power_ports()
+            print("power ports")

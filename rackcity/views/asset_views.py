@@ -351,12 +351,14 @@ def asset_modify(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     print("Creating new asset cp",create_new_asset_cp)
-    failure_message = save_all_field_data(data, existing_asset, change_plan=change_plan,create_asset_cp = create_new_asset_cp)
+    (asset_cp,failure_message) = save_all_field_data(data, existing_asset, change_plan=change_plan,create_asset_cp = create_new_asset_cp)
     if failure_message:
         return JsonResponse(
             {"failure_message": Status.MODIFY_ERROR.value + failure_message},
             status=HTTPStatus.BAD_REQUEST,
         )
+    if asset_cp:
+        existing_asset = asset_cp
 
     warning_message = save_all_connection_data(
         data, existing_asset, request.user, change_plan=change_plan

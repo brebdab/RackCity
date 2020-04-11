@@ -81,7 +81,7 @@ def get_or_create_asset_with_hostname(hostname, change_plan=None):
             assets, assets_cp = get_assets_for_cp(change_plan.id)
             if assets.filter(hostname=hostname).exists():
                 asset_live = assets.get(hostname=hostname)
-                asset = copy_asset_to_new_asset_cp(asset_live, hostname, change_plan)
+                asset = copy_asset_to_new_asset_cp(asset_live,change_plan)
             else:
                 asset = assets_cp.get(hostname=hostname, change_plan=change_plan)
         else:
@@ -431,7 +431,7 @@ def save_all_field_data(data, asset, change_plan=None, create_asset_cp = False):
                     hostname__iexact=data[field]
                 )
             if len(assets_with_hostname) > 0 and assets_with_hostname[0].id != id:
-                return (
+                return (None,
                     "Asset with hostname '" + data[field].lower() + "' already exists."
                 )
             value = data[field]
@@ -447,7 +447,7 @@ def save_all_field_data(data, asset, change_plan=None, create_asset_cp = False):
                         data[field], id, change_plan, related_asset,
                     )
                 except ValidationError:
-                    return (
+                    return (None,
                         "Asset with asset number '"
                         + str(data[field])
                         + "' already exists."
@@ -461,23 +461,28 @@ def save_all_field_data(data, asset, change_plan=None, create_asset_cp = False):
                     and len(assets_with_asset_number) > 0
                     and assets_with_asset_number[0].id != asset.id
                 ):
-                    return (
+                    return (None,
                         "Asset with asset number '"
                         + str(data[field])
                         + "' already exists."
                     )
             value = data[field]
-            print(field, value)
-            if field is not "id":
-                setattr(asset, field, value)
+        else:
+            value = data[field]
+
+        print(field, value)
+        if field is not "id":
+            setattr(asset, field, value)
 
     try:
         if create_asset_cp:
             asset_cp = copy_asset_to_new_asset_cp(asset, change_plan)
             print(asset_cp)
             asset_cp.save()
+            return asset_cp, None
 
         else:
             asset.save()
+            return None, None
     except Exception as error:
         return parse_save_validation_error(error, "Asset")
