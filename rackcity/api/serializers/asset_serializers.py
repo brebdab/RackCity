@@ -233,6 +233,7 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
     network_connections = serializers.SerializerMethodField()
     network_graph = serializers.SerializerMethodField()
     related_asset = AssetSerializer()
+    blades = serializers.SerializerMethodField()
 
     class Meta:
         model = AssetCP
@@ -262,6 +263,8 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
             "storage",
             "display_color",
             "memory_gb",
+            "blades",
+
         )
 
     def get_mac_addresses(self, assetCP):
@@ -275,6 +278,9 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
 
     def get_network_connections(self, assetCP):
         return serialize_network_connections(NetworkPortCP, assetCP)
+
+    def get_blades(self, assetCP):
+        get_blades_in_chassis_cp(assetCP)
 
 
 def normalize_bulk_asset_data(bulk_asset_data):
@@ -314,7 +320,6 @@ def serialize_mac_addresses(network_port_model, asset):
 
 
 def serialize_network_connections(network_port_model, asset):
-
     try:
         source_ports = network_port_model.objects.filter(
             asset=asset.id, change_plan=asset.change_plan.id
@@ -354,10 +359,15 @@ def serialize_power_connections(power_port_model, asset):
 def get_blades_in_chassis(asset):
     if asset.model.model_type != ModelType.BLADE_CHASSIS.value:
         return []
-    else:
-        blades = Asset.objects.filter(chassis=asset.id)
-        serializer = AssetSerializer(blades, many=True,)
-        return serializer.data
+
+    blades = Asset.objects.filter(chassis=asset.id)
+    serializer = AssetSerializer(blades, many=True, )
+    return serializer.data
+
+
+def get_blades_in_chassis_cp(asset_cp):
+    # TODO
+    return []
 
 
 def generate_network_graph(asset):
