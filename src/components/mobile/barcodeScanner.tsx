@@ -54,7 +54,7 @@ export class BarcodeScanner extends React.PureComponent<
             width={1280}
             videoConstraints={constraints}
             ref={webcamRef}
-            // mirrored={true}
+            mirrored={true}
           />
           <button onClick={capture}>Capture photo</button>
         </>
