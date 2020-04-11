@@ -55,7 +55,9 @@ def get_existing_power_port(port_name, asset_id, change_plan=None):
 
 
 def does_asset_exist(asset_id, change_plan):
-    return (AssetCP.objects.filter(id=asset_id, change_plan=change_plan.id).exists()) or (Asset.objects.filter(id=asset_id).exists())
+    return (
+        AssetCP.objects.filter(id=asset_id, change_plan=change_plan.id).exists()
+    ) or (Asset.objects.filter(id=asset_id).exists())
 
 
 def get_or_create_asset_with_hostname(hostname, change_plan=None):
@@ -71,7 +73,7 @@ def get_or_create_asset_with_hostname(hostname, change_plan=None):
             assets, assets_cp = get_assets_for_cp(change_plan.id)
             if assets.filter(hostname=hostname).exists():
                 asset_live = assets.get(hostname=hostname)
-                asset = copy_asset_to_new_asset_cp(asset_live,change_plan)
+                asset = copy_asset_to_new_asset_cp(asset_live, change_plan)
             else:
                 asset = assets_cp.get(hostname=hostname, change_plan=change_plan)
         else:
@@ -398,81 +400,94 @@ def save_all_connection_data(data, asset, user, change_plan=None):
     return warning_message
 
 
-def save_all_field_data(data, asset, change_plan=None, create_asset_cp = False):
-    id = data["id"]
-    print(data)
+def save_all_field_data_live(data, asset):
+    asset_id = data["id"]
     for field in data.keys():
         if field == "model":
             value = ITModel.objects.get(id=data[field])
         elif field == "rack":
             value = Rack.objects.get(id=data[field])
         elif field == "hostname" and data["hostname"]:
-            if change_plan:
-                assets, assets_cp = get_assets_for_cp(change_plan.id)
-                assets_with_hostname = assets.filter(hostname__iexact=data[field])
-                if not (
-                    len(assets_with_hostname) > 0 and assets_with_hostname[0].id != id
-                ):
-                    assets_with_hostname = assets_cp.filter(
-                        hostname__iexact=data[field]
-                    )
-            else:
-                assets_with_hostname = Asset.objects.filter(
-                    hostname__iexact=data[field]
-                )
-            if len(assets_with_hostname) > 0 and assets_with_hostname[0].id != id:
-                return (None,
+            assets_with_hostname = Asset.objects.filter(hostname__iexact=data[field])
+            if len(assets_with_hostname) > 0 and assets_with_hostname[0].id != asset_id:
+                return (
                     "Asset with hostname '" + data[field].lower() + "' already exists."
                 )
             value = data[field]
         elif field == "asset_number":
-            if change_plan:
-                if create_asset_cp:
-                    related_asset = asset
-                else:
-                    related_asset = asset.related_asset
-                try:
-                    print("related_asset_1",related_asset, related_asset.id)
-                    validate_asset_number_uniqueness(
-                        data[field], id, change_plan, related_asset,
-                    )
-                except ValidationError:
-                    return (None,
-                        "Asset with asset number '"
-                        + str(data[field])
-                        + "' already exists."
-                    )
-            else:
-                assets_with_asset_number = Asset.objects.filter(
-                    asset_number=data[field]
+            assets_with_asset_number = Asset.objects.filter(asset_number=data[field])
+            if (
+                data[field]
+                and len(assets_with_asset_number) > 0
+                and assets_with_asset_number[0].id != asset.id
+            ):
+                return (
+                    "Asset with asset number '" + str(data[field]) + "' already exists."
                 )
-                if (
-                    data[field]
-                    and len(assets_with_asset_number) > 0
-                    and assets_with_asset_number[0].id != asset.id
-                ):
-                    return (None,
-                        "Asset with asset number '"
-                        + str(data[field])
-                        + "' already exists."
-                    )
             value = data[field]
         else:
             value = data[field]
 
-        print(field, value)
+        if field is not "id":
+            setattr(asset, field, value)
+    try:
+        asset.save()
+    except Exception as error:
+        return parse_save_validation_error(error, "Asset")
+
+
+def save_all_field_data_cp(data, asset, change_plan, create_asset_cp):
+    asset_id = data["id"]
+    for field in data.keys():
+        if field == "model":
+            value = ITModel.objects.get(id=data[field])
+        elif field == "rack":
+            value = Rack.objects.get(id=data[field])
+        elif field == "hostname" and data["hostname"]:
+            assets, assets_cp = get_assets_for_cp(change_plan.id)
+            assets_with_hostname = assets.filter(hostname__iexact=data[field])
+            if not (
+                len(assets_with_hostname) > 0 and assets_with_hostname[0].id != asset_id
+            ):
+                assets_with_hostname = assets_cp.filter(hostname__iexact=data[field])
+            if len(assets_with_hostname) > 0 and assets_with_hostname[0].id != asset_id:
+                return (
+                    None,
+                    "Asset with hostname '" + data[field].lower() + "' already exists.",
+                )
+            value = data[field]
+        elif field == "asset_number":
+            if create_asset_cp:
+                related_asset = asset
+            else:
+                related_asset = asset.related_asset
+            try:
+                validate_asset_number_uniqueness(
+                    data[field], asset_id, change_plan, related_asset,
+                )
+            except ValidationError:
+                return (
+                    None,
+                    "Asset with asset number '"
+                    + str(data[field])
+                    + "' already exists.",
+                )
+
+            value = data[field]
+        else:
+            value = data[field]
+
         if field is not "id":
             setattr(asset, field, value)
 
     try:
         if create_asset_cp:
             asset_cp = copy_asset_to_new_asset_cp(asset, change_plan)
-            print(asset_cp)
             asset_cp.save()
             return asset_cp, None
 
         else:
             asset.save()
-            return None, None
+            return asset, None
     except Exception as error:
         return parse_save_validation_error(error, "Asset")
