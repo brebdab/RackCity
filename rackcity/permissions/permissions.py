@@ -85,6 +85,9 @@ def validate_user_asset_permission_to_add(user, validated_data):
     # TODO: make this check work for blades, which don't have a rack
     if "rack" not in validated_data:
         return
+    ## ading this to throw readable error if no rack specified
+    if not validated_data["rack"]:
+        raise Exception("Rack must be specified")
     rack_id = validated_data["rack"].id
     try:
         rack = Rack.objects.get(id=rack_id)

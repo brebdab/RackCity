@@ -54,18 +54,18 @@ def get_existing_power_port(port_name, asset_id, change_plan=None):
         return power_port
 
 
-def get_or_create_asset_cp(asset_id, change_plan):
+def does_asset_exist(asset_id, change_plan):
     try:
-        existing_asset_cp = AssetCP.objects.get(
-            asset=asset_id, change_plan=change_plan.id
+        AssetCP.objects.get(
+            id=asset_id, change_plan=change_plan.id
         )
     except ObjectDoesNotExist:
         try:
             existing_asset_live = Asset.objects.get(id=asset_id)
         except ObjectDoesNotExist:
-            return None
-        existing_asset_cp = copy_asset_to_new_asset_cp(existing_asset_live, change_plan)
-    return existing_asset_cp
+            return False
+        # existing_asset_cp = copy_asset_to_new_asset_cp(existing_asset_live, change_plan)
+    return True;
 
 
 def get_or_create_asset_with_hostname(hostname, change_plan=None):
@@ -133,7 +133,6 @@ def copy_asset_to_new_asset_cp(asset_live, change_plan):
         if field.name != "id" and field.name != "assetid_ptr":
             setattr(asset_cp, field.name, getattr(asset_live, field.name))
     asset_cp.save()
-
     # Copy mac address values
     # Note: actual connections get made later in create_network_connections()
     network_ports_live = NetworkPort.objects.filter(asset=asset_live)
@@ -409,8 +408,9 @@ def save_all_connection_data(data, asset, user, change_plan=None):
     return warning_message
 
 
-def save_all_field_data(data, asset, change_plan=None):
+def save_all_field_data(data, asset, change_plan=None, create_asset_cp = False):
     id = data["id"]
+    print(data)
     for field in data.keys():
         if field == "model":
             value = ITModel.objects.get(id=data[field])
@@ -437,9 +437,14 @@ def save_all_field_data(data, asset, change_plan=None):
             value = data[field]
         elif field == "asset_number":
             if change_plan:
+                if create_asset_cp:
+                    related_asset = asset
+                else:
+                    related_asset = asset.related_asset
                 try:
+                    print("related_asset_1",related_asset, related_asset.id)
                     validate_asset_number_uniqueness(
-                        data[field], id, change_plan, asset.related_asset,
+                        data[field], id, change_plan, related_asset,
                     )
                 except ValidationError:
                     return (
@@ -462,10 +467,17 @@ def save_all_field_data(data, asset, change_plan=None):
                         + "' already exists."
                     )
             value = data[field]
+            print(field, value)
+            if field is not "id":
+                setattr(asset, field, value)
+
+    try:
+        if create_asset_cp:
+            asset_cp = copy_asset_to_new_asset_cp(asset, change_plan)
+            print(asset_cp)
+            asset_cp.save()
+
         else:
-            value = data[field]
-        setattr(asset, field, value)
-        try:
             asset.save()
-        except Exception as error:
-            return parse_save_validation_error(error, "Asset")
+    except Exception as error:
+        return parse_save_validation_error(error, "Asset")
