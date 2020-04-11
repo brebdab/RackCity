@@ -75,11 +75,9 @@ def validate_asset_location(
         # Ignore if asset being modified conflicts with its old location
 
         is_valid_conflict = asset_id is None or asset_in_rack.id != asset_id
-        print("location", is_valid_conflict,asset_in_rack.id, asset_id)
+
         if related_asset_id:
-            is_valid_conflict = (
-                asset_in_rack.id != related_asset_id
-            )
+            is_valid_conflict = asset_in_rack.id != related_asset_id
 
         if is_valid_conflict:
             for occupied_location in [
@@ -88,7 +86,6 @@ def validate_asset_location(
             ]:
                 if occupied_location in new_asset_location_range:
                     if asset_in_rack.asset_number:
-                        print("occupied_location",occupied_location)
                         raise LocationException(
                             "Asset location conflicts with another asset: '"
                             + str(asset_in_rack.asset_number)
@@ -156,7 +153,6 @@ def validate_location_modification(data, existing_asset, user, change_plan=None)
                 )
 
     try:
-        print(related_asset_id,asset_id)
         validate_asset_location(
             rack_id,
             asset_rack_position,
