@@ -22,6 +22,8 @@ import time
 from requests.exceptions import ConnectionError
 from rackcity.models.asset import get_assets_for_cp
 from rackcity.utils.change_planner_utils import get_change_plan
+import os
+
 
 pdu_url = "http://hyposoft-mgt.colab.duke.edu:8005/"
 # Need to specify rack + side in request, e.g. for A1 left, use A01L
@@ -31,7 +33,7 @@ toggle_pdu = "power.php"
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def power_status(request, id):
+def pdu_power_status(request, id):
     """
     Get status of all power ports for an asset in
     network controlled PDU datacenter.
@@ -88,7 +90,7 @@ def power_status(request, id):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def power_on(request):
+def pdu_power_on(request):
     """
     Turn on power to specified port
     """
@@ -160,7 +162,7 @@ def power_on(request):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def power_off(request):
+def pdu_power_off(request):
     """
     Turn on power to specified port
     """
@@ -232,7 +234,7 @@ def power_off(request):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def power_cycle(request):
+def pdu_power_cycle(request):
     data = JSONParser().parse(request)
     if "id" not in data.keys():
         return JsonResponse(
@@ -284,7 +286,7 @@ def power_cycle(request):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def power_availability(request):
+def pdu_power_availability(request):
     rack_id = request.query_params.get("id")
     if not rack_id:
         return JsonResponse(
@@ -436,7 +438,74 @@ def toggle_power(asset, asset_port_number, goal_state):
     return
 
 
-@api_view(["GET"])
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def chassis_power_status(request):
+    data = JSONParser().parse(request)
+    id = data["id"]
+    chassis = Asset.objects.get(id=id)
+    chassis_hostname = chassis.hostname
+    blade = data["blade"]
+    result, exit_status = call_bcman(chassis_hostname, str(blade), "")
+    return JsonResponse(
+        {"success_message": Status.SUCCESS.value + result}, status=HTTPStatus.OK,
+    )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def chassis_power_on(request):
+    data = JSONParser().parse(request)
+    id = data["id"]
+    chassis = Asset.objects.get(id=id)
+    chassis_hostname = chassis.hostname
+    blade = data["blade"]
+    result, exit_status = call_bcman(chassis_hostname, str(blade), "on")
+    return JsonResponse(
+        {"success_message": Status.SUCCESS.value + result}, status=HTTPStatus.OK,
+    )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def chassis_power_off(request):
+    data = JSONParser().parse(request)
+    id = data["id"]
+    chassis = Asset.objects.get(id=id)
+    chassis_hostname = chassis.hostname
+    blade = data["blade"]
+    result, exit_status = call_bcman(chassis_hostname, str(blade), "off")
+    return JsonResponse(
+        {"success_message": Status.SUCCESS.value + result}, status=HTTPStatus.OK,
+    )
+
+
+@api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def contact_bmi(request):
-    return JsonResponse({}, status=HTTPStatus.OK)
+    data = JSONParser().parse(request)
+    chassis = data["chassis"]
+    blade = data["blade"]
+    power_cmd = "on"
+    result, exit_status = call_bcman(chassis, blade, power_cmd)
+    return JsonResponse(
+        {"result": result, "exit_status": exit_status}, status=HTTPStatus.OK
+    )
+
+
+def call_bcman(chassis, blade, power_command):
+    user = os.environ["BCMAN_USERNAME"]
+    host = "hyposoft-mgt.colab.duke.edu"
+    options = os.environ["BCMAN_OPTIONS"]
+    password = os.environ["BCMAN_PASSWORD"]
+    cmd = "rackcity/utils/bcman.expect '{}' '{}' '{}' '{}' '{}' '{}' '{}' > temp.txt".format(
+        user, host, options, password, chassis, blade, power_command,
+    )
+    exit_status = os.system(cmd)
+    result = None
+    if os.path.exists("temp.txt"):
+        fp = open("temp.txt", "r")
+        result = fp.read().splitlines()[0]
+        fp.close()
+        os.remove("temp.txt")
+    return result, exit_status
