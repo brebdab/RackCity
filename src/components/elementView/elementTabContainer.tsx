@@ -45,7 +45,7 @@ class ElementTabContainer extends React.Component<
   getDatacenters = () => {
     const headers = getHeaders(this.props.token);
     axios
-      .post(API_ROOT + "api/datacenters/get-many", {}, headers)
+      .post(API_ROOT + "api/sites/datacenters/get-many", {}, headers)
       .then((res) => {
         const datacenters = res.data.datacenters as Array<DatacenterObject>;
         datacenters.push(ALL_DATACENTERS);

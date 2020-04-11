@@ -3,7 +3,7 @@ from rest_framework.validators import UniqueValidator
 from rackcity.models import Site
 
 
-class DatacenterSerializer(serializers.ModelSerializer):
+class SiteSerializer(serializers.ModelSerializer):
     abbreviation = serializers.CharField(
         validators=[UniqueValidator(queryset=Site.objects.all(), lookup="iexact")]
     )
@@ -17,4 +17,5 @@ class DatacenterSerializer(serializers.ModelSerializer):
             "id",
             "abbreviation",
             "name",
+            "is_storage",
         )
