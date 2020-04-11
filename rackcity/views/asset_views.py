@@ -296,7 +296,9 @@ def asset_modify(request):
         ).exists()
 
         if not create_new_asset_cp:
-            existing_asset = AssetCP.objects.get(id=asset_id, change_plan=change_plan.id)
+            existing_asset = AssetCP.objects.get(
+                id=asset_id, change_plan=change_plan.id
+            )
         if not does_asset_exist(asset_id, change_plan):
             return JsonResponse(
                 {
