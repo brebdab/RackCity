@@ -59,7 +59,6 @@ def validate_hostname_uniqueness(value, asset_id, change_plan, related_asset):
         and matching_assets[0].id != asset_id
         and not matching_assets[0].is_decommissioned
     ):
-        print(matching_assets.values())
         raise ValidationError(
             "'"
             + value
@@ -92,7 +91,6 @@ def validate_asset_number_uniqueness(value, asset_id, change_plan, related_asset
         and matching_assets[0].id != asset_id
         and not matching_assets[0].is_decommissioned
     ):
-        print(matching_assets.values())
         raise ValidationError(
             "'"
             + str(value)
@@ -100,16 +98,13 @@ def validate_asset_number_uniqueness(value, asset_id, change_plan, related_asset
             An existing asset on this change plan exists with this asset number."
         )
     related_asset_id = None
-    print("related_asset_2", related_asset,related_asset.id)
 
     if related_asset:
         related_asset_id = related_asset.id
     matching_assets = assets.filter(asset_number=value)
-    print(related_asset_id)
     if (len(matching_assets) > 0) and (
         not (related_asset and matching_assets[0].id == related_asset_id)
     ):
-        print(matching_assets[0].id, related_asset_id)
         raise ValidationError(
             "'"
             + str(value)
@@ -365,12 +360,10 @@ class AssetCP(AbstractAsset):
                 validate_hostname_uniqueness(
                     self.hostname, self.id, self.change_plan, self.related_asset
                 )
-                print("on save")
                 validate_asset_number_uniqueness(
                     self.asset_number, self.id, self.change_plan, self.related_asset
                 )
                 validate_owner(self.owner)
-                print("location validation")
                 validate_location_type(
                     model=self.model,
                     rack=self.rack,
@@ -382,10 +375,7 @@ class AssetCP(AbstractAsset):
         except ValidationError as valid_error:
             raise valid_error
         else:
-            print("Saving")
             super(AssetCP, self).save(*args, **kwargs)
-
             self.add_network_ports()
-            print("network ports")
+
             self.add_power_ports()
-            print("power ports")
