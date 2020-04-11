@@ -347,6 +347,7 @@ def serialize_power_connections(power_port_model, asset):
             }
     return power_connections
 
+
 def get_blades_in_chassis(asset):
     if asset.model.model_type != ModelType.BLADE_CHASSIS:
         return []
@@ -354,6 +355,7 @@ def get_blades_in_chassis(asset):
         blades = Asset.objects.filter(chassis=asset.id)
         serializer =AssetSerializer(blades, many=True, )
         return serializer.data
+    
 
 def generate_network_graph(asset):
     try:
