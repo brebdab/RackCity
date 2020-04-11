@@ -17,8 +17,8 @@ ALLOWED_HOSTS = [
     "rack-city-mobile.herokuapp.com",
     "127.0.0.1",
     "localhost",
-    "192.168.1.17",
-    "192.168.0.18",
+    # "192.168.1.17",
+    # "192.168.0.18",
 ]
 
 INSTALLED_APPS = [
