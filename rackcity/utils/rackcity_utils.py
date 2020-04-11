@@ -53,7 +53,7 @@ def validate_asset_datacenter_move(data, asset):
             )
 
 
-def validate_asset_location(
+def validate_asset_location_in_rack(
     rack_id,
     asset_rack_position,
     asset_height,
@@ -116,19 +116,79 @@ def validate_asset_location(
                             )
 
 
+def validate_asset_location_in_chassis(
+    chassis_id,
+    chassis_slot,
+    asset_id=None,
+    change_plan=None,
+    related_asset_id=None,
+):
+    num_slots_in_chassis = 12
+    if chassis_slot < 1 or chassis_slot > num_slots_in_chassis:
+        raise LocationException(str(chassis_slot) + " is not a valid slot number. ")
+    if change_plan:
+        assets, assets_cp = get_assets_for_cp(change_plan.id)
+    else:
+        assets = Asset.objects.all()
+    for asset_in_chassis in assets.filter(chassis=chassis_id):
+        # Ignore if asset being modified conflicts with its old location
+        is_valid_conflict = asset_id is None or asset_in_chassis.id != asset_id
+        if change_plan:
+            is_valid_conflict = (
+                related_asset_id is not None and asset_in_chassis.id != related_asset_id
+            )
+
+        if is_valid_conflict:
+            if asset_in_chassis.chassis_slot == chassis_slot:
+                if asset_in_chassis.asset_number:
+                    raise LocationException(
+                        "Blade location conflicts with another blade: '"
+                        + str(asset_in_chassis.asset_number)
+                        + "'. "
+                    )
+                else:
+                    raise LocationException(
+                        "Blade location conflicts with another blade."
+                    )
+    if change_plan:
+        for asset_in_chassis in assets_cp.filter(chassis=chassis_id):
+            # Ignore if asset being modified conflicts with its old location
+            if (asset_id is None) or (asset_in_chassis.id != asset_id):
+                if asset_in_chassis.chassis_slot == chassis_slot:
+                    if asset_in_chassis.asset_number:
+                        raise LocationException(
+                            "Blade location conflicts with another blade: '"
+                            + str(asset_in_chassis.asset_number)
+                            + "'. "
+                        )
+                    else:
+                        raise LocationException(
+                            "Blade location conflicts with another blade."
+                        )
+
+
+# TODO: validate blade location modification
 def validate_location_modification(data, existing_asset, user, change_plan=None):
     asset_id = existing_asset.id
     rack_id = existing_asset.rack_id
+    chassis_id = existing_asset.chassis_id
     related_asset_id = None
     if hasattr(existing_asset, "related_asset") and existing_asset.related_asset:
         related_asset_id = existing_asset.related_asset.id
     asset_rack_position = existing_asset.rack_position
+    asset_chassis_slot = existing_asset.chassis_slot
     asset_height = existing_asset.model.height
     if "rack_position" in data:
         try:
             asset_rack_position = int(data["rack_position"])
         except ValueError:
             raise Exception("Field 'rack_position' must be of type int.")
+
+    if "chassis_slot" in data:
+        try:
+            asset_chassis_slot = int(data["chassis_slot"])
+        except ValueError:
+            raise Exception("Field 'chassis_slot' must be of type int.")
 
     if "model" in data:
         try:
@@ -151,17 +211,45 @@ def validate_location_modification(data, existing_asset, user, change_plan=None)
                     + "."
                 )
 
-    try:
-        validate_asset_location(
-            rack_id,
-            asset_rack_position,
-            asset_height,
-            asset_id=asset_id,
-            change_plan=change_plan,
-            related_asset_id=related_asset_id,
-        )
-    except LocationException as error:
-        raise error
+    if "chassis" in data:
+        try:
+            chassis = Asset.objects.get(id=data["chassis"])
+            chassis_id = chassis.id
+        except Exception:
+            raise Exception("No existing chassis with id=" + str(data["chassis"]) + ".")
+        else:
+            if not user_has_asset_permission(user, site=chassis.rack.datacenter):
+                raise Exception(
+                    "You do not have permission to move assets to "
+                    + "datacenter "
+                    + chassis.rack.datacenter.abbreviation
+                    + "."
+                )
+
+    if existing_asset.model.is_rackmount():
+        try:
+            validate_asset_location_in_rack(
+                rack_id,
+                asset_rack_position,
+                asset_height,
+                asset_id=asset_id,
+                change_plan=change_plan,
+                related_asset_id=related_asset_id,
+            )
+        except LocationException as error:
+            raise error
+    else:
+        try:
+            validate_asset_location_in_chassis(
+                chassis_id,
+                asset_chassis_slot,
+                asset_id=asset_id,
+                change_plan=change_plan,
+                related_asset_id=related_asset_id,
+            )
+        except LocationException as error:
+            raise error
+
 
 
 def records_are_identical(existing_data, new_data):

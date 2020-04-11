@@ -28,7 +28,7 @@ from rackcity.utils.query_utils import (
     get_invalid_paginated_request_response,
     should_paginate_query,
 )
-from rackcity.utils.rackcity_utils import validate_asset_location
+from rackcity.utils.rackcity_utils import validate_asset_location_in_rack
 
 
 class ModificationType(Enum):
@@ -82,7 +82,8 @@ def detect_conflicts_cp(sender, **kwargs):
         & Q(change_plan__execution_time=None)
     ):
         try:
-            validate_asset_location(
+            # TODO: add check for blades
+            validate_asset_location_in_rack(
                 asset.rack_id,
                 assetcp.rack_position,
                 assetcp.model.height,

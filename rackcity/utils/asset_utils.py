@@ -416,6 +416,8 @@ def save_all_field_data(data, asset, change_plan=None):
             value = ITModel.objects.get(id=data[field])
         elif field == "rack":
             value = Rack.objects.get(id=data[field])
+        elif field == "chassis":
+            value = Asset.objects.get(id=data[field])
         elif field == "hostname" and data["hostname"]:
             if change_plan:
                 assets, assets_cp = get_assets_for_cp(change_plan.id)
