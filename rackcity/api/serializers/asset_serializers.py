@@ -15,6 +15,8 @@ from .change_plan_serializers import GetChangePlanSerializer
 from rackcity.api.serializers.fields import RCIntegerField
 import copy
 
+from ...models.model_utils import ModelType
+
 
 class AssetCPSerializer(serializers.ModelSerializer):
     """
@@ -128,6 +130,7 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
             "network_connections",
             "network_graph",
             "power_connections",
+            "blades",
             "cpu",
             "storage",
             "display_color",
@@ -145,6 +148,9 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
 
     def get_network_connections(self, asset):
         return serialize_network_connections(NetworkPort, asset)
+
+    def get_blades(self,asset):
+        return get_blades_in_chassis(asset)
 
 
 class BulkAssetSerializer(serializers.ModelSerializer):
@@ -341,6 +347,15 @@ def serialize_power_connections(power_port_model, asset):
             }
     return power_connections
 
+
+def get_blades_in_chassis(asset):
+    if asset.model.model_type != ModelType.BLADE_CHASSIS:
+        return []
+    else:
+        blades = Asset.objects.filter(chassis=asset.id)
+        serializer =AssetSerializer(blades, many=True, )
+        return serializer.data
+    
 
 def generate_network_graph(asset):
     try:

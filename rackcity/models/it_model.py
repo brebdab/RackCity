@@ -2,16 +2,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from rackcity.models.fields import RCPositiveIntegerField
 from django.contrib.postgres.fields import ArrayField
-from rackcity.models.model_utils import DEFAULT_DISPLAY_COLOR, validate_display_color
-from enum import Enum
-
-
-
-class ModelType(Enum):
-    RACKMOUNT_ASSET = "Asset"
-    BLADE_CHASSIS = "Blade Chassis"
-    BLADE_ASSET = "Blade Server "
-
+from rackcity.models.model_utils import DEFAULT_DISPLAY_COLOR, validate_display_color, ModelType
 
 MODEL_TYPE_CHOICES = [
     (ModelType.RACKMOUNT_ASSET.value, ModelType.RACKMOUNT_ASSET.value),
