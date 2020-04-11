@@ -117,11 +117,7 @@ def validate_asset_location_in_rack(
 
 
 def validate_asset_location_in_chassis(
-    chassis_id,
-    chassis_slot,
-    asset_id=None,
-    change_plan=None,
-    related_asset_id=None,
+    chassis_id, chassis_slot, asset_id=None, change_plan=None, related_asset_id=None,
 ):
     num_slots_in_chassis = 12
     if chassis_slot < 1 or chassis_slot > num_slots_in_chassis:
@@ -249,7 +245,6 @@ def validate_location_modification(data, existing_asset, user, change_plan=None)
             )
         except LocationException as error:
             raise error
-
 
 
 def records_are_identical(existing_data, new_data):

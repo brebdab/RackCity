@@ -203,9 +203,7 @@ def asset_add(request):
             status=HTTPStatus.BAD_REQUEST,
         )
 
-    if (
-        serializer.validated_data["model"].is_rackmount()
-    ):
+    if serializer.validated_data["model"].is_rackmount():
         rack_id = serializer.validated_data["rack"].id
         rack_position = serializer.validated_data["rack_position"]
         height = serializer.validated_data["model"].height
