@@ -21,7 +21,7 @@ const initialState: ReduxState = {
     power_control: false,
     audit_read: false,
     admin: false,
-    datacenter_permissions: [],
+    site_permissions: [],
   } as PermissionState,
   isMobile: false
 };

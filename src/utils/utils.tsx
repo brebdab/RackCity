@@ -229,7 +229,7 @@ export interface UserPermissionsObject {
   power_control: boolean;
   audit_read: boolean;
   admin: boolean;
-  datacenter_permissions: Array<string>;
+  site_permissions: Array<string>;
 }
 
 export type ElementObjectType =

@@ -226,7 +226,7 @@ export class AssetView extends React.PureComponent<
                     this.props.permissionState.asset_management ||
                     (this.state.asset &&
                       this.state.asset.rack &&
-                      this.props.permissionState.datacenter_permissions.includes(
+                      this.props.permissionState.site_permissions.includes(
                         +this.state.asset.rack.datacenter.id
                       ))
                   )
@@ -255,7 +255,7 @@ export class AssetView extends React.PureComponent<
                     this.props.permissionState.asset_management ||
                     (this.state.asset &&
                       this.state.asset.rack &&
-                      this.props.permissionState.datacenter_permissions.includes(
+                      this.props.permissionState.site_permissions.includes(
                         +this.state.asset.rack.datacenter.id
                       ))
                   )
@@ -287,7 +287,7 @@ export class AssetView extends React.PureComponent<
                     this.props.permissionState.asset_management ||
                     (this.state.asset &&
                       this.state.asset.rack &&
-                      this.props.permissionState.datacenter_permissions.includes(
+                      this.props.permissionState.site_permissions.includes(
                         +this.state.asset.rack.datacenter.id
                       ))
                   )
