@@ -23,6 +23,7 @@ class AssetCPSerializer(serializers.ModelSerializer):
     Serializes all fields on Asset model, where model and rack fields are
     defined by their pk only.
     """
+
     rack_position = RCIntegerField(
         allow_null=True, max_value=2147483647, min_value=0, required=False
     )
@@ -32,6 +33,7 @@ class AssetCPSerializer(serializers.ModelSerializer):
     memory_gb = RCIntegerField(
         allow_null=True, max_value=2147483647, min_value=0, required=False
     )
+
     class Meta:
         model = AssetCP
         fields = (
@@ -112,6 +114,7 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
     power_connections = serializers.SerializerMethodField()
     network_connections = serializers.SerializerMethodField()
     network_graph = serializers.SerializerMethodField()
+    blades = serializers.SerializerMethodField()
 
     class Meta:
         model = Asset
@@ -149,7 +152,7 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
     def get_network_connections(self, asset):
         return serialize_network_connections(NetworkPort, asset)
 
-    def get_blades(self,asset):
+    def get_blades(self, asset):
         return get_blades_in_chassis(asset)
 
 
@@ -349,13 +352,13 @@ def serialize_power_connections(power_port_model, asset):
 
 
 def get_blades_in_chassis(asset):
-    if asset.model.model_type != ModelType.BLADE_CHASSIS:
+    if asset.model.model_type != ModelType.BLADE_CHASSIS.value:
         return []
     else:
         blades = Asset.objects.filter(chassis=asset.id)
-        serializer =AssetSerializer(blades, many=True, )
+        serializer = AssetSerializer(blades, many=True,)
         return serializer.data
-    
+
 
 def generate_network_graph(asset):
     try:
