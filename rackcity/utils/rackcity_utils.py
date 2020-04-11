@@ -163,7 +163,6 @@ def validate_asset_location_in_chassis(
                         )
 
 
-# TODO: validate blade location modification
 def validate_location_modification(data, existing_asset, user, change_plan=None):
     asset_id = existing_asset.id
     rack_id = existing_asset.rack_id
