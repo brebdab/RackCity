@@ -183,7 +183,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       ? API_ROOT + "api/sites/datacenters/pages"
       : API_ROOT + "api/" + path + "/pages";
     return axios
-      .post(API_ROOT + url, { filters: filtersCopy }, config)
+      .post(url, { filters: filtersCopy }, config)
       .then((res) => {
         return res.data.page_count;
       });
