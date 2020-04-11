@@ -400,16 +400,16 @@ def asset_delete(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
-    id = data["id"]
+    asset_id = data["id"]
     try:
-        existing_asset = Asset.objects.get(id=id)
+        existing_asset = Asset.objects.get(id=asset_id)
     except ObjectDoesNotExist:
         return JsonResponse(
             {
                 "failure_message": Status.DELETE_ERROR.value
                 + "Model"
                 + GenericFailure.DOES_NOT_EXIST.value,
-                "errors": "No existing asset with id=" + str(id),
+                "errors": "No existing asset with id=" + str(asset_id),
             },
             status=HTTPStatus.BAD_REQUEST,
         )
