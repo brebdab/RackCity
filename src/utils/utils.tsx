@@ -116,6 +116,7 @@ export const ModelFieldsTable: any = {
   memory_gb: "Memory (GB)",
   storage: "Storage",
   comment: "Comment",
+  model_type: "Mount Type"
 };
 
 export enum AssetFormLabels {
@@ -130,6 +131,8 @@ export enum AssetFormLabels {
   network_ports = "Network Ports",
   power_connections = "Power Connections",
 }
+
+
 export interface Link {
   to: number;
   from: number;
@@ -198,10 +201,17 @@ export interface DatacenterObject extends ElementObject {
   abbreviation: string;
 }
 
+export enum MountTypes {
+  RACKMOUNT = "Asset",
+  BLADE_CHASSIS = "Blade Chassis",
+  BLADE = "Blade Server ",
+}
+
 export interface ModelObject extends ElementObject {
   vendor: string;
   model_number: string;
   height: string;
+  model_type: MountTypes;
   display_color?: string;
   num_network_ports?: string;
   network_ports?: Array<string>; //
