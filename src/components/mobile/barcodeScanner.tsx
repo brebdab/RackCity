@@ -7,6 +7,7 @@ import Webcam from "react-webcam";
 
 interface BarcodeScannerState {
   result: string;
+  image: any;
 }
 interface BarcodeScannerProps {
   token: string;
@@ -19,6 +20,7 @@ export class BarcodeScanner extends React.PureComponent<
 > {
   public state = {
     result: "",
+    image: undefined
   };
 
   handleScan(data: string) {
@@ -39,14 +41,17 @@ export class BarcodeScanner extends React.PureComponent<
     };
 
     const WebcamCapture = () => {
-      const webcamRef = React.useRef(null);
+      let webcamRef: any;
+      webcamRef = React.useRef(null);
       //   const webcamRef = React.createRef<HTMLVideoElement>();
       const capture = React.useCallback(() => {
-        const imageSrc = webcamRef
-        alert(imageSrc)
+        const imageSrc = webcamRef.current.getScreenshot();
+        this.setState({
+          image: imageSrc
+        });
       }, [webcamRef]);
       return (
-        <>
+        <div>
           <Webcam
             audio={false}
             height={720}
@@ -57,7 +62,7 @@ export class BarcodeScanner extends React.PureComponent<
             mirrored={true}
           />
           <button onClick={capture}>Capture photo</button>
-        </>
+        </div>
       );
     };
 
