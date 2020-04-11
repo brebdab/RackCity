@@ -17,15 +17,20 @@ import {
   Tooltip,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
-import {IconNames} from "@blueprintjs/icons";
+import { IconNames } from "@blueprintjs/icons";
 import axios from "axios";
 import * as React from "react";
-import {connect} from "react-redux";
-import {isNullOrUndefined} from "util";
-import {ALL_DATACENTERS} from "../components/elementView/elementTabContainer";
-import {FilterTypes, IFilter, PagingTypes, TextFilterTypes,} from "../components/elementView/elementUtils";
-import {updateObject} from "../store/utility";
-import {API_ROOT} from "../utils/api-config";
+import { connect } from "react-redux";
+import { isNullOrUndefined } from "util";
+import { ALL_DATACENTERS } from "../components/elementView/elementTabContainer";
+import {
+  FilterTypes,
+  IFilter,
+  PagingTypes,
+  TextFilterTypes,
+} from "../components/elementView/elementUtils";
+import { updateObject } from "../store/utility";
+import { API_ROOT } from "../utils/api-config";
 import {
   AssetFormLabels,
   AssetObject,
@@ -273,6 +278,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       hostname,
       id,
       rack_position,
+      chassis_slot,
       owner,
       mac_addresses,
       network_connections,
@@ -285,7 +291,10 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     } = asset;
     const model = asset.model ? asset.model.id : null;
     const rack = asset.rack ? asset.rack.id : null;
+    const chassis = asset.chassis? asset.chassis.id:null;
     let valuesToSend: ShallowAssetObject = {
+      chassis,
+      chassis_slot,
       asset_number,
       model,
       rack,
@@ -1102,10 +1111,10 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
             <div>
               <Card>{this.renderModelFields()}</Card>
               {values.model ? (
-
                 <Card>
-                  {values.model.model_type===MountTypes.BLADE?  this.renderChassisFields() :
-                  this.renderRackFields()}
+                  {values.model.model_type === MountTypes.BLADE
+                    ? this.renderChassisFields()
+                    : this.renderRackFields()}
                 </Card>
               ) : null}
 
@@ -1463,104 +1472,115 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
   private renderRackFields() {
     const values = this.state.values;
-    return ([ <FormGroup label={AssetFormLabels.rack} inline={false}>
-                    <RackSelect
-                      popoverProps={{
-                        minimal: true,
-                        popoverClassName: "dropdown",
-                        usePortal: true,
-                      }}
-                      items={this.state.racks}
-                      onItemSelect={(rack: RackObject) => {
-                        this.state.values.rack
-                          ? this.showChangeWarningAlert(
-                              "Are you sure you want to change rack? This will clear all rack related fields",
-                              rack
-                            )
-                          : this.handleRackSelect(rack);
-                      }}
-                      itemRenderer={renderRackItem}
-                      itemPredicate={filterRack}
-                      noResults={
-                        this.gettingRacksInProgress ? (
-                          <div>
-                            <Spinner
-                              intent="primary"
-                              size={Spinner.SIZE_SMALL}
-                            />
-                            <MenuItem
-                              disabled={true}
-                              text="Getting all racks"
-                            />
-                          </div>
-                        ) : (
-                          <MenuItem disabled={true} text="No available racks" />
-                        )
-                      }
-                    >
-                      <Button
-                        rightIcon="caret-down"
-                        text={
-                          this.state.values.rack
-                            ? this.state.values.rack.row_letter +
-                              +this.state.values.rack.rack_num
-                            : "Select a rack"
-                        }
-                      />
-                    </RackSelect>
-                  </FormGroup>,
-                  <FormGroup
-                    label={AssetFormLabels.rack_position}
-                    inline={false}
-                  >
-                    <Field
-                      field="rack_position"
-                      placeholder="rack_position"
-                      value={values.rack_position}
-                      onChange={this.handleChange}
-                    />
-                  </FormGroup>]
-    )
+    return [
+      <FormGroup label={AssetFormLabels.rack} inline={false}>
+        <RackSelect
+          popoverProps={{
+            minimal: true,
+            popoverClassName: "dropdown",
+            usePortal: true,
+          }}
+          items={this.state.racks}
+          onItemSelect={(rack: RackObject) => {
+            this.state.values.rack
+              ? this.showChangeWarningAlert(
+                  "Are you sure you want to change rack? This will clear all rack related fields",
+                  rack
+                )
+              : this.handleRackSelect(rack);
+          }}
+          itemRenderer={renderRackItem}
+          itemPredicate={filterRack}
+          noResults={
+            this.gettingRacksInProgress ? (
+              <div>
+                <Spinner intent="primary" size={Spinner.SIZE_SMALL} />
+                <MenuItem disabled={true} text="Getting all racks" />
+              </div>
+            ) : (
+              <MenuItem disabled={true} text="No available racks" />
+            )
+          }
+        >
+          <Button
+            rightIcon="caret-down"
+            text={
+              this.state.values.rack
+                ? this.state.values.rack.row_letter +
+                  +this.state.values.rack.rack_num
+                : "Select a rack"
+            }
+          />
+        </RackSelect>
+      </FormGroup>,
+      <FormGroup label={AssetFormLabels.rack_position} inline={false}>
+        <Field
+          field="rack_position"
+          placeholder="rack_position"
+          value={values.rack_position}
+          onChange={this.handleChange}
+        />
+      </FormGroup>,
+    ];
+  }
+  private getAvailableChassisAssets() {
+    return this.state.assets.filter(
+      (asset: AssetObject) =>
+        asset.model && asset.model.model_type === MountTypes.BLADE_CHASSIS
+    );
   }
 
   private renderChassisFields() {
-     <AssetSelect
-                                className="select"
-                                popoverProps={{
-                                  minimal: true,
-                                  popoverClassName: "dropdown",
-                                  usePortal: true,
-                                }}
-                                items={this.state.assets}
-                                onItemSelect={(asset: AssetObject) => {
-                                  this.handleNetworkConnectionAssetSelection(
-                                    port,
-                                    asset.hostname
-                                  );
-                                }}
-                                itemRenderer={renderAssetItem}
-                                itemPredicate={filterAsset}
-                                noResults={
-                                  this.gettingAssetsInProgress ? (
-                                    <div>
-                                      <Spinner
-                                        intent="primary"
-                                        size={Spinner.SIZE_SMALL}
-                                      />
-                                      <MenuItem
-                                        disabled={true}
-                                        text="Getting all available assets"
-                                      />
-                                    </div>
-                                  ) : (
-                                    <MenuItem
-                                      disabled={true}
-                                      text="No available assets"
-                                    />
-                                  )
-                                }
-                              >
+    const values = this.state.values;
+    return [
+      <FormGroup label={AssetFormLabels.chassis} inline={false}>
+        <AssetSelect
+          className="select"
+          popoverProps={{
+            minimal: true,
+            popoverClassName: "dropdown",
+            usePortal: true,
+          }}
+          items={this.getAvailableChassisAssets()}
+          onItemSelect={(asset: AssetObject) => {
+            const newValues = this.state.values;
+            newValues.chassis = asset;
 
+            this.setState({
+              values: newValues,
+            });
+          }}
+          itemRenderer={renderAssetItem}
+          itemPredicate={filterAsset}
+          noResults={
+            this.gettingAssetsInProgress ? (
+              <div>
+                <Spinner intent="primary" size={Spinner.SIZE_SMALL} />
+                <MenuItem
+                  disabled={true}
+                  text="Getting all available chassis"
+                />
+              </div>
+            ) : (
+              <MenuItem disabled={true} text="No available chassis" />
+            )
+          }
+        >
+          <Button
+            rightIcon="caret-down"
+            text={values.chassis ? values.chassis.hostname : "Select Chassis"}
+          />
+        </AssetSelect>
+      </FormGroup>,
+      <FormGroup label={AssetFormLabels.chassis_slot} inline={false}>
+        <Field
+          field="chassis_slot"
+          placeholder="chassis slot"
+          value={values.chassis_slot}
+          onChange={this.handleChange}
+        />
+      </FormGroup>,
+    ];
   }
 }
 
