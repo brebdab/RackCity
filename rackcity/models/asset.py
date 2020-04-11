@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Q
-from rackcity.models.model_utils import DEFAULT_DISPLAY_COLOR, validate_display_color
+from rackcity.models.model_utils import validate_display_color
 from rackcity.models.fields import RCPositiveIntegerField
 import re
 
@@ -100,6 +100,7 @@ def validate_asset_number_uniqueness(value, asset_id, change_plan, related_asset
             An existing asset on this change plan exists with this asset number."
         )
     related_asset_id = None
+
     if related_asset:
         related_asset_id = related_asset.id
     matching_assets = assets.filter(asset_number=value)
