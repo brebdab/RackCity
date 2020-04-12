@@ -482,6 +482,21 @@ def chassis_power_off(request):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
+def chassis_power_cycle(request):
+    data = JSONParser().parse(request)
+    id = data["id"]
+    chassis = Asset.objects.get(id=id)
+    chassis_hostname = chassis.hostname
+    blade = data["blade"]
+    result, exit_status = call_bcman(chassis_hostname, str(blade), "off")
+    return JsonResponse(
+        {"success_message": Status.SUCCESS.value + result}, status=HTTPStatus.OK,
+    )
+
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def contact_bmi(request):
     data = JSONParser().parse(request)
     chassis = data["chassis"]

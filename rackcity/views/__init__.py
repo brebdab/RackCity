@@ -77,7 +77,10 @@ from .power_views import (
     pdu_power_off,
     pdu_power_cycle,
     pdu_power_availability,
-    contact_bmi,
+    chassis_power_status,
+    chassis_power_on,
+    chassis_power_off,
+    chassis_power_cycle,
 )
 from .change_plan_views import (
     change_plan_many,
