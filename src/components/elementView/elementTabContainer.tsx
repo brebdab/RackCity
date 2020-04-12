@@ -137,6 +137,24 @@ class ElementTabContainer extends React.Component<
           }
         />
 
+        <Tab
+          className="tab do-not-print"
+          id="offline-storage-sites"
+          title="Offline Storage Sites"
+          disabled={
+            !(
+              this.props.permissionState.admin ||
+              this.props.permissionState.asset_management
+            )
+          }
+          panel={
+            <ElementTab
+              {...this.props}
+              element={ElementType.OFFLINE_STORAGE_SITE}
+            />
+          }
+        />
+
         <Tabs.Expander />
       </Tabs>
     );

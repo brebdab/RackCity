@@ -103,12 +103,11 @@ interface AssetFormState {
   loading: boolean;
   customizeModel: boolean;
 }
-function ifNullReturnEmptyString (value:string|null|undefined){
-  if (value===null || value===undefined){
-    return ""
+function ifNullReturnEmptyString(value: string | null | undefined) {
+  if (value === null || value === undefined) {
+    return "";
   }
   return value;
-
 }
 
 class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
@@ -119,14 +118,18 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   initializeCustomValues(asset: AssetObject) {
     if (this.props.initialValues) {
       const model = this.props.initialValues.model;
-      asset.cpu = this.initialState.cpu ? asset.cpu : ifNullReturnEmptyString(model.cpu);
+      asset.cpu = this.initialState.cpu
+        ? asset.cpu
+        : ifNullReturnEmptyString(model.cpu);
       asset.display_color = asset.display_color
         ? asset.display_color
         : ifNullReturnEmptyString(model.display_color);
       asset.memory_gb = asset.memory_gb
         ? asset.memory_gb
         : ifNullReturnEmptyString(model.memory_gb);
-      asset.storage = asset.storage ? asset.storage : ifNullReturnEmptyString(model.storage);
+      asset.storage = asset.storage
+        ? asset.storage
+        : ifNullReturnEmptyString(model.storage);
     }
     return asset;
   }
@@ -320,10 +323,10 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         return;
       }
       let newValues = this.mapAssetObject(this.state.values);
-      if(this.state.values.model) {
+      if (this.state.values.model) {
         if (
-            this.state.values.display_color ===
-            this.state.values.model.display_color
+          this.state.values.display_color ===
+          this.state.values.model.display_color
         ) {
           newValues.display_color = "";
         }
@@ -333,7 +336,10 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         if (this.state.values.storage === this.state.values.model.storage) {
           newValues.storage = "";
         }
-        if (this.state.values.memory_gb === this.state.values.model.memory_gb || this.state.values.memory_gb === "") {
+        if (
+          this.state.values.memory_gb === this.state.values.model.memory_gb ||
+          this.state.values.memory_gb === ""
+        ) {
           newValues.memory_gb = null;
         }
       }
@@ -342,7 +348,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         newValues.hostname = null;
       }
       if (this.state.values.asset_number === "") {
-       newValues.asset_number =null;
+        newValues.asset_number = null;
       }
       if (this.props.initialValues) {
         newValues.id = this.props.initialValues.id;
@@ -1005,7 +1011,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   };
 
   render() {
-    console.log(this.state.values)
+    console.log(this.state.values);
     if (this.state.models.length === 0) {
       this.getModels();
     }

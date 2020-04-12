@@ -10,6 +10,7 @@ export enum ROUTES {
   LOGIN = "/login",
   RACKS = "/dashboard/racks",
   DATACENTERS = "/dashboard/datacenters",
+  OFFLINE_STORAGE_SITES = "/dashboard/offline-storage-sites",
   MODELS = "/dashboard/models",
   ASSETS = "/dashboard/assets",
   DASHBOARD = "/dashboard",
@@ -28,6 +29,7 @@ export enum ElementType {
   MODEL = "models",
   USER = "users",
   DATACENTER = "datacenters",
+  OFFLINE_STORAGE_SITE = "offline-storage-sites",
   CHANGEPLANS = "change-plans",
 }
 export enum PowerSide {
@@ -54,8 +56,8 @@ export interface AssetCPObject extends AssetObject {
   is_decommissioned: boolean;
 }
 interface ParentAssetObject extends ElementObject {
-  asset_number: string|null;
-  hostname: string|null;
+  asset_number: string | null;
+  hostname: string | null;
   rack_position: string;
   mac_addresses: { [port: string]: string };
   network_connections: Array<NetworkConnection>;
@@ -116,7 +118,7 @@ export const ModelFieldsTable: any = {
   memory_gb: "Memory (GB)",
   storage: "Storage",
   comment: "Comment",
-  model_type: "Mount Type"
+  model_type: "Mount Type",
 };
 
 export enum AssetFormLabels {
@@ -131,7 +133,6 @@ export enum AssetFormLabels {
   network_ports = "Network Ports",
   power_connections = "Power Connections",
 }
-
 
 export interface Link {
   to: number;
