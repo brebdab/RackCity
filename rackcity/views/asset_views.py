@@ -112,7 +112,7 @@ def asset_many(request):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def asset_offline_storage_many(request):
+def offline_storage_asset_many(request):
     """
     List many assets in offline storage. If page is not specified as a query parameter, all
     assets are returned. If page is specified as a query parameter, page
@@ -890,7 +890,7 @@ def asset_page_count(request):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def asset_offline_storage_page_count(request):
+def offline_storage_asset_page_count(request):
     """
     Return total number of pages according to page size, which must be
     specified as query parameter.
