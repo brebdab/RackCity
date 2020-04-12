@@ -16,7 +16,7 @@ from .change_plan_serializers import GetChangePlanSerializer
 from rackcity.api.serializers.fields import RCIntegerField
 import copy
 
-from ...models.model_utils import ModelType
+from rackcity.models.model_utils import ModelType
 
 
 class AssetCPSerializer(serializers.ModelSerializer):
@@ -436,6 +436,6 @@ def get_neighbor_assets(hostname, id, nodes, edges, change_plan=None):
 def get_datacenter_of_asset(asset):
     if asset.rack:
         datacenter = asset.rack.datacenter
-    if asset.chassis and asset.chassis.rack and asset.chassis.rack.datacenter:
+    if asset.chassis and asset.chassis.rack:
         datacenter = asset.chassis.rack.datacenter
     return SiteSerializer(datacenter).data
