@@ -98,11 +98,9 @@ def asset_many(request):
     if failure_response:
         return failure_response
     if change_plan:
-        return get_many_assets_response_for_cp(
-            request, change_plan, decommissioned=False, stored=False
-        )
+        return get_many_assets_response_for_cp(request, change_plan, stored=False)
     else:
-        racked_assets = Asset.objects.filter(offline_storage_site__is_null=True)
+        racked_assets = Asset.objects.filter(offline_storage_site__isnull=True)
         return get_many_response(
             Asset,
             RecursiveAssetSerializer,
@@ -126,11 +124,9 @@ def asset_offline_storage_many(request):
     if failure_response:
         return failure_response
     if change_plan:
-        return get_many_assets_response_for_cp(
-            request, change_plan, decommissioned=False, stored=True
-        )
+        return get_many_assets_response_for_cp(request, change_plan, stored=True)
     else:
-        stored_assets = Asset.objects.filter(offline_storage_site__is_null=False)
+        stored_assets = Asset.objects.filter(offline_storage_site__isnull=False)
         return get_many_response(
             Asset,
             RecursiveAssetSerializer,
@@ -881,11 +877,9 @@ def asset_page_count(request):
     if failure_response:
         return failure_response
     if change_plan:
-        return get_page_count_response_for_cp(
-            request, change_plan, decommissioned=False, stored=False
-        )
+        return get_page_count_response_for_cp(request, change_plan, stored=False)
     else:
-        racked_assets = Asset.objects.filter(offline_storage_site__is_null=True)
+        racked_assets = Asset.objects.filter(offline_storage_site__isnull=True)
         return get_page_count_response(
             Asset,
             request.query_params,
@@ -907,11 +901,9 @@ def asset_offline_storage_page_count(request):
     if failure_response:
         return failure_response
     if change_plan:
-        return get_page_count_response_for_cp(
-            request, change_plan, decommissioned=False, stored=True
-        )
+        return get_page_count_response_for_cp(request, change_plan, stored=True)
     else:
-        stored_assets = Asset.objects.filter(offline_storage_site__is_null=False)
+        stored_assets = Asset.objects.filter(offline_storage_site__isnull=False)
         return get_page_count_response(
             Asset,
             request.query_params,
