@@ -174,7 +174,7 @@ export class PowerView extends React.PureComponent<
             ) : (
               <td></td>
             )}
-            {this.props.asset!.rack.is_network_controlled ? (
+            {this.props.asset!.rack && this.props.asset!.rack.is_network_controlled ? (
               this.state.powerStatus ? (
                 <td>{this.state.powerStatus[i]}</td>
               ) : this.props.assetIsDecommissioned || this.props.changePlan ? (
@@ -236,7 +236,7 @@ export class PowerView extends React.PureComponent<
                   <tbody>{this.getPowerPortRows()}</tbody>
                 </table>
               </div>
-              {this.props.asset!.rack.is_network_controlled &&
+              {this.props.asset!.rack && this.props.asset!.rack.is_network_controlled &&
               Object.keys(this.props.asset!.power_connections).length > 0 &&
               this.state.powerStatus &&
               !this.props.assetIsDecommissioned &&
@@ -315,7 +315,7 @@ export class PowerView extends React.PureComponent<
                   }
                 />
               ) : null}
-              {this.props.asset!.rack.is_network_controlled &&
+              {this.props.asset!.rack && this.props.asset!.rack.is_network_controlled &&
               Object.keys(this.props.asset!.power_connections).length > 0 &&
               this.state.powerStatus &&
               !this.props.assetIsDecommissioned &&

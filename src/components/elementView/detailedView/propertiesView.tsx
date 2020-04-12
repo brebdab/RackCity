@@ -10,7 +10,7 @@ import {
   isModelObject,
   isObject,
   ModelFieldsTable,
-  ChangePlan,
+  ChangePlan, isDatacenterObject,
 } from "../../../utils/utils";
 import "./propertiesView.scss";
 import { connect } from "react-redux";
@@ -81,7 +81,7 @@ class PropertiesView extends React.PureComponent<
         }
       } else if (item === "model") {
         dat = <p>{data[item].vendor + " " + data[item].model_number}</p>;
-      } else if (item === "rack") {
+      } else if (isAssetObject(data) &&item === "rack") {
         return [
           <tr>
             <td key={item}>
@@ -90,24 +90,16 @@ class PropertiesView extends React.PureComponent<
 
             <td style={getChangePlanRowStyle(data)}>
               {" "}
-              <p>{data[item].row_letter + "" + data[item].rack_num}</p>
+              <p>{data.rack ? data.rack.row_letter + "" + data.rack.rack_num : null}</p>
             </td>
-          </tr>,
-          <tr>
-            <td key={"datacenter"}>
-              <p className="label">
-                {AssetFieldsTable["rack__datacenter__name"]}:
-              </p>
-            </td>
-
-            <td style={getChangePlanRowStyle(data)}>
-              {" "}
-              <p>{data[item].datacenter.name}</p>
-            </td>
-          </tr>,
+          </tr>
         ];
       } else if (item === "comment") {
         dat = <p className="comment">{data[item]}</p>;
+      } else if (isDatacenterObject((data[item]))){
+        dat = <p>data[item].name</p>
+
+
       } else if (!isObject(data[item])) {
         //TO DO: decide how to render dicts
         dat = <p>{data[item]}</p>;

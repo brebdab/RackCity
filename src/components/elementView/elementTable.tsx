@@ -589,10 +589,7 @@ class ElementTable extends React.Component<
           fields.push("model__vendor");
           fields.push("model__model_number");
         }
-        // } else if (col === "rack") {
-        //   fields.push("rack");
-        //   fields.push("rack__datacenter__name");
-        // }
+
         else if (
           col !== "id" &&
           col !== "decommissioned_id" &&
@@ -607,9 +604,7 @@ class ElementTable extends React.Component<
           fields.push(col);
         }
       });
-      if (isAssetObject(items[0])) {
-        fields.push("datacenter");
-      }
+
     }
 
     this.setState({
@@ -1294,7 +1289,7 @@ class ElementTable extends React.Component<
                                               .asset_management) ||
                                           (this.props.type ===
                                             ElementType.ASSET &&
-                                            isAssetObject(item) && item &&
+                                            isAssetObject(item) &&
                                             this.props.permissionState.site_permissions.includes(
                                               +item.datacenter.id
                                             ))
@@ -1343,7 +1338,7 @@ class ElementTable extends React.Component<
                                             ElementType.ASSET &&
                                             isAssetObject(item) &&
                                             this.props.permissionState.site_permissions.includes(
-                                              +item.rack.datacenter.id
+                                              +item.datacenter.id
                                             ))
                                         )
                                   }

@@ -40,9 +40,9 @@ export interface ChangePlan extends ElementObject {
 }
 
 export interface AssetObject extends ParentAssetObject {
-  chassis: AssetObject;
+  chassis?: AssetObject;
   model: ModelObject;
-  rack: RackObject;
+  rack?: RackObject;
   network_graph: NetworkGraphData;
   blades: Array<AssetObject>;
   datacenter: DatacenterObject
