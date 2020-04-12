@@ -158,8 +158,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
   public state = {
     values: this.initializeCustomValues(this.initialState),
-    currDatacenter: this.initialState.rack
-      ? this.initialState.rack.datacenter
+    currDatacenter: this.initialState.datacenter
+      ? this.initialState.datacenter
       : this.props.currDatacenter === ALL_DATACENTERS
       ? undefined
       : this.props.currDatacenter,

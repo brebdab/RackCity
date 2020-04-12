@@ -9,6 +9,7 @@ from rackcity.models import (
     NetworkPort,
     NetworkPortCP,
 )
+from . import SiteSerializer
 from .it_model_serializers import ITModelSerializer
 from .rack_serializers import RackSerializer
 from .change_plan_serializers import GetChangePlanSerializer
@@ -115,6 +116,7 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
     network_connections = serializers.SerializerMethodField()
     network_graph = serializers.SerializerMethodField()
     blades = serializers.SerializerMethodField()
+    datacenter = serializers.SerializerMethodField()
 
     class Meta:
         model = Asset
@@ -138,6 +140,7 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
             "storage",
             "display_color",
             "memory_gb",
+            "datacenter",
         )
 
     def get_mac_addresses(self, asset):
@@ -154,6 +157,9 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
 
     def get_blades(self, asset):
         return get_blades_in_chassis(asset)
+
+    def get_datacenter(self, asset):
+        return get_datacenter_of_asset(asset)
 
 
 class BulkAssetSerializer(serializers.ModelSerializer):
@@ -264,7 +270,6 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
             "display_color",
             "memory_gb",
             "blades",
-
         )
 
     def get_mac_addresses(self, assetCP):
@@ -361,7 +366,7 @@ def get_blades_in_chassis(asset):
         return []
 
     blades = Asset.objects.filter(chassis=asset.id)
-    serializer = AssetSerializer(blades, many=True, )
+    serializer = AssetSerializer(blades, many=True,)
     return serializer.data
 
 
@@ -421,3 +426,11 @@ def get_neighbor_assets(hostname, id, nodes, edges, change_plan=None):
         return nodes, edges
     except ObjectDoesNotExist:
         return
+
+
+def get_datacenter_of_asset(asset):
+    if asset.rack:
+        datacenter = asset.rack.datacenter
+    if asset.chassis and asset.chassis.rack and asset.chassis.rack.datacenter:
+        datacenter = asset.chassis.rack.datacenter
+    return SiteSerializer(datacenter).data
