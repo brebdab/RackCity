@@ -444,14 +444,38 @@ def toggle_pdu_power(asset, asset_port_number, goal_state):
 @permission_classes([IsAuthenticated])
 def chassis_power_status(request):
     data = JSONParser().parse(request)
-    id = data["id"]
-    chassis = Asset.objects.get(id=id)
-    chassis_hostname = chassis.hostname
-    blade = data["blade"]
-    result, exit_status = make_bcman_request(chassis_hostname, str(blade), "")
-    return JsonResponse(
-        {"success_message": Status.SUCCESS.value + result}, status=HTTPStatus.OK,
-    )
+    try:
+        chassis_hostname, blade_slot = get_chassis_power_request_parameters(data)
+    except ChassisPowerManagementException as error:
+        return JsonResponse(
+            {"failure_message": Status.ERROR.value + str(error)},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    result, exit_status = make_bcman_request(chassis_hostname, str(blade_slot), "")
+    if exit_status != 0:
+        return JsonResponse(
+            {
+                "failure_message": Status.CONNECTION.value
+                + "Unable to contact network controlled blade chassis power management.",
+                "errors": "Request to bcman exited with non-zero status: "
+                + str(exit_status),
+            },
+            status=HTTPStatus.REQUEST_TIMEOUT,
+        )
+    if "is ON" in result:
+        blade_slot_power_status = "ON"
+    elif "is OFF" in result:
+        blade_slot_power_status = "OFF"
+    else:
+        return JsonResponse(
+            {
+                "failure_message": Status.CONNECTION.value
+                + "Unable to contact network controlled blade chassis power management.",
+                "errors": "Power status returned as: " + result,
+            },
+            status=HTTPStatus.REQUEST_TIMEOUT,
+        )
+    return JsonResponse({str(blade_slot): blade_slot_power_status}, status=HTTPStatus.OK,)
 
 
 @api_view(["POST"])
@@ -466,6 +490,16 @@ def chassis_power_on(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     result, exit_status = make_bcman_request(chassis_hostname, str(blade_slot), "on")
+    if exit_status != 0:
+        return JsonResponse(
+            {
+                "failure_message": Status.CONNECTION.value
+                + "Unable to contact network controlled blade chassis power management.",
+                "errors": "Request to bcman exited with non-zero status: "
+                + str(exit_status),
+            },
+            status=HTTPStatus.REQUEST_TIMEOUT,
+        )
     return JsonResponse(
         {"success_message": Status.SUCCESS.value + result}, status=HTTPStatus.OK,
     )
@@ -483,6 +517,16 @@ def chassis_power_off(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     result, exit_status = make_bcman_request(chassis_hostname, str(blade_slot), "off")
+    if exit_status != 0:
+        return JsonResponse(
+            {
+                "failure_message": Status.CONNECTION.value
+                + "Unable to contact network controlled blade chassis power management.",
+                "errors": "Request to bcman exited with non-zero status: "
+                + str(exit_status),
+            },
+            status=HTTPStatus.REQUEST_TIMEOUT,
+        )
     return JsonResponse(
         {"success_message": Status.SUCCESS.value + result}, status=HTTPStatus.OK,
     )
@@ -502,10 +546,30 @@ def chassis_power_cycle(request):
     result_off, exit_status_off = make_bcman_request(
         chassis_hostname, str(blade_slot), "off"
     )
+    if exit_status_off != 0:
+        return JsonResponse(
+            {
+                "failure_message": Status.CONNECTION.value
+                + "Unable to contact network controlled blade chassis power management.",
+                "errors": "Request to bcman exited with non-zero status: "
+                + str(exit_status_off),
+            },
+            status=HTTPStatus.REQUEST_TIMEOUT,
+        )
     time.sleep(2)
     result_on, exit_status_on = make_bcman_request(
         chassis_hostname, str(blade_slot), "on"
     )
+    if exit_status_on != 0:
+        return JsonResponse(
+            {
+                "failure_message": Status.CONNECTION.value
+                + "Unable to contact network controlled blade chassis power management.",
+                "errors": "Request to bcman exited with non-zero status: "
+                + str(exit_status_on),
+            },
+            status=HTTPStatus.REQUEST_TIMEOUT,
+        )
     result = (
         "chassis '" + chassis_hostname + "' blade " + str(blade_slot) + "' power cycled"
     )
