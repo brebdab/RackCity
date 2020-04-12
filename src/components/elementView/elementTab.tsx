@@ -230,7 +230,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       }
     }
     let url = this.state.isDecommissioned
-      ? "api/assets/pages-decommissioned"
+      ? "api/assets/get-many-decommissioned"
       : path === "datacenters" || path === "offline-storage-sites"
       ? "api/sites/" + path + "/get-many"
       : "api/" + path + "/get-many";
