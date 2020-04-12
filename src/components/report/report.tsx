@@ -235,7 +235,7 @@ export class Report extends React.PureComponent<
   componentDidMount() {
     axios
       .post(
-        API_ROOT + "api/datacenters/get-many",
+        API_ROOT + "api/sites/datacenters/get-many",
         {},
         getHeaders(this.props.token)
       )

@@ -179,6 +179,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     }
     let url = this.state.isDecommissioned
       ? "api/assets/pages-decommissioned"
+      : path === "datacenters"
+      ? "api/sites/datacenters/pages"
       : "api/" + path + "/pages";
     return axios
       .post(API_ROOT + url, { filters: filtersCopy }, config)
@@ -228,10 +230,11 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       }
     }
     let url = this.state.isDecommissioned
-      ? API_ROOT + "api/assets/get-many-decommissioned"
-      : API_ROOT + "api/" + path + "/get-many";
-
-    return axios.post(url, bodyCopy, config).then((res) => {
+      ? "api/assets/get-many-decommissioned"
+      : path === "datacenters"
+      ? "api/sites/datacenters/get-many"
+      : "api/" + path + "/get-many";
+    return axios.post(API_ROOT + url, bodyCopy, config).then((res) => {
       const items = res.data[path];
 
       return items;
@@ -304,16 +307,14 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     dc: DatacenterObject,
     headers: any
   ): Promise<any> => {
-    return axios
-      .post(API_ROOT + "api/datacenters/add", dc, headers)
-      .then((res) => {
-        this.handleDataUpdate(true);
-        this.handleClose();
-        this.addSuccessToast(res.data.success_message);
-        if (this.props.updateDatacenters) {
-          this.props.updateDatacenters();
-        }
-      });
+    return axios.post(API_ROOT + "api/sites/add", dc, headers).then((res) => {
+      this.handleDataUpdate(true);
+      this.handleClose();
+      this.addSuccessToast(res.data.success_message);
+      if (this.props.updateDatacenters) {
+        this.props.updateDatacenters();
+      }
+    });
   };
 
   private createUser = (user: CreateUserObject, headers: any): Promise<any> => {

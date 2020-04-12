@@ -42,16 +42,13 @@ import PowerView from "../../powerView/powerView";
 import { ALL_DATACENTERS } from "../../elementTabContainer";
 import { isNullOrUndefined } from "util";
 import { PermissionState } from "../../../../utils/permissionUtils";
+import { IconNames } from "@blueprintjs/icons";
 export interface AssetViewProps {
   token: string;
   isAdmin: boolean;
   changePlan: ChangePlan;
   permissionState: PermissionState;
 }
-// Given an rid, will perform a GET request of that rid and display info about that instnace
-
-// var console: any = {};
-// console.log = function() {};
 
 interface AssetViewState {
   asset: AssetObject | AssetCPObject;
@@ -183,7 +180,7 @@ export class AssetView extends React.PureComponent<
     const headers = getHeaders(this.props.token);
 
     axios
-      .post(API_ROOT + "api/datacenters/get-many", {}, headers)
+      .post(API_ROOT + "api/sites/datacenters/get-many", {}, headers)
       .then((res) => {
         const datacenters = res.data.datacenters as Array<DatacenterObject>;
         datacenters.push(ALL_DATACENTERS);
@@ -229,7 +226,7 @@ export class AssetView extends React.PureComponent<
                     this.props.permissionState.asset_management ||
                     (this.state.asset &&
                       this.state.asset.rack &&
-                      this.props.permissionState.datacenter_permissions.includes(
+                      this.props.permissionState.site_permissions.includes(
                         +this.state.asset.rack.datacenter.id
                       ))
                   )
@@ -258,7 +255,7 @@ export class AssetView extends React.PureComponent<
                     this.props.permissionState.asset_management ||
                     (this.state.asset &&
                       this.state.asset.rack &&
-                      this.props.permissionState.datacenter_permissions.includes(
+                      this.props.permissionState.site_permissions.includes(
                         +this.state.asset.rack.datacenter.id
                       ))
                   )
@@ -290,7 +287,7 @@ export class AssetView extends React.PureComponent<
                     this.props.permissionState.asset_management ||
                     (this.state.asset &&
                       this.state.asset.rack &&
-                      this.props.permissionState.datacenter_permissions.includes(
+                      this.props.permissionState.site_permissions.includes(
                         +this.state.asset.rack.datacenter.id
                       ))
                   )
@@ -337,7 +334,30 @@ export class AssetView extends React.PureComponent<
             Please go to change plan detail view for more details
           </Callout>
         ) : null}
-        <PropertiesView data={this.state.asset} />
+        <PropertiesView data={this.state.asset} title="Asset Properties" />
+        {this.state.asset.model ? (
+          <div>
+            <AnchorButton
+              disabled={
+                !isNullOrUndefined(this.state.asset.decommissioning_user)
+              }
+              onClick={() =>
+                this.props.history.push(
+                  ROUTES.MODELS + "/" + this.state.asset.model.id
+                )
+              }
+              className="model-detail"
+              minimal
+              icon={IconNames.DOCUMENT_OPEN}
+              text="Go to model detail page"
+            />
+            <PropertiesView
+              data={this.state.asset.model}
+              title="Model Properties"
+              data_override={this.state.asset}
+            />
+          </div>
+        ) : null}
         <div className="propsview">
           <h3>Network Connections</h3>
 

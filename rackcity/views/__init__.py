@@ -62,12 +62,14 @@ from .user_views import (
     all_user_groups,
     user_get_my_groups,
 )
-from .datacenter_views import (
+from .site_views import (
     datacenter_all,
-    datacenter_create,
-    datacenter_delete,
     datacenter_page_count,
-    datacenter_modify,
+    offline_storage_site_all,
+    offline_storage_site_page_count,
+    site_create,
+    site_delete,
+    site_modify,
 )
 from .power_views import (
     pdu_power_status,

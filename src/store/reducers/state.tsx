@@ -8,6 +8,7 @@ interface ReduxState {
   loading: boolean;
   changePlan: ChangePlan | null;
   permissionState: PermissionState;
+  isMobile: boolean;
 }
 const initialState: ReduxState = {
   token: null,
@@ -20,8 +21,9 @@ const initialState: ReduxState = {
     power_control: false,
     audit_read: false,
     admin: false,
-    datacenter_permissions: [],
+    site_permissions: [],
   } as PermissionState,
+  isMobile: false
 };
 const setChangePlan = (state: any, action: any) => {
   return updateObject(state, {
@@ -74,6 +76,12 @@ const authAdmin = (state: any, aciton: any) => {
   });
 };
 
+const setBrowser = (state: any, action: any) => {
+  return updateObject(state, {
+    isMobile: true,
+  });
+};
+
 // define when actions take place
 
 const reducer = (state = initialState, action: any) => {
@@ -94,6 +102,8 @@ const reducer = (state = initialState, action: any) => {
       return updateChangePlans(state, action);
     case actionTypes.SET_PERMISSION_STATE:
       return setPermissionState(state, action);
+    case actionTypes.SET_BROWSER_TYPE:
+      return setBrowser(state, action);
     default:
       return state;
   }

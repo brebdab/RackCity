@@ -184,14 +184,14 @@ export const deleteDatacenter = (
   headers: any
 ): Promise<any> => {
   const data = { id: dc.id };
-  return axios.post(API_ROOT + "api/datacenters/delete", data, headers);
+  return axios.post(API_ROOT + "api/sites/delete", data, headers);
 };
 
 export const modifyDatacenter = (
   dc: DatacenterObject,
   headers: any
 ): Promise<any> => {
-  return axios.post(API_ROOT + "api/datacenters/modify", dc, headers);
+  return axios.post(API_ROOT + "api/sites/modify", dc, headers);
 };
 export const deleteUser = (
   user: UserInfoObject,

@@ -20,6 +20,7 @@ export enum ROUTES {
   USERS = "/dashboard/users",
   CHANGE_PLAN = "/dashboard/change-plans",
   BARCODE_PRINT = "/assets/barcode-print",
+  SCANNER = "/mobile/scanner",
 }
 export enum ElementType {
   RACK = "racks",
@@ -37,15 +38,6 @@ export interface ChangePlan extends ElementObject {
   name: string;
   execution_time?: string;
 }
-export interface AssetObjectOld extends ElementObject {
-  hostname: string;
-  rack_position: string;
-  model?: ModelObject;
-  rack?: RackObject;
-  network_connections: {};
-  owner?: string;
-  comment?: string;
-}
 
 export interface AssetObject extends ParentAssetObject {
   model: ModelObject;
@@ -62,8 +54,8 @@ export interface AssetCPObject extends AssetObject {
   is_decommissioned: boolean;
 }
 interface ParentAssetObject extends ElementObject {
-  asset_number: string;
-  hostname: string;
+  asset_number: string|null;
+  hostname: string|null;
   rack_position: string;
   mac_addresses: { [port: string]: string };
   network_connections: Array<NetworkConnection>;
@@ -72,6 +64,10 @@ interface ParentAssetObject extends ElementObject {
   comment: string;
   decommissioning_user?: string;
   time_decommissioned?: string;
+  cpu: string;
+  storage: string;
+  display_color: string;
+  memory_gb: string | null;
 }
 
 export interface RackRangeFields {
@@ -95,7 +91,6 @@ export const AssetFieldsTable: any = {
   model__vendor: "Model Vendor",
   model__model_number: "Model Number",
   rack: "Rack",
-
   rack__datacenter__name: "Datacenter",
   rack_position: "Rack Position",
   owner: "Owner",
@@ -121,6 +116,7 @@ export const ModelFieldsTable: any = {
   memory_gb: "Memory (GB)",
   storage: "Storage",
   comment: "Comment",
+  model_type: "Mount Type"
 };
 
 export enum AssetFormLabels {
@@ -135,6 +131,8 @@ export enum AssetFormLabels {
   network_ports = "Network Ports",
   power_connections = "Power Connections",
 }
+
+
 export interface Link {
   to: number;
   from: number;
@@ -195,7 +193,7 @@ export interface RackObject extends ElementObject {
 
 export interface RackResponseObject {
   rack: RackObject;
-  assets: Array<AssetObjectOld>;
+  assets: Array<AssetObject>;
 }
 
 export interface DatacenterObject extends ElementObject {
@@ -203,28 +201,17 @@ export interface DatacenterObject extends ElementObject {
   abbreviation: string;
 }
 
-export interface ModificationsObject {
-  existing: Array<ModelObjectOld>;
-  modified: Array<ModelObjectOld>;
-}
-
-export interface ModelObjectOld extends ElementObject {
-  vendor: string;
-  model_number: string;
-  height: string;
-  display_color?: string;
-  num_ethernet_ports?: string; //
-  num_power_ports?: string; //
-  cpu?: string;
-  memory_gb?: string; //
-  storage?: string;
-  comment?: string;
+export enum MountTypes {
+  RACKMOUNT = "Asset",
+  BLADE_CHASSIS = "Blade Chassis",
+  BLADE = "Blade Server ",
 }
 
 export interface ModelObject extends ElementObject {
   vendor: string;
   model_number: string;
   height: string;
+  model_type: MountTypes;
   display_color?: string;
   num_network_ports?: string;
   network_ports?: Array<string>; //
@@ -234,10 +221,6 @@ export interface ModelObject extends ElementObject {
   storage?: string;
   comment?: string;
 }
-export interface ModelDetailObject {
-  model: ModelObjectOld;
-  assets: Array<AssetObjectOld>;
-}
 
 export interface UserPermissionsObject {
   [index: string]: any;
@@ -246,14 +229,12 @@ export interface UserPermissionsObject {
   power_control: boolean;
   audit_read: boolean;
   admin: boolean;
-  datacenter_permissions: Array<string>;
+  site_permissions: Array<string>;
 }
 
 export type ElementObjectType =
-  | ModelObjectOld
   | ModelObject
   | RackObject
-  | AssetObjectOld
   | AssetObject
   | ShallowAssetObject
   | UserInfoObject
@@ -261,10 +242,9 @@ export type ElementObjectType =
   | ChangePlan;
 
 export type FormObjectType =
-  | ModelObjectOld
   | RackObject
-  | AssetObjectOld
   | AssetObject
+  | ModelObject
   | DatacenterObject
   | RackRangeFields
   | ShallowAssetObject

@@ -148,7 +148,7 @@ export const checkPermissions = (token: string) => {
           power_control: res.data.power_control,
           audit_read: res.data.audit_read,
           admin: res.data.admin,
-          datacenter_permissions: res.data.datacenter_permissions,
+          site_permissions: res.data.site_permissions,
         };
         dispatch(setPermissionState(permissionState));
       })
@@ -187,3 +187,15 @@ export const authCheckState = () => {
     }
   };
 };
+
+export const isMobile = () => {
+  return {
+    type: actionTypes.SET_BROWSER_TYPE,
+  };
+};
+
+export const checkBrowserType = () => {
+  return (dispatch: any) => {
+    dispatch(isMobile());
+  }
+}
