@@ -2,7 +2,14 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from rackcity.models.fields import RCPositiveIntegerField
 from django.contrib.postgres.fields import ArrayField
-from rackcity.models.model_utils import DEFAULT_DISPLAY_COLOR, validate_display_color, ModelType
+
+from rackcity.models.model_utils import (
+    DEFAULT_DISPLAY_COLOR,
+    validate_display_color,
+    validate_portname,
+    ModelType,
+)
+
 
 MODEL_TYPE_CHOICES = [
     (ModelType.RACKMOUNT_ASSET.value, ModelType.RACKMOUNT_ASSET.value),
@@ -42,7 +49,11 @@ class ITModel(models.Model):
         default=DEFAULT_DISPLAY_COLOR,
         validators=[validate_display_color],
     )
-    network_ports = ArrayField(models.CharField(max_length=150), null=True, blank=True)
+    network_ports = ArrayField(
+        models.CharField(max_length=150, validators=[validate_portname]),
+        null=True,
+        blank=True,
+    )
     num_network_ports = RCPositiveIntegerField(null=True, blank=True)
     num_power_ports = RCPositiveIntegerField(null=True, blank=True)
     cpu = models.CharField(max_length=150, null=True, blank=True)
