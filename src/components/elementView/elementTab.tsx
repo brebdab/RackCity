@@ -318,11 +318,14 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
   };
 
   private createUser = (user: CreateUserObject, headers: any): Promise<any> => {
-    return axios.post(API_ROOT + "api/users/add", user, headers).then((res) => {
-      this.handleDataUpdate(true);
-      this.handleClose();
-      this.addSuccessToast(res.data.success_message);
-    });
+    return axios
+        .post(API_ROOT + "api/users/add", user, headers)
+        .then((res) => {
+          this.handleDataUpdate(true);
+          this.handleClose();
+          this.addSuccessToast(res.data.success_message);
+        })
+        .catch((err) => this.addErrorToast(err.response.data.failure_message));
   };
 
   private createChangePlan = (
