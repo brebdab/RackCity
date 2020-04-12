@@ -26,3 +26,8 @@ class NetworkConnectionException(Exception):
 class UserAssetPermissionException(Exception):
     def __init__(self, *args, **kwargs):
         Exception.__init__(self, *args, **kwargs)
+
+
+class ChassisPowerManagementException(Exception):
+    def __init__(self, *args, **kwargs):
+        Exception.__init__(self, *args, **kwargs)

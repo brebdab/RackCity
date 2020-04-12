@@ -25,12 +25,14 @@ from rackcity.models import (
 from rackcity.models.asset import (
     get_assets_for_cp,
     get_next_available_asset_number,
+    AssetCP,
 )
 from rackcity.utils.asset_utils import (
-    get_or_create_asset_cp,
+    does_asset_exist,
     save_all_connection_data,
     save_power_connections,
-    save_all_field_data,
+    save_all_field_data_live,
+    save_all_field_data_cp,
 )
 from rackcity.utils.change_planner_utils import (
     get_change_plan,
@@ -276,44 +278,51 @@ def asset_modify(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
-    id = data["id"]
+    asset_id = data["id"]
 
     (change_plan, failure_response) = get_change_plan(
         request.query_params.get("change_plan")
     )
     if failure_response:
         return failure_response
-
+    create_new_asset_cp = False
+    existing_asset = None
     if change_plan:
         failure_response = get_cp_already_executed_response(change_plan)
         if failure_response:
             return failure_response
-        del data["id"]
-        existing_asset = get_or_create_asset_cp(id, change_plan)
-        if existing_asset is None:
+
+        create_new_asset_cp = not AssetCP.objects.filter(
+            id=asset_id, change_plan=change_plan.id
+        ).exists()
+
+        if not create_new_asset_cp:
+            existing_asset = AssetCP.objects.get(
+                id=asset_id, change_plan=change_plan.id
+            )
+        if not does_asset_exist(asset_id, change_plan):
             return JsonResponse(
                 {
                     "failure_message": Status.MODIFY_ERROR.value
                     + "Asset"
                     + GenericFailure.DOES_NOT_EXIST.value,
-                    "errors": "No existing asset with id=" + str(id),
+                    "errors": "No existing asset with id=" + str(asset_id),
                 },
                 status=HTTPStatus.BAD_REQUEST,
             )
-    else:
+    if create_new_asset_cp or not change_plan:
         try:
-            existing_asset = Asset.objects.get(id=id)
+            existing_asset = Asset.objects.get(id=asset_id)
         except ObjectDoesNotExist:
             return JsonResponse(
                 {
                     "failure_message": Status.MODIFY_ERROR.value
                     + "Model"
                     + GenericFailure.DOES_NOT_EXIST.value,
-                    "errors": "No existing asset with id=" + str(id),
+                    "errors": "No existing asset with id=" + str(asset_id),
                 },
                 status=HTTPStatus.BAD_REQUEST,
             )
-
     try:
         validate_user_asset_permission_to_modify_or_delete(request.user, existing_asset)
     except UserAssetPermissionException as auth_error:
@@ -335,13 +344,21 @@ def asset_modify(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
-
-    failure_message = save_all_field_data(data, existing_asset, change_plan=change_plan)
+    asset_cp = None
+    if change_plan:
+        (asset_cp, failure_message) = save_all_field_data_cp(
+            data, existing_asset, change_plan, create_new_asset_cp
+        )
+    else:
+        failure_message = save_all_field_data_live(data, existing_asset)
     if failure_message:
         return JsonResponse(
             {"failure_message": Status.MODIFY_ERROR.value + failure_message},
             status=HTTPStatus.BAD_REQUEST,
         )
+
+    if asset_cp:
+        existing_asset = asset_cp
 
     warning_message = save_all_connection_data(
         data, existing_asset, request.user, change_plan=change_plan
@@ -388,16 +405,16 @@ def asset_delete(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
-    id = data["id"]
+    asset_id = data["id"]
     try:
-        existing_asset = Asset.objects.get(id=id)
+        existing_asset = Asset.objects.get(id=asset_id)
     except ObjectDoesNotExist:
         return JsonResponse(
             {
                 "failure_message": Status.DELETE_ERROR.value
                 + "Model"
                 + GenericFailure.DOES_NOT_EXIST.value,
-                "errors": "No existing asset with id=" + str(id),
+                "errors": "No existing asset with id=" + str(asset_id),
             },
             status=HTTPStatus.BAD_REQUEST,
         )

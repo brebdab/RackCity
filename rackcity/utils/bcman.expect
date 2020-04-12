@@ -1,0 +1,25 @@
+#!/usr/bin/expect
+
+log_user 0
+set timeout 20
+set user [lindex $argv 0]
+set host [lindex $argv 1]
+set options [lindex $argv 2]
+set password [lindex $argv 3]
+set chassis [lindex $argv 4]
+set blade [lindex $argv 5]
+set power [lindex $argv 6]
+
+spawn ssh $user@$host $options
+expect  "yes/no" {
+        send "yes\r"
+        expect "*?assword" { send "$password\r" }
+        } "*?assword" { send "$password\r" }
+expect "bcman" { send "chassis $chassis\r" }
+expect "bcman" { send "blade $blade\r" }
+expect "bcman" { send "power $power\r" }
+expect "chassis '$chassis' blade $blade*\r"
+set output $expect_out(0,string)
+send "exit\r"
+expect eof
+puts "$output"
