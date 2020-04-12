@@ -71,12 +71,16 @@ from .site_views import (
     site_delete,
     site_modify,
 )
-from .pdu_views import (
-    power_status,
-    power_on,
-    power_off,
-    power_cycle,
-    power_availability,
+from .power_views import (
+    pdu_power_status,
+    pdu_power_on,
+    pdu_power_off,
+    pdu_power_cycle,
+    pdu_power_availability,
+    chassis_power_status,
+    chassis_power_on,
+    chassis_power_off,
+    chassis_power_cycle,
 )
 from .change_plan_views import (
     change_plan_many,
