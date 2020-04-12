@@ -8,6 +8,8 @@ import Webcam from "react-webcam";
 interface BarcodeScannerState {
   result: string;
   image: any;
+  cameraHeight: number;
+  cameraWidth: number;
 }
 interface BarcodeScannerProps {
   token: string;
@@ -21,6 +23,8 @@ export class BarcodeScanner extends React.PureComponent<
   public state = {
     result: "",
     image: undefined,
+    cameraHeight: 0,
+    cameraWidth: 0
   };
 
   handleScan(data: string) {
@@ -32,12 +36,17 @@ export class BarcodeScanner extends React.PureComponent<
     console.error(err);
   }
 
+  componentDidMount(): void {
+    this.setState({
+      cameraHeight: document.body.offsetHeight,
+      cameraWidth: document.body.offsetWidth
+    })
+  }
+
   render() {
-    const height = document.body.offsetHeight;
-    const width = document.body.offsetWidth;
     const constraints = {
-      height: height,
-      width: width,
+      height: this.state.cameraHeight,
+      width: this.state.cameraWidth,
       // facingMode: "user",
       facingMode: { exact: "environment" },
     };
@@ -57,9 +66,9 @@ export class BarcodeScanner extends React.PureComponent<
         <div>
           <Webcam
             audio={false}
-            height={height}
+            height={this.state.cameraHeight}
             screenshotFormat={"image/jpeg"}
-            width={width}
+            width={this.state.cameraWidth}
             videoConstraints={constraints}
             ref={webcamRef}
             mirrored={true}
