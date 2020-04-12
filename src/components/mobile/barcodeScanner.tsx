@@ -35,15 +35,16 @@ export class BarcodeScanner extends React.PureComponent<
   handleError(err: any) {
     console.error(err);
   }
-
-  componentDidMount(): void {
-    this.setState({
-      cameraHeight: document.body.offsetHeight,
-      cameraWidth: document.body.offsetWidth
-    })
-  }
-
+  
   render() {
+    const height = document.body.offsetHeight;
+    const width = document.body.offsetWidth;
+    if (this.state.cameraHeight === 0 && this.state.cameraWidth === 0) {
+      this.setState({
+        cameraWidth: width,
+        cameraHeight: height
+      })
+    }
     const constraints = {
       height: this.state.cameraHeight,
       width: this.state.cameraWidth,
@@ -58,6 +59,7 @@ export class BarcodeScanner extends React.PureComponent<
       const capture = React.useCallback(() => {
         const imageSrc = webcamRef.current.getScreenshot();
         console.log(webcamRef);
+        console.log(imageSrc)
         this.setState({
           image: imageSrc,
         });
