@@ -588,9 +588,7 @@ class ElementTable extends React.Component<
         if (col === "model") {
           fields.push("model__vendor");
           fields.push("model__model_number");
-        }
-
-        else if (
+        } else if (
           col !== "id" &&
           col !== "decommissioned_id" &&
           col !== "network_ports" &&
@@ -604,7 +602,6 @@ class ElementTable extends React.Component<
           fields.push(col);
         }
       });
-
     }
 
     this.setState({
@@ -1199,10 +1196,14 @@ class ElementTable extends React.Component<
                               let rack_value = null;
                               if (isRackObject(value)) {
                                 rack_value = value.row_letter + value.rack_num;
-                              }
-                              else if (isAssetObject(item) && item.chassis && item.chassis.rack){
-                                rack_value = item.chassis.rack.row_letter + item.chassis.rack.rack_num
-
+                              } else if (
+                                isAssetObject(item) &&
+                                item.chassis &&
+                                item.chassis.rack
+                              ) {
+                                rack_value =
+                                  item.chassis.rack.row_letter +
+                                  item.chassis.rack.rack_num;
                               }
 
                               return (
@@ -1210,9 +1211,7 @@ class ElementTable extends React.Component<
                                   {rack_value}
                                 </td>
                               );
-                            }
-
-                            else if (
+                            } else if (
                               isModelObject(item) &&
                               col === "display_color"
                             ) {
@@ -1239,7 +1238,7 @@ class ElementTable extends React.Component<
                                 </td>
                               );
                             } else if (this.shouldShowColumn(item, col)) {
-                              console.log(col,value)
+                              console.log(col, value);
                               return (
                                 <td style={getChangePlanRowStyle(item)}>
                                   {value}

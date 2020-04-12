@@ -85,12 +85,12 @@ class PropertiesView extends React.PureComponent<
       } else if (item === "model") {
         dat = <p>{data[item].vendor + " " + data[item].model_number}</p>;
       } else if (isAssetObject(data) && item === "rack") {
-        let rack  = null
-        if(data.rack){
-          rack = data.rack
+        let rack = null;
+        if (data.rack) {
+          rack = data.rack;
         }
-        if(data.chassis){
-          rack = data.chassis.rack
+        if (data.chassis) {
+          rack = data.chassis.rack;
         }
         return [
           <tr>
@@ -100,18 +100,15 @@ class PropertiesView extends React.PureComponent<
 
             <td style={getChangePlanRowStyle(data)}>
               {" "}
-              <p>
-                {rack
-                  ? rack.row_letter + "" + rack.rack_num
-                  : null}
-              </p>
+              <p>{rack ? rack.row_letter + "" + rack.rack_num : null}</p>
             </td>
           </tr>,
         ];
       } else if (isAssetObject(data) && item === "chassis") {
-        console.log(data,this.props)
+        console.log(data, this.props);
         return [
-          <tr className= {data.chassis && this.props.redirectToAsset?"link":""}
+          <tr
+            className={data.chassis && this.props.redirectToAsset ? "link" : ""}
             onClick={() =>
               data.chassis && this.props.redirectToAsset
                 ? this.props.redirectToAsset(data.chassis.id)

@@ -95,12 +95,13 @@ class AssetSerializer(serializers.ModelSerializer):
             "memory_gb",
         )
 
+
 class ChassisSerializer(serializers.ModelSerializer):
     """
     Serializers the information we want for a chassis that a blade is in (only used for serializing info to be sent)
     """
-    rack = RackSerializer()
 
+    rack = RackSerializer()
 
     class Meta:
         model = Asset
@@ -109,7 +110,6 @@ class ChassisSerializer(serializers.ModelSerializer):
             "hostname",
             "model",
             "rack",
-
             "rack_position",
         )
 
