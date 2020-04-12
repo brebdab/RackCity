@@ -240,6 +240,7 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
     network_graph = serializers.SerializerMethodField()
     related_asset = AssetSerializer()
     blades = serializers.SerializerMethodField()
+    datacenter = serializers.SerializerMethodField()
 
     class Meta:
         model = AssetCP
@@ -270,6 +271,7 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
             "display_color",
             "memory_gb",
             "blades",
+            "datacenter"
         )
 
     def get_mac_addresses(self, assetCP):
@@ -286,6 +288,9 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
 
     def get_blades(self, assetCP):
         get_blades_in_chassis_cp(assetCP)
+    
+    def get_datacenter(self, assetCP):
+        get_datacenter_of_asset(assetCP)
 
 
 def normalize_bulk_asset_data(bulk_asset_data):
