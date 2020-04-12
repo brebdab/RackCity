@@ -1113,7 +1113,6 @@ class ElementTable extends React.Component<
                 !this.state.getDataInProgress ? (
                   <tbody>
                     {this.state.items.map((item: ElementObjectType) => {
-                      let datacenter = null;
 
                       return (
                         <tr

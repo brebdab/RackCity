@@ -12,7 +12,6 @@ import {
   ModelFieldsTable,
   ChangePlan,
   isDatacenterObject,
-  ROUTES,
 } from "../../../utils/utils";
 import "./propertiesView.scss";
 import { connect } from "react-redux";
