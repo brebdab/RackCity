@@ -275,9 +275,7 @@ def decommissioned_asset_page_count(request):
     if failure_response:
         return failure_response
     if change_plan:
-        return get_page_count_response_for_cp(
-            request, change_plan, decommissioned=True, stored=False
-        )
+        return get_page_count_response_for_cp(request, change_plan, decommissioned=True)
     else:
         return get_page_count_response(
             DecommissionedAsset, request.query_params, data_for_filters=request.data,
