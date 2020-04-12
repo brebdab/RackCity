@@ -20,7 +20,7 @@ export class BarcodeScanner extends React.PureComponent<
 > {
   public state = {
     result: "",
-    image: undefined
+    image: undefined,
   };
 
   handleScan(data: string) {
@@ -38,8 +38,8 @@ export class BarcodeScanner extends React.PureComponent<
     const constraints = {
       height: height,
       width: width,
-      facingMode: "user",
-      //   facingMode: { exact: "environment" }
+      // facingMode: "user",
+      facingMode: { exact: "environment" },
     };
 
     const WebcamCapture = () => {
@@ -48,9 +48,9 @@ export class BarcodeScanner extends React.PureComponent<
       //   const webcamRef = React.createRef<HTMLVideoElement>();
       const capture = React.useCallback(() => {
         const imageSrc = webcamRef.current.getScreenshot();
-        console.log(webcamRef)
+        console.log(webcamRef);
         this.setState({
-          image: imageSrc
+          image: imageSrc,
         });
       }, [webcamRef]);
       return (
