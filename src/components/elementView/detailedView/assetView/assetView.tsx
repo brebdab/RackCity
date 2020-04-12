@@ -334,7 +334,11 @@ export class AssetView extends React.PureComponent<
             Please go to change plan detail view for more details
           </Callout>
         ) : null}
-        <PropertiesView data={this.state.asset} title="Asset Properties" />
+        <PropertiesView
+          redirectToAsset={this.redirectToAsset}
+          data={this.state.asset}
+          title="Asset Properties"
+        />
         {this.state.asset.model ? (
           <div>
             <AnchorButton
@@ -434,7 +438,9 @@ export class AssetView extends React.PureComponent<
           ) : null}
         </div>
         {/*temporary logic to hide power info if the asset does not have a rack, might need to change this later*/}
-        {Object.keys(this.state.asset).length !== 0 && this.state.asset.rack? this.renderPower() : null}
+        {Object.keys(this.state.asset).length !== 0 && this.state.asset.rack
+          ? this.renderPower()
+          : null}
       </div>
     );
   }
@@ -453,7 +459,7 @@ export class AssetView extends React.PureComponent<
   };
 
   private renderPower() {
-    console.log("rendering power")
+    console.log("rendering power");
     return (
       <PowerView
         {...this.props}

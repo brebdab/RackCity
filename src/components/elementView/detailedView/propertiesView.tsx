@@ -10,7 +10,9 @@ import {
   isModelObject,
   isObject,
   ModelFieldsTable,
-  ChangePlan, isDatacenterObject,
+  ChangePlan,
+  isDatacenterObject,
+  ROUTES,
 } from "../../../utils/utils";
 import "./propertiesView.scss";
 import { connect } from "react-redux";
@@ -25,6 +27,7 @@ interface PropertiesViewProps {
   changePlan: ChangePlan;
   title?: string;
   data_override?: any;
+  redirectToAsset?(id: string): void;
 }
 
 class PropertiesView extends React.PureComponent<
@@ -81,7 +84,7 @@ class PropertiesView extends React.PureComponent<
         }
       } else if (item === "model") {
         dat = <p>{data[item].vendor + " " + data[item].model_number}</p>;
-      } else if (isAssetObject(data) &&item === "rack") {
+      } else if (isAssetObject(data) && item === "rack") {
         return [
           <tr>
             <td key={item}>
@@ -90,16 +93,38 @@ class PropertiesView extends React.PureComponent<
 
             <td style={getChangePlanRowStyle(data)}>
               {" "}
-              <p>{data.rack ? data.rack.row_letter + "" + data.rack.rack_num : null}</p>
+              <p>
+                {data.rack
+                  ? data.rack.row_letter + "" + data.rack.rack_num
+                  : null}
+              </p>
             </td>
-          </tr>
+          </tr>,
+        ];
+      } else if (isAssetObject(data) && item === "chassis") {
+        console.log(data,this.props)
+        return [
+          <tr className= {data.chassis && this.props.redirectToAsset?"link":""}
+            onClick={() =>
+              data.chassis && this.props.redirectToAsset
+                ? this.props.redirectToAsset(data.chassis.id)
+                : {}
+            }
+          >
+            <td key={item}>
+              <p className="label">{AssetFieldsTable[item]}:</p>
+            </td>
+
+            <td style={getChangePlanRowStyle(data)}>
+              {" "}
+              <p>{data.chassis ? data.chassis.hostname : null}</p>
+            </td>
+          </tr>,
         ];
       } else if (item === "comment") {
         dat = <p className="comment">{data[item]}</p>;
-      } else if (isDatacenterObject((data[item]))){
-        dat = <p>data[item].name</p>
-
-
+      } else if (isDatacenterObject(data[item])) {
+        dat = <p>data[item].name</p>;
       } else if (!isObject(data[item])) {
         //TO DO: decide how to render dicts
         dat = <p>{data[item]}</p>;
