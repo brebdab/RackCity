@@ -33,9 +33,11 @@ export class BarcodeScanner extends React.PureComponent<
   }
 
   render() {
+    const height = document.body.offsetHeight;
+    const width = document.body.offsetWidth;
     const constraints = {
-      height: 720,
-      width: 1280,
+      height: height,
+      width: width,
       facingMode: "user",
       //   facingMode: { exact: "environment" }
     };
@@ -55,9 +57,9 @@ export class BarcodeScanner extends React.PureComponent<
         <div>
           <Webcam
             audio={false}
-            height={720}
+            height={height}
             screenshotFormat={"image/jpeg"}
-            width={1280}
+            width={width}
             videoConstraints={constraints}
             ref={webcamRef}
             mirrored={true}
