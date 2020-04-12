@@ -611,14 +611,6 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               this.setState({ filters: data });
             }}
             shouldUpdateData={this.state.updateTable}
-            disableSorting={
-              this.props.element === ElementType.DATACENTER ||
-              this.props.element === ElementType.OFFLINE_STORAGE_SITE
-            }
-            disableFiltering={
-              this.props.element === ElementType.DATACENTER ||
-              this.props.element === ElementType.OFFLINE_STORAGE_SITE
-            }
             currDatacenter={this.props.currDatacenter}
             isDecommissioned={this.state.isDecommissioned}
           />
