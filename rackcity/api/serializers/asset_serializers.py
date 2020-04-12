@@ -9,11 +9,14 @@ from rackcity.models import (
     NetworkPort,
     NetworkPortCP,
 )
+from . import SiteSerializer
 from .it_model_serializers import ITModelSerializer
 from .rack_serializers import RackSerializer
 from .change_plan_serializers import GetChangePlanSerializer
 from rackcity.api.serializers.fields import RCIntegerField
 import copy
+
+from ...models.model_utils import ModelType
 
 
 class AssetCPSerializer(serializers.ModelSerializer):
@@ -21,6 +24,7 @@ class AssetCPSerializer(serializers.ModelSerializer):
     Serializes all fields on Asset model, where model and rack fields are
     defined by their pk only.
     """
+
     rack_position = RCIntegerField(
         allow_null=True, max_value=2147483647, min_value=0, required=False
     )
@@ -30,6 +34,7 @@ class AssetCPSerializer(serializers.ModelSerializer):
     memory_gb = RCIntegerField(
         allow_null=True, max_value=2147483647, min_value=0, required=False
     )
+
     class Meta:
         model = AssetCP
         fields = (
@@ -110,6 +115,8 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
     power_connections = serializers.SerializerMethodField()
     network_connections = serializers.SerializerMethodField()
     network_graph = serializers.SerializerMethodField()
+    blades = serializers.SerializerMethodField()
+    datacenter = serializers.SerializerMethodField()
 
     class Meta:
         model = Asset
@@ -128,10 +135,12 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
             "network_connections",
             "network_graph",
             "power_connections",
+            "blades",
             "cpu",
             "storage",
             "display_color",
             "memory_gb",
+            "datacenter",
         )
 
     def get_mac_addresses(self, asset):
@@ -145,6 +154,12 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
 
     def get_network_connections(self, asset):
         return serialize_network_connections(NetworkPort, asset)
+
+    def get_blades(self, asset):
+        return get_blades_in_chassis(asset)
+
+    def get_datacenter(self, asset):
+        return get_datacenter_of_asset(asset)
 
 
 class BulkAssetSerializer(serializers.ModelSerializer):
@@ -224,6 +239,8 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
     network_connections = serializers.SerializerMethodField()
     network_graph = serializers.SerializerMethodField()
     related_asset = AssetSerializer()
+    blades = serializers.SerializerMethodField()
+    datacenter = serializers.SerializerMethodField()
 
     class Meta:
         model = AssetCP
@@ -253,6 +270,8 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
             "storage",
             "display_color",
             "memory_gb",
+            "blades",
+            "datacenter",
         )
 
     def get_mac_addresses(self, assetCP):
@@ -266,6 +285,12 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
 
     def get_network_connections(self, assetCP):
         return serialize_network_connections(NetworkPortCP, assetCP)
+
+    def get_blades(self, assetCP):
+        get_blades_in_chassis_cp(assetCP)
+
+    def get_datacenter(self, assetCP):
+        get_datacenter_of_asset(assetCP)
 
 
 def normalize_bulk_asset_data(bulk_asset_data):
@@ -305,7 +330,6 @@ def serialize_mac_addresses(network_port_model, asset):
 
 
 def serialize_network_connections(network_port_model, asset):
-
     try:
         source_ports = network_port_model.objects.filter(
             asset=asset.id, change_plan=asset.change_plan.id
@@ -340,6 +364,20 @@ def serialize_power_connections(power_port_model, asset):
                 "port_number": port.power_connection.port_number,
             }
     return power_connections
+
+
+def get_blades_in_chassis(asset):
+    if asset.model.model_type != ModelType.BLADE_CHASSIS.value:
+        return []
+
+    blades = Asset.objects.filter(chassis=asset.id)
+    serializer = AssetSerializer(blades, many=True,)
+    return serializer.data
+
+
+def get_blades_in_chassis_cp(asset_cp):
+    # TODO
+    return []
 
 
 def generate_network_graph(asset):
@@ -393,3 +431,11 @@ def get_neighbor_assets(hostname, id, nodes, edges, change_plan=None):
         return nodes, edges
     except ObjectDoesNotExist:
         return
+
+
+def get_datacenter_of_asset(asset):
+    if asset.rack:
+        datacenter = asset.rack.datacenter
+    if asset.chassis and asset.chassis.rack and asset.chassis.rack.datacenter:
+        datacenter = asset.chassis.rack.datacenter
+    return SiteSerializer(datacenter).data

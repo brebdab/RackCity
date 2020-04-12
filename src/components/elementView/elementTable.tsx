@@ -1231,6 +1231,12 @@ class ElementTable extends React.Component<
                                   {value.hostname}
                                 </td>
                               );
+                            } else if (isDatacenterObject(value)) {
+                              return (
+                                <td style={getChangePlanRowStyle(item)}>
+                                  {value.name}
+                                </td>
+                              );
                             } else if (this.shouldShowColumn(item, col)) {
                               return (
                                 <td style={getChangePlanRowStyle(item)}>
@@ -1241,9 +1247,6 @@ class ElementTable extends React.Component<
 
                             return null;
                           })}
-                          {isAssetObject(item) ? (
-                            <td>{item.datacenter}</td>
-                          ) : null}
 
                           <td
                             onClick={(event: any) => {
@@ -1291,9 +1294,9 @@ class ElementTable extends React.Component<
                                               .asset_management) ||
                                           (this.props.type ===
                                             ElementType.ASSET &&
-                                            isAssetObject(item) &&
+                                            isAssetObject(item) && item &&
                                             this.props.permissionState.site_permissions.includes(
-                                              +item.rack.datacenter.id
+                                              +item.datacenter.id
                                             ))
                                         )
                                   }

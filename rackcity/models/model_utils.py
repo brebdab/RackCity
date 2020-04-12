@@ -1,8 +1,15 @@
-
 from django.core.exceptions import ValidationError
 import re
+from enum import Enum
 
 DEFAULT_DISPLAY_COLOR = "#394B59"
+
+
+class ModelType(Enum):
+    RACKMOUNT_ASSET = "Asset"
+    BLADE_CHASSIS = "Blade Chassis"
+    BLADE_ASSET = "Blade Server "
+
 
 def validate_display_color(value):
     if value:
