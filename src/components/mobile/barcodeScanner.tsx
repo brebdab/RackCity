@@ -46,7 +46,7 @@ export class BarcodeScanner extends React.PureComponent<
       })
     }
     const constraints = {
-      height: this.state.cameraHeight,
+      height: this.state.cameraHeight*0.9,
       width: this.state.cameraWidth,
       // facingMode: "user",
       facingMode: { exact: "environment" },
@@ -82,7 +82,6 @@ export class BarcodeScanner extends React.PureComponent<
 
     return (
       <div className={Classes.DARK}>
-        <p>Scanner</p>
         {/* <BarcodeReader onError={this.handleError} onScan={this.handleScan} /> */}
         <WebcamCapture />
       </div>
