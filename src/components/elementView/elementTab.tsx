@@ -28,15 +28,15 @@ import {
 import { updateObject } from "../../store/utility";
 import { API_ROOT } from "../../utils/api-config";
 import {
+  ChangePlan,
   CreateUserObject,
   DatacenterObject,
   ElementObjectType,
   ElementType,
   ModelObject,
+  ROUTES,
   ShallowAssetObject,
   SortFilterBody,
-  ChangePlan,
-  ROUTES,
 } from "../../utils/utils";
 import { ALL_DATACENTERS } from "./elementTabContainer";
 import ElementTable from "./elementTable";
@@ -415,6 +415,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
           <div className="element-tab-buttons">
             {this.props.element !== ElementType.USER &&
             this.props.element !== ElementType.DATACENTER &&
+            this.props.element !== ElementType.OFFLINE_STORAGE_SITE &&
             this.props.element !== ElementType.CHANGEPLANS ? (
               <AnchorButton
                 className="add"
@@ -610,8 +611,14 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               this.setState({ filters: data });
             }}
             shouldUpdateData={this.state.updateTable}
-            disableSorting={this.props.element === ElementType.DATACENTER}
-            disableFiltering={this.props.element === ElementType.DATACENTER}
+            disableSorting={
+              this.props.element === ElementType.DATACENTER ||
+              this.props.element === ElementType.OFFLINE_STORAGE_SITE
+            }
+            disableFiltering={
+              this.props.element === ElementType.DATACENTER ||
+              this.props.element === ElementType.OFFLINE_STORAGE_SITE
+            }
             currDatacenter={this.props.currDatacenter}
             isDecommissioned={this.state.isDecommissioned}
           />
