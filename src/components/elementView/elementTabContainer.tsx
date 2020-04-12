@@ -1,6 +1,6 @@
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
-import { Tabs, Tab, Classes } from "@blueprintjs/core";
+import { Classes, Tab, Tabs } from "@blueprintjs/core";
 import ElementTab from "./elementTab";
 import { RouteComponentProps } from "react-router";
 import "./elementView.scss";
@@ -95,10 +95,50 @@ class ElementTabContainer extends React.Component<
             />
           }
         />
+
         <Tab
-          className="tab do-not-print"
-          id="assets"
+          className="tab tab-header do-not-print"
+          id="assets-header"
           title="Assets"
+          disabled={true}
+        />
+
+        <Tab
+          className="tab-sub do-not-print"
+          id="assets"
+          title="Racked Assets"
+          panel={
+            <ElementTab
+              datacenters={this.state.datacenters}
+              currDatacenter={this.state.currDatacenter}
+              onDatacenterSelect={this.onDatacenterSelect}
+              {...this.props}
+              element={ElementType.ASSET}
+              isActive={false}
+            />
+          }
+        />
+
+        <Tab
+          className="tab-sub do-not-print"
+          id="offline-storage-assets"
+          title="Offline Storage Assets"
+          panel={
+            <ElementTab
+              datacenters={this.state.datacenters}
+              currDatacenter={this.state.currDatacenter}
+              onDatacenterSelect={this.onDatacenterSelect}
+              {...this.props}
+              element={ElementType.ASSET}
+              isActive={false}
+            />
+          }
+        />
+
+        <Tab
+          className="tab-sub do-not-print"
+          id="decommissioned-assets"
+          title="Decommissioned Assets"
           panel={
             <ElementTab
               datacenters={this.state.datacenters}
@@ -119,7 +159,14 @@ class ElementTabContainer extends React.Component<
         />
 
         <Tab
-          className="tab do-not-print"
+          className="tab tab-header do-not-print"
+          id="sites-header"
+          title="Sites"
+          disabled={true}
+        />
+
+        <Tab
+          className="tab-sub do-not-print"
           id="datacenters"
           title="Datacenters"
           disabled={
@@ -138,7 +185,7 @@ class ElementTabContainer extends React.Component<
         />
 
         <Tab
-          className="tab do-not-print"
+          className="tab-sub do-not-print"
           id="offline-storage-sites"
           title="Offline Storage Sites"
           disabled={

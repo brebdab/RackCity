@@ -2,9 +2,27 @@
   width: 100%;
   padding: 5pt;
   display: inline-block;
+  font-weight: bold !important;
 }
+
 .tab:focus {
   outline: none;
+}
+
+.tab-header {
+  width: 100%;
+  padding: 5pt;
+  display: inline-block;
+  cursor: default !important;
+  font-weight: bold !important;
+  color: #ffffff !important;
+}
+
+.tab-sub {
+  width: 100%;
+  padding: 5pt;
+  display: inline-block;
+  font-size: small !important;
 }
 
 .permissions-button {
