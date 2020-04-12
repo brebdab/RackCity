@@ -85,6 +85,13 @@ class PropertiesView extends React.PureComponent<
       } else if (item === "model") {
         dat = <p>{data[item].vendor + " " + data[item].model_number}</p>;
       } else if (isAssetObject(data) && item === "rack") {
+        let rack  = null
+        if(data.rack){
+          rack = data.rack
+        }
+        if(data.chassis){
+          rack = data.chassis.rack
+        }
         return [
           <tr>
             <td key={item}>
@@ -94,8 +101,8 @@ class PropertiesView extends React.PureComponent<
             <td style={getChangePlanRowStyle(data)}>
               {" "}
               <p>
-                {data.rack
-                  ? data.rack.row_letter + "" + data.rack.rack_num
+                {rack
+                  ? rack.row_letter + "" + rack.rack_num
                   : null}
               </p>
             </td>
