@@ -286,6 +286,7 @@ def asset_modify(request):
     if failure_response:
         return failure_response
     create_new_asset_cp = False
+    existing_asset = None
     if change_plan:
         failure_response = get_cp_already_executed_response(change_plan)
         if failure_response:
@@ -343,6 +344,7 @@ def asset_modify(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
+    asset_cp = None
     if change_plan:
         (asset_cp, failure_message) = save_all_field_data_cp(
             data, existing_asset, change_plan, create_new_asset_cp
@@ -354,6 +356,7 @@ def asset_modify(request):
             {"failure_message": Status.MODIFY_ERROR.value + failure_message},
             status=HTTPStatus.BAD_REQUEST,
         )
+
     if asset_cp:
         existing_asset = asset_cp
 
