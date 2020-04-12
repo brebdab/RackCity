@@ -35,24 +35,15 @@ export class BarcodeScanner extends React.PureComponent<
   handleError(err: any) {
     console.error(err);
   }
-
-  render() {
-    const height = window.innerHeight;
-    const width = document.body.offsetWidth;
-    if (this.state.cameraHeight === 0 && this.state.cameraWidth === 0) {
-      this.setState({
-        cameraWidth: width,
-        cameraHeight: height
-      })
-    }
-    const constraints = {
-      height: this.state.cameraHeight*0.9,
-      width: this.state.cameraWidth,
+  constraints = {
+    height: 720,
+    width: 1280,
+      // height: this.state.cameraHeight*0.9,
+      // width: this.state.cameraWidth,
       // facingMode: "user",
       facingMode: { exact: "environment" },
     };
-
-    const WebcamCapture = () => {
+  WebcamCapture = () => {
       let webcamRef: any;
       webcamRef = React.useRef(null);
       const capture = React.useCallback(() => {
@@ -70,7 +61,7 @@ export class BarcodeScanner extends React.PureComponent<
             height={this.state.cameraHeight}
             screenshotFormat={"image/jpeg"}
             width={this.state.cameraWidth}
-            videoConstraints={constraints}
+            videoConstraints={this.constraints}
             ref={webcamRef}
           />
           <button onClick={capture}>Capture photo</button>
@@ -78,10 +69,52 @@ export class BarcodeScanner extends React.PureComponent<
       );
     };
 
+  render() {
+    const height = window.innerHeight;
+    const width = document.body.offsetWidth;
+    if (this.state.cameraHeight === 0 && this.state.cameraWidth === 0) {
+      this.setState({
+        cameraWidth: width,
+        cameraHeight: height
+      })
+    }
+    // const constraints = {
+    //   height: this.state.cameraHeight*0.9,
+    //   width: this.state.cameraWidth,
+    //   // facingMode: "user",
+    //   facingMode: { exact: "environment" },
+    // };
+    //
+    // const WebcamCapture = () => {
+    //   let webcamRef: any;
+    //   webcamRef = React.useRef(null);
+    //   const capture = React.useCallback(() => {
+    //     const imageSrc = webcamRef.current.getScreenshot();
+    //     console.log(webcamRef);
+    //     console.log(imageSrc)
+    //     this.setState({
+    //       image: imageSrc,
+    //     });
+    //   }, [webcamRef]);
+    //   return (
+    //     <div>
+    //       <Webcam
+    //         audio={false}
+    //         height={this.state.cameraHeight}
+    //         screenshotFormat={"image/jpeg"}
+    //         width={this.state.cameraWidth}
+    //         videoConstraints={constraints}
+    //         ref={webcamRef}
+    //       />
+    //       <button onClick={capture}>Capture photo</button>
+    //     </div>
+    //   );
+    // };
+
     return (
       <div className={Classes.DARK}>
         {/* <BarcodeReader onError={this.handleError} onScan={this.handleScan} /> */}
-        <WebcamCapture />
+        <this.WebcamCapture />
       </div>
     );
   }

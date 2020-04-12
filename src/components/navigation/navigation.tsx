@@ -223,7 +223,6 @@ export class Navigation extends React.Component<
                     minimal
                     text="Change Plans"
                   />
-                  </>}
                   <NavbarDivider />
                   {this.state.username ? (
                     <AnchorButton
@@ -232,6 +231,7 @@ export class Navigation extends React.Component<
                       minimal
                     />
                   ) : null}
+                  </>}
 
                   <AnchorButton
                     onClick={() => {
