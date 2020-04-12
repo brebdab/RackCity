@@ -78,9 +78,8 @@ def detect_conflicts_cp(sender, **kwargs):
     ).update(asset_conflict_hostname=asset)
 
     # asset rack location conflicts with an active assetCP
-
+    asset.location_conflict.clear()
     if asset.model.is_rackmount():
-        asset.location_conflict.clear()
         for assetcp in AssetCP.objects.filter(
             Q(rack=asset.rack_id)
             & ~Q(related_asset=asset.id)
@@ -100,9 +99,8 @@ def detect_conflicts_cp(sender, **kwargs):
                     asset_conflict_location=asset
                 )
     else:
-        asset.location_conflict.clear()
         for assetcp in AssetCP.objects.filter(
-            Q(chassed=asset.chassis_id)
+            Q(chassis=asset.chassis_id)
             & ~Q(related_asset=asset.id)
             & Q(change_plan__execution_time=None)
         ):
