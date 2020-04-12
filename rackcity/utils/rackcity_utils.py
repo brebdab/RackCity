@@ -73,11 +73,11 @@ def validate_asset_location_in_rack(
 
     for asset_in_rack in assets.filter(rack=rack_id):
         # Ignore if asset being modified conflicts with its old location
+
         is_valid_conflict = asset_id is None or asset_in_rack.id != asset_id
-        if change_plan:
-            is_valid_conflict = (
-                related_asset_id is not None and asset_in_rack.id != related_asset_id
-            )
+
+        if related_asset_id:
+            is_valid_conflict = asset_in_rack.id != related_asset_id
 
         if is_valid_conflict:
             for occupied_location in [
@@ -170,6 +170,7 @@ def validate_location_modification(data, existing_asset, user, change_plan=None)
     related_asset_id = None
     if hasattr(existing_asset, "related_asset") and existing_asset.related_asset:
         related_asset_id = existing_asset.related_asset.id
+
     asset_rack_position = existing_asset.rack_position
     asset_chassis_slot = existing_asset.chassis_slot
     asset_height = existing_asset.model.height

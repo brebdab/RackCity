@@ -11,9 +11,11 @@ class DecommissionedAsset(models.Model):
         validators=[MinValueValidator(100000), MaxValueValidator(999999)]
     )
     hostname = models.CharField(max_length=150, null=True, blank=True)  # not unique
-    rack_position = models.PositiveIntegerField()
+    rack_position = models.PositiveIntegerField(null=True, blank=True)
+    chassis_slot = models.PositiveIntegerField(null=True, blank=True)
     model = JSONField()
-    rack = JSONField()
+    rack = JSONField(null=True, blank=True)
+    chassis = JSONField(null=True, blank=True)
     owner = models.CharField(  # don't validate owner
         max_length=150, null=True, blank=True,
     )

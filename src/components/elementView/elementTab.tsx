@@ -178,10 +178,10 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       }
     }
     let url = this.state.isDecommissioned
-      ? API_ROOT + "api/assets/pages-decommissioned"
+      ? "api/assets/pages-decommissioned"
       : path === "datacenters"
-      ? API_ROOT + "api/sites/datacenters/pages"
-      : API_ROOT + "api/" + path + "/pages";
+      ? "api/sites/datacenters/pages"
+      : "api/" + path + "/pages";
     return axios
       .post(API_ROOT + url, { filters: filtersCopy }, config)
       .then((res) => {
@@ -230,11 +230,11 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       }
     }
     let url = this.state.isDecommissioned
-      ? API_ROOT + "api/assets/get-many-decommissioned"
+      ? "api/assets/get-many-decommissioned"
       : path === "datacenters"
-      ? API_ROOT + "api/sites/datacenters/get-many"
-      : API_ROOT + "api/" + path + "/get-many";
-    return axios.post(url, bodyCopy, config).then((res) => {
+      ? "api/sites/datacenters/get-many"
+      : "api/" + path + "/get-many";
+    return axios.post(API_ROOT + url, bodyCopy, config).then((res) => {
       const items = res.data[path];
 
       return items;

@@ -22,6 +22,10 @@ import time
 from requests.exceptions import ConnectionError
 from rackcity.models.asset import get_assets_for_cp
 from rackcity.utils.change_planner_utils import get_change_plan
+from rackcity.utils.exceptions import ChassisPowerManagementException
+import os
+from django.core.exceptions import ObjectDoesNotExist
+
 
 pdu_url = "http://hyposoft-mgt.colab.duke.edu:8005/"
 # Need to specify rack + side in request, e.g. for A1 left, use A01L
@@ -31,7 +35,7 @@ toggle_pdu = "power.php"
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def power_status(request, id):
+def pdu_power_status(request, id):
     """
     Get status of all power ports for an asset in
     network controlled PDU datacenter.
@@ -88,7 +92,7 @@ def power_status(request, id):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def power_on(request):
+def pdu_power_on(request):
     """
     Turn on power to specified port
     """
@@ -148,7 +152,7 @@ def power_on(request):
             html.text, power_connections[connection]["port_number"]
         )[0]
         if power_status != "ON":
-            toggle_power(asset, connection, "on")
+            toggle_pdu_power(asset, connection, "on")
     log_power_action(
         request.user, PowerAction.ON, asset,
     )
@@ -160,7 +164,7 @@ def power_on(request):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def power_off(request):
+def pdu_power_off(request):
     """
     Turn on power to specified port
     """
@@ -220,7 +224,7 @@ def power_off(request):
             html.text, power_connections[connection]["port_number"]
         )[0]
         if power_status == "ON":
-            toggle_power(asset, connection, "off")
+            toggle_pdu_power(asset, connection, "off")
     log_power_action(
         request.user, PowerAction.OFF, asset,
     )
@@ -232,7 +236,7 @@ def power_off(request):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def power_cycle(request):
+def pdu_power_cycle(request):
     data = JSONParser().parse(request)
     if "id" not in data.keys():
         return JsonResponse(
@@ -268,10 +272,10 @@ def power_cycle(request):
         )
     power_connections = serialize_power_connections(PowerPort, asset)
     for connection in power_connections:
-        toggle_power(asset, connection, "off")
+        toggle_pdu_power(asset, connection, "off")
     time.sleep(2)
     for connection in power_connections:
-        toggle_power(asset, connection, "on")
+        toggle_pdu_power(asset, connection, "on")
     log_power_action(request.user, PowerAction.CYCLE, asset)
     return JsonResponse(
         {
@@ -284,7 +288,7 @@ def power_cycle(request):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def power_availability(request):
+def pdu_power_availability(request):
     rack_id = request.query_params.get("id")
     if not rack_id:
         return JsonResponse(
@@ -415,7 +419,7 @@ def get_pdu_status_ext(asset, left_right):
     return rack_str + left_right
 
 
-def toggle_power(asset, asset_port_number, goal_state):
+def toggle_pdu_power(asset, asset_port_number, goal_state):
     power_connections = serialize_power_connections(PowerPort, asset)
     pdu_port = power_connections[asset_port_number]["port_number"]
     pdu = "hpdu-rtp1-" + get_pdu_status_ext(
@@ -434,3 +438,188 @@ def toggle_power(asset, asset_port_number, goal_state):
             status=HTTPStatus.REQUEST_TIMEOUT,
         )
     return
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def chassis_power_status(request):
+    data = JSONParser().parse(request)
+    try:
+        chassis_hostname, blade_slot = get_chassis_power_request_parameters(data)
+    except ChassisPowerManagementException as error:
+        return JsonResponse(
+            {"failure_message": Status.ERROR.value + str(error)},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    result, exit_status = make_bcman_request(chassis_hostname, str(blade_slot), "")
+    if exit_status != 0:
+        return JsonResponse(
+            {
+                "failure_message": Status.CONNECTION.value
+                + "Unable to contact network controlled blade chassis power management.",
+                "errors": "Request to bcman exited with non-zero status: "
+                + str(exit_status),
+            },
+            status=HTTPStatus.REQUEST_TIMEOUT,
+        )
+    if "is ON" in result:
+        blade_slot_power_status = "ON"
+    elif "is OFF" in result:
+        blade_slot_power_status = "OFF"
+    else:
+        return JsonResponse(
+            {
+                "failure_message": Status.CONNECTION.value
+                + "Unable to contact network controlled blade chassis power management.",
+                "errors": "Power status returned as: " + result,
+            },
+            status=HTTPStatus.REQUEST_TIMEOUT,
+        )
+    return JsonResponse({str(blade_slot): blade_slot_power_status}, status=HTTPStatus.OK,)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def chassis_power_on(request):
+    data = JSONParser().parse(request)
+    try:
+        chassis_hostname, blade_slot = get_chassis_power_request_parameters(data)
+    except ChassisPowerManagementException as error:
+        return JsonResponse(
+            {"failure_message": Status.ERROR.value + str(error)},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    result, exit_status = make_bcman_request(chassis_hostname, str(blade_slot), "on")
+    if exit_status != 0:
+        return JsonResponse(
+            {
+                "failure_message": Status.CONNECTION.value
+                + "Unable to contact network controlled blade chassis power management.",
+                "errors": "Request to bcman exited with non-zero status: "
+                + str(exit_status),
+            },
+            status=HTTPStatus.REQUEST_TIMEOUT,
+        )
+    return JsonResponse(
+        {"success_message": Status.SUCCESS.value + result}, status=HTTPStatus.OK,
+    )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def chassis_power_off(request):
+    data = JSONParser().parse(request)
+    try:
+        chassis_hostname, blade_slot = get_chassis_power_request_parameters(data)
+    except ChassisPowerManagementException as error:
+        return JsonResponse(
+            {"failure_message": Status.ERROR.value + str(error)},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    result, exit_status = make_bcman_request(chassis_hostname, str(blade_slot), "off")
+    if exit_status != 0:
+        return JsonResponse(
+            {
+                "failure_message": Status.CONNECTION.value
+                + "Unable to contact network controlled blade chassis power management.",
+                "errors": "Request to bcman exited with non-zero status: "
+                + str(exit_status),
+            },
+            status=HTTPStatus.REQUEST_TIMEOUT,
+        )
+    return JsonResponse(
+        {"success_message": Status.SUCCESS.value + result}, status=HTTPStatus.OK,
+    )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def chassis_power_cycle(request):
+    data = JSONParser().parse(request)
+    try:
+        chassis_hostname, blade_slot = get_chassis_power_request_parameters(data)
+    except ChassisPowerManagementException as error:
+        return JsonResponse(
+            {"failure_message": Status.ERROR.value + str(error)},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    result_off, exit_status_off = make_bcman_request(
+        chassis_hostname, str(blade_slot), "off"
+    )
+    if exit_status_off != 0:
+        return JsonResponse(
+            {
+                "failure_message": Status.CONNECTION.value
+                + "Unable to contact network controlled blade chassis power management.",
+                "errors": "Request to bcman exited with non-zero status: "
+                + str(exit_status_off),
+            },
+            status=HTTPStatus.REQUEST_TIMEOUT,
+        )
+    time.sleep(2)
+    result_on, exit_status_on = make_bcman_request(
+        chassis_hostname, str(blade_slot), "on"
+    )
+    if exit_status_on != 0:
+        return JsonResponse(
+            {
+                "failure_message": Status.CONNECTION.value
+                + "Unable to contact network controlled blade chassis power management.",
+                "errors": "Request to bcman exited with non-zero status: "
+                + str(exit_status_on),
+            },
+            status=HTTPStatus.REQUEST_TIMEOUT,
+        )
+    result = (
+        "chassis '" + chassis_hostname + "' blade " + str(blade_slot) + "' power cycled"
+    )
+    return JsonResponse(
+        {"success_message": Status.SUCCESS.value + result}, status=HTTPStatus.OK,
+    )
+
+
+def make_bcman_request(chassis, blade, power_command):
+    user = os.environ["BCMAN_USERNAME"]
+    host = "hyposoft-mgt.colab.duke.edu"
+    options = os.environ["BCMAN_OPTIONS"]
+    password = os.environ["BCMAN_PASSWORD"]
+    cmd = "rackcity/utils/bcman.expect '{}' '{}' '{}' '{}' '{}' '{}' '{}' > temp.txt".format(
+        user, host, options, password, chassis, blade, power_command,
+    )
+    exit_status = os.system(cmd)
+    result = None
+    if os.path.exists("temp.txt"):
+        fp = open("temp.txt", "r")
+        result = fp.read().splitlines()[0]
+        fp.close()
+        os.remove("temp.txt")
+    return result, exit_status
+
+
+def get_chassis_power_request_parameters(data):
+    if ("chassis_id" not in data) or ("blade_slot" not in data):
+        raise ChassisPowerManagementException(
+            "Must specify 'chassis_id' and 'blade_slot' on chassis power request."
+        )
+    try:
+        blade_slot = int(data["blade_slot"])
+        chassis_id = int(data["chassis_id"])
+    except ValueError:
+        raise ChassisPowerManagementException(
+            "Parameters 'chassis_id' and 'blade_slot' must be of type int."
+        )
+    try:
+        chassis = Asset.objects.get(id=chassis_id)
+    except ObjectDoesNotExist:
+        raise ChassisPowerManagementException(
+            "Chassis" + GenericFailure.DOES_NOT_EXIST.value
+        )
+    if (not chassis.model.is_blade_chassis) or (chassis.model.vendor != "BMI"):
+        raise ChassisPowerManagementException(
+            "Power is only network controllable for blade chassis of vendor 'BMI'."
+        )
+    if (blade_slot < 1) or (blade_slot > 14):
+        raise ChassisPowerManagementException(
+            "Blade slot " + str(blade_slot) + " does not exist on chassis."
+        )
+    return chassis.hostname, blade_slot
