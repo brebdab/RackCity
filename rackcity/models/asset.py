@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Q
-from rackcity.models.model_utils import DEFAULT_DISPLAY_COLOR, validate_display_color
+from rackcity.models.model_utils import validate_display_color
 from rackcity.models.fields import RCPositiveIntegerField
 import re
 
