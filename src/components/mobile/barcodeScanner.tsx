@@ -55,7 +55,6 @@ export class BarcodeScanner extends React.PureComponent<
     const WebcamCapture = () => {
       let webcamRef: any;
       webcamRef = React.useRef(null);
-      //   const webcamRef = React.createRef<HTMLVideoElement>();
       const capture = React.useCallback(() => {
         const imageSrc = webcamRef.current.getScreenshot();
         console.log(webcamRef);
@@ -73,7 +72,6 @@ export class BarcodeScanner extends React.PureComponent<
             width={this.state.cameraWidth}
             videoConstraints={constraints}
             ref={webcamRef}
-            mirrored={true}
           />
           <button onClick={capture}>Capture photo</button>
         </div>

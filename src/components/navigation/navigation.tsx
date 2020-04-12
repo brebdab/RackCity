@@ -37,6 +37,7 @@ export interface NavigationProps {
   updateChangePlansBoolean: boolean;
   updateChangePlans(status: boolean): void;
   permissionState: PermissionState;
+  isMobile: boolean;
 }
 
 export interface NavigationState {
@@ -136,7 +137,7 @@ export class Navigation extends React.Component<
                 />
               </NavbarHeading>
               <NavbarDivider />
-              {this.props.isAuthenticated ? (
+              {this.props.isAuthenticated && !this.props.isMobile ? (
                 <div>
                   <Button
                     minimal
@@ -174,7 +175,7 @@ export class Navigation extends React.Component<
             <NavbarGroup align={Alignment.RIGHT}>
               {this.props.isAuthenticated ? (
                 <div className="nav-buttons-right">
-                  <ChangePlanSelect
+                  {this.props.isMobile ? null : <><ChangePlanSelect
                     popoverProps={{
                       minimal: true,
                       popoverClassName: "dropdown",
@@ -222,6 +223,7 @@ export class Navigation extends React.Component<
                     minimal
                     text="Change Plans"
                   />
+                  </>}
                   <NavbarDivider />
                   {this.state.username ? (
                     <AnchorButton
@@ -267,6 +269,7 @@ const mapStateToProps = (state: any) => {
     changePlan: state.changePlan,
     updateChangePlansBoolean: state.updateChangePlansBoolean,
     permissionState: state.permissionState,
+    isMobile: state.isMobile
   };
 };
 
