@@ -35,9 +35,9 @@ export class BarcodeScanner extends React.PureComponent<
   handleError(err: any) {
     console.error(err);
   }
-  
+
   render() {
-    const height = document.body.offsetHeight;
+    const height = window.innerHeight;
     const width = document.body.offsetWidth;
     if (this.state.cameraHeight === 0 && this.state.cameraWidth === 0) {
       this.setState({
