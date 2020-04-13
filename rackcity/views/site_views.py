@@ -19,9 +19,7 @@ def site_all(request):
     """
     Return list of all sites (datacenters and offline storage sites).
     """
-    return get_many_response(
-        Site, SiteSerializer, "sites", request,
-    )
+    return get_many_response(Site, SiteSerializer, "sites", request)
 
 
 @api_view(["POST"])
