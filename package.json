@@ -24,6 +24,7 @@
     "axios": "^0.19.2",
     "jquery": "^3.4.1",
     "js-file-download": "^0.4.9",
+    "node": "^13.12.0",
     "node-sass": "^4.13.1",
     "normalize.css": "^8.0.1",
     "package.json": "^2.0.1",
@@ -72,6 +73,6 @@
   "proxy": "http://localhost:8000",
   "devDependencies": {
     "@types/jquery": "^3.3.32",
-    "prettier": "2.0.4"
+    "prettier": "^2.0.4"
   }
 }
