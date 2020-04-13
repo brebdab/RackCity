@@ -61,7 +61,7 @@ class ElementTabContainer extends React.Component<
 
   getTabName = (pathname: string) => {
     if (pathname === "/dashboard") {
-      return "racks";
+      return ElementType.ASSET;
     }
     const regex = new RegExp("dashboard/(.*$)");
     const match = regex.exec(pathname);
@@ -94,18 +94,6 @@ class ElementTabContainer extends React.Component<
         large
         onChange={(tab: string) => this.handleTabClick(tab)}
       >
-        <Tab
-          className="tab"
-          id="racks"
-          title="Racks"
-          panel={
-            <RackTab
-              datacenters={this.state.datacenters}
-              currDatacenter={this.state.currDatacenter}
-              onDatacenterSelect={this.onDatacenterSelect}
-            />
-          }
-        />
 
         <Tab
           className="tab-header do-not-print"
@@ -167,12 +155,26 @@ class ElementTabContainer extends React.Component<
           title="Models"
           panel={<ElementTab {...this.props} element={ElementType.MODEL} />}
         />
+            <Tab
+          className="tab"
+          id="racks"
+          title="Racks"
+          panel={
+            <RackTab
+              datacenters={this.state.datacenters}
+              currDatacenter={this.state.currDatacenter}
+              onDatacenterSelect={this.onDatacenterSelect}
+            />
+          }
+        />
+
 
         <Tab
           className="tab-header do-not-print"
           id="sites"
           title="Sites"
         />
+
 
         <Tab
           className="tab-sub do-not-print"
