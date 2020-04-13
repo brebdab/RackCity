@@ -270,7 +270,8 @@ export class AssetView extends React.PureComponent<
                 onConfirm={this.handleDecommission}
               >
                 <p>
-                  Are you sure you want to decommission this asset? If it's a chassis, its blades will also be decommissioned.
+                  Are you sure you want to decommission this asset? If it's a
+                  chassis, its blades will also be decommissioned.
                 </p>
               </Alert>
               <AnchorButton
