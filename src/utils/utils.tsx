@@ -42,9 +42,13 @@ export interface ChangePlan extends ElementObject {
 }
 
 export interface AssetObject extends ParentAssetObject {
+  chassis?: AssetObject;
   model: ModelObject;
-  rack: RackObject;
+  rack?: RackObject;
   network_graph: NetworkGraphData;
+  blades: Array<AssetObject>;
+  datacenter: DatacenterObject
+
 }
 export interface AssetCPObject extends AssetObject {
   change_plan: ChangePlan;
@@ -59,6 +63,7 @@ interface ParentAssetObject extends ElementObject {
   asset_number: string | null;
   hostname: string | null;
   rack_position: string;
+  chassis_slot:string;
   mac_addresses: { [port: string]: string };
   network_connections: Array<NetworkConnection>;
   power_connections: { [port: string]: PowerConnection };
@@ -70,6 +75,7 @@ interface ParentAssetObject extends ElementObject {
   storage: string;
   display_color: string;
   memory_gb: string | null;
+
 }
 
 export interface RackRangeFields {
@@ -93,8 +99,10 @@ export const AssetFieldsTable: any = {
   model__vendor: "Model Vendor",
   model__model_number: "Model Number",
   rack: "Rack",
-  rack__datacenter__name: "Datacenter",
+  datacenter: "Datacenter",
   rack_position: "Rack Position",
+  chassis: "Chassis",
+  chassis_slot: "Chassis Slot",
   owner: "Owner",
   comment: "Comment",
   decommissioning_user: "Decommissioning User",
@@ -127,6 +135,8 @@ export enum AssetFormLabels {
   datacenter = "Datacenter*",
   rack = "Rack*",
   rack_position = "Rack Position*",
+  chassis = "Chassis*",
+  chassis_slot = "Chassis Slot*",
   model = "Model*",
   owner = "Owner",
   comment = "Comment",
@@ -154,6 +164,7 @@ export interface PowerConnection {
 export interface ShallowAssetObject extends ParentAssetObject {
   model: string | null | undefined;
   rack: string | null | undefined;
+  chassis: string|null|undefined;
 }
 
 export interface SortFilterBody {

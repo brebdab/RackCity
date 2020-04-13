@@ -42,7 +42,7 @@ from rackcity.utils.query_utils import (
     get_many_response,
 )
 from rackcity.utils.rackcity_utils import (
-    validate_asset_location,
+    validate_asset_location_in_rack,
     records_are_identical,
 )
 import re
@@ -214,7 +214,7 @@ def validate_model_height_change(new_model_data, existing_model):
         assets = Asset.objects.filter(model=existing_model.id)
         for asset in assets:
             try:
-                validate_asset_location(
+                validate_asset_location_in_rack(
                     asset.rack.id, asset.rack_position, new_model_height, asset.id
                 )
             except LocationException as error:

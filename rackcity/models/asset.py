@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Q
-from rackcity.models.model_utils import DEFAULT_DISPLAY_COLOR, validate_display_color
+from rackcity.models.model_utils import validate_display_color
 from rackcity.models.fields import RCPositiveIntegerField
 import re
 
@@ -59,7 +59,6 @@ def validate_hostname_uniqueness(value, asset_id, change_plan, related_asset):
         and matching_assets[0].id != asset_id
         and not matching_assets[0].is_decommissioned
     ):
-        print(matching_assets.values())
         raise ValidationError(
             "'"
             + value
@@ -92,7 +91,6 @@ def validate_asset_number_uniqueness(value, asset_id, change_plan, related_asset
         and matching_assets[0].id != asset_id
         and not matching_assets[0].is_decommissioned
     ):
-        print(matching_assets.values())
         raise ValidationError(
             "'"
             + str(value)
@@ -100,10 +98,10 @@ def validate_asset_number_uniqueness(value, asset_id, change_plan, related_asset
             An existing asset on this change plan exists with this asset number."
         )
     related_asset_id = None
+
     if related_asset:
         related_asset_id = related_asset.id
     matching_assets = assets.filter(asset_number=value)
-
     if (len(matching_assets) > 0) and (
         not (related_asset and matching_assets[0].id == related_asset_id)
     ):
@@ -111,7 +109,7 @@ def validate_asset_number_uniqueness(value, asset_id, change_plan, related_asset
             "'"
             + str(value)
             + "'is not a unique asset number. \
-            An existing asset on exists with this asset number."
+            An existing asset exists with this asset number."
         )
 
 
@@ -379,4 +377,5 @@ class AssetCP(AbstractAsset):
         else:
             super(AssetCP, self).save(*args, **kwargs)
             self.add_network_ports()
+
             self.add_power_ports()

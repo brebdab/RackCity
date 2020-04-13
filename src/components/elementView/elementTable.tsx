@@ -588,9 +588,6 @@ class ElementTable extends React.Component<
         if (col === "model") {
           fields.push("model__vendor");
           fields.push("model__model_number");
-        } else if (col === "rack") {
-          fields.push("rack");
-          fields.push("rack__datacenter__name");
         } else if (
           col !== "id" &&
           col !== "decommissioned_id" &&
@@ -1116,6 +1113,7 @@ class ElementTable extends React.Component<
                 !this.state.getDataInProgress ? (
                   <tbody>
                     {this.state.items.map((item: ElementObjectType) => {
+
                       return (
                         <tr
                           key={item.id}
@@ -1193,20 +1191,25 @@ class ElementTable extends React.Component<
                                   {value.model_number}
                                 </td>,
                               ];
-                            } else if (col === "rack" && isRackObject(value)) {
-                              return [
-                                <td style={getChangePlanRowStyle(item)}>
-                                  {value.row_letter + value.rack_num}
-                                </td>,
-                                <td style={getChangePlanRowStyle(item)}>
-                                  {value.datacenter.name}
-                                </td>,
-                              ];
                             } else if (col === "rack") {
-                              return [
-                                <td style={getChangePlanRowStyle(item)}></td>,
-                                <td style={getChangePlanRowStyle(item)}></td>,
-                              ];
+                              let rack_value = null;
+                              if (isRackObject(value)) {
+                                rack_value = value.row_letter + value.rack_num;
+                              } else if (
+                                isAssetObject(item) &&
+                                item.chassis &&
+                                item.chassis.rack
+                              ) {
+                                rack_value =
+                                  item.chassis.rack.row_letter +
+                                  item.chassis.rack.rack_num;
+                              }
+
+                              return (
+                                <td style={getChangePlanRowStyle(item)}>
+                                  {rack_value}
+                                </td>
+                              );
                             } else if (
                               isModelObject(item) &&
                               col === "display_color"
@@ -1216,9 +1219,25 @@ class ElementTable extends React.Component<
                                   style={{
                                     backgroundColor: value,
                                   }}
-                                ></td>
+                                />
+                              );
+                            } else if (
+                              isAssetObject(value) &&
+                              col === "chassis"
+                            ) {
+                              return (
+                                <td style={getChangePlanRowStyle(item)}>
+                                  {value.hostname}
+                                </td>
+                              );
+                            } else if (isDatacenterObject(value)) {
+                              return (
+                                <td style={getChangePlanRowStyle(item)}>
+                                  {value.name}
+                                </td>
                               );
                             } else if (this.shouldShowColumn(item, col)) {
+                              console.log(col, value);
                               return (
                                 <td style={getChangePlanRowStyle(item)}>
                                   {value}
@@ -1228,6 +1247,7 @@ class ElementTable extends React.Component<
 
                             return null;
                           })}
+
                           <td
                             onClick={(event: any) => {
                               event.stopPropagation();
@@ -1276,7 +1296,7 @@ class ElementTable extends React.Component<
                                             ElementType.ASSET &&
                                             isAssetObject(item) &&
                                             this.props.permissionState.site_permissions.includes(
-                                              +item.rack.datacenter.id
+                                              +item.datacenter.id
                                             ))
                                         )
                                   }
@@ -1323,7 +1343,7 @@ class ElementTable extends React.Component<
                                             ElementType.ASSET &&
                                             isAssetObject(item) &&
                                             this.props.permissionState.site_permissions.includes(
-                                              +item.rack.datacenter.id
+                                              +item.datacenter.id
                                             ))
                                         )
                                   }
