@@ -30,10 +30,11 @@ import os
 from django.core.exceptions import ObjectDoesNotExist
 
 
-pdu_url = "http://hyposoft-mgt.colab.duke.edu:8005/"
+BCMAN_URL = "hyposoft-mgt.colab.duke.edu"
+PDU_URL = "http://hyposoft-mgt.colab.duke.edu:8005/"
 # Need to specify rack + side in request, e.g. for A1 left, use A01L
-get_pdu = "pdu.php?pdu=hpdu-rtp1-"
-toggle_pdu = "power.php"
+GET_PDU = "pdu.php?pdu=hpdu-rtp1-"
+TOGGLE_PDU = "power.php"
 
 
 @api_view(["GET"])
@@ -72,8 +73,8 @@ def pdu_power_status(request, id):
     for power_connection in power_connections:
         try:
             html = requests.get(
-                pdu_url
-                + get_pdu
+                PDU_URL
+                + GET_PDU
                 + rack_str
                 + str(power_connections[power_connection]["left_right"]),
                 timeout=5,
@@ -121,8 +122,8 @@ def pdu_power_on(request):
     for connection in power_connections:
         try:
             html = requests.get(
-                pdu_url
-                + get_pdu
+                PDU_URL
+                + GET_PDU
                 + get_pdu_status_ext(
                     asset, str(power_connections[connection]["left_right"])
                 )
@@ -175,8 +176,8 @@ def pdu_power_off(request):
     for connection in power_connections:
         try:
             html = requests.get(
-                pdu_url
-                + get_pdu
+                PDU_URL
+                + GET_PDU
                 + get_pdu_status_ext(
                     asset, str(power_connections[connection]["left_right"])
                 )
@@ -356,7 +357,7 @@ def toggle_pdu_power(asset, asset_port_number, goal_state):
     )
     try:
         requests.post(
-            pdu_url + toggle_pdu, {"pdu": pdu, "port": pdu_port, "v": goal_state}
+            PDU_URL + TOGGLE_PDU, {"pdu": pdu, "port": pdu_port, "v": goal_state}
         )
     except ConnectionError:
         return JsonResponse(
@@ -373,7 +374,7 @@ def toggle_pdu_power(asset, asset_port_number, goal_state):
 @permission_classes([IsAuthenticated])
 def chassis_power_status(request):
     try:
-        chassis_hostname, blade_slot = get_chassis_power_request_parameters(request)
+        chassis, blade_slot = get_chassis_power_request_parameters(request)
     except PowerManagementException as error:
         return JsonResponse(
             {"failure_message": Status.ERROR.value + str(error)},
@@ -387,7 +388,7 @@ def chassis_power_status(request):
             },
             status=HTTPStatus.UNAUTHORIZED,
         )
-    result, exit_status = make_bcman_request(chassis_hostname, str(blade_slot), "")
+    result, exit_status = make_bcman_request(chassis.hostname, str(blade_slot), "")
     if exit_status != 0:
         return JsonResponse(
             {
@@ -420,7 +421,7 @@ def chassis_power_status(request):
 @permission_classes([IsAuthenticated])
 def chassis_power_on(request):
     try:
-        chassis_hostname, blade_slot = get_chassis_power_request_parameters(request)
+        chassis, blade_slot = get_chassis_power_request_parameters(request)
     except PowerManagementException as error:
         return JsonResponse(
             {"failure_message": Status.ERROR.value + str(error)},
@@ -434,7 +435,7 @@ def chassis_power_on(request):
             },
             status=HTTPStatus.UNAUTHORIZED,
         )
-    result, exit_status = make_bcman_request(chassis_hostname, str(blade_slot), "on")
+    result, exit_status = make_bcman_request(chassis.hostname, str(blade_slot), "on")
     if exit_status != 0:
         return JsonResponse(
             {
@@ -445,6 +446,7 @@ def chassis_power_on(request):
             },
             status=HTTPStatus.REQUEST_TIMEOUT,
         )
+    log_power_action(request.user, PowerAction.ON, chassis, blade_slot=blade_slot)
     return JsonResponse(
         {"success_message": Status.SUCCESS.value + result}, status=HTTPStatus.OK,
     )
@@ -454,7 +456,7 @@ def chassis_power_on(request):
 @permission_classes([IsAuthenticated])
 def chassis_power_off(request):
     try:
-        chassis_hostname, blade_slot = get_chassis_power_request_parameters(request)
+        chassis, blade_slot = get_chassis_power_request_parameters(request)
     except PowerManagementException as error:
         return JsonResponse(
             {"failure_message": Status.ERROR.value + str(error)},
@@ -468,7 +470,7 @@ def chassis_power_off(request):
             },
             status=HTTPStatus.UNAUTHORIZED,
         )
-    result, exit_status = make_bcman_request(chassis_hostname, str(blade_slot), "off")
+    result, exit_status = make_bcman_request(chassis.hostname, str(blade_slot), "off")
     if exit_status != 0:
         return JsonResponse(
             {
@@ -479,6 +481,7 @@ def chassis_power_off(request):
             },
             status=HTTPStatus.REQUEST_TIMEOUT,
         )
+    log_power_action(request.user, PowerAction.OFF, chassis, blade_slot=blade_slot)
     return JsonResponse(
         {"success_message": Status.SUCCESS.value + result}, status=HTTPStatus.OK,
     )
@@ -488,7 +491,7 @@ def chassis_power_off(request):
 @permission_classes([IsAuthenticated])
 def chassis_power_cycle(request):
     try:
-        chassis_hostname, blade_slot = get_chassis_power_request_parameters(request)
+        chassis, blade_slot = get_chassis_power_request_parameters(request)
     except PowerManagementException as error:
         return JsonResponse(
             {"failure_message": Status.ERROR.value + str(error)},
@@ -503,7 +506,7 @@ def chassis_power_cycle(request):
             status=HTTPStatus.UNAUTHORIZED,
         )
     result_off, exit_status_off = make_bcman_request(
-        chassis_hostname, str(blade_slot), "off"
+        chassis.hostname, str(blade_slot), "off"
     )
     if exit_status_off != 0:
         return JsonResponse(
@@ -517,7 +520,7 @@ def chassis_power_cycle(request):
         )
     time.sleep(2)
     result_on, exit_status_on = make_bcman_request(
-        chassis_hostname, str(blade_slot), "on"
+        chassis.hostname, str(blade_slot), "on"
     )
     if exit_status_on != 0:
         return JsonResponse(
@@ -530,8 +533,9 @@ def chassis_power_cycle(request):
             status=HTTPStatus.REQUEST_TIMEOUT,
         )
     result = (
-        "chassis '" + chassis_hostname + "' blade " + str(blade_slot) + "' power cycled"
+        "chassis '" + chassis.hostname + "' blade " + str(blade_slot) + "' power cycled"
     )
+    log_power_action(request.user, PowerAction.CYCLE, chassis, blade_slot=blade_slot)
     return JsonResponse(
         {"success_message": Status.SUCCESS.value + result}, status=HTTPStatus.OK,
     )
@@ -539,11 +543,10 @@ def chassis_power_cycle(request):
 
 def make_bcman_request(chassis, blade, power_command):
     user = os.environ["BCMAN_USERNAME"]
-    host = "hyposoft-mgt.colab.duke.edu"
     options = os.environ["BCMAN_OPTIONS"]
     password = os.environ["BCMAN_PASSWORD"]
     cmd = "rackcity/utils/bcman.expect '{}' '{}' '{}' '{}' '{}' '{}' '{}' > temp.txt".format(
-        user, host, options, password, chassis, blade, power_command,
+        user, BCMAN_URL, options, password, chassis, blade, power_command,
     )
     exit_status = os.system(cmd)
     result = None
@@ -581,13 +584,13 @@ def get_chassis_power_request_parameters(request):
         )
     if not is_asset_power_controllable_by_bcman(chassis):
         raise PowerManagementException(
-            "Power is only network controllable for blade chassis of vendor 'BMI' with hostname."
+            "Power is only network controllable for blade chassis of vendor 'BMI' with hostname not in storage."
         )
     if (blade_slot < 1) or (blade_slot > 14):
         raise PowerManagementException(
             "Blade slot " + str(blade_slot) + " does not exist on chassis."
         )
-    return chassis.hostname, blade_slot
+    return chassis, blade_slot
 
 
 def get_pdu_power_request_parameters(request):
@@ -615,10 +618,15 @@ def get_pdu_power_request_parameters(request):
 def is_asset_power_controllable_by_bcman(asset):
     return (
         asset.model.is_blade_chassis()
+        and not asset.is_in_offline_storage()
         and asset.model.vendor == "BMI"
         and asset.hostname is not None
     )
 
 
 def is_asset_power_controllable_by_pdu(asset):
-    return asset.model.is_rackmount() and asset.rack.is_network_controlled
+    return (
+        asset.model.is_rackmount()
+        and not asset.is_in_offline_storage()
+        and asset.rack.is_network_controlled
+    )
