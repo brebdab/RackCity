@@ -331,12 +331,12 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
     var checks: Array<any>;
     checks = [];
     for (var i = 0; i < this.state.sites.length; i++) {
-      checks.push(this.Site(this.state.sites[i]));
+      checks.push(this.renderSite(this.state.sites[i]));
     }
     return checks;
   }
 
-  private Site(site: DatacenterObject) {
+  private renderSite(site: DatacenterObject) {
     return (
       <FormGroup key={site.name} inline={true}>
         <Checkbox
