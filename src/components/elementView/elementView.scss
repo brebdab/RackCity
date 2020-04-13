@@ -13,9 +13,12 @@
   width: 100%;
   padding: 5pt;
   display: inline-block;
-  cursor: default !important;
   font-weight: bold !important;
   color: #ffffff !important;
+}
+
+.tab-header:focus {
+  outline: none;
 }
 
 .tab-sub {
@@ -23,6 +26,11 @@
   padding: 5pt;
   display: inline-block;
   font-size: small !important;
+  margin-left: 10pt;
+}
+
+.tab-sub:focus {
+  outline: none;
 }
 
 .permissions-button {

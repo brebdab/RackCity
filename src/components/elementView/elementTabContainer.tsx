@@ -98,9 +98,8 @@ class ElementTabContainer extends React.Component<
 
         <Tab
           className="tab tab-header do-not-print"
-          id="assets-header"
+          id="assets"
           title="Assets"
-          disabled={true}
         />
 
         <Tab
@@ -121,8 +120,8 @@ class ElementTabContainer extends React.Component<
 
         <Tab
           className="tab-sub do-not-print"
-          id="offline-storage-assets"
-          title="Offline Storage Assets"
+          id="stored-assets"
+          title="Stored Assets"
           panel={
             <ElementTab
               datacenters={this.state.datacenters}
@@ -160,9 +159,8 @@ class ElementTabContainer extends React.Component<
 
         <Tab
           className="tab tab-header do-not-print"
-          id="sites-header"
+          id="datacenters"
           title="Sites"
-          disabled={true}
         />
 
         <Tab
