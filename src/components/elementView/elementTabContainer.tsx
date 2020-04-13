@@ -5,7 +5,12 @@ import ElementTab from "./elementTab";
 import { RouteComponentProps } from "react-router";
 import "./elementView.scss";
 import { connect } from "react-redux";
-import {ElementType, DatacenterObject, getHeaders, ROUTES} from "../../utils/utils";
+import {
+  ElementType,
+  DatacenterObject,
+  getHeaders,
+  ROUTES,
+} from "../../utils/utils";
 import RackTab from "./rackTab";
 import { API_ROOT } from "../../utils/api-config";
 import axios from "axios";
@@ -69,17 +74,14 @@ class ElementTabContainer extends React.Component<
       return match[1];
     }
   };
-  private handleTabClick(tab:string){
-    if(tab==="assets-parent"){
-      this.props.history.push(ROUTES.ASSETS)
+  private handleTabClick(tab: string) {
+    if (tab === "assets-parent") {
+      this.props.history.push(ROUTES.ASSETS);
+    } else if (tab === "sites") {
+      this.props.history.push(ROUTES.DATACENTERS);
+    } else {
+      this.props.history.push("/dashboard/" + tab);
     }
-    else if(tab==="sites"){
-      this.props.history.push(ROUTES.DATACENTERS)
-    }
-    else {
-      this.props.history.push("/dashboard/" + tab)
-    }
-
   }
   public render() {
     return (
@@ -94,7 +96,6 @@ class ElementTabContainer extends React.Component<
         large
         onChange={(tab: string) => this.handleTabClick(tab)}
       >
-
         <Tab
           className="tab-header do-not-print"
           id="assets-parent"
@@ -155,7 +156,7 @@ class ElementTabContainer extends React.Component<
           title="Models"
           panel={<ElementTab {...this.props} element={ElementType.MODEL} />}
         />
-            <Tab
+        <Tab
           className="tab"
           id="racks"
           title="Racks"
@@ -168,13 +169,7 @@ class ElementTabContainer extends React.Component<
           }
         />
 
-
-        <Tab
-          className="tab-header do-not-print"
-          id="sites"
-          title="Sites"
-        />
-
+        <Tab className="tab-header do-not-print" id="sites" title="Sites" />
 
         <Tab
           className="tab-sub do-not-print"
