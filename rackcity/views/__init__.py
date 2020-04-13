@@ -78,7 +78,7 @@ from .power_views import (
     pdu_power_on,
     pdu_power_off,
     pdu_power_cycle,
-    pdu_power_availability,
+    pdu_port_availability,
     chassis_power_status,
     chassis_power_on,
     chassis_power_off,
