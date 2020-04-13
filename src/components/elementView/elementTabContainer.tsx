@@ -5,7 +5,7 @@ import ElementTab from "./elementTab";
 import { RouteComponentProps } from "react-router";
 import "./elementView.scss";
 import { connect } from "react-redux";
-import { ElementType, DatacenterObject, getHeaders } from "../../utils/utils";
+import {ElementType, DatacenterObject, getHeaders, ROUTES} from "../../utils/utils";
 import RackTab from "./rackTab";
 import { API_ROOT } from "../../utils/api-config";
 import axios from "axios";
@@ -69,7 +69,18 @@ class ElementTabContainer extends React.Component<
       return match[1];
     }
   };
+  private handleTabClick(tab:string){
+    if(tab==="assets-parent"){
+      this.props.history.push(ROUTES.ASSETS)
+    }
+    else if(tab==="sites"){
+      this.props.history.push(ROUTES.DATACENTERS)
+    }
+    else {
+      this.props.history.push("/dashboard/" + tab)
+    }
 
+  }
   public render() {
     return (
       <Tabs
@@ -81,7 +92,7 @@ class ElementTabContainer extends React.Component<
         renderActiveTabPanelOnly={false}
         vertical={true}
         large
-        onChange={(tab: any) => this.props.history.push("/dashboard/" + tab)}
+        onChange={(tab: string) => this.handleTabClick(tab)}
       >
         <Tab
           className="tab"
@@ -98,7 +109,7 @@ class ElementTabContainer extends React.Component<
 
         <Tab
           className="tab-header do-not-print"
-          id="assets"
+          id="assets-parent"
           title="Assets"
         />
 
@@ -159,7 +170,7 @@ class ElementTabContainer extends React.Component<
 
         <Tab
           className="tab-header do-not-print"
-          id="datacenters"
+          id="sites"
           title="Sites"
         />
 
