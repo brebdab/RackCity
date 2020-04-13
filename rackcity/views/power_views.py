@@ -475,7 +475,9 @@ def chassis_power_status(request):
             },
             status=HTTPStatus.REQUEST_TIMEOUT,
         )
-    return JsonResponse({str(blade_slot): blade_slot_power_status}, status=HTTPStatus.OK,)
+    return JsonResponse(
+        {str(blade_slot): blade_slot_power_status}, status=HTTPStatus.OK,
+    )
 
 
 @api_view(["POST"])
@@ -614,9 +616,13 @@ def get_chassis_power_request_parameters(data):
         raise ChassisPowerManagementException(
             "Chassis" + GenericFailure.DOES_NOT_EXIST.value
         )
-    if (not chassis.model.is_blade_chassis) or (chassis.model.vendor != "BMI"):
+    if (
+        (not chassis.model.is_blade_chassis)
+        or (chassis.model.vendor != "BMI")
+        or (not chassis.hostname)
+    ):
         raise ChassisPowerManagementException(
-            "Power is only network controllable for blade chassis of vendor 'BMI'."
+            "Power is only network controllable for blade chassis of vendor 'BMI' with hostname."
         )
     if (blade_slot < 1) or (blade_slot > 14):
         raise ChassisPowerManagementException(
