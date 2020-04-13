@@ -6,8 +6,7 @@ from rackcity.models import (
     Asset,
     ITModel,
     Log,
-    Rack,
-    RackCityPermission,
+    Site,
 )
 from rackcity.utils.exceptions import UserAssetPermissionException
 from rest_framework.permissions import BasePermission
@@ -75,48 +74,71 @@ def get_permission(permission_name: PermissionName) -> Permission:
     return permission
 
 
-def user_has_asset_permission(user, site=None):
-    if user.has_perm(PermissionPath.ASSET_WRITE.value):
-        return True
-    if site:
-        try:
-            permission = RackCityPermission.objects.get(user=user.id)
-        except ObjectDoesNotExist:
-            return False
-        else:
-            if site in permission.site_permissions.all():
-                return True
-    return False
+def user_has_asset_permission(user, site):
+    return user.has_perm(
+        PermissionPath.ASSET_WRITE.value
+    ) or site.user_has_site_level_permission(user)
 
 
 def validate_user_asset_permission_to_add(user, validated_data):
-    # TODO: make this check work for blades, which don't have a rack
-    if "rack" not in validated_data:
-        return
-    rack_id = validated_data["rack"].id
-    try:
-        rack = Rack.objects.get(id=rack_id)
-    except ObjectDoesNotExist:
-        raise Exception("Rack '" + str(rack_id) + "' does not exist")
-    if not user_has_asset_permission(user, site=rack.datacenter):
+    site = None
+    if "offline_storage_site" in validated_data:
+        site_id = validated_data["offline_storage_site"].id
+        try:
+            site = Site.objects.get(id=site_id)
+        except ObjectDoesNotExist:
+            raise Exception("Site '" + str(site_id) + "' does not exist")
+    elif "model" in validated_data:
+        model_id = validated_data["model"].id
+        try:
+            model = ITModel.objects.get(id=model_id)
+        except ObjectDoesNotExist:
+            raise Exception("Model '" + str(model_id) + "' does not exist")
+        if model.is_rackmount():
+            site = model.rack.datacenter
+        elif model.is_blade_asset():
+            if "chassis" in validated_data:
+                chassis_id = validated_data["chassis"].id
+                try:
+                    chassis = Asset.objects.get(id=chassis_id)
+                except ObjectDoesNotExist:
+                    raise Exception("Chassis '" + str(chassis_id) + "' does not exist")
+                site = chassis.rack.datecenter
+    if site:
+        if not user_has_asset_permission(user, site):
+            raise UserAssetPermissionException(
+                "User '"
+                + user.username
+                + "' does not have asset permission in site '"
+                + site.abbreviation
+                + "'."
+            )
+    else:
         raise UserAssetPermissionException(
-            "User '"
-            + user.username
-            + "' does not have asset permission in datacenter '"
-            + rack.datacenter.abbreviation
-            + "'."
+            "User '" + user.username + "' does not have asset permission."
         )
 
 
 def validate_user_asset_permission_to_modify_or_delete(user, asset):
-    # TODO: make this check work for blades, which don't have a rack
-    if asset.rack and not user_has_asset_permission(user, site=asset.rack.datacenter):
+    site = None
+    if asset.is_in_offline_storage():
+        site = asset.offline_storage_site
+    elif asset.model.is_rackmount():
+        site = asset.rack.datacenter
+    elif asset.model.is_blade_asset():
+        site = asset.chassis.rack.datacenter
+    if site:
+        if not user_has_asset_permission(user, site):
+            raise UserAssetPermissionException(
+                "User '"
+                + user.username
+                + "' does not have asset permission in site '"
+                + site.abbreviation
+                + "'."
+            )
+    else:
         raise UserAssetPermissionException(
-            "User '"
-            + user.username
-            + "' does not have asset permission in datacenter '"
-            + asset.rack.datacenter.abbreviation
-            + "'."
+            "User '" + user.username + "' does not have asset permission."
         )
 
 

@@ -100,7 +100,7 @@ def decommission_asset_parameterized(data, query_params, user):
                 )
         # TODO: permissions for blades
         if decommissioned_asset_cp.rack and not user_has_asset_permission(
-            user, site=decommissioned_asset_cp.rack.datacenter
+            user, decommissioned_asset_cp.rack.datacenter
         ):
             return JsonResponse(
                 {
@@ -127,9 +127,7 @@ def decommission_asset_parameterized(data, query_params, user):
                 status=HTTPStatus.BAD_REQUEST,
             )
         # TODO: permissions for blades
-        if asset.rack and not user_has_asset_permission(
-            user, site=asset.rack.datacenter
-        ):
+        if asset.rack and not user_has_asset_permission(user, asset.rack.datacenter):
             return JsonResponse(
                 {
                     "failure_message": Status.AUTH_ERROR.value
