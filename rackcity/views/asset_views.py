@@ -25,12 +25,14 @@ from rackcity.models import (
 from rackcity.models.asset import (
     get_assets_for_cp,
     get_next_available_asset_number,
+    AssetCP,
 )
 from rackcity.utils.asset_utils import (
-    get_or_create_asset_cp,
+    does_asset_exist,
     save_all_connection_data,
     save_power_connections,
-    save_all_field_data,
+    save_all_field_data_live,
+    save_all_field_data_cp,
 )
 from rackcity.utils.change_planner_utils import (
     get_change_plan,
@@ -66,7 +68,8 @@ from rackcity.utils.query_utils import (
     get_many_response,
 )
 from rackcity.utils.rackcity_utils import (
-    validate_asset_location,
+    validate_asset_location_in_rack,
+    validate_asset_location_in_chassis,
     validate_location_modification,
     no_infile_location_conflicts,
     records_are_identical,
@@ -86,7 +89,7 @@ from rest_framework.parsers import JSONParser
 @permission_classes([IsAuthenticated])
 def asset_many(request):
     """
-    List many assets. If page is not specified as a query parameter, all
+    List many assets in datacenters. If page is not specified as a query parameter, all
     assets are returned. If page is specified as a query parameter, page
     size must also be specified, and a page of assets will be returned.
     """
@@ -96,9 +99,42 @@ def asset_many(request):
     if failure_response:
         return failure_response
     if change_plan:
-        return get_many_assets_response_for_cp(request, change_plan)
+        return get_many_assets_response_for_cp(request, change_plan, stored=False)
     else:
-        return get_many_response(Asset, RecursiveAssetSerializer, "assets", request)
+        racked_assets = Asset.objects.filter(offline_storage_site__isnull=True)
+        return get_many_response(
+            Asset,
+            RecursiveAssetSerializer,
+            "assets",
+            request,
+            premade_object_query=racked_assets,
+        )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def offline_storage_asset_many(request):
+    """
+    List many assets in offline storage. If page is not specified as a query parameter, all
+    assets are returned. If page is specified as a query parameter, page
+    size must also be specified, and a page of assets will be returned.
+    """
+    (change_plan, failure_response) = get_change_plan(
+        request.query_params.get("change_plan")
+    )
+    if failure_response:
+        return failure_response
+    if change_plan:
+        return get_many_assets_response_for_cp(request, change_plan, stored=True)
+    else:
+        stored_assets = Asset.objects.filter(offline_storage_site__isnull=False)
+        return get_many_response(
+            Asset,
+            RecursiveAssetSerializer,
+            "assets",
+            request,
+            premade_object_query=stored_assets,
+        )
 
 
 @api_view(["GET"])
@@ -202,17 +238,51 @@ def asset_add(request):
             status=HTTPStatus.BAD_REQUEST,
         )
 
-    if (
-        serializer.validated_data["model"].is_rackmount()
-        and "rack" in serializer.validated_data
-        and "rack_position" in serializer.validated_data
-    ):
+    if serializer.validated_data["model"].is_rackmount():
+        if (
+            "rack" not in serializer.validated_data
+            or not serializer.validated_data["rack"]
+            or "rack_position" not in serializer.validated_data
+            or not serializer.validated_data["rack_position"]
+        ):
+            return JsonResponse(
+                {
+                    "failure_message": Status.INVALID_INPUT.value
+                    + "Must include rack and rack position to add a rackmount asset. "
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
         rack_id = serializer.validated_data["rack"].id
         rack_position = serializer.validated_data["rack_position"]
         height = serializer.validated_data["model"].height
         try:
-            validate_asset_location(
+            validate_asset_location_in_rack(
                 rack_id, rack_position, height, change_plan=change_plan
+            )
+        except LocationException as error:
+            return JsonResponse(
+                {"failure_message": Status.CREATE_ERROR.value + str(error)},
+                status=HTTPStatus.BAD_REQUEST,
+            )
+    else:
+        if (
+            "chassis" not in serializer.validated_data
+            or not serializer.validated_data["chassis"]
+            or "chassis_slot" not in serializer.validated_data
+            or not serializer.validated_data["chassis_slot"]
+        ):
+            return JsonResponse(
+                {
+                    "failure_message": Status.INVALID_INPUT.value
+                    + "Must include chassis and chassis slot to add a blade asset. "
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
+        chassis_id = serializer.validated_data["chassis"].id
+        chassis_slot = serializer.validated_data["chassis_slot"]
+        try:
+            validate_asset_location_in_chassis(
+                chassis_id, chassis_slot, change_plan=change_plan
             )
         except LocationException as error:
             return JsonResponse(
@@ -276,44 +346,51 @@ def asset_modify(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
-    id = data["id"]
+    asset_id = data["id"]
 
     (change_plan, failure_response) = get_change_plan(
         request.query_params.get("change_plan")
     )
     if failure_response:
         return failure_response
-
+    create_new_asset_cp = False
+    existing_asset = None
     if change_plan:
         failure_response = get_cp_already_executed_response(change_plan)
         if failure_response:
             return failure_response
-        del data["id"]
-        existing_asset = get_or_create_asset_cp(id, change_plan)
-        if existing_asset is None:
+
+        create_new_asset_cp = not AssetCP.objects.filter(
+            id=asset_id, change_plan=change_plan.id
+        ).exists()
+
+        if not create_new_asset_cp:
+            existing_asset = AssetCP.objects.get(
+                id=asset_id, change_plan=change_plan.id
+            )
+        if not does_asset_exist(asset_id, change_plan):
             return JsonResponse(
                 {
                     "failure_message": Status.MODIFY_ERROR.value
                     + "Asset"
                     + GenericFailure.DOES_NOT_EXIST.value,
-                    "errors": "No existing asset with id=" + str(id),
+                    "errors": "No existing asset with id=" + str(asset_id),
                 },
                 status=HTTPStatus.BAD_REQUEST,
             )
-    else:
+    if create_new_asset_cp or not change_plan:
         try:
-            existing_asset = Asset.objects.get(id=id)
+            existing_asset = Asset.objects.get(id=asset_id)
         except ObjectDoesNotExist:
             return JsonResponse(
                 {
                     "failure_message": Status.MODIFY_ERROR.value
                     + "Model"
                     + GenericFailure.DOES_NOT_EXIST.value,
-                    "errors": "No existing asset with id=" + str(id),
+                    "errors": "No existing asset with id=" + str(asset_id),
                 },
                 status=HTTPStatus.BAD_REQUEST,
             )
-
     try:
         validate_user_asset_permission_to_modify_or_delete(request.user, existing_asset)
     except UserAssetPermissionException as auth_error:
@@ -335,13 +412,21 @@ def asset_modify(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
-
-    failure_message = save_all_field_data(data, existing_asset, change_plan=change_plan)
+    asset_cp = None
+    if change_plan:
+        (asset_cp, failure_message) = save_all_field_data_cp(
+            data, existing_asset, change_plan, create_new_asset_cp
+        )
+    else:
+        failure_message = save_all_field_data_live(data, existing_asset)
     if failure_message:
         return JsonResponse(
             {"failure_message": Status.MODIFY_ERROR.value + failure_message},
             status=HTTPStatus.BAD_REQUEST,
         )
+
+    if asset_cp:
+        existing_asset = asset_cp
 
     warning_message = save_all_connection_data(
         data, existing_asset, request.user, change_plan=change_plan
@@ -388,16 +473,16 @@ def asset_delete(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
-    id = data["id"]
+    asset_id = data["id"]
     try:
-        existing_asset = Asset.objects.get(id=id)
+        existing_asset = Asset.objects.get(id=asset_id)
     except ObjectDoesNotExist:
         return JsonResponse(
             {
                 "failure_message": Status.DELETE_ERROR.value
                 + "Model"
                 + GenericFailure.DOES_NOT_EXIST.value,
-                "errors": "No existing asset with id=" + str(id),
+                "errors": "No existing asset with id=" + str(asset_id),
             },
             status=HTTPStatus.BAD_REQUEST,
         )
@@ -635,7 +720,8 @@ def asset_bulk_upload(request):
                 )
             model = ITModel.objects.get(id=asset_data["model"])
             try:
-                validate_asset_location(
+                # TODO: add chassis validation to bulk
+                validate_asset_location_in_rack(
                     asset_serializer.validated_data["rack"].id,
                     asset_serializer.validated_data["rack_position"],
                     model.height,
@@ -767,7 +853,7 @@ def asset_bulk_approve(request):
         return JsonResponse({"warning_message": warning_message}, status=HTTPStatus.OK)
     else:
         return JsonResponse(
-            {"success_message": "Assets succesfully modified. "}, status=HTTPStatus.OK
+            {"success_message": "Assets successfully modified. "}, status=HTTPStatus.OK
         )
 
 
@@ -827,10 +913,38 @@ def asset_page_count(request):
     if failure_response:
         return failure_response
     if change_plan:
-        return get_page_count_response_for_cp(request, change_plan)
+        return get_page_count_response_for_cp(request, change_plan, stored=False)
     else:
+        racked_assets = Asset.objects.filter(offline_storage_site__isnull=True)
         return get_page_count_response(
-            Asset, request.query_params, data_for_filters=request.data,
+            Asset,
+            request.query_params,
+            data_for_filters=request.data,
+            premade_object_query=racked_assets,
+        )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def offline_storage_asset_page_count(request):
+    """
+    Return total number of pages according to page size, which must be
+    specified as query parameter.
+    """
+    (change_plan, failure_response) = get_change_plan(
+        request.query_params.get("change_plan")
+    )
+    if failure_response:
+        return failure_response
+    if change_plan:
+        return get_page_count_response_for_cp(request, change_plan, stored=True)
+    else:
+        stored_assets = Asset.objects.filter(offline_storage_site__isnull=False)
+        return get_page_count_response(
+            Asset,
+            request.query_params,
+            data_for_filters=request.data,
+            premade_object_query=stored_assets,
         )
 
 

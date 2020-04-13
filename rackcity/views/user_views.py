@@ -11,7 +11,7 @@ from rackcity.permissions.groups import (
     update_user_groups,
     update_user_site_permissions,
 )
-from rackcity.permissions.permissions import PermissionPath
+from rackcity.permissions.permissions import PermissionPath, RegisterUserPermission
 from rackcity.utils.query_utils import (
     get_page_count_response,
     get_many_response,
@@ -37,10 +37,9 @@ from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAuthenticated
 
 
-class RegisterNameView(PermissionRequiredMixin, RegisterView):
+class RegisterNameView(RegisterView):
+    permission_classes = IsAuthenticated, RegisterUserPermission
     serializer_class = RegisterNameSerializer
-    permission_required = PermissionPath.USER_WRITE.value
-    raise_exception = True
 
 
 @api_view(["POST"])

@@ -11,7 +11,7 @@ from rackcity.utils.change_planner_utils import (
     get_change_plan,
     get_cp_already_executed_response,
     get_many_assets_response_for_cp,
-    get_page_count_response_for_decommissioned_cp,
+    get_page_count_response_for_cp,
 )
 from rackcity.utils.errors_utils import (
     Status,
@@ -39,10 +39,16 @@ def decommission_asset(request):
     """
     Decommission a live asset
     """
-    data = JSONParser().parse(request)
-    (change_plan, failure_response) = get_change_plan(
-        request.query_params.get("change_plan")
+    return decommission_asset_parameterized(
+        JSONParser().parse(request), request.query_params, request.user
     )
+
+
+def decommission_asset_parameterized(data, query_params, user):
+    """
+    Decommission a live asset
+    """
+    (change_plan, failure_response) = get_change_plan(query_params.get("change_plan"))
     if failure_response:
         return failure_response
     if "id" not in data:
@@ -92,15 +98,16 @@ def decommission_asset(request):
                     },
                     status=HTTPStatus.BAD_REQUEST,
                 )
-        if not user_has_asset_permission(
-            request.user, site=decommissioned_asset_cp.rack.datacenter
+        # TODO: permissions for blades
+        if decommissioned_asset_cp.rack and not user_has_asset_permission(
+            user, site=decommissioned_asset_cp.rack.datacenter
         ):
             return JsonResponse(
                 {
                     "failure_message": Status.AUTH_ERROR.value
                     + AuthFailure.ASSET.value,
                     "errors": "User "
-                    + request.user.username
+                    + user.username
                     + " does not have asset permission in datacenter",
                 },
                 status=HTTPStatus.UNAUTHORIZED,
@@ -119,13 +126,16 @@ def decommission_asset(request):
                 },
                 status=HTTPStatus.BAD_REQUEST,
             )
-        if not user_has_asset_permission(request.user, site=asset.rack.datacenter):
+        # TODO: permissions for blades
+        if asset.rack and not user_has_asset_permission(
+            user, site=asset.rack.datacenter
+        ):
             return JsonResponse(
                 {
                     "failure_message": Status.AUTH_ERROR.value
                     + AuthFailure.ASSET.value,
                     "errors": "User "
-                    + request.user.username
+                    + user.username
                     + " does not have asset permission in datacenter id="
                     + str(asset.rack.datacenter.id),
                 },
@@ -133,6 +143,25 @@ def decommission_asset(request):
             )
 
     if change_plan:
+        blades = AssetCP.objects.filter(chassis=decommissioned_asset_cp.id)
+        for blade in blades:
+            data_for_blade = data.copy()
+            data_for_blade["id"] = blade.id
+            try:
+                decommission_asset_parameterized(data_for_blade, query_params, user)
+                # Assume that if this call doesn't raise an exception, it was successful
+                # None of the failed responses above are possible
+            except Exception as error:
+                return JsonResponse(
+                    {
+                        "failure_message": Status.DECOMMISSION_ERROR.value
+                        + "Unable to decommission blade: '"
+                        + str(blade.asset_number)
+                        + "'. ",
+                        "errors": str(error),
+                    },
+                    status=HTTPStatus.BAD_REQUEST,
+                )
         try:
             decommissioned_asset_cp.save()
         except Exception as error:
@@ -152,11 +181,29 @@ def decommission_asset(request):
             },
             status=HTTPStatus.OK,
         )
-
+    blades = Asset.objects.filter(chassis=asset.id)
+    for blade in blades:
+        data_for_blade = data.copy()
+        data_for_blade["id"] = blade.id
+        try:
+            decommission_asset_parameterized(data_for_blade, query_params, user)
+            # Assume that if this call doesn't raise an exception, it was successful
+            # None of the failed responses above are possible
+        except Exception as error:
+            return JsonResponse(
+                {
+                    "failure_message": Status.DECOMMISSION_ERROR.value
+                    + "Unable to decommission blade: '"
+                    + str(blade.asset_number)
+                    + "'. ",
+                    "errors": str(error),
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
     asset_data = RecursiveAssetSerializer(asset).data
     asset_data["live_id"] = asset_data["id"]
     del asset_data["id"]
-    asset_data["decommissioning_user"] = str(request.user)
+    asset_data["decommissioning_user"] = str(user)
     decommissioned_asset = AddDecommissionedAssetSerializer(data=asset_data)
     if not decommissioned_asset.is_valid(raise_exception=False):
         return JsonResponse(
@@ -183,7 +230,7 @@ def decommission_asset(request):
             assetcp.related_decommissioned_asset = decommissioned_asset_object
             assetcp.save()
         log_action(
-            request.user, asset, Action.DECOMMISSION,
+            user, asset, Action.DECOMMISSION,
         )
         asset.delete()
         return JsonResponse(
@@ -228,7 +275,7 @@ def decommissioned_asset_page_count(request):
     if failure_response:
         return failure_response
     if change_plan:
-        return get_page_count_response_for_decommissioned_cp(request, change_plan,)
+        return get_page_count_response_for_cp(request, change_plan, decommissioned=True)
     else:
         return get_page_count_response(
             DecommissionedAsset, request.query_params, data_for_filters=request.data,

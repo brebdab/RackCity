@@ -76,7 +76,7 @@ import "./elementView.scss";
 import FilterSelect from "./filterSelect";
 import { PowerView } from "./powerView/powerView";
 import "./powerView/powerView.scss";
-import { isNullOrUndefined} from "util";
+import { isNullOrUndefined } from "util";
 import { PermissionState } from "../../utils/permissionUtils";
 
 interface ElementTableState {
@@ -133,7 +133,6 @@ interface ElementTableProps {
   updateChangePlans(status: boolean): void;
   changePlan: ChangePlan;
 }
-
 
 class ElementTable extends React.Component<
   ElementTableProps & RouteComponentProps,
@@ -584,24 +583,21 @@ class ElementTable extends React.Component<
 
   setFieldNamesFromData = (items: Array<ElementObjectType>) => {
     let fields: Array<string> = [];
-    if(items.length> 0) {
+    if (items.length > 0) {
       Object.keys(items[0]).forEach((col: string) => {
         if (col === "model") {
           fields.push("model__vendor");
           fields.push("model__model_number");
-        } else if (col === "rack") {
-          fields.push("rack");
-          fields.push("rack__datacenter__name");
         } else if (
-            col !== "id" &&
-            col !== "decommissioned_id" &&
-            col !== "network_ports" &&
-            col !== "comment" &&
-            col !== "power_connections" &&
-            col !== "mac_addresses" &&
-            col !== "network_connections" &&
-            col !== "network_graph" &&
-            col !== "is_admin"
+          col !== "id" &&
+          col !== "decommissioned_id" &&
+          col !== "network_ports" &&
+          col !== "comment" &&
+          col !== "power_connections" &&
+          col !== "mac_addresses" &&
+          col !== "network_connections" &&
+          col !== "network_graph" &&
+          col !== "is_admin"
         ) {
           fields.push(col);
         }
@@ -750,9 +746,7 @@ class ElementTable extends React.Component<
 
   //DELETE LOGIC
   private shouldShowColumn = (item: any, col: string) => {
-
     if (isAssetObject(item)) {
-
       return AssetFieldsTable[col] && col !== "comment";
     }
     return (
@@ -1081,15 +1075,13 @@ class ElementTable extends React.Component<
                   } else if (this.props.type === ElementType.ASSET) {
                     if (AssetFieldsTable[col]) {
                       return (
-
-                          <th className="header-cell">
-                            <div className="header-text">
-                              <span>{AssetFieldsTable[col]}</span>
-                              {this.getScrollIcon(col)}
-                            </div>
-                          </th>
+                        <th className="header-cell">
+                          <div className="header-text">
+                            <span>{AssetFieldsTable[col]}</span>
+                            {this.getScrollIcon(col)}
+                          </div>
+                        </th>
                       );
-
                     }
                     return null;
                   } else if (this.props.type === ElementType.MODEL) {
@@ -1121,6 +1113,7 @@ class ElementTable extends React.Component<
                 !this.state.getDataInProgress ? (
                   <tbody>
                     {this.state.items.map((item: ElementObjectType) => {
+
                       return (
                         <tr
                           key={item.id}
@@ -1143,15 +1136,24 @@ class ElementTable extends React.Component<
                                 event.stopPropagation();
                               }}
                             >
-                              {this.props.isDecommissioned  ? null : (
+                              {this.props.isDecommissioned ? null : (
                                 <Checkbox
-                                    disabled = {isNullOrUndefined((item.asset_number))}
-                                  checked={item.asset_number? this.state.selected.includes(
+                                  disabled={isNullOrUndefined(
                                     item.asset_number
-                                  ):false}
+                                  )}
+                                  checked={
+                                    item.asset_number
+                                      ? this.state.selected.includes(
+                                          item.asset_number
+                                        )
+                                      : false
+                                  }
                                   onClick={(event: any) => {
                                     const selected = this.state.selected;
-                                    if (item.asset_number && selected.includes(item.asset_number)) {
+                                    if (
+                                      item.asset_number &&
+                                      selected.includes(item.asset_number)
+                                    ) {
                                       if (this.state.selectedAll) {
                                         this.setState({
                                           selectedAll: false,
@@ -1180,7 +1182,6 @@ class ElementTable extends React.Component<
                             </th>
                           ) : null}
                           {Object.entries(item).map(([col, value]) => {
-
                             if (isModelObject(value)) {
                               return [
                                 <td style={getChangePlanRowStyle(item)}>
@@ -1190,34 +1191,53 @@ class ElementTable extends React.Component<
                                   {value.model_number}
                                 </td>,
                               ];
-                            } else if (col === "rack" && isRackObject(value)) {
-                              return [
-                                <td style={getChangePlanRowStyle(item)}>
-                                  {value.row_letter + value.rack_num}
-                                </td>,
-                                <td style={getChangePlanRowStyle(item)}>
-                                  {value.datacenter.name}
-                                </td>,
-                              ];
-                            } else if(col ==="rack"){
-                               return [
-                                <td style={getChangePlanRowStyle(item)}>
+                            } else if (col === "rack") {
+                              let rack_value = null;
+                              if (isRackObject(value)) {
+                                rack_value = value.row_letter + value.rack_num;
+                              } else if (
+                                isAssetObject(item) &&
+                                item.chassis &&
+                                item.chassis.rack
+                              ) {
+                                rack_value =
+                                  item.chassis.rack.row_letter +
+                                  item.chassis.rack.rack_num;
+                              }
 
-                                </td>,
+                              return (
                                 <td style={getChangePlanRowStyle(item)}>
-
-                                </td>,
-                              ];
-                            }
-                              else if (isModelObject(item) && col === "display_color") {
+                                  {rack_value}
+                                </td>
+                              );
+                            } else if (
+                              isModelObject(item) &&
+                              col === "display_color"
+                            ) {
                               return (
                                 <td
                                   style={{
                                     backgroundColor: value,
                                   }}
-                                ></td>
+                                />
+                              );
+                            } else if (
+                              isAssetObject(value) &&
+                              col === "chassis"
+                            ) {
+                              return (
+                                <td style={getChangePlanRowStyle(item)}>
+                                  {value.hostname}
+                                </td>
+                              );
+                            } else if (isDatacenterObject(value)) {
+                              return (
+                                <td style={getChangePlanRowStyle(item)}>
+                                  {value.name}
+                                </td>
                               );
                             } else if (this.shouldShowColumn(item, col)) {
+                              console.log(col, value);
                               return (
                                 <td style={getChangePlanRowStyle(item)}>
                                   {value}
@@ -1227,6 +1247,7 @@ class ElementTable extends React.Component<
 
                             return null;
                           })}
+
                           <td
                             onClick={(event: any) => {
                               event.stopPropagation();
@@ -1275,7 +1296,7 @@ class ElementTable extends React.Component<
                                             ElementType.ASSET &&
                                             isAssetObject(item) &&
                                             this.props.permissionState.site_permissions.includes(
-                                              +item.rack.datacenter.id
+                                              +item.datacenter.id
                                             ))
                                         )
                                   }
@@ -1322,7 +1343,7 @@ class ElementTable extends React.Component<
                                             ElementType.ASSET &&
                                             isAssetObject(item) &&
                                             this.props.permissionState.site_permissions.includes(
-                                              +item.rack.datacenter.id
+                                              +item.datacenter.id
                                             ))
                                         )
                                   }

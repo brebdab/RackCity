@@ -3,6 +3,7 @@ import {
   Button,
   ButtonGroup,
   Callout,
+  Card,
   Checkbox,
   Classes,
   Collapse,
@@ -12,9 +13,8 @@ import {
   Intent,
   MenuItem,
   Spinner,
-  Tooltip,
-  Card,
   Switch,
+  Tooltip,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { IconNames } from "@blueprintjs/icons";
@@ -34,6 +34,7 @@ import { API_ROOT } from "../utils/api-config";
 import {
   AssetFormLabels,
   AssetObject,
+  ChangePlan,
   DatacenterObject,
   ElementObjectType,
   ElementType,
@@ -42,13 +43,13 @@ import {
   isDatacenterObject,
   isRackObject,
   ModelObject,
+  MountTypes,
   NetworkConnection,
   PowerConnection,
   PowerPortAvailability,
   PowerSide,
   RackObject,
   ShallowAssetObject,
-  ChangePlan,
 } from "../utils/utils";
 import Field from "./field";
 import "./forms.scss";
@@ -103,12 +104,11 @@ interface AssetFormState {
   loading: boolean;
   customizeModel: boolean;
 }
-function ifNullReturnEmptyString (value:string|null|undefined){
-  if (value===null || value===undefined){
-    return ""
+function ifNullReturnEmptyString(value: string | null | undefined) {
+  if (value === null || value === undefined) {
+    return "";
   }
   return value;
-
 }
 
 class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
@@ -116,21 +116,25 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     ? JSON.parse(JSON.stringify(this.props.initialValues))
     : ({} as AssetObject);
 
-  initializeCustomValues(asset: AssetObject) {
+  private initializeCustomValues(asset: AssetObject) {
     if (this.props.initialValues) {
       const model = this.props.initialValues.model;
-      asset.cpu = this.initialState.cpu ? asset.cpu : ifNullReturnEmptyString(model.cpu);
+      asset.cpu = this.initialState.cpu
+        ? asset.cpu
+        : ifNullReturnEmptyString(model.cpu);
       asset.display_color = asset.display_color
         ? asset.display_color
         : ifNullReturnEmptyString(model.display_color);
       asset.memory_gb = asset.memory_gb
         ? asset.memory_gb
         : ifNullReturnEmptyString(model.memory_gb);
-      asset.storage = asset.storage ? asset.storage : ifNullReturnEmptyString(model.storage);
+      asset.storage = asset.storage
+        ? asset.storage
+        : ifNullReturnEmptyString(model.storage);
     }
     return asset;
   }
-  resetCustomValuesToDefault(asset: AssetObject) {
+  private resetCustomValuesToDefault(asset: AssetObject) {
     asset.cpu = ifNullReturnEmptyString(asset.model.cpu);
     asset.display_color = ifNullReturnEmptyString(asset.model.display_color);
     asset.memory_gb = ifNullReturnEmptyString(asset.model.memory_gb);
@@ -154,8 +158,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
   public state = {
     values: this.initializeCustomValues(this.initialState),
-    currDatacenter: this.initialState.rack
-      ? this.initialState.rack.datacenter
+    currDatacenter: this.initialState.datacenter
+      ? this.initialState.datacenter
       : this.props.currDatacenter === ALL_DATACENTERS
       ? undefined
       : this.props.currDatacenter,
@@ -195,7 +199,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
       params: params,
     };
-    axios.get(API_ROOT + "api/power/availability", config).then((res) => {
+    axios.get(API_ROOT + "api/rack-power/availability", config).then((res) => {
       this.gettingPowerPortsInProgress = false;
       this.setState({ power_ports: res.data });
     });
@@ -274,6 +278,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       hostname,
       id,
       rack_position,
+      chassis_slot,
       owner,
       mac_addresses,
       network_connections,
@@ -286,7 +291,10 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     } = asset;
     const model = asset.model ? asset.model.id : null;
     const rack = asset.rack ? asset.rack.id : null;
+    const chassis = asset.chassis ? asset.chassis.id : null;
     let valuesToSend: ShallowAssetObject = {
+      chassis,
+      chassis_slot,
       asset_number,
       model,
       rack,
@@ -320,10 +328,10 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         return;
       }
       let newValues = this.mapAssetObject(this.state.values);
-      if(this.state.values.model) {
+      if (this.state.values.model) {
         if (
-            this.state.values.display_color ===
-            this.state.values.model.display_color
+          this.state.values.display_color ===
+          this.state.values.model.display_color
         ) {
           newValues.display_color = "";
         }
@@ -333,7 +341,10 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         if (this.state.values.storage === this.state.values.model.storage) {
           newValues.storage = "";
         }
-        if (this.state.values.memory_gb === this.state.values.model.memory_gb || this.state.values.memory_gb === "") {
+        if (
+          this.state.values.memory_gb === this.state.values.model.memory_gb ||
+          this.state.values.memory_gb === ""
+        ) {
           newValues.memory_gb = null;
         }
       }
@@ -342,7 +353,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         newValues.hostname = null;
       }
       if (this.state.values.asset_number === "") {
-       newValues.asset_number =null;
+        newValues.asset_number = null;
       }
       if (this.props.initialValues) {
         newValues.id = this.props.initialValues.id;
@@ -1005,7 +1016,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   };
 
   render() {
-    console.log(this.state.values)
+    console.log(this.state.values);
     if (this.state.models.length === 0) {
       this.getModels();
     }
@@ -1095,357 +1106,216 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
               </DatacenterSelect>
             </FormGroup>
           </Card>
-          <Collapse
-            isOpen={!isNullOrUndefined(this.state.currDatacenter)}
-            keepChildrenMounted={true}
-          >
-            <Card>
-              <FormGroup label={AssetFormLabels.rack} inline={false}>
-                <RackSelect
-                  popoverProps={{
-                    minimal: true,
-                    popoverClassName: "dropdown",
-                    usePortal: true,
-                  }}
-                  items={this.state.racks}
-                  onItemSelect={(rack: RackObject) => {
-                    this.state.values.rack
-                      ? this.showChangeWarningAlert(
-                          "Are you sure you want to change rack? This will clear all rack related fields",
-                          rack
-                        )
-                      : this.handleRackSelect(rack);
-                  }}
-                  itemRenderer={renderRackItem}
-                  itemPredicate={filterRack}
-                  noResults={
-                    this.gettingRacksInProgress ? (
-                      <div>
-                        <Spinner intent="primary" size={Spinner.SIZE_SMALL} />
-                        <MenuItem disabled={true} text="Getting all racks" />
-                      </div>
-                    ) : (
-                      <MenuItem disabled={true} text="No available racks" />
-                    )
-                  }
-                >
-                  <Button
-                    rightIcon="caret-down"
-                    text={
-                      this.state.values.rack
-                        ? this.state.values.rack.row_letter +
-                          +this.state.values.rack.rack_num
-                        : "Select a rack"
-                    }
-                  />
-                </RackSelect>
-              </FormGroup>
-              <FormGroup label={AssetFormLabels.rack_position} inline={false}>
-                <Field
-                  field="rack_position"
-                  placeholder="rack_position"
-                  value={values.rack_position}
-                  onChange={this.handleChange}
-                />
-              </FormGroup>
-            </Card>
-            <Card>
-              <FormGroup label={AssetFormLabels.model} inline={false}>
-                <ModelSelect
-                  className="select"
-                  popoverProps={{
-                    minimal: true,
-                    popoverClassName: "dropdown",
-                    usePortal: true,
-                  }}
-                  disabled={!isNullOrUndefined(this.initialState.model)}
-                  items={this.state.models}
-                  onItemSelect={(model: ModelObject) => {
-                    const values = this.state.values;
-                    values.model = model;
 
-                    this.setState({
-                      values: this.resetCustomValuesToDefault(values),
-                    });
-                  }}
-                  itemRenderer={renderModelItem}
-                  itemPredicate={filterModel}
-                  noResults={<MenuItem disabled={true} text="No results." />}
-                >
-                  <Button
-                    rightIcon="caret-down"
-                    disabled={!isNullOrUndefined(this.initialState.model)}
-                    text={
-                      this.state.values.model
-                        ? this.state.values.model.vendor +
-                          " " +
-                          this.state.values.model.model_number
-                        : "Select a model"
-                    }
-                  />
-                </ModelSelect>
-                {values.model ? (
-                  <div>
-                    <Switch
-                      checked={this.state.customizeModel}
-                      label="Customize model values"
-                      onChange={this.handleCustomizeModelSwitch}
-                    />
-
-                    <FormGroup
-                      label="Display Color"
-                      disabled={values.model && !this.state.customizeModel}
-                    >
-                      <Field
-                        disabled={values.model && !this.state.customizeModel}
-                        field="display_color"
-                        type="color"
-                        value={values.display_color}
-                        onChange={this.handleChange}
-                      />
-                    </FormGroup>
-                    <FormGroup
-                      label="CPU"
-                      inline={false}
-                      disabled={values.model && !this.state.customizeModel}
-                    >
-                      <Field
-                        disabled={values.model && !this.state.customizeModel}
-                        field="cpu"
-                        placeholder="cpu"
-                        value={values.cpu}
-                        onChange={this.handleChange}
-                      />
-                    </FormGroup>
-                    <FormGroup
-                      label="Memory(GB)"
-                      inline={false}
-                      disabled={values.model && !this.state.customizeModel}
-                    >
-                      <Field
-                        disabled={values.model && !this.state.customizeModel}
-                        field="memory_gb"
-                        placeholder="memory_gb"
-                        value={values.memory_gb}
-                        onChange={this.handleChange}
-                      />
-                    </FormGroup>
-                    <FormGroup
-                      label="Storage"
-                      inline={false}
-                      disabled={values.model && !this.state.customizeModel}
-                    >
-                      <Field
-                        disabled={values.model && !this.state.customizeModel}
-                        field="storage"
-                        placeholder="storage"
-                        value={values.storage}
-                        onChange={this.handleChange}
-                      />
-                    </FormGroup>
-                  </div>
-                ) : null}
-              </FormGroup>
-            </Card>
-            <Collapse
-              isOpen={
-                values.model &&
-                values.model.network_ports &&
-                values.model.network_ports.length !== 0
-              }
-            >
-              {!(
-                values.model &&
-                values.model.network_ports &&
-                values.model.network_ports.length !== 0
-              ) ? null : (
+          {this.state.currDatacenter ? (
+            <div>
+              <Card>{this.renderModelFields()}</Card>
+              {values.model ? (
                 <Card>
-                  <FormGroup
-                    label={AssetFormLabels.network_ports}
-                    inline={false}
-                  >
-                    {values.model.network_ports.map((port, index) => {
-                      return (
-                        <div className="power-form-container">
-                          <i className="section-title">
-                            {"Network Port: " + port}
-                          </i>
-                          <div>
-                            <div className="text-with-tooltip">
-                              {"Mac Address "}
-                              <Tooltip
-                                className="tooltip-icon"
-                                content={macAddressInfo}
-                              >
-                                <Icon icon={IconNames.INFO_SIGN} />
-                              </Tooltip>
-                            </div>
-                            <InputGroup
-                              value={values.mac_addresses[port]}
-                              type="string"
-                              className="network-name"
-                              onChange={(e: any) => {
-                                const mac_addresses = values.mac_addresses;
-                                mac_addresses[port] = e.currentTarget.value;
-
-                                this.setState({
-                                  values: updateObject(this.state.values, {
-                                    mac_addresses,
-                                  }),
-                                });
-                              }}
-                            />
-                          </div>
-                          <FormGroup
-                            label="Add Network Connection"
-                            inline={false}
-                          >
-                            <AssetSelect
-                              className="select"
-                              popoverProps={{
-                                minimal: true,
-                                popoverClassName: "dropdown",
-                                usePortal: true,
-                              }}
-                              items={this.state.assets}
-                              onItemSelect={(asset: AssetObject) => {
-                                this.handleNetworkConnectionAssetSelection(
-                                  port,
-                                  asset.hostname
-                                );
-                              }}
-                              itemRenderer={renderAssetItem}
-                              itemPredicate={filterAsset}
-                              noResults={
-                                this.gettingAssetsInProgress ? (
-                                  <div>
-                                    <Spinner
-                                      intent="primary"
-                                      size={Spinner.SIZE_SMALL}
-                                    />
-                                    <MenuItem
-                                      disabled={true}
-                                      text="Getting all available assets"
-                                    />
-                                  </div>
-                                ) : (
-                                  <MenuItem
-                                    disabled={true}
-                                    text="No available assets"
-                                  />
-                                )
-                              }
-                            >
-                              <Button
-                                rightIcon="caret-down"
-                                text={
-                                  this.getSelectedNetworkConnectionAsset(port)
-                                    ? this.getSelectedNetworkConnectionAsset(
-                                        port
-                                      )
-                                    : "Select Asset"
-                                }
-                              />
-                            </AssetSelect>
-
-                            <StringSelect
-                              popoverProps={{
-                                minimal: true,
-                                popoverClassName: "dropdown",
-                                usePortal: true,
-                              }}
-                              disabled={
-                                this.getSelectedNetworkConnectionAsset(port)
-                                  ? false
-                                  : true
-                              }
-                              items={
-                                this.getSelectedNetworkConnectionAsset(port)
-                                  ? this.getPortsFromHostname(
-                                      this.getSelectedNetworkConnectionAsset(
-                                        port
-                                      )!
-                                    )
-                                  : []
-                              }
-                              onItemSelect={(dest_port: string) => {
-                                this.handleNetworkConnectionPortSelection(
-                                  port,
-                                  dest_port
-                                );
-                              }}
-                              itemRenderer={renderStringItem}
-                              itemPredicate={filterString}
-                              noResults={
-                                this.gettingAssetsInProgress ? (
-                                  <div>
-                                    <Spinner
-                                      intent="primary"
-                                      size={Spinner.SIZE_SMALL}
-                                    />
-                                    <MenuItem
-                                      disabled={true}
-                                      text="Getting available network ports"
-                                    />
-                                  </div>
-                                ) : (
-                                  <MenuItem
-                                    disabled={true}
-                                    text="No available network ports"
-                                  />
-                                )
-                              }
-                            >
-                              <Button
-                                disabled={
-                                  this.getSelectedNetworkConnectionAsset(port)
-                                    ? false
-                                    : true
-                                }
-                                rightIcon="caret-down"
-                                text={
-                                  this.getSelectedPort(port)
-                                    ? this.getSelectedPort(port)
-                                    : "Select Port"
-                                }
-                              />
-                            </StringSelect>
-                            <Button
-                              icon={IconNames.DELETE}
-                              minimal
-                              onClick={() => {
-                                this.clearNetworkConnectionSelection(port);
-                              }}
-                            />
-                          </FormGroup>
-                        </div>
-                      );
-                    })}
-                  </FormGroup>
-                </Card>
-              )}
-            </Collapse>
-
-            <Collapse
-              isOpen={
-                this.state.values.model &&
-                !isNullOrUndefined(this.state.values.model.num_power_ports)
-              }
-            >
-              {this.state.values.model &&
-              this.state.values.model.num_power_ports &&
-              parseInt(this.state.values.model.num_power_ports, 10) > 0 ? (
-                <Card>
-                  <FormGroup
-                    label={AssetFormLabels.power_connections}
-                    inline={false}
-                  >
-                    {this.getPowerPortFields()}
-                  </FormGroup>
+                  {values.model.model_type === MountTypes.BLADE
+                    ? this.renderChassisFields()
+                    : this.renderRackFields()}
                 </Card>
               ) : null}
-            </Collapse>
-          </Collapse>
+
+              <Collapse
+                isOpen={
+                  values.model &&
+                  values.model.network_ports &&
+                  values.model.network_ports.length !== 0
+                }
+              >
+                {!(
+                  values.model &&
+                  values.model.network_ports &&
+                  values.model.network_ports.length !== 0
+                ) ? null : (
+                  <Card>
+                    <FormGroup
+                      label={AssetFormLabels.network_ports}
+                      inline={false}
+                    >
+                      {values.model.network_ports.map((port, index) => {
+                        return (
+                          <div className="power-form-container">
+                            <i className="section-title">
+                              {"Network Port: " + port}
+                            </i>
+                            <div>
+                              <div className="text-with-tooltip">
+                                {"Mac Address "}
+                                <Tooltip
+                                  className="tooltip-icon"
+                                  content={macAddressInfo}
+                                >
+                                  <Icon icon={IconNames.INFO_SIGN} />
+                                </Tooltip>
+                              </div>
+                              <InputGroup
+                                value={values.mac_addresses[port]}
+                                type="string"
+                                className="network-name"
+                                onChange={(e: any) => {
+                                  const mac_addresses = values.mac_addresses;
+                                  mac_addresses[port] = e.currentTarget.value;
+
+                                  this.setState({
+                                    values: updateObject(this.state.values, {
+                                      mac_addresses,
+                                    }),
+                                  });
+                                }}
+                              />
+                            </div>
+                            <FormGroup
+                              label="Add Network Connection"
+                              inline={false}
+                            >
+                              <AssetSelect
+                                className="select"
+                                popoverProps={{
+                                  minimal: true,
+                                  popoverClassName: "dropdown",
+                                  usePortal: true,
+                                }}
+                                items={this.state.assets}
+                                onItemSelect={(asset: AssetObject) => {
+                                  this.handleNetworkConnectionAssetSelection(
+                                    port,
+                                    asset.hostname
+                                  );
+                                }}
+                                itemRenderer={renderAssetItem}
+                                itemPredicate={filterAsset}
+                                noResults={
+                                  this.gettingAssetsInProgress ? (
+                                    <div>
+                                      <Spinner
+                                        intent="primary"
+                                        size={Spinner.SIZE_SMALL}
+                                      />
+                                      <MenuItem
+                                        disabled={true}
+                                        text="Getting all available assets"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <MenuItem
+                                      disabled={true}
+                                      text="No available assets"
+                                    />
+                                  )
+                                }
+                              >
+                                <Button
+                                  rightIcon="caret-down"
+                                  text={
+                                    this.getSelectedNetworkConnectionAsset(port)
+                                      ? this.getSelectedNetworkConnectionAsset(
+                                          port
+                                        )
+                                      : "Select Asset"
+                                  }
+                                />
+                              </AssetSelect>
+
+                              <StringSelect
+                                popoverProps={{
+                                  minimal: true,
+                                  popoverClassName: "dropdown",
+                                  usePortal: true,
+                                }}
+                                disabled={
+                                  !this.getSelectedNetworkConnectionAsset(port)
+                                }
+                                items={
+                                  this.getSelectedNetworkConnectionAsset(port)
+                                    ? this.getPortsFromHostname(
+                                        this.getSelectedNetworkConnectionAsset(
+                                          port
+                                        )!
+                                      )
+                                    : []
+                                }
+                                onItemSelect={(dest_port: string) => {
+                                  this.handleNetworkConnectionPortSelection(
+                                    port,
+                                    dest_port
+                                  );
+                                }}
+                                itemRenderer={renderStringItem}
+                                itemPredicate={filterString}
+                                noResults={
+                                  this.gettingAssetsInProgress ? (
+                                    <div>
+                                      <Spinner
+                                        intent="primary"
+                                        size={Spinner.SIZE_SMALL}
+                                      />
+                                      <MenuItem
+                                        disabled={true}
+                                        text="Getting available network ports"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <MenuItem
+                                      disabled={true}
+                                      text="No available network ports"
+                                    />
+                                  )
+                                }
+                              >
+                                <Button
+                                  disabled={
+                                    !this.getSelectedNetworkConnectionAsset(
+                                      port
+                                    )
+                                  }
+                                  rightIcon="caret-down"
+                                  text={
+                                    this.getSelectedPort(port)
+                                      ? this.getSelectedPort(port)
+                                      : "Select Port"
+                                  }
+                                />
+                              </StringSelect>
+                              <Button
+                                icon={IconNames.DELETE}
+                                minimal
+                                onClick={() => {
+                                  this.clearNetworkConnectionSelection(port);
+                                }}
+                              />
+                            </FormGroup>
+                          </div>
+                        );
+                      })}
+                    </FormGroup>
+                  </Card>
+                )}
+              </Collapse>
+
+              <Collapse
+                isOpen={
+                  this.state.values.model &&
+                  !isNullOrUndefined(this.state.values.model.num_power_ports)
+                }
+              >
+                {this.state.values.model &&
+                this.state.values.model.num_power_ports &&
+                parseInt(this.state.values.model.num_power_ports, 10) > 0 ? (
+                  <Card>
+                    <FormGroup
+                      label={AssetFormLabels.power_connections}
+                      inline={false}
+                    >
+                      {this.getPowerPortFields()}
+                    </FormGroup>
+                  </Card>
+                ) : null}
+              </Collapse>
+            </div>
+          ) : null}
 
           <Card>
             <FormGroup label={AssetFormLabels.owner} inline={false}>
@@ -1483,7 +1353,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                 onChange={(e: any) =>
                   this.handleChange({ comment: e.currentTarget.value })
                 }
-              ></textarea>
+              />
             </FormGroup>
           </Card>
           <Button className="login-button" type="submit">
@@ -1496,6 +1366,250 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         </form>
       </div>
     );
+  }
+
+  renderModelFields() {
+    const values = this.state.values;
+    return (
+      <FormGroup label={AssetFormLabels.model} inline={false}>
+        <ModelSelect
+          className="select"
+          popoverProps={{
+            minimal: true,
+            popoverClassName: "dropdown",
+            usePortal: true,
+          }}
+          disabled={!isNullOrUndefined(this.initialState.model)}
+          items={this.state.models}
+          onItemSelect={(model: ModelObject) => {
+            const values = this.state.values;
+            values.model = model;
+
+            this.setState({
+              values: this.resetCustomValuesToDefault(values),
+            });
+          }}
+          itemRenderer={renderModelItem}
+          itemPredicate={filterModel}
+          noResults={<MenuItem disabled={true} text="No results." />}
+        >
+          <Button
+            rightIcon="caret-down"
+            disabled={!isNullOrUndefined(this.initialState.model)}
+            text={
+              this.state.values.model
+                ? this.state.values.model.vendor +
+                  " " +
+                  this.state.values.model.model_number
+                : "Select a model"
+            }
+          />
+        </ModelSelect>
+        {values.model ? (
+          <div>
+            <Switch
+              checked={this.state.customizeModel}
+              label="Customize model values"
+              onChange={this.handleCustomizeModelSwitch}
+            />
+
+            <FormGroup
+              label="Display Color"
+              disabled={values.model && !this.state.customizeModel}
+            >
+              <Field
+                disabled={values.model && !this.state.customizeModel}
+                field="display_color"
+                type="color"
+                value={values.display_color}
+                onChange={this.handleChange}
+              />
+            </FormGroup>
+            <FormGroup
+              label="CPU"
+              inline={false}
+              disabled={values.model && !this.state.customizeModel}
+            >
+              <Field
+                disabled={values.model && !this.state.customizeModel}
+                field="cpu"
+                placeholder="cpu"
+                value={values.cpu}
+                onChange={this.handleChange}
+              />
+            </FormGroup>
+            <FormGroup
+              label="Memory(GB)"
+              inline={false}
+              disabled={values.model && !this.state.customizeModel}
+            >
+              <Field
+                disabled={values.model && !this.state.customizeModel}
+                field="memory_gb"
+                placeholder="memory_gb"
+                value={values.memory_gb}
+                onChange={this.handleChange}
+              />
+            </FormGroup>
+            <FormGroup
+              label="Storage"
+              inline={false}
+              disabled={values.model && !this.state.customizeModel}
+            >
+              <Field
+                disabled={values.model && !this.state.customizeModel}
+                field="storage"
+                placeholder="storage"
+                value={values.storage}
+                onChange={this.handleChange}
+              />
+            </FormGroup>
+          </div>
+        ) : null}
+      </FormGroup>
+    );
+  }
+
+  private renderRackFields() {
+    const values = this.state.values;
+    return [
+      <FormGroup label={AssetFormLabels.rack} inline={false}>
+        <RackSelect
+          popoverProps={{
+            minimal: true,
+            popoverClassName: "dropdown",
+            usePortal: true,
+          }}
+          items={this.state.racks}
+          onItemSelect={(rack: RackObject) => {
+            this.state.values.rack
+              ? this.showChangeWarningAlert(
+                  "Are you sure you want to change rack? This will clear all rack related fields",
+                  rack
+                )
+              : this.handleRackSelect(rack);
+          }}
+          itemRenderer={renderRackItem}
+          itemPredicate={filterRack}
+          noResults={
+            this.gettingRacksInProgress ? (
+              <div>
+                <Spinner intent="primary" size={Spinner.SIZE_SMALL} />
+                <MenuItem disabled={true} text="Getting all racks" />
+              </div>
+            ) : (
+              <MenuItem disabled={true} text="No available racks" />
+            )
+          }
+        >
+          <Button
+            rightIcon="caret-down"
+            text={
+              this.state.values.rack
+                ? this.state.values.rack.row_letter +
+                  +this.state.values.rack.rack_num
+                : "Select a rack"
+            }
+          />
+        </RackSelect>
+      </FormGroup>,
+      <FormGroup label={AssetFormLabels.rack_position} inline={false}>
+        <Field
+          field="rack_position"
+          placeholder="rack_position"
+          value={values.rack_position}
+          onChange={this.handleChange}
+        />
+      </FormGroup>,
+    ];
+  }
+  private getAvailableChassisAssets() {
+    return this.state.assets.filter(
+      (asset: AssetObject) =>
+        asset.model && asset.model.model_type === MountTypes.BLADE_CHASSIS
+    );
+  }
+
+  private renderChassisFields() {
+    const values = this.state.values;
+    return [
+      <FormGroup label={AssetFormLabels.chassis} inline={false}>
+        <AssetSelect
+          className="select"
+          popoverProps={{
+            minimal: true,
+            popoverClassName: "dropdown",
+            usePortal: true,
+          }}
+          items={this.getAvailableChassisAssets()}
+          onItemSelect={(asset: AssetObject) => {
+            const newValues = this.state.values;
+            newValues.chassis = asset;
+
+            this.setState({
+              values: newValues,
+            });
+          }}
+          itemRenderer={renderAssetItem}
+          itemPredicate={filterAsset}
+          noResults={
+            this.gettingAssetsInProgress ? (
+              <div>
+                <Spinner intent="primary" size={Spinner.SIZE_SMALL} />
+                <MenuItem
+                  disabled={true}
+                  text="Getting all available chassis"
+                />
+              </div>
+            ) : (
+              <MenuItem disabled={true} text="No available chassis" />
+            )
+          }
+        >
+          <Button
+            rightIcon="caret-down"
+            text={values.chassis ? values.chassis.hostname : "Select Chassis"}
+          />
+        </AssetSelect>
+      </FormGroup>,
+      <FormGroup label={AssetFormLabels.chassis_slot} inline={false}>
+        <StringSelect
+          className="power-form-element"
+          popoverProps={{
+            minimal: true,
+            popoverClassName: "dropdown",
+            usePortal: true,
+          }}
+          disabled={isNullOrUndefined(values.chassis)}
+          items={this.getChassisSlots()}
+          onItemSelect={(chassis_slot: string) => {
+            this.setState({
+              values: updateObject(this.state.values, {
+                chassis_slot,
+              }),
+            });
+          }}
+          itemRenderer={renderStringItem}
+          itemPredicate={filterString}
+          noResults={<MenuItem disabled={true} text="No available slots ." />}
+        >
+          <Button
+            disabled={isNullOrUndefined(values.chassis)}
+            rightIcon="caret-down"
+            text={values.chassis_slot ? values.chassis_slot : "Chassis Slot"}
+          />
+        </StringSelect>
+      </FormGroup>,
+    ];
+  }
+  getChassisSlots() {
+    let slots = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
+    if (this.state.values.chassis && this.state.values.chassis.blades) {
+      this.state.values.chassis.blades.forEach((asset: AssetObject) => {
+        slots = slots.filter((slot: string) => slot !== asset.chassis_slot);
+      });
+    }
+    return slots;
   }
 }
 

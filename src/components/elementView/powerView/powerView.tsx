@@ -84,7 +84,7 @@ export class PowerView extends React.PureComponent<
       });
       axios
         .get(
-          API_ROOT + "api/power/get-state/" + this.props.asset!.id,
+          API_ROOT + "api/rack-power/status/" + this.props.asset!.id,
           getHeaders(this.props.token)
         )
         .then((res) => {
@@ -113,7 +113,7 @@ export class PowerView extends React.PureComponent<
       if (!this.props.assetIsDecommissioned && !this.props.changePlan) {
         axios
           .get(
-            API_ROOT + "api/power/get-state/" + this.props.asset!.id,
+            API_ROOT + "api/rack-power/status/" + this.props.asset!.id,
             getHeaders(this.props.token)
           )
           .then((res) => {
@@ -174,7 +174,7 @@ export class PowerView extends React.PureComponent<
             ) : (
               <td></td>
             )}
-            {this.props.asset!.rack.is_network_controlled ? (
+            {this.props.asset!.rack && this.props.asset!.rack.is_network_controlled ? (
               this.state.powerStatus ? (
                 <td>{this.state.powerStatus[i]}</td>
               ) : this.props.assetIsDecommissioned || this.props.changePlan ? (
@@ -236,7 +236,7 @@ export class PowerView extends React.PureComponent<
                   <tbody>{this.getPowerPortRows()}</tbody>
                 </table>
               </div>
-              {this.props.asset!.rack.is_network_controlled &&
+              {this.props.asset!.rack && this.props.asset!.rack.is_network_controlled &&
               Object.keys(this.props.asset!.power_connections).length > 0 &&
               this.state.powerStatus &&
               !this.props.assetIsDecommissioned &&
@@ -276,7 +276,7 @@ export class PowerView extends React.PureComponent<
                           });
                           axios
                             .post(
-                              API_ROOT + "api/power/mask-on",
+                              API_ROOT + "api/rack-power/on",
                               { id: this.props.asset!.id },
                               getHeaders(this.props.token)
                             )
@@ -297,7 +297,7 @@ export class PowerView extends React.PureComponent<
                           });
                           axios
                             .post(
-                              API_ROOT + "api/power/mask-off",
+                              API_ROOT + "api/rack-power/off",
                               { id: this.props.asset!.id },
                               getHeaders(this.props.token)
                             )
@@ -315,7 +315,7 @@ export class PowerView extends React.PureComponent<
                   }
                 />
               ) : null}
-              {this.props.asset!.rack.is_network_controlled &&
+              {this.props.asset!.rack && this.props.asset!.rack.is_network_controlled &&
               Object.keys(this.props.asset!.power_connections).length > 0 &&
               this.state.powerStatus &&
               !this.props.assetIsDecommissioned &&
@@ -338,7 +338,7 @@ export class PowerView extends React.PureComponent<
                     });
                     axios
                       .post(
-                        API_ROOT + "api/power/cycle",
+                        API_ROOT + "api/rack-power/cycle",
                         { id: this.props.asset!.id },
                         getHeaders(this.props.token)
                       )
