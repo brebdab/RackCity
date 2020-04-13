@@ -15,6 +15,17 @@ from rest_framework.permissions import IsAuthenticated
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
+def site_all(request):
+    """
+    Return list of all sites (datacenters and offline storage sites).
+    """
+    return get_many_response(
+        Site, SiteSerializer, "sites", request,
+    )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def datacenter_all(request):
     """
     Return list of all datacenters.

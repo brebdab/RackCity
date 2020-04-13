@@ -118,9 +118,9 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
   };
 
   componentDidMount() {
-    this.getDatacenters()
+    this.getSites()
       .then((res) => {
-        var data = res.datacenters as Array<DatacenterObject>;
+        var data = res.sites as Array<DatacenterObject>;
         data.sort(this.compare);
         this.setState({
           sites: data,
@@ -321,41 +321,41 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
         </RadioGroup>
         {this.state.asset_permission_selection ===
         AssetPermissionSelection.PER_SITE
-          ? this.renderDatacenterChecks()
+          ? this.renderSiteChecks()
           : null}
       </Card>
     );
   }
 
-  private renderDatacenterChecks() {
+  private renderSiteChecks() {
     var checks: Array<any>;
     checks = [];
     for (var i = 0; i < this.state.sites.length; i++) {
-      checks.push(this.renderDatacenter(this.state.sites[i]));
+      checks.push(this.Site(this.state.sites[i]));
     }
     return checks;
   }
 
-  private renderDatacenter(datacenter: DatacenterObject) {
+  private Site(site: DatacenterObject) {
     return (
-      <FormGroup key={datacenter.name} inline={true}>
+      <FormGroup key={site.name} inline={true}>
         <Checkbox
-          label={datacenter.name}
+          label={site.name + " (" + site.abbreviation + ")"}
           alignIndicator={Alignment.LEFT}
           checked={this.state.permissions.site_permissions.includes(
-            datacenter.id
+            site.id
           )}
           onChange={() => {
             var updatedPermissions = this.state.permissions;
             if (
-              this.state.permissions.site_permissions.includes(datacenter.id)
+              this.state.permissions.site_permissions.includes(site.id)
             ) {
               const index = this.state.permissions.site_permissions.indexOf(
-                datacenter.id
+                site.id
               );
               updatedPermissions.site_permissions.splice(index, 1);
             } else {
-              updatedPermissions.site_permissions.push(datacenter.id);
+              updatedPermissions.site_permissions.push(site.id);
             }
             this.setState({
               permissions: updatedPermissions,
@@ -366,14 +366,14 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
     );
   }
 
-  private getDatacenters() {
+  private getSites() {
     const body = {
       sort_by: [],
       filters: [],
     };
     return axios
       .post(
-        API_ROOT + "api/sites/datacenters/get-many",
+        API_ROOT + "api/sites/get-many",
         body,
         getHeaders(this.props.token)
       )

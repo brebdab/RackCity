@@ -46,6 +46,7 @@ urlpatterns = [
     path("sites/add", views.site_create),
     path("sites/delete", views.site_delete),
     path("sites/modify", views.site_modify),
+    path("sites/get-many", views.site_all),
     path("sites/datacenters/get-many", views.datacenter_all),
     path("sites/datacenters/pages", views.datacenter_page_count),
     path("sites/offline-storage-sites/get-many", views.offline_storage_site_all),
