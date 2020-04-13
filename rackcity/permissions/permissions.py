@@ -91,7 +91,7 @@ def user_has_asset_permission(user, site=None):
 
 def validate_user_asset_permission_to_add(user, validated_data):
     # TODO: make this check work for blades, which don't have a rack
-    if "rack" not in validated_data:
+    if "rack" not in validated_data or not validated_data["rack"]:
         return
     rack_id = validated_data["rack"].id
     try:
