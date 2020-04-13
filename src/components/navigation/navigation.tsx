@@ -126,10 +126,18 @@ export class Navigation extends React.Component<
           <Navbar className={Classes.DARK + " nav-bar"}>
             <NavbarGroup>
               <NavbarHeading
-                onClick={() => this.props.history.push(ROUTES.DASHBOARD)}
+                onClick={
+                  this.props.isMobile
+                    ? () => this.props.history.push(ROUTES.SCANNER)
+                    : () => this.props.history.push(ROUTES.DASHBOARD)
+                }
               >
                 <AnchorButton
-                  onClick={() => this.props.history.push(ROUTES.DASHBOARD)}
+                  onClick={
+                    this.props.isMobile
+                      ? () => this.props.history.push(ROUTES.SCANNER)
+                      : () => this.props.history.push(ROUTES.DASHBOARD)
+                  }
                   className="nav-bar-button"
                   icon="home"
                   text="HypoSoft"
@@ -175,63 +183,70 @@ export class Navigation extends React.Component<
             <NavbarGroup align={Alignment.RIGHT}>
               {this.props.isAuthenticated ? (
                 <div className="nav-buttons-right">
-                  {this.props.isMobile ? null : <><ChangePlanSelect
-                    popoverProps={{
-                      minimal: true,
-                      popoverClassName: "dropdown",
-                      usePortal: true,
-                    }}
-                    disabled={this.props.location.pathname.includes(
-                      "/dashboard/change-plans/"
-                    )}
-                    items={this.state.changePlans}
-                    onItemSelect={(changePlan: ChangePlan) => {
-                      this.props.setChangePlan(changePlan);
-                    }}
-                    itemRenderer={renderChangePlanItem}
-                    itemPredicate={filterChangePlan}
-                    noResults={<MenuItem disabled={true} text="No results." />}
-                  >
-                    <Button
-                      minimal
-                      disabled={this.props.location.pathname.includes(
-                        "/dashboard/change-plans/"
-                      )}
-                      rightIcon="caret-down"
-                      text={
-                        this.props.changePlan
-                          ? this.props.changePlan.name
-                          : "Select Change Plan"
-                      }
-                      icon={IconNames.GIT_BRANCH}
-                    />
-                  </ChangePlanSelect>
+                  {this.props.isMobile ? null : (
+                    <>
+                      <ChangePlanSelect
+                        popoverProps={{
+                          minimal: true,
+                          popoverClassName: "dropdown",
+                          usePortal: true,
+                        }}
+                        disabled={this.props.location.pathname.includes(
+                          "/dashboard/change-plans/"
+                        )}
+                        items={this.state.changePlans}
+                        onItemSelect={(changePlan: ChangePlan) => {
+                          this.props.setChangePlan(changePlan);
+                        }}
+                        itemRenderer={renderChangePlanItem}
+                        itemPredicate={filterChangePlan}
+                        noResults={
+                          <MenuItem disabled={true} text="No results." />
+                        }
+                      >
+                        <Button
+                          minimal
+                          disabled={this.props.location.pathname.includes(
+                            "/dashboard/change-plans/"
+                          )}
+                          rightIcon="caret-down"
+                          text={
+                            this.props.changePlan
+                              ? this.props.changePlan.name
+                              : "Select Change Plan"
+                          }
+                          icon={IconNames.GIT_BRANCH}
+                        />
+                      </ChangePlanSelect>
 
-                  {this.props.changePlan ? (
-                    <AnchorButton
-                      minimal
-                      disabled={this.props.location.pathname.includes(
-                        "/dashboard/change-plans/"
-                      )}
-                      icon={IconNames.DELETE}
-                      onClick={() => this.props.setChangePlan(null)}
-                    />
-                  ) : null}
-                  <AnchorButton
-                    onClick={() => this.props.history.push(ROUTES.CHANGE_PLAN)}
-                    icon="clipboard"
-                    minimal
-                    text="Change Plans"
-                  />
-                  <NavbarDivider />
-                  {this.state.username ? (
-                    <AnchorButton
-                      className="nav-bar-non-button nav-bar-button"
-                      text={"Welcome, " + this.state.username}
-                      minimal
-                    />
-                  ) : null}
-                  </>}
+                      {this.props.changePlan ? (
+                        <AnchorButton
+                          minimal
+                          disabled={this.props.location.pathname.includes(
+                            "/dashboard/change-plans/"
+                          )}
+                          icon={IconNames.DELETE}
+                          onClick={() => this.props.setChangePlan(null)}
+                        />
+                      ) : null}
+                      <AnchorButton
+                        onClick={() =>
+                          this.props.history.push(ROUTES.CHANGE_PLAN)
+                        }
+                        icon="clipboard"
+                        minimal
+                        text="Change Plans"
+                      />
+                      <NavbarDivider />
+                      {this.state.username ? (
+                        <AnchorButton
+                          className="nav-bar-non-button nav-bar-button"
+                          text={"Welcome, " + this.state.username}
+                          minimal
+                        />
+                      ) : null}
+                    </>
+                  )}
 
                   <AnchorButton
                     onClick={() => {
@@ -269,7 +284,7 @@ const mapStateToProps = (state: any) => {
     changePlan: state.changePlan,
     updateChangePlansBoolean: state.updateChangePlansBoolean,
     permissionState: state.permissionState,
-    isMobile: state.isMobile
+    isMobile: state.isMobile,
   };
 };
 
