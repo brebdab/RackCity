@@ -114,7 +114,7 @@ def pdu_power_on(request):
                 "failure_message": Status.AUTH_ERROR + AuthFailure.POWER.value,
                 "errors": str(error),
             },
-            status=HTTPStatus.FORBIDDEN,
+            status=HTTPStatus.UNAUTHORIZED,
         )
     power_connections = serialize_power_connections(PowerPort, asset)
     # Check power is off
@@ -168,7 +168,7 @@ def pdu_power_off(request):
                 "failure_message": Status.AUTH_ERROR + AuthFailure.POWER.value,
                 "errors": str(error),
             },
-            status=HTTPStatus.FORBIDDEN,
+            status=HTTPStatus.UNAUTHORIZED,
         )
     power_connections = serialize_power_connections(PowerPort, asset)
     # Check power is off
@@ -219,7 +219,7 @@ def pdu_power_cycle(request):
                 "failure_message": Status.AUTH_ERROR + AuthFailure.POWER.value,
                 "errors": str(error),
             },
-            status=HTTPStatus.FORBIDDEN,
+            status=HTTPStatus.UNAUTHORIZED,
         )
     power_connections = serialize_power_connections(PowerPort, asset)
     for connection in power_connections:
@@ -385,7 +385,7 @@ def chassis_power_status(request):
                 "failure_message": Status.AUTH_ERROR + AuthFailure.POWER.value,
                 "errors": str(error),
             },
-            status=HTTPStatus.FORBIDDEN,
+            status=HTTPStatus.UNAUTHORIZED,
         )
     result, exit_status = make_bcman_request(chassis_hostname, str(blade_slot), "")
     if exit_status != 0:
@@ -432,7 +432,7 @@ def chassis_power_on(request):
                 "failure_message": Status.AUTH_ERROR + AuthFailure.POWER.value,
                 "errors": str(error),
             },
-            status=HTTPStatus.FORBIDDEN,
+            status=HTTPStatus.UNAUTHORIZED,
         )
     result, exit_status = make_bcman_request(chassis_hostname, str(blade_slot), "on")
     if exit_status != 0:
@@ -466,7 +466,7 @@ def chassis_power_off(request):
                 "failure_message": Status.AUTH_ERROR + AuthFailure.POWER.value,
                 "errors": str(error),
             },
-            status=HTTPStatus.FORBIDDEN,
+            status=HTTPStatus.UNAUTHORIZED,
         )
     result, exit_status = make_bcman_request(chassis_hostname, str(blade_slot), "off")
     if exit_status != 0:
@@ -500,7 +500,7 @@ def chassis_power_cycle(request):
                 "failure_message": Status.AUTH_ERROR + AuthFailure.POWER.value,
                 "errors": str(error),
             },
-            status=HTTPStatus.FORBIDDEN,
+            status=HTTPStatus.UNAUTHORIZED,
         )
     result_off, exit_status_off = make_bcman_request(
         chassis_hostname, str(blade_slot), "off"
