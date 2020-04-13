@@ -1,8 +1,7 @@
 .tab {
-  width: 100%;
   padding: 5pt;
   display: inline-block;
-  font-weight: bold !important;
+  font-weight: bold;
 }
 
 .tab:focus {
@@ -10,11 +9,9 @@
 }
 
 .tab-header {
-  width: 100%;
   padding: 5pt;
   display: inline-block;
-  font-weight: bold !important;
-  color: #ffffff !important;
+  font-weight: bold;
 }
 
 .tab-header:focus {
@@ -22,10 +19,9 @@
 }
 
 .tab-sub {
-  width: 100%;
   padding: 5pt;
   display: inline-block;
-  font-size: small !important;
+  font-size: 14px !important;
   margin-left: 10pt;
 }
 
@@ -74,6 +70,7 @@
 }
 .rack-tab-panel {
   display: block;
+  font-weight: normal;
 }
 
 .rack-tab .bp3-card {
@@ -112,9 +109,11 @@
 .bp3-tab-panel {
   overflow: auto;
   width: calc(100vw - 136pt);
+  font-weight: normal;
+  margin-left: 5pt;
 }
 .element-view {
-  width: 100%;
+  width: 95%;
 }
 
 .filter-select {
@@ -125,6 +124,7 @@
   float: left;
   display: block;
   width: 100%;
+  font-weight: normal;
 }
 .field {
   float: left !important;

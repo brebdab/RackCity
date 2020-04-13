@@ -97,7 +97,7 @@ class ElementTabContainer extends React.Component<
         />
 
         <Tab
-          className="tab tab-header do-not-print"
+          className="tab-header do-not-print"
           id="assets"
           title="Assets"
         />
@@ -158,7 +158,7 @@ class ElementTabContainer extends React.Component<
         />
 
         <Tab
-          className="tab tab-header do-not-print"
+          className="tab-header do-not-print"
           id="datacenters"
           title="Sites"
         />
