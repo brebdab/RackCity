@@ -273,6 +273,32 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
     return 0;
   }
 
+  private handleAssetPermissionSelection() {
+    var updatedPermissions = this.state.permissions;
+    if (
+      this.state.asset_permission_selection === AssetPermissionSelection.GLOBAL
+    ) {
+      updatedPermissions.site_permissions = this.state.initialValues.site_permissions;
+      updatedPermissions.asset_management = false;
+      this.setState({
+        asset_permission_selection: AssetPermissionSelection.PER_SITE,
+        permissions: updatedPermissions,
+      });
+    } else {
+      let permissions: Array<string>;
+      permissions = [];
+      for (var i = 0; i < this.state.sites.length; i++) {
+        permissions.push(this.state.sites[i].id);
+      }
+      updatedPermissions.site_permissions = permissions;
+      updatedPermissions.asset_management = this.state.show_asset_options;
+      this.setState({
+        asset_permission_selection: AssetPermissionSelection.GLOBAL,
+        permissions: updatedPermissions,
+      });
+    }
+  }
+
   private renderAssetPermissionDetails() {
     return (
       <Card className="permission-card" elevation={Elevation.ZERO}>
@@ -280,30 +306,7 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
           inline={true}
           label="Select asset permission level"
           onChange={() => {
-            var updatedPermissions = this.state.permissions;
-            if (
-              this.state.asset_permission_selection ===
-              AssetPermissionSelection.GLOBAL
-            ) {
-              updatedPermissions.site_permissions = this.state.initialValues.site_permissions;
-              updatedPermissions.asset_management = false;
-              this.setState({
-                asset_permission_selection: AssetPermissionSelection.PER_SITE,
-                permissions: updatedPermissions,
-              });
-            } else {
-              let permissions: Array<string>;
-              permissions = [];
-              for (var i = 0; i < this.state.sites.length; i++) {
-                permissions.push(this.state.sites[i].id);
-              }
-              updatedPermissions.site_permissions = permissions;
-              updatedPermissions.asset_management = this.state.show_asset_options;
-              this.setState({
-                asset_permission_selection: AssetPermissionSelection.GLOBAL,
-                permissions: updatedPermissions,
-              });
-            }
+            this.handleAssetPermissionSelection();
           }}
           selectedValue={this.state.asset_permission_selection}
         >
