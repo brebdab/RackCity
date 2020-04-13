@@ -926,7 +926,10 @@ class ElementTable extends React.Component<
           onCancel={this.handleDecommissionCancel}
           onConfirm={this.handleDecommission}
         >
-          <p>Are you sure you want to decommission this asset?  If it's a chassis, its blades will also be decommissioned.</p>
+          <p>
+            Are you sure you want to decommission this asset? If it's a chassis,
+            its blades will also be decommissioned.
+          </p>
         </Alert>
         <Toaster
           autoFocus={false}
@@ -1113,7 +1116,6 @@ class ElementTable extends React.Component<
                 !this.state.getDataInProgress ? (
                   <tbody>
                     {this.state.items.map((item: ElementObjectType) => {
-
                       return (
                         <tr
                           key={item.id}
