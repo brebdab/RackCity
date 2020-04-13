@@ -80,7 +80,7 @@ def detect_conflicts_cp(sender, **kwargs):
     # asset rack location conflicts with an active assetCP
     asset.location_conflict.clear()
     if asset.model.is_rackmount():
-        for assetcp in AssetCP.objects.filter(
+        for asset_cp in AssetCP.objects.filter(
             Q(rack=asset.rack_id)
             & ~Q(related_asset=asset.id)
             & Q(change_plan__execution_time=None)
@@ -89,17 +89,17 @@ def detect_conflicts_cp(sender, **kwargs):
                 # TODO: add check for blades
                 validate_asset_location_in_rack(
                     asset.rack_id,
-                    assetcp.rack_position,
-                    assetcp.model.height,
-                    asset_id=assetcp.id,
+                    asset_cp.rack_position,
+                    asset_cp.model.height,
+                    asset_id=asset_cp.id,
                 )
             except LocationException:
-                assetcp.asset_conflict_location = asset
-                AssetCP.objects.filter(id=assetcp.id).update(
+                asset_cp.asset_conflict_location = asset
+                AssetCP.objects.filter(id=asset_cp.id).update(
                     asset_conflict_location=asset
                 )
     else:
-        for assetcp in AssetCP.objects.filter(
+        for asset_cp in AssetCP.objects.filter(
             Q(chassis=asset.chassis_id)
             & ~Q(related_asset=asset.id)
             & Q(change_plan__execution_time=None)
@@ -107,11 +107,11 @@ def detect_conflicts_cp(sender, **kwargs):
             try:
                 # TODO: add check for blades
                 validate_asset_location_in_chassis(
-                    asset.chassis_id, assetcp.chassis_slot, asset_id=assetcp.id,
+                    asset.chassis_id, asset_cp.chassis_slot, asset_id=asset_cp.id,
                 )
             except LocationException:
-                assetcp.asset_conflict_location = asset
-                AssetCP.objects.filter(id=assetcp.id).update(
+                asset_cp.asset_conflict_location = asset
+                AssetCP.objects.filter(id=asset_cp.id).update(
                     asset_conflict_location=asset
                 )
 

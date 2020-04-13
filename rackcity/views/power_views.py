@@ -357,8 +357,8 @@ def pdu_power_availability(request):
                         status=HTTPStatus.BAD_REQUEST,
                     )
     if change_plan:
-        for assetcp in assets_cp:
-            asset_power = serialize_power_connections(PowerPortCP, assetcp)
+        for asset_cp in assets_cp:
+            asset_power = serialize_power_connections(PowerPortCP, asset_cp)
             for port_num in asset_power.keys():
                 if asset_power[port_num]["left_right"] == "L":
                     try:
@@ -475,7 +475,9 @@ def chassis_power_status(request):
             },
             status=HTTPStatus.REQUEST_TIMEOUT,
         )
-    return JsonResponse({str(blade_slot): blade_slot_power_status}, status=HTTPStatus.OK,)
+    return JsonResponse(
+        {str(blade_slot): blade_slot_power_status}, status=HTTPStatus.OK,
+    )
 
 
 @api_view(["POST"])
