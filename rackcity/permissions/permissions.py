@@ -10,6 +10,7 @@ from rackcity.models import (
     RackCityPermission,
 )
 from rackcity.utils.exceptions import UserAssetPermissionException
+from rest_framework.permissions import BasePermission
 from typing import Tuple
 
 
@@ -35,6 +36,13 @@ class PermissionPath(Enum):
     POWER_WRITE = "rackcity." + PermissionCodename.POWER_WRITE.value
     AUDIT_READ = "rackcity." + PermissionCodename.AUDIT_READ.value
     USER_WRITE = "auth." + PermissionCodename.USER_WRITE.value
+
+
+class RegisterUserPermission(BasePermission):
+    message = "User write permission required"
+
+    def has_permission(self, request, view):
+        return request.user.has_perm(PermissionPath.USER_WRITE.value)
 
 
 def get_metadata_for_permission(
