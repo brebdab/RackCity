@@ -342,14 +342,10 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
         <Checkbox
           label={site.name + " (" + site.abbreviation + ")"}
           alignIndicator={Alignment.LEFT}
-          checked={this.state.permissions.site_permissions.includes(
-            site.id
-          )}
+          checked={this.state.permissions.site_permissions.includes(site.id)}
           onChange={() => {
             var updatedPermissions = this.state.permissions;
-            if (
-              this.state.permissions.site_permissions.includes(site.id)
-            ) {
+            if (this.state.permissions.site_permissions.includes(site.id)) {
               const index = this.state.permissions.site_permissions.indexOf(
                 site.id
               );
@@ -372,11 +368,7 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
       filters: [],
     };
     return axios
-      .post(
-        API_ROOT + "api/sites/get-many",
-        body,
-        getHeaders(this.props.token)
-      )
+      .post(API_ROOT + "api/sites/get-many", body, getHeaders(this.props.token))
       .then((res) => {
         return res.data;
       })
