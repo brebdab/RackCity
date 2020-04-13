@@ -403,6 +403,11 @@ def asset_modify(request):
         validate_location_modification(
             data, existing_asset, request.user, change_plan=change_plan
         )
+    except UserAssetPermissionException as auth_error:
+        return JsonResponse(
+            {"failure_message": Status.AUTH_ERROR + str(auth_error)},
+            status=HTTPStatus.UNAUTHORIZED,
+        )
     except Exception as error:
         return JsonResponse(
             {
@@ -689,6 +694,11 @@ def asset_bulk_upload(request):
             try:
                 validate_location_modification(
                     asset_data, existing_asset, request.user,
+                )
+            except UserAssetPermissionException as auth_error:
+                return JsonResponse(
+                    {"failure_message": Status.AUTH_ERROR + str(auth_error)},
+                    status=HTTPStatus.UNAUTHORIZED,
                 )
             except Exception:
                 failure_message = (
