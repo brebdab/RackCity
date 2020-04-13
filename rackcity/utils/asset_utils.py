@@ -407,6 +407,8 @@ def save_all_field_data_live(data, asset):
             value = ITModel.objects.get(id=data[field])
         elif field == "rack":
             value = Rack.objects.get(id=data[field])
+        elif field == "chassis":
+            value = Asset.objects.get(id=data[field])
         elif field == "hostname" and data["hostname"]:
             assets_with_hostname = Asset.objects.filter(hostname__iexact=data[field])
             if len(assets_with_hostname) > 0 and assets_with_hostname[0].id != asset_id:

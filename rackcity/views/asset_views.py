@@ -68,7 +68,8 @@ from rackcity.utils.query_utils import (
     get_many_response,
 )
 from rackcity.utils.rackcity_utils import (
-    validate_asset_location,
+    validate_asset_location_in_rack,
+    validate_asset_location_in_chassis,
     validate_location_modification,
     no_infile_location_conflicts,
     records_are_identical,
@@ -204,17 +205,51 @@ def asset_add(request):
             status=HTTPStatus.BAD_REQUEST,
         )
 
-    if (
-        serializer.validated_data["model"].is_rackmount()
-        and "rack" in serializer.validated_data
-        and "rack_position" in serializer.validated_data
-    ):
+    if serializer.validated_data["model"].is_rackmount():
+        if (
+            "rack" not in serializer.validated_data
+            or not serializer.validated_data["rack"]
+            or "rack_position" not in serializer.validated_data
+            or not serializer.validated_data["rack_position"]
+        ):
+            return JsonResponse(
+                {
+                    "failure_message": Status.INVALID_INPUT.value
+                    + "Must include rack and rack position to add a rackmount asset. "
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
         rack_id = serializer.validated_data["rack"].id
         rack_position = serializer.validated_data["rack_position"]
         height = serializer.validated_data["model"].height
         try:
-            validate_asset_location(
+            validate_asset_location_in_rack(
                 rack_id, rack_position, height, change_plan=change_plan
+            )
+        except LocationException as error:
+            return JsonResponse(
+                {"failure_message": Status.CREATE_ERROR.value + str(error)},
+                status=HTTPStatus.BAD_REQUEST,
+            )
+    else:
+        if (
+            "chassis" not in serializer.validated_data
+            or not serializer.validated_data["chassis"]
+            or "chassis_slot" not in serializer.validated_data
+            or not serializer.validated_data["chassis_slot"]
+        ):
+            return JsonResponse(
+                {
+                    "failure_message": Status.INVALID_INPUT.value
+                    + "Must include chassis and chassis slot to add a blade asset. "
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
+        chassis_id = serializer.validated_data["chassis"].id
+        chassis_slot = serializer.validated_data["chassis_slot"]
+        try:
+            validate_asset_location_in_chassis(
+                chassis_id, chassis_slot, change_plan=change_plan
             )
         except LocationException as error:
             return JsonResponse(
@@ -652,7 +687,8 @@ def asset_bulk_upload(request):
                 )
             model = ITModel.objects.get(id=asset_data["model"])
             try:
-                validate_asset_location(
+                # TODO: add chassis validation to bulk
+                validate_asset_location_in_rack(
                     asset_serializer.validated_data["rack"].id,
                     asset_serializer.validated_data["rack_position"],
                     model.height,
