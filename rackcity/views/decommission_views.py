@@ -11,7 +11,7 @@ from rackcity.utils.change_planner_utils import (
     get_change_plan,
     get_cp_already_executed_response,
     get_many_assets_response_for_cp,
-    get_page_count_response_for_decommissioned_cp,
+    get_page_count_response_for_cp,
 )
 from rackcity.utils.errors_utils import (
     Status,
@@ -247,7 +247,9 @@ def decommissioned_asset_many(request):
     assets are returned. If page is specified as a query parameter, page
     size must also be specified, and a page of assets will be returned.
     """
-    (change_plan, failure_response) = get_change_plan(query_params.get("change_plan"))
+    (change_plan, failure_response) = get_change_plan(
+        request.query_params.get("change_plan")
+    )
     if failure_response:
         return failure_response
     if change_plan:
@@ -267,12 +269,14 @@ def decommissioned_asset_page_count(request):
     Return total number of pages according to page size, which must be
     specified as query parameter.
     """
-    (change_plan, failure_response) = get_change_plan(query_params.get("change_plan"))
+    (change_plan, failure_response) = get_change_plan(
+        request.query_params.get("change_plan")
+    )
     if failure_response:
         return failure_response
     if change_plan:
-        return get_page_count_response_for_decommissioned_cp(request, change_plan,)
+        return get_page_count_response_for_cp(request, change_plan, decommissioned=True)
     else:
         return get_page_count_response(
-            DecommissionedAsset, query_params, data_for_filters=request.data,
+            DecommissionedAsset, request.query_params, data_for_filters=request.data,
         )

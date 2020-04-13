@@ -21,10 +21,12 @@ from .asset_views import (
     asset_modify,
     asset_delete,
     asset_many,
+    offline_storage_asset_many,
     asset_bulk_upload,
     asset_bulk_approve,
     asset_bulk_export,
     asset_page_count,
+    offline_storage_asset_page_count,
     asset_fields,
     asset_number,
 )

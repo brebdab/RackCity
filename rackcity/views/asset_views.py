@@ -89,7 +89,7 @@ from rest_framework.parsers import JSONParser
 @permission_classes([IsAuthenticated])
 def asset_many(request):
     """
-    List many assets. If page is not specified as a query parameter, all
+    List many assets in datacenters. If page is not specified as a query parameter, all
     assets are returned. If page is specified as a query parameter, page
     size must also be specified, and a page of assets will be returned.
     """
@@ -99,9 +99,42 @@ def asset_many(request):
     if failure_response:
         return failure_response
     if change_plan:
-        return get_many_assets_response_for_cp(request, change_plan)
+        return get_many_assets_response_for_cp(request, change_plan, stored=False)
     else:
-        return get_many_response(Asset, RecursiveAssetSerializer, "assets", request)
+        racked_assets = Asset.objects.filter(offline_storage_site__isnull=True)
+        return get_many_response(
+            Asset,
+            RecursiveAssetSerializer,
+            "assets",
+            request,
+            premade_object_query=racked_assets,
+        )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def offline_storage_asset_many(request):
+    """
+    List many assets in offline storage. If page is not specified as a query parameter, all
+    assets are returned. If page is specified as a query parameter, page
+    size must also be specified, and a page of assets will be returned.
+    """
+    (change_plan, failure_response) = get_change_plan(
+        request.query_params.get("change_plan")
+    )
+    if failure_response:
+        return failure_response
+    if change_plan:
+        return get_many_assets_response_for_cp(request, change_plan, stored=True)
+    else:
+        stored_assets = Asset.objects.filter(offline_storage_site__isnull=False)
+        return get_many_response(
+            Asset,
+            RecursiveAssetSerializer,
+            "assets",
+            request,
+            premade_object_query=stored_assets,
+        )
 
 
 @api_view(["GET"])
@@ -820,7 +853,7 @@ def asset_bulk_approve(request):
         return JsonResponse({"warning_message": warning_message}, status=HTTPStatus.OK)
     else:
         return JsonResponse(
-            {"success_message": "Assets succesfully modified. "}, status=HTTPStatus.OK
+            {"success_message": "Assets successfully modified. "}, status=HTTPStatus.OK
         )
 
 
@@ -880,10 +913,38 @@ def asset_page_count(request):
     if failure_response:
         return failure_response
     if change_plan:
-        return get_page_count_response_for_cp(request, change_plan)
+        return get_page_count_response_for_cp(request, change_plan, stored=False)
     else:
+        racked_assets = Asset.objects.filter(offline_storage_site__isnull=True)
         return get_page_count_response(
-            Asset, request.query_params, data_for_filters=request.data,
+            Asset,
+            request.query_params,
+            data_for_filters=request.data,
+            premade_object_query=racked_assets,
+        )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def offline_storage_asset_page_count(request):
+    """
+    Return total number of pages according to page size, which must be
+    specified as query parameter.
+    """
+    (change_plan, failure_response) = get_change_plan(
+        request.query_params.get("change_plan")
+    )
+    if failure_response:
+        return failure_response
+    if change_plan:
+        return get_page_count_response_for_cp(request, change_plan, stored=True)
+    else:
+        stored_assets = Asset.objects.filter(offline_storage_site__isnull=False)
+        return get_page_count_response(
+            Asset,
+            request.query_params,
+            data_for_filters=request.data,
+            premade_object_query=stored_assets,
         )
 
 
