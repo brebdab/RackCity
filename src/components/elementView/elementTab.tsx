@@ -180,6 +180,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     let url =
       this.props.assetType === AssetType.DECOMMISSIONED
         ? "api/assets/pages-decommissioned"
+        : this.props.assetType === AssetType.STORED
+        ? "api/assets/pages-offline-storage"
         : path === "datacenters" || path === "offline-storage-sites"
         ? "api/sites/" + path + "/pages"
         : "api/" + path + "/pages";
