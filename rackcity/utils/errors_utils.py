@@ -161,6 +161,10 @@ def parse_save_validation_error(error, object_name):
     failure_detail = ""
     if isinstance(error, ValidationError):
         for err in error:
+            if isinstance(err, tuple):
+                field = err[0]
+                error_text = err[1][0]
+                err = field + ": " + error_text + " "
             failure_detail += err
     elif isinstance(error, IntegrityError):
         for err in error.args:
