@@ -225,7 +225,7 @@ def asset_add(request):
         )
     try:
         validate_user_permission_on_new_asset_data(
-            request.user, serializer.validated_data
+            request.user, serializer.validated_data, data_is_validated=True
         )
     except UserAssetPermissionException as auth_error:
         return JsonResponse(
@@ -398,7 +398,9 @@ def asset_modify(request):
         )
 
     try:
-        validate_user_permission_on_new_asset_data(request.user, data)
+        validate_user_permission_on_new_asset_data(
+            request.user, data, data_is_validated=False
+        )
     except UserAssetPermissionException as auth_error:
         return JsonResponse(
             {"failure_message": Status.AUTH_ERROR + str(auth_error)},
@@ -701,7 +703,9 @@ def asset_bulk_upload(request):
         if asset_exists:
             # asset number specfies existing asset
             try:
-                validate_user_permission_on_new_asset_data(request.user, asset_data)
+                validate_user_permission_on_new_asset_data(
+                    request.user, asset_data, data_is_validated=False
+                )
             except UserAssetPermissionException as auth_error:
                 return JsonResponse(
                     {"failure_message": Status.IMPORT_ERROR.value + str(auth_error)},
