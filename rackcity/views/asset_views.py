@@ -395,7 +395,7 @@ def asset_modify(request):
         validate_user_asset_permission_to_modify_or_delete(request.user, existing_asset)
     except UserAssetPermissionException as auth_error:
         return JsonResponse(
-            {"failure_message": Status.AUTH_ERROR + str(auth_error)},
+            {"failure_message": Status.AUTH_ERROR.value + str(auth_error)},
             status=HTTPStatus.UNAUTHORIZED,
         )
 
@@ -491,7 +491,7 @@ def asset_delete(request):
         validate_user_asset_permission_to_modify_or_delete(request.user, existing_asset)
     except UserAssetPermissionException as auth_error:
         return JsonResponse(
-            {"failure_message": Status.AUTH_ERROR + str(auth_error)},
+            {"failure_message": Status.AUTH_ERROR.value + str(auth_error)},
             status=HTTPStatus.UNAUTHORIZED,
         )
     try:
