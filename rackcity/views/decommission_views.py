@@ -6,7 +6,7 @@ from rackcity.api.serializers import (
     GetDecommissionedAssetSerializer,
 )
 from rackcity.models import Asset, DecommissionedAsset, AssetCP
-from rackcity.permissions.permissions import user_has_asset_permission
+from rackcity.permissions.permissions import validate_user_permission_on_existing_asset
 from rackcity.utils.change_planner_utils import (
     get_change_plan,
     get_cp_already_executed_response,
@@ -18,8 +18,8 @@ from rackcity.utils.errors_utils import (
     GenericFailure,
     parse_serializer_errors,
     parse_save_validation_error,
-    AuthFailure,
 )
+from rackcity.utils.exceptions import UserAssetPermissionException
 from rackcity.utils.log_utils import (
     Action,
     log_action,
@@ -98,18 +98,11 @@ def decommission_asset_parameterized(data, query_params, user):
                     },
                     status=HTTPStatus.BAD_REQUEST,
                 )
-        # TODO: permissions for blades
-        if decommissioned_asset_cp.rack and not user_has_asset_permission(
-            user, decommissioned_asset_cp.rack.datacenter
-        ):
+        try:
+            validate_user_permission_on_existing_asset(user, decommissioned_asset_cp)
+        except UserAssetPermissionException as auth_error:
             return JsonResponse(
-                {
-                    "failure_message": Status.AUTH_ERROR.value
-                    + AuthFailure.ASSET.value,
-                    "errors": "User "
-                    + user.username
-                    + " does not have asset permission in datacenter",
-                },
+                {"failure_message": Status.AUTH_ERROR.value + str(auth_error)},
                 status=HTTPStatus.UNAUTHORIZED,
             )
 
@@ -126,17 +119,11 @@ def decommission_asset_parameterized(data, query_params, user):
                 },
                 status=HTTPStatus.BAD_REQUEST,
             )
-        # TODO: permissions for blades
-        if asset.rack and not user_has_asset_permission(user, asset.rack.datacenter):
+        try:
+            validate_user_permission_on_existing_asset(user, asset)
+        except UserAssetPermissionException as auth_error:
             return JsonResponse(
-                {
-                    "failure_message": Status.AUTH_ERROR.value
-                    + AuthFailure.ASSET.value,
-                    "errors": "User "
-                    + user.username
-                    + " does not have asset permission in datacenter id="
-                    + str(asset.rack.datacenter.id),
-                },
+                {"failure_message": Status.AUTH_ERROR.value + str(auth_error)},
                 status=HTTPStatus.UNAUTHORIZED,
             )
 

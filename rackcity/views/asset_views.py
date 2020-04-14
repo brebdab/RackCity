@@ -76,8 +76,8 @@ from rackcity.utils.rackcity_utils import (
 )
 from rackcity.permissions.permissions import (
     user_has_asset_permission,
-    validate_user_asset_permission_to_modify_or_delete,
-    validate_user_asset_permission_to_add,
+    validate_user_permission_on_existing_asset,
+    validate_user_permission_on_new_asset,
 )
 import re
 from rest_framework.decorators import permission_classes, api_view
@@ -224,7 +224,7 @@ def asset_add(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     try:
-        validate_user_asset_permission_to_add(request.user, serializer.validated_data)
+        validate_user_permission_on_new_asset(request.user, serializer.validated_data)
     except UserAssetPermissionException as auth_error:
 
         return JsonResponse(
@@ -389,7 +389,7 @@ def asset_modify(request):
                 status=HTTPStatus.BAD_REQUEST,
             )
     try:
-        validate_user_asset_permission_to_modify_or_delete(request.user, existing_asset)
+        validate_user_permission_on_existing_asset(request.user, existing_asset)
     except UserAssetPermissionException as auth_error:
         return JsonResponse(
             {"failure_message": Status.AUTH_ERROR.value + str(auth_error)},
@@ -490,7 +490,7 @@ def asset_delete(request):
         )
 
     try:
-        validate_user_asset_permission_to_modify_or_delete(request.user, existing_asset)
+        validate_user_permission_on_existing_asset(request.user, existing_asset)
     except UserAssetPermissionException as auth_error:
         return JsonResponse(
             {"failure_message": Status.AUTH_ERROR.value + str(auth_error)},

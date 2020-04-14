@@ -80,7 +80,7 @@ def user_has_asset_permission(user, site):
     ) or site.user_has_site_level_permission(user)
 
 
-def validate_user_asset_permission_to_add(user, validated_data):
+def validate_user_permission_on_new_asset(user, validated_data):
     site = None
     if "offline_storage_site" in validated_data:
         site_id = validated_data["offline_storage_site"].id
@@ -119,7 +119,7 @@ def validate_user_asset_permission_to_add(user, validated_data):
         )
 
 
-def validate_user_asset_permission_to_modify_or_delete(user, asset):
+def validate_user_permission_on_existing_asset(user, asset):
     site = None
     if asset.is_in_offline_storage():
         site = asset.offline_storage_site
