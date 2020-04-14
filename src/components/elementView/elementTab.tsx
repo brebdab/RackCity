@@ -66,7 +66,6 @@ interface ElementViewState {
   networkFileName: string;
   updateTable: boolean;
   barcodes: Array<String>;
-  isDecommissioned: boolean;
 }
 interface ElementViewProps {
   element: ElementType;
@@ -93,7 +92,6 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     networkFileName: "",
     updateTable: false,
     barcodes: [],
-    isDecommissioned: false,
   };
 
   getExportData = (
