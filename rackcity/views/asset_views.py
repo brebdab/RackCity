@@ -403,7 +403,7 @@ def asset_modify(request):
         )
     except UserAssetPermissionException as auth_error:
         return JsonResponse(
-            {"failure_message": Status.AUTH_ERROR + str(auth_error)},
+            {"failure_message": Status.AUTH_ERROR.value + str(auth_error)},
             status=HTTPStatus.UNAUTHORIZED,
         )
 
