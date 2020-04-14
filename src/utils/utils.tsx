@@ -138,6 +138,7 @@ export enum AssetFormLabels {
   asset_number = "Asset Number",
   hostname = "Hostname",
   datacenter = "Datacenter*",
+  site = "Site*",
   rack = "Rack*",
   rack_position = "Rack Position*",
   chassis = "Chassis*",
@@ -216,6 +217,12 @@ export interface RackResponseObject {
 export interface DatacenterObject extends ElementObject {
   name: string;
   abbreviation: string;
+  is_storage: boolean;
+}
+
+export enum SiteTypes {
+  DATACENTER = "Datacenter",
+  OFFLINE_STORAGE = "Offline Storage Site",
 }
 
 export enum MountTypes {

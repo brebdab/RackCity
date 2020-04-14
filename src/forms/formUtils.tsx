@@ -392,5 +392,6 @@ export const StringSuggest = Suggest.ofType<string>();
 export const ModelSelect = Select.ofType<ModelObject>();
 export const RackSelect = Select.ofType<RackObject>();
 export const DatacenterSelect = Select.ofType<DatacenterObject>();
+export const OfflineStorageSiteSelect = Select.ofType<DatacenterObject>();
 export const AssetSelect = Select.ofType<AssetObject>();
 export const ChangePlanSelect = Select.ofType<ChangePlan>();

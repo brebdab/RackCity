@@ -12,6 +12,8 @@ import {
   InputGroup,
   Intent,
   MenuItem,
+  Radio,
+  RadioGroup,
   Spinner,
   Switch,
   Tooltip,
@@ -50,6 +52,7 @@ import {
   PowerSide,
   RackObject,
   ShallowAssetObject,
+  SiteTypes,
 } from "../utils/utils";
 import Field from "./field";
 import "./forms.scss";
@@ -65,6 +68,7 @@ import {
   isMacAddressValid,
   macAddressInfo,
   ModelSelect,
+  OfflineStorageSiteSelect,
   RackSelect,
   renderAssetItem,
   renderDatacenterItem,
@@ -89,6 +93,7 @@ export interface AssetFormProps {
 interface AssetFormState {
   values: AssetObject;
   currDatacenter?: DatacenterObject;
+  selectedSiteType: SiteTypes;
   racks: Array<RackObject>;
   models: Array<ModelObject>;
   errors: Array<string>;
@@ -163,6 +168,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       : this.props.currDatacenter === ALL_DATACENTERS
       ? undefined
       : this.props.currDatacenter,
+    selectedSiteType: SiteTypes.DATACENTER,
     racks: [],
     models: [],
     errors: [],
@@ -781,6 +787,23 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     );
   }
 
+  getOfflineStorageSites() {
+    let offlineStorageSites = Array<DatacenterObject>();
+    axios
+      .post(
+        API_ROOT + "api/sites/offline-storage-sites/get-many",
+        {},
+        getHeaders(this.props.token)
+      )
+      .then((res) => {
+        offlineStorageSites = res.data.offline_storage_sites;
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+    return offlineStorageSites;
+  }
+
   handleDatacenterSelect(datacenter: DatacenterObject) {
     const clearedNetworkConnections = this.getClearedNetworkConnections();
     const clearedPowerConnections = this.getClearedPowerSelections();
@@ -1072,6 +1095,75 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                 value={values.hostname}
                 field="hostname"
               />
+            </FormGroup>
+          </Card>
+          <Card>
+            <FormGroup label={AssetFormLabels.site} inline={false}>
+              <div className={"site-selection"}>
+                <DatacenterSelect
+                  popoverProps={{
+                    minimal: true,
+                    popoverClassName: "dropdown",
+                    usePortal: true,
+                  }}
+                  items={this.getValidDatacenters()}
+                  onItemSelect={(datacenter: DatacenterObject) => {
+                    this.state.currDatacenter
+                      ? this.showChangeWarningAlert(
+                          "Are you sure you want to change sites? This will clear all site related properties",
+                          datacenter
+                        )
+                      : this.handleDatacenterSelect(datacenter);
+                  }}
+                  itemRenderer={renderDatacenterItem}
+                  itemPredicate={filterDatacenter}
+                  noResults={<MenuItem disabled={true} text="No results." />}
+                >
+                  <Button
+                    rightIcon="caret-down"
+                    text={
+                      this.state.currDatacenter &&
+                      !this.state.currDatacenter.is_storage &&
+                      this.state.currDatacenter.name
+                        ? "Datacenter: " + this.state.currDatacenter.name
+                        : "Select a datacenter"
+                    }
+                  />
+                </DatacenterSelect>
+              </div>
+              <div className={"site-selection"}>
+                <OfflineStorageSiteSelect
+                  popoverProps={{
+                    minimal: true,
+                    popoverClassName: "dropdown",
+                    usePortal: true,
+                  }}
+                  items={this.getOfflineStorageSites()}
+                  onItemSelect={(datacenter: DatacenterObject) => {
+                    this.state.currDatacenter
+                      ? this.showChangeWarningAlert(
+                          "Are you sure you want to change sites? This will clear all site related properties",
+                          datacenter
+                        )
+                      : this.handleDatacenterSelect(datacenter);
+                  }}
+                  itemRenderer={renderDatacenterItem}
+                  itemPredicate={filterDatacenter}
+                  noResults={<MenuItem disabled={true} text="No results." />}
+                >
+                  <Button
+                    rightIcon={"caret-down"}
+                    text={
+                      this.state.currDatacenter &&
+                      this.state.currDatacenter.is_storage &&
+                      this.state.currDatacenter.name
+                        ? "Offline Storage Site: " +
+                          this.state.currDatacenter.name
+                        : "Select an offline storage site"
+                    }
+                  />
+                </OfflineStorageSiteSelect>
+              </div>
             </FormGroup>
           </Card>
           <Card>
