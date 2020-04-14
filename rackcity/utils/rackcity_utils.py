@@ -5,7 +5,6 @@ from http import HTTPStatus
 from rackcity.api.serializers import RecursiveAssetSerializer, RackSerializer
 from rackcity.models import Asset, ITModel, Rack, PowerPort, NetworkPort
 from rackcity.models.asset import get_assets_for_cp
-from rackcity.permissions.permissions import user_has_asset_permission
 from rackcity.utils.exceptions import LocationException
 
 
@@ -163,7 +162,7 @@ def validate_asset_location_in_chassis(
                         )
 
 
-def validate_location_modification(data, existing_asset, user, change_plan=None):
+def validate_location_modification(data, existing_asset, change_plan=None):
     asset_id = existing_asset.id
     rack_id = existing_asset.rack_id
     chassis_id = existing_asset.chassis_id
@@ -174,53 +173,37 @@ def validate_location_modification(data, existing_asset, user, change_plan=None)
     asset_rack_position = existing_asset.rack_position
     asset_chassis_slot = existing_asset.chassis_slot
     asset_height = existing_asset.model.height
-    if "rack_position" in data:
+    if "rack_position" in data and data["rack_position"]:
         try:
             asset_rack_position = int(data["rack_position"])
         except ValueError:
             raise Exception("Field 'rack_position' must be of type int.")
 
-    if "chassis_slot" in data:
+    if "chassis_slot" in data and data["chassis_slot"]:
         try:
             asset_chassis_slot = int(data["chassis_slot"])
         except ValueError:
             raise Exception("Field 'chassis_slot' must be of type int.")
 
-    if "model" in data:
+    if "model" in data and data["model"]:
         try:
             asset_height = ITModel.objects.get(id=data["model"]).height
         except Exception:
             raise Exception("No existing model with id=" + str(data["model"]) + ".")
 
-    if "rack" in data:
+    if "rack" in data and data["rack"]:
         try:
             rack = Rack.objects.get(id=data["rack"])
             rack_id = rack.id
         except Exception:
             raise Exception("No existing rack with id=" + str(data["rack"]) + ".")
-        else:
-            if not user_has_asset_permission(user, site=rack.datacenter):
-                raise Exception(
-                    "You do not have permission to move assets to "
-                    + "datacenter "
-                    + rack.datacenter.abbreviation
-                    + "."
-                )
 
-    if "chassis" in data:
+    if "chassis" in data and data["chassis"]:
         try:
             chassis = Asset.objects.get(id=data["chassis"])
             chassis_id = chassis.id
         except Exception:
             raise Exception("No existing chassis with id=" + str(data["chassis"]) + ".")
-        else:
-            if not user_has_asset_permission(user, site=chassis.rack.datacenter):
-                raise Exception(
-                    "You do not have permission to move assets to "
-                    + "datacenter "
-                    + chassis.rack.datacenter.abbreviation
-                    + "."
-                )
 
     if existing_asset.model.is_rackmount():
         try:
