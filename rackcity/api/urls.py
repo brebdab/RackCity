@@ -67,7 +67,7 @@ urlpatterns = [
     path("rack-power/on", views.pdu_power_on),
     path("rack-power/off", views.pdu_power_off),
     path("rack-power/cycle", views.pdu_power_cycle),
-    path("rack-power/availability", views.pdu_power_availability),
+    path("rack-power/availability", views.pdu_port_availability),
     path("chassis-power/status", views.chassis_power_status),
     path("chassis-power/on", views.chassis_power_on),
     path("chassis-power/off", views.chassis_power_off),
