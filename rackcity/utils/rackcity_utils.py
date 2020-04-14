@@ -173,32 +173,32 @@ def validate_location_modification(data, existing_asset, change_plan=None):
     asset_rack_position = existing_asset.rack_position
     asset_chassis_slot = existing_asset.chassis_slot
     asset_height = existing_asset.model.height
-    if "rack_position" in data:
+    if "rack_position" in data and data["rack_position"]:
         try:
             asset_rack_position = int(data["rack_position"])
         except ValueError:
             raise Exception("Field 'rack_position' must be of type int.")
 
-    if "chassis_slot" in data:
+    if "chassis_slot" in data and data["chassis_slot"]:
         try:
             asset_chassis_slot = int(data["chassis_slot"])
         except ValueError:
             raise Exception("Field 'chassis_slot' must be of type int.")
 
-    if "model" in data:
+    if "model" in data and data["model"]:
         try:
             asset_height = ITModel.objects.get(id=data["model"]).height
         except Exception:
             raise Exception("No existing model with id=" + str(data["model"]) + ".")
 
-    if "rack" in data:
+    if "rack" in data and data["rack"]:
         try:
             rack = Rack.objects.get(id=data["rack"])
             rack_id = rack.id
         except Exception:
             raise Exception("No existing rack with id=" + str(data["rack"]) + ".")
 
-    if "chassis" in data:
+    if "chassis" in data and data["chassis"]:
         try:
             chassis = Asset.objects.get(id=data["chassis"])
             chassis_id = chassis.id
