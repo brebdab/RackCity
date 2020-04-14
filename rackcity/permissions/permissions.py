@@ -88,16 +88,18 @@ def get_id_from_data(data, field, data_is_validated):
         return data[field]
 
 
-def validate_user_permission_on_new_asset_data(user, asset_data, data_is_validated=False):
+def validate_user_permission_on_new_asset_data(
+    user, asset_data, data_is_validated=False
+):
     site = None
     if "offline_storage_site" in asset_data and asset_data["offline_storage_site"]:
-        site_id = get_id_from_data(asset_data, "offline_storage_site", data_is_validated)
+        site_id = get_id_from_data(
+            asset_data, "offline_storage_site", data_is_validated
+        )
         try:
             site = Site.objects.get(id=site_id)
         except ObjectDoesNotExist:
             raise Exception("Site '" + str(site_id) + "' does not exist. ")
-        else:
-            print("ASSET PERMISSION CHECK FOR USER " + user.username + " IN OFFLINE STORAGE SITE")
     elif "model" in asset_data and asset_data["model"]:
         model_id = get_id_from_data(asset_data, "model", data_is_validated)
         try:
@@ -112,19 +114,18 @@ def validate_user_permission_on_new_asset_data(user, asset_data, data_is_validat
                 except ObjectDoesNotExist:
                     raise Exception("Rack '" + str(rack_id) + "' does not exist. ")
                 site = rack.datacenter
-                print("ASSET PERMISSION CHECK FOR USER " + user.username + " ON RACKMOUNT ASSET")
         elif model.is_blade_asset():
             if "chassis" in asset_data and asset_data["chassis"]:
                 chassis_id = get_id_from_data(asset_data, "chassis", data_is_validated)
                 try:
                     chassis = Asset.objects.get(id=chassis_id)
                 except ObjectDoesNotExist:
-                    raise Exception("Chassis '" + str(chassis_id) + "' does not exist. ")
+                    raise Exception(
+                        "Chassis '" + str(chassis_id) + "' does not exist. "
+                    )
                 site = chassis.rack.datacenter
-                print("ASSET PERMISSION CHECK FOR USER " + user.username + " ON BLADE ASSET IN CHASSIS")
     if site:
         if not user_has_asset_permission(user, site):
-            print("ASSET PERMISSION CHECK FAILED")
             raise UserAssetPermissionException(
                 "User '"
                 + user.username
@@ -132,10 +133,7 @@ def validate_user_permission_on_new_asset_data(user, asset_data, data_is_validat
                 + site.abbreviation
                 + "'. "
             )
-        else:
-            print("ASSET PERMISSION CHECK PASSED")
     else:
-        print("ASSET PERMISSION CHECK FAILED - NO SITE DETECTED")
         raise UserAssetPermissionException(
             "User '" + user.username + "' does not have asset permission. "
         )
@@ -145,16 +143,12 @@ def validate_user_permission_on_existing_asset(user, asset):
     site = None
     if asset.is_in_offline_storage():
         site = asset.offline_storage_site
-        print("EXISTING ASSET PERMISSION CHECK FOR USER " + user.username + " IN OFFLINE STORAGE SITE")
     elif asset.model.is_rackmount():
         site = asset.rack.datacenter
-        print("EXISTING ASSET PERMISSION CHECK FOR USER " + user.username + " ON RACKMOUNT ASSET")
     elif asset.model.is_blade_asset():
         site = asset.chassis.rack.datacenter
-        print("EXISTING ASSET PERMISSION CHECK FOR USER " + user.username + " ON BLADE ASSET IN CHASSIS")
     if site:
         if not user_has_asset_permission(user, site):
-            print("EXISTING ASSET PERMISSION CHECK FAILED")
             raise UserAssetPermissionException(
                 "User '"
                 + user.username
@@ -162,10 +156,7 @@ def validate_user_permission_on_existing_asset(user, asset):
                 + site.abbreviation
                 + "'. "
             )
-        else:
-            print("EXISTING ASSET PERMISSION CHECK PASSED")
     else:
-        print("EXISTING ASSET PERMISSION CHECK FAILED - NO SITE DETECTED")
         raise UserAssetPermissionException(
             "User '" + user.username + "' does not have asset permission. "
         )
