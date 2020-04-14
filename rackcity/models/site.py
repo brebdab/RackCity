@@ -32,4 +32,4 @@ class Site(models.Model):
         except ObjectDoesNotExist:
             return False
         else:
-            return self.id in user_permissions.site_permissions.all()
+            return self in user_permissions.site_permissions.all()
