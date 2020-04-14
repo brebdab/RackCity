@@ -5,8 +5,7 @@ from http import HTTPStatus
 from rackcity.api.serializers import RecursiveAssetSerializer, RackSerializer
 from rackcity.models import Asset, ITModel, Rack, PowerPort, NetworkPort
 from rackcity.models.asset import get_assets_for_cp
-from rackcity.permissions.permissions import user_has_asset_permission
-from rackcity.utils.exceptions import LocationException, UserAssetPermissionException
+from rackcity.utils.exceptions import LocationException
 
 
 def get_rack_detailed_response(racks):
@@ -163,7 +162,7 @@ def validate_asset_location_in_chassis(
                         )
 
 
-def validate_location_modification(data, existing_asset, user, change_plan=None):
+def validate_location_modification(data, existing_asset, change_plan=None):
     asset_id = existing_asset.id
     rack_id = existing_asset.rack_id
     chassis_id = existing_asset.chassis_id
@@ -198,14 +197,6 @@ def validate_location_modification(data, existing_asset, user, change_plan=None)
             rack_id = rack.id
         except Exception:
             raise Exception("No existing rack with id=" + str(data["rack"]) + ".")
-        else:
-            if not user_has_asset_permission(user, rack.datacenter):
-                raise UserAssetPermissionException(
-                    "You do not have permission to move assets to "
-                    + "datacenter "
-                    + rack.datacenter.abbreviation
-                    + "."
-                )
 
     if "chassis" in data:
         try:
@@ -213,14 +204,6 @@ def validate_location_modification(data, existing_asset, user, change_plan=None)
             chassis_id = chassis.id
         except Exception:
             raise Exception("No existing chassis with id=" + str(data["chassis"]) + ".")
-        else:
-            if not user_has_asset_permission(user, chassis.rack.datacenter):
-                raise UserAssetPermissionException(
-                    "You do not have permission to move assets to "
-                    + "datacenter "
-                    + chassis.rack.datacenter.abbreviation
-                    + "."
-                )
 
     if existing_asset.model.is_rackmount():
         try:

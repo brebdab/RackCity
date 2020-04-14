@@ -77,7 +77,7 @@ from rackcity.utils.rackcity_utils import (
 from rackcity.permissions.permissions import (
     user_has_asset_permission,
     validate_user_permission_on_existing_asset,
-    validate_user_permission_on_new_asset,
+    validate_user_permission_on_new_asset_data,
 )
 import re
 from rest_framework.decorators import permission_classes, api_view
@@ -224,9 +224,10 @@ def asset_add(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     try:
-        validate_user_permission_on_new_asset(request.user, serializer.validated_data)
+        validate_user_permission_on_new_asset_data(
+            request.user, serializer.validated_data
+        )
     except UserAssetPermissionException as auth_error:
-
         return JsonResponse(
             {"failure_message": Status.AUTH_ERROR.value + str(auth_error)},
             status=HTTPStatus.UNAUTHORIZED,
@@ -397,14 +398,15 @@ def asset_modify(request):
         )
 
     try:
-        validate_location_modification(
-            data, existing_asset, request.user, change_plan=change_plan
-        )
+        validate_user_permission_on_new_asset_data(request.user, data)
     except UserAssetPermissionException as auth_error:
         return JsonResponse(
             {"failure_message": Status.AUTH_ERROR + str(auth_error)},
             status=HTTPStatus.UNAUTHORIZED,
         )
+
+    try:
+        validate_location_modification(data, existing_asset, change_plan=change_plan)
     except Exception as error:
         return JsonResponse(
             {
@@ -498,11 +500,11 @@ def asset_delete(request):
         )
     if existing_asset.model.is_blade_chassis():
         blades = Asset.objects.filter(chassis=existing_asset)
-        if len(blades)>0:
+        if len(blades) > 0:
             return JsonResponse(
                 {
                     "failure_message": Status.DELETE_ERROR.value
-                                       + "Cannot delete a chassis with blades in it. "
+                    + "Cannot delete a chassis with blades in it. "
                 },
                 status=HTTPStatus.BAD_REQUEST,
             )
@@ -699,15 +701,15 @@ def asset_bulk_upload(request):
         if asset_exists:
             # asset number specfies existing asset
             try:
-                validate_location_modification(
-                    asset_data, existing_asset, request.user,
-                )
+                validate_user_permission_on_new_asset_data(request.user, asset_data)
             except UserAssetPermissionException as auth_error:
                 return JsonResponse(
-                    {"failure_message": Status.AUTH_ERROR + str(auth_error)},
-                    status=HTTPStatus.UNAUTHORIZED,
+                    {"failure_message": Status.IMPORT_ERROR.value + str(auth_error)},
+                    status=HTTPStatus.BAD_REQUEST,
                 )
-            except Exception:
+            try:
+                validate_location_modification(asset_data, existing_asset)
+            except Exception as error:
                 failure_message = (
                     Status.IMPORT_ERROR.value
                     + "Asset "
@@ -715,7 +717,8 @@ def asset_bulk_upload(request):
                     + " would conflict location with an existing asset. "
                 )
                 return JsonResponse(
-                    {"failure_message": failure_message}, status=HTTPStatus.BAD_REQUEST
+                    {"failure_message": failure_message, "errors": str(error)},
+                    status=HTTPStatus.BAD_REQUEST,
                 )
             potential_modifications.append(
                 {"existing_asset": existing_asset, "new_data": asset_data}

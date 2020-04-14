@@ -80,16 +80,16 @@ def user_has_asset_permission(user, site):
     ) or site.user_has_site_level_permission(user)
 
 
-def validate_user_permission_on_new_asset(user, validated_data):
+def validate_user_permission_on_new_asset_data(user, asset_data):
     site = None
-    if "offline_storage_site" in validated_data:
-        site_id = validated_data["offline_storage_site"].id
+    if "offline_storage_site" in asset_data:
+        site_id = asset_data["offline_storage_site"].id
         try:
             site = Site.objects.get(id=site_id)
         except ObjectDoesNotExist:
             raise Exception("Site '" + str(site_id) + "' does not exist")
-    elif "model" in validated_data:
-        model_id = validated_data["model"].id
+    elif "model" in asset_data:
+        model_id = asset_data["model"].id
         try:
             model = ITModel.objects.get(id=model_id)
         except ObjectDoesNotExist:
@@ -97,8 +97,8 @@ def validate_user_permission_on_new_asset(user, validated_data):
         if model.is_rackmount():
             site = model.rack.datacenter
         elif model.is_blade_asset():
-            if "chassis" in validated_data:
-                chassis_id = validated_data["chassis"].id
+            if "chassis" in asset_data:
+                chassis_id = asset_data["chassis"].id
                 try:
                     chassis = Asset.objects.get(id=chassis_id)
                 except ObjectDoesNotExist:
