@@ -201,7 +201,6 @@ def asset_add(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
-
     (change_plan, failure_response) = get_change_plan(
         request.query_params.get("change_plan")
     )
@@ -224,10 +223,10 @@ def asset_add(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
-
     try:
         validate_user_asset_permission_to_add(request.user, serializer.validated_data)
     except UserAssetPermissionException as auth_error:
+
         return JsonResponse(
             {"failure_message": Status.AUTH_ERROR.value + str(auth_error)},
             status=HTTPStatus.UNAUTHORIZED,
@@ -237,7 +236,6 @@ def asset_add(request):
             {"failure_message": Status.CREATE_ERROR.value + str(error)},
             status=HTTPStatus.BAD_REQUEST,
         )
-
     if serializer.validated_data["model"].is_rackmount():
         if (
             "rack" not in serializer.validated_data
@@ -260,6 +258,7 @@ def asset_add(request):
                 rack_id, rack_position, height, change_plan=change_plan
             )
         except LocationException as error:
+
             return JsonResponse(
                 {"failure_message": Status.CREATE_ERROR.value + str(error)},
                 status=HTTPStatus.BAD_REQUEST,
@@ -289,7 +288,6 @@ def asset_add(request):
                 {"failure_message": Status.CREATE_ERROR.value + str(error)},
                 status=HTTPStatus.BAD_REQUEST,
             )
-
     try:
         asset = serializer.save()
     except Exception as error:
@@ -301,7 +299,6 @@ def asset_add(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
-
     warning_message = save_all_connection_data(
         data, asset, request.user, change_plan=change_plan
     )
@@ -494,6 +491,16 @@ def asset_delete(request):
             {"failure_message": Status.AUTH_ERROR + str(auth_error)},
             status=HTTPStatus.UNAUTHORIZED,
         )
+    if existing_asset.model.is_blade_chassis():
+        blades = Asset.objects.filter(chassis=existing_asset)
+        if len(blades)>0:
+            return JsonResponse(
+                {
+                    "failure_message": Status.DELETE_ERROR.value
+                                       + "Cannot delete a chassis with blades in it. "
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
     try:
         existing_asset.delete()
     except Exception as error:
