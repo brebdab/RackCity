@@ -28,6 +28,7 @@ import {
 import { updateObject } from "../../store/utility";
 import { API_ROOT } from "../../utils/api-config";
 import {
+  AssetType,
   ChangePlan,
   CreateUserObject,
   DatacenterObject,
@@ -65,10 +66,10 @@ interface ElementViewState {
   networkFileName: string;
   updateTable: boolean;
   barcodes: Array<String>;
-  isDecommissioned: boolean;
 }
 interface ElementViewProps {
   element: ElementType;
+  assetType?: AssetType;
   isAdmin: boolean;
   token: string;
   datacenters?: Array<DatacenterObject>;
@@ -91,7 +92,6 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     networkFileName: "",
     updateTable: false,
     barcodes: [],
-    isDecommissioned: false,
   };
 
   getExportData = (
@@ -177,11 +177,14 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
         });
       }
     }
-    let url = this.state.isDecommissioned
-      ? "api/assets/pages-decommissioned"
-      : path === "datacenters" || path === "offline-storage-sites"
-      ? "api/sites/" + path + "/pages"
-      : "api/" + path + "/pages";
+    let url =
+      this.props.assetType === AssetType.DECOMMISSIONED
+        ? "api/assets/pages-decommissioned"
+        : this.props.assetType === AssetType.STORED
+        ? "api/assets/pages-offline-storage"
+        : path === "datacenters" || path === "offline-storage-sites"
+        ? "api/sites/" + path + "/pages"
+        : "api/" + path + "/pages";
     return axios
       .post(API_ROOT + url, { filters: filtersCopy }, config)
       .then((res) => {
@@ -229,11 +232,14 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
         bodyCopy = updateObject(bodyCopy, { filters });
       }
     }
-    let url = this.state.isDecommissioned
-      ? "api/assets/get-many-decommissioned"
-      : path === "datacenters" || path === "offline-storage-sites"
-      ? "api/sites/" + path + "/get-many"
-      : "api/" + path + "/get-many";
+    let url =
+      this.props.assetType === AssetType.DECOMMISSIONED
+        ? "api/assets/get-many-decommissioned"
+        : this.props.assetType === AssetType.STORED
+        ? "api/assets/get-many-offline-storage"
+        : path === "datacenters" || path === "offline-storage-sites"
+        ? "api/sites/" + path + "/get-many"
+        : "api/" + path + "/get-many";
     return axios.post(API_ROOT + url, bodyCopy, config).then((res) => {
       const items = res.data[path];
 
@@ -408,21 +414,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             </Callout>
           ) : null}
         </div>
-        {this.state.isDecommissioned ? (
-          <Callout icon="warning-sign">
-            <FormGroup label="Showing decommissioned assets" inline={true}>
-              <Button
-                onClick={() => {
-                  /* handle data based on state */
-                  this.setState({ isDecommissioned: false });
-                  this.handleDataUpdate(true);
-                }}
-              >
-                View Live Assets
-              </Button>
-            </FormGroup>
-          </Callout>
-        ) : (
+        {this.props.assetType === AssetType.DECOMMISSIONED ? null : (
           <div className="element-tab-buttons">
             {this.props.element !== ElementType.USER &&
             this.props.element !== ElementType.DATACENTER &&
@@ -575,17 +567,6 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             {this.props.element === ElementType.ASSET
               ? this.renderBarcodeButton()
               : null}
-            {this.props.element === ElementType.ASSET ? (
-              <Button
-                onClick={() => {
-                  this.setState({ isDecommissioned: true });
-                  this.handleDataUpdate(true);
-                }}
-                text="View Decommissioned"
-                minimal
-                icon="archive"
-              ></Button>
-            ) : null}
             <FormPopup
               {...this.props}
               type={FormTypes.CREATE}
@@ -623,7 +604,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             }}
             shouldUpdateData={this.state.updateTable}
             currDatacenter={this.props.currDatacenter}
-            isDecommissioned={this.state.isDecommissioned}
+            isDecommissioned={this.props.assetType === AssetType.DECOMMISSIONED}
           />
         </div>
       </div>

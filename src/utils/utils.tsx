@@ -13,6 +13,8 @@ export enum ROUTES {
   OFFLINE_STORAGE_SITES = "/dashboard/offline-storage-sites",
   MODELS = "/dashboard/models",
   ASSETS = "/dashboard/assets",
+  STORED_ASSETS = "/dashboard/stored-assets",
+  DECOMMISSIONED_ASSETS = "/dashboard/decommissioned-assets",
   DASHBOARD = "/dashboard",
   REPORT = "/dashboard/report",
   LOGS = "/dashboard/logs",
@@ -32,6 +34,11 @@ export enum ElementType {
   OFFLINE_STORAGE_SITE = "offline-storage-sites",
   CHANGEPLANS = "change-plans",
 }
+export enum AssetType {
+  RACKED = "Racked",
+  STORED = "Stored",
+  DECOMMISSIONED = "Decommissioned",
+}
 export enum PowerSide {
   LEFT = "L",
   RIGHT = "R",
@@ -47,8 +54,7 @@ export interface AssetObject extends ParentAssetObject {
   rack?: RackObject;
   network_graph: NetworkGraphData;
   blades: Array<AssetObject>;
-  datacenter: DatacenterObject
-
+  datacenter: DatacenterObject;
 }
 export interface AssetCPObject extends AssetObject {
   change_plan: ChangePlan;
@@ -63,7 +69,7 @@ interface ParentAssetObject extends ElementObject {
   asset_number: string | null;
   hostname: string | null;
   rack_position: string;
-  chassis_slot:string;
+  chassis_slot: string;
   mac_addresses: { [port: string]: string };
   network_connections: Array<NetworkConnection>;
   power_connections: { [port: string]: PowerConnection };
@@ -75,7 +81,6 @@ interface ParentAssetObject extends ElementObject {
   storage: string;
   display_color: string;
   memory_gb: string | null;
-
 }
 
 export interface RackRangeFields {
@@ -164,7 +169,7 @@ export interface PowerConnection {
 export interface ShallowAssetObject extends ParentAssetObject {
   model: string | null | undefined;
   rack: string | null | undefined;
-  chassis: string|null|undefined;
+  chassis: string | null | undefined;
 }
 
 export interface SortFilterBody {
