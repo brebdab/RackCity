@@ -17,21 +17,22 @@ import FormPopup from "../../../../forms/formPopup";
 import { FormTypes } from "../../../../forms/formUtils";
 import { API_ROOT } from "../../../../utils/api-config";
 import {
+  AssetCPObject,
   AssetObject,
+  ChangePlan,
+  DatacenterObject,
   ElementType,
+  getChangePlanRowStyle,
   getHeaders,
+  isAssetCPObject,
+  MountTypes,
   NetworkConnection,
   Node,
-  DatacenterObject,
   ROUTES,
-  ChangePlan,
-  AssetCPObject,
-  getChangePlanRowStyle,
-  isAssetCPObject,
 } from "../../../../utils/utils";
 import {
-  deleteAsset,
   decommissionAsset,
+  deleteAsset,
   modifyAsset,
 } from "../../elementUtils";
 import PropertiesView from "../propertiesView";
@@ -43,6 +44,8 @@ import { ALL_DATACENTERS } from "../../elementTabContainer";
 import { isNullOrUndefined } from "util";
 import { PermissionState } from "../../../../utils/permissionUtils";
 import { IconNames } from "@blueprintjs/icons";
+import { BladePowerView } from "../../powerView/bladePowerView";
+
 export interface AssetViewProps {
   token: string;
   isAdmin: boolean;
@@ -437,10 +440,7 @@ export class AssetView extends React.PureComponent<
             </div>
           ) : null}
         </div>
-        {/*temporary logic to hide power info if the asset does not have a rack, might need to change this later*/}
-        {Object.keys(this.state.asset).length !== 0 && this.state.asset.rack
-          ? this.renderPower()
-          : null}
+        {this.renderPower()}
       </div>
     );
   }
@@ -459,20 +459,39 @@ export class AssetView extends React.PureComponent<
   };
 
   private renderPower() {
-    console.log("rendering power");
-    return (
-      <PowerView
-        {...this.props}
-        asset={this.state.asset}
-        shouldUpdate={this.state.powerShouldUpdate}
-        updated={() => {
-          this.setState({ powerShouldUpdate: false });
-        }}
-        assetIsDecommissioned={
-          this.state.asset.decommissioning_user !== undefined
-        }
-      />
-    );
+    if (this.state.asset && this.state.asset.model) {
+      if (this.state.asset.model.model_type === MountTypes.BLADE) {
+        return (
+            <BladePowerView
+                {...this.props}
+                asset={this.state.asset}
+                shouldUpdate={this.state.powerShouldUpdate}
+                updated={() => {
+                  this.setState({powerShouldUpdate: false});
+                }}
+                assetIsDecommissioned={
+                  this.state.asset.decommissioning_user !== undefined
+                }
+            />
+        );
+      } else {
+        return (
+            <PowerView
+                {...this.props}
+                asset={this.state.asset}
+                shouldUpdate={this.state.powerShouldUpdate}
+                updated={() => {
+                  this.setState({powerShouldUpdate: false});
+                }}
+                assetIsDecommissioned={
+                  this.state.asset.decommissioning_user !== undefined
+                }
+            />
+        );
+      }
+    } else {
+      return
+    }
   }
 
   private handleFormOpen = () => {
