@@ -270,8 +270,8 @@ export class AssetView extends React.PureComponent<
                 onConfirm={this.handleDecommission}
               >
                 <p>
-                  Are you sure you want to decommission this asset? This action
-                  cannot be undone.
+                  Are you sure you want to decommission this asset? If it's a
+                  chassis, its blades will also be decommissioned.
                 </p>
               </Alert>
               <AnchorButton
@@ -334,7 +334,11 @@ export class AssetView extends React.PureComponent<
             Please go to change plan detail view for more details
           </Callout>
         ) : null}
-        <PropertiesView data={this.state.asset} title="Asset Properties" />
+        <PropertiesView
+          redirectToAsset={this.redirectToAsset}
+          data={this.state.asset}
+          title="Asset Properties"
+        />
         {this.state.asset.model ? (
           <div>
             <AnchorButton
@@ -433,8 +437,10 @@ export class AssetView extends React.PureComponent<
             </div>
           ) : null}
         </div>
-
-        {Object.keys(this.state.asset).length !== 0 ? this.renderPower() : null}
+        {/*temporary logic to hide power info if the asset does not have a rack, might need to change this later*/}
+        {Object.keys(this.state.asset).length !== 0 && this.state.asset.rack
+          ? this.renderPower()
+          : null}
       </div>
     );
   }
@@ -453,6 +459,7 @@ export class AssetView extends React.PureComponent<
   };
 
   private renderPower() {
+    console.log("rendering power");
     return (
       <PowerView
         {...this.props}

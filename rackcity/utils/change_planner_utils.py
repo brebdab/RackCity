@@ -10,7 +10,6 @@ from rackcity.api.serializers import (
     RecursiveAssetSerializer,
     RecursiveAssetCPSerializer,
 )
-from rackcity.models.asset import get_assets_for_cp
 from rackcity.models import (
     Asset,
     AssetCP,
@@ -146,30 +145,43 @@ def get_change_plan(change_plan_id):
         return change_plan, None
 
 
-def get_filtered_decommissioned_assets_for_cp(change_plan, data):
+def get_racked_assets_for_cp(change_plan):
+    racked_assets = Asset.objects.filter(offline_storage_site__isnull=True)
+    racked_assets_cp = AssetCP.objects.filter(change_plan=change_plan, offline_storage_site__isnull=True)
+    for asset_cp in racked_assets_cp:
+        if asset_cp.related_asset and (asset_cp.related_asset in racked_assets):
+            racked_assets = racked_assets.filter(~Q(id=asset_cp.related_asset.id))
+    return racked_assets, racked_assets_cp
+
+
+def get_offline_storage_assets_for_cp(change_plan):
+    stored_assets = Asset.objects.filter(offline_storage_site__isnull=False)
+    stored_assets_cp = AssetCP.objects.filter(change_plan=change_plan, offline_storage_site__isnull=False)
+    for asset_cp in stored_assets_cp:
+        if asset_cp.related_asset and (asset_cp.related_asset in stored_assets):
+            stored_assets = stored_assets.filter(~Q(id=asset_cp.related_asset.id))
+    return stored_assets, stored_assets_cp
+
+
+def get_decommissioned_assets_for_cp(change_plan):
     decommissioned_assets = DecommissionedAsset.objects.all()
     decommissioned_assets_cp = AssetCP.objects.filter(
         change_plan=change_plan, is_decommissioned=True,
     )
-    decommissioned_assets, filter_failure_response = get_filtered_query(
-        decommissioned_assets, data,
-    )
-    if filter_failure_response:
-        return None, None, filter_failure_response
-    decommissioned_assets_cp, filter_failure_response = get_filtered_query(
-        decommissioned_assets_cp, data,
-    )
-    if filter_failure_response:
-        return None, None, filter_failure_response
-    return decommissioned_assets, decommissioned_assets_cp, None
+    return decommissioned_assets, decommissioned_assets_cp
 
 
-def get_filtered_assets_for_cp(change_plan, data):
-    assets, assets_cp = get_assets_for_cp(change_plan=change_plan)
-    filtered_assets, filter_failure_response = get_filtered_query(assets, data,)
+def get_filtered_assets_for_cp(change_plan, data, decommissioned, stored):
+    if decommissioned:
+        assets, assets_cp = get_decommissioned_assets_for_cp(change_plan)
+    elif stored:
+        assets, assets_cp = get_offline_storage_assets_for_cp(change_plan)
+    else:
+        assets, assets_cp = get_racked_assets_for_cp(change_plan)
+    filtered_assets, filter_failure_response = get_filtered_query(assets, data)
     if filter_failure_response:
         return None, None, filter_failure_response
-    filtered_assets_cp, filter_failure_response = get_filtered_query(assets_cp, data,)
+    filtered_assets_cp, filter_failure_response = get_filtered_query(assets_cp, data)
     if filter_failure_response:
         return None, None, filter_failure_response
     return filtered_assets, filtered_assets_cp, None
@@ -204,7 +216,7 @@ def get_page_of_serialized_assets(all_assets, query_params):
         return all_assets[start:end]
 
 
-def get_many_assets_response_for_cp(request, change_plan, decommissioned=False):
+def get_many_assets_response_for_cp(request, change_plan, decommissioned=False, stored=False):
     should_paginate = should_paginate_query(request.query_params)
     if should_paginate:
         page_failure_response = get_invalid_paginated_request_response(
@@ -213,18 +225,11 @@ def get_many_assets_response_for_cp(request, change_plan, decommissioned=False):
         if page_failure_response:
             return page_failure_response
 
-    if not decommissioned:
-        assets, assets_cp, filter_failure_response = get_filtered_assets_for_cp(
-            change_plan, request.data,
-        )
-        if filter_failure_response:
-            return filter_failure_response
-    else:
-        (
-            assets,
-            assets_cp,
-            filter_failure_response,
-        ) = get_filtered_decommissioned_assets_for_cp(change_plan, request.data,)
+    assets, assets_cp, filter_failure_response = get_filtered_assets_for_cp(
+        change_plan, request.data, decommissioned, stored,
+    )
+    if filter_failure_response:
+        return filter_failure_response
 
     asset_serializer = RecursiveAssetSerializer(assets, many=True,)
     asset_cp_serializer = RecursiveAssetCPSerializer(assets_cp, many=True,)
@@ -252,39 +257,7 @@ def get_many_assets_response_for_cp(request, change_plan, decommissioned=False):
     return JsonResponse({"assets": assets_data}, status=HTTPStatus.OK,)
 
 
-def get_page_count_response_for_decommissioned_cp(request, change_plan):
-    if (
-        not request.query_params.get("page_size")
-        or int(request.query_params.get("page_size")) <= 0
-    ):
-        return JsonResponse(
-            {
-                "failure_message": Status.ERROR.value + GenericFailure.PAGE_ERROR.value,
-                "errors": "Must specify positive integer page_size.",
-            },
-            status=HTTPStatus.BAD_REQUEST,
-        )
-    page_size = int(request.query_params.get("page_size"))
-    decommissioned_assets = DecommissionedAsset.objects.all()
-    decommissioned_assets_cp = AssetCP.objects.filter(
-        change_plan=change_plan, is_decommissioned=True,
-    )
-    decommissioned_assets, filter_failure_response = get_filtered_query(
-        decommissioned_assets, request.data,
-    )
-    if filter_failure_response:
-        return filter_failure_response
-    decommissioned_assets_cp, filter_failure_response = get_filtered_query(
-        decommissioned_assets_cp, request.data,
-    )
-    if filter_failure_response:
-        return filter_failure_response
-    count = decommissioned_assets.count() + decommissioned_assets_cp.count()
-    page_count = math.ceil(count / page_size)
-    return JsonResponse({"page_count": page_count})
-
-
-def get_page_count_response_for_cp(request, change_plan):
+def get_page_count_response_for_cp(request, change_plan, decommissioned=False, stored=False):
     if (
         not request.query_params.get("page_size")
         or int(request.query_params.get("page_size")) <= 0
@@ -298,7 +271,7 @@ def get_page_count_response_for_cp(request, change_plan):
         )
     page_size = int(request.query_params.get("page_size"))
     assets, assets_cp, filter_failure_response = get_filtered_assets_for_cp(
-        change_plan, request.data,
+        change_plan, request.data, decommissioned, stored,
     )
     if filter_failure_response:
         return filter_failure_response

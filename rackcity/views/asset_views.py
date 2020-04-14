@@ -89,7 +89,7 @@ from rest_framework.parsers import JSONParser
 @permission_classes([IsAuthenticated])
 def asset_many(request):
     """
-    List many assets. If page is not specified as a query parameter, all
+    List many assets in datacenters. If page is not specified as a query parameter, all
     assets are returned. If page is specified as a query parameter, page
     size must also be specified, and a page of assets will be returned.
     """
@@ -99,9 +99,42 @@ def asset_many(request):
     if failure_response:
         return failure_response
     if change_plan:
-        return get_many_assets_response_for_cp(request, change_plan)
+        return get_many_assets_response_for_cp(request, change_plan, stored=False)
     else:
-        return get_many_response(Asset, RecursiveAssetSerializer, "assets", request)
+        racked_assets = Asset.objects.filter(offline_storage_site__isnull=True)
+        return get_many_response(
+            Asset,
+            RecursiveAssetSerializer,
+            "assets",
+            request,
+            premade_object_query=racked_assets,
+        )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def offline_storage_asset_many(request):
+    """
+    List many assets in offline storage. If page is not specified as a query parameter, all
+    assets are returned. If page is specified as a query parameter, page
+    size must also be specified, and a page of assets will be returned.
+    """
+    (change_plan, failure_response) = get_change_plan(
+        request.query_params.get("change_plan")
+    )
+    if failure_response:
+        return failure_response
+    if change_plan:
+        return get_many_assets_response_for_cp(request, change_plan, stored=True)
+    else:
+        stored_assets = Asset.objects.filter(offline_storage_site__isnull=False)
+        return get_many_response(
+            Asset,
+            RecursiveAssetSerializer,
+            "assets",
+            request,
+            premade_object_query=stored_assets,
+        )
 
 
 @api_view(["GET"])
@@ -168,7 +201,6 @@ def asset_add(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
-
     (change_plan, failure_response) = get_change_plan(
         request.query_params.get("change_plan")
     )
@@ -191,10 +223,10 @@ def asset_add(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
-
     try:
         validate_user_asset_permission_to_add(request.user, serializer.validated_data)
     except UserAssetPermissionException as auth_error:
+
         return JsonResponse(
             {"failure_message": Status.AUTH_ERROR.value + str(auth_error)},
             status=HTTPStatus.UNAUTHORIZED,
@@ -204,7 +236,6 @@ def asset_add(request):
             {"failure_message": Status.CREATE_ERROR.value + str(error)},
             status=HTTPStatus.BAD_REQUEST,
         )
-
     if serializer.validated_data["model"].is_rackmount():
         if (
             "rack" not in serializer.validated_data
@@ -227,6 +258,7 @@ def asset_add(request):
                 rack_id, rack_position, height, change_plan=change_plan
             )
         except LocationException as error:
+
             return JsonResponse(
                 {"failure_message": Status.CREATE_ERROR.value + str(error)},
                 status=HTTPStatus.BAD_REQUEST,
@@ -256,7 +288,6 @@ def asset_add(request):
                 {"failure_message": Status.CREATE_ERROR.value + str(error)},
                 status=HTTPStatus.BAD_REQUEST,
             )
-
     try:
         asset = serializer.save()
     except Exception as error:
@@ -268,7 +299,6 @@ def asset_add(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
-
     warning_message = save_all_connection_data(
         data, asset, request.user, change_plan=change_plan
     )
@@ -362,7 +392,7 @@ def asset_modify(request):
         validate_user_asset_permission_to_modify_or_delete(request.user, existing_asset)
     except UserAssetPermissionException as auth_error:
         return JsonResponse(
-            {"failure_message": Status.AUTH_ERROR + str(auth_error)},
+            {"failure_message": Status.AUTH_ERROR.value + str(auth_error)},
             status=HTTPStatus.UNAUTHORIZED,
         )
 
@@ -458,9 +488,19 @@ def asset_delete(request):
         validate_user_asset_permission_to_modify_or_delete(request.user, existing_asset)
     except UserAssetPermissionException as auth_error:
         return JsonResponse(
-            {"failure_message": Status.AUTH_ERROR + str(auth_error)},
+            {"failure_message": Status.AUTH_ERROR.value + str(auth_error)},
             status=HTTPStatus.UNAUTHORIZED,
         )
+    if existing_asset.model.is_blade_chassis():
+        blades = Asset.objects.filter(chassis=existing_asset)
+        if len(blades)>0:
+            return JsonResponse(
+                {
+                    "failure_message": Status.DELETE_ERROR.value
+                                       + "Cannot delete a chassis with blades in it. "
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
     try:
         existing_asset.delete()
     except Exception as error:
@@ -820,7 +860,7 @@ def asset_bulk_approve(request):
         return JsonResponse({"warning_message": warning_message}, status=HTTPStatus.OK)
     else:
         return JsonResponse(
-            {"success_message": "Assets succesfully modified. "}, status=HTTPStatus.OK
+            {"success_message": "Assets successfully modified. "}, status=HTTPStatus.OK
         )
 
 
@@ -880,10 +920,38 @@ def asset_page_count(request):
     if failure_response:
         return failure_response
     if change_plan:
-        return get_page_count_response_for_cp(request, change_plan)
+        return get_page_count_response_for_cp(request, change_plan, stored=False)
     else:
+        racked_assets = Asset.objects.filter(offline_storage_site__isnull=True)
         return get_page_count_response(
-            Asset, request.query_params, data_for_filters=request.data,
+            Asset,
+            request.query_params,
+            data_for_filters=request.data,
+            premade_object_query=racked_assets,
+        )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def offline_storage_asset_page_count(request):
+    """
+    Return total number of pages according to page size, which must be
+    specified as query parameter.
+    """
+    (change_plan, failure_response) = get_change_plan(
+        request.query_params.get("change_plan")
+    )
+    if failure_response:
+        return failure_response
+    if change_plan:
+        return get_page_count_response_for_cp(request, change_plan, stored=True)
+    else:
+        stored_assets = Asset.objects.filter(offline_storage_site__isnull=False)
+        return get_page_count_response(
+            Asset,
+            request.query_params,
+            data_for_filters=request.data,
+            premade_object_query=stored_assets,
         )
 
 

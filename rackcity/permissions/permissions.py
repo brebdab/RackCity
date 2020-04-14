@@ -10,6 +10,7 @@ from rackcity.models import (
     RackCityPermission,
 )
 from rackcity.utils.exceptions import UserAssetPermissionException
+from rest_framework.permissions import BasePermission
 from typing import Tuple
 
 
@@ -35,6 +36,13 @@ class PermissionPath(Enum):
     POWER_WRITE = "rackcity." + PermissionCodename.POWER_WRITE.value
     AUDIT_READ = "rackcity." + PermissionCodename.AUDIT_READ.value
     USER_WRITE = "auth." + PermissionCodename.USER_WRITE.value
+
+
+class RegisterUserPermission(BasePermission):
+    message = "User write permission required"
+
+    def has_permission(self, request, view):
+        return request.user.has_perm(PermissionPath.USER_WRITE.value)
 
 
 def get_metadata_for_permission(
@@ -83,7 +91,7 @@ def user_has_asset_permission(user, site=None):
 
 def validate_user_asset_permission_to_add(user, validated_data):
     # TODO: make this check work for blades, which don't have a rack
-    if "rack" not in validated_data:
+    if "rack" not in validated_data or not validated_data["rack"]:
         return
     rack_id = validated_data["rack"].id
     try:

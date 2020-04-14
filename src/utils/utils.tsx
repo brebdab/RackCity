@@ -10,6 +10,7 @@ export enum ROUTES {
   LOGIN = "/login",
   RACKS = "/dashboard/racks",
   DATACENTERS = "/dashboard/datacenters",
+  OFFLINE_STORAGE_SITES = "/dashboard/offline-storage-sites",
   MODELS = "/dashboard/models",
   ASSETS = "/dashboard/assets",
   DASHBOARD = "/dashboard",
@@ -28,6 +29,7 @@ export enum ElementType {
   MODEL = "models",
   USER = "users",
   DATACENTER = "datacenters",
+  OFFLINE_STORAGE_SITE = "offline-storage-sites",
   CHANGEPLANS = "change-plans",
 }
 export enum PowerSide {
@@ -40,12 +42,13 @@ export interface ChangePlan extends ElementObject {
 }
 
 export interface AssetObject extends ParentAssetObject {
-  chassis: AssetObject;
+  chassis?: AssetObject;
   model: ModelObject;
-  rack: RackObject;
+  rack?: RackObject;
   network_graph: NetworkGraphData;
   blades: Array<AssetObject>;
   datacenter: DatacenterObject
+
 }
 export interface AssetCPObject extends AssetObject {
   change_plan: ChangePlan;
@@ -57,8 +60,8 @@ export interface AssetCPObject extends AssetObject {
   is_decommissioned: boolean;
 }
 interface ParentAssetObject extends ElementObject {
-  asset_number: string|null;
-  hostname: string|null;
+  asset_number: string | null;
+  hostname: string | null;
   rack_position: string;
   chassis_slot:string;
   mac_addresses: { [port: string]: string };
@@ -72,6 +75,7 @@ interface ParentAssetObject extends ElementObject {
   storage: string;
   display_color: string;
   memory_gb: string | null;
+
 }
 
 export interface RackRangeFields {
@@ -95,8 +99,10 @@ export const AssetFieldsTable: any = {
   model__vendor: "Model Vendor",
   model__model_number: "Model Number",
   rack: "Rack",
-  rack__datacenter__name: "Datacenter",
+  datacenter: "Datacenter",
   rack_position: "Rack Position",
+  chassis: "Chassis",
+  chassis_slot: "Chassis Slot",
   owner: "Owner",
   comment: "Comment",
   decommissioning_user: "Decommissioning User",
@@ -120,7 +126,7 @@ export const ModelFieldsTable: any = {
   memory_gb: "Memory (GB)",
   storage: "Storage",
   comment: "Comment",
-  model_type: "Mount Type"
+  model_type: "Mount Type",
 };
 
 export enum AssetFormLabels {
@@ -137,7 +143,6 @@ export enum AssetFormLabels {
   network_ports = "Network Ports",
   power_connections = "Power Connections",
 }
-
 
 export interface Link {
   to: number;

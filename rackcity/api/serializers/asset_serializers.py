@@ -96,6 +96,24 @@ class AssetSerializer(serializers.ModelSerializer):
         )
 
 
+class ChassisSerializer(serializers.ModelSerializer):
+    """
+    Serializers the information we want for a chassis that a blade is in (only used for serializing info to be sent)
+    """
+
+    rack = RackSerializer()
+
+    class Meta:
+        model = Asset
+        fields = (
+            "id",
+            "hostname",
+            "model",
+            "rack",
+            "rack_position",
+        )
+
+
 class RecursiveAssetSerializer(serializers.ModelSerializer):
     """
     Recursively serializes all fields on Asset model, where model and
@@ -107,7 +125,7 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
     rack_position = RCIntegerField(
         allow_null=True, max_value=2147483647, min_value=0, required=False
     )
-    chassis = AssetSerializer()
+    chassis = ChassisSerializer()
     chassis_slot = RCIntegerField(
         allow_null=True, max_value=2147483647, min_value=0, required=False
     )

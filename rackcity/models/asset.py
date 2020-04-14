@@ -260,6 +260,9 @@ class Asset(AbstractAsset):
                     power_port = PowerPort(asset=self, port_name=port_name,)
                     power_port.save()
 
+    def is_in_offline_storage(self):
+        return self.offline_storage_site is not None
+
 
 class AssetCP(AbstractAsset):
     related_asset = models.ForeignKey(
