@@ -69,6 +69,7 @@ from .site_views import (
     datacenter_page_count,
     offline_storage_site_all,
     offline_storage_site_page_count,
+    site_all,
     site_create,
     site_delete,
     site_modify,

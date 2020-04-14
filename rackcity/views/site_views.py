@@ -7,10 +7,19 @@ from rackcity.models import Asset, Rack, Site
 from rackcity.permissions.permissions import PermissionPath
 from rackcity.utils.errors_utils import Status, GenericFailure, parse_serializer_errors
 from rackcity.utils.log_utils import log_action, log_delete, ElementType, Action
-from rackcity.utils.query_utils import get_page_count_response
+from rackcity.utils.query_utils import get_page_count_response, get_many_response
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAuthenticated
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def site_all(request):
+    """
+    Return list of all sites (datacenters and offline storage sites).
+    """
+    return get_many_response(Site, SiteSerializer, "sites", request)
 
 
 @api_view(["POST"])
@@ -20,8 +29,9 @@ def datacenter_all(request):
     Return list of all datacenters.
     """
     datacenters = Site.get_datacenters()
-    serializer = SiteSerializer(datacenters, many=True)
-    return JsonResponse({"datacenters": serializer.data}, status=HTTPStatus.OK)
+    return get_many_response(
+        Site, SiteSerializer, "datacenters", request, premade_object_query=datacenters
+    )
 
 
 @api_view(["POST"])
@@ -31,9 +41,12 @@ def offline_storage_site_all(request):
     Return list of all offline storage sites.
     """
     offline_storage_sites = Site.get_offline_storage_sites()
-    serializer = SiteSerializer(offline_storage_sites, many=True)
-    return JsonResponse(
-        {"offline_storage_sites": serializer.data}, status=HTTPStatus.OK
+    return get_many_response(
+        Site,
+        SiteSerializer,
+        "offline_storage_sites",
+        request,
+        premade_object_query=offline_storage_sites,
     )
 
 

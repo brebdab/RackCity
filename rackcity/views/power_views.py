@@ -59,7 +59,7 @@ def pdu_power_status(request, id):
         return JsonResponse(
             {
                 "failure_message": Status.ERROR.value
-                + "Power is only network controllable for assets in datacenter 'RTP1'."
+                + "Power is not network controllable on this rack."
             },
             status=HTTPStatus.BAD_REQUEST,
         )
@@ -112,7 +112,7 @@ def pdu_power_on(request):
     except UserPowerPermissionException as error:
         return JsonResponse(
             {
-                "failure_message": Status.AUTH_ERROR + AuthFailure.POWER.value,
+                "failure_message": Status.AUTH_ERROR.value + AuthFailure.POWER.value,
                 "errors": str(error),
             },
             status=HTTPStatus.UNAUTHORIZED,
@@ -166,7 +166,7 @@ def pdu_power_off(request):
     except UserPowerPermissionException as error:
         return JsonResponse(
             {
-                "failure_message": Status.AUTH_ERROR + AuthFailure.POWER.value,
+                "failure_message": Status.AUTH_ERROR.value + AuthFailure.POWER.value,
                 "errors": str(error),
             },
             status=HTTPStatus.UNAUTHORIZED,
@@ -217,7 +217,7 @@ def pdu_power_cycle(request):
     except UserPowerPermissionException as error:
         return JsonResponse(
             {
-                "failure_message": Status.AUTH_ERROR + AuthFailure.POWER.value,
+                "failure_message": Status.AUTH_ERROR.value + AuthFailure.POWER.value,
                 "errors": str(error),
             },
             status=HTTPStatus.UNAUTHORIZED,
@@ -322,7 +322,7 @@ def remove_unavailable_pdu_ports(
                     raise Exception(
                         "Port "
                         + asset_power[port_num]["port_number"]
-                        + " does not exist on PDU"
+                        + " does not exist on PDU. "
                     )
             else:
                 try:
@@ -331,7 +331,7 @@ def remove_unavailable_pdu_ports(
                     raise Exception(
                         "Port "
                         + asset_power[port_num]["port_number"]
-                        + " does not exist on PDU"
+                        + " does not exist on PDU. "
                     )
 
 
@@ -383,7 +383,7 @@ def chassis_power_status(request):
     except UserPowerPermissionException as error:
         return JsonResponse(
             {
-                "failure_message": Status.AUTH_ERROR + AuthFailure.POWER.value,
+                "failure_message": Status.AUTH_ERROR.value + AuthFailure.POWER.value,
                 "errors": str(error),
             },
             status=HTTPStatus.UNAUTHORIZED,
@@ -430,7 +430,7 @@ def chassis_power_on(request):
     except UserPowerPermissionException as error:
         return JsonResponse(
             {
-                "failure_message": Status.AUTH_ERROR + AuthFailure.POWER.value,
+                "failure_message": Status.AUTH_ERROR.value + AuthFailure.POWER.value,
                 "errors": str(error),
             },
             status=HTTPStatus.UNAUTHORIZED,
@@ -465,7 +465,7 @@ def chassis_power_off(request):
     except UserPowerPermissionException as error:
         return JsonResponse(
             {
-                "failure_message": Status.AUTH_ERROR + AuthFailure.POWER.value,
+                "failure_message": Status.AUTH_ERROR.value + AuthFailure.POWER.value,
                 "errors": str(error),
             },
             status=HTTPStatus.UNAUTHORIZED,
@@ -500,7 +500,7 @@ def chassis_power_cycle(request):
     except UserPowerPermissionException as error:
         return JsonResponse(
             {
-                "failure_message": Status.AUTH_ERROR + AuthFailure.POWER.value,
+                "failure_message": Status.AUTH_ERROR.value + AuthFailure.POWER.value,
                 "errors": str(error),
             },
             status=HTTPStatus.UNAUTHORIZED,
@@ -562,14 +562,14 @@ def get_chassis_power_request_parameters(request):
     data = JSONParser().parse(request)
     if ("chassis_id" not in data) or ("blade_slot" not in data):
         raise PowerManagementException(
-            "Must specify 'chassis_id' and 'blade_slot' on chassis power request."
+            "Must specify 'chassis_id' and 'blade_slot' on chassis power request. "
         )
     try:
         blade_slot = int(data["blade_slot"])
         chassis_id = int(data["chassis_id"])
     except ValueError:
         raise PowerManagementException(
-            "Parameters 'chassis_id' and 'blade_slot' must be of type int."
+            "Parameters 'chassis_id' and 'blade_slot' must be of type int. "
         )
     try:
         chassis = Asset.objects.get(id=chassis_id)
@@ -581,14 +581,15 @@ def get_chassis_power_request_parameters(request):
             + request.user.username
             + " does not have power permission and does not own asset with id="
             + str(data["id"])
+            + ". "
         )
     if not is_asset_power_controllable_by_bcman(chassis):
         raise PowerManagementException(
-            "Power is only network controllable for blade chassis of vendor 'BMI' with hostname not in storage."
+            "Power is only network controllable for blade chassis of vendor 'BMI' with hostname not in storage. "
         )
     if (blade_slot < 1) or (blade_slot > 14):
         raise PowerManagementException(
-            "Blade slot " + str(blade_slot) + " does not exist on chassis."
+            "Blade slot " + str(blade_slot) + " does not exist on chassis. "
         )
     return chassis, blade_slot
 
@@ -596,21 +597,24 @@ def get_chassis_power_request_parameters(request):
 def get_pdu_power_request_parameters(request):
     data = JSONParser().parse(request)
     if "id" not in data:
-        raise PowerManagementException("Must specify 'id' on pdu power request.")
+        raise PowerManagementException("Must specify 'id' on pdu power request. ")
     try:
         asset = Asset.objects.get(id=data["id"])
     except ObjectDoesNotExist:
-        raise PowerManagementException("Asset" + GenericFailure.DOES_NOT_EXIST.value)
+        raise PowerManagementException(
+            "Asset" + GenericFailure.DOES_NOT_EXIST.value + ". "
+        )
     if not user_has_power_permission(request.user, asset=asset):
         raise UserPowerPermissionException(
             "User "
             + request.user.username
             + " does not have power permission and does not own asset with id="
             + str(data["id"])
+            + ". "
         )
     if not is_asset_power_controllable_by_pdu(asset):
         raise PowerManagementException(
-            "Power is only network controllable for assets in datacenter 'RTP1'."
+            "Power is not network controllable on this rack. "
         )
     return asset
 

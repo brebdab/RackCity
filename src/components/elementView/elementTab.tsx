@@ -28,15 +28,15 @@ import {
 import { updateObject } from "../../store/utility";
 import { API_ROOT } from "../../utils/api-config";
 import {
+  ChangePlan,
   CreateUserObject,
   DatacenterObject,
   ElementObjectType,
   ElementType,
   ModelObject,
+  ROUTES,
   ShallowAssetObject,
   SortFilterBody,
-  ChangePlan,
-  ROUTES,
 } from "../../utils/utils";
 import { ALL_DATACENTERS } from "./elementTabContainer";
 import ElementTable from "./elementTable";
@@ -179,8 +179,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     }
     let url = this.state.isDecommissioned
       ? "api/assets/pages-decommissioned"
-      : path === "datacenters"
-      ? "api/sites/datacenters/pages"
+      : path === "datacenters" || path === "offline-storage-sites"
+      ? "api/sites/" + path + "/pages"
       : "api/" + path + "/pages";
     return axios
       .post(API_ROOT + url, { filters: filtersCopy }, config)
@@ -231,8 +231,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     }
     let url = this.state.isDecommissioned
       ? "api/assets/get-many-decommissioned"
-      : path === "datacenters"
-      ? "api/sites/datacenters/get-many"
+      : path === "datacenters" || path === "offline-storage-sites"
+      ? "api/sites/" + path + "/get-many"
       : "api/" + path + "/get-many";
     return axios.post(API_ROOT + url, bodyCopy, config).then((res) => {
       const items = res.data[path];
@@ -426,6 +426,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
           <div className="element-tab-buttons">
             {this.props.element !== ElementType.USER &&
             this.props.element !== ElementType.DATACENTER &&
+            this.props.element !== ElementType.OFFLINE_STORAGE_SITE &&
             this.props.element !== ElementType.CHANGEPLANS ? (
               <AnchorButton
                 className="add"
@@ -621,8 +622,6 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               this.setState({ filters: data });
             }}
             shouldUpdateData={this.state.updateTable}
-            disableSorting={this.props.element === ElementType.DATACENTER}
-            disableFiltering={this.props.element === ElementType.DATACENTER}
             currDatacenter={this.props.currDatacenter}
             isDecommissioned={this.state.isDecommissioned}
           />
