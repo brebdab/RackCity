@@ -173,7 +173,17 @@ class ElementTabContainer extends React.Component<
           }
         />
 
-        <Tab className="tab-header do-not-print" id="sites" title="Sites" />
+        <Tab
+          className="tab-header do-not-print"
+          id="sites"
+          title="Sites"
+          disabled={
+            !(
+              this.props.permissionState.admin ||
+              this.props.permissionState.asset_management
+            )
+          }
+        />
 
         <Tab
           className="tab-sub do-not-print"
