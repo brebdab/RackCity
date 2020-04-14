@@ -414,21 +414,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             </Callout>
           ) : null}
         </div>
-        {this.props.assetType === AssetType.DECOMMISSIONED ? (
-          <Callout icon="warning-sign">
-            <FormGroup label="Showing decommissioned assets" inline={true}>
-              <Button
-                onClick={() => {
-                  /* handle data based on state */
-                  this.setState({ isDecommissioned: false });
-                  this.handleDataUpdate(true);
-                }}
-              >
-                View Live Assets
-              </Button>
-            </FormGroup>
-          </Callout>
-        ) : (
+        {this.props.assetType === AssetType.DECOMMISSIONED ? null : (
           <div className="element-tab-buttons">
             {this.props.element !== ElementType.USER &&
             this.props.element !== ElementType.DATACENTER &&
@@ -581,17 +567,6 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             {this.props.element === ElementType.ASSET
               ? this.renderBarcodeButton()
               : null}
-            {this.props.element === ElementType.ASSET ? (
-              <Button
-                onClick={() => {
-                  this.setState({ isDecommissioned: true });
-                  this.handleDataUpdate(true);
-                }}
-                text="View Decommissioned"
-                minimal
-                icon="archive"
-              ></Button>
-            ) : null}
             <FormPopup
               {...this.props}
               type={FormTypes.CREATE}
