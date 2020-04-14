@@ -18,11 +18,11 @@ from rackcity.utils.errors_utils import (
     Status,
     GenericFailure,
     BulkFailure,
-    AuthFailure,
 )
 from rackcity.utils.exceptions import (
     MacAddressException,
     NetworkConnectionException,
+    UserAssetPermissionException,
 )
 from rackcity.utils.log_utils import (
     log_bulk_upload,
@@ -34,7 +34,7 @@ from rackcity.utils.query_utils import (
     get_filter_arguments,
 )
 from rackcity.utils.rackcity_utils import records_are_identical
-from rackcity.permissions.permissions import user_has_asset_permission
+from rackcity.permissions.permissions import validate_user_permission_on_existing_asset
 import re
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
@@ -111,16 +111,11 @@ def network_bulk_upload(request):
             return JsonResponse(
                 {"failure_message": failure_message}, status=HTTPStatus.BAD_REQUEST
             )
-        if not user_has_asset_permission(request.user, source_asset.rack.datacenter):
+        try:
+            validate_user_permission_on_existing_asset(request.user, source_asset)
+        except UserAssetPermissionException as auth_error:
             return JsonResponse(
-                {
-                    "failure_message": Status.AUTH_ERROR.value
-                    + AuthFailure.ASSET.value,
-                    "errors": "User "
-                    + request.user.username
-                    + " does not have asset permission in datacenter id="
-                    + str(source_asset.rack.datacenter.id),
-                },
+                {"failure_message": Status.AUTH_ERROR.value + str(auth_error)},
                 status=HTTPStatus.UNAUTHORIZED,
             )
         try:
