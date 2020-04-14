@@ -217,6 +217,7 @@ class Asset(AbstractAsset):
 
     def save(self, *args, **kwargs):
         try:
+            self.full_clean()
             validate_hostname(self.hostname)
             validate_owner(self.owner)
             validate_location_type(
@@ -358,6 +359,7 @@ class AssetCP(AbstractAsset):
 
     def save(self, *args, **kwargs):
         try:
+            self.full_clean()
             if not self.is_decommissioned:
                 validate_hostname(self.hostname)
                 validate_hostname_uniqueness(
