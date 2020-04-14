@@ -17,21 +17,22 @@ import FormPopup from "../../../../forms/formPopup";
 import { FormTypes } from "../../../../forms/formUtils";
 import { API_ROOT } from "../../../../utils/api-config";
 import {
+  AssetCPObject,
   AssetObject,
+  ChangePlan,
+  DatacenterObject,
   ElementType,
+  getChangePlanRowStyle,
   getHeaders,
+  isAssetCPObject,
   NetworkConnection,
   Node,
-  DatacenterObject,
   ROUTES,
-  ChangePlan,
-  AssetCPObject,
-  getChangePlanRowStyle,
-  isAssetCPObject,
+  TableType,
 } from "../../../../utils/utils";
 import {
-  deleteAsset,
   decommissionAsset,
+  deleteAsset,
   modifyAsset,
 } from "../../elementUtils";
 import PropertiesView from "../propertiesView";
@@ -43,11 +44,14 @@ import { ALL_DATACENTERS } from "../../elementTabContainer";
 import { isNullOrUndefined } from "util";
 import { PermissionState } from "../../../../utils/permissionUtils";
 import { IconNames } from "@blueprintjs/icons";
+import * as actions from "../../../../store/actions/state";
+
 export interface AssetViewProps {
   token: string;
   isAdmin: boolean;
   changePlan: ChangePlan;
   permissionState: PermissionState;
+  markTablesStale(staleTables: TableType[]): void;
 }
 
 interface AssetViewState {
@@ -519,8 +523,17 @@ export class AssetView extends React.PureComponent<
         let params: any;
         params = this.props.match.params;
         this.updateAssetData(params.rid);
+        console.log("about to set state")
+        this.props.markTablesStale([
+          TableType.RACKED_ASSETS,
+          // TableType.STORED_ASSETS, TODO: set all of these
+          // TableType.DECOMMISSIONED_ASSETS,
+        ]);
+        console.log("just set state")
       })
       .catch((err) => {
+        console.log("there was an error: ")
+        console.log(err)
         this.addToast({
           message: err.response.data.failure_message,
           intent: Intent.DANGER,
@@ -538,4 +551,11 @@ const mapStatetoProps = (state: any) => {
   };
 };
 
-export default withRouter(connect(mapStatetoProps)(AssetView));
+const mapDispatchToProps = (dispatch: any) => {
+  return {
+    markTablesStale: (staleTables: TableType[]) =>
+      dispatch(actions.markTablesStale(staleTables)),
+  };
+};
+
+export default withRouter(connect(mapStatetoProps, mapDispatchToProps)(AssetView));

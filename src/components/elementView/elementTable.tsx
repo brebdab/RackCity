@@ -1,6 +1,8 @@
 import {
   Alert,
   AnchorButton,
+  Callout,
+  Checkbox,
   Classes,
   Dialog,
   HTMLSelect,
@@ -8,10 +10,8 @@ import {
   Intent,
   IToastProps,
   Position,
-  Toaster,
   Spinner,
-  Callout,
-  Checkbox,
+  Toaster,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { IconNames } from "@blueprintjs/icons";
@@ -23,34 +23,37 @@ import FormPopup from "../../forms/formPopup";
 import { FormTypes } from "../../forms/formUtils";
 import { updateObject } from "../../store/utility";
 import {
+  AssetFieldsTable,
   AssetObject,
+  ChangePlan,
   DatacenterObject,
   ElementObjectType,
   ElementType,
+  getChangePlanRowStyle,
   getHeaders,
+  isAssetCPObject,
   isAssetObject,
+  isChangePlanObject,
   isDatacenterObject,
   isModelObject,
   isObject,
   isRackObject,
   isRackRangeFields,
   isUserObject,
-  RackRangeFields,
-  SortFilterBody,
-  UserInfoObject,
-  AssetFieldsTable,
   ModelFieldsTable,
+  RackRangeFields,
   ROUTES,
-  isChangePlanObject,
-  ChangePlan,
-  getChangePlanRowStyle,
-  isAssetCPObject,
+  SortFilterBody,
+  TableType,
+  UserInfoObject,
 } from "../../utils/utils";
 import * as actions from "../../store/actions/state";
 import DragDropList, { DragDropListTypes } from "./dragDropList";
 import {
-  deleteAsset,
+  DatetimeFilter,
   decommissionAsset,
+  deleteAsset,
+  deleteChangePlan,
   deleteDatacenter,
   deleteModel,
   deleteUser,
@@ -59,18 +62,16 @@ import {
   IFilter,
   ITableSort,
   modifyAsset,
+  modifyChangePlan,
   modifyDatacenter,
   modifyModel,
   NumericFilter,
-  DatetimeFilter,
   PagingTypes,
+  renderDatetimeFilterItem,
   renderNumericFilterItem,
   renderRackRangeFilterItem,
   renderTextFilterItem,
-  renderDatetimeFilterItem,
   TextFilter,
-  modifyChangePlan,
-  deleteChangePlan,
 } from "./elementUtils";
 import "./elementView.scss";
 import FilterSelect from "./filterSelect";
@@ -78,6 +79,7 @@ import { PowerView } from "./powerView/powerView";
 import "./powerView/powerView.scss";
 import { isNullOrUndefined } from "util";
 import { PermissionState } from "../../utils/permissionUtils";
+import {markTableFresh} from "../../store/actions/state";
 
 interface ElementTableState {
   items: Array<ElementObjectType>;
@@ -132,6 +134,11 @@ interface ElementTableProps {
   updateDatacenters?(): void;
   updateChangePlans(status: boolean): void;
   changePlan: ChangePlan;
+  markTableFresh(freshTable: TableType): void;
+  rackedAssetDataIsStale: boolean;
+  storedAssetDataIsStale: boolean;
+  decommissionedAssetDataIsStale: boolean;
+  modelDataIsStale: boolean;
 }
 
 class ElementTable extends React.Component<
@@ -518,7 +525,10 @@ class ElementTable extends React.Component<
   };
 
   componentDidUpdate() {
-    if (this.props.shouldUpdateData && !this.props.data) {
+    let dataIsStale =
+      this.props.rackedAssetDataIsStale &&
+      this.props.type === ElementType.ASSET; // && is racked
+    if (dataIsStale || (this.props.shouldUpdateData && !this.props.data)) {
       this.updateTableData();
     }
     if (this.props.token && !this.validRequestMadeWithToken) {
@@ -579,6 +589,7 @@ class ElementTable extends React.Component<
           });
         });
     }
+    this.props.markTableFresh(TableType.RACKED_ASSETS); // TODO: MAKE THIS DYNAMIC
   };
 
   setFieldNamesFromData = (items: Array<ElementObjectType>) => {
@@ -1420,14 +1431,22 @@ const mapStateToProps = (state: any) => {
     isAdmin: state.admin,
     changePlan: state.changePlan,
     permissionState: state.permissionState,
+    rackedAssetDataIsStale: state.rackedAssetDataIsStale,
+    storedAssetDataIsStale: state.storedAssetDataIsStale,
+    decommissionedAssetDataIsStale: state.decommissionedAssetDataIsStale,
+    modelDataIsStale: state.modelDataIsStale,
   };
 };
+
 const mapDispatchToProps = (dispatch: any) => {
   return {
     updateChangePlans: (status: boolean) =>
       dispatch(actions.updateChangePlans(status)),
+    markTableFresh: (freshTable: TableType) =>
+      dispatch(actions.markTableFresh(freshTable)),
   };
 };
+
 export default connect(
   mapStateToProps,
   mapDispatchToProps
