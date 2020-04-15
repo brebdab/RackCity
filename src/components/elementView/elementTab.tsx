@@ -383,7 +383,9 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
           ref={this.refHandlers.toaster}
         />
         <div>
-          {this.props.datacenters && this.props.onDatacenterSelect ? (
+          {this.props.datacenters &&
+          this.props.onDatacenterSelect &&
+          this.props.assetType === AssetType.RACKED ? (
             <Callout>
               <FormGroup label="Datacenter" inline={true}>
                 <DatacenterSelect
