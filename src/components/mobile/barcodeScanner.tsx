@@ -7,6 +7,9 @@ import Webcam from "react-webcam";
 
 interface BarcodeScannerState {
   result: string;
+  image: any;
+  cameraHeight: number;
+  cameraWidth: number;
 }
 interface BarcodeScannerProps {
   token: string;
@@ -19,6 +22,9 @@ export class BarcodeScanner extends React.PureComponent<
 > {
   public state = {
     result: "",
+    image: undefined,
+    cameraHeight: 0,
+    cameraWidth: 0,
   };
 
   handleScan(data: string) {
@@ -29,42 +35,48 @@ export class BarcodeScanner extends React.PureComponent<
   handleError(err: any) {
     console.error(err);
   }
+  constraints = {
+    height: 720,
+    width: 1280,
+    facingMode: { exact: "environment" },
+  };
+  WebcamCapture = () => {
+    let webcamRef: any;
+    webcamRef = React.useRef(null);
+    const capture = React.useCallback(() => {
+      const imageSrc = webcamRef.current.getScreenshot();
+      this.setState({
+        image: imageSrc,
+      });
+    }, [webcamRef]);
+    return (
+      <div>
+        <Webcam
+          audio={false}
+          height={this.state.cameraHeight * 0.8}
+          screenshotFormat={"image/jpeg"}
+          width={this.state.cameraWidth}
+          videoConstraints={this.constraints}
+          ref={webcamRef}
+        />
+        <button onClick={capture}>Capture photo</button>
+      </div>
+    );
+  };
 
   render() {
-    const constraints = {
-      height: 720,
-      width: 1280,
-      facingMode: "user",
-      //   facingMode: { exact: "environment" }
-    };
-
-    const WebcamCapture = () => {
-      const webcamRef = React.useRef(null);
-      //   const webcamRef = React.createRef<HTMLVideoElement>();
-      const capture = React.useCallback(() => {
-        // alert(webcamRef);
-        alert(JSON.stringify(webcamRef));
-      }, [webcamRef]);
-      return (
-        <>
-          <Webcam
-            audio={false}
-            height={720}
-            screenshotFormat={"image/jpeg"}
-            width={1280}
-            videoConstraints={constraints}
-            mirrored={true}
-          />
-          <button onClick={capture}>Capture photo</button>
-        </>
-      );
-    };
+    const height = window.innerHeight;
+    const width = document.body.offsetWidth;
+    if (this.state.cameraHeight === 0 && this.state.cameraWidth === 0) {
+      this.setState({
+        cameraWidth: width,
+        cameraHeight: height,
+      });
+    }
 
     return (
       <div className={Classes.DARK}>
-        <p>Scanner</p>
-        {/* <BarcodeReader onError={this.handleError} onScan={this.handleScan} /> */}
-        <WebcamCapture />
+        <this.WebcamCapture />
       </div>
     );
   }
