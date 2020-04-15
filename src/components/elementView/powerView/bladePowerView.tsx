@@ -256,9 +256,9 @@ export class BladePowerView extends React.PureComponent<
           this.props.asset.chassis.model &&
           this.props.asset.chassis.model.vendor &&
           this.isBladePowerNetworkControlled() ? (
-            this.renderNoPowerCallout()
-          ) : (
             this.renderPowerTable()
+          ) : (
+            this.renderNoPowerCallout()
           )
         ) : (
           <Spinner />
