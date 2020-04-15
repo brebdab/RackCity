@@ -66,7 +66,11 @@ def get_filter_arguments(data):
                         )
                     elif filter_dict["match_type"] == "contains":
                         filter_args.append(
-                            {"{0}__icontains".format(filter_field): filter_dict["value"]}
+                            {
+                                "{0}__icontains".format(filter_field): filter_dict[
+                                    "value"
+                                ]
+                            }
                         )
 
             elif filter_type == "numeric":
@@ -118,12 +122,22 @@ def get_filter_arguments(data):
                         "Invalid rack_range filter: " + str(range_serializer.errors)
                     )
                 filter_args.append(
-                    {"rack__rack_num__range": range_serializer.get_number_range()}
+                    [
+                        {"rack__rack_num__range": range_serializer.get_number_range()},
+                        {
+                            "chassis__rack__rack_num__range": range_serializer.get_number_range()
+                        },
+                    ]
                 )
                 filter_args.append(
-                    {
-                        "rack__row_letter__range": range_serializer.get_row_range()  # noqa inclusive on both letter, number
-                    }
+                    [
+                        {
+                            "rack__row_letter__range": range_serializer.get_row_range()  # noqa inclusive on both letter, number
+                        },
+                        {
+                            "chassis__rack__row_letter__range": range_serializer.get_row_range()
+                        },
+                    ]
                 )
 
             elif filter_type == "datetime":
