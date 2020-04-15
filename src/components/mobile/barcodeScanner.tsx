@@ -24,7 +24,7 @@ export class BarcodeScanner extends React.PureComponent<
     result: "",
     image: undefined,
     cameraHeight: 0,
-    cameraWidth: 0
+    cameraWidth: 0,
   };
 
   handleScan(data: string) {
@@ -38,33 +38,31 @@ export class BarcodeScanner extends React.PureComponent<
   constraints = {
     height: 720,
     width: 1280,
-      facingMode: { exact: "environment" },
-    };
+    facingMode: { exact: "environment" },
+  };
   WebcamCapture = () => {
-      let webcamRef: any;
-      webcamRef = React.useRef(null);
-      const capture = React.useCallback(() => {
-        const imageSrc = webcamRef.current.getScreenshot();
-        console.log(webcamRef);
-        console.log(imageSrc)
-        this.setState({
-          image: imageSrc,
-        });
-      }, [webcamRef]);
-      return (
-        <div>
-          <Webcam
-            audio={false}
-            height={this.state.cameraHeight*0.8}
-            screenshotFormat={"image/jpeg"}
-            width={this.state.cameraWidth}
-            videoConstraints={this.constraints}
-            ref={webcamRef}
-          />
-          <button onClick={capture}>Capture photo</button>
-        </div>
-      );
-    };
+    let webcamRef: any;
+    webcamRef = React.useRef(null);
+    const capture = React.useCallback(() => {
+      const imageSrc = webcamRef.current.getScreenshot();
+      this.setState({
+        image: imageSrc,
+      });
+    }, [webcamRef]);
+    return (
+      <div>
+        <Webcam
+          audio={false}
+          height={this.state.cameraHeight * 0.8}
+          screenshotFormat={"image/jpeg"}
+          width={this.state.cameraWidth}
+          videoConstraints={this.constraints}
+          ref={webcamRef}
+        />
+        <button onClick={capture}>Capture photo</button>
+      </div>
+    );
+  };
 
   render() {
     const height = window.innerHeight;
@@ -72,8 +70,8 @@ export class BarcodeScanner extends React.PureComponent<
     if (this.state.cameraHeight === 0 && this.state.cameraWidth === 0) {
       this.setState({
         cameraWidth: width,
-        cameraHeight: height
-      })
+        cameraHeight: height,
+      });
     }
 
     return (

@@ -1002,6 +1002,7 @@ def asset_number(request):
     """
     return JsonResponse({"asset_number": get_next_available_asset_number()})
 
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def get_asset_from_barcode(request):
@@ -1013,4 +1014,6 @@ def get_asset_from_barcode(request):
     if "img_string" in data:
         return JsonResponse({"img_string": data.img_string}, status=HTTPStatus.OK)
     else:
-        return JsonResponse({"failure_message": "failed"}, status=HTTPStatus.BAD_REQUEST)
+        return JsonResponse(
+            {"failure_message": "failed"}, status=HTTPStatus.BAD_REQUEST
+        )
