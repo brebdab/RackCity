@@ -1,48 +1,38 @@
-import {
-  Alert,
-  AnchorButton,
-  Callout,
-  Classes,
-  Intent,
-  IToastProps,
-  Position,
-  Toaster,
-} from "@blueprintjs/core";
+import {Alert, AnchorButton, Callout, Classes, Intent, IToastProps, Position, Toaster,} from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
-import { connect } from "react-redux";
-import { RouteComponentProps, withRouter } from "react-router";
+import {connect} from "react-redux";
+import {RouteComponentProps, withRouter} from "react-router";
 import FormPopup from "../../../../forms/formPopup";
-import { FormTypes } from "../../../../forms/formUtils";
-import { API_ROOT } from "../../../../utils/api-config";
+import {FormTypes} from "../../../../forms/formUtils";
+import {API_ROOT} from "../../../../utils/api-config";
 import {
+  AssetCPObject,
   AssetObject,
+  ChangePlan,
+  DatacenterObject,
   ElementType,
+  getChangePlanRowStyle,
   getHeaders,
+  isAssetCPObject,
+  MountTypes,
   NetworkConnection,
   Node,
-  DatacenterObject,
   ROUTES,
-  ChangePlan,
-  AssetCPObject,
-  getChangePlanRowStyle,
-  isAssetCPObject,
 } from "../../../../utils/utils";
-import {
-  deleteAsset,
-  decommissionAsset,
-  modifyAsset,
-} from "../../elementUtils";
+import {decommissionAsset, deleteAsset, modifyAsset,} from "../../elementUtils";
 import PropertiesView from "../propertiesView";
 import DecommissionedPropertiesView from "../decommissionedPropertiesView";
 import "./assetView.scss";
 import NetworkGraph from "./graph";
 import PowerView from "../../powerView/powerView";
-import { ALL_DATACENTERS } from "../../elementTabContainer";
-import { isNullOrUndefined } from "util";
-import { PermissionState } from "../../../../utils/permissionUtils";
-import { IconNames } from "@blueprintjs/icons";
+import {ALL_DATACENTERS} from "../../elementTabContainer";
+import {isNullOrUndefined} from "util";
+import {PermissionState} from "../../../../utils/permissionUtils";
+import {IconNames} from "@blueprintjs/icons";
+import ChassisView from "./chassisView";
+
 export interface AssetViewProps {
   token: string;
   isAdmin: boolean;
@@ -362,6 +352,35 @@ export class AssetView extends React.PureComponent<
             />
           </div>
         ) : null}
+
+        {this.state.asset.model && this.state.asset.model.model_type !==  MountTypes.RACKMOUNT ?
+            <div>
+                               {this.state.asset.model.model_type === MountTypes.BLADE && this.state.asset.chassis ?
+                               <AnchorButton
+              disabled={
+                !isNullOrUndefined(this.state.asset.decommissioning_user)
+              }
+              onClick={() =>
+                this.props.history.push(
+                  ROUTES.ASSETS + "/" + this.state.asset.chassis!.id
+                )
+              }
+              className="model-detail"
+              minimal
+              icon={IconNames.DOCUMENT_OPEN}
+              text="Go to chassis detail page"
+              />:null}
+                 <div className="propsview">
+          <h3>Chassis Diagram</h3>
+
+
+                   {this.state.asset.model.model_type === MountTypes.BLADE_CHASSIS ?
+                   <ChassisView chassis={this.state.asset} redirectToAsset={this.redirectToAsset} />:
+                       this.state.asset.chassis?
+                        <ChassisView chassis={this.state.asset.chassis} redirectToAsset={this.redirectToAsset} />:null}
+                 </div>
+            </div>
+        :null}
         <div className="propsview">
           <h3>Network Connections</h3>
 

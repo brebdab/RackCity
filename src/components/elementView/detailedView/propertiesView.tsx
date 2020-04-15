@@ -16,7 +16,7 @@ import {
 import "./propertiesView.scss";
 import { connect } from "react-redux";
 
-export interface AlertState {
+interface PropertiesViewState {
   isDeleteOpen: boolean;
   fields: Array<string>;
 }
@@ -31,32 +31,28 @@ interface PropertiesViewProps {
 
 class PropertiesView extends React.PureComponent<
   RouteComponentProps & PropertiesViewProps,
-  AlertState
+  PropertiesViewState
 > {
   setFieldNamesFromData = () => {
     let fields: Array<string> = [];
     Object.keys(this.props.data).forEach((col: string) => {
       if (
-        col !== "id" &&
-        col !== "power_connections" &&
-        col !== "mac_addresses" &&
-        col !== "network_connections" &&
-        col !== "network_graph" &&
-        col !== "decommissioned_id" &&
-        col !== "decommissioning_user" &&
-        col !== "time_decommissioned"
+ 
+        (isAssetObject(this.props.data) && AssetFieldsTable[col]) ||
+        (isModelObject(this.props.data) && ModelFieldsTable[col])
       ) {
         fields.push(col);
       }
     });
     return fields;
   };
-  public state: AlertState = {
+  public state: PropertiesViewState = {
     isDeleteOpen: false,
     fields: this.setFieldNamesFromData(),
   };
 
   renderData(fields: Array<any>, data: any) {
+    console.log(fields);
     return fields.map((item: string) => {
       var dat;
       if (item === "display_color") {
@@ -127,7 +123,7 @@ class PropertiesView extends React.PureComponent<
       } else if (item === "comment") {
         dat = <p className="comment">{data[item]}</p>;
       } else if (isDatacenterObject(data[item])) {
-        dat = <p>data[item].name</p>;
+        dat = <p>{data[item].name}</p>;
       } else if (!isObject(data[item])) {
         //TO DO: decide how to render dicts
         dat = <p>{data[item]}</p>;

@@ -46,3 +46,40 @@
 .network-connections {
   display: flex;
 }
+.chassis-view table{
+margin:auto;
+
+
+}
+.slot{
+ height:200pt;
+
+  max-width:30pt;
+  min-width:30pt;
+  border: 1px solid #BFCCD6 !important;
+  overflow: auto;
+    background-color:#10161A
+
+
+
+}
+.slot-number{
+  border: 1px solid #BFCCD6 !important;
+  text-align:center !important;
+    background-color:#10161A!important
+
+}
+
+.vertical{
+  //transform: rotate(-180deg);
+  writing-mode: vertical-lr;
+  //width:fit-content;
+  padding:5pt;
+  height: 30%;
+  text-align:center;
+
+
+}
+.bp3-tooltip{
+    white-space: pre-line;
+}
