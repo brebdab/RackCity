@@ -124,28 +124,34 @@ export class Navigation extends React.Component<
           ) : null}
           <Navbar className={Classes.DARK + " nav-bar"}>
             <NavbarGroup>
-              <NavbarHeading
-                onClick={() => this.props.history.push(ROUTES.DASHBOARD)}
-              >
+
+
                 <AnchorButton
-                  onClick={() => this.props.history.push(ROUTES.DASHBOARD)}
-                  className="nav-bar-button"
-                  icon="home"
+                  className="nav-bar-non-button nav-bar-button"
                   text="HypoSoft"
                   minimal
                 />
-              </NavbarHeading>
+
               <NavbarDivider />
               {this.props.isAuthenticated ? (
                 <div>
+                 <Button
+                     className="nav-bar-button"
+                     minimal
+                     icon = "panel-table"
+                     text = "Asset Management"
+                 />
                   <Button
+                      className="nav-bar-button"
                     minimal
                     disabled={this.props.changePlan ? true : false}
                     text="Report"
                     icon="numbered-list"
                     onClick={() => this.props.history.push(ROUTES.REPORT)}
                   />
+
                   <Button
+                      className="nav-bar-button"
                     minimal
                     onClick={() => this.props.history.push(ROUTES.LOGS)}
                     icon="history"
@@ -158,6 +164,7 @@ export class Navigation extends React.Component<
                     }
                   />
                   <Button
+                      className="nav-bar-button"
                     minimal
                     icon="user"
                     onClick={() => this.props.history.push(ROUTES.USERS)}
@@ -208,6 +215,7 @@ export class Navigation extends React.Component<
 
                   {this.props.changePlan ? (
                     <AnchorButton
+                        className="nav-bar-button"
                       minimal
                       disabled={this.props.location.pathname.includes(
                         "/dashboard/change-plans/"
@@ -217,6 +225,7 @@ export class Navigation extends React.Component<
                     />
                   ) : null}
                   <AnchorButton
+                      className="nav-bar-button"
                     onClick={() => this.props.history.push(ROUTES.CHANGE_PLAN)}
                     icon="clipboard"
                     minimal
