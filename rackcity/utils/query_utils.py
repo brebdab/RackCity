@@ -59,6 +59,12 @@ def get_filter_arguments(data):
                             filter_dict["match_type"], filter_dict["value"]
                         )
                     )
+                elif filter_field == "offline_storage_site":
+                    filter_args.append(
+                        get_offline_site_filter_arguments(
+                            filter_dict["match_type"], filter_dict["value"]
+                        )
+                    )
                 else:
                     if filter_dict["match_type"] == "exact":
                         filter_args.append(
@@ -214,6 +220,21 @@ def get_datacenter_filter_arguments(match_type, value):
             {"{0}__i{1}".format(datacenter_filter_field, match_type): value}
         )
     return datacenter_filter_args
+
+
+def get_offline_site_filter_arguments(match_type, value):
+    offline_site_filter_args = []
+    offline_site_filter_fields = [
+        "offline_storage_site__name",
+        "offline_storage_site__abbreviation",
+        "chassis__offline_storage_site__name",
+        "chassis__offline_storage_site__abbreviation",
+    ]
+    for offline_site_filter_field in offline_site_filter_fields:
+        offline_site_filter_args.append(
+            {"{0}__i{1}".format(offline_site_filter_field, match_type): value}
+        )
+    return offline_site_filter_args
 
 
 def apply_filters_or(object_query, filter_args):
