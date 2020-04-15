@@ -46,6 +46,7 @@ class AssetCPSerializer(serializers.ModelSerializer):
             "rack_position",
             "chassis",
             "chassis_slot",
+            "offline_storage_site",
             "owner",
             "comment",
             "change_plan",
@@ -87,6 +88,7 @@ class AssetSerializer(serializers.ModelSerializer):
             "rack_position",
             "chassis",
             "chassis_slot",
+            "offline_storage_site",
             "owner",
             "comment",
             "cpu",
@@ -129,6 +131,7 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
     chassis_slot = RCIntegerField(
         allow_null=True, max_value=2147483647, min_value=0, required=False
     )
+    offline_storage_site = SiteSerializer()
     mac_addresses = serializers.SerializerMethodField()
     power_connections = serializers.SerializerMethodField()
     network_connections = serializers.SerializerMethodField()
@@ -147,6 +150,7 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
             "rack_position",
             "chassis",
             "chassis_slot",
+            "offline_storage_site",
             "owner",
             "comment",
             "mac_addresses",
@@ -248,6 +252,7 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
     model = ITModelSerializer()
     rack = RackSerializer()
     chassis = AssetSerializer()
+    offline_storage_site = SiteSerializer()
     asset_conflict_hostname = AssetSerializer()
     asset_conflict_location = AssetSerializer()
     asset_conflict_asset_number = AssetSerializer()
@@ -271,6 +276,7 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
             "rack_position",
             "chassis",
             "chassis_slot",
+            "offline_storage_site",
             "owner",
             "comment",
             "mac_addresses",
@@ -305,10 +311,10 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
         return serialize_network_connections(NetworkPortCP, assetCP)
 
     def get_blades(self, assetCP):
-        get_blades_in_chassis_cp(assetCP)
+        return get_blades_in_chassis_cp(assetCP)
 
     def get_datacenter(self, assetCP):
-        get_datacenter_of_asset(assetCP)
+        return get_datacenter_of_asset(assetCP)
 
 
 def normalize_bulk_asset_data(bulk_asset_data):
@@ -452,8 +458,12 @@ def get_neighbor_assets(hostname, id, nodes, edges, change_plan=None):
 
 
 def get_datacenter_of_asset(asset):
+    datacenter = None
     if asset.rack:
         datacenter = asset.rack.datacenter
     if asset.chassis and asset.chassis.rack:
         datacenter = asset.chassis.rack.datacenter
-    return SiteSerializer(datacenter).data
+    if datacenter:
+        return SiteSerializer(datacenter).data
+    else:
+        return None
