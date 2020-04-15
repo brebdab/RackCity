@@ -52,6 +52,7 @@ from rackcity.utils.exceptions import (
     LocationException,
     PowerConnectionException,
     UserAssetPermissionException,
+    AssetModificationException,
 )
 from rackcity.utils.log_utils import (
     log_action,
@@ -73,6 +74,7 @@ from rackcity.utils.rackcity_utils import (
     validate_location_modification,
     no_infile_location_conflicts,
     records_are_identical,
+    validate_hostname_deletion,
 )
 from rackcity.permissions.permissions import (
     user_has_asset_permission,
@@ -406,7 +408,17 @@ def asset_modify(request):
             {"failure_message": Status.AUTH_ERROR.value + str(auth_error)},
             status=HTTPStatus.UNAUTHORIZED,
         )
-
+    try:
+        validate_hostname_deletion(data, existing_asset)
+    except AssetModificationException as modifcation_exception:
+        return JsonResponse(
+            {
+                "failure_message": Status.MODIFY_ERROR.value
+                                   + "Invalid hostname deletion. "
+                                   + str(modifcation_exception)
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
     try:
         validate_location_modification(data, existing_asset, change_plan=change_plan)
     except Exception as error:

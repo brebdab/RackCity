@@ -1,11 +1,9 @@
-from django.db import close_old_connections
 from django.http import JsonResponse
-import functools
 from http import HTTPStatus
 from rackcity.api.serializers import RecursiveAssetSerializer, RackSerializer
-from rackcity.models import Asset, ITModel, Rack, PowerPort, NetworkPort
+from rackcity.models import Asset, AssetCP, ITModel, Rack, PowerPort, NetworkPort
 from rackcity.models.asset import get_assets_for_cp
-from rackcity.utils.exceptions import LocationException
+from rackcity.utils.exceptions import LocationException, AssetModificationException
 
 
 def get_rack_detailed_response(racks):
@@ -308,12 +306,15 @@ def no_infile_location_conflicts(asset_datas):
     return
 
 
-def close_old_connections_decorator(func):
-    @functools.wraps(func)
-    def wrapper_decorator(*args, **kwargs):
-        close_old_connections()
-        value = func(*args, **kwargs)
-        close_old_connections()
-        return value
-
-    return wrapper_decorator
+def validate_hostname_deletion(data, existing_asset):
+    if "hostname" in data and not data["hostname"]:
+        if isinstance(existing_asset, Asset):
+            if Asset.objects.filter(chassis=existing_asset).exists():
+                raise AssetModificationException(
+                    "Cannot delete hostname of an chassis with blades installed. "
+                )
+        if isinstance(existing_asset, AssetCP):
+            if AssetCP.objects.filter(chassis=existing_asset).exists():
+                raise AssetModificationException(
+                    "Cannot delete hostname of an chassis in a change plan with blades installed on the change plan. "
+                )
