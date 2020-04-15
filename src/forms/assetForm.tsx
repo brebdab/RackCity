@@ -135,6 +135,26 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     }
     return asset;
   }
+  private initializeSite() {
+    if (this.initialState.datacenter) {
+      return this.initialState.datacenter;
+    } else if (this.initialState.offline_storage_site) {
+      return this.initialState.offline_storage_site;
+    } else {
+      if (this.props.currSite === ALL_DATACENTERS) {
+        return undefined;
+      } else {
+        return this.props.currSite;
+      }
+    }
+  }
+
+    // this.initialState.datacenter
+    //   ? this.initialState.datacenter
+    //   : this.props.currSite === ALL_DATACENTERS
+    //   ? undefined
+    //   : this.props.currSite,
+
   private resetCustomValuesToDefault(asset: AssetObject) {
     asset.cpu = ifNullReturnEmptyString(asset.model.cpu);
     asset.display_color = ifNullReturnEmptyString(asset.model.display_color);
@@ -160,11 +180,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
   public state = {
     values: this.initializeCustomValues(this.initialState),
-    currSite: this.initialState.datacenter
-      ? this.initialState.datacenter
-      : this.props.currSite === ALL_DATACENTERS
-      ? undefined
-      : this.props.currSite,
+    currSite: this.initializeSite(),
     sites: [],
     racks: [],
     models: [],
@@ -296,12 +312,14 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     const model = asset.model ? asset.model.id : null;
     const rack = asset.rack ? asset.rack.id : null;
     const chassis = asset.chassis ? asset.chassis.id : null;
+    const offline_storage_site = null;
     let valuesToSend: ShallowAssetObject = {
       chassis,
       chassis_slot,
       asset_number,
       model,
       rack,
+      offline_storage_site,
       hostname,
       id,
       rack_position,
@@ -361,6 +379,10 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       }
       if (this.props.initialValues) {
         newValues.id = this.props.initialValues.id;
+      }
+
+      if (this.state.currSite && this.state.currSite.is_storage) {
+        newValues.offline_storage_site = this.state.currSite.id;
       }
 
       const resp = this.props.submitForm(
