@@ -1,10 +1,14 @@
 import * as React from "react";
 import { RouteComponentProps, withRouter } from "react-router";
 import {
+  Alert,
   AnchorButton,
   Callout,
+  Classes,
   Intent,
   IToastProps,
+  Position,
+  Spinner,
   Toaster,
 } from "@blueprintjs/core";
 import axios from "axios";
@@ -19,6 +23,13 @@ import {
 import { PermissionState } from "../../../utils/permissionUtils";
 import { IconNames } from "@blueprintjs/icons";
 import "./bladePowerView.scss";
+import { PowerView } from "./powerView";
+
+export enum PowerAction {
+  ON = "on",
+  OFF = "off",
+  CYCLE = "cycle",
+}
 
 interface BladePowerViewProps {
   token: string;
@@ -33,9 +44,11 @@ interface BladePowerViewProps {
 }
 
 interface BladePowerViewState {
-  powerStatus?: boolean;
-  username?: string;
+  powerStatus?: string;
   statusLoaded: boolean;
+  alertOpen: boolean;
+  confirmationMessage: string;
+  username?: string;
 }
 
 export class BladePowerView extends React.PureComponent<
@@ -63,11 +76,30 @@ export class BladePowerView extends React.PureComponent<
   public state: BladePowerViewState = {
     powerStatus: undefined,
     statusLoaded: true,
+    alertOpen: false,
+    confirmationMessage: "",
+    username: undefined,
   };
 
-  componentDidMount() {}
+  componentDidMount() {
+    if (this.shouldShowPower()) {
+      this.getPowerStatus();
+    } else {
+      this.setState({
+        statusLoaded: true,
+      });
+    }
+    this.getUsername(this.props.token);
+  }
 
-  componentDidUpdate() {}
+  componentDidUpdate() {
+    if (this.props.shouldUpdate && this.shouldShowPower()) {
+      this.getPowerStatus();
+    } else {
+      this.setState({ statusLoaded: true });
+    }
+    this.props.updated();
+  }
 
   private getUsername(token: string) {
     const headers = {
@@ -92,7 +124,23 @@ export class BladePowerView extends React.PureComponent<
     }
   }
 
-  private requestPowerStatus() {
+  private shouldShowPower() {
+    return (
+      !this.props.assetIsDecommissioned &&
+      !this.props.changePlan &&
+      this.isBladePowerNetworkControlled()
+    );
+  }
+
+  private shouldDisablePowerButtons() {
+    return !(
+      this.props.permissionState.admin ||
+      this.props.permissionState.power_control ||
+      (this.props.asset && this.state.username === this.props.asset.owner)
+    );
+  }
+
+  private getPowerStatus() {
     axios
       .post(
         API_ROOT + "api/chassis-power/status",
@@ -103,17 +151,23 @@ export class BladePowerView extends React.PureComponent<
         getHeaders(this.props.token)
       )
       .then((res) => {
-        console.log(res.data.success_message);
+        this.setState({
+          powerStatus: res.data.power_status,
+          statusLoaded: true,
+        });
       })
       .catch((err) => {
-        console.log(err);
+        this.addErrorToast(err.response.data.failure_message);
+        this.setState({
+          statusLoaded: true,
+        });
       });
   }
 
-  private requestPowerOn() {
+  private requestPowerAction(action: PowerAction) {
     axios
       .post(
-        API_ROOT + "api/chassis-power/on",
+        API_ROOT + "api/chassis-power/" + action,
         {
           chassis_id: this.props.asset!.chassis!.id,
           blade_slot: this.props.asset!.chassis_slot,
@@ -121,46 +175,14 @@ export class BladePowerView extends React.PureComponent<
         getHeaders(this.props.token)
       )
       .then((res) => {
-        console.log(res.data.success_message);
+        this.setState({
+          alertOpen: true,
+          confirmationMessage: res.data.success_message,
+        });
+        this.getPowerStatus();
       })
       .catch((err) => {
-        console.log(err);
-      });
-  }
-
-  private requestPowerOff() {
-    axios
-      .post(
-        API_ROOT + "api/chassis-power/off",
-        {
-          chassis_id: this.props.asset!.chassis!.id,
-          blade_slot: this.props.asset!.chassis_slot,
-        },
-        getHeaders(this.props.token)
-      )
-      .then((res) => {
-        console.log(res.data.success_message);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  }
-
-  private requestPowerCycle() {
-    axios
-      .post(
-        API_ROOT + "api/chassis-power/cycle",
-        {
-          chassis_id: this.props.asset!.chassis!.id,
-          blade_slot: this.props.asset!.chassis_slot,
-        },
-        getHeaders(this.props.token)
-      )
-      .then((res) => {
-        console.log(res.data.success_message);
-      })
-      .catch((err) => {
-        console.log(err);
+        alert(err);
       });
   }
 
@@ -183,7 +205,7 @@ export class BladePowerView extends React.PureComponent<
                   {this.props.asset?.chassis_slot}
                 </td>
                 <td style={getChangePlanRowStyle(this.props.asset)}>
-                  Status TBD
+                  {this.state.powerStatus}
                 </td>
               </tr>
             </tbody>
@@ -191,11 +213,16 @@ export class BladePowerView extends React.PureComponent<
         </div>
         <AnchorButton
           className={"blade-power-close"}
-          intent={"primary"}
+          intent={this.state.powerStatus === "OFF" ? "primary" : "danger"}
           minimal
-          text={"Turn on"}
+          text={this.state.powerStatus === "OFF" ? "Turn on" : "Turn off"}
           icon="power"
-          disabled={false}
+          disabled={this.shouldDisablePowerButtons()}
+          onClick={() => {
+            this.state.powerStatus === "OFF"
+              ? this.requestPowerAction(PowerAction.ON)
+              : this.requestPowerAction(PowerAction.OFF);
+          }}
         />
         <AnchorButton
           className={"blade-power-close"}
@@ -203,7 +230,10 @@ export class BladePowerView extends React.PureComponent<
           minimal
           text={"Cycle Power"}
           icon="power"
-          disabled={false}
+          disabled={this.shouldDisablePowerButtons()}
+          onClick={() => {
+            this.requestPowerAction(PowerAction.CYCLE);
+          }}
         />
       </div>
     );
@@ -222,13 +252,42 @@ export class BladePowerView extends React.PureComponent<
     return (
       <div className="propsview">
         <h3>Power Connections</h3>
-        {this.props.asset &&
-        this.props.asset.chassis &&
-        this.isBladePowerNetworkControlled()
-          ? this.renderNoPowerCallout()
-          : this.renderPowerTable()}
-        {/*? this.renderPowerTable()*/}
-        {/* this.renderNoPowerCallout()}*/}
+        {this.state.statusLoaded ? (
+          this.props.asset &&
+          this.props.asset.chassis &&
+          this.props.asset.chassis.model &&
+          this.props.asset.chassis.model.vendor &&
+          this.isBladePowerNetworkControlled() ? (
+            this.renderNoPowerCallout()
+          ) : (
+            this.renderPowerTable()
+          )
+        ) : (
+          <Spinner />
+        )}
+        <Alert
+          className={Classes.DARK}
+          confirmButtonText="Okay"
+          isOpen={this.state.alertOpen}
+          onConfirm={() => {
+            this.setState({
+              alertOpen: false,
+            });
+          }}
+          onClose={() => {
+            this.setState({
+              alertOpen: false,
+            });
+          }}
+        >
+          <p>{this.state.confirmationMessage}</p>
+        </Alert>
+        <Toaster
+          autoFocus={false}
+          canEscapeKeyClear={true}
+          position={Position.TOP}
+          ref={this.refHandlers.toaster}
+        />
       </div>
     );
   }
