@@ -38,9 +38,6 @@ export class BarcodeScanner extends React.PureComponent<
   constraints = {
     height: 720,
     width: 1280,
-      // height: this.state.cameraHeight*0.9,
-      // width: this.state.cameraWidth,
-      // facingMode: "user",
       facingMode: { exact: "environment" },
     };
   WebcamCapture = () => {
@@ -78,42 +75,9 @@ export class BarcodeScanner extends React.PureComponent<
         cameraHeight: height
       })
     }
-    // const constraints = {
-    //   height: this.state.cameraHeight*0.9,
-    //   width: this.state.cameraWidth,
-    //   // facingMode: "user",
-    //   facingMode: { exact: "environment" },
-    // };
-    //
-    // const WebcamCapture = () => {
-    //   let webcamRef: any;
-    //   webcamRef = React.useRef(null);
-    //   const capture = React.useCallback(() => {
-    //     const imageSrc = webcamRef.current.getScreenshot();
-    //     console.log(webcamRef);
-    //     console.log(imageSrc)
-    //     this.setState({
-    //       image: imageSrc,
-    //     });
-    //   }, [webcamRef]);
-    //   return (
-    //     <div>
-    //       <Webcam
-    //         audio={false}
-    //         height={this.state.cameraHeight}
-    //         screenshotFormat={"image/jpeg"}
-    //         width={this.state.cameraWidth}
-    //         videoConstraints={constraints}
-    //         ref={webcamRef}
-    //       />
-    //       <button onClick={capture}>Capture photo</button>
-    //     </div>
-    //   );
-    // };
 
     return (
       <div className={Classes.DARK}>
-        {/* <BarcodeReader onError={this.handleError} onScan={this.handleScan} /> */}
         <this.WebcamCapture />
       </div>
     );
