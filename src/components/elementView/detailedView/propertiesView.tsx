@@ -37,7 +37,6 @@ class PropertiesView extends React.PureComponent<
     let fields: Array<string> = [];
     Object.keys(this.props.data).forEach((col: string) => {
       if (
-
         (isAssetObject(this.props.data) && AssetFieldsTable[col]) ||
         (isModelObject(this.props.data) && ModelFieldsTable[col])
       ) {
@@ -52,7 +51,6 @@ class PropertiesView extends React.PureComponent<
   };
 
   renderData(fields: Array<any>, data: any) {
-    console.log(fields);
     return fields.map((item: string) => {
       var dat;
       if (item === "display_color") {
@@ -100,16 +98,8 @@ class PropertiesView extends React.PureComponent<
           </tr>,
         ];
       } else if (isAssetObject(data) && item === "chassis") {
-        console.log(data, this.props);
         return [
-          <tr
-            // className={data.chassis && this.props.redirectToAsset ? "link" : ""}
-            // onClick={() =>
-            //   data.chassis && this.props.redirectToAsset
-            //     ? this.props.redirectToAsset(data.chassis.id)
-            //     : {}
-            // }
-          >
+          <tr>
             <td key={item}>
               <p className="label">{AssetFieldsTable[item]}:</p>
             </td>

@@ -120,12 +120,14 @@ class ChassisSerializer(serializers.ModelSerializer):
     def get_blades(self, asset):
         return get_blades_in_chassis(asset)
 
+
 class BladeSerializer(serializers.ModelSerializer):
     """
 
     """
 
-    model =  ITModelSerializer()
+    model = ITModelSerializer()
+
     class Meta:
         model = Asset
         fields = (

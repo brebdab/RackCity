@@ -2,7 +2,7 @@ import * as React from "react";
 import { RouteComponentProps } from "react-router";
 import { AssetObject, ROUTES } from "../../../../utils/utils";
 import { withRouter } from "react-router-dom";
-import {Classes, Tooltip} from "@blueprintjs/core";
+import { Classes, Tooltip } from "@blueprintjs/core";
 
 interface ChassisViewProps {
   chassis: AssetObject;
@@ -30,10 +30,13 @@ class ChassisView extends React.PureComponent<
 
       if (blades.length > 0) {
         const blade = blades[0];
-        const style = { backgroundColor: blade.display_color? blade.display_color: blade.model.display_color };
+        const style = {
+          backgroundColor: blade.display_color
+            ? blade.display_color
+            : blade.model.display_color,
+        };
 
         slots.push(
-
           <td
             className="slot"
             onClick={() => {
@@ -43,14 +46,20 @@ class ChassisView extends React.PureComponent<
             }}
             style={style}
           >
-                <Tooltip className = {Classes.DARK} content={"hostname: " +  blade.hostname + "\n asset number: " + blade.asset_number }>
-            <div className="vertical">{blade.hostname}</div>
-                              </Tooltip>
+            <Tooltip
+              className={Classes.DARK}
+              content={
+                "hostname: " +
+                blade.hostname +
+                "\n asset number: " +
+                blade.asset_number
+              }
+            >
+              <div className="vertical">{blade.hostname}</div>
+            </Tooltip>
           </td>
-
         );
       } else {
-
         slots.push(<td className="slot"></td>);
       }
     }
@@ -58,11 +67,20 @@ class ChassisView extends React.PureComponent<
     return slots;
   }
   render() {
-      const chassisColor = this.props.chassis.display_color? this.props.chassis.display_color:this.props.chassis.model.display_color;
-      console.log(chassisColor)
+    const chassisColor = this.props.chassis.display_color
+      ? this.props.chassis.display_color
+      : this.props.chassis.model.display_color;
+    console.log(chassisColor);
     return (
       <div className="chassis-view">
-        <table className=".bp3-interactive " style = {{borderStyle:"solid", borderWidth: "10pt", borderColor:chassisColor}}>
+        <table
+          className=".bp3-interactive "
+          style={{
+            borderStyle: "solid",
+            borderWidth: "10pt",
+            borderColor: chassisColor,
+          }}
+        >
           <tbody>
             <tr>{this.generateSlotNumbers()}</tr>
             <tr>{this.generateSlots()}</tr>
