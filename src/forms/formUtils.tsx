@@ -320,6 +320,25 @@ export const renderDatacenterItem: ItemRenderer<DatacenterObject> = (
   );
 };
 
+export const renderSiteItem: ItemRenderer<DatacenterObject> = (
+  site: DatacenterObject,
+  { handleClick, modifiers, query }
+) => {
+  if (!modifiers.matchesPredicate) {
+    return null;
+  }
+  const text = site.name + " (" + site.abbreviation + ")";
+  const siteType = site.is_storage ? "Offline Storage" : "Datacenter";
+  return (
+    <MenuItem
+      active={modifiers.active}
+      label={siteType}
+      text={highlightText(text, query)}
+      onClick={handleClick}
+    />
+  );
+};
+
 export const renderModelItem: ItemRenderer<ModelObject> = (
   model: ModelObject,
   { handleClick, modifiers, query }
@@ -392,6 +411,5 @@ export const StringSuggest = Suggest.ofType<string>();
 export const ModelSelect = Select.ofType<ModelObject>();
 export const RackSelect = Select.ofType<RackObject>();
 export const DatacenterSelect = Select.ofType<DatacenterObject>();
-export const OfflineStorageSiteSelect = Select.ofType<DatacenterObject>();
 export const AssetSelect = Select.ofType<AssetObject>();
 export const ChangePlanSelect = Select.ofType<ChangePlan>();

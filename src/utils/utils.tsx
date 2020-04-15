@@ -220,11 +220,6 @@ export interface DatacenterObject extends ElementObject {
   is_storage: boolean;
 }
 
-export enum SiteTypes {
-  DATACENTER = "Datacenter",
-  OFFLINE_STORAGE = "Offline Storage Site",
-}
-
 export enum MountTypes {
   RACKMOUNT = "Asset",
   BLADE_CHASSIS = "Blade Chassis",
