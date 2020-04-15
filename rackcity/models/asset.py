@@ -384,3 +384,6 @@ class AssetCP(AbstractAsset):
             self.add_network_ports()
 
             self.add_power_ports()
+
+    def is_in_offline_storage(self):
+        return self.offline_storage_site is not None
