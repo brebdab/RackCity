@@ -864,9 +864,8 @@ class ElementTable extends React.Component<
       <AnchorButton
         className="button-table permissions-button"
         intent="primary"
-        icon="edit"
+        icon="shield"
         minimal
-        text="Edit Permissions"
         onClick={() => {
           this.setState({
             editUserFormOpen: true,

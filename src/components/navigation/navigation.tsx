@@ -140,6 +140,7 @@ export class Navigation extends React.Component<
                      minimal
                      icon = "panel-table"
                      text = "Asset Management"
+                     onClick = {() => this.props.history.push(ROUTES.DASHBOARD)}
                  />
                   <Button
                       className="nav-bar-button"
