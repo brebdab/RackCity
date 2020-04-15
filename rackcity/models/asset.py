@@ -217,6 +217,7 @@ class Asset(AbstractAsset):
 
     def save(self, *args, **kwargs):
         try:
+            self.full_clean()
             validate_hostname(self.hostname)
             validate_owner(self.owner)
             validate_location_type(
@@ -258,6 +259,9 @@ class Asset(AbstractAsset):
                     port_name = str(port_index + 1)
                     power_port = PowerPort(asset=self, port_name=port_name,)
                     power_port.save()
+
+    def is_in_offline_storage(self):
+        return self.offline_storage_site is not None
 
 
 class AssetCP(AbstractAsset):
@@ -355,6 +359,7 @@ class AssetCP(AbstractAsset):
 
     def save(self, *args, **kwargs):
         try:
+            self.full_clean()
             if not self.is_decommissioned:
                 validate_hostname(self.hostname)
                 validate_hostname_uniqueness(
@@ -379,3 +384,6 @@ class AssetCP(AbstractAsset):
             self.add_network_ports()
 
             self.add_power_ports()
+
+    def is_in_offline_storage(self):
+        return self.offline_storage_site is not None

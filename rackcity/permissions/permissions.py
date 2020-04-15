@@ -7,7 +7,7 @@ from rackcity.models import (
     ITModel,
     Log,
     Rack,
-    RackCityPermission,
+    Site,
 )
 from rackcity.utils.exceptions import UserAssetPermissionException
 from rest_framework.permissions import BasePermission
@@ -75,48 +75,90 @@ def get_permission(permission_name: PermissionName) -> Permission:
     return permission
 
 
-def user_has_asset_permission(user, site=None):
-    if user.has_perm(PermissionPath.ASSET_WRITE.value):
-        return True
-    if site:
+def user_has_asset_permission(user, site):
+    return user.has_perm(
+        PermissionPath.ASSET_WRITE.value
+    ) or site.user_has_site_level_permission(user)
+
+
+def get_id_from_data(data, field, data_is_validated):
+    if data_is_validated:
+        return data[field].id
+    else:
+        return data[field]
+
+
+def validate_user_permission_on_new_asset_data(
+    user, asset_data, data_is_validated=False
+):
+    site = None
+    if "offline_storage_site" in asset_data and asset_data["offline_storage_site"]:
+        site_id = get_id_from_data(
+            asset_data, "offline_storage_site", data_is_validated
+        )
         try:
-            permission = RackCityPermission.objects.get(user=user.id)
+            site = Site.objects.get(id=site_id)
         except ObjectDoesNotExist:
-            return False
-        else:
-            if site in permission.site_permissions.all():
-                return True
-    return False
-
-
-def validate_user_asset_permission_to_add(user, validated_data):
-    # TODO: make this check work for blades, which don't have a rack
-    if "rack" not in validated_data:
-        return
-    rack_id = validated_data["rack"].id
-    try:
-        rack = Rack.objects.get(id=rack_id)
-    except ObjectDoesNotExist:
-        raise Exception("Rack '" + str(rack_id) + "' does not exist")
-    if not user_has_asset_permission(user, site=rack.datacenter):
+            raise Exception("Site '" + str(site_id) + "' does not exist. ")
+    elif "model" in asset_data and asset_data["model"]:
+        model_id = get_id_from_data(asset_data, "model", data_is_validated)
+        try:
+            model = ITModel.objects.get(id=model_id)
+        except ObjectDoesNotExist:
+            raise Exception("Model '" + str(model_id) + "' does not exist. ")
+        if model.is_rackmount():
+            if "rack" in asset_data and asset_data["rack"]:
+                rack_id = get_id_from_data(asset_data, "rack", data_is_validated)
+                try:
+                    rack = Rack.objects.get(id=rack_id)
+                except ObjectDoesNotExist:
+                    raise Exception("Rack '" + str(rack_id) + "' does not exist. ")
+                site = rack.datacenter
+        elif model.is_blade_asset():
+            if "chassis" in asset_data and asset_data["chassis"]:
+                chassis_id = get_id_from_data(asset_data, "chassis", data_is_validated)
+                try:
+                    chassis = Asset.objects.get(id=chassis_id)
+                except ObjectDoesNotExist:
+                    raise Exception(
+                        "Chassis '" + str(chassis_id) + "' does not exist. "
+                    )
+                site = chassis.rack.datacenter
+    if site:
+        if not user_has_asset_permission(user, site):
+            raise UserAssetPermissionException(
+                "User '"
+                + user.username
+                + "' does not have asset permission in site '"
+                + site.abbreviation
+                + "'. "
+            )
+    else:
         raise UserAssetPermissionException(
-            "User '"
-            + user.username
-            + "' does not have asset permission in datacenter '"
-            + rack.datacenter.abbreviation
-            + "'."
+            "User '" + user.username + "' does not have asset permission. "
         )
 
 
-def validate_user_asset_permission_to_modify_or_delete(user, asset):
-    # TODO: make this check work for blades, which don't have a rack
-    if asset.rack and not user_has_asset_permission(user, site=asset.rack.datacenter):
+def validate_user_permission_on_existing_asset(user, asset):
+    site = None
+    if asset.is_in_offline_storage():
+        site = asset.offline_storage_site
+    elif asset.model.is_rackmount():
+        site = asset.rack.datacenter
+    elif asset.model.is_blade_asset():
+        site = asset.chassis.rack.datacenter
+    if site:
+        if not user_has_asset_permission(user, site):
+            raise UserAssetPermissionException(
+                "User '"
+                + user.username
+                + "' does not have asset permission in site '"
+                + site.abbreviation
+                + "'. "
+            )
+    else:
         raise UserAssetPermissionException(
-            "User '"
-            + user.username
-            + "' does not have asset permission in datacenter '"
-            + asset.rack.datacenter.abbreviation
-            + "'."
+            "User '" + user.username + "' does not have asset permission. "
         )
 
 

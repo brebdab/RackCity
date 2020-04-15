@@ -28,6 +28,11 @@ class UserAssetPermissionException(Exception):
         Exception.__init__(self, *args, **kwargs)
 
 
-class ChassisPowerManagementException(Exception):
+class UserPowerPermissionException(Exception):
+    def __init__(self, *args, **kwargs):
+        Exception.__init__(self, *args, **kwargs)
+
+
+class PowerManagementException(Exception):
     def __init__(self, *args, **kwargs):
         Exception.__init__(self, *args, **kwargs)

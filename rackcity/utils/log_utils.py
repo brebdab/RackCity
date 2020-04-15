@@ -168,7 +168,7 @@ def log_user_permission_action(user, permission_action, username):
     log.save()
 
 
-def log_power_action(user, power_action, related_asset):
+def log_power_action(user, power_action, related_asset, blade_slot=None):
     """
     Specified power_action should be PowerAction enum.
     """
@@ -183,6 +183,8 @@ def log_power_action(user, power_action, related_asset):
             power_action.value,
         ]
     )
+    if blade_slot:
+        log_content += " to chassis blade slot " + str(blade_slot)
     log = Log(
         date=date, log_content=log_content, user=user, related_asset=related_asset,
     )
