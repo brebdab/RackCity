@@ -413,7 +413,7 @@ def chassis_power_status(request):
             status=HTTPStatus.REQUEST_TIMEOUT,
         )
     return JsonResponse(
-        {str(blade_slot): blade_slot_power_status}, status=HTTPStatus.OK,
+        {"power_status": blade_slot_power_status}, status=HTTPStatus.OK,
     )
 
 
