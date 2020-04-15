@@ -168,7 +168,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   };
   initialGetRacks = false;
   gettingAssetsInProgress = false;
-  gettingSitesInProgress = false;
   gettingRacksInProgress = false;
   gettingPowerPortsInProgress = false;
 
@@ -450,7 +449,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       .catch((err) => {});
   };
   getSites = () => {
-    this.gettingSitesInProgress = true;
     const config = {
       headers: {
         Authorization: "Token " + this.props.token,
@@ -460,7 +458,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     axios
       .post(API_ROOT + "api/sites/get-many", {}, config)
       .then((res) => {
-        this.gettingSitesInProgress = false;
         this.setState({
           sites: res.data.sites as Array<DatacenterObject>,
           sitesLoaded: true,
