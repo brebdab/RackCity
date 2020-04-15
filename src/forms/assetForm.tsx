@@ -1046,7 +1046,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   };
 
   render() {
-    console.log(this.state.values);
     if (!this.state.sitesLoaded) {
       this.getSites();
     }
