@@ -35,7 +35,7 @@ class ChassisView extends React.PureComponent<
         slots.push(
 
           <td
-            className="slot asset-link"
+            className="slot"
             onClick={() => {
               console.log(blade);
               this.props.history.push(ROUTES.ASSETS + "/" + blade.id);

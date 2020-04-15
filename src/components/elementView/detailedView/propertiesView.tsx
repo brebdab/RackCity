@@ -103,12 +103,12 @@ class PropertiesView extends React.PureComponent<
         console.log(data, this.props);
         return [
           <tr
-            className={data.chassis && this.props.redirectToAsset ? "link" : ""}
-            onClick={() =>
-              data.chassis && this.props.redirectToAsset
-                ? this.props.redirectToAsset(data.chassis.id)
-                : {}
-            }
+            // className={data.chassis && this.props.redirectToAsset ? "link" : ""}
+            // onClick={() =>
+            //   data.chassis && this.props.redirectToAsset
+            //     ? this.props.redirectToAsset(data.chassis.id)
+            //     : {}
+            // }
           >
             <td key={item}>
               <p className="label">{AssetFieldsTable[item]}:</p>
