@@ -977,3 +977,16 @@ def asset_number(request):
     Get a suggest asset number for Asset creation
     """
     return JsonResponse({"asset_number": get_next_available_asset_number()})
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def get_asset_from_barcode(request):
+    """
+    Parse barcode as base64 encoded string for asset number then return
+    corresponding live asset with that number, if it exists
+    """
+    data = JSONParser().parse(request)
+    if "img_string" in data:
+        return JsonResponse({"img_string": data.img_string}, status=HTTPStatus.OK)
+    else:
+        return JsonResponse({"failure_message": "failed"}, status=HTTPStatus.BAD_REQUEST)
