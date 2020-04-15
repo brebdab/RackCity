@@ -91,6 +91,10 @@ export class AssetView extends React.PureComponent<
       this.getData(params.rid, this.props.changePlan);
 
       this.handleFormClose();
+      this.props.markTablesStale([
+        TableType.RACKED_ASSETS,
+        TableType.STORED_ASSETS,
+      ]);
     });
   };
   private toaster: Toaster = {} as Toaster;
@@ -499,6 +503,10 @@ export class AssetView extends React.PureComponent<
         this.setState({ isDeleteOpen: false });
         this.addSuccessToast(res.data.success_message);
         this.props.history.push(ROUTES.DASHBOARD);
+        this.props.markTablesStale([
+          TableType.RACKED_ASSETS,
+          TableType.STORED_ASSETS,
+        ]);
       })
       .catch((err) => {
         this.addToast({
@@ -523,17 +531,15 @@ export class AssetView extends React.PureComponent<
         let params: any;
         params = this.props.match.params;
         this.updateAssetData(params.rid);
-        console.log("about to set state")
         this.props.markTablesStale([
           TableType.RACKED_ASSETS,
-          // TableType.STORED_ASSETS, TODO: set all of these
-          // TableType.DECOMMISSIONED_ASSETS,
+          TableType.STORED_ASSETS,
+          TableType.DECOMMISSIONED_ASSETS,
         ]);
-        console.log("just set state")
       })
       .catch((err) => {
-        console.log("there was an error: ")
-        console.log(err)
+        console.log("there was an error: ");
+        console.log(err);
         this.addToast({
           message: err.response.data.failure_message,
           intent: Intent.DANGER,
@@ -558,4 +564,6 @@ const mapDispatchToProps = (dispatch: any) => {
   };
 };
 
-export default withRouter(connect(mapStatetoProps, mapDispatchToProps)(AssetView));
+export default withRouter(
+  connect(mapStatetoProps, mapDispatchToProps)(AssetView)
+);

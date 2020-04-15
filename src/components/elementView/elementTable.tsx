@@ -25,6 +25,7 @@ import { updateObject } from "../../store/utility";
 import {
   AssetFieldsTable,
   AssetObject,
+  AssetType,
   ChangePlan,
   DatacenterObject,
   ElementObjectType,
@@ -79,7 +80,6 @@ import { PowerView } from "./powerView/powerView";
 import "./powerView/powerView.scss";
 import { isNullOrUndefined } from "util";
 import { PermissionState } from "../../utils/permissionUtils";
-import {markTableFresh} from "../../store/actions/state";
 
 interface ElementTableState {
   items: Array<ElementObjectType>;
@@ -103,10 +103,11 @@ interface ElementTableState {
 }
 
 interface ElementTableProps {
-  isDecommissioned: boolean;
+  isDecommissioned: boolean; // TODO: remove this and use assetType instead
   callback?: Function;
   updateBarcodes?: Function;
   type: ElementType;
+  assetType?: AssetType;
   token: string;
   disableSorting?: boolean;
   disableFiltering?: boolean;
@@ -135,6 +136,7 @@ interface ElementTableProps {
   updateChangePlans(status: boolean): void;
   changePlan: ChangePlan;
   markTableFresh(freshTable: TableType): void;
+  markTablesStale(staleTables: TableType[]): void;
   rackedAssetDataIsStale: boolean;
   storedAssetDataIsStale: boolean;
   decommissionedAssetDataIsStale: boolean;
@@ -589,7 +591,22 @@ class ElementTable extends React.Component<
           });
         });
     }
-    this.props.markTableFresh(TableType.RACKED_ASSETS); // TODO: MAKE THIS DYNAMIC
+    let tableType =
+      this.props.type === ElementType.MODEL
+        ? TableType.MODELS
+        : this.props.type === ElementType.ASSET &&
+          this.props.assetType === AssetType.RACKED
+        ? TableType.RACKED_ASSETS
+        : this.props.type === ElementType.ASSET &&
+          this.props.assetType === AssetType.STORED
+        ? TableType.STORED_ASSETS
+        : this.props.type === ElementType.ASSET &&
+          this.props.assetType === AssetType.DECOMMISSIONED
+        ? TableType.DECOMMISSIONED_ASSETS
+        : null;
+    if (tableType) {
+      this.props.markTableFresh(tableType);
+    }
   };
 
   setFieldNamesFromData = (items: Array<ElementObjectType>) => {
@@ -715,6 +732,11 @@ class ElementTable extends React.Component<
     if (isModelObject(values)) {
       return modifyModel(values, headers).then((res) => {
         this.successfulModification(res.data.success_message);
+        this.props.markTablesStale([
+          TableType.RACKED_ASSETS,
+          TableType.STORED_ASSETS,
+          TableType.MODELS,
+        ]);
       });
     } else if (isAssetObject(values)) {
       return modifyAsset(values, headers, this.props.changePlan).then((res) => {
@@ -723,6 +745,10 @@ class ElementTable extends React.Component<
         } else {
           this.successfulModification(res.data.success_message);
         }
+        this.props.markTablesStale([
+          TableType.RACKED_ASSETS,
+          TableType.STORED_ASSETS,
+        ]);
       });
     } else if (isChangePlanObject(values)) {
       return modifyChangePlan(values, headers).then((res) => {
@@ -735,6 +761,7 @@ class ElementTable extends React.Component<
         if (this.props.updateDatacenters) {
           this.props.updateDatacenters();
         }
+        this.props.markTablesStale([TableType.RACKED_ASSETS]);
       });
     }
   };
@@ -819,6 +846,15 @@ class ElementTable extends React.Component<
           if (this.props.type === ElementType.CHANGEPLANS) {
             this.props.updateChangePlans(true);
           }
+          if (isModelObject(this.state.editFormValues)) {
+            this.props.markTablesStale([TableType.MODELS]);
+          }
+          if (isUserObject(this.state.editFormValues)) {
+            this.props.markTablesStale([
+              TableType.RACKED_ASSETS,
+              TableType.STORED_ASSETS,
+            ]);
+          }
         })
         .catch((err) => {
           this.addErrorToast(err.response.data.failure_message);
@@ -845,6 +881,11 @@ class ElementTable extends React.Component<
           if (this.props.updateDatacenters) {
             this.props.updateDatacenters();
           }
+          this.props.markTablesStale([
+            TableType.RACKED_ASSETS,
+            TableType.STORED_ASSETS,
+            TableType.DECOMMISSIONED_ASSETS,
+          ]);
         })
         .catch((err) => {
           this.addErrorToast(err.response.data.failure_message);
@@ -1444,6 +1485,8 @@ const mapDispatchToProps = (dispatch: any) => {
       dispatch(actions.updateChangePlans(status)),
     markTableFresh: (freshTable: TableType) =>
       dispatch(actions.markTableFresh(freshTable)),
+    markTablesStale: (staleTables: TableType[]) =>
+      dispatch(actions.markTablesStale(staleTables)),
   };
 };
 
