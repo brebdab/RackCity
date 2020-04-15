@@ -149,12 +149,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     }
   }
 
-    // this.initialState.datacenter
-    //   ? this.initialState.datacenter
-    //   : this.props.currSite === ALL_DATACENTERS
-    //   ? undefined
-    //   : this.props.currSite,
-
   private resetCustomValuesToDefault(asset: AssetObject) {
     asset.cpu = ifNullReturnEmptyString(asset.model.cpu);
     asset.display_color = ifNullReturnEmptyString(asset.model.display_color);
