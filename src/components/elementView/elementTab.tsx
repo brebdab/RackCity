@@ -607,6 +607,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             shouldUpdateData={this.state.updateTable}
             currDatacenter={this.props.currDatacenter}
             isDecommissioned={this.props.assetType === AssetType.DECOMMISSIONED}
+            assetType={this.props.assetType}
           />
         </div>
       </div>
