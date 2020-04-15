@@ -37,7 +37,7 @@ class PropertiesView extends React.PureComponent<
     let fields: Array<string> = [];
     Object.keys(this.props.data).forEach((col: string) => {
       if (
- 
+
         (isAssetObject(this.props.data) && AssetFieldsTable[col]) ||
         (isModelObject(this.props.data) && ModelFieldsTable[col])
       ) {
