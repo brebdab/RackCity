@@ -552,7 +552,8 @@ def make_bcman_request(chassis, blade, power_command):
     result = None
     if os.path.exists("temp.txt"):
         fp = open("temp.txt", "r")
-        result = fp.read().splitlines()[0]
+        result = " ; ".join(fp.read().splitlines())
+        # result = fp.read().splitlines()[0]
         fp.close()
         os.remove("temp.txt")
     return result, exit_status

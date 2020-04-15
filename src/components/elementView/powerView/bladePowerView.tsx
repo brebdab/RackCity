@@ -126,9 +126,7 @@ export class BladePowerView extends React.PureComponent<
 
   private shouldShowPower() {
     return (
-      !this.props.assetIsDecommissioned &&
-      !this.props.changePlan &&
-      this.isBladePowerNetworkControlled()
+      !this.props.assetIsDecommissioned && !this.props.changePlan //&& this.isBladePowerNetworkControlled()
     );
   }
 
