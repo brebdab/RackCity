@@ -33,6 +33,7 @@ interface BladePowerViewProps {
 }
 
 interface BladePowerViewState {
+  powerStatus?: boolean;
   username?: string;
   statusLoaded: boolean;
 }
@@ -60,6 +61,7 @@ export class BladePowerView extends React.PureComponent<
   };
 
   public state: BladePowerViewState = {
+    powerStatus: undefined,
     statusLoaded: true,
   };
 

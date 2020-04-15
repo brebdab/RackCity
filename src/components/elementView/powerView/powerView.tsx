@@ -1,13 +1,13 @@
 import {
-  Classes,
-  AnchorButton,
   Alert,
-  Toaster,
+  AnchorButton,
+  Callout,
+  Classes,
+  Intent,
   IToastProps,
   Position,
-  Intent,
   Spinner,
-  Callout,
+  Toaster,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -17,9 +17,10 @@ import { RouteComponentProps, withRouter } from "react-router";
 import { connect } from "react-redux";
 import {
   AssetObject,
-  getHeaders,
-  getChangePlanRowStyle,
   ChangePlan,
+  getChangePlanRowStyle,
+  getHeaders,
+  MountTypes,
 } from "../../../utils/utils";
 import "./powerView.scss";
 import { IconNames } from "@blueprintjs/icons";
@@ -139,6 +140,26 @@ export class PowerView extends React.PureComponent<
       });
     }
     this.props.updated();
+  }
+
+  private isAssetPowerNetworkControlled() {
+    if (this.props.asset && this.props.asset.model) {
+      if (
+        this.props.asset.model.model_type === MountTypes.RACKMOUNT &&
+        this.props.asset.rack
+      ) {
+        return this.props.asset.rack.is_network_controlled;
+      } else if (
+        this.props.asset.model.model_type === MountTypes.BLADE &&
+        this.props.asset.chassis &&
+        this.props.asset.chassis.rack
+      ) {
+        return this.props.asset.chassis.rack.is_network_controlled;
+      } else {
+        return false;
+      }
+    }
+    return false;
   }
 
   getUsername(token: string) {
