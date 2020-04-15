@@ -528,8 +528,16 @@ class ElementTable extends React.Component<
 
   componentDidUpdate() {
     let dataIsStale =
-      this.props.rackedAssetDataIsStale &&
-      this.props.type === ElementType.ASSET; // && is racked
+      (this.props.rackedAssetDataIsStale &&
+        this.props.type === ElementType.ASSET &&
+        this.props.assetType === AssetType.RACKED) ||
+      (this.props.storedAssetDataIsStale &&
+        this.props.type === ElementType.ASSET &&
+        this.props.assetType === AssetType.STORED) ||
+      (this.props.decommissionedAssetDataIsStale &&
+        this.props.type === ElementType.ASSET &&
+        this.props.assetType === AssetType.DECOMMISSIONED) ||
+      (this.props.modelDataIsStale && this.props.type === ElementType.MODEL);
     if (dataIsStale || (this.props.shouldUpdateData && !this.props.data)) {
       this.updateTableData();
     }
