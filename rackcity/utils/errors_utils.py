@@ -16,7 +16,7 @@ class Status(Enum):
     IMPORT_ERROR = "IMPORT ERROR: "
     EXPORT_ERROR = "EXPORT ERROR: "
     CONNECTION = "CONNECTION ERROR: "
-    AUTH_ERROR = "AUTHORIZATION ERROR: "
+    AUTH_ERROR = "PERMISSIONS ERROR: "
 
 
 class GenericFailure(Enum):

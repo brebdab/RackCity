@@ -403,11 +403,11 @@ def save_all_connection_data(data, asset, user, change_plan=None):
 def save_all_field_data_live(data, asset):
     asset_id = data["id"]
     for field in data.keys():
-        if field == "model":
+        if field == "model" and data["model"]:
             value = ITModel.objects.get(id=data[field])
-        elif field == "rack":
+        elif field == "rack" and data["rack"]:
             value = Rack.objects.get(id=data[field])
-        elif field == "chassis":
+        elif field == "chassis" and data["chassis"]:
             value = Asset.objects.get(id=data[field])
         elif field == "hostname" and data["hostname"]:
             assets_with_hostname = Asset.objects.filter(hostname__iexact=data[field])
@@ -441,9 +441,9 @@ def save_all_field_data_live(data, asset):
 def save_all_field_data_cp(data, asset, change_plan, create_asset_cp):
     asset_id = data["id"]
     for field in data.keys():
-        if field == "model":
+        if field == "model" and data["model"]:
             value = ITModel.objects.get(id=data[field])
-        elif field == "rack":
+        elif field == "rack" and data["rack"]:
             value = Rack.objects.get(id=data[field])
         elif field == "hostname" and data["hostname"]:
             assets, assets_cp = get_assets_for_cp(change_plan.id)
