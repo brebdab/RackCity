@@ -633,7 +633,17 @@ class ElementTable extends React.Component<
           col !== "mac_addresses" &&
           col !== "network_connections" &&
           col !== "network_graph" &&
-          col !== "is_admin"
+          col !== "is_admin" &&
+          !(
+            col === "offline_storage_site" &&
+            this.props.assetType === AssetType.RACKED
+          ) &&
+          !(
+            (col === "datacenter" ||
+              col === "rack" ||
+              col === "rack_position") &&
+            this.props.assetType === AssetType.STORED
+          )
         ) {
           fields.push(col);
         }
@@ -793,7 +803,18 @@ class ElementTable extends React.Component<
   //DELETE LOGIC
   private shouldShowColumn = (item: any, col: string) => {
     if (isAssetObject(item)) {
-      return AssetFieldsTable[col] && col !== "comment";
+      return (
+        AssetFieldsTable[col] &&
+        col !== "comment" &&
+        !(
+          col === "offline_storage_site" &&
+          this.props.assetType === AssetType.RACKED
+        ) &&
+        !(
+          (col === "datacenter" || col === "rack" || col === "rack_position") &&
+          this.props.assetType === AssetType.STORED
+        )
+      );
     }
     return (
       col !== "id" &&
@@ -1253,7 +1274,10 @@ class ElementTable extends React.Component<
                                   {value.model_number}
                                 </td>,
                               ];
-                            } else if (col === "rack") {
+                            } else if (
+                              col === "rack" &&
+                              this.props.assetType !== AssetType.STORED
+                            ) {
                               let rack_value = null;
                               if (isRackObject(value)) {
                                 rack_value = value.row_letter + value.rack_num;

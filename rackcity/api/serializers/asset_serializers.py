@@ -150,6 +150,7 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
             "rack_position",
             "chassis",
             "chassis_slot",
+            "datacenter",
             "offline_storage_site",
             "owner",
             "comment",
@@ -162,7 +163,6 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
             "storage",
             "display_color",
             "memory_gb",
-            "datacenter",
         )
 
     def get_mac_addresses(self, asset):
@@ -276,6 +276,7 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
             "rack_position",
             "chassis",
             "chassis_slot",
+            "datacenter",
             "offline_storage_site",
             "owner",
             "comment",
@@ -295,7 +296,6 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
             "display_color",
             "memory_gb",
             "blades",
-            "datacenter",
         )
 
     def get_mac_addresses(self, assetCP):
