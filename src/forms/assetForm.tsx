@@ -135,11 +135,11 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     }
     return asset;
   }
-  private initializeSite() {
-    if (this.initialState.datacenter) {
-      return this.initialState.datacenter;
-    } else if (this.initialState.offline_storage_site) {
-      return this.initialState.offline_storage_site;
+  private initializeSite(asset: AssetObject) {
+    if (asset.datacenter) {
+      return asset.datacenter;
+    } else if (asset.offline_storage_site) {
+      return asset.offline_storage_site;
     } else {
       if (this.props.currSite === ALL_DATACENTERS) {
         return undefined;
@@ -174,7 +174,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
   public state = {
     values: this.initializeCustomValues(this.initialState),
-    currSite: this.initializeSite(),
+    currSite: this.initializeSite(this.initialState),
     sites: [],
     racks: [],
     models: [],
