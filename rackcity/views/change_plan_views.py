@@ -307,7 +307,9 @@ def change_plan_page_count(request):
     Return total number of pages according to page size, which must be
     specified as query parameter.
     """
-    return get_page_count_response(ChangePlan, request.query_params)
+    user = request.user
+    user_change_plans = ChangePlan.objects.filter(owner=user)
+    return get_page_count_response(ChangePlan, request.query_params,premade_object_query=user_change_plans)
 
 
 @api_view(["POST"])
