@@ -2,10 +2,10 @@ import {
   Alert,
   AnchorButton,
   Callout,
-  Classes,
+  Classes, Dialog,
   Intent,
   IToastProps,
-  Position,
+  Position, Spinner,
   Toaster,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
@@ -61,6 +61,7 @@ interface AssetViewState {
   isAlertOpen: boolean;
   datacenters: Array<DatacenterObject>;
   powerShouldUpdate: boolean;
+  loading:boolean;
 }
 
 export class AssetView extends React.PureComponent<
@@ -75,6 +76,7 @@ export class AssetView extends React.PureComponent<
     isAlertOpen: false,
     datacenters: [],
     powerShouldUpdate: false,
+    loading:false,
   };
   successfullyLoadedData = false;
   private updateAsset = (asset: AssetObject, headers: any): Promise<any> => {
@@ -103,6 +105,9 @@ export class AssetView extends React.PureComponent<
   };
 
   getData(assetKey: string, changePlan: ChangePlan) {
+    this.setState({
+      loading:true
+    })
     const params: any = {};
     if (changePlan) {
       params["change_plan"] = changePlan.id;
@@ -125,11 +130,13 @@ export class AssetView extends React.PureComponent<
         this.setState({
           asset: result,
           powerShouldUpdate: true,
+          loading:false
         });
       })
       .catch((err) => {
         this.setState({
           asset: {} as AssetObject,
+          loading:false
         });
         this.addErrorToast(err.response.data.failure_message);
       });
@@ -193,6 +200,8 @@ export class AssetView extends React.PureComponent<
       })
       .catch((err) => {});
   };
+
+
   public render() {
     if (!this.successfullyLoadedData && this.props.token) {
       let params: any;
@@ -206,6 +215,7 @@ export class AssetView extends React.PureComponent<
 
     return (
       <div className={Classes.DARK + " asset-view"}>
+        <Dialog className = "spinner-dialog" isOpen = {this.state.loading}><Spinner/></Dialog>
         <Toaster
           autoFocus={false}
           canEscapeKeyClear={true}
@@ -376,9 +386,7 @@ export class AssetView extends React.PureComponent<
                   !isNullOrUndefined(this.state.asset.decommissioning_user)
                 }
                 onClick={() =>
-                  this.props.history.push(
-                    ROUTES.ASSETS + "/" + this.state.asset.chassis!.id
-                  )
+                  this.redirectToAsset(this.state.asset.chassis!.id)
                 }
                 className="model-detail"
                 minimal
