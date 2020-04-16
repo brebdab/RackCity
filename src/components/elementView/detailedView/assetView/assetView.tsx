@@ -538,8 +538,6 @@ export class AssetView extends React.PureComponent<
         ]);
       })
       .catch((err) => {
-        console.log("there was an error: ");
-        console.log(err);
         this.addToast({
           message: err.response.data.failure_message,
           intent: Intent.DANGER,
