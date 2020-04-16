@@ -50,6 +50,7 @@ export class BarcodeScanner extends React.PureComponent<
     const capture = React.useCallback(() => {
       const imageSrc = webcamRef.current.getScreenshot();
       alert(imageSrc);
+      var imgStr = imageSrc.substr(23)
       this.setState({
         image: imageSrc,
       });
