@@ -203,29 +203,30 @@ def validate_location_modification(data, existing_asset, change_plan=None):
         except Exception:
             raise Exception("No existing chassis with id=" + str(data["chassis"]) + ".")
 
-    if existing_asset.model.is_rackmount():
-        try:
-            validate_asset_location_in_rack(
-                rack_id,
-                asset_rack_position,
-                asset_height,
-                asset_id=asset_id,
-                change_plan=change_plan,
-                related_asset_id=related_asset_id,
-            )
-        except LocationException as error:
-            raise error
-    else:
-        try:
-            validate_asset_location_in_chassis(
-                chassis_id,
-                asset_chassis_slot,
-                asset_id=asset_id,
-                change_plan=change_plan,
-                related_asset_id=related_asset_id,
-            )
-        except LocationException as error:
-            raise error
+    if not ("offline_storage_site" in data and data["offline_storage_site"]):
+        if existing_asset.model.is_rackmount():
+            try:
+                validate_asset_location_in_rack(
+                    rack_id,
+                    asset_rack_position,
+                    asset_height,
+                    asset_id=asset_id,
+                    change_plan=change_plan,
+                    related_asset_id=related_asset_id,
+                )
+            except LocationException as error:
+                raise error
+        else:
+            try:
+                validate_asset_location_in_chassis(
+                    chassis_id,
+                    asset_chassis_slot,
+                    asset_id=asset_id,
+                    change_plan=change_plan,
+                    related_asset_id=related_asset_id,
+                )
+            except LocationException as error:
+                raise error
 
 
 def records_are_identical(existing_data, new_data):
