@@ -816,6 +816,9 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     const clearedPowerConnections = this.getClearedPowerSelections();
     const newValues = updateObject(this.state.values, {
       rack: undefined,
+      rack_position: null,
+      chassis: undefined,
+      chassis_slot: null,
       power_connections: clearedPowerConnections,
       network_connections: clearedNetworkConnections,
     });
