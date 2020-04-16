@@ -53,14 +53,31 @@ def get_filter_arguments(data):
             filter_type = filter["filter_type"]
             filter_dict = filter["filter"]
             if filter_type == "text":
-                if filter_dict["match_type"] == "exact":
+                if filter_field == "datacenter":
                     filter_args.append(
-                        {"{0}__iexact".format(filter_field): filter_dict["value"]}
+                        get_datacenter_filter_arguments(
+                            filter_dict["match_type"], filter_dict["value"]
+                        )
                     )
-                elif filter_dict["match_type"] == "contains":
+                elif filter_field == "offline_storage_site":
                     filter_args.append(
-                        {"{0}__icontains".format(filter_field): filter_dict["value"]}
+                        get_offline_site_filter_arguments(
+                            filter_dict["match_type"], filter_dict["value"]
+                        )
                     )
+                else:
+                    if filter_dict["match_type"] == "exact":
+                        filter_args.append(
+                            {"{0}__iexact".format(filter_field): filter_dict["value"]}
+                        )
+                    elif filter_dict["match_type"] == "contains":
+                        filter_args.append(
+                            {
+                                "{0}__icontains".format(filter_field): filter_dict[
+                                    "value"
+                                ]
+                            }
+                        )
 
             elif filter_type == "numeric":
                 if (
@@ -111,12 +128,22 @@ def get_filter_arguments(data):
                         "Invalid rack_range filter: " + str(range_serializer.errors)
                     )
                 filter_args.append(
-                    {"rack__rack_num__range": range_serializer.get_number_range()}
+                    [
+                        {"rack__rack_num__range": range_serializer.get_number_range()},
+                        {
+                            "chassis__rack__rack_num__range": range_serializer.get_number_range()
+                        },
+                    ]
                 )
                 filter_args.append(
-                    {
-                        "rack__row_letter__range": range_serializer.get_row_range()  # noqa inclusive on both letter, number
-                    }
+                    [
+                        {
+                            "rack__row_letter__range": range_serializer.get_row_range()  # noqa inclusive on both letter, number
+                        },
+                        {
+                            "chassis__rack__row_letter__range": range_serializer.get_row_range()
+                        },
+                    ]
                 )
 
             elif filter_type == "datetime":
@@ -180,17 +207,62 @@ def get_filter_arguments(data):
     return filter_args
 
 
+def get_datacenter_filter_arguments(match_type, value):
+    datacenter_filter_args = []
+    datacenter_filter_fields = [
+        "rack__datacenter__name",
+        "rack__datacenter__abbreviation",
+        "chassis__rack__datacenter__name",
+        "chassis__rack__datacenter__abbreviation",
+    ]
+    for datacenter_filter_field in datacenter_filter_fields:
+        datacenter_filter_args.append(
+            {"{0}__i{1}".format(datacenter_filter_field, match_type): value}
+        )
+    return datacenter_filter_args
+
+
+def get_offline_site_filter_arguments(match_type, value):
+    offline_site_filter_args = []
+    offline_site_filter_fields = [
+        "offline_storage_site__name",
+        "offline_storage_site__abbreviation",
+        "chassis__offline_storage_site__name",
+        "chassis__offline_storage_site__abbreviation",
+    ]
+    for offline_site_filter_field in offline_site_filter_fields:
+        offline_site_filter_args.append(
+            {"{0}__i{1}".format(offline_site_filter_field, match_type): value}
+        )
+    return offline_site_filter_args
+
+
 def apply_filters_or(object_query, filter_args):
     q_objects = Q()
     for filter_arg in filter_args:
-        q_objects |= Q(**filter_arg)
-    object_query = object_query.filter(q_objects)
-    return object_query
+        if isinstance(filter_arg, list):
+            for sub_filter_arg in filter_arg:
+                q_objects |= Q(**sub_filter_arg)
+        else:
+            q_objects |= Q(**filter_arg)
+    return apply_filters(object_query, q_objects)
 
 
-def apply_filters_and(object_query, filter_args):
+def apply_filters_and_with_nested_or(object_query, filter_args):
+    q_objects = Q()
     for filter_arg in filter_args:
-        object_query = object_query.filter(**filter_arg)
+        if isinstance(filter_arg, list):
+            sub_q_objects = Q()
+            for sub_filter_arg in filter_arg:
+                sub_q_objects |= Q(**sub_filter_arg)
+            q_objects &= sub_q_objects
+        else:
+            q_objects &= Q(**filter_arg)
+    return apply_filters(object_query, q_objects)
+
+
+def apply_filters(object_query, q_objects):
+    object_query = object_query.filter(q_objects)
     return object_query
 
 
@@ -211,7 +283,7 @@ def get_filtered_query(object_query, data, or_filters=False):
     if or_filters and len(filter_args) > 0:
         object_query = apply_filters_or(object_query, filter_args)
     else:
-        object_query = apply_filters_and(object_query, filter_args)
+        object_query = apply_filters_and_with_nested_or(object_query, filter_args)
     return (object_query, None)
 
 

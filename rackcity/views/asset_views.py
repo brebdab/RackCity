@@ -52,6 +52,7 @@ from rackcity.utils.exceptions import (
     LocationException,
     PowerConnectionException,
     UserAssetPermissionException,
+    AssetModificationException,
 )
 from rackcity.utils.log_utils import (
     log_action,
@@ -73,6 +74,7 @@ from rackcity.utils.rackcity_utils import (
     validate_location_modification,
     no_infile_location_conflicts,
     records_are_identical,
+    validate_hostname_deletion,
 )
 from rackcity.permissions.permissions import (
     user_has_asset_permission,
@@ -240,58 +242,61 @@ def asset_add(request):
             {"failure_message": Status.CREATE_ERROR.value + str(error)},
             status=HTTPStatus.BAD_REQUEST,
         )
-    if serializer.validated_data["model"].is_rackmount():
-        if (
-            "rack" not in serializer.validated_data
-            or not serializer.validated_data["rack"]
-            or "rack_position" not in serializer.validated_data
-            or not serializer.validated_data["rack_position"]
-        ):
-            return JsonResponse(
-                {
-                    "failure_message": Status.INVALID_INPUT.value
-                    + "Must include rack and rack position to add a rackmount asset. "
-                },
-                status=HTTPStatus.BAD_REQUEST,
-            )
-        rack_id = serializer.validated_data["rack"].id
-        rack_position = serializer.validated_data["rack_position"]
-        height = serializer.validated_data["model"].height
-        try:
-            validate_asset_location_in_rack(
-                rack_id, rack_position, height, change_plan=change_plan
-            )
-        except LocationException as error:
-
-            return JsonResponse(
-                {"failure_message": Status.CREATE_ERROR.value + str(error)},
-                status=HTTPStatus.BAD_REQUEST,
-            )
-    else:
-        if (
-            "chassis" not in serializer.validated_data
-            or not serializer.validated_data["chassis"]
-            or "chassis_slot" not in serializer.validated_data
-            or not serializer.validated_data["chassis_slot"]
-        ):
-            return JsonResponse(
-                {
-                    "failure_message": Status.INVALID_INPUT.value
-                    + "Must include chassis and chassis slot to add a blade asset. "
-                },
-                status=HTTPStatus.BAD_REQUEST,
-            )
-        chassis_id = serializer.validated_data["chassis"].id
-        chassis_slot = serializer.validated_data["chassis_slot"]
-        try:
-            validate_asset_location_in_chassis(
-                chassis_id, chassis_slot, change_plan=change_plan
-            )
-        except LocationException as error:
-            return JsonResponse(
-                {"failure_message": Status.CREATE_ERROR.value + str(error)},
-                status=HTTPStatus.BAD_REQUEST,
-            )
+    if not (
+        "offline_storage_site" in serializer.validated_data
+        and serializer.validated_data["offline_storage_site"]
+    ):
+        if serializer.validated_data["model"].is_rackmount():
+            if (
+                "rack" not in serializer.validated_data
+                or not serializer.validated_data["rack"]
+                or "rack_position" not in serializer.validated_data
+                or not serializer.validated_data["rack_position"]
+            ):
+                return JsonResponse(
+                    {
+                        "failure_message": Status.INVALID_INPUT.value
+                        + "Must include rack and rack position to add a rackmount asset. "
+                    },
+                    status=HTTPStatus.BAD_REQUEST,
+                )
+            rack_id = serializer.validated_data["rack"].id
+            rack_position = serializer.validated_data["rack_position"]
+            height = serializer.validated_data["model"].height
+            try:
+                validate_asset_location_in_rack(
+                    rack_id, rack_position, height, change_plan=change_plan
+                )
+            except LocationException as error:
+                return JsonResponse(
+                    {"failure_message": Status.CREATE_ERROR.value + str(error)},
+                    status=HTTPStatus.BAD_REQUEST,
+                )
+        else:
+            if (
+                "chassis" not in serializer.validated_data
+                or not serializer.validated_data["chassis"]
+                or "chassis_slot" not in serializer.validated_data
+                or not serializer.validated_data["chassis_slot"]
+            ):
+                return JsonResponse(
+                    {
+                        "failure_message": Status.INVALID_INPUT.value
+                        + "Must include chassis and chassis slot to add a blade asset. "
+                    },
+                    status=HTTPStatus.BAD_REQUEST,
+                )
+            chassis_id = serializer.validated_data["chassis"].id
+            chassis_slot = serializer.validated_data["chassis_slot"]
+            try:
+                validate_asset_location_in_chassis(
+                    chassis_id, chassis_slot, change_plan=change_plan
+                )
+            except LocationException as error:
+                return JsonResponse(
+                    {"failure_message": Status.CREATE_ERROR.value + str(error)},
+                    status=HTTPStatus.BAD_REQUEST,
+                )
     try:
         asset = serializer.save()
     except Exception as error:
@@ -409,7 +414,17 @@ def asset_modify(request):
             {"failure_message": Status.AUTH_ERROR.value + str(auth_error)},
             status=HTTPStatus.UNAUTHORIZED,
         )
-
+    try:
+        validate_hostname_deletion(data, existing_asset)
+    except AssetModificationException as modifcation_exception:
+        return JsonResponse(
+            {
+                "failure_message": Status.MODIFY_ERROR.value
+                + "Invalid hostname deletion. "
+                + str(modifcation_exception)
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
     try:
         validate_location_modification(data, existing_asset, change_plan=change_plan)
     except Exception as error:

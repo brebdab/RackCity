@@ -3,9 +3,11 @@ import {
   AnchorButton,
   Callout,
   Classes,
+  Dialog,
   Intent,
   IToastProps,
   Position,
+  Spinner,
   Toaster,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
@@ -17,21 +19,23 @@ import FormPopup from "../../../../forms/formPopup";
 import { FormTypes } from "../../../../forms/formUtils";
 import { API_ROOT } from "../../../../utils/api-config";
 import {
+  AssetCPObject,
   AssetObject,
+  ChangePlan,
+  DatacenterObject,
   ElementType,
+  getChangePlanRowStyle,
   getHeaders,
+  isAssetCPObject,
+  MountTypes,
   NetworkConnection,
   Node,
-  DatacenterObject,
   ROUTES,
-  ChangePlan,
-  AssetCPObject,
-  getChangePlanRowStyle,
-  isAssetCPObject,
+  TableType,
 } from "../../../../utils/utils";
 import {
-  deleteAsset,
   decommissionAsset,
+  deleteAsset,
   modifyAsset,
 } from "../../elementUtils";
 import PropertiesView from "../propertiesView";
@@ -43,11 +47,16 @@ import { ALL_DATACENTERS } from "../../elementTabContainer";
 import { isNullOrUndefined } from "util";
 import { PermissionState } from "../../../../utils/permissionUtils";
 import { IconNames } from "@blueprintjs/icons";
+import { BladePowerView } from "../../powerView/bladePowerView";
+import * as actions from "../../../../store/actions/state";
+import ChassisView from "./chassisView";
+
 export interface AssetViewProps {
   token: string;
   isAdmin: boolean;
   changePlan: ChangePlan;
   permissionState: PermissionState;
+  markTablesStale(staleTables: TableType[]): void;
 }
 
 interface AssetViewState {
@@ -58,6 +67,7 @@ interface AssetViewState {
   isAlertOpen: boolean;
   datacenters: Array<DatacenterObject>;
   powerShouldUpdate: boolean;
+  loading: boolean;
 }
 
 export class AssetView extends React.PureComponent<
@@ -72,6 +82,7 @@ export class AssetView extends React.PureComponent<
     isAlertOpen: false,
     datacenters: [],
     powerShouldUpdate: false,
+    loading: false,
   };
   successfullyLoadedData = false;
   private updateAsset = (asset: AssetObject, headers: any): Promise<any> => {
@@ -87,6 +98,10 @@ export class AssetView extends React.PureComponent<
       this.getData(params.rid, this.props.changePlan);
 
       this.handleFormClose();
+      this.props.markTablesStale([
+        TableType.RACKED_ASSETS,
+        TableType.STORED_ASSETS,
+      ]);
     });
   };
   private toaster: Toaster = {} as Toaster;
@@ -100,6 +115,9 @@ export class AssetView extends React.PureComponent<
   };
 
   getData(assetKey: string, changePlan: ChangePlan) {
+    this.setState({
+      loading: true,
+    });
     const params: any = {};
     if (changePlan) {
       params["change_plan"] = changePlan.id;
@@ -122,11 +140,13 @@ export class AssetView extends React.PureComponent<
         this.setState({
           asset: result,
           powerShouldUpdate: true,
+          loading: false,
         });
       })
       .catch((err) => {
         this.setState({
           asset: {} as AssetObject,
+          loading: false,
         });
         this.addErrorToast(err.response.data.failure_message);
       });
@@ -190,6 +210,7 @@ export class AssetView extends React.PureComponent<
       })
       .catch((err) => {});
   };
+
   public render() {
     if (!this.successfullyLoadedData && this.props.token) {
       let params: any;
@@ -203,6 +224,9 @@ export class AssetView extends React.PureComponent<
 
     return (
       <div className={Classes.DARK + " asset-view"}>
+        <Dialog className="spinner-dialog" isOpen={this.state.loading}>
+          <Spinner />
+        </Dialog>
         <Toaster
           autoFocus={false}
           canEscapeKeyClear={true}
@@ -358,8 +382,53 @@ export class AssetView extends React.PureComponent<
             <PropertiesView
               data={this.state.asset.model}
               title="Model Properties"
-              data_override={this.state.asset}
+              data_override={() => {
+                const {
+                  cpu,
+                  display_color,
+                  storage,
+                  memory_gb,
+                } = this.state.asset;
+                return {cpu, display_color, storage, memory_gb};
+              }}
             />
+          </div>
+        ) : null}
+
+        {this.state.asset.model &&
+        this.state.asset.model.model_type !== MountTypes.RACKMOUNT ? (
+          <div>
+            {this.state.asset.model.model_type === MountTypes.BLADE &&
+            this.state.asset.chassis ? (
+              <AnchorButton
+                disabled={
+                  !isNullOrUndefined(this.state.asset.decommissioning_user)
+                }
+                onClick={() =>
+                  this.redirectToAsset(this.state.asset.chassis!.id)
+                }
+                className="model-detail"
+                minimal
+                icon={IconNames.DOCUMENT_OPEN}
+                text="Go to chassis detail page"
+              />
+            ) : null}
+            <div className="propsview">
+              <h3>Chassis Diagram</h3>
+
+              {this.state.asset.model.model_type ===
+              MountTypes.BLADE_CHASSIS ? (
+                <ChassisView
+                  chassis={this.state.asset}
+                  redirectToAsset={this.redirectToAsset}
+                />
+              ) : this.state.asset.chassis ? (
+                <ChassisView
+                  chassis={this.state.asset.chassis}
+                  redirectToAsset={this.redirectToAsset}
+                />
+              ) : null}
+            </div>
           </div>
         ) : null}
         <div className="propsview">
@@ -437,10 +506,7 @@ export class AssetView extends React.PureComponent<
             </div>
           ) : null}
         </div>
-        {/*temporary logic to hide power info if the asset does not have a rack, might need to change this later*/}
-        {Object.keys(this.state.asset).length !== 0 && this.state.asset.rack
-          ? this.renderPower()
-          : null}
+        {this.renderPower()}
       </div>
     );
   }
@@ -459,20 +525,39 @@ export class AssetView extends React.PureComponent<
   };
 
   private renderPower() {
-    console.log("rendering power");
-    return (
-      <PowerView
-        {...this.props}
-        asset={this.state.asset}
-        shouldUpdate={this.state.powerShouldUpdate}
-        updated={() => {
-          this.setState({ powerShouldUpdate: false });
-        }}
-        assetIsDecommissioned={
-          this.state.asset.decommissioning_user !== undefined
-        }
-      />
-    );
+    if (this.state.asset && this.state.asset.model) {
+      if (this.state.asset.model.model_type === MountTypes.BLADE) {
+        return (
+          <BladePowerView
+            {...this.props}
+            asset={this.state.asset}
+            shouldUpdate={this.state.powerShouldUpdate}
+            updated={() => {
+              this.setState({ powerShouldUpdate: false });
+            }}
+            assetIsDecommissioned={
+              this.state.asset.decommissioning_user !== undefined
+            }
+          />
+        );
+      } else {
+        return (
+          <PowerView
+            {...this.props}
+            asset={this.state.asset}
+            shouldUpdate={this.state.powerShouldUpdate}
+            updated={() => {
+              this.setState({ powerShouldUpdate: false });
+            }}
+            assetIsDecommissioned={
+              this.state.asset.decommissioning_user !== undefined
+            }
+          />
+        );
+      }
+    } else {
+      return;
+    }
   }
 
   private handleFormOpen = () => {
@@ -495,6 +580,10 @@ export class AssetView extends React.PureComponent<
         this.setState({ isDeleteOpen: false });
         this.addSuccessToast(res.data.success_message);
         this.props.history.push(ROUTES.DASHBOARD);
+        this.props.markTablesStale([
+          TableType.RACKED_ASSETS,
+          TableType.STORED_ASSETS,
+        ]);
       })
       .catch((err) => {
         this.addToast({
@@ -519,8 +608,15 @@ export class AssetView extends React.PureComponent<
         let params: any;
         params = this.props.match.params;
         this.updateAssetData(params.rid);
+        this.props.markTablesStale([
+          TableType.RACKED_ASSETS,
+          TableType.STORED_ASSETS,
+          TableType.DECOMMISSIONED_ASSETS,
+        ]);
       })
       .catch((err) => {
+        console.log("there was an error: ");
+        console.log(err);
         this.addToast({
           message: err.response.data.failure_message,
           intent: Intent.DANGER,
@@ -538,4 +634,13 @@ const mapStatetoProps = (state: any) => {
   };
 };
 
-export default withRouter(connect(mapStatetoProps)(AssetView));
+const mapDispatchToProps = (dispatch: any) => {
+  return {
+    markTablesStale: (staleTables: TableType[]) =>
+      dispatch(actions.markTablesStale(staleTables)),
+  };
+};
+
+export default withRouter(
+  connect(mapStatetoProps, mapDispatchToProps)(AssetView)
+);

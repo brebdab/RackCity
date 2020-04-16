@@ -1,13 +1,13 @@
 import {
-  Classes,
-  AnchorButton,
   Alert,
-  Toaster,
+  AnchorButton,
+  Callout,
+  Classes,
+  Intent,
   IToastProps,
   Position,
-  Intent,
   Spinner,
-  Callout,
+  Toaster,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -17,9 +17,10 @@ import { RouteComponentProps, withRouter } from "react-router";
 import { connect } from "react-redux";
 import {
   AssetObject,
-  getHeaders,
-  getChangePlanRowStyle,
   ChangePlan,
+  getChangePlanRowStyle,
+  getHeaders,
+  MountTypes,
 } from "../../../utils/utils";
 import "./powerView.scss";
 import { IconNames } from "@blueprintjs/icons";
@@ -141,6 +142,26 @@ export class PowerView extends React.PureComponent<
     this.props.updated();
   }
 
+  private isAssetPowerNetworkControlled() {
+    if (this.props.asset && this.props.asset.model) {
+      if (
+        this.props.asset.model.model_type === MountTypes.RACKMOUNT &&
+        this.props.asset.rack
+      ) {
+        return this.props.asset.rack.is_network_controlled;
+      } else if (
+        this.props.asset.model.model_type === MountTypes.BLADE &&
+        this.props.asset.chassis &&
+        this.props.asset.chassis.rack
+      ) {
+        return this.props.asset.chassis.rack.is_network_controlled;
+      } else {
+        return false;
+      }
+    }
+    return false;
+  }
+
   getUsername(token: string) {
     const headers = {
       headers: {
@@ -174,7 +195,8 @@ export class PowerView extends React.PureComponent<
             ) : (
               <td></td>
             )}
-            {this.props.asset!.rack && this.props.asset!.rack.is_network_controlled ? (
+            {this.props.asset!.rack &&
+            this.props.asset!.rack.is_network_controlled ? (
               this.state.powerStatus ? (
                 <td>{this.state.powerStatus[i]}</td>
               ) : this.props.assetIsDecommissioned || this.props.changePlan ? (
@@ -202,10 +224,7 @@ export class PowerView extends React.PureComponent<
           ) ? (
             <div className="propsview">
               <h3>Power Connections</h3>
-              <Callout
-                title="No power ports"
-                icon={IconNames.INFO_SIGN}
-              ></Callout>
+              <Callout title="No power ports" icon={IconNames.INFO_SIGN} />
               {this.props.callback === undefined ? null : (
                 <AnchorButton
                   className={"power-close"}
@@ -236,7 +255,8 @@ export class PowerView extends React.PureComponent<
                   <tbody>{this.getPowerPortRows()}</tbody>
                 </table>
               </div>
-              {this.props.asset!.rack && this.props.asset!.rack.is_network_controlled &&
+              {this.props.asset!.rack &&
+              this.props.asset!.rack.is_network_controlled &&
               Object.keys(this.props.asset!.power_connections).length > 0 &&
               this.state.powerStatus &&
               !this.props.assetIsDecommissioned &&
@@ -315,7 +335,8 @@ export class PowerView extends React.PureComponent<
                   }
                 />
               ) : null}
-              {this.props.asset!.rack && this.props.asset!.rack.is_network_controlled &&
+              {this.props.asset!.rack &&
+              this.props.asset!.rack.is_network_controlled &&
               Object.keys(this.props.asset!.power_connections).length > 0 &&
               this.state.powerStatus &&
               !this.props.assetIsDecommissioned &&

@@ -114,7 +114,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
           datacenterName = this.props.currDatacenter.name;
           filtersCopy.push({
             id: "",
-            field: "rack__datacenter__name",
+            field: "datacenter",
             filter_type: FilterTypes.TEXT,
             filter: {
               value: datacenterName,
@@ -171,7 +171,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
         datacenterName = this.props.currDatacenter.name;
         filtersCopy.push({
           id: "",
-          field: "rack__datacenter__name",
+          field: "datacenter",
           filter_type: FilterTypes.TEXT,
           filter: { value: datacenterName, match_type: TextFilterTypes.EXACT },
         });
@@ -225,7 +225,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
         datacenterName = this.props.currDatacenter.name;
         filters.push({
           id: "",
-          field: "rack__datacenter__name",
+          field: "datacenter",
           filter_type: FilterTypes.TEXT,
           filter: { value: datacenterName, match_type: TextFilterTypes.EXACT },
         });
@@ -383,7 +383,9 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
           ref={this.refHandlers.toaster}
         />
         <div>
-          {this.props.datacenters && this.props.onDatacenterSelect ? (
+          {this.props.datacenters &&
+          this.props.onDatacenterSelect &&
+          this.props.assetType === AssetType.RACKED ? (
             <Callout>
               <FormGroup label="Datacenter" inline={true}>
                 <DatacenterSelect
@@ -605,6 +607,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             shouldUpdateData={this.state.updateTable}
             currDatacenter={this.props.currDatacenter}
             isDecommissioned={this.props.assetType === AssetType.DECOMMISSIONED}
+            assetType={this.props.assetType}
           />
         </div>
       </div>

@@ -1,7 +1,7 @@
 import axios from "axios";
 import { API_ROOT } from "../../utils/api-config";
 import * as actionTypes from "./actionTypes";
-import { ChangePlan } from "../../utils/utils";
+import { ChangePlan, TableType } from "../../utils/utils";
 import { PermissionState } from "../../utils/permissionUtils";
 
 export const DUKE_OAUTH_URI =
@@ -27,6 +27,18 @@ export const setPermissionState = (permissionState: PermissionState) => {
     permissionState: permissionState,
   };
 };
+export const markTablesStale = (staleTables: TableType[]) => {
+  return {
+    type: actionTypes.MARK_TABLES_STALE,
+    staleTables: staleTables,
+  };
+}
+export const markTableFresh = (freshTable: TableType) => {
+  return {
+    type: actionTypes.MARK_TABLE_FRESH,
+    freshTable: freshTable,
+  };
+}
 export const authStart = () => {
   return {
     type: actionTypes.AUTH_START,
