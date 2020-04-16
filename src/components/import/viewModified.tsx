@@ -16,8 +16,6 @@ interface ModifierProps {
   callback: (toasts: Array<string>, types: Array<string>) => void;
   operation: string;
 }
-var console: any = {};
-console.log = function () {};
 
 export interface AssetObject {
   [key: string]: any;
@@ -38,6 +36,7 @@ export interface ModelObjectMod {
   [key: string]: any;
   vendor: string;
   model_number: string;
+  mount_type: string;
   height: string;
   display_color?: string;
   network_ports?: string; //
@@ -84,6 +83,7 @@ export class Modifier extends React.PureComponent<
             <tr>
               <th>Modified or Original?</th>
               {Object.keys(model).map((item: string) => {
+                console.log("item: ")
                 console.log(item);
                 if (item !== "id") {
                   if (item === "power_connections") {
@@ -246,6 +246,7 @@ export class Modifier extends React.PureComponent<
         fields = {
           vendor: "Vendor",
           model_number: "Model Number",
+          model_type: "Mount Type",
           height: "Height",
           display_color: "Display Color",
           network_ports: "Network Ports",

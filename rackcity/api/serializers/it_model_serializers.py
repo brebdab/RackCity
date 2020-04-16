@@ -46,9 +46,7 @@ class BulkITModelSerializer(serializers.ModelSerializer):
     Serializes all fields on ITModel model according to the format required
     for bulk export.
     """
-    mount_type = serializers.CharField(
-        source="model_type",
-    )
+    mount_type = serializers.SerializerMethodField()
     network_ports = RCIntegerField(
         source="num_network_ports",
         allow_null=True,
@@ -94,6 +92,14 @@ class BulkITModelSerializer(serializers.ModelSerializer):
             "network_port_name_3",
             "network_port_name_4",
         )
+
+    def get_mount_type(self, model):
+        if model.model_type == ModelType.RACKMOUNT_ASSET.value:
+            return "asset"
+        elif model.model_type == ModelType.BLADE_CHASSIS.value:
+            return "chassis"
+        elif model.model_type == ModelType.BLADE_ASSET.value:
+            return "blade"
 
     def get_network_port_name_1(self, model):
         return self.network_port_name(model, port_number=1)
