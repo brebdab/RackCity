@@ -2,10 +2,12 @@ import {
   Alert,
   AnchorButton,
   Callout,
-  Classes, Dialog,
+  Classes,
+  Dialog,
   Intent,
   IToastProps,
-  Position, Spinner,
+  Position,
+  Spinner,
   Toaster,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
@@ -29,6 +31,7 @@ import {
   NetworkConnection,
   Node,
   ROUTES,
+  TableType,
 } from "../../../../utils/utils";
 import {
   decommissionAsset,
@@ -44,6 +47,7 @@ import { ALL_DATACENTERS } from "../../elementTabContainer";
 import { isNullOrUndefined } from "util";
 import { PermissionState } from "../../../../utils/permissionUtils";
 import { IconNames } from "@blueprintjs/icons";
+import * as actions from "../../../../store/actions/state";
 import ChassisView from "./chassisView";
 
 export interface AssetViewProps {
@@ -51,6 +55,7 @@ export interface AssetViewProps {
   isAdmin: boolean;
   changePlan: ChangePlan;
   permissionState: PermissionState;
+  markTablesStale(staleTables: TableType[]): void;
 }
 
 interface AssetViewState {
@@ -61,7 +66,7 @@ interface AssetViewState {
   isAlertOpen: boolean;
   datacenters: Array<DatacenterObject>;
   powerShouldUpdate: boolean;
-  loading:boolean;
+  loading: boolean;
 }
 
 export class AssetView extends React.PureComponent<
@@ -76,7 +81,7 @@ export class AssetView extends React.PureComponent<
     isAlertOpen: false,
     datacenters: [],
     powerShouldUpdate: false,
-    loading:false,
+    loading: false,
   };
   successfullyLoadedData = false;
   private updateAsset = (asset: AssetObject, headers: any): Promise<any> => {
@@ -92,6 +97,10 @@ export class AssetView extends React.PureComponent<
       this.getData(params.rid, this.props.changePlan);
 
       this.handleFormClose();
+      this.props.markTablesStale([
+        TableType.RACKED_ASSETS,
+        TableType.STORED_ASSETS,
+      ]);
     });
   };
   private toaster: Toaster = {} as Toaster;
@@ -106,8 +115,8 @@ export class AssetView extends React.PureComponent<
 
   getData(assetKey: string, changePlan: ChangePlan) {
     this.setState({
-      loading:true
-    })
+      loading: true,
+    });
     const params: any = {};
     if (changePlan) {
       params["change_plan"] = changePlan.id;
@@ -130,13 +139,13 @@ export class AssetView extends React.PureComponent<
         this.setState({
           asset: result,
           powerShouldUpdate: true,
-          loading:false
+          loading: false,
         });
       })
       .catch((err) => {
         this.setState({
           asset: {} as AssetObject,
-          loading:false
+          loading: false,
         });
         this.addErrorToast(err.response.data.failure_message);
       });
@@ -201,7 +210,6 @@ export class AssetView extends React.PureComponent<
       .catch((err) => {});
   };
 
-
   public render() {
     if (!this.successfullyLoadedData && this.props.token) {
       let params: any;
@@ -215,7 +223,9 @@ export class AssetView extends React.PureComponent<
 
     return (
       <div className={Classes.DARK + " asset-view"}>
-        <Dialog className = "spinner-dialog" isOpen = {this.state.loading}><Spinner/></Dialog>
+        <Dialog className="spinner-dialog" isOpen={this.state.loading}>
+          <Spinner />
+        </Dialog>
         <Toaster
           autoFocus={false}
           canEscapeKeyClear={true}
@@ -545,6 +555,10 @@ export class AssetView extends React.PureComponent<
         this.setState({ isDeleteOpen: false });
         this.addSuccessToast(res.data.success_message);
         this.props.history.push(ROUTES.DASHBOARD);
+        this.props.markTablesStale([
+          TableType.RACKED_ASSETS,
+          TableType.STORED_ASSETS,
+        ]);
       })
       .catch((err) => {
         this.addToast({
@@ -569,8 +583,15 @@ export class AssetView extends React.PureComponent<
         let params: any;
         params = this.props.match.params;
         this.updateAssetData(params.rid);
+        this.props.markTablesStale([
+          TableType.RACKED_ASSETS,
+          TableType.STORED_ASSETS,
+          TableType.DECOMMISSIONED_ASSETS,
+        ]);
       })
       .catch((err) => {
+        console.log("there was an error: ");
+        console.log(err);
         this.addToast({
           message: err.response.data.failure_message,
           intent: Intent.DANGER,
@@ -588,4 +609,13 @@ const mapStatetoProps = (state: any) => {
   };
 };
 
-export default withRouter(connect(mapStatetoProps)(AssetView));
+const mapDispatchToProps = (dispatch: any) => {
+  return {
+    markTablesStale: (staleTables: TableType[]) =>
+      dispatch(actions.markTablesStale(staleTables)),
+  };
+};
+
+export default withRouter(
+  connect(mapStatetoProps, mapDispatchToProps)(AssetView)
+);
