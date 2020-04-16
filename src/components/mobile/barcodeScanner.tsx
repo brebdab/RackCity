@@ -6,7 +6,7 @@ import { RouteComponentProps, withRouter } from "react-router";
 import Webcam from "react-webcam";
 import "./barcodeScanner.scss";
 import { API_ROOT } from "../../utils/api-config";
-import {getHeaders} from "../../utils/utils";
+import { getHeaders } from "../../utils/utils";
 import axios from "axios";
 
 interface BarcodeScannerState {
@@ -50,7 +50,8 @@ export class BarcodeScanner extends React.PureComponent<
     const capture = React.useCallback(() => {
       const imageSrc = webcamRef.current.getScreenshot();
       var imgStr = imageSrc.substr(23);
-      alert(imgStr)
+      alert(imgStr);
+      alert(this.props.token)
       this.setState({
         image: imageSrc,
       });
@@ -61,7 +62,7 @@ export class BarcodeScanner extends React.PureComponent<
           getHeaders(this.props.token)
         )
         .then((res: any) => {
-          alert(JSON.stringify((res)));
+          alert(JSON.stringify(res));
         })
         .catch((err: any) => {
           alert(JSON.stringify(err));
