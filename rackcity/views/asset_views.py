@@ -14,6 +14,7 @@ from rackcity.api.serializers import (
     ITModelSerializer,
     RackSerializer,
     normalize_bulk_asset_data,
+    ChassisSerializer,
 )
 from rackcity.models import (
     Asset,
@@ -67,6 +68,7 @@ from rackcity.utils.query_utils import (
     get_filter_arguments,
     get_page_count_response,
     get_many_response,
+    get_filtered_query,
 )
 from rackcity.utils.rackcity_utils import (
     validate_asset_location_in_rack,
@@ -618,32 +620,79 @@ def asset_bulk_upload(request):
         del asset_data["vendor"]
         del asset_data["model_number"]
         try:
-            datacenter = Site.objects.get(abbreviation=asset_data["datacenter"])
+            chassis = Asset.objects.get(asset_number=asset_data["chassis_number"])
+            if not chassis.model.is_blade_chassis():
+                failure_message = (
+                    Status.IMPORT_ERROR.value
+                    + "Asset is not a chassis: "
+                    + "asset_number="
+                    + asset_data["chassis_number"]
+                )
+                return JsonResponse(
+                    {"failure_message": failure_message}, status=HTTPStatus.BAD_REQUEST
+                )
         except ObjectDoesNotExist:
             failure_message = (
                 Status.IMPORT_ERROR.value
-                + "Provided datacenter doesn't exist: "
-                + asset_data["datacenter"]
+                + "Chassis does not exist: "
+                + "asset_number="
+                + asset_data["chassis_number"]
             )
             return JsonResponse(
                 {"failure_message": failure_message}, status=HTTPStatus.BAD_REQUEST
             )
-        try:
-            row_letter = asset_data["rack"][:1].upper()
-            rack_num = asset_data["rack"][1:]
-            rack = Rack.objects.get(
-                datacenter=datacenter, row_letter=row_letter, rack_num=rack_num
-            )
-        except ObjectDoesNotExist:
-            failure_message = (
-                Status.IMPORT_ERROR.value
-                + "Provided rack doesn't exist: "
-                + asset_data["rack"]
-            )
-            return JsonResponse(
-                {"failure_message": failure_message}, status=HTTPStatus.BAD_REQUEST
-            )
-        asset_data["rack"] = rack.id
+        asset_data["chassis"] = chassis.id
+        del asset_data["chassis_number"]
+        if asset_data["datacenter"]:
+            try:
+                datacenter = Site.objects.get(abbreviation=asset_data["datacenter"])
+            except ObjectDoesNotExist:
+                failure_message = (
+                    Status.IMPORT_ERROR.value
+                    + "Provided datacenter doesn't exist: "
+                    + asset_data["datacenter"]
+                )
+                return JsonResponse(
+                    {"failure_message": failure_message}, status=HTTPStatus.BAD_REQUEST
+                )
+            try:
+                row_letter = asset_data["rack"][:1].upper()
+                rack_num = asset_data["rack"][1:]
+                rack = Rack.objects.get(
+                    datacenter=datacenter, row_letter=row_letter, rack_num=rack_num
+                )
+            except ObjectDoesNotExist:
+                failure_message = (
+                    Status.IMPORT_ERROR.value
+                    + "Provided rack doesn't exist: "
+                    + asset_data["rack"]
+                )
+                return JsonResponse(
+                    {"failure_message": failure_message}, status=HTTPStatus.BAD_REQUEST
+                )
+            asset_data["rack"] = rack.id
+        else:
+            asset_data["rack"] = None
+        del asset_data["datacenter"]
+        if asset_data["offline_site"]:
+            try:
+                offline_storage_site = Site.objects.get(
+                    abbreviation=asset_data["offline_site"]
+                )
+            except ObjectDoesNotExist:
+                failure_message = (
+                    Status.IMPORT_ERROR.value
+                    + "Provided offline storage site doesn't exist: "
+                    + asset_data["offline_site"]
+                )
+                return JsonResponse(
+                    {"failure_message": failure_message}, status=HTTPStatus.BAD_REQUEST
+                )
+            else:
+                asset_data["offline_storage_site"] = offline_storage_site.id
+        else:
+            asset_data["offline_storage_site"] = None
+        del asset_data["offline_site"]
         asset_serializer = AssetSerializer(data=asset_data)  # non-recursive to validate
         if not asset_serializer.is_valid():
             errors = asset_serializer.errors
@@ -744,28 +793,60 @@ def asset_bulk_upload(request):
             )
         else:
             # asset number not provided or it is new
-            rack = asset_serializer.validated_data["rack"]
-            if not user_has_asset_permission(request.user, rack.datacenter):
+            if (
+                "rack" in asset_serializer.validated_data
+                and asset_serializer.validated_data["rack"]
+            ):
+                site = asset_serializer.validated_data["rack"].datacenter
+            elif (
+                "chassis" in asset_serializer.validated_data
+                and asset_serializer.validated_data["chassis"]
+                and asset_serializer.validated_data["chassis"].rack
+            ):
+                site = asset_serializer.validated_data["chassis"].rack.datacenter
+            elif (
+                "chassis" in asset_serializer.validated_data
+                and asset_serializer.validated_data["chassis"]
+                and asset_serializer.validated_data["chassis"].offline_storage_site
+            ):
+                site = asset_serializer.validated_data["chassis"].offline_storage_site
+            elif (
+                "offline_storage_site" in asset_serializer.validated_data
+                and asset_serializer.validated_data["offline_storage_site"]
+            ):
+                site = asset_serializer.validated_data["offline_storage_site"]
+            if not user_has_asset_permission(request.user, site):
                 return JsonResponse(
                     {
                         "failure_message": Status.AUTH_ERROR.value
                         + AuthFailure.ASSET.value,
                         "errors": "User "
                         + request.user.username
-                        + " does not have asset permission in datacenter id="
-                        + str(rack.datacenter.id),
+                        + " does not have asset permission in site id="
+                        + str(site.id),
                     },
                     status=HTTPStatus.UNAUTHORIZED,
                 )
             model = ITModel.objects.get(id=asset_data["model"])
             try:
-                # TODO: add chassis validation to bulk
-                validate_asset_location_in_rack(
-                    asset_serializer.validated_data["rack"].id,
-                    asset_serializer.validated_data["rack_position"],
-                    model.height,
-                    asset_id=None,
-                )
+                if (
+                    "rack" in asset_serializer.validated_data
+                    and asset_serializer.validated_data["rack"]
+                ):
+                    validate_asset_location_in_rack(
+                        asset_serializer.validated_data["rack"].id,
+                        asset_serializer.validated_data["rack_position"],
+                        model.height,
+                        asset_id=None,
+                    )
+                elif (
+                    "chassis" in asset_serializer.validated_data
+                    and asset_serializer.validated_data["chassis"]
+                ):
+                    validate_asset_location_in_chassis(
+                        asset_serializer.validated_data["chassis"].id,
+                        asset_serializer.validated_data["chassis_slot"],
+                    )
             except LocationException as error:
                 if "asset_number" in asset_data and asset_data["asset_number"]:
                     asset_name = str(asset_data["asset_number"])
@@ -788,7 +869,10 @@ def asset_bulk_upload(request):
                     {"asset_serializer": asset_serializer, "asset_data": asset_data}
                 )
     try:
-        no_infile_location_conflicts(asset_datas)
+        print("DID NOT CHECK INFILE LOCATION CONFLICTS!")
+        # no_infile_location_conflicts(
+        #     asset_datas
+        # )  # TODO: add check for blades. make sure this doens't break for offline
     except LocationException as error:
         failure_message = (
             Status.IMPORT_ERROR.value
@@ -815,7 +899,14 @@ def asset_bulk_upload(request):
         new_data["model"] = ITModelSerializer(
             ITModel.objects.get(id=new_data["model"])
         ).data
-        new_data["rack"] = RackSerializer(Rack.objects.get(id=new_data["rack"])).data
+        if new_data["rack"]:
+            new_data["rack"] = RackSerializer(
+                Rack.objects.get(id=new_data["rack"])
+            ).data
+        if new_data["chassis"]:
+            new_data["chassis"] = ChassisSerializer(
+                Asset.objects.get(id=new_data["chassis"])
+            ).data
         existing_data = RecursiveAssetSerializer(
             potential_modification["existing_asset"]
         ).data
@@ -877,7 +968,9 @@ def asset_bulk_approve(request):
             # blank ones. That's how it's returned in bulk-upload
             if field == "model":
                 value = ITModel.objects.get(id=asset_data[field]["id"])
-            elif field == "rack":
+            elif field == "rack" and asset_data[field]:
+                value = Rack.objects.get(id=asset_data[field]["id"])
+            elif field == "chassis" and asset_data[field]:
                 value = Rack.objects.get(id=asset_data[field]["id"])
             else:
                 value = asset_data[field]
@@ -898,25 +991,14 @@ def asset_bulk_approve(request):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def asset_bulk_export(request):
+def asset_bulk_export(request):  # TODO: add a new method for offline
     """
     List all assets in csv form, in accordance with Bulk Spec.
     """
     assets_query = Asset.objects
-    try:
-        filter_args = get_filter_arguments(request.data)  # TODO: make this use the new method
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message": Status.EXPORT_ERROR.value
-                + GenericFailure.FILTER.value,
-                "errors": str(error),
-            },
-            status=HTTPStatus.BAD_REQUEST,
-        )
-    for filter_arg in filter_args:
-        assets_query = assets_query.filter(**filter_arg)
-
+    filtered_query, failure_response = get_filtered_query(assets_query, request.data)
+    if failure_response:
+        return failure_response
     try:
         sort_args = get_sort_arguments(request.data)
     except Exception as error:
@@ -928,7 +1010,7 @@ def asset_bulk_export(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
-    assets = assets_query.order_by(*sort_args)
+    assets = filtered_query.order_by(*sort_args)
 
     serializer = BulkAssetSerializer(assets, many=True)
     csv_string = StringIO()
