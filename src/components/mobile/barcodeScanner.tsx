@@ -8,7 +8,6 @@ import "./barcodeScanner.scss";
 import { API_ROOT } from "../../utils/api-config";
 import { getHeaders } from "../../utils/utils";
 import axios from "axios";
-import * as actionTypes from "../../store/actions/actionTypes";
 
 interface BarcodeScannerState {
   result: string;
@@ -54,12 +53,12 @@ export class BarcodeScanner extends React.PureComponent<
     let webcamRef: any;
     webcamRef = React.useRef(null);
     let capture: Function;
+    const token = useSelector((state: RootState) => {
+        return state.token;
+      })
     capture = React.useCallback(() => {
       const imageSrc = webcamRef.current.getScreenshot();
       var imgStr = imageSrc.substr(23);
-      const token = useSelector((state: RootState) => {
-        return state.token;
-      })
       console.log(token)
       this.setState({
         image: imageSrc,
