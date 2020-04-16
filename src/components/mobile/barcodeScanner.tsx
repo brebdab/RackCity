@@ -1,10 +1,13 @@
-import {AnchorButton, Classes} from "@blueprintjs/core";
+import { AnchorButton, Classes } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import Webcam from "react-webcam";
 import "./barcodeScanner.scss";
+import { API_ROOT } from "../../utils/api-config";
+import {getHeaders} from "../../utils/utils";
+import axios from "axios";
 
 interface BarcodeScannerState {
   result: string;
@@ -46,9 +49,22 @@ export class BarcodeScanner extends React.PureComponent<
     webcamRef = React.useRef(null);
     const capture = React.useCallback(() => {
       const imageSrc = webcamRef.current.getScreenshot();
+      alert(imageSrc);
       this.setState({
         image: imageSrc,
       });
+      axios
+        .post(
+          API_ROOT + "api/assets/asset-barcode",
+          { img_string: imageSrc },
+          getHeaders(this.props.token)
+        )
+        .then((res: any) => {
+          alert(JSON.stringify((res)));
+        })
+        .catch((err: any) => {
+          alert(JSON.stringify(err));
+        });
     }, [webcamRef]);
     return (
       <div>
@@ -60,7 +76,15 @@ export class BarcodeScanner extends React.PureComponent<
           videoConstraints={this.constraints}
           ref={webcamRef}
         />
-        <AnchorButton className={"scanner-button"} onClick={capture}>Capture photo</AnchorButton>
+        <AnchorButton
+          className={"scanner-button"}
+          intent={"primary"}
+          minimal
+          icon="camera"
+          onClick={capture}
+        >
+          Capture photo
+        </AnchorButton>
       </div>
     );
   };
