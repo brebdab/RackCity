@@ -359,7 +359,12 @@ def get_changes_on_asset(asset, asset_cp):
     fields = [field.name for field in Asset._meta.fields]
     changes = []
     for field in fields:
-        if getattr(asset, field) != getattr(asset_cp, field):
+        if field == "chassis":
+            chassis_live = asset.chassis
+            chassis_cp = asset_cp.chassis
+            if chassis_live and (chassis_live != chassis_cp.related_asset):
+                changes.append("chassis")
+        elif getattr(asset, field) != getattr(asset_cp, field):
             changes.append(field)
     if network_connections_have_changed(asset, asset_cp):
         changes.append("network_connections")
