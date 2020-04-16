@@ -49,15 +49,15 @@ export class BarcodeScanner extends React.PureComponent<
     webcamRef = React.useRef(null);
     const capture = React.useCallback(() => {
       const imageSrc = webcamRef.current.getScreenshot();
-      alert(imageSrc);
-      var imgStr = imageSrc.substr(23)
+      var imgStr = imageSrc.substr(23);
+      alert(imgStr)
       this.setState({
         image: imageSrc,
       });
       axios
         .post(
           API_ROOT + "api/assets/asset-barcode",
-          { img_string: imageSrc },
+          { img_string: imgStr },
           getHeaders(this.props.token)
         )
         .then((res: any) => {
