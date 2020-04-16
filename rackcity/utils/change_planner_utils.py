@@ -440,7 +440,7 @@ def get_cp_modification_conflicts(asset_cp):
                 "conflict_resolvable": False,
             }
         )
-    if asset_cp.rack is None:
+    if asset_cp.model.is_rackmount() and (asset_cp.rack is None):
         conflicts.append(
             {
                 "conflict_message": "The rack"
@@ -468,16 +468,23 @@ def get_cp_modification_conflicts(asset_cp):
         return conflicts
 
 
-def get_location_detail(asset):
-    return (
-        " at rack "
-        + asset.rack.datacenter.abbreviation
-        + " "
-        + asset.rack.row_letter
-        + str(asset.rack.rack_num)
-        + ", position "
-        + str(asset.rack_position)
-    )
+def get_location_detail(asset,):
+    if asset.model.is_rackmount():
+        if asset.rack:
+            return (
+                " at rack "
+                + asset.rack.datacenter.abbreviation
+                + " "
+                + asset.rack.row_letter
+                + str(asset.rack.rack_num)
+                + ", position "
+                + str(asset.rack_position)
+            )
+        ## TODO error message if asset is in an offline site
+        return ""
+
+    else:
+        return " in chassis " + asset.chassis.hostname
 
 
 def get_modifications_in_cp(change_plan):

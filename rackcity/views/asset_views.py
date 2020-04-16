@@ -33,6 +33,8 @@ from rackcity.utils.asset_utils import (
     save_power_connections,
     save_all_field_data_live,
     save_all_field_data_cp,
+    copy_asset_to_new_asset_cp,
+    add_chassis_to_cp,
 )
 from rackcity.utils.change_planner_utils import (
     get_change_plan,
@@ -208,11 +210,18 @@ def asset_add(request):
     )
     if failure_response:
         return failure_response
+    chassis_id_live = None
     if change_plan:
         failure_response = get_cp_already_executed_response(change_plan)
         if failure_response:
             return failure_response
         data["change_plan"] = change_plan.id
+
+        if data["chassis"] and not AssetCP.objects.filter(id=data["chassis"]).exists():
+            #ignore the chassis because we will replace it with a new chassis on AssetCP later
+            chassis_id_live = data["chassis"]
+            del data["chassis"]
+
         serializer = AssetCPSerializer(data=data)
     else:
         serializer = AssetSerializer(data=data)
@@ -271,8 +280,8 @@ def asset_add(request):
                 )
         else:
             if (
-                "chassis" not in serializer.validated_data
-                or not serializer.validated_data["chassis"]
+                (("chassis" not in serializer.validated_data
+                or not serializer.validated_data["chassis"]) and not chassis_id_live)
                 or "chassis_slot" not in serializer.validated_data
                 or not serializer.validated_data["chassis_slot"]
             ):
@@ -283,7 +292,26 @@ def asset_add(request):
                     },
                     status=HTTPStatus.BAD_REQUEST,
                 )
-            chassis_id = serializer.validated_data["chassis"].id
+
+            if chassis_id_live:
+                try:
+                    chassis_live = Asset.objects.get(id=chassis_id_live)
+                except ObjectDoesNotExist:
+                    return JsonResponse(
+                        {
+                            "failure_message": Status.MODIFY_ERROR.value
+                            + "Chassis"
+                            + GenericFailure.DOES_NOT_EXIST.value,
+                            "errors": "No existing chassis with id=" + str(chassis_id_live),
+                        },
+                        status=HTTPStatus.BAD_REQUEST,
+                    )
+                chassis_cp = add_chassis_to_cp(chassis_live, change_plan)
+                chassis_id = chassis_cp.id
+                serializer.validated_data["chassis"] = chassis_cp
+
+            else:
+                chassis_id = serializer.validated_data["chassis"].id
             chassis_slot = serializer.validated_data["chassis_slot"]
             try:
                 validate_asset_location_in_chassis(
@@ -305,6 +333,7 @@ def asset_add(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
+
     warning_message = save_all_connection_data(
         data, asset, request.user, change_plan=change_plan
     )

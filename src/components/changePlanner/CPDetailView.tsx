@@ -27,6 +27,7 @@ import {
   AssetObject,
   ChangePlan,
   getHeaders,
+  isAssetObject,
   isDatacenterObject,
   isModelObject,
   isObject,
@@ -125,6 +126,7 @@ class CPDetailView extends React.Component<
     });
   }
   removeModification(modification: Modification) {
+    this.loading = true;
     axios
       .post(
         API_ROOT +
@@ -135,6 +137,7 @@ class CPDetailView extends React.Component<
         getHeaders(this.props.token)
       )
       .then((res) => {
+        this.loading = false;
         this.addSuccessToast(res.data.success_message);
         this.updateData();
         this.props.markTablesStale([
@@ -145,6 +148,7 @@ class CPDetailView extends React.Component<
         this.setButtonState();
       })
       .catch((err) => {
+        this.loading = false;
         this.addErrorToast(err.response.data.failure_message);
       });
   }
@@ -178,6 +182,7 @@ class CPDetailView extends React.Component<
     conflict: Conflict,
     override_live: boolean
   ) {
+    this.loading = true;
     axios
       .post(
         API_ROOT +
@@ -188,6 +193,7 @@ class CPDetailView extends React.Component<
         getHeaders(this.props.token)
       )
       .then((res) => {
+        this.loading = false;
         this.addSuccessToast(res.data.success_message);
         this.updateData();
         this.props.markTablesStale([
@@ -197,6 +203,7 @@ class CPDetailView extends React.Component<
         this.setButtonState();
       })
       .catch((err) => {
+        this.loading = false;
         this.addErrorToast(err.response.data.failure_message);
       });
   }
@@ -206,6 +213,7 @@ class CPDetailView extends React.Component<
     });
   }
   handleExecute() {
+    this.loading = true;
     axios
       .post(
         API_ROOT + "api/change-plans/" + this.state.changePlan.id + "/execute",
@@ -213,6 +221,7 @@ class CPDetailView extends React.Component<
         getHeaders(this.props.token)
       )
       .then((res) => {
+        this.loading = false;
         this.props.updateChangePlans(true);
         this.addSuccessToast(res.data.success_message);
         this.setState({
@@ -230,6 +239,7 @@ class CPDetailView extends React.Component<
         ]);
       })
       .catch((err) => {
+        this.loading = false;
         this.addErrorToast(err.response.data.failure_message);
         this.setState({
           isAlertOpen: false,
@@ -323,6 +333,12 @@ class CPDetailView extends React.Component<
             field = (
               <td style={this.getHighlightStyle(modification, col)}>
                 {value.name}
+              </td>
+            );
+          } else if (isAssetObject(value)) {
+            field = (
+              <td style={this.getHighlightStyle(modification, col)}>
+                {value.hostname}
               </td>
             );
           } else if (!isObject(value)) {
