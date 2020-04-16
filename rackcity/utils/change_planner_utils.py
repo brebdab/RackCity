@@ -505,8 +505,8 @@ def get_modifications_in_cp(change_plan):
             title = "Decommission asset"
             if asset_cp.asset_number:
                 title += " " + str(asset_cp.asset_number)
-            if asset_cp.rack:
-                title += get_location_detail(asset_cp)
+            title += get_location_detail(asset_cp)
+
         elif related_asset or (asset_cp.is_conflict and related_asset is None):
             modification_type = ModificationType.MODIFY
             if related_asset:
