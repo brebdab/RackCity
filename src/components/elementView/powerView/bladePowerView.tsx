@@ -23,7 +23,6 @@ import {
 import { PermissionState } from "../../../utils/permissionUtils";
 import { IconNames } from "@blueprintjs/icons";
 import "./bladePowerView.scss";
-import { PowerView } from "./powerView";
 
 export enum PowerAction {
   ON = "on",
