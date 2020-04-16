@@ -71,9 +71,11 @@ export class BarcodeScanner extends React.PureComponent<
         )
         .then((res: any) => {
           alert(JSON.stringify(res));
+          console.log(res)
         })
         .catch((err: any) => {
           alert(JSON.stringify(err));
+          console.log(err)
         });
     }, [webcamRef]);
     return (
@@ -81,7 +83,7 @@ export class BarcodeScanner extends React.PureComponent<
         <Webcam
           audio={false}
           height={this.state.cameraHeight * 0.8}
-          screenshotFormat={"image/jpeg"}
+          screenshotFormat={"image/png"}
           width={this.state.cameraWidth}
           videoConstraints={this.constraints}
           ref={webcamRef}
@@ -128,7 +130,6 @@ export class BarcodeScanner extends React.PureComponent<
     return (
       <div className={Classes.DARK}>
         <this.WebcamCapture />
-        <AnchorButton onClick={() => {console.log(this.state); console.log(this.props)}}>Show data</AnchorButton>
       </div>
     );
   }

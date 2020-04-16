@@ -1013,55 +1013,66 @@ def get_asset_from_barcode(request):
     Parse barcode as base64 encoded string for asset number then return
     corresponding live asset with that number, if it exists
     """
-    try:
-        data = JSONParser().parse(request)
-    except Exception as error:
-        return JsonResponse(
-            {"failure_message": "failed1"}, status=HTTPStatus.BAD_REQUEST
-        )
+    data = JSONParser().parse(request)
     if "img_string" not in data:
         return JsonResponse(
-            {"failure_message": "failed2"}, status=HTTPStatus.BAD_REQUEST
+            {"failure_message": "ERROR: Request must contain base64-encoded image string"}, status=HTTPStatus.BAD_REQUEST
         )
-    try:
-        img = b64decode(data["img_string"])
-    except Exception as error:
-        return JsonResponse(
-            {"failure_message": "failed3"}, status=HTTPStatus.BAD_REQUEST
-        )
-    try:
-        img_file = BytesIO(img)
-    except Exception as error:
-        return JsonResponse(
-            {"failure_message": "failed4"}, status=HTTPStatus.BAD_REQUEST
-        )
-    try:
-        image = Image.open(img_file).convert("RGB")
-    except Exception as error:
-        return JsonResponse(
-            {"failure_message": "failed5"}, status=HTTPStatus.BAD_REQUEST
-        )
-    try:
-        opencv_img = numpy.array(image)
-    except Exception as error:
-        return JsonResponse(
-            {"failure_message": "failed3"}, status=HTTPStatus.BAD_REQUEST
-        )
-    try:
-        opencv_img = opencv_img[:, :, ::-1].copy()
-    except Exception as error:
-        return JsonResponse(
-            {"failure_message": "failed3"}, status=HTTPStatus.BAD_REQUEST
-        )
-    try:
-        barcodes = decode(opencv_img)
-    except Exception as error:
-        return JsonResponse(
-            {"failure_message": error}, status=HTTPStatus.BAD_REQUEST
-        )
+    img = b64decode(data["img_string"])
+    img_file = BytesIO(img)
+    image = Image.open(img_file).convert("RGB")
+    opencv_img = numpy.array(image)
+    opencv_img = opencv_img[:, :, ::-1].copy()
+    barcodes = decode(opencv_img)
+    # try:
+    #     data = JSONParser().parse(request)
+    # except Exception as error:
+    #     return JsonResponse(
+    #         {"failure_message": "failed1"}, status=HTTPStatus.BAD_REQUEST
+    #     )
+    # if "img_string" not in data:
+    #     return JsonResponse(
+    #         {"failure_message": "failed2"}, status=HTTPStatus.BAD_REQUEST
+    #     )
+    # try:
+    #     img = b64decode(data["img_string"])
+    # except Exception as error:
+    #     return JsonResponse(
+    #         {"failure_message": "failed3"}, status=HTTPStatus.BAD_REQUEST
+    #     )
+    # try:
+    #     img_file = BytesIO(img)
+    # except Exception as error:
+    #     return JsonResponse(
+    #         {"failure_message": "failed4"}, status=HTTPStatus.BAD_REQUEST
+    #     )
+    # try:
+    #     image = Image.open(img_file).convert("RGB")
+    # except Exception as error:
+    #     return JsonResponse(
+    #         {"failure_message": "failed5"}, status=HTTPStatus.BAD_REQUEST
+    #     )
+    # try:
+    #     opencv_img = numpy.array(image)
+    # except Exception as error:
+    #     return JsonResponse(
+    #         {"failure_message": "failed3"}, status=HTTPStatus.BAD_REQUEST
+    #     )
+    # try:
+    #     opencv_img = opencv_img[:, :, ::-1].copy()
+    # except Exception as error:
+    #     return JsonResponse(
+    #         {"failure_message": "failed3"}, status=HTTPStatus.BAD_REQUEST
+    #     )
+    # try:
+    #     barcodes = decode(opencv_img)
+    # except Exception as error:
+    #     return JsonResponse(
+    #         {"failure_message": error}, status=HTTPStatus.BAD_REQUEST
+    #     )
     if len(barcodes) < 1:
         return JsonResponse(
-            {"warning_message": "ERROR: No barcode detected"}, status=HTTPStatus.OK
+            {"warning_message": "WARNING: No barcode detected"}, status=HTTPStatus.BAD_REQUEST
         )
     barcode_data = ""
     try:
@@ -1069,7 +1080,11 @@ def get_asset_from_barcode(request):
             barcode_data = barcode.data.decode("utf-8")
     except Exception as error:
         return JsonResponse(
-            {"failure_message": "failed"}, status=HTTPStatus.BAD_REQUEST
+            {"failure_message": "ERROR: Could not decode barcode value"}, status=HTTPStatus.BAD_REQUEST
+        )
+    if not barcode_data.isdigit():
+        return JsonResponse(
+            {"failure_message": "ERROR: Barcode contains non-numeric characters"}, status=HTTPStatus.BAD_REQUEST
         )
     try:
         asset = Asset.objects.get(asset_number=barcode_data)
