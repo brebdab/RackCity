@@ -256,7 +256,7 @@ export class BladePowerView extends React.PureComponent<
 
   render() {
     return (
-      <div className="propsview">
+      <div className={Classes.DARK + " propsview"}>
         <h3>Power Connections</h3>
         {this.state.statusLoaded ? (
           this.props.asset &&
