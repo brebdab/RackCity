@@ -112,6 +112,7 @@ export const AssetFieldsTable: any = {
   model__model_number: "Model Number",
   rack: "Rack",
   datacenter: "Datacenter",
+  offline_storage_site: "Offline Storage Site",
   rack_position: "Rack Position",
   chassis: "Chassis",
   chassis_slot: "Chassis Slot",
