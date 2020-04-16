@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from rackcity.models import DecommissionedAsset
+from rackcity.models import DecommissionedAsset, AssetCP
 
 
 class GetDecommissionedAssetSerializer(serializers.ModelSerializer):
@@ -53,3 +53,6 @@ class AddDecommissionedAssetSerializer(serializers.ModelSerializer):
             "network_connections",
             "network_graph",
         )
+
+
+

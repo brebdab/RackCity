@@ -11,6 +11,7 @@ from rackcity.api.serializers import (
     RecursiveAssetCPSerializer,
     GetDecommissionedAssetSerializer,
 )
+from rackcity.api.serializers.asset_serializers import GetDecommissionedAssetCPSerializer
 from rackcity.models import (
     Asset,
     AssetCP,
@@ -245,10 +246,10 @@ def get_many_assets_response_for_cp(
         return filter_failure_response
     if decommissioned:
         asset_serializer = GetDecommissionedAssetSerializer(assets, many=True,)
-
+        asset_cp_serializer = GetDecommissionedAssetCPSerializer(assets_cp, many=True, )
     else:
         asset_serializer = RecursiveAssetSerializer(assets, many=True,)
-    asset_cp_serializer = RecursiveAssetCPSerializer(assets_cp, many=True,)
+        asset_cp_serializer = RecursiveAssetCPSerializer(assets_cp, many=True,)
     all_assets = asset_serializer.data + asset_cp_serializer.data
 
     sorted_assets = sort_serialized_assets(all_assets, request.data)
