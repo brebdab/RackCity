@@ -1,19 +1,23 @@
 import { AnchorButton, Classes } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
-import { connect } from "react-redux";
+import { connect, useSelector } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import Webcam from "react-webcam";
 import "./barcodeScanner.scss";
 import { API_ROOT } from "../../utils/api-config";
 import { getHeaders } from "../../utils/utils";
 import axios from "axios";
+import * as actionTypes from "../../store/actions/actionTypes";
 
 interface BarcodeScannerState {
   result: string;
   image: any;
   cameraHeight: number;
   cameraWidth: number;
+  token: string;
+}
+interface RootState {
   token: string;
 }
 interface BarcodeScannerProps {
@@ -53,8 +57,10 @@ export class BarcodeScanner extends React.PureComponent<
     capture = React.useCallback(() => {
       const imageSrc = webcamRef.current.getScreenshot();
       var imgStr = imageSrc.substr(23);
-      console.log(this.props)
-      console.log(this.state)
+      const token = useSelector((state: RootState) => {
+        return state.token;
+      })
+      console.log(token)
       this.setState({
         image: imageSrc,
       });
