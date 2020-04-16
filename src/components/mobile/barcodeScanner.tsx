@@ -10,11 +10,8 @@ import { getHeaders } from "../../utils/utils";
 import axios from "axios";
 
 interface BarcodeScannerState {
-  result: string;
-  image: any;
   cameraHeight: number;
   cameraWidth: number;
-  token: string;
 }
 interface RootState {
   token: string;
@@ -29,21 +26,10 @@ export class BarcodeScanner extends React.PureComponent<
   BarcodeScannerState
 > {
   public state = {
-    result: "",
-    image: undefined,
     cameraHeight: 0,
     cameraWidth: 0,
-    token: ""
   };
 
-  handleScan(data: string) {
-    this.setState({
-      result: data,
-    });
-  }
-  handleError(err: any) {
-    console.error(err);
-  }
   constraints = {
     height: 720,
     width: 1280,
@@ -54,15 +40,12 @@ export class BarcodeScanner extends React.PureComponent<
     webcamRef = React.useRef(null);
     let capture: Function;
     const token = useSelector((state: RootState) => {
-        return state.token;
-      })
+      return state.token;
+    });
     capture = React.useCallback(() => {
       const imageSrc = webcamRef.current.getScreenshot();
-      var imgStr = imageSrc.substr(23);
-      console.log(token)
-      this.setState({
-        image: imageSrc,
-      });
+      let imgStr: string;
+      imgStr = imageSrc.substr(23);
       axios
         .post(
           API_ROOT + "api/assets/asset-barcode",
@@ -71,11 +54,9 @@ export class BarcodeScanner extends React.PureComponent<
         )
         .then((res: any) => {
           alert(JSON.stringify(res));
-          console.log(res)
         })
         .catch((err: any) => {
           alert(JSON.stringify(err));
-          console.log(err)
         });
     }, [webcamRef]);
     return (
@@ -95,7 +76,6 @@ export class BarcodeScanner extends React.PureComponent<
           icon="camera"
           onClick={() => {
             capture();
-            this.getDataFromString();
           }}
         >
           Capture photo
@@ -104,18 +84,6 @@ export class BarcodeScanner extends React.PureComponent<
     );
   };
 
-  private getDataFromString() {
-    console.log(this.props.token)
-    console.log(this.state)
-  }
-
-  componentDidMount() {
-    console.log(this.props)
-    this.setState({
-      token: this.props.token
-    })
-  }
-
   render() {
     const height = window.innerHeight;
     const width = document.body.offsetWidth;
@@ -123,7 +91,6 @@ export class BarcodeScanner extends React.PureComponent<
       this.setState({
         cameraWidth: width,
         cameraHeight: height,
-        token: this.props.token
       });
     }
 
