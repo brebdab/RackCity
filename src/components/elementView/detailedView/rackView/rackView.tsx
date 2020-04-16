@@ -70,11 +70,11 @@ class RackView extends React.PureComponent<
           );
         } else {
           currHeight = width + currHeight;
-          const hostname = assets[0].hostname ? assets[0].hostname : " ";
+          const hostname = assets[0].hostname ? " | " + assets[0].hostname : " ";
           let display=  assets[0].model.vendor +
                   " " +
                   assets[0].model.model_number +
-                  " | " +
+                   
                   hostname;
           if (assets[0].model.model_type===MountTypes.BLADE_CHASSIS){
             display += " | " + assets[0].blades.length + " blades"
