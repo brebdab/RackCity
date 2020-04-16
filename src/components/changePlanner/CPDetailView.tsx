@@ -86,7 +86,7 @@ class CPDetailView extends React.Component<
     modifications: [],
     isAlertOpen: false,
     username: "",
-    disableButtons: false,
+    disableButtons: true,
   };
   printWorkOrder = () => {
     this.getUsername(this.props.token);
@@ -100,22 +100,27 @@ class CPDetailView extends React.Component<
   };
 
   setButtonState() {
-    let disable = false;
     if (
       this.loading ||
       this.state.modifications.length === 0 ||
       !isNullOrUndefined(this.state.changePlan.execution_time)
     ) {
-      disable = true;
+      this.setState({
+        disableButtons: true,
+      });
+      return;
     }
 
     this.state.modifications.forEach((modification: Modification) => {
       if (modification.conflicts && modification.conflicts.length > 0) {
-        disable = true;
+        this.setState({
+          disableButtons: true,
+        });
+        return;
       }
     });
     this.setState({
-      disableButtons: disable,
+      disableButtons: false,
     });
   }
   removeModification(modification: Modification) {
@@ -136,16 +141,7 @@ class CPDetailView extends React.Component<
           TableType.STORED_ASSETS,
           TableType.DECOMMISSIONED_ASSETS,
         ]);
-        // const modifications: Array<Modification> = this.state.modifications.slice();
-        // const index = modifications.indexOf(modification);
-        // modifications.splice(index, 1);
-        // console.log(modifications, index);
-        // const isOpen = this.state.isOpen;
-        // isOpen.splice(index, 1);
-        //   this.setState({
-        //     modifications,
-        //     isOpen
-        //   });
+    this.setButtonState()
       })
       .catch((err) => {
         this.addErrorToast(err.response.data.failure_message);
@@ -197,27 +193,9 @@ class CPDetailView extends React.Component<
           TableType.RACKED_ASSETS,
           TableType.STORED_ASSETS,
         ]);
+        this.setButtonState()
 
-        // const modifications: Array<Modification> = this.state.modifications.slice();
-        // const index = modifications.indexOf(modification);
-        // if (override_live) {
-        //   modification.conflicts.splice(
-        //     modification.conflicts.indexOf(conflict),
-        //     1
-        //   );
 
-        //   modifications[index] = modification;
-        // } else {
-        //   modifications.splice(index, 1);
-        //   const isOpen = this.state.isOpen;
-        //   isOpen.splice(index, 1);
-        //   this.setState({
-        //     isOpen
-        //   });
-        // }
-        // this.setState({
-        //   modifications
-        // });
       })
       .catch((err) => {
         this.addErrorToast(err.response.data.failure_message);
