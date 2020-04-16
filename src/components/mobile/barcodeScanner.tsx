@@ -14,6 +14,7 @@ interface BarcodeScannerState {
   image: any;
   cameraHeight: number;
   cameraWidth: number;
+  token: string;
 }
 interface BarcodeScannerProps {
   token: string;
@@ -29,6 +30,7 @@ export class BarcodeScanner extends React.PureComponent<
     image: undefined,
     cameraHeight: 0,
     cameraWidth: 0,
+    token: ""
   };
 
   handleScan(data: string) {
@@ -50,8 +52,8 @@ export class BarcodeScanner extends React.PureComponent<
     const capture = React.useCallback(() => {
       const imageSrc = webcamRef.current.getScreenshot();
       var imgStr = imageSrc.substr(23);
-      alert(imgStr);
-      alert(this.props.token)
+      console.log(this.props)
+      console.log(this.state)
       this.setState({
         image: imageSrc,
       });
@@ -90,6 +92,12 @@ export class BarcodeScanner extends React.PureComponent<
       </div>
     );
   };
+
+  componentDidMount() {
+    this.setState({
+      token: this.props.token
+    })
+  }
 
   render() {
     const height = window.innerHeight;
