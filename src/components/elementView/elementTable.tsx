@@ -674,6 +674,20 @@ class ElementTable extends React.Component<
       });
     }
   };
+  shouldShowPowerInline = (item: ElementObjectType) => {
+    return (
+      isAssetObject(item) &&
+      this.props.assetType === AssetType.RACKED &&
+      ((item.rack && item.rack.is_network_controlled) ||
+        (item.chassis &&
+          item.chassis.hostname &&
+          !item.chassis.hostname.includes("-") &&
+          item.chassis.model.vendor === "BMI"))
+    );
+  };
+  shouldDisablePowerInline = () => {
+    return !!this.props.changePlan;
+  };
   //EDIT LOGIC
   handleEditFormClose = () => this.setState({ isEditFormOpen: false });
   getEditForm = () => {
@@ -933,11 +947,13 @@ class ElementTable extends React.Component<
     this.handleDecommissionOpen();
   };
 
-  handlePowerButtonClick = (data: AssetObject) => {
-    this.setState({
-      isPowerOptionsOpen: true,
-      assetPower: data,
-    });
+  handlePowerButtonClick = (data: ElementObjectType) => {
+    if (isAssetObject(data)) {
+      this.setState({
+        isPowerOptionsOpen: true,
+        assetPower: data,
+      });
+    }
   };
 
   renderPermissionsButton = (item: UserInfoObject) => {
@@ -1445,18 +1461,13 @@ class ElementTable extends React.Component<
                                   }
                                 />
                               ) : null}
-                              {isAssetObject(item) &&
-                              item.rack &&
-                              item.rack.is_network_controlled &&
-                              !this.props.isDecommissioned ? (
+                              {this.shouldShowPowerInline(item) ? (
                                 <AnchorButton
                                   className="button-table"
                                   intent="warning"
                                   minimal
                                   icon="offline"
-                                  disabled={
-                                    this.props.changePlan ? true : false
-                                  }
+                                  disabled={this.shouldDisablePowerInline()}
                                   onClick={(event: any) => {
                                     this.handlePowerButtonClick(item);
                                     event.stopPropagation();
