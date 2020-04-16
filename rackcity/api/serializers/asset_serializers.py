@@ -177,7 +177,6 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
             "rack_position",
             "chassis",
             "chassis_slot",
-            "datacenter",
             "offline_storage_site",
             "owner",
             "comment",
@@ -278,7 +277,7 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
 
     model = ITModelSerializer()
     rack = RackSerializer()
-    chassis = AssetSerializer()
+    chassis = ChassisSerializer()
     offline_storage_site = SiteSerializer()
     asset_conflict_hostname = AssetSerializer()
     asset_conflict_location = AssetSerializer()
@@ -304,7 +303,6 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
             "rack_position",
             "chassis",
             "chassis_slot",
-            "datacenter",
             "offline_storage_site",
             "owner",
             "comment",
