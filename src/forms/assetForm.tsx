@@ -67,9 +67,9 @@ import {
   ModelSelect,
   RackSelect,
   renderAssetItem,
-  renderDatacenterItem,
   renderModelItem,
   renderRackItem,
+  renderSiteItem,
   renderStringItem,
   StringSelect,
 } from "./formUtils";
@@ -82,13 +82,13 @@ export interface AssetFormProps {
   isOpen: boolean;
   submitForm(Asset: ShallowAssetObject, headers: any): Promise<any> | void;
   pageScroll?(): void;
-  datacenters: Array<DatacenterObject>;
-  currDatacenter: DatacenterObject;
+  currSite: DatacenterObject;
   changePlan: ChangePlan;
 }
 interface AssetFormState {
   values: AssetObject;
-  currDatacenter?: DatacenterObject;
+  currSite?: DatacenterObject;
+  sites: Array<DatacenterObject>;
   racks: Array<RackObject>;
   models: Array<ModelObject>;
   errors: Array<string>;
@@ -103,6 +103,7 @@ interface AssetFormState {
   selectedValue: any;
   loading: boolean;
   customizeModel: boolean;
+  sitesLoaded: boolean;
 }
 function ifNullReturnEmptyString(value: string | null | undefined) {
   if (value === null || value === undefined) {
@@ -134,6 +135,20 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     }
     return asset;
   }
+  private initializeSite(asset: AssetObject) {
+    if (asset.datacenter) {
+      return asset.datacenter;
+    } else if (asset.offline_storage_site) {
+      return asset.offline_storage_site;
+    } else {
+      if (this.props.currSite === ALL_DATACENTERS) {
+        return undefined;
+      } else {
+        return this.props.currSite;
+      }
+    }
+  }
+
   private resetCustomValuesToDefault(asset: AssetObject) {
     asset.cpu = ifNullReturnEmptyString(asset.model.cpu);
     asset.display_color = ifNullReturnEmptyString(asset.model.display_color);
@@ -158,11 +173,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
   public state = {
     values: this.initializeCustomValues(this.initialState),
-    currDatacenter: this.initialState.datacenter
-      ? this.initialState.datacenter
-      : this.props.currDatacenter === ALL_DATACENTERS
-      ? undefined
-      : this.props.currDatacenter,
+    currSite: this.initializeSite(this.initialState),
+    sites: [],
     racks: [],
     models: [],
     errors: [],
@@ -184,6 +196,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     warningMessage: "",
     selectedValue: undefined,
     loading: false,
+    sitesLoaded: false,
   };
 
   getPowerPortAvailability(rack: RackObject) {
@@ -269,8 +282,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     this.setState({
       values,
     });
-    this.getValidAssets(this.state.currDatacenter!);
-    this.getRacks(this.state.currDatacenter!);
+    this.getValidAssets(this.state.currSite!);
+    this.getRacks(this.state.currSite!);
   }
   private mapAssetObject = (asset: AssetObject): ShallowAssetObject => {
     const {
@@ -292,12 +305,14 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     const model = asset.model ? asset.model.id : null;
     const rack = asset.rack ? asset.rack.id : null;
     const chassis = asset.chassis ? asset.chassis.id : null;
+    const offline_storage_site = null;
     let valuesToSend: ShallowAssetObject = {
       chassis,
       chassis_slot,
       asset_number,
       model,
       rack,
+      offline_storage_site,
       hostname,
       id,
       rack_position,
@@ -357,6 +372,10 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       }
       if (this.props.initialValues) {
         newValues.id = this.props.initialValues.id;
+      }
+
+      if (this.state.currSite && this.state.currSite.is_storage) {
+        newValues.offline_storage_site = this.state.currSite.id;
       }
 
       const resp = this.props.submitForm(
@@ -429,6 +448,23 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       })
       .catch((err) => {});
   };
+  getSites = () => {
+    const config = {
+      headers: {
+        Authorization: "Token " + this.props.token,
+      },
+      params: {},
+    };
+    axios
+      .post(API_ROOT + "api/sites/get-many", {}, config)
+      .then((res) => {
+        this.setState({
+          sites: res.data.sites as Array<DatacenterObject>,
+          sitesLoaded: true,
+        });
+      })
+      .catch((err) => {});
+  };
   getRacks = (datacenter: DatacenterObject) => {
     if (datacenter) {
       this.gettingRacksInProgress = true;
@@ -466,18 +502,18 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       });
     });
   };
-  getValidAssets = (currDatacenter: DatacenterObject) => {
+  getValidAssets = (currSite: DatacenterObject) => {
     this.gettingAssetsInProgress = true;
 
     let body = {};
     const filters: Array<IFilter> = [];
     let datacenterName;
-    if (currDatacenter) {
-      if (currDatacenter.name !== ALL_DATACENTERS.name) {
-        datacenterName = currDatacenter.name;
+    if (currSite) {
+      if (currSite.name !== ALL_DATACENTERS.name) {
+        datacenterName = currSite.name;
         filters.push({
           id: "",
-          field: "rack__datacenter__name",
+          field: "datacenter",
           filter_type: FilterTypes.TEXT,
           filter: { value: datacenterName, match_type: TextFilterTypes.EXACT },
         });
@@ -775,13 +811,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     }
   };
 
-  getValidDatacenters() {
-    return this.props.datacenters.filter(
-      (datacenter) => datacenter !== ALL_DATACENTERS
-    );
-  }
-
-  handleDatacenterSelect(datacenter: DatacenterObject) {
+  handleSiteSelect(site: DatacenterObject) {
     const clearedNetworkConnections = this.getClearedNetworkConnections();
     const clearedPowerConnections = this.getClearedPowerSelections();
     const newValues = updateObject(this.state.values, {
@@ -791,12 +821,12 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     });
 
     this.setState({
-      currDatacenter: datacenter,
+      currSite: site,
       values: newValues,
     });
 
-    this.getValidAssets(datacenter);
-    this.getRacks(datacenter);
+    this.getValidAssets(site);
+    this.getRacks(site);
   }
 
   handleRackSelect(rack: RackObject) {
@@ -1005,7 +1035,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       this.state.selectedValue &&
       isDatacenterObject(this.state.selectedValue)
     ) {
-      this.handleDatacenterSelect(this.state.selectedValue!);
+      this.handleSiteSelect(this.state.selectedValue!);
     }
     if (this.state.selectedValue && isRackObject(this.state.selectedValue)) {
       this.handleRackSelect(this.state.selectedValue!);
@@ -1016,7 +1046,9 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   };
 
   render() {
-    console.log(this.state.values);
+    if (!this.state.sitesLoaded) {
+      this.getSites();
+    }
     if (this.state.models.length === 0) {
       this.getModels();
     }
@@ -1025,11 +1057,11 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     }
 
     if (
-      this.state.currDatacenter &&
-      this.state.currDatacenter !== ALL_DATACENTERS &&
+      this.state.currSite &&
+      this.state.currSite !== ALL_DATACENTERS &&
       !this.initialGetRacks
     ) {
-      this.getRacks(this.state.currDatacenter);
+      this.getRacks(this.state.currSite);
     }
 
     const { values } = this.state;
@@ -1075,41 +1107,47 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
             </FormGroup>
           </Card>
           <Card>
-            <FormGroup label={AssetFormLabels.datacenter} inline={false}>
+            <FormGroup label={AssetFormLabels.site} inline={false}>
               <DatacenterSelect
                 popoverProps={{
                   minimal: true,
                   popoverClassName: "dropdown",
                   usePortal: true,
                 }}
-                items={this.getValidDatacenters()}
-                onItemSelect={(datacenter: DatacenterObject) => {
-                  this.state.currDatacenter
+                items={this.state.sites}
+                onItemSelect={(site: DatacenterObject) => {
+                  this.state.currSite
                     ? this.showChangeWarningAlert(
-                        "Are you sure you want to change datacenter? This will clear all datacenter related properties",
-                        datacenter
+                        "Are you sure you want to change site? This will clear all site related properties.",
+                        site
                       )
-                    : this.handleDatacenterSelect(datacenter);
+                    : this.handleSiteSelect(site);
                 }}
-                itemRenderer={renderDatacenterItem}
+                itemRenderer={renderSiteItem}
                 itemPredicate={filterDatacenter}
                 noResults={<MenuItem disabled={true} text="No results." />}
               >
                 <Button
                   rightIcon="caret-down"
                   text={
-                    this.state.currDatacenter && this.state.currDatacenter.name
-                      ? this.state.currDatacenter.name
-                      : "Select a Datacenter"
+                    this.state.currSite && this.state.currSite.name
+                      ? this.state.currSite.name
+                      : "Select a Site"
                   }
                 />
               </DatacenterSelect>
             </FormGroup>
           </Card>
 
-          {this.state.currDatacenter ? (
+          {this.state.currSite ? (
             <div>
+              {" "}
               <Card>{this.renderModelFields()}</Card>
+            </div>
+          ) : null}
+
+          {this.state.currSite && !this.state.currSite.is_storage ? (
+            <div>
               {values.model ? (
                 <Card>
                   {values.model.model_type === MountTypes.BLADE

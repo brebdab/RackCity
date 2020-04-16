@@ -8,6 +8,11 @@ class ModelModificationException(Exception):
         Exception.__init__(self, *args, **kwargs)
 
 
+class AssetModificationException(Exception):
+    def __init__(self, *args, **kwargs):
+        Exception.__init__(self, *args, **kwargs)
+
+
 class MacAddressException(Exception):
     def __init__(self, *args, **kwargs):
         Exception.__init__(self, *args, **kwargs)

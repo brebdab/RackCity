@@ -62,8 +62,7 @@ class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
         ) : null}
         {this.props.elementName === ElementType.ASSET ? (
           <AssetForm
-            datacenters={this.props.datacenters ? this.props.datacenters : []}
-            currDatacenter={
+            currSite={
               this.props.currDatacenter
                 ? this.props.currDatacenter
                 : ALL_DATACENTERS

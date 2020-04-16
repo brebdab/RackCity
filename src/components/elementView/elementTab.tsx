@@ -114,7 +114,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
           datacenterName = this.props.currDatacenter.name;
           filtersCopy.push({
             id: "",
-            field: "rack__datacenter__name",
+            field: "datacenter",
             filter_type: FilterTypes.TEXT,
             filter: {
               value: datacenterName,
@@ -171,7 +171,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
         datacenterName = this.props.currDatacenter.name;
         filtersCopy.push({
           id: "",
-          field: "rack__datacenter__name",
+          field: "datacenter",
           filter_type: FilterTypes.TEXT,
           filter: { value: datacenterName, match_type: TextFilterTypes.EXACT },
         });
@@ -225,7 +225,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
         datacenterName = this.props.currDatacenter.name;
         filters.push({
           id: "",
-          field: "rack__datacenter__name",
+          field: "datacenter",
           filter_type: FilterTypes.TEXT,
           filter: { value: datacenterName, match_type: TextFilterTypes.EXACT },
         });
