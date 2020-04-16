@@ -489,7 +489,6 @@ def save_all_field_data_cp(data, asset, change_plan, create_asset_cp):
             else:
                 related_asset = asset.related_asset
             try:
-                print(related_asset)
                 validate_asset_number_uniqueness(
                     data[field], asset_id, change_plan, related_asset,
                 )
@@ -505,7 +504,6 @@ def save_all_field_data_cp(data, asset, change_plan, create_asset_cp):
         else:
             value = data[field]
         if field != "id" and field != "chassis":
-            print(field)
             setattr(asset, field, value)
     chassis = None
     if data["chassis"]:
