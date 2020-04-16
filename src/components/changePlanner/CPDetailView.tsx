@@ -26,7 +26,7 @@ import {
   AssetFieldsTable,
   AssetObject,
   ChangePlan,
-  getHeaders,
+  getHeaders, isDatacenterObject,
   isModelObject,
   isObject,
   isRackObject,
@@ -309,19 +309,7 @@ class CPDetailView extends React.Component<
                 <td style={this.getHighlightStyle(modification, col)}>
                   {value.row_letter + "" + value.rack_num}
                 </td>
-              </tr>,
-              <tr>
-                <td
-                  style={this.getHighlightStyle(modification, col)}
-                  key={"datacenter"}
-                >
-                  {AssetFieldsTable["rack__datacenter__name"]}:
-                </td>
-
-                <td style={this.getHighlightStyle(modification, col)}>
-                  {value.datacenter.name}
-                </td>
-              </tr>,
+              </tr>
             ];
           } else if (col === "comment") {
             field = (
@@ -332,7 +320,15 @@ class CPDetailView extends React.Component<
                 {value}
               </td>
             );
-          } else if (!isObject(value)) {
+          } else if (isDatacenterObject(value)){
+
+                        field = (
+              <td style={this.getHighlightStyle(modification, col)}>{value.name}</td>
+            );
+          }
+
+            else if (!isObject(value)) {
+
             field = (
               <td style={this.getHighlightStyle(modification, col)}>{value}</td>
             );
@@ -617,7 +613,7 @@ class CPDetailView extends React.Component<
                 );
               }
             )
-          ) : (
+          ) : (this.loading? null:
             <Callout title="No modifications for this change plan"> </Callout>
           )}
         </ul>
