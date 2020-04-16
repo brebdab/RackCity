@@ -104,6 +104,8 @@ class ChassisSerializer(serializers.ModelSerializer):
     """
 
     rack = RackSerializer()
+    model = ITModelSerializer()
+    blades = serializers.SerializerMethodField()
 
     class Meta:
         model = Asset
@@ -113,6 +115,30 @@ class ChassisSerializer(serializers.ModelSerializer):
             "model",
             "rack",
             "rack_position",
+            "display_color",
+            "blades",
+        )
+
+    def get_blades(self, asset):
+        return get_blades_in_chassis(asset)
+
+
+class BladeSerializer(serializers.ModelSerializer):
+    """
+
+    """
+
+    model = ITModelSerializer()
+
+    class Meta:
+        model = Asset
+        fields = (
+            "id",
+            "hostname",
+            "asset_number",
+            "chassis_slot",
+            "model",
+            "display_color",
         )
 
 
@@ -395,7 +421,7 @@ def get_blades_in_chassis(asset):
         return []
 
     blades = Asset.objects.filter(chassis=asset.id)
-    serializer = AssetSerializer(blades, many=True,)
+    serializer = BladeSerializer(blades, many=True,)
     return serializer.data
 
 

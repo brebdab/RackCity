@@ -1239,7 +1239,6 @@ class ElementTable extends React.Component<
                                 </td>
                               );
                             } else if (this.shouldShowColumn(item, col)) {
-                              console.log(col, value);
                               return (
                                 <td style={getChangePlanRowStyle(item)}>
                                   {value}
