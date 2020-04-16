@@ -85,13 +85,21 @@ export class BarcodeScanner extends React.PureComponent<
           intent={"primary"}
           minimal
           icon="camera"
-          onClick={capture}
+          onClick={() => {
+            capture();
+            this.getDataFromString();
+          }}
         >
           Capture photo
         </AnchorButton>
       </div>
     );
   };
+
+  private getDataFromString() {
+    console.log(this.props.token)
+    console.log(this.state)
+  }
 
   componentDidMount() {
     this.setState({
