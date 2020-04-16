@@ -1,4 +1,6 @@
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.db.models import Q
+
 from rackcity.models import (
     Asset,
     AssetCP,
@@ -13,6 +15,7 @@ from rackcity.models import (
     Site,
 )
 from rackcity.models.asset import get_assets_for_cp, validate_asset_number_uniqueness
+from rackcity.models.model_utils import ModelType
 from rackcity.utils.errors_utils import parse_save_validation_error
 from rackcity.utils.exceptions import (
     MacAddressException,
@@ -20,7 +23,7 @@ from rackcity.utils.exceptions import (
     PowerConnectionException,
 )
 from rackcity.utils.log_utils import log_network_action
-
+import traceback
 
 def get_existing_network_port(port_name, asset_id, change_plan=None):
     """
@@ -114,19 +117,19 @@ def get_or_create_pdu_port(asset, power_connection_data, change_plan=None):
         return pdu_port_live
 
 
-def add_chassis_to_cp(chassis_live,change_plan):
+def add_chassis_to_cp(chassis_live,change_plan,ignore_blade_id=None):
     """
     Takes a live chassis and change plan, adds its blades to the AssetCP table,
     then adds the chassis to the AssetCP table.
     """
     chassis_cp = copy_asset_to_new_asset_cp(chassis_live, change_plan)
-    blades = Asset.objects.filter(chassis=chassis_live)
+    blades = Asset.objects.filter(Q(chassis=chassis_live) & ~Q(id=ignore_blade_id))
     for blade in blades:
         copy_asset_to_new_asset_cp(blade,change_plan, chassis_cp)
     return chassis_cp
 
 
-def copy_asset_to_new_asset_cp(asset_live, change_plan,chassis_cp=None):
+def copy_asset_to_new_asset_cp(asset_live, change_plan, chassis_cp=None):
     """
     Copies an existing Asset (asset_live) to the AssetCP table, assigning
     the given change_plan. Copies all Asset fields, network port mac addresses,
@@ -460,8 +463,6 @@ def save_all_field_data_live(data, asset):
 def save_all_field_data_cp(data, asset, change_plan, create_asset_cp):
     asset_id = data["id"]
     for field in data.keys():
-        if field == "chassis" and data["chassis"]:
-            if AssetCP.ex
         if field == "model" and data["model"]:
             value = ITModel.objects.get(id=data[field])
         elif field == "rack" and data["rack"]:
@@ -485,6 +486,7 @@ def save_all_field_data_cp(data, asset, change_plan, create_asset_cp):
             else:
                 related_asset = asset.related_asset
             try:
+                print(related_asset)
                 validate_asset_number_uniqueness(
                     data[field], asset_id, change_plan, related_asset,
                 )
@@ -499,18 +501,38 @@ def save_all_field_data_cp(data, asset, change_plan, create_asset_cp):
             value = data[field]
         else:
             value = data[field]
-
-        if field is not "id":
+        if field != "id" and field != "chassis":
+            print(field)
             setattr(asset, field, value)
+    chassis = None
+    if data["chassis"]:
+        try:
+            chassis_live = Asset.objects.get(id=data["chassis"])
+        except ObjectDoesNotExist:
+            return (None, "No existing chassis with id=" + data["chassis"])
+
+        if not AssetCP.objects.filter(id=data["chassis"]).exists():
+            chassis = add_chassis_to_cp(chassis_live, change_plan, ignore_blade_id=asset.id)
+        else:
+            chassis = AssetCP.objects.get(id=data["chassis"])
 
     try:
         if create_asset_cp:
-            asset_cp = copy_asset_to_new_asset_cp(asset, change_plan)
+            print(asset.model,asset.model.model_type)
+            if asset.model.model_type == ModelType.BLADE_CHASSIS.value:
+                print("modifying chassis")
+                asset_cp = add_chassis_to_cp(asset,change_plan)
+            else:
+                asset_cp = copy_asset_to_new_asset_cp(asset, change_plan, chassis_cp=chassis)
             asset_cp.save()
             return asset_cp, None
 
         else:
+            asset.chassis = chassis
             asset.save()
             return asset, None
     except Exception as error:
+        print("ERROR")
+        traceback.format_exc(error)
+
         return None, parse_save_validation_error(error, "Asset")
