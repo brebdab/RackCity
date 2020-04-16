@@ -189,7 +189,6 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
             "storage",
             "display_color",
             "memory_gb",
-
         )
 
     def get_mac_addresses(self, asset):
@@ -323,7 +322,6 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
             "display_color",
             "memory_gb",
             "blades",
-
         )
 
     def get_mac_addresses(self, assetCP):
@@ -488,6 +486,7 @@ def get_neighbor_assets(hostname, id, nodes, edges, change_plan=None):
 def get_datacenter_of_asset(asset):
     datacenter = None
     if asset.rack:
+        print(asset.rack)
         datacenter = asset.rack.datacenter
     if asset.chassis and asset.chassis.rack:
         datacenter = asset.chassis.rack.datacenter

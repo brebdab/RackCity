@@ -9,7 +9,7 @@ import math
 from rackcity.api.serializers import (
     RecursiveAssetSerializer,
     RecursiveAssetCPSerializer,
-)
+    GetDecommissionedAssetSerializer)
 from rackcity.models import (
     Asset,
     AssetCP,
@@ -151,12 +151,14 @@ def get_racked_assets_for_cp(change_plan):
     for asset_cp in racked_assets_cp:
         if asset_cp.related_asset and (asset_cp.related_asset in racked_assets):
             racked_assets = racked_assets.filter(~Q(id=asset_cp.related_asset.id))
+    ## don't return decommissioned asset_cps:
+    racked_assets_cp = racked_assets_cp.filter(is_decommissioned=False)
     return racked_assets, racked_assets_cp
 
 
 def get_offline_storage_assets_for_cp(change_plan):
     stored_assets = Asset.objects.filter(offline_storage_site__isnull=False)
-    stored_assets_cp = AssetCP.objects.filter(change_plan=change_plan, offline_storage_site__isnull=False)
+    stored_assets_cp = AssetCP.objects.filter(change_plan=change_plan, offline_storage_site__isnull=False,is_decommissioned=False)
     for asset_cp in stored_assets_cp:
         if asset_cp.related_asset and (asset_cp.related_asset in stored_assets):
             stored_assets = stored_assets.filter(~Q(id=asset_cp.related_asset.id))
@@ -230,8 +232,11 @@ def get_many_assets_response_for_cp(request, change_plan, decommissioned=False, 
     )
     if filter_failure_response:
         return filter_failure_response
+    if decommissioned:
+        asset_serializer = GetDecommissionedAssetSerializer(assets,many=True,)
 
-    asset_serializer = RecursiveAssetSerializer(assets, many=True,)
+    else:
+        asset_serializer = RecursiveAssetSerializer(assets, many=True,)
     asset_cp_serializer = RecursiveAssetCPSerializer(assets_cp, many=True,)
     all_assets = asset_serializer.data + asset_cp_serializer.data
 
