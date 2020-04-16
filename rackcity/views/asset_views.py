@@ -1018,12 +1018,17 @@ def get_asset_from_barcode(request):
         return JsonResponse(
             {"failure_message": "failed"}, status=HTTPStatus.BAD_REQUEST
         )
-    img = b64decode(data["img_string"])
-    img_file = BytesIO(img)
-    image = Image.open(img_file).convert("RGB")
-    opencv_img = numpy.array(image)
-    opencv_img = opencv_img[:, :, ::-1].copy()
-    barcodes = decode(opencv_img)
+    try:
+        img = b64decode(data["img_string"])
+        img_file = BytesIO(img)
+        image = Image.open(img_file).convert("RGB")
+        opencv_img = numpy.array(image)
+        opencv_img = opencv_img[:, :, ::-1].copy()
+        barcodes = decode(opencv_img)
+    except Exception as error:
+        return JsonResponse(
+            {"failure_message": error}, status=HTTPStatus.BAD_REQUEST
+        )
     if len(barcodes) < 1:
         return JsonResponse(
             {"warning_message": "ERROR: No barcode detected"}, status=HTTPStatus.OK
