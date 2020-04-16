@@ -13,7 +13,7 @@ class LandingView extends React.Component<
 > {
   showTabs() {
     const regex = new RegExp(
-      "^/dashboard/(assets|models|datacenters|racks|offline-storage-sites)|^/dashboard$"
+      "^/dashboard/(assets|stored-assets|decommissioned-assets|models|datacenters|racks|offline-storage-sites)|^/dashboard$"
     );
     if (regex.exec(this.props.location.pathname)) {
       return true;

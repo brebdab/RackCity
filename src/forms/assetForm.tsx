@@ -477,7 +477,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         datacenterName = currDatacenter.name;
         filters.push({
           id: "",
-          field: "rack__datacenter__name",
+          field: "datacenter",
           filter_type: FilterTypes.TEXT,
           filter: { value: datacenterName, match_type: TextFilterTypes.EXACT },
         });

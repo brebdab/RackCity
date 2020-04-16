@@ -73,6 +73,7 @@ class ITModel(models.Model):
 
     def save(self, *args, **kwargs):
         try:
+            self.full_clean()
             validate_display_color(self.display_color)
         except ValidationError as validation_eror:
             raise validation_eror

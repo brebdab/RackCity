@@ -7,6 +7,7 @@ import "./elementView.scss";
 import { connect } from "react-redux";
 import {
   ElementType,
+  AssetType,
   DatacenterObject,
   getHeaders,
   ROUTES,
@@ -113,6 +114,7 @@ class ElementTabContainer extends React.Component<
               onDatacenterSelect={this.onDatacenterSelect}
               {...this.props}
               element={ElementType.ASSET}
+              assetType={AssetType.RACKED}
               isActive={false}
             />
           }
@@ -129,6 +131,7 @@ class ElementTabContainer extends React.Component<
               onDatacenterSelect={this.onDatacenterSelect}
               {...this.props}
               element={ElementType.ASSET}
+              assetType={AssetType.STORED}
               isActive={false}
             />
           }
@@ -145,6 +148,7 @@ class ElementTabContainer extends React.Component<
               onDatacenterSelect={this.onDatacenterSelect}
               {...this.props}
               element={ElementType.ASSET}
+              assetType={AssetType.DECOMMISSIONED}
               isActive={false}
             />
           }
@@ -169,7 +173,17 @@ class ElementTabContainer extends React.Component<
           }
         />
 
-        <Tab className="tab-header do-not-print" id="sites" title="Sites" />
+        <Tab
+          className="tab-header do-not-print"
+          id="sites"
+          title="Sites"
+          disabled={
+            !(
+              this.props.permissionState.admin ||
+              this.props.permissionState.asset_management
+            )
+          }
+        />
 
         <Tab
           className="tab-sub do-not-print"

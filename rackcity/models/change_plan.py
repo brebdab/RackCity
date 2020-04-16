@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 
 
 class ChangePlan(models.Model):
@@ -15,3 +16,11 @@ class ChangePlan(models.Model):
             )
         ]
         verbose_name = "change planner"
+
+    def save(self, *args, **kwargs):
+        try:
+            self.full_clean()
+        except ValidationError as validation_eror:
+            raise validation_eror
+        else:
+            super(ChangePlan, self).save(*args, **kwargs)

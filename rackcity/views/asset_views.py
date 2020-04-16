@@ -52,6 +52,7 @@ from rackcity.utils.exceptions import (
     LocationException,
     PowerConnectionException,
     UserAssetPermissionException,
+    AssetModificationException,
 )
 from rackcity.utils.log_utils import (
     log_action,
@@ -73,11 +74,12 @@ from rackcity.utils.rackcity_utils import (
     validate_location_modification,
     no_infile_location_conflicts,
     records_are_identical,
+    validate_hostname_deletion,
 )
 from rackcity.permissions.permissions import (
     user_has_asset_permission,
-    validate_user_asset_permission_to_modify_or_delete,
-    validate_user_asset_permission_to_add,
+    validate_user_permission_on_existing_asset,
+    validate_user_permission_on_new_asset_data,
 )
 import re
 from rest_framework.decorators import permission_classes, api_view
@@ -224,9 +226,10 @@ def asset_add(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     try:
-        validate_user_asset_permission_to_add(request.user, serializer.validated_data)
+        validate_user_permission_on_new_asset_data(
+            request.user, serializer.validated_data, data_is_validated=True
+        )
     except UserAssetPermissionException as auth_error:
-
         return JsonResponse(
             {"failure_message": Status.AUTH_ERROR.value + str(auth_error)},
             status=HTTPStatus.UNAUTHORIZED,
@@ -389,7 +392,7 @@ def asset_modify(request):
                 status=HTTPStatus.BAD_REQUEST,
             )
     try:
-        validate_user_asset_permission_to_modify_or_delete(request.user, existing_asset)
+        validate_user_permission_on_existing_asset(request.user, existing_asset)
     except UserAssetPermissionException as auth_error:
         return JsonResponse(
             {"failure_message": Status.AUTH_ERROR.value + str(auth_error)},
@@ -397,9 +400,27 @@ def asset_modify(request):
         )
 
     try:
-        validate_location_modification(
-            data, existing_asset, request.user, change_plan=change_plan
+        validate_user_permission_on_new_asset_data(
+            request.user, data, data_is_validated=False
         )
+    except UserAssetPermissionException as auth_error:
+        return JsonResponse(
+            {"failure_message": Status.AUTH_ERROR.value + str(auth_error)},
+            status=HTTPStatus.UNAUTHORIZED,
+        )
+    try:
+        validate_hostname_deletion(data, existing_asset)
+    except AssetModificationException as modifcation_exception:
+        return JsonResponse(
+            {
+                "failure_message": Status.MODIFY_ERROR.value
+                                   + "Invalid hostname deletion. "
+                                   + str(modifcation_exception)
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    try:
+        validate_location_modification(data, existing_asset, change_plan=change_plan)
     except Exception as error:
         return JsonResponse(
             {
@@ -485,7 +506,7 @@ def asset_delete(request):
         )
 
     try:
-        validate_user_asset_permission_to_modify_or_delete(request.user, existing_asset)
+        validate_user_permission_on_existing_asset(request.user, existing_asset)
     except UserAssetPermissionException as auth_error:
         return JsonResponse(
             {"failure_message": Status.AUTH_ERROR.value + str(auth_error)},
@@ -493,11 +514,11 @@ def asset_delete(request):
         )
     if existing_asset.model.is_blade_chassis():
         blades = Asset.objects.filter(chassis=existing_asset)
-        if len(blades)>0:
+        if len(blades) > 0:
             return JsonResponse(
                 {
                     "failure_message": Status.DELETE_ERROR.value
-                                       + "Cannot delete a chassis with blades in it. "
+                    + "Cannot delete a chassis with blades in it. "
                 },
                 status=HTTPStatus.BAD_REQUEST,
             )
@@ -694,10 +715,17 @@ def asset_bulk_upload(request):
         if asset_exists:
             # asset number specfies existing asset
             try:
-                validate_location_modification(
-                    asset_data, existing_asset, request.user,
+                validate_user_permission_on_new_asset_data(
+                    request.user, asset_data, data_is_validated=False
                 )
-            except Exception:
+            except UserAssetPermissionException as auth_error:
+                return JsonResponse(
+                    {"failure_message": Status.IMPORT_ERROR.value + str(auth_error)},
+                    status=HTTPStatus.BAD_REQUEST,
+                )
+            try:
+                validate_location_modification(asset_data, existing_asset)
+            except Exception as error:
                 failure_message = (
                     Status.IMPORT_ERROR.value
                     + "Asset "
@@ -705,7 +733,8 @@ def asset_bulk_upload(request):
                     + " would conflict location with an existing asset. "
                 )
                 return JsonResponse(
-                    {"failure_message": failure_message}, status=HTTPStatus.BAD_REQUEST
+                    {"failure_message": failure_message, "errors": str(error)},
+                    status=HTTPStatus.BAD_REQUEST,
                 )
             potential_modifications.append(
                 {"existing_asset": existing_asset, "new_data": asset_data}
@@ -713,7 +742,7 @@ def asset_bulk_upload(request):
         else:
             # asset number not provided or it is new
             rack = asset_serializer.validated_data["rack"]
-            if not user_has_asset_permission(request.user, site=rack.datacenter):
+            if not user_has_asset_permission(request.user, rack.datacenter):
                 return JsonResponse(
                     {
                         "failure_message": Status.AUTH_ERROR.value
@@ -984,3 +1013,19 @@ def asset_number(request):
     Get a suggest asset number for Asset creation
     """
     return JsonResponse({"asset_number": get_next_available_asset_number()})
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def get_asset_from_barcode(request):
+    """
+    Parse barcode as base64 encoded string for asset number then return
+    corresponding live asset with that number, if it exists
+    """
+    data = JSONParser().parse(request)
+    if "img_string" in data:
+        return JsonResponse({"img_string": data.img_string}, status=HTTPStatus.OK)
+    else:
+        return JsonResponse(
+            {"failure_message": "failed"}, status=HTTPStatus.BAD_REQUEST
+        )
