@@ -1,7 +1,8 @@
 import * as actionTypes from "../actions/actionTypes";
 import { updateObject } from "../utility";
-import { ChangePlan } from "../../utils/utils";
+import { ChangePlan, TableType } from "../../utils/utils";
 import { PermissionState } from "../../utils/permissionUtils";
+
 interface ReduxState {
   token: string | null;
   error: string | null;
@@ -9,6 +10,10 @@ interface ReduxState {
   changePlan: ChangePlan | null;
   permissionState: PermissionState;
   isMobile: boolean;
+  rackedAssetDataIsStale: boolean;
+  storedAssetDataIsStale: boolean;
+  decommissionedAssetDataIsStale: boolean;
+  modelDataIsStale: boolean;
 }
 const initialState: ReduxState = {
   token: null,
@@ -23,7 +28,11 @@ const initialState: ReduxState = {
     admin: false,
     site_permissions: [],
   } as PermissionState,
-  isMobile: false
+  isMobile: false,
+  rackedAssetDataIsStale: false,
+  storedAssetDataIsStale: false,
+  decommissionedAssetDataIsStale: false,
+  modelDataIsStale: false,
 };
 const setChangePlan = (state: any, action: any) => {
   return updateObject(state, {
@@ -82,6 +91,41 @@ const setBrowser = (state: any, action: any) => {
   });
 };
 
+const markTablesStale = (state: any, action: any) => {
+  return Object.assign({}, state, {
+    rackedAssetDataIsStale: action.staleTables.includes(
+      TableType.RACKED_ASSETS
+    ),
+    storedAssetDataIsStale: action.staleTables.includes(
+      TableType.STORED_ASSETS
+    ),
+    decommissionedAssetDataIsStale: action.staleTables.includes(
+      TableType.DECOMMISSIONED_ASSETS
+    ),
+    modelDataIsStale: action.staleTables.includes(TableType.MODELS),
+  });
+};
+const markTableFresh = (state: any, action: any) => {
+  switch (action.freshTable) {
+    case TableType.RACKED_ASSETS:
+      return Object.assign({}, state, {
+        rackedAssetDataIsStale: false,
+      });
+    case TableType.STORED_ASSETS:
+      return Object.assign({}, state, {
+        storedAssetDataIsStale: false,
+      });
+    case TableType.DECOMMISSIONED_ASSETS:
+      return Object.assign({}, state, {
+        decommissionedAssetDataIsStale: false,
+      });
+    case TableType.MODELS:
+      return Object.assign({}, state, {
+        modelDataIsStale: false,
+      });
+  }
+};
+
 // define when actions take place
 
 const reducer = (state = initialState, action: any) => {
@@ -104,6 +148,10 @@ const reducer = (state = initialState, action: any) => {
       return setPermissionState(state, action);
     case actionTypes.SET_BROWSER_TYPE:
       return setBrowser(state, action);
+    case actionTypes.MARK_TABLES_STALE:
+      return markTablesStale(state, action);
+    case actionTypes.MARK_TABLE_FRESH:
+      return markTableFresh(state, action);
     default:
       return state;
   }
