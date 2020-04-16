@@ -550,10 +550,9 @@ def make_bcman_request(chassis, blade, power_command):
     )
     exit_status = os.system(cmd)
     result = None
-    if os.path.exists("temp.txt"):
+    if os.path.exists("temp.txt") and (exit_status == 0):
         fp = open("temp.txt", "r")
-        result = " ; ".join(fp.read().splitlines())
-        # result = fp.read().splitlines()[0]
+        result = fp.read().splitlines()[0]
         fp.close()
         os.remove("temp.txt")
     return result, exit_status
@@ -586,7 +585,8 @@ def get_chassis_power_request_parameters(request):
         )
     if not is_asset_power_controllable_by_bcman(chassis):
         raise PowerManagementException(
-            "Power is only network controllable for blade chassis of vendor 'BMI' with hostname not in storage. "
+            "Power is only network controllable for blade chassis "
+            + "that are of vendor 'BMI', have valid hostnames, and are not in storage. "
         )
     if (blade_slot < 1) or (blade_slot > 14):
         raise PowerManagementException(
@@ -626,6 +626,7 @@ def is_asset_power_controllable_by_bcman(asset):
         and not asset.is_in_offline_storage()
         and asset.model.vendor == "BMI"
         and asset.hostname is not None
+        and "-" not in asset.hostname
     )
 
 

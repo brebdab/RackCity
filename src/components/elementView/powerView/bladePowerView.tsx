@@ -116,8 +116,15 @@ export class BladePowerView extends React.PureComponent<
 
   private isBladePowerNetworkControlled() {
     const vendorBMI = "BMI";
-    if (this.props.asset && this.props.asset.chassis) {
-      return this.props.asset.chassis.model.vendor === vendorBMI;
+    if (
+      this.props.asset &&
+      this.props.asset.chassis &&
+      this.props.asset.chassis.hostname
+    ) {
+      return (
+        !this.props.asset.chassis.hostname.includes("-") &&
+        this.props.asset.chassis.model.vendor === vendorBMI
+      );
     } else {
       return false;
     }
@@ -241,7 +248,7 @@ export class BladePowerView extends React.PureComponent<
   private renderNoPowerCallout() {
     return (
       <Callout
-        title="Power is not network controllable in this blade chassis"
+        title="Power is not network controllable for blades in this chassis"
         icon={IconNames.INFO_SIGN}
       />
     );
