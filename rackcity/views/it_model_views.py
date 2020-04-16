@@ -363,7 +363,7 @@ def model_bulk_upload(request):
     csv_bytes_io = BytesIO(b64decode(re.sub(".*base64,", "", base_64_csv)))
     csv_string_io = StringIO(csv_bytes_io.read().decode("UTF-8-SIG"))
     csv_reader = csv.DictReader(csv_string_io)
-    expected_fields = BulkITModelSerializer.Meta.fields
+    expected_fields = BulkITModelSerializer.Meta.fields # TODO: add the mount type field
     given_fields = csv_reader.fieldnames
     if len(expected_fields) != len(given_fields) or set(  # check for repeated fields
         expected_fields
@@ -382,7 +382,7 @@ def model_bulk_upload(request):
     potential_modifications = []
     models_in_import = set()
     for bulk_model_data in bulk_model_datas:
-        model_data = normalize_bulk_model_data(bulk_model_data)
+        model_data = normalize_bulk_model_data(bulk_model_data) # TODO: change the value of mount type
         model_serializer = ITModelSerializer(data=model_data)
         if not model_serializer.is_valid():
             return JsonResponse(
@@ -417,7 +417,7 @@ def model_bulk_upload(request):
             models_to_add.append(model_serializer)
         else:
             try:
-                validate_model_height_change(model_data, existing_model)
+                validate_model_height_change(model_data, existing_model) # TODO: make sure blades don't break this
             except LocationException as error:
                 failure_message = (
                     Status.IMPORT_ERROR.value
@@ -434,7 +434,7 @@ def model_bulk_upload(request):
                     status=HTTPStatus.NOT_ACCEPTABLE,
                 )
             try:
-                validate_model_change(model_data, existing_model)
+                validate_model_change(model_data, existing_model) # TODO: prevent mount type change
             except ModelModificationException as error:
                 modification_failure = (
                     " There are existing assets with this model: "
@@ -552,7 +552,7 @@ def model_bulk_export(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     for filter_arg in filter_args:
-        models_query = models_query.filter(**filter_arg)
+        models_query = models_query.filter(**filter_arg) # TODO: make this use the new method
 
     try:
         sort_args = get_sort_arguments(request.data)

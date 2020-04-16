@@ -220,7 +220,7 @@ def network_bulk_export(request):
             status=HTTPStatus.BAD_REQUEST,
         )
     for filter_arg in filter_args:
-        assets_query = assets_query.filter(**filter_arg)
+        assets_query = assets_query.filter(**filter_arg)  # TODO: make this use the new method
 
     try:
         sort_args = get_sort_arguments(request.data)

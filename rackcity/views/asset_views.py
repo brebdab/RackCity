@@ -904,7 +904,7 @@ def asset_bulk_export(request):
     """
     assets_query = Asset.objects
     try:
-        filter_args = get_filter_arguments(request.data)
+        filter_args = get_filter_arguments(request.data)  # TODO: make this use the new method
     except Exception as error:
         return JsonResponse(
             {
