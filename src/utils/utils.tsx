@@ -75,8 +75,8 @@ export interface AssetCPObject extends AssetObject {
 interface ParentAssetObject extends ElementObject {
   asset_number: string | null;
   hostname: string | null;
-  rack_position: string;
-  chassis_slot: string;
+  rack_position: string | null;
+  chassis_slot: string | null;
   mac_addresses: { [port: string]: string };
   network_connections: Array<NetworkConnection>;
   power_connections: { [port: string]: PowerConnection };

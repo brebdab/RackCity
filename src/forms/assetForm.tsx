@@ -376,6 +376,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
       if (this.state.currSite && this.state.currSite.is_storage) {
         newValues.offline_storage_site = this.state.currSite.id;
+        newValues.rack_position = null;
+        newValues.chassis_slot = null;
       }
 
       const resp = this.props.submitForm(
@@ -816,6 +818,9 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     const clearedPowerConnections = this.getClearedPowerSelections();
     const newValues = updateObject(this.state.values, {
       rack: undefined,
+      rack_position: null,
+      chassis: undefined,
+      chassis_slot: null,
       power_connections: clearedPowerConnections,
       network_connections: clearedNetworkConnections,
     });

@@ -25,7 +25,7 @@ class ChassisView extends React.PureComponent<
     let blades: Array<AssetObject> = [];
     for (let i = 1; i < this.numSlots + 1; i++) {
       blades = this.props.chassis.blades.filter((asset: AssetObject) => {
-        return parseInt(asset.chassis_slot) === i;
+        return parseInt(asset.chassis_slot!) === i;
       });
 
       if (blades.length > 0) {
