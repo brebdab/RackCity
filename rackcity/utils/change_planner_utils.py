@@ -69,11 +69,12 @@ def detect_conflicts_cp(sender, **kwargs):
 
     # asset hostname conflicts with hostnames on an active assetCP
     asset.hostname_conflict.clear()
-    AssetCP.objects.filter(
-        Q(hostname=asset.hostname)
-        & ~Q(related_asset=asset.id)
-        & Q(change_plan__execution_time=None)
-    ).update(asset_conflict_hostname=asset)
+    if asset.hostname:
+        AssetCP.objects.filter(
+            Q(hostname=asset.hostname)
+            & ~Q(related_asset=asset.id)
+            & Q(change_plan__execution_time=None)
+        ).update(asset_conflict_hostname=asset)
 
     # asset rack location conflicts with an active assetCP
     asset.location_conflict.clear()
