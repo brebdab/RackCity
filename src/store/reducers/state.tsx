@@ -1,7 +1,7 @@
 import * as actionTypes from "../actions/actionTypes";
-import {updateObject} from "../utility";
-import {ChangePlan, TableType} from "../../utils/utils";
-import {PermissionState} from "../../utils/permissionUtils";
+import { updateObject } from "../utility";
+import { ChangePlan, TableType } from "../../utils/utils";
+import { PermissionState } from "../../utils/permissionUtils";
 
 interface ReduxState {
   token: string | null;
@@ -93,13 +93,19 @@ const setBrowser = (state: any, action: any) => {
 
 const markTablesStale = (state: any, action: any) => {
   return Object.assign({}, state, {
-        rackedAssetDataIsStale: action.staleTables.includes(TableType.RACKED_ASSETS),
-        storedAssetDataIsStale: action.staleTables.includes(TableType.STORED_ASSETS),
-        decommissionedAssetDataIsStale: action.staleTables.includes(TableType.DECOMMISSIONED_ASSETS),
-        modelDataIsStale: action.staleTables.includes(TableType.MODELS),
-      });
+    rackedAssetDataIsStale: action.staleTables.includes(
+      TableType.RACKED_ASSETS
+    ),
+    storedAssetDataIsStale: action.staleTables.includes(
+      TableType.STORED_ASSETS
+    ),
+    decommissionedAssetDataIsStale: action.staleTables.includes(
+      TableType.DECOMMISSIONED_ASSETS
+    ),
+    modelDataIsStale: action.staleTables.includes(TableType.MODELS),
+  });
 };
-const markTableFesh = (state: any, action: any) => {
+const markTableFresh = (state: any, action: any) => {
   switch (action.freshTable) {
     case TableType.RACKED_ASSETS:
       return Object.assign({}, state, {
@@ -146,7 +152,7 @@ const reducer = (state = initialState, action: any) => {
     case actionTypes.MARK_TABLES_STALE:
       return markTablesStale(state, action);
     case actionTypes.MARK_TABLE_FRESH:
-      return markTableFesh(state, action);
+      return markTableFresh(state, action);
     default:
       return state;
   }

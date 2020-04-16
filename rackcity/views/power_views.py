@@ -413,7 +413,7 @@ def chassis_power_status(request):
             status=HTTPStatus.REQUEST_TIMEOUT,
         )
     return JsonResponse(
-        {str(blade_slot): blade_slot_power_status}, status=HTTPStatus.OK,
+        {"power_status": blade_slot_power_status}, status=HTTPStatus.OK,
     )
 
 
@@ -552,7 +552,8 @@ def make_bcman_request(chassis, blade, power_command):
     result = None
     if os.path.exists("temp.txt"):
         fp = open("temp.txt", "r")
-        result = fp.read().splitlines()[0]
+        result = " ; ".join(fp.read().splitlines())
+        # result = fp.read().splitlines()[0]
         fp.close()
         os.remove("temp.txt")
     return result, exit_status
