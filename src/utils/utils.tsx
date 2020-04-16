@@ -55,6 +55,7 @@ export interface AssetObject extends ParentAssetObject {
   network_graph: NetworkGraphData;
   blades: Array<AssetObject>;
   datacenter: DatacenterObject;
+  offline_storage_site?: DatacenterObject;
 }
 export interface AssetCPObject extends AssetObject {
   change_plan: ChangePlan;
@@ -138,6 +139,7 @@ export enum AssetFormLabels {
   asset_number = "Asset Number",
   hostname = "Hostname",
   datacenter = "Datacenter*",
+  site = "Site*",
   rack = "Rack*",
   rack_position = "Rack Position*",
   chassis = "Chassis*",
@@ -170,6 +172,7 @@ export interface ShallowAssetObject extends ParentAssetObject {
   model: string | null | undefined;
   rack: string | null | undefined;
   chassis: string | null | undefined;
+  offline_storage_site: string | null | undefined;
 }
 
 export interface SortFilterBody {
@@ -216,6 +219,7 @@ export interface RackResponseObject {
 export interface DatacenterObject extends ElementObject {
   name: string;
   abbreviation: string;
+  is_storage: boolean;
 }
 
 export enum MountTypes {

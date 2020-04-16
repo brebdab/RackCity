@@ -36,6 +36,7 @@ export interface NavigationProps {
   updateChangePlansBoolean: boolean;
   updateChangePlans(status: boolean): void;
   permissionState: PermissionState;
+  isMobile: boolean;
 }
 
 export interface NavigationState {
@@ -123,14 +124,17 @@ export class Navigation extends React.Component<
           ) : null}
           <Navbar className={Classes.DARK + " nav-bar"}>
             <NavbarGroup>
+
               <AnchorButton
                 className="nav-bar-non-button nav-bar-button"
                 text="HypoSoft"
                 minimal
               />
 
+
               <NavbarDivider />
-              {this.props.isAuthenticated ? (
+
+              {this.props.isAuthenticated && !this.props.isMobile ? (
                 <div>
                   <Button
                     className="nav-bar-button"
@@ -179,37 +183,41 @@ export class Navigation extends React.Component<
             <NavbarGroup align={Alignment.RIGHT}>
               {this.props.isAuthenticated ? (
                 <div className="nav-buttons-right">
-                  <ChangePlanSelect
-                    popoverProps={{
-                      minimal: true,
-                      popoverClassName: "dropdown",
-                      usePortal: true,
-                    }}
-                    disabled={this.props.location.pathname.includes(
-                      "/dashboard/change-plans/"
-                    )}
-                    items={this.state.changePlans}
-                    onItemSelect={(changePlan: ChangePlan) => {
-                      this.props.setChangePlan(changePlan);
-                    }}
-                    itemRenderer={renderChangePlanItem}
-                    itemPredicate={filterChangePlan}
-                    noResults={<MenuItem disabled={true} text="No results." />}
-                  >
-                    <Button
-                      minimal
-                      disabled={this.props.location.pathname.includes(
-                        "/dashboard/change-plans/"
-                      )}
-                      rightIcon="caret-down"
-                      text={
-                        this.props.changePlan
-                          ? this.props.changePlan.name
-                          : "Select Change Plan"
-                      }
-                      icon={IconNames.GIT_BRANCH}
-                    />
-                  </ChangePlanSelect>
+                  {this.props.isMobile ? null : (
+                    <>
+                      <ChangePlanSelect
+                        popoverProps={{
+                          minimal: true,
+                          popoverClassName: "dropdown",
+                          usePortal: true,
+                        }}
+                        disabled={this.props.location.pathname.includes(
+                          "/dashboard/change-plans/"
+                        )}
+                        items={this.state.changePlans}
+                        onItemSelect={(changePlan: ChangePlan) => {
+                          this.props.setChangePlan(changePlan);
+                        }}
+                        itemRenderer={renderChangePlanItem}
+                        itemPredicate={filterChangePlan}
+                        noResults={
+                          <MenuItem disabled={true} text="No results." />
+                        }
+                      >
+                        <Button
+                          minimal
+                          disabled={this.props.location.pathname.includes(
+                            "/dashboard/change-plans/"
+                          )}
+                          rightIcon="caret-down"
+                          text={
+                            this.props.changePlan
+                              ? this.props.changePlan.name
+                              : "Select Change Plan"
+                          }
+                          icon={IconNames.GIT_BRANCH}
+                        />
+                      </ChangePlanSelect>
 
                   {this.props.changePlan ? (
                     <AnchorButton
@@ -237,6 +245,9 @@ export class Navigation extends React.Component<
                       minimal
                     />
                   ) : null}
+
+                    </>
+                  )}
 
                   <AnchorButton
                     onClick={() => {
@@ -274,6 +285,7 @@ const mapStateToProps = (state: any) => {
     changePlan: state.changePlan,
     updateChangePlansBoolean: state.updateChangePlansBoolean,
     permissionState: state.permissionState,
+    isMobile: state.isMobile,
   };
 };
 

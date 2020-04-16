@@ -30,6 +30,7 @@ export const ALL_DATACENTERS: DatacenterObject = {
   id: "",
   name: "All datacenters",
   abbreviation: "ALL",
+  is_storage: false,
 };
 // var console: any = {};
 // console.log = function() {};

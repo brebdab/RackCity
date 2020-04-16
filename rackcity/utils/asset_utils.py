@@ -10,6 +10,7 @@ from rackcity.models import (
     PDUPort,
     PDUPortCP,
     Rack,
+    Site,
 )
 from rackcity.models.asset import get_assets_for_cp, validate_asset_number_uniqueness
 from rackcity.utils.errors_utils import parse_save_validation_error
@@ -409,6 +410,8 @@ def save_all_field_data_live(data, asset):
             value = Rack.objects.get(id=data[field])
         elif field == "chassis" and data["chassis"]:
             value = Asset.objects.get(id=data[field])
+        elif field == "offline_storage_site" and data["offline_storage_site"]:
+            value = Site.objects.get(id=data[field])
         elif field == "hostname" and data["hostname"]:
             assets_with_hostname = Asset.objects.filter(hostname__iexact=data[field])
             if len(assets_with_hostname) > 0 and assets_with_hostname[0].id != asset_id:
