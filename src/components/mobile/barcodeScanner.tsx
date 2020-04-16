@@ -49,7 +49,8 @@ export class BarcodeScanner extends React.PureComponent<
   WebcamCapture = () => {
     let webcamRef: any;
     webcamRef = React.useRef(null);
-    const capture = React.useCallback(() => {
+    let capture: Function;
+    capture = React.useCallback(() => {
       const imageSrc = webcamRef.current.getScreenshot();
       var imgStr = imageSrc.substr(23);
       console.log(this.props)
@@ -102,6 +103,7 @@ export class BarcodeScanner extends React.PureComponent<
   }
 
   componentDidMount() {
+    console.log(this.props)
     this.setState({
       token: this.props.token
     })
@@ -114,6 +116,7 @@ export class BarcodeScanner extends React.PureComponent<
       this.setState({
         cameraWidth: width,
         cameraHeight: height,
+        token: this.props.token
       });
     }
 
