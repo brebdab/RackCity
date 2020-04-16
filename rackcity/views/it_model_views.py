@@ -40,6 +40,7 @@ from rackcity.utils.query_utils import (
     get_filter_arguments,
     get_page_count_response,
     get_many_response,
+    get_filtered_query,
 )
 from rackcity.utils.rackcity_utils import (
     validate_asset_location_in_rack,
@@ -173,6 +174,8 @@ def model_modify(request):
 
 
 def validate_model_change(new_model_data, existing_model):
+    if "model_type" in new_model_data and new_model_data["model_type"] != existing_model.model_type:
+        raise ModelModificationException("Unable to modify model type. ")
     if (
         "network_ports" not in new_model_data
         and "num_power_ports" not in new_model_data
@@ -205,7 +208,7 @@ def validate_model_change(new_model_data, existing_model):
 
 
 def validate_model_height_change(new_model_data, existing_model):
-    if "height" not in new_model_data:
+    if "height" not in new_model_data or not new_model_data["height"]:
         return
     new_model_height = int(new_model_data["height"])
     if new_model_height <= existing_model.height:
@@ -363,7 +366,7 @@ def model_bulk_upload(request):
     csv_bytes_io = BytesIO(b64decode(re.sub(".*base64,", "", base_64_csv)))
     csv_string_io = StringIO(csv_bytes_io.read().decode("UTF-8-SIG"))
     csv_reader = csv.DictReader(csv_string_io)
-    expected_fields = BulkITModelSerializer.Meta.fields # TODO: add the mount type field
+    expected_fields = BulkITModelSerializer.Meta.fields
     given_fields = csv_reader.fieldnames
     if len(expected_fields) != len(given_fields) or set(  # check for repeated fields
         expected_fields
@@ -382,7 +385,7 @@ def model_bulk_upload(request):
     potential_modifications = []
     models_in_import = set()
     for bulk_model_data in bulk_model_datas:
-        model_data = normalize_bulk_model_data(bulk_model_data) # TODO: change the value of mount type
+        model_data = normalize_bulk_model_data(bulk_model_data)
         model_serializer = ITModelSerializer(data=model_data)
         if not model_serializer.is_valid():
             return JsonResponse(
@@ -417,7 +420,7 @@ def model_bulk_upload(request):
             models_to_add.append(model_serializer)
         else:
             try:
-                validate_model_height_change(model_data, existing_model) # TODO: make sure blades don't break this
+                validate_model_height_change(model_data, existing_model)
             except LocationException as error:
                 failure_message = (
                     Status.IMPORT_ERROR.value
@@ -434,7 +437,7 @@ def model_bulk_upload(request):
                     status=HTTPStatus.NOT_ACCEPTABLE,
                 )
             try:
-                validate_model_change(model_data, existing_model) # TODO: prevent mount type change
+                validate_model_change(model_data, existing_model)
             except ModelModificationException as error:
                 modification_failure = (
                     " There are existing assets with this model: "
@@ -539,21 +542,9 @@ def model_bulk_export(request):
     List all models in csv form, in accordance with Bulk Spec.
     """
     models_query = ITModel.objects
-
-    try:
-        filter_args = get_filter_arguments(request.data)
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message": Status.EXPORT_ERROR.value
-                + GenericFailure.FILTER.value,
-                "errors": str(error),
-            },
-            status=HTTPStatus.BAD_REQUEST,
-        )
-    for filter_arg in filter_args:
-        models_query = models_query.filter(**filter_arg) # TODO: make this use the new method
-
+    filtered_query, failure_response = get_filtered_query(models_query, request.data)
+    if failure_response:
+        return failure_response
     try:
         sort_args = get_sort_arguments(request.data)
     except Exception as error:
@@ -565,7 +556,7 @@ def model_bulk_export(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
-    models = models_query.order_by(*sort_args)
+    models = filtered_query.order_by(*sort_args)
 
     serializer = BulkITModelSerializer(models, many=True)
     csv_string = StringIO()

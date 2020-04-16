@@ -1,7 +1,11 @@
 from rest_framework import serializers
 from rackcity.models import ITModel
 from rackcity.models.it_model import DEFAULT_DISPLAY_COLOR
+from rackcity.models.model_utils import (
+    ModelType,
+)
 from rackcity.api.serializers.fields import RCIntegerField
+
 
 
 class ITModelSerializer(serializers.ModelSerializer):
@@ -42,7 +46,9 @@ class BulkITModelSerializer(serializers.ModelSerializer):
     Serializes all fields on ITModel model according to the format required
     for bulk export.
     """
-
+    mount_type = serializers.CharField(
+        source="model_type",
+    )
     network_ports = RCIntegerField(
         source="num_network_ports",
         allow_null=True,
@@ -74,7 +80,7 @@ class BulkITModelSerializer(serializers.ModelSerializer):
         fields = (
             "vendor",
             "model_number",
-            "model_type",
+            "mount_type",
             "height",
             "display_color",
             "network_ports",
@@ -133,6 +139,13 @@ def normalize_bulk_model_data(bulk_model_data):
     del bulk_model_data["power_ports"]
     bulk_model_data["memory_gb"] = bulk_model_data["memory"]
     del bulk_model_data["memory"]
+    if bulk_model_data["mount_type"] == "asset":
+        bulk_model_data["model_type"] = ModelType.RACKMOUNT_ASSET.value
+    elif bulk_model_data["mount_type"] == "chassis":
+        bulk_model_data["model_type"] = ModelType.BLADE_CHASSIS.value
+    elif bulk_model_data["mount_type"] == "blade":
+        bulk_model_data["model_type"] = ModelType.BLADE_ASSET.value
+    del bulk_model_data["mount_type"]
     if not bulk_model_data["display_color"]:
         del bulk_model_data["display_color"]
         bulk_model_data["display_color"] = DEFAULT_DISPLAY_COLOR
