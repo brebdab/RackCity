@@ -31,12 +31,14 @@ import {
   isObject,
   isRackObject,
   ROUTES,
+  TableType,
 } from "../../utils/utils";
 import "./changePlanner.scss";
 interface CPDetailViewProps {
   token: string;
   updateChangePlans(status: boolean): void;
   setChangePlan(changePlan: ChangePlan | null): void;
+  markTablesStale(staleTables: TableType[]): void;
 }
 enum ModificationType {
   MODIFY = "Modify",
@@ -129,7 +131,11 @@ class CPDetailView extends React.Component<
       .then((res) => {
         this.addSuccessToast(res.data.success_message);
         this.updateData();
-
+        this.props.markTablesStale([
+          TableType.RACKED_ASSETS,
+          TableType.STORED_ASSETS,
+          TableType.DECOMMISSIONED_ASSETS,
+        ]);
         // const modifications: Array<Modification> = this.state.modifications.slice();
         // const index = modifications.indexOf(modification);
         // modifications.splice(index, 1);
@@ -187,6 +193,10 @@ class CPDetailView extends React.Component<
       .then((res) => {
         this.addSuccessToast(res.data.success_message);
         this.updateData();
+        this.props.markTablesStale([
+          TableType.RACKED_ASSETS,
+          TableType.STORED_ASSETS,
+        ]);
 
         // const modifications: Array<Modification> = this.state.modifications.slice();
         // const index = modifications.indexOf(modification);
@@ -235,6 +245,11 @@ class CPDetailView extends React.Component<
         });
 
         this.updateData();
+        this.props.markTablesStale([
+          TableType.RACKED_ASSETS,
+          TableType.STORED_ASSETS,
+          TableType.DECOMMISSIONED_ASSETS,
+        ]);
       })
       .catch((err) => {
         this.addErrorToast(err.response.data.failure_message);
@@ -673,9 +688,10 @@ const mapDispatchToProps = (dispatch: any) => {
     logout: () => dispatch(actions.logout()),
     updateChangePlans: (status: boolean) =>
       dispatch(actions.updateChangePlans(status)),
-
     setChangePlan: (changePlan: ChangePlan) =>
       dispatch(actions.setChangePlan(changePlan)),
+    markTablesStale: (staleTables: TableType[]) =>
+      dispatch(actions.markTablesStale(staleTables)),
   };
 };
 

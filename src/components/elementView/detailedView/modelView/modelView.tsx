@@ -22,11 +22,13 @@ import {
   ModelObject,
   ROUTES,
   ChangePlan,
+  TableType,
 } from "../../../../utils/utils";
 import ElementTable from "../../elementTable";
 import { deleteModel, modifyModel } from "../../elementUtils";
 import PropertiesView from "../propertiesView";
 import { PermissionState } from "../../../../utils/permissionUtils";
+import * as actions from "../../../../store/actions/state";
 
 export interface ModelViewProps {
   token: string;
@@ -34,6 +36,7 @@ export interface ModelViewProps {
   isAdmin: boolean;
   changePlan: ChangePlan;
   permissionState: PermissionState;
+  markTablesStale(staleTables: TableType[]): void;
 }
 
 var console: any = {};
@@ -93,6 +96,11 @@ export class ModelView extends React.PureComponent<
         }
       );
       this.handleFormClose();
+      this.props.markTablesStale([
+        TableType.RACKED_ASSETS,
+        TableType.STORED_ASSETS,
+        TableType.MODELS,
+      ]);
     });
   };
   private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
@@ -127,6 +135,7 @@ export class ModelView extends React.PureComponent<
           intent: Intent.PRIMARY,
         });
         this.props.history.push(ROUTES.DASHBOARD);
+        this.props.markTablesStale([TableType.MODELS]);
       })
       .catch((err) => {
         this.addToast({
@@ -251,4 +260,13 @@ const mapStatetoProps = (state: any) => {
   };
 };
 
-export default withRouter(connect(mapStatetoProps)(ModelView));
+const mapDispatchToProps = (dispatch: any) => {
+  return {
+    markTablesStale: (staleTables: TableType[]) =>
+      dispatch(actions.markTablesStale(staleTables)),
+  };
+};
+
+export default withRouter(
+  connect(mapStatetoProps, mapDispatchToProps)(ModelView)
+);

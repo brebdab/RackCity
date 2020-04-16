@@ -7,7 +7,6 @@ import {
   Navbar,
   NavbarDivider,
   NavbarGroup,
-  NavbarHeading,
 } from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
 import axios from "axios";
@@ -125,36 +124,43 @@ export class Navigation extends React.Component<
           ) : null}
           <Navbar className={Classes.DARK + " nav-bar"}>
             <NavbarGroup>
-              <NavbarHeading
-                onClick={
-                  this.props.isMobile
-                    ? () => this.props.history.push(ROUTES.SCANNER)
-                    : () => this.props.history.push(ROUTES.DASHBOARD)
-                }
-              >
-                <AnchorButton
-                  onClick={
-                    this.props.isMobile
-                      ? () => this.props.history.push(ROUTES.SCANNER)
-                      : () => this.props.history.push(ROUTES.DASHBOARD)
-                  }
-                  className="nav-bar-button"
-                  icon="home"
-                  text="HypoSoft"
-                  minimal
-                />
-              </NavbarHeading>
+              <AnchorButton
+                className="nav-bar-non-button nav-bar-button"
+                text="HypoSoft"
+                minimal
+              />
+
               <NavbarDivider />
+              {this.props.isMobile && this.props.isAuthenticated ? (
+                <Button
+                  className="nav-bar-button"
+                  minimal
+                  icon="barcode"
+                  text="Barcode Scanner"
+                  onClick={() => this.props.history.push(ROUTES.SCANNER)}
+                />
+              ) : null}
+
               {this.props.isAuthenticated && !this.props.isMobile ? (
                 <div>
                   <Button
+                    className="nav-bar-button"
+                    minimal
+                    icon="panel-table"
+                    text="Asset Management"
+                    onClick={() => this.props.history.push(ROUTES.DASHBOARD)}
+                  />
+                  <Button
+                    className="nav-bar-button"
                     minimal
                     disabled={this.props.changePlan ? true : false}
                     text="Report"
                     icon="numbered-list"
                     onClick={() => this.props.history.push(ROUTES.REPORT)}
                   />
+
                   <Button
+                    className="nav-bar-button"
                     minimal
                     onClick={() => this.props.history.push(ROUTES.LOGS)}
                     icon="history"
@@ -167,6 +173,7 @@ export class Navigation extends React.Component<
                     }
                   />
                   <Button
+                    className="nav-bar-button"
                     minimal
                     icon="user"
                     onClick={() => this.props.history.push(ROUTES.USERS)}
@@ -221,6 +228,7 @@ export class Navigation extends React.Component<
 
                       {this.props.changePlan ? (
                         <AnchorButton
+                          className="nav-bar-button"
                           minimal
                           disabled={this.props.location.pathname.includes(
                             "/dashboard/change-plans/"
@@ -230,6 +238,7 @@ export class Navigation extends React.Component<
                         />
                       ) : null}
                       <AnchorButton
+                        className="nav-bar-button"
                         onClick={() =>
                           this.props.history.push(ROUTES.CHANGE_PLAN)
                         }

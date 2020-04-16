@@ -39,6 +39,12 @@ export enum AssetType {
   STORED = "Stored",
   DECOMMISSIONED = "Decommissioned",
 }
+export enum TableType {
+  RACKED_ASSETS = "RACKED_ASSETS",
+  STORED_ASSETS = "STORED_ASSETS",
+  DECOMMISSIONED_ASSETS = "DECOMMISSIONED_ASSETS",
+  MODELS = "MODELS",
+}
 export enum PowerSide {
   LEFT = "L",
   RIGHT = "R",

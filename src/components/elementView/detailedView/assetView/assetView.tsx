@@ -31,6 +31,7 @@ import {
   NetworkConnection,
   Node,
   ROUTES,
+  TableType,
 } from "../../../../utils/utils";
 import {
   decommissionAsset,
@@ -47,6 +48,7 @@ import { isNullOrUndefined } from "util";
 import { PermissionState } from "../../../../utils/permissionUtils";
 import { IconNames } from "@blueprintjs/icons";
 import { BladePowerView } from "../../powerView/bladePowerView";
+import * as actions from "../../../../store/actions/state";
 import ChassisView from "./chassisView";
 
 export interface AssetViewProps {
@@ -54,6 +56,7 @@ export interface AssetViewProps {
   isAdmin: boolean;
   changePlan: ChangePlan;
   permissionState: PermissionState;
+  markTablesStale(staleTables: TableType[]): void;
 }
 
 interface AssetViewState {
@@ -95,6 +98,10 @@ export class AssetView extends React.PureComponent<
       this.getData(params.rid, this.props.changePlan);
 
       this.handleFormClose();
+      this.props.markTablesStale([
+        TableType.RACKED_ASSETS,
+        TableType.STORED_ASSETS,
+      ]);
     });
   };
   private toaster: Toaster = {} as Toaster;
@@ -565,6 +572,10 @@ export class AssetView extends React.PureComponent<
         this.setState({ isDeleteOpen: false });
         this.addSuccessToast(res.data.success_message);
         this.props.history.push(ROUTES.DASHBOARD);
+        this.props.markTablesStale([
+          TableType.RACKED_ASSETS,
+          TableType.STORED_ASSETS,
+        ]);
       })
       .catch((err) => {
         this.addToast({
@@ -589,8 +600,15 @@ export class AssetView extends React.PureComponent<
         let params: any;
         params = this.props.match.params;
         this.updateAssetData(params.rid);
+        this.props.markTablesStale([
+          TableType.RACKED_ASSETS,
+          TableType.STORED_ASSETS,
+          TableType.DECOMMISSIONED_ASSETS,
+        ]);
       })
       .catch((err) => {
+        console.log("there was an error: ");
+        console.log(err);
         this.addToast({
           message: err.response.data.failure_message,
           intent: Intent.DANGER,
@@ -608,4 +626,13 @@ const mapStatetoProps = (state: any) => {
   };
 };
 
-export default withRouter(connect(mapStatetoProps)(AssetView));
+const mapDispatchToProps = (dispatch: any) => {
+  return {
+    markTablesStale: (staleTables: TableType[]) =>
+      dispatch(actions.markTablesStale(staleTables)),
+  };
+};
+
+export default withRouter(
+  connect(mapStatetoProps, mapDispatchToProps)(AssetView)
+);
