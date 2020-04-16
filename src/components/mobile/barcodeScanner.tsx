@@ -83,7 +83,7 @@ export class BarcodeScanner extends React.PureComponent<
         <Webcam
           audio={false}
           height={this.state.cameraHeight * 0.8}
-          screenshotFormat={"image/png"}
+          screenshotFormat={"image/jpeg"}
           width={this.state.cameraWidth}
           videoConstraints={this.constraints}
           ref={webcamRef}
