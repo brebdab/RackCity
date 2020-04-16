@@ -1505,10 +1505,7 @@ class ElementTable extends React.Component<
           ) : null}
           {(!this.state.items || this.state.items.length === 0) &&
           !this.state.getDataInProgress ? (
-            <Callout
-              icon={IconNames.ERROR}
-              title={"No " + this.props.type}
-            ></Callout>
+            <Callout icon={IconNames.ERROR} title={"No " + this.props.type} />
           ) : null}
         </div>
       </div>

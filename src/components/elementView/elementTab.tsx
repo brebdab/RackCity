@@ -16,12 +16,17 @@ import * as actions from "../../store/actions/state";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
-import {connect} from "react-redux";
-import {RouteComponentProps} from "react-router";
+import { connect } from "react-redux";
+import { RouteComponentProps } from "react-router";
 import FormPopup from "../../forms/formPopup";
-import {DatacenterSelect, filterDatacenter, FormTypes, renderDatacenterItem,} from "../../forms/formUtils";
-import {updateObject} from "../../store/utility";
-import {API_ROOT} from "../../utils/api-config";
+import {
+  DatacenterSelect,
+  filterDatacenter,
+  FormTypes,
+  renderDatacenterItem,
+} from "../../forms/formUtils";
+import { updateObject } from "../../store/utility";
+import { API_ROOT } from "../../utils/api-config";
 import {
   AssetType,
   ChangePlan,
@@ -34,12 +39,20 @@ import {
   ShallowAssetObject,
   SortFilterBody,
 } from "../../utils/utils";
-import {ALL_DATACENTERS} from "./elementTabContainer";
+import { ALL_DATACENTERS } from "./elementTabContainer";
 import ElementTable from "./elementTable";
-import {FilterTypes, IFilter, PagingTypes, TextFilterTypes,} from "./elementUtils";
+import {
+  FilterTypes,
+  IFilter,
+  PagingTypes,
+  TextFilterTypes,
+} from "./elementUtils";
 import "./elementView.scss";
-import {Link} from "react-router-dom";
-import {hasAddElementPermission, PermissionState,} from "../../utils/permissionUtils";
+import { Link } from "react-router-dom";
+import {
+  hasAddElementPermission,
+  PermissionState,
+} from "../../utils/permissionUtils";
 
 // var console: any = {};
 // console.log = function() {};
@@ -565,7 +578,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                   ? this.createModel
                   : this.props.element === ElementType.ASSET
                   ? this.createAsset
-                  : this.props.element === ElementType.DATACENTER
+                  : this.props.element === ElementType.DATACENTER ||
+                    this.props.element === ElementType.OFFLINE_STORAGE_SITE
                   ? this.createDatacenter
                   : this.props.element === ElementType.CHANGEPLANS
                   ? this.createChangePlan
