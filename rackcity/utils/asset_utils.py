@@ -21,7 +21,6 @@ from rackcity.utils.exceptions import (
 )
 from rackcity.utils.log_utils import log_network_action
 
-
 def get_existing_network_port(port_name, asset_id, change_plan=None):
     """
     If live, returns NetworkPort corresponding to port_name and asset_id. If change plan,

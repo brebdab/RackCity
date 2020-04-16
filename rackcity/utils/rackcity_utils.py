@@ -85,7 +85,7 @@ def validate_asset_location_in_rack(
                     if asset_in_rack.asset_number:
                         raise LocationException(
                             "Asset location conflicts with another asset: '"
-                            + str(asset_in_rack.asset_number)
+                            + str(asset_in_rack.id)
                             + "'. "
                         )
                     else:
