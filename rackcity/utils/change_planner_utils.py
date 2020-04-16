@@ -9,7 +9,8 @@ import math
 from rackcity.api.serializers import (
     RecursiveAssetSerializer,
     RecursiveAssetCPSerializer,
-    GetDecommissionedAssetSerializer)
+    GetDecommissionedAssetSerializer,
+)
 from rackcity.models import (
     Asset,
     AssetCP,
@@ -31,6 +32,7 @@ from rackcity.utils.rackcity_utils import (
     validate_asset_location_in_rack,
     validate_asset_location_in_chassis,
 )
+
 
 class ModificationType(Enum):
     MODIFY = "Modify"
@@ -79,7 +81,6 @@ def detect_conflicts_cp(sender, **kwargs):
     # asset rack location conflicts with an active assetCP
     asset.location_conflict.clear()
     if asset.model.is_rackmount():
-        print(asset.rack_id)
         for asset_cp in AssetCP.objects.filter(
             Q(rack=asset.rack_id)
             & ~Q(related_asset=asset.id)
@@ -91,7 +92,7 @@ def detect_conflicts_cp(sender, **kwargs):
                     asset_cp.rack_position,
                     asset_cp.model.height,
                     asset_id=asset_cp.id,
-                    related_asset_id = asset_cp.related_asset_id
+                    related_asset_id=asset_cp.related_asset_id,
                 )
             except LocationException as e:
                 AssetCP.objects.filter(id=asset_cp.id).update(
@@ -106,7 +107,10 @@ def detect_conflicts_cp(sender, **kwargs):
             try:
                 # TODO: add check for blades
                 validate_asset_location_in_chassis(
-                    asset.chassis_id, asset_cp.chassis_slot, asset_id=asset_cp.id,related_asset_id = asset_cp.related_asset_id
+                    asset.chassis_id,
+                    asset_cp.chassis_slot,
+                    asset_id=asset_cp.id,
+                    related_asset_id=asset_cp.related_asset_id,
                 )
             except LocationException:
                 asset_cp.asset_conflict_location = asset
@@ -147,7 +151,9 @@ def get_change_plan(change_plan_id):
 
 def get_racked_assets_for_cp(change_plan):
     racked_assets = Asset.objects.filter(offline_storage_site__isnull=True)
-    racked_assets_cp = AssetCP.objects.filter(change_plan=change_plan, offline_storage_site__isnull=True)
+    racked_assets_cp = AssetCP.objects.filter(
+        change_plan=change_plan, offline_storage_site__isnull=True
+    )
     for asset_cp in racked_assets_cp:
         if asset_cp.related_asset and (asset_cp.related_asset in racked_assets):
             racked_assets = racked_assets.filter(~Q(id=asset_cp.related_asset.id))
@@ -158,7 +164,11 @@ def get_racked_assets_for_cp(change_plan):
 
 def get_offline_storage_assets_for_cp(change_plan):
     stored_assets = Asset.objects.filter(offline_storage_site__isnull=False)
-    stored_assets_cp = AssetCP.objects.filter(change_plan=change_plan, offline_storage_site__isnull=False,is_decommissioned=False)
+    stored_assets_cp = AssetCP.objects.filter(
+        change_plan=change_plan,
+        offline_storage_site__isnull=False,
+        is_decommissioned=False,
+    )
     for asset_cp in stored_assets_cp:
         if asset_cp.related_asset and (asset_cp.related_asset in stored_assets):
             stored_assets = stored_assets.filter(~Q(id=asset_cp.related_asset.id))
@@ -218,7 +228,9 @@ def get_page_of_serialized_assets(all_assets, query_params):
         return all_assets[start:end]
 
 
-def get_many_assets_response_for_cp(request, change_plan, decommissioned=False, stored=False):
+def get_many_assets_response_for_cp(
+    request, change_plan, decommissioned=False, stored=False
+):
     should_paginate = should_paginate_query(request.query_params)
     if should_paginate:
         page_failure_response = get_invalid_paginated_request_response(
@@ -233,7 +245,7 @@ def get_many_assets_response_for_cp(request, change_plan, decommissioned=False, 
     if filter_failure_response:
         return filter_failure_response
     if decommissioned:
-        asset_serializer = GetDecommissionedAssetSerializer(assets,many=True,)
+        asset_serializer = GetDecommissionedAssetSerializer(assets, many=True,)
 
     else:
         asset_serializer = RecursiveAssetSerializer(assets, many=True,)
@@ -262,7 +274,9 @@ def get_many_assets_response_for_cp(request, change_plan, decommissioned=False, 
     return JsonResponse({"assets": assets_data}, status=HTTPStatus.OK,)
 
 
-def get_page_count_response_for_cp(request, change_plan, decommissioned=False, stored=False):
+def get_page_count_response_for_cp(
+    request, change_plan, decommissioned=False, stored=False
+):
     if (
         not request.query_params.get("page_size")
         or int(request.query_params.get("page_size")) <= 0

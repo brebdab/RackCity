@@ -26,7 +26,8 @@ import {
   AssetFieldsTable,
   AssetObject,
   ChangePlan,
-  getHeaders, isDatacenterObject,
+  getHeaders,
+  isDatacenterObject,
   isModelObject,
   isObject,
   isRackObject,
@@ -141,7 +142,7 @@ class CPDetailView extends React.Component<
           TableType.STORED_ASSETS,
           TableType.DECOMMISSIONED_ASSETS,
         ]);
-    this.setButtonState()
+        this.setButtonState();
       })
       .catch((err) => {
         this.addErrorToast(err.response.data.failure_message);
@@ -193,9 +194,7 @@ class CPDetailView extends React.Component<
           TableType.RACKED_ASSETS,
           TableType.STORED_ASSETS,
         ]);
-        this.setButtonState()
-
-
+        this.setButtonState();
       })
       .catch((err) => {
         this.addErrorToast(err.response.data.failure_message);
@@ -309,7 +308,7 @@ class CPDetailView extends React.Component<
                 <td style={this.getHighlightStyle(modification, col)}>
                   {value.row_letter + "" + value.rack_num}
                 </td>
-              </tr>
+              </tr>,
             ];
           } else if (col === "comment") {
             field = (
@@ -320,15 +319,13 @@ class CPDetailView extends React.Component<
                 {value}
               </td>
             );
-          } else if (isDatacenterObject(value)){
-
-                        field = (
-              <td style={this.getHighlightStyle(modification, col)}>{value.name}</td>
+          } else if (isDatacenterObject(value)) {
+            field = (
+              <td style={this.getHighlightStyle(modification, col)}>
+                {value.name}
+              </td>
             );
-          }
-
-            else if (!isObject(value)) {
-
+          } else if (!isObject(value)) {
             field = (
               <td style={this.getHighlightStyle(modification, col)}>{value}</td>
             );
@@ -613,7 +610,7 @@ class CPDetailView extends React.Component<
                 );
               }
             )
-          ) : (this.loading? null:
+          ) : this.loading ? null : (
             <Callout title="No modifications for this change plan"> </Callout>
           )}
         </ul>

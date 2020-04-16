@@ -486,7 +486,6 @@ def get_neighbor_assets(hostname, id, nodes, edges, change_plan=None):
 def get_datacenter_of_asset(asset):
     datacenter = None
     if asset.rack:
-        print(asset.rack)
         datacenter = asset.rack.datacenter
     if asset.chassis and asset.chassis.rack:
         datacenter = asset.chassis.rack.datacenter
