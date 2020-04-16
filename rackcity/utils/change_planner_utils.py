@@ -362,12 +362,22 @@ def get_cp_modification_conflicts(asset_cp):
     )
     conflicting_asset_message_2 = " now conflicts with a live asset. "
     if asset_cp.is_conflict and asset_cp.related_asset is None:
-        conflicts.append(
-            {
-                "conflict_message": "This asset has been deleted live. "
-                + nonresolvable_message
-            }
-        )
+        if asset_cp.related_decommissioned_asset:
+            conflicts.append(
+                {
+                    "conflict_message": "This asset has been decommissioned in a live change. "
+                    + nonresolvable_message,
+                    "conflicting_asset": None,
+                    "conflict_resolvable": False,
+                }
+            )
+        else:
+            conflicts.append(
+                {
+                    "conflict_message": "This asset has been deleted live. "
+                    + nonresolvable_message
+                }
+            )
     if asset_cp.asset_conflict_hostname:
         conflicts.append(
             {
@@ -417,15 +427,6 @@ def get_cp_modification_conflicts(asset_cp):
             {
                 "conflict_message": "The rack"
                 + deleted_relation_message
-                + nonresolvable_message,
-                "conflicting_asset": None,
-                "conflict_resolvable": False,
-            }
-        )
-    if asset_cp.related_decommissioned_asset:
-        conflicts.append(
-            {
-                "conflict_message": "This asset has been decommissioned in a live change. "
                 + nonresolvable_message,
                 "conflicting_asset": None,
                 "conflict_resolvable": False,
