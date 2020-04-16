@@ -438,6 +438,7 @@ def save_all_field_data_live(data, asset):
     try:
         asset.save()
     except Exception as error:
+        print(error)
         return parse_save_validation_error(error, "Asset")
 
 
@@ -495,4 +496,5 @@ def save_all_field_data_cp(data, asset, change_plan, create_asset_cp):
             asset.save()
             return asset, None
     except Exception as error:
+        print(error)
         return None, parse_save_validation_error(error, "Asset")

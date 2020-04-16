@@ -1,3 +1,5 @@
+import traceback
+
 from .change_plan import ChangePlan
 from .decommissioned_asset import DecommissionedAsset
 from .it_model import ITModel
@@ -125,6 +127,10 @@ def validate_location_type(
 ):
     if model.is_rackmount():
         if offline_storage_site and (rack or rack_position):
+            print("hmm")
+            print(offline_storage_site)
+            print(rack)
+            print(rack_position)
             raise ValidationError(
                 "Rackmount assets in storage must not have a rack or rack position. "
             )
@@ -229,13 +235,33 @@ class Asset(AbstractAsset):
                 offline_storage_site=self.offline_storage_site,
             )
         except ValidationError as valid_error:
+            print(valid_error)
             raise valid_error
         else:
-            if self.asset_number is None:
-                self.asset_number = get_next_available_asset_number()
-            super(Asset, self).save(*args, **kwargs)
-            self.add_network_ports()
-            self.add_power_ports()
+            try:
+                if self.asset_number is None:
+                    self.asset_number = get_next_available_asset_number()
+            except Exception as error:
+                print("problem 1")
+                print(error)
+                raise Exception(error)
+            try:
+                super(Asset, self).save(*args, **kwargs)
+            except Exception as error:
+                print(traceback.format_exc(error))
+                raise Exception(error)
+            try:
+                self.add_network_ports()
+            except Exception as error:
+                print("problem 3")
+                print(error)
+                raise Exception(error)
+            try:
+                self.add_power_ports()
+            except Exception as error:
+                print("problem 4")
+                print(error)
+                raise Exception(error)
 
     def add_network_ports(self):
         from rackcity.models import NetworkPort
@@ -378,11 +404,11 @@ class AssetCP(AbstractAsset):
                     offline_storage_site=self.offline_storage_site,
                 )
         except ValidationError as valid_error:
+            print(valid_error)
             raise valid_error
         else:
             super(AssetCP, self).save(*args, **kwargs)
             self.add_network_ports()
-
             self.add_power_ports()
 
     def is_in_offline_storage(self):
