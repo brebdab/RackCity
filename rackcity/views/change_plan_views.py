@@ -15,7 +15,7 @@ from rackcity.utils.change_planner_utils import (
     get_modifications_in_cp,
     asset_cp_has_conflicts,
     get_cp_already_executed_response,
-)
+    get_cp_modification_conflicts)
 from rackcity.utils.errors_utils import (
     Status,
     GenericFailure,
@@ -389,7 +389,7 @@ def change_plan_execute(request, id):
 
     assets_cp = AssetCP.objects.filter(change_plan=change_plan)
     for asset_cp in assets_cp:
-        if asset_cp_has_conflicts(asset_cp):
+        if get_cp_modification_conflicts(asset_cp):
             return JsonResponse(
                 {
                     "failure_message": Status.ERROR.value
@@ -422,6 +422,13 @@ def change_plan_execute(request, id):
             )
         update_network_ports(updated_asset, asset_cp, change_plan)
         update_power_ports(updated_asset, asset_cp, change_plan)
+    for asset_cp in assets_cp:
+        if asset_cp.model.is_blade_chassis():
+            blades_cp = assets_cp.filter(chassis = asset_cp)
+            for blade_cp in blades_cp:
+                updated_asset = updated_asset_mappings[blade_cp]
+                updated_asset.chassis = updated_asset_mappings[asset_cp]
+                updated_asset.save()
 
     for asset_cp in assets_cp:
         # Decommission only after all changes have been made to all CP assets

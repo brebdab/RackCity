@@ -28,7 +28,7 @@ def get_updated_asset(asset_cp):
         updated_asset = Asset()
         created = True
     for field in Asset._meta.fields:
-        if field.name != "id" and field.name != "assetid_ptr":
+        if field.name != "id" and field.name != "assetid_ptr" and field.name != "chassis":
             setattr(updated_asset, field.name, getattr(asset_cp, field.name))
     # Assigns asset number, creates network & power ports on save
     updated_asset.save()
