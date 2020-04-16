@@ -469,15 +469,22 @@ def get_cp_modification_conflicts(asset_cp):
 
 
 def get_location_detail(asset):
-    return (
-        " at rack "
-        + asset.rack.datacenter.abbreviation
-        + " "
-        + asset.rack.row_letter
-        + str(asset.rack.rack_num)
-        + ", position "
-        + str(asset.rack_position)
-    )
+    if asset.model.is_rackmount():
+        if asset.rack:
+            return (
+                " at rack "
+                + asset.rack.datacenter.abbreviation
+                + " "
+                + asset.rack.row_letter
+                + str(asset.rack.rack_num)
+                + ", position "
+                + str(asset.rack_position)
+            )
+        return ""
+
+    else:
+        return (" in chassis " + asset.chassis.hostname )
+
 
 
 def get_modifications_in_cp(change_plan):

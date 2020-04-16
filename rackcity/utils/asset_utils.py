@@ -25,6 +25,7 @@ from rackcity.utils.exceptions import (
 from rackcity.utils.log_utils import log_network_action
 import traceback
 
+
 def get_existing_network_port(port_name, asset_id, change_plan=None):
     """
     If live, returns NetworkPort corresponding to port_name and asset_id. If change plan,
@@ -117,7 +118,7 @@ def get_or_create_pdu_port(asset, power_connection_data, change_plan=None):
         return pdu_port_live
 
 
-def add_chassis_to_cp(chassis_live,change_plan,ignore_blade_id=None):
+def add_chassis_to_cp(chassis_live, change_plan, ignore_blade_id=None):
     """
     Takes a live chassis and change plan, adds its blades to the AssetCP table,
     then adds the chassis to the AssetCP table.
@@ -125,7 +126,7 @@ def add_chassis_to_cp(chassis_live,change_plan,ignore_blade_id=None):
     chassis_cp = copy_asset_to_new_asset_cp(chassis_live, change_plan)
     blades = Asset.objects.filter(Q(chassis=chassis_live) & ~Q(id=ignore_blade_id))
     for blade in blades:
-        copy_asset_to_new_asset_cp(blade,change_plan, chassis_cp)
+        copy_asset_to_new_asset_cp(blade, change_plan, chassis_cp)
     return chassis_cp
 
 
@@ -138,7 +139,11 @@ def copy_asset_to_new_asset_cp(asset_live, change_plan, chassis_cp=None):
     # Copy existing asset to AssetCP table
     asset_cp = AssetCP(related_asset=asset_live, change_plan=change_plan)
     for field in asset_live._meta.fields:
-        if field.name != "id" and field.name != "assetid_ptr" and field.name != "chassis":
+        if (
+            field.name != "id"
+            and field.name != "assetid_ptr"
+            and field.name != "chassis"
+        ):
             setattr(asset_cp, field.name, getattr(asset_live, field.name))
     if chassis_cp:
         asset_cp.chassis = chassis_cp
@@ -512,18 +517,22 @@ def save_all_field_data_cp(data, asset, change_plan, create_asset_cp):
             return (None, "No existing chassis with id=" + data["chassis"])
 
         if not AssetCP.objects.filter(id=data["chassis"]).exists():
-            chassis = add_chassis_to_cp(chassis_live, change_plan, ignore_blade_id=asset.id)
+            chassis = add_chassis_to_cp(
+                chassis_live, change_plan, ignore_blade_id=asset.id
+            )
         else:
             chassis = AssetCP.objects.get(id=data["chassis"])
 
     try:
         if create_asset_cp:
-            print(asset.model,asset.model.model_type)
-            if asset.model.model_type == ModelType.BLADE_CHASSIS.value:
+            print(asset.model, asset.model.model_type)
+            if asset.model.is_blade_chassis():
                 print("modifying chassis")
-                asset_cp = add_chassis_to_cp(asset,change_plan)
+                asset_cp = add_chassis_to_cp(asset, change_plan)
             else:
-                asset_cp = copy_asset_to_new_asset_cp(asset, change_plan, chassis_cp=chassis)
+                asset_cp = copy_asset_to_new_asset_cp(
+                    asset, change_plan, chassis_cp=chassis
+                )
             asset_cp.save()
             return asset_cp, None
 
