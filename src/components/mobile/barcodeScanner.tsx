@@ -67,7 +67,7 @@ export class BarcodeScanner extends React.PureComponent<
         .post(
           API_ROOT + "api/assets/asset-barcode",
           { img_string: imgStr },
-          getHeaders(this.props.token)
+          getHeaders(token)
         )
         .then((res: any) => {
           alert(JSON.stringify(res));
