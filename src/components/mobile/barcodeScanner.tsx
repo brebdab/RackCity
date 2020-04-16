@@ -123,6 +123,7 @@ export class BarcodeScanner extends React.PureComponent<
     return (
       <div className={Classes.DARK}>
         <this.WebcamCapture />
+        <AnchorButton onClick={() => {console.log(this.state); console.log(this.props)}}>Show data</AnchorButton>
       </div>
     );
   }
