@@ -242,6 +242,21 @@ export class BladePowerView extends React.PureComponent<
               this.requestPowerAction(PowerAction.CYCLE);
             }}
           />
+          {this.props.callback === undefined ? null : (
+            <AnchorButton
+              className={"power-close"}
+              intent="danger"
+              minimal
+              text="Close"
+              onClick={() => {
+                this.setState({
+                  powerStatus: undefined,
+                  statusLoaded: false,
+                });
+                this.props.callback!();
+              }}
+            />
+          )}
         </div>
       </div>
     );

@@ -296,6 +296,7 @@ export class PowerView extends React.PureComponent<
         </div>
         {this.props.asset &&
         this.state.powerStatus &&
+        this.state.statusLoaded &&
         this.shouldShowPowerButtons() ? (
           <AnchorButton
             className={"power-close"}
@@ -328,6 +329,7 @@ export class PowerView extends React.PureComponent<
         ) : null}
         {this.props.asset &&
         this.state.powerStatus &&
+        this.state.statusLoaded &&
         this.shouldShowPowerButtons() ? (
           <AnchorButton
             className={"power-close"}

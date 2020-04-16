@@ -42,6 +42,7 @@ import {
   isRackRangeFields,
   isUserObject,
   ModelFieldsTable,
+  MountTypes,
   RackRangeFields,
   ROUTES,
   SortFilterBody,
@@ -80,6 +81,7 @@ import { PowerView } from "./powerView/powerView";
 import "./powerView/powerView.scss";
 import { isNullOrUndefined } from "util";
 import { PermissionState } from "../../utils/permissionUtils";
+import { BladePowerView } from "./powerView/bladePowerView";
 
 interface ElementTableState {
   items: Array<ElementObjectType>;
@@ -736,16 +738,31 @@ class ElementTable extends React.Component<
           this.setState({ isPowerOptionsOpen: false });
         }}
       >
-        <PowerView
-          {...this.props}
-          callback={() => {
-            this.setState({ isPowerOptionsOpen: false });
-          }}
-          asset={this.state.assetPower}
-          shouldUpdate={false}
-          updated={() => {}}
-          assetIsDecommissioned={this.props.isDecommissioned}
-        />
+        {this.state.assetPower &&
+        this.state.assetPower.model &&
+        this.state.assetPower.model.model_type === MountTypes.BLADE ? (
+          <BladePowerView
+            {...this.props}
+            callback={() => {
+              this.setState({ isPowerOptionsOpen: false });
+            }}
+            asset={this.state.assetPower}
+            shouldUpdate={false}
+            updated={() => {}}
+            assetIsDecommissioned={this.props.isDecommissioned}
+          />
+        ) : (
+          <PowerView
+            {...this.props}
+            callback={() => {
+              this.setState({ isPowerOptionsOpen: false });
+            }}
+            asset={this.state.assetPower}
+            shouldUpdate={false}
+            updated={() => {}}
+            assetIsDecommissioned={this.props.isDecommissioned}
+          />
+        )}
       </Dialog>
     );
   };
