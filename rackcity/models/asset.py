@@ -124,6 +124,10 @@ def validate_location_type(
     model, rack, rack_position, chassis, chassis_slot, offline_storage_site,
 ):
     if model.is_rackmount():
+        if (offline_storage_site) and (rack or rack_position):
+            raise ValidationError(
+                "Rackmount assets in storage must not have a rack or rack position. "
+            )
         if (not offline_storage_site) and (not rack or not rack_position):
             raise ValidationError(
                 "Rackmount assets not in storage must have a rack and rack position. "
