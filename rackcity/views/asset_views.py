@@ -1066,10 +1066,7 @@ def get_asset_from_barcode(request):
     except Asset.DoesNotExist:
         return JsonResponse(
             {
-                "failure_message": Status.ERROR.value
-                + "Asset"
-                + GenericFailure.DOES_NOT_EXIST.value,
-                "errors": "No existing asset with asset_number=" + str(barcode_data),
+                "failure_message": "There is no existing asset associated with this barcode"
             },
             status=HTTPStatus.BAD_REQUEST,
         )
