@@ -87,6 +87,9 @@ import re
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import JSONParser
+from PIL import Image
+import numpy
+from pyzbar.pyzbar import decode
 
 
 @api_view(["POST"])
@@ -1055,9 +1058,49 @@ def get_asset_from_barcode(request):
     corresponding live asset with that number, if it exists
     """
     data = JSONParser().parse(request)
-    if "img_string" in data:
-        return JsonResponse({"img_string": data.img_string}, status=HTTPStatus.OK)
-    else:
+    if "img_string" not in data:
         return JsonResponse(
-            {"failure_message": "failed"}, status=HTTPStatus.BAD_REQUEST
+            {
+                "failure_message": "ERROR: Request must contain base64-encoded image string"
+            },
+            status=HTTPStatus.BAD_REQUEST,
         )
+    img = b64decode(data["img_string"])
+    img_file = BytesIO(img)
+    image = Image.open(img_file).convert("RGB")
+    opencv_img = numpy.array(image)
+    opencv_img = opencv_img[:, :, ::-1].copy()
+    barcodes = decode(opencv_img)
+    if len(barcodes) < 1:
+        return JsonResponse(
+            {"warning_message": "WARNING: No barcode detected"},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    barcode_data = ""
+    try:
+        for barcode in barcodes:
+            barcode_data = barcode.data.decode("utf-8")
+    except Exception as error:
+        return JsonResponse(
+            {"failure_message": "ERROR: Could not decode barcode value"},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    if not barcode_data.isdigit():
+        return JsonResponse(
+            {"failure_message": "ERROR: Barcode contains non-numeric characters"},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    try:
+        asset = Asset.objects.get(asset_number=barcode_data)
+    except Asset.DoesNotExist:
+        return JsonResponse(
+            {
+                "failure_message": "There is no existing asset associated with this barcode"
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    serializer = RecursiveAssetSerializer(asset)
+    return JsonResponse(
+        {"barcode_data": barcode_data, "asset_data": serializer.data},
+        status=HTTPStatus.OK,
+    )
