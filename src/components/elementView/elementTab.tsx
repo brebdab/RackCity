@@ -241,9 +241,9 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
         ? "api/sites/" + path + "/get-many"
         : "api/" + path + "/get-many";
     return axios.post(API_ROOT + url, bodyCopy, config).then((res) => {
-      const items = res.data[path];
-
-      return items;
+      const dataKey =
+        path === "offline-storage-sites" ? "offline_storage_sites" : path;
+      return res.data[dataKey];
     });
   };
 
@@ -578,7 +578,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                   ? this.createModel
                   : this.props.element === ElementType.ASSET
                   ? this.createAsset
-                  : this.props.element === ElementType.DATACENTER
+                  : this.props.element === ElementType.DATACENTER ||
+                    this.props.element === ElementType.OFFLINE_STORAGE_SITE
                   ? this.createDatacenter
                   : this.props.element === ElementType.CHANGEPLANS
                   ? this.createChangePlan
