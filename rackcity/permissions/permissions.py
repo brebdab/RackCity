@@ -124,18 +124,13 @@ def validate_user_permission_on_new_asset_data(
                         "Chassis '" + str(chassis_id) + "' does not exist. "
                     )
                 site = chassis.rack.datacenter
-    if site:
-        if not user_has_asset_permission(user, site):
-            raise UserAssetPermissionException(
-                "User '"
-                + user.username
-                + "' does not have asset permission in site '"
-                + site.abbreviation
-                + "'. "
-            )
-    else:
+    if site and not user_has_asset_permission(user, site):
         raise UserAssetPermissionException(
-            "User '" + user.username + "' does not have asset permission. "
+            "User '"
+            + user.username
+            + "' does not have asset permission in site '"
+            + site.abbreviation
+            + "'. "
         )
 
 
@@ -147,18 +142,13 @@ def validate_user_permission_on_existing_asset(user, asset):
         site = asset.rack.datacenter
     elif asset.model.is_blade_asset():
         site = asset.chassis.rack.datacenter
-    if site:
-        if not user_has_asset_permission(user, site):
-            raise UserAssetPermissionException(
-                "User '"
-                + user.username
-                + "' does not have asset permission in site '"
-                + site.abbreviation
-                + "'. "
-            )
-    else:
+    if site and not user_has_asset_permission(user, site):
         raise UserAssetPermissionException(
-            "User '" + user.username + "' does not have asset permission. "
+            "User '"
+            + user.username
+            + "' does not have asset permission in site '"
+            + site.abbreviation
+            + "'. "
         )
 
 
