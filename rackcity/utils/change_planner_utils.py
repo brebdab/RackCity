@@ -480,6 +480,7 @@ def get_location_detail(asset,):
                 + ", position "
                 + str(asset.rack_position)
             )
+        ## TODO error message if asset is in an offline site
         return ""
 
     else:
