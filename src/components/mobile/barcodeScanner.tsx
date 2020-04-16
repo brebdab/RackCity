@@ -58,7 +58,7 @@ export class BarcodeScanner extends React.PureComponent<
         .catch((err: any) => {
           alert(JSON.stringify(err));
         });
-    }, [webcamRef]);
+    }, [webcamRef, token]);
     return (
       <div>
         <Webcam
