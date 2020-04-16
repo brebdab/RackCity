@@ -27,6 +27,7 @@ import {
   AssetObject,
   ChangePlan,
   getHeaders,
+  isDatacenterObject,
   isModelObject,
   isObject,
   isRackObject,
@@ -86,7 +87,7 @@ class CPDetailView extends React.Component<
     modifications: [],
     isAlertOpen: false,
     username: "",
-    disableButtons: false,
+    disableButtons: true,
   };
   printWorkOrder = () => {
     this.getUsername(this.props.token);
@@ -100,22 +101,27 @@ class CPDetailView extends React.Component<
   };
 
   setButtonState() {
-    let disable = false;
     if (
       this.loading ||
       this.state.modifications.length === 0 ||
       !isNullOrUndefined(this.state.changePlan.execution_time)
     ) {
-      disable = true;
+      this.setState({
+        disableButtons: true,
+      });
+      return;
     }
 
     this.state.modifications.forEach((modification: Modification) => {
       if (modification.conflicts && modification.conflicts.length > 0) {
-        disable = true;
+        this.setState({
+          disableButtons: true,
+        });
+        return;
       }
     });
     this.setState({
-      disableButtons: disable,
+      disableButtons: false,
     });
   }
   removeModification(modification: Modification) {
@@ -136,16 +142,7 @@ class CPDetailView extends React.Component<
           TableType.STORED_ASSETS,
           TableType.DECOMMISSIONED_ASSETS,
         ]);
-        // const modifications: Array<Modification> = this.state.modifications.slice();
-        // const index = modifications.indexOf(modification);
-        // modifications.splice(index, 1);
-        // console.log(modifications, index);
-        // const isOpen = this.state.isOpen;
-        // isOpen.splice(index, 1);
-        //   this.setState({
-        //     modifications,
-        //     isOpen
-        //   });
+        this.setButtonState();
       })
       .catch((err) => {
         this.addErrorToast(err.response.data.failure_message);
@@ -197,27 +194,7 @@ class CPDetailView extends React.Component<
           TableType.RACKED_ASSETS,
           TableType.STORED_ASSETS,
         ]);
-
-        // const modifications: Array<Modification> = this.state.modifications.slice();
-        // const index = modifications.indexOf(modification);
-        // if (override_live) {
-        //   modification.conflicts.splice(
-        //     modification.conflicts.indexOf(conflict),
-        //     1
-        //   );
-
-        //   modifications[index] = modification;
-        // } else {
-        //   modifications.splice(index, 1);
-        //   const isOpen = this.state.isOpen;
-        //   isOpen.splice(index, 1);
-        //   this.setState({
-        //     isOpen
-        //   });
-        // }
-        // this.setState({
-        //   modifications
-        // });
+        this.setButtonState();
       })
       .catch((err) => {
         this.addErrorToast(err.response.data.failure_message);
@@ -236,6 +213,7 @@ class CPDetailView extends React.Component<
         getHeaders(this.props.token)
       )
       .then((res) => {
+        this.props.updateChangePlans(true);
         this.addSuccessToast(res.data.success_message);
         this.setState({
           isAlertOpen: false,
@@ -331,18 +309,6 @@ class CPDetailView extends React.Component<
                   {value.row_letter + "" + value.rack_num}
                 </td>
               </tr>,
-              <tr>
-                <td
-                  style={this.getHighlightStyle(modification, col)}
-                  key={"datacenter"}
-                >
-                  {AssetFieldsTable["rack__datacenter__name"]}:
-                </td>
-
-                <td style={this.getHighlightStyle(modification, col)}>
-                  {value.datacenter.name}
-                </td>
-              </tr>,
             ];
           } else if (col === "comment") {
             field = (
@@ -351,6 +317,12 @@ class CPDetailView extends React.Component<
                 className="comment"
               >
                 {value}
+              </td>
+            );
+          } else if (isDatacenterObject(value)) {
+            field = (
+              <td style={this.getHighlightStyle(modification, col)}>
+                {value.name}
               </td>
             );
           } else if (!isObject(value)) {
@@ -638,7 +610,7 @@ class CPDetailView extends React.Component<
                 );
               }
             )
-          ) : (
+          ) : this.loading ? null : (
             <Callout title="No modifications for this change plan"> </Callout>
           )}
         </ul>
