@@ -381,7 +381,15 @@ export class AssetView extends React.PureComponent<
             <PropertiesView
               data={this.state.asset.model}
               title="Model Properties"
-              data_override={this.state.asset}
+              data_override={() => {
+                const {
+                  cpu,
+                  display_color,
+                  storage,
+                  memory_gb,
+                } = this.state.asset;
+                return {cpu, display_color, storage, memory_gb};
+              }}
             />
           </div>
         ) : null}

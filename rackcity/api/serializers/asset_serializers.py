@@ -298,6 +298,7 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
             "asset_number",
             "hostname",
             "model",
+            "datacenter",
             "rack",
             "rack_position",
             "chassis",
@@ -321,7 +322,7 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
             "display_color",
             "memory_gb",
             "blades",
-            "datacenter",
+
         )
 
     def get_mac_addresses(self, assetCP):
