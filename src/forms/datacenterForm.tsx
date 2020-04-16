@@ -1,12 +1,12 @@
-import {Button, Callout, Classes, FormGroup, Intent} from "@blueprintjs/core";
+import { Button, Callout, Classes, FormGroup, Intent } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
-import {connect} from "react-redux";
-import {DatacenterObject, ElementType} from "../utils/utils";
-import {updateObject} from "../store/utility";
+import { connect } from "react-redux";
+import { DatacenterObject, ElementType } from "../utils/utils";
+import { updateObject } from "../store/utility";
 import Field from "./field";
 import "./forms.scss";
-import {FormTypes} from "./formUtils";
+import { FormTypes } from "./formUtils";
 
 //TO DO : add validation of types!!!
 var console: any = {};
@@ -68,7 +68,8 @@ class DatacenterForm extends React.Component<
       }
 
       let newValues = this.state.values;
-      newValues.is_storage = (this.props.elementType === ElementType.OFFLINE_STORAGE_SITE);
+      newValues.is_storage =
+        this.props.elementType === ElementType.OFFLINE_STORAGE_SITE;
 
       const resp = this.props.submitForm(newValues, this.headers);
       if (resp) {
