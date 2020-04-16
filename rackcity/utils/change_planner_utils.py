@@ -32,7 +32,7 @@ from rackcity.utils.rackcity_utils import (
     validate_asset_location_in_chassis,
 )
 
-
+import traceback
 class ModificationType(Enum):
     MODIFY = "Modify"
     CREATE = "Create"
@@ -79,21 +79,22 @@ def detect_conflicts_cp(sender, **kwargs):
     # asset rack location conflicts with an active assetCP
     asset.location_conflict.clear()
     if asset.model.is_rackmount():
+        print(asset.rack_id)
         for asset_cp in AssetCP.objects.filter(
             Q(rack=asset.rack_id)
             & ~Q(related_asset=asset.id)
             & Q(change_plan__execution_time=None)
         ):
             try:
-                # TODO: add check for blades
                 validate_asset_location_in_rack(
                     asset.rack_id,
                     asset_cp.rack_position,
                     asset_cp.model.height,
                     asset_id=asset_cp.id,
+                    related_asset_id = asset.id
                 )
-            except LocationException:
-                asset_cp.asset_conflict_location = asset
+            except LocationException as e:
+                traceback.format_exc(e)
                 AssetCP.objects.filter(id=asset_cp.id).update(
                     asset_conflict_location=asset
                 )

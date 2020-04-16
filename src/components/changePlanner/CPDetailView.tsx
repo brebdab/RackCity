@@ -236,6 +236,7 @@ class CPDetailView extends React.Component<
         getHeaders(this.props.token)
       )
       .then((res) => {
+        this.props.updateChangePlans(true);
         this.addSuccessToast(res.data.success_message);
         this.setState({
           isAlertOpen: false,
