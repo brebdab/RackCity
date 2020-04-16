@@ -1,9 +1,10 @@
-import { Classes } from "@blueprintjs/core";
+import {AnchorButton, Classes} from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import Webcam from "react-webcam";
+import "./barcodeScanner.scss";
 
 interface BarcodeScannerState {
   result: string;
@@ -59,7 +60,7 @@ export class BarcodeScanner extends React.PureComponent<
           videoConstraints={this.constraints}
           ref={webcamRef}
         />
-        <button onClick={capture}>Capture photo</button>
+        <AnchorButton className={"scanner-button"} onClick={capture}>Capture photo</AnchorButton>
       </div>
     );
   };
