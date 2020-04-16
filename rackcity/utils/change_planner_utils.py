@@ -440,7 +440,7 @@ def get_cp_modification_conflicts(asset_cp):
                 "conflict_resolvable": False,
             }
         )
-    if asset_cp.rack is None:
+    if asset_cp.model.is_rackmount() and (asset_cp.rack is None):
         conflicts.append(
             {
                 "conflict_message": "The rack"
@@ -468,7 +468,7 @@ def get_cp_modification_conflicts(asset_cp):
         return conflicts
 
 
-def get_location_detail(asset):
+def get_location_detail(asset,):
     if asset.model.is_rackmount():
         if asset.rack:
             return (
