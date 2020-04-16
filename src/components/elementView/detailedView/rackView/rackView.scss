@@ -14,7 +14,7 @@ $row-height: 6px;
 .rack {
   border-style: solid;
   border-width: 6pt;
-  border-color: #202b33;
+  border-color: #182026;
   display: inline-block;
   margin: left 10px;
 }
@@ -25,14 +25,15 @@ $row-height: 6px;
 }
 .loc-table {
   padding-left: 0px !important;
+  float:left;
 }
 
 .header {
   padding: 5px !important;
   font-size: 10px;
-  background-color: grey;
-}
+  background-color: #202b33;
 
+}
 .cell {
   text-align: center !important;
   padding: 0 !important;
@@ -42,8 +43,8 @@ $row-height: 6px;
 }
 
 .rack-table .cell {
-  max-width: 200px;
-  min-width: 200px;
+  max-width: 225px;
+  min-width: 225px;
   display: block;
   overflow-x: auto;
   overflow-y: hidden;
@@ -62,10 +63,14 @@ $row-height: 6px;
   margin: 0px !important;
   float: left;
 }
+.rack-table .cell {
+  margin:0px !important;
+}
 
-.rack-container tr {
+.rack-container td,.rack-container th  {
   outline: 1px solid #202b33;
 }
+
 
 .empty {
   padding-top: $row-height !important;
@@ -122,14 +127,6 @@ $row-height: 6px;
     color-adjust: exact !important;
   }
 
-  .header,
-  .unit {
-    color: black !important;
-  }
-
-  // .rack-view-select {
-  //   display: none;
-  // }
   .do-not-print {
     display: none;
   }
