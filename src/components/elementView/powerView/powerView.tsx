@@ -79,28 +79,11 @@ export class PowerView extends React.PureComponent<
   };
 
   componentDidMount() {
-    if (!this.props.assetIsDecommissioned && !this.props.changePlan) {
+    if (this.shouldShowPower()) {
       this.setState({
         statusLoaded: true,
       });
-      axios
-        .get(
-          API_ROOT + "api/rack-power/status/" + this.props.asset!.id,
-          getHeaders(this.props.token)
-        )
-        .then((res) => {
-          this.setState({
-            powerConnections: res.data.power_connections,
-            powerStatus: res.data.power_status,
-            statusLoaded: true,
-          });
-        })
-        .catch((err) => {
-          this.addErrorToast(err.response.data.failure_message);
-          this.setState({
-            statusLoaded: true,
-          });
-        });
+      this.getPowerStatus();
     } else {
       this.setState({
         statusLoaded: true,
@@ -111,25 +94,8 @@ export class PowerView extends React.PureComponent<
 
   componentDidUpdate() {
     if (this.props.shouldUpdate) {
-      if (!this.props.assetIsDecommissioned && !this.props.changePlan) {
-        axios
-          .get(
-            API_ROOT + "api/rack-power/status/" + this.props.asset!.id,
-            getHeaders(this.props.token)
-          )
-          .then((res) => {
-            this.setState({
-              powerConnections: res.data.power_connections,
-              powerStatus: res.data.power_status,
-              statusLoaded: true,
-            });
-          })
-          .catch((err) => {
-            this.addErrorToast(err.response.data.failure_message);
-            this.setState({
-              statusLoaded: true,
-            });
-          });
+      if (this.shouldShowPower()) {
+        this.getPowerStatus();
         this.setState({
           statusLoaded: true,
         });
@@ -151,6 +117,116 @@ export class PowerView extends React.PureComponent<
       this.props.asset.rack &&
       this.props.asset.rack.is_network_controlled
     );
+  }
+
+  private shouldShowPower() {
+    return (
+      !this.props.assetIsDecommissioned &&
+      !this.props.changePlan &&
+      this.isAssetPowerNetworkControlled()
+    );
+  }
+
+  private shouldShowPowerButtons() {
+    return (
+      this.shouldShowPower() &&
+      Object.keys(this.props.asset!.power_connections).length > 0
+    );
+  }
+
+  private shouldDisablePowerButtons() {
+    return !(
+      this.props.permissionState.admin ||
+      this.props.permissionState.power_control ||
+      (this.props.asset && this.state.username === this.props.asset.owner)
+    );
+  }
+
+  private getPowerStatus() {
+    axios
+      .get(
+        API_ROOT + "api/rack-power/status/" + this.props.asset!.id,
+        getHeaders(this.props.token)
+      )
+      .then((res) => {
+        this.setState({
+          powerConnections: res.data.power_connections,
+          powerStatus: res.data.power_status,
+          statusLoaded: true,
+        });
+      })
+      .catch((err) => {
+        this.addErrorToast(err.response.data.failure_message);
+        this.setState({
+          statusLoaded: true,
+        });
+      });
+  }
+
+  private requestPowerOn() {
+    this.setState({
+      statusLoaded: !this.state.statusLoaded,
+    });
+    axios
+      .post(
+        API_ROOT + "api/rack-power/on",
+        { id: this.props.asset!.id },
+        getHeaders(this.props.token)
+      )
+      .then((res) => {
+        this.setState({
+          alertOpen: true,
+          confirmationMessage: res.data.success_message,
+        });
+        this.componentDidMount();
+      })
+      .catch((err) => {
+        alert(err);
+      });
+  }
+
+  private requestPowerOff() {
+    this.setState({
+      statusLoaded: !this.state.statusLoaded,
+    });
+    axios
+      .post(
+        API_ROOT + "api/rack-power/off",
+        { id: this.props.asset!.id },
+        getHeaders(this.props.token)
+      )
+      .then((res) => {
+        this.setState({
+          alertOpen: true,
+          confirmationMessage: res.data.success_message,
+        });
+        this.componentDidMount();
+      })
+      .catch((err) => {
+        alert(err);
+      });
+  }
+
+  private requestPowerCycle() {
+    this.setState({
+      statusLoaded: !this.state.statusLoaded,
+    });
+    axios
+      .post(
+        API_ROOT + "api/rack-power/cycle",
+        { id: this.props.asset!.id },
+        getHeaders(this.props.token)
+      )
+      .then((res) => {
+        this.setState({
+          alertOpen: true,
+          confirmationMessage: res.data.success_message,
+        });
+        this.componentDidMount();
+      })
+      .catch((err) => {
+        alert(err);
+      });
   }
 
   getUsername(token: string) {
@@ -207,7 +283,7 @@ export class PowerView extends React.PureComponent<
 
   private renderPowerTable() {
     return (
-      <div className="propsview">
+      <div className="power-table">
         <div className="network-connections">
           <table className="bp3-html-table bp3-html-table-bordered bp3-html-table-striped">
             <tr>
@@ -218,12 +294,9 @@ export class PowerView extends React.PureComponent<
             <tbody>{this.getPowerPortRows()}</tbody>
           </table>
         </div>
-        {this.props.asset!.rack &&
-        this.props.asset!.rack.is_network_controlled &&
-        Object.keys(this.props.asset!.power_connections).length > 0 &&
+        {this.props.asset &&
         this.state.powerStatus &&
-        !this.props.assetIsDecommissioned &&
-        !this.props.changePlan ? (
+        this.shouldShowPowerButtons() ? (
           <AnchorButton
             className={"power-close"}
             intent={
@@ -240,101 +313,30 @@ export class PowerView extends React.PureComponent<
                 : "Turn off"
             }
             icon="power"
-            disabled={
-              !(
-                this.props.permissionState.admin ||
-                this.props.permissionState.power_control ||
-                (this.props.asset &&
-                  this.state.username === this.props.asset.owner)
-              )
-            }
+            disabled={this.shouldDisablePowerButtons()}
             onClick={
               this.state.powerStatus[Object.keys(this.state.powerStatus)[0]] ===
               "OFF"
                 ? () => {
-                    this.setState({
-                      statusLoaded: !this.state.statusLoaded,
-                    });
-                    axios
-                      .post(
-                        API_ROOT + "api/rack-power/on",
-                        { id: this.props.asset!.id },
-                        getHeaders(this.props.token)
-                      )
-                      .then((res) => {
-                        this.setState({
-                          alertOpen: true,
-                          confirmationMessage: res.data.success_message,
-                        });
-                        this.componentDidMount();
-                      })
-                      .catch((err) => {
-                        alert(err);
-                      });
+                    this.requestPowerOn();
                   }
                 : () => {
-                    this.setState({
-                      statusLoaded: !this.state.statusLoaded,
-                    });
-                    axios
-                      .post(
-                        API_ROOT + "api/rack-power/off",
-                        { id: this.props.asset!.id },
-                        getHeaders(this.props.token)
-                      )
-                      .then((res) => {
-                        this.setState({
-                          alertOpen: true,
-                          confirmationMessage: res.data.success_message,
-                        });
-                        this.componentDidMount();
-                      })
-                      .catch((err) => {
-                        alert(err);
-                      });
+                    this.requestPowerOff();
                   }
             }
           />
         ) : null}
-        {this.props.asset!.rack &&
-        this.props.asset!.rack.is_network_controlled &&
-        Object.keys(this.props.asset!.power_connections).length > 0 &&
+        {this.props.asset &&
         this.state.powerStatus &&
-        !this.props.assetIsDecommissioned &&
-        !this.props.changePlan ? (
+        this.shouldShowPowerButtons() ? (
           <AnchorButton
             className={"power-close"}
             minimal
             intent="warning"
             text={"Cycle Power"}
-            disabled={
-              !(
-                this.props.permissionState.admin ||
-                this.props.permissionState.power_control ||
-                (this.props.asset &&
-                  this.state.username === this.props.asset.owner)
-              )
-            }
+            disabled={this.shouldDisablePowerButtons()}
             onClick={() => {
-              this.setState({
-                statusLoaded: !this.state.statusLoaded,
-              });
-              axios
-                .post(
-                  API_ROOT + "api/rack-power/cycle",
-                  { id: this.props.asset!.id },
-                  getHeaders(this.props.token)
-                )
-                .then((res) => {
-                  this.setState({
-                    alertOpen: true,
-                    confirmationMessage: res.data.success_message,
-                  });
-                  this.componentDidMount();
-                })
-                .catch((err) => {
-                  alert(err);
-                });
+              this.requestPowerCycle();
             }}
           />
         ) : null}
@@ -384,7 +386,7 @@ export class PowerView extends React.PureComponent<
         )}
         <Alert
           className={Classes.DARK}
-          confirmButtonText="Okay"
+          confirmButtonText="OK"
           isOpen={this.state.alertOpen}
           onConfirm={() => {
             this.setState({
@@ -408,216 +410,6 @@ export class PowerView extends React.PureComponent<
       </div>
     );
   }
-
-  //   render() {
-  //     return (
-  //       <div className={Classes.DARK}>
-  //         {this.state.statusLoaded ? (
-  //           !(
-  //             this.props.asset &&
-  //             ((this.props.asset.model.num_power_ports as unknown) as number) > 0
-  //           ) ? (
-  //             <div className="propsview">
-  //               <h3>Power Connections</h3>
-  //               <Callout title="No power ports" icon={IconNames.INFO_SIGN} />
-  //               {this.props.callback === undefined ? null : (
-  //                 <AnchorButton
-  //                   className={"power-close"}
-  //                   intent="danger"
-  //                   minimal
-  //                   text="Close"
-  //                   onClick={() => {
-  //                     this.setState({
-  //                       powerConnections: undefined,
-  //                       powerStatus: undefined,
-  //                       statusLoaded: false,
-  //                     });
-  //                     this.props.callback!();
-  //                   }}
-  //                 />
-  //               )}
-  //             </div>
-  //           ) : (
-  //             <div className="propsview">
-  //               <h3>Power Connections</h3>
-  //               <div className="network-connections">
-  //                 <table className="bp3-html-table bp3-html-table-bordered bp3-html-table-striped">
-  //                   <tr>
-  //                     <th>Power Port Number</th>
-  //                     <th>PDU Port Number</th>
-  //                     <th>Power Status</th>
-  //                   </tr>
-  //                   <tbody>{this.getPowerPortRows()}</tbody>
-  //                 </table>
-  //               </div>
-  //               {this.props.asset!.rack &&
-  //               this.props.asset!.rack.is_network_controlled &&
-  //               Object.keys(this.props.asset!.power_connections).length > 0 &&
-  //               this.state.powerStatus &&
-  //               !this.props.assetIsDecommissioned &&
-  //               !this.props.changePlan ? (
-  //                 <AnchorButton
-  //                   className={"power-close"}
-  //                   intent={
-  //                     this.state.powerStatus[
-  //                       Object.keys(this.state.powerStatus)[0]
-  //                     ] === "OFF"
-  //                       ? "primary"
-  //                       : "danger"
-  //                   }
-  //                   minimal
-  //                   text={
-  //                     this.state.powerStatus[
-  //                       Object.keys(this.state.powerStatus)[0]
-  //                     ] === "OFF"
-  //                       ? "Turn on"
-  //                       : "Turn off"
-  //                   }
-  //                   icon="power"
-  //                   disabled={
-  //                     !(
-  //                       this.props.permissionState.admin ||
-  //                       this.props.permissionState.power_control ||
-  //                       this.state.username === this.props.asset.owner
-  //                     )
-  //                   }
-  //                   onClick={
-  //                     this.state.powerStatus[
-  //                       Object.keys(this.state.powerStatus)[0]
-  //                     ] === "OFF"
-  //                       ? () => {
-  //                           this.setState({
-  //                             statusLoaded: !this.state.statusLoaded,
-  //                           });
-  //                           axios
-  //                             .post(
-  //                               API_ROOT + "api/rack-power/on",
-  //                               { id: this.props.asset!.id },
-  //                               getHeaders(this.props.token)
-  //                             )
-  //                             .then((res) => {
-  //                               this.setState({
-  //                                 alertOpen: true,
-  //                                 confirmationMessage: res.data.success_message,
-  //                               });
-  //                               this.componentDidMount();
-  //                             })
-  //                             .catch((err) => {
-  //                               alert(err);
-  //                             });
-  //                         }
-  //                       : () => {
-  //                           this.setState({
-  //                             statusLoaded: !this.state.statusLoaded,
-  //                           });
-  //                           axios
-  //                             .post(
-  //                               API_ROOT + "api/rack-power/off",
-  //                               { id: this.props.asset!.id },
-  //                               getHeaders(this.props.token)
-  //                             )
-  //                             .then((res) => {
-  //                               this.setState({
-  //                                 alertOpen: true,
-  //                                 confirmationMessage: res.data.success_message,
-  //                               });
-  //                               this.componentDidMount();
-  //                             })
-  //                             .catch((err) => {
-  //                               alert(err);
-  //                             });
-  //                         }
-  //                   }
-  //                 />
-  //               ) : null}
-  //               {this.props.asset!.rack &&
-  //               this.props.asset!.rack.is_network_controlled &&
-  //               Object.keys(this.props.asset!.power_connections).length > 0 &&
-  //               this.state.powerStatus &&
-  //               !this.props.assetIsDecommissioned &&
-  //               !this.props.changePlan ? (
-  //                 <AnchorButton
-  //                   className={"power-close"}
-  //                   minimal
-  //                   intent="warning"
-  //                   text={"Cycle Power"}
-  //                   disabled={
-  //                     !(
-  //                       this.props.permissionState.admin ||
-  //                       this.props.permissionState.power_control ||
-  //                       this.state.username === this.props.asset.owner
-  //                     )
-  //                   }
-  //                   onClick={() => {
-  //                     this.setState({
-  //                       statusLoaded: !this.state.statusLoaded,
-  //                     });
-  //                     axios
-  //                       .post(
-  //                         API_ROOT + "api/rack-power/cycle",
-  //                         { id: this.props.asset!.id },
-  //                         getHeaders(this.props.token)
-  //                       )
-  //                       .then((res) => {
-  //                         this.setState({
-  //                           alertOpen: true,
-  //                           confirmationMessage: res.data.success_message,
-  //                         });
-  //                         this.componentDidMount();
-  //                       })
-  //                       .catch((err) => {
-  //                         alert(err);
-  //                       });
-  //                   }}
-  //                 />
-  //               ) : null}
-  //               {this.props.callback === undefined ? null : (
-  //                 <AnchorButton
-  //                   className={"power-close"}
-  //                   intent="danger"
-  //                   minimal
-  //                   text="Close"
-  //                   onClick={() => {
-  //                     this.setState({
-  //                       powerConnections: undefined,
-  //                       powerStatus: undefined,
-  //                       statusLoaded: false,
-  //                     });
-  //                     this.props.callback!();
-  //                   }}
-  //                 />
-  //               )}
-  //             </div>
-  //           )
-  //         ) : (
-  //           <Spinner />
-  //         )}
-  //         <Alert
-  //           className={Classes.DARK}
-  //           confirmButtonText="Okay"
-  //           isOpen={this.state.alertOpen}
-  //           onConfirm={() => {
-  //             this.setState({
-  //               alertOpen: false,
-  //             });
-  //           }}
-  //           onClose={() => {
-  //             this.setState({
-  //               alertOpen: false,
-  //             });
-  //           }}
-  //         >
-  //           <p>{this.state.confirmationMessage}</p>
-  //         </Alert>
-  //         <Toaster
-  //           autoFocus={false}
-  //           canEscapeKeyClear={true}
-  //           position={Position.TOP}
-  //           ref={this.refHandlers.toaster}
-  //         />
-  //       </div>
-  //     );
-  //   }
 }
 
 const mapStatetoProps = (state: any) => {

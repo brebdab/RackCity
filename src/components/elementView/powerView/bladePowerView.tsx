@@ -217,30 +217,32 @@ export class BladePowerView extends React.PureComponent<
             </tbody>
           </table>
         </div>
-        <AnchorButton
-          className={"blade-power-close"}
-          intent={this.state.powerStatus === "OFF" ? "primary" : "danger"}
-          minimal
-          text={this.state.powerStatus === "OFF" ? "Turn on" : "Turn off"}
-          icon="power"
-          disabled={this.shouldDisablePowerButtons()}
-          onClick={() => {
-            this.state.powerStatus === "OFF"
-              ? this.requestPowerAction(PowerAction.ON)
-              : this.requestPowerAction(PowerAction.OFF);
-          }}
-        />
-        <AnchorButton
-          className={"blade-power-close"}
-          intent={"warning"}
-          minimal
-          text={"Cycle Power"}
-          icon="power"
-          disabled={this.shouldDisablePowerButtons()}
-          onClick={() => {
-            this.requestPowerAction(PowerAction.CYCLE);
-          }}
-        />
+        <div>
+          <AnchorButton
+            className={"blade-power-close"}
+            intent={this.state.powerStatus === "OFF" ? "primary" : "danger"}
+            minimal
+            text={this.state.powerStatus === "OFF" ? "Turn on" : "Turn off"}
+            icon="power"
+            disabled={this.shouldDisablePowerButtons()}
+            onClick={() => {
+              this.state.powerStatus === "OFF"
+                ? this.requestPowerAction(PowerAction.ON)
+                : this.requestPowerAction(PowerAction.OFF);
+            }}
+          />
+          <AnchorButton
+            className={"blade-power-close"}
+            intent={"warning"}
+            minimal
+            text={"Cycle Power"}
+            icon="power"
+            disabled={this.shouldDisablePowerButtons()}
+            onClick={() => {
+              this.requestPowerAction(PowerAction.CYCLE);
+            }}
+          />
+        </div>
       </div>
     );
   }
@@ -273,7 +275,7 @@ export class BladePowerView extends React.PureComponent<
         )}
         <Alert
           className={Classes.DARK}
-          confirmButtonText="Okay"
+          confirmButtonText="OK"
           isOpen={this.state.alertOpen}
           onConfirm={() => {
             this.setState({
