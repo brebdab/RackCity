@@ -124,6 +124,7 @@ const markTableFresh = (state: any, action: any) => {
         modelDataIsStale: false,
       });
   }
+
 };
 
 // define when actions take place
