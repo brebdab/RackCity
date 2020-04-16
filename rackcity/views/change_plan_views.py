@@ -416,7 +416,7 @@ def change_plan_execute(request, id):
             log_action(
                 request.user, updated_asset, Action.CREATE, change_plan=change_plan,
             )
-        else:
+        elif not asset_cp.is_decommissioned:
             num_modified += 1
             log_action(
                 request.user, updated_asset, Action.MODIFY, change_plan=change_plan,
