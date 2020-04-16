@@ -15,7 +15,6 @@ from rackcity.models import (
     Site,
 )
 from rackcity.models.asset import get_assets_for_cp, validate_asset_number_uniqueness
-from rackcity.models.model_utils import ModelType
 from rackcity.utils.errors_utils import parse_save_validation_error
 from rackcity.utils.exceptions import (
     MacAddressException,
@@ -23,7 +22,6 @@ from rackcity.utils.exceptions import (
     PowerConnectionException,
 )
 from rackcity.utils.log_utils import log_network_action
-import traceback
 
 
 def get_existing_network_port(port_name, asset_id, change_plan=None):
@@ -525,9 +523,7 @@ def save_all_field_data_cp(data, asset, change_plan, create_asset_cp):
 
     try:
         if create_asset_cp:
-            print(asset.model, asset.model.model_type)
             if asset.model.is_blade_chassis():
-                print("modifying chassis")
                 asset_cp = add_chassis_to_cp(asset, change_plan)
             else:
                 asset_cp = copy_asset_to_new_asset_cp(
@@ -541,7 +537,5 @@ def save_all_field_data_cp(data, asset, change_plan, create_asset_cp):
             asset.save()
             return asset, None
     except Exception as error:
-        print("ERROR")
-        traceback.format_exc(error)
 
         return None, parse_save_validation_error(error, "Asset")

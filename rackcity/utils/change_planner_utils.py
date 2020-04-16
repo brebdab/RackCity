@@ -483,8 +483,7 @@ def get_location_detail(asset,):
         return ""
 
     else:
-        return (" in chassis " + asset.chassis.hostname )
-
+        return " in chassis " + asset.chassis.hostname
 
 
 def get_modifications_in_cp(change_plan):

@@ -15,7 +15,8 @@ from rackcity.utils.change_planner_utils import (
     get_modifications_in_cp,
     asset_cp_has_conflicts,
     get_cp_already_executed_response,
-    get_cp_modification_conflicts)
+    get_cp_modification_conflicts,
+)
 from rackcity.utils.errors_utils import (
     Status,
     GenericFailure,
@@ -424,7 +425,7 @@ def change_plan_execute(request, id):
         update_power_ports(updated_asset, asset_cp, change_plan)
     for asset_cp in assets_cp:
         if asset_cp.model.is_blade_chassis():
-            blades_cp = assets_cp.filter(chassis = asset_cp)
+            blades_cp = assets_cp.filter(chassis=asset_cp)
             for blade_cp in blades_cp:
                 updated_asset = updated_asset_mappings[blade_cp]
                 updated_asset.chassis = updated_asset_mappings[asset_cp]
