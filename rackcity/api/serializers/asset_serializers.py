@@ -498,7 +498,7 @@ def get_blades_in_chassis(asset):
 
 
 def get_blades_in_chassis_cp(asset_cp):
-    if asset_cp.model.is_blade_chassis():
+    if not asset_cp.model.is_blade_chassis():
         return []
     blades_cp = AssetCP.objects.filter(
         chassis=asset_cp.id, change_plan=asset_cp.change_plan

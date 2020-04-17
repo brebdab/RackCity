@@ -170,6 +170,7 @@ def asset_detail(request, id):
                     asset = related_asset
                     serializer = RecursiveAssetSerializer(asset)
                 else:
+                    print("RecursiveassetCP")
                     serializer = RecursiveAssetCPSerializer(asset)
             elif assets_cp.filter(id=id).exists():
                 asset = assets_cp.get(id=id)

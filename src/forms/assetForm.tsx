@@ -1649,8 +1649,10 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
     if (this.state.values.chassis && this.state.values.chassis.blades) {
       this.state.values.chassis.blades.forEach((asset: AssetObject) => {
+        if (parseInt(asset.chassis_slot) !== parseInt(this.state.values.chassis_slot)) {
 
-        slots = slots.filter((slot: string) => parseInt(slot) !== parseInt(asset.chassis_slot));
+          slots = slots.filter((slot: string) => parseInt(slot) !== parseInt(asset.chassis_slot));
+        }
       });
 
     }
