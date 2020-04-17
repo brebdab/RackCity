@@ -7,6 +7,8 @@ import {
   Navbar,
   NavbarDivider,
   NavbarGroup,
+  Position,
+  Tooltip,
 } from "@blueprintjs/core";
 import { IconNames } from "@blueprintjs/icons";
 import axios from "axios";
@@ -227,15 +229,23 @@ export class Navigation extends React.Component<
                       </ChangePlanSelect>
 
                       {this.props.changePlan ? (
-                        <AnchorButton
-                          className="nav-bar-button"
-                          minimal
+                        <Tooltip
+                          content={"Exit Change Planner"}
+                          position={Position.BOTTOM}
                           disabled={this.props.location.pathname.includes(
                             "/dashboard/change-plans/"
                           )}
-                          icon={IconNames.DELETE}
-                          onClick={() => this.props.setChangePlan(null)}
-                        />
+                        >
+                          <AnchorButton
+                            className="nav-bar-button"
+                            minimal
+                            disabled={this.props.location.pathname.includes(
+                              "/dashboard/change-plans/"
+                            )}
+                            icon={IconNames.DELETE}
+                            onClick={() => this.props.setChangePlan(null)}
+                          />
+                        </Tooltip>
                       ) : null}
                       <AnchorButton
                         className="nav-bar-button"
