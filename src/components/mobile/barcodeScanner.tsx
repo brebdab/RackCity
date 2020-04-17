@@ -79,7 +79,10 @@ export class BarcodeScanner extends React.PureComponent<
         )
         .then((res: any) => {
           const id = res.data.asset_data.id;
-          this.props.history.push(ROUTES.ASSETS + "/" + id)
+          this.props.history.push({
+            pathname: ROUTES.ASSETS + "/" + id,
+            state: { token: token }
+          })
         })
         .catch((err: any) => {
           this.addErrorToast(err.response.data.failure_message);

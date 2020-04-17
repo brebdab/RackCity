@@ -56,6 +56,7 @@ interface MobileAssetViewState {
   datacenters: Array<DatacenterObject>;
   powerShouldUpdate: boolean;
   loading: boolean;
+  token?: any;
 }
 
 export class MobileAssetView extends React.PureComponent<
@@ -140,18 +141,6 @@ export class MobileAssetView extends React.PureComponent<
     this.getData(rid, this.props.changePlan);
   };
 
-  public updateAssetDataCP = (rid: string, changePlan: ChangePlan) => {
-    this.getData(rid, changePlan);
-  };
-
-  componentWillReceiveProps(nextProps: MobileAssetViewProps & RouteComponentProps) {
-    if (nextProps.changePlan !== this.props.changePlan) {
-      let params: any;
-      params = this.props.match.params;
-      this.updateAssetDataCP(params.rid, nextProps.changePlan);
-    }
-  }
-
   getNetworkConnectionForPort(port: string) {
     return this.state.asset.network_connections.find(
       (connection: NetworkConnection) => connection.source_port === port
@@ -181,6 +170,12 @@ export class MobileAssetView extends React.PureComponent<
   };
 
   public render() {
+    if (this.props.location.state) {
+      this.setState({
+        token: this.props.location.state
+      });
+    }
+    console.log(this.state.token)
     if (!this.successfullyLoadedData && this.props.token) {
       let params: any;
       params = this.props.match.params;
