@@ -1,5 +1,5 @@
 import {
-  Alert,
+  // Alert,
   AnchorButton,
   Callout,
   Classes,
@@ -25,6 +25,7 @@ import {
 import "./powerView.scss";
 import { IconNames } from "@blueprintjs/icons";
 import { PermissionState } from "../../../utils/permissionUtils";
+// import { Spin } from "antd";
 
 interface PowerViewProps {
   token: string;
@@ -42,7 +43,7 @@ interface PowerViewState {
   powerConnections: any;
   powerStatus: any;
   statusLoaded: boolean;
-  alertOpen: boolean;
+  // alertOpen: boolean;
   confirmationMessage: string;
   username?: string;
 }
@@ -73,16 +74,13 @@ export class PowerView extends React.PureComponent<
   public state: PowerViewState = {
     powerConnections: undefined,
     powerStatus: undefined,
-    statusLoaded: true,
-    alertOpen: false,
+    statusLoaded: false,
+    // alertOpen: false,
     confirmationMessage: "",
   };
 
   componentDidMount() {
     if (this.shouldShowPower()) {
-      this.setState({
-        statusLoaded: true,
-      });
       this.getPowerStatus();
     } else {
       this.setState({
@@ -93,18 +91,14 @@ export class PowerView extends React.PureComponent<
   }
 
   componentDidUpdate() {
-    if (this.props.shouldUpdate) {
-      if (this.shouldShowPower()) {
-        this.getPowerStatus();
-        this.setState({
-          statusLoaded: true,
-        });
-      }
-    } else {
-      this.setState({
-        statusLoaded: true,
-      });
+    if (this.props.shouldUpdate && this.shouldShowPower()) {
+      this.getPowerStatus();
     }
+    // } else {
+    //   this.setState({
+    //     statusLoaded: true,
+    //   });
+    // }
     this.props.updated();
   }
 
@@ -165,7 +159,7 @@ export class PowerView extends React.PureComponent<
 
   private requestPowerOn() {
     this.setState({
-      statusLoaded: !this.state.statusLoaded,
+      statusLoaded: false,
     });
     axios
       .post(
@@ -174,20 +168,29 @@ export class PowerView extends React.PureComponent<
         getHeaders(this.props.token)
       )
       .then((res) => {
-        this.setState({
-          alertOpen: true,
-          confirmationMessage: res.data.success_message,
-        });
-        this.componentDidMount();
+        this.getPowerStatus();
+        this.addSuccessToast(res.data.success_message);
+        // this.setState({
+        //   alertOpen: true,
+        //   confirmationMessage: res.data.success_message,
+        // });
+        // this.componentDidMount();
       })
       .catch((err) => {
-        alert(err);
+        // alert(err);
+        if (
+          err.response &&
+          err.response.data &&
+          err.response.data.failure_message
+        ) {
+          this.addErrorToast(err.response.data.failure_message);
+        }
       });
   }
 
   private requestPowerOff() {
     this.setState({
-      statusLoaded: !this.state.statusLoaded,
+      statusLoaded: false,
     });
     axios
       .post(
@@ -196,20 +199,29 @@ export class PowerView extends React.PureComponent<
         getHeaders(this.props.token)
       )
       .then((res) => {
-        this.setState({
-          alertOpen: true,
-          confirmationMessage: res.data.success_message,
-        });
-        this.componentDidMount();
+        this.getPowerStatus();
+        this.addSuccessToast(res.data.success_message);
+        // this.setState({
+        //   alertOpen: true,
+        //   confirmationMessage: res.data.success_message,
+        // });
+        // this.componentDidMount();
       })
       .catch((err) => {
-        alert(err);
+        // alert(err);
+        if (
+          err.response &&
+          err.response.data &&
+          err.response.data.failure_message
+        ) {
+          this.addErrorToast(err.response.data.failure_message);
+        }
       });
   }
 
   private requestPowerCycle() {
     this.setState({
-      statusLoaded: !this.state.statusLoaded,
+      statusLoaded: false,
     });
     axios
       .post(
@@ -218,14 +230,23 @@ export class PowerView extends React.PureComponent<
         getHeaders(this.props.token)
       )
       .then((res) => {
-        this.setState({
-          alertOpen: true,
-          confirmationMessage: res.data.success_message,
-        });
-        this.componentDidMount();
+        this.getPowerStatus();
+        this.addSuccessToast(res.data.success_message);
+        // this.setState({
+        //   alertOpen: true,
+        //   confirmationMessage: res.data.success_message,
+        // });
+        // this.componentDidMount();
       })
       .catch((err) => {
-        alert(err);
+        if (
+          err.response &&
+          err.response.data &&
+          err.response.data.failure_message
+        ) {
+          this.addErrorToast(err.response.data.failure_message);
+        }
+        // alert(err);
       });
   }
 
@@ -243,7 +264,7 @@ export class PowerView extends React.PureComponent<
       .catch((err) => {});
   }
 
-  getPowerPortRows() {
+  getPowerPortRows(loading: boolean) {
     const rows = [];
     if (this.props.asset) {
       for (
@@ -260,14 +281,16 @@ export class PowerView extends React.PureComponent<
                 {this.props.asset!.power_connections[i].left_right}
               </td>
             ) : (
-              <td></td>
+              <td />
             )}
             {this.props.asset!.rack &&
             this.props.asset!.rack.is_network_controlled ? (
-              this.state.powerStatus ? (
+              this.props.assetIsDecommissioned || this.props.changePlan ? (
+                <td />
+              ) : loading ? (
+                <td><Spinner size={Spinner.SIZE_SMALL} /></td>
+              ) : this.state.powerStatus ? (
                 <td>{this.state.powerStatus[i]}</td>
-              ) : this.props.assetIsDecommissioned || this.props.changePlan ? (
-                <td> </td>
               ) : (
                 <td>Unable to contact PDU controller</td>
               )
@@ -281,7 +304,7 @@ export class PowerView extends React.PureComponent<
     return rows;
   }
 
-  private renderPowerTable() {
+  private renderPowerTable(loading: boolean) {
     return (
       <div className="power-table">
         <div className="network-connections">
@@ -291,7 +314,7 @@ export class PowerView extends React.PureComponent<
               <th>PDU Port Number</th>
               <th>Power Status</th>
             </tr>
-            <tbody>{this.getPowerPortRows()}</tbody>
+            <tbody>{this.getPowerPortRows(loading)}</tbody>
           </table>
         </div>
         {this.props.asset &&
@@ -377,32 +400,28 @@ export class PowerView extends React.PureComponent<
     return (
       <div className={Classes.DARK + " propsview"}>
         <h3>Power Connections</h3>
-        {this.state.statusLoaded ? (
-          this.assetHasPowerPorts() ? (
-            this.renderPowerTable()
-          ) : (
-            this.renderNoPowerPortsCallout()
-          )
-        ) : (
-          <Spinner />
-        )}
-        <Alert
-          className={Classes.DARK}
-          confirmButtonText="OK"
-          isOpen={this.state.alertOpen}
-          onConfirm={() => {
-            this.setState({
-              alertOpen: false,
-            });
-          }}
-          onClose={() => {
-            this.setState({
-              alertOpen: false,
-            });
-          }}
-        >
-          <p>{this.state.confirmationMessage}</p>
-        </Alert>
+        {this.assetHasPowerPorts()
+          ? this.state.statusLoaded
+            ? this.renderPowerTable(false)
+            : this.renderPowerTable(true)
+          : this.renderNoPowerPortsCallout()}
+        {/*<Alert*/}
+        {/*  className={Classes.DARK}*/}
+        {/*  confirmButtonText="OK"*/}
+        {/*  isOpen={this.state.alertOpen}*/}
+        {/*  onConfirm={() => {*/}
+        {/*    this.setState({*/}
+        {/*      alertOpen: false,*/}
+        {/*    });*/}
+        {/*  }}*/}
+        {/*  onClose={() => {*/}
+        {/*    this.setState({*/}
+        {/*      alertOpen: false,*/}
+        {/*    });*/}
+        {/*  }}*/}
+        {/*>*/}
+        {/*  <p>{this.state.confirmationMessage}</p>*/}
+        {/*</Alert>*/}
         <Toaster
           autoFocus={false}
           canEscapeKeyClear={true}
