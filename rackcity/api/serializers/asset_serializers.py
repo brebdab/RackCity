@@ -346,7 +346,7 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
 class GetDecommissionedAssetCPSerializer(serializers.ModelSerializer):
     decommissioning_user = serializers.SerializerMethodField()
     datacenter = serializers.SerializerMethodField()
-    time_decommissioned =  serializers.SerializerMethodField()
+    time_decommissioned = serializers.SerializerMethodField()
     model = ITModelSerializer()
     rack = RackSerializer()
     chassis = ChassisSerializer()
@@ -389,11 +389,12 @@ class GetDecommissionedAssetCPSerializer(serializers.ModelSerializer):
     def get_datacenter(self, assetCP):
         return get_datacenter_of_asset(assetCP)
 
-    def get_decommissioning_user(self,assetCP):
+    def get_decommissioning_user(self, assetCP):
         return assetCP.change_plan.owner.username
 
-    def get_time_decommissioned(self,assetCP):
+    def get_time_decommissioned(self, assetCP):
         return "N/A"
+
 
 def normalize_bulk_asset_data(bulk_asset_data):
     power_connections = {}
@@ -530,9 +531,41 @@ def get_neighbor_assets(hostname, id, nodes, edges, change_plan=None):
                 edges.append(
                     {"from": source_port.asset.id, "to": destination_port_asset.id}
                 )
+        nodes, edges = add_blades_to_graph(id, nodes, edges, change_plan)
+        nodes, edges = add_chassis_to_graph(id, nodes, edges, change_plan)
         return nodes, edges
     except ObjectDoesNotExist:
         return
+
+
+def add_blades_to_graph(id, nodes, edges, change_plan=None):
+    if change_plan:
+        blades = AssetCP.objects.filter(chassis=id, change_plan=change_plan)
+    else:
+        blades = Asset.objects.filter(chassis=id)
+    for blade in blades:
+        node = {
+            "id": blade.id,
+            "label": blade.hostname,
+        }
+        if node not in nodes:
+            nodes.append(node)
+        edges.append({"from": id, "to": blade.id})
+    return nodes, edges
+
+
+def add_chassis_to_graph(id, nodes, edges, change_plan=None):
+    chassis = Asset.objects.get(id=id).chassis
+    if not chassis:
+        return nodes, edges
+    node = {
+        "id": chassis.id,
+        "label": chassis.hostname,
+    }
+    if node not in nodes:
+        nodes.append(node)
+    edges.append({"from": id, "to": chassis.id})
+    return nodes, edges
 
 
 def get_datacenter_of_asset(asset):
