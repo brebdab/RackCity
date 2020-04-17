@@ -14,14 +14,15 @@ import { RouteComponentProps, withRouter } from "react-router";
 import Webcam from "react-webcam";
 import "./barcodeScanner.scss";
 import { API_ROOT } from "../../utils/api-config";
-import { getHeaders, ROUTES } from "../../utils/utils";
+import { AssetObject, getHeaders } from "../../utils/utils";
 import axios from "axios";
+import { MobileAssetView } from "./mobileAssetView";
 
 interface BarcodeScannerState {
   cameraHeight: number;
   cameraWidth: number;
   token?: string;
-  asset: any;
+  asset: AssetObject | null;
   barcode_data: string;
   confirmationIsOpen: boolean;
   showAsset: boolean;
@@ -45,9 +46,7 @@ export class BarcodeScanner extends React.PureComponent<
       this.toaster.show(toast);
     }
   };
-  private addSuccessToast = (message: string) => {
-    this.addToast({ message: message, intent: Intent.PRIMARY });
-  };
+
   private addErrorToast = (message: string) => {
     this.addToast({ message: message, intent: Intent.DANGER });
   };
@@ -125,6 +124,21 @@ export class BarcodeScanner extends React.PureComponent<
     );
   };
 
+  private renderAssetView(asset: AssetObject | null) {
+    if (asset) {
+      return (
+          <MobileAssetView {...this.props} asset={asset} />
+      );
+    } else {
+      this.addErrorToast("ERROR: No data found for selected asset");
+      this.setState({
+        asset: null,
+        showAsset: false
+      })
+      return
+    }
+  }
+
   render() {
     const height = window.innerHeight;
     const width = document.body.offsetWidth;
@@ -137,39 +151,41 @@ export class BarcodeScanner extends React.PureComponent<
 
     return (
       <div className={Classes.DARK}>
-        {this.state.showAsset && this.state.asset ?
-            <p>Asset Data</p>
-            : <>
-          <this.WebcamCapture />
-          <Toaster
-            autoFocus={false}
-            canEscapeKeyClear={true}
-            position={Position.TOP}
-            ref={this.refHandlers.toaster}
-          />
-          <Alert
-            className={Classes.DARK}
-            isOpen={this.state.confirmationIsOpen}
-            onCancel={() => {
-              this.setState({
-                confirmationIsOpen: false,
-                asset: null,
-              });
-            }}
-            onConfirm={() => {
-              this.setState({
-                showAsset: true,
-              });
-            }}
-            cancelButtonText={"Cancel"}
-            confirmButtonText={"View Asset"}
-          >
-            <p>
-              Found barcode with value: {this.state.barcode_data}. Would you
-              like to view this asset?
-            </p>
-          </Alert>
-        </>}
+        {this.state.showAsset && this.state.asset ? (
+            this.renderAssetView(this.state.asset)
+        ) : (
+          <>
+            <this.WebcamCapture />
+            <Toaster
+              autoFocus={false}
+              canEscapeKeyClear={true}
+              position={Position.TOP}
+              ref={this.refHandlers.toaster}
+            />
+            <Alert
+              className={Classes.DARK}
+              isOpen={this.state.confirmationIsOpen}
+              onCancel={() => {
+                this.setState({
+                  confirmationIsOpen: false,
+                  asset: null,
+                });
+              }}
+              onConfirm={() => {
+                this.setState({
+                  showAsset: true,
+                });
+              }}
+              cancelButtonText={"Cancel"}
+              confirmButtonText={"View Asset"}
+            >
+              <p>
+                Found barcode with value: {this.state.barcode_data}. Would you
+                like to view this asset?
+              </p>
+            </Alert>
+          </>
+        )}
       </div>
     );
   }
