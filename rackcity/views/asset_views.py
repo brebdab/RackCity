@@ -875,7 +875,7 @@ def asset_bulk_upload(request):
                     "chassis" in asset_serializer.validated_data
                     and asset_serializer.validated_data["chassis"]
                 ):
-                    validate_asset_location_in_chassis(  # TODO: don't do this if chassis is new
+                    validate_asset_location_in_chassis(
                         asset_serializer.validated_data["chassis"].id,
                         asset_serializer.validated_data["chassis_slot"],
                     )
@@ -903,7 +903,7 @@ def asset_bulk_upload(request):
     try:
         no_infile_location_conflicts(
             asset_datas
-        )  # TODO: make sure this works if chassis in the file
+        )
     except LocationException as error:
         failure_message = (
             Status.IMPORT_ERROR.value
@@ -1047,7 +1047,7 @@ def asset_bulk_approve(request):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def asset_bulk_export(request):  # TODO: add a new method for offline
+def asset_bulk_export(request):
     """
     List all assets in csv form, in accordance with Bulk Spec.
     """
