@@ -241,22 +241,12 @@ def records_are_identical(existing_data, new_data):
             and existing_data[key] != {}
             and key != "id"
         ):
-            print(key)
-            print("existing: ")
-            print(existing_data[key])
-            print("new: ")
-            print(new_data[key])
             return False
         if (key in new_keys) and (new_data[key] != existing_data[key]):
             if not (
                 int_string_comparison(existing_data[key], new_data[key])
                 or empty_vs_null_comparison(existing_data[key], new_data[key])
             ):
-                print(key)
-                print("existing: ")
-                print(existing_data[key])
-                print("new: ")
-                print(new_data[key])
                 return False
     return True
 
@@ -285,24 +275,57 @@ def empty_vs_null_comparison(existing_value, new_value):
 
 
 def no_infile_location_conflicts(asset_datas):
-    location_occupied_by = {}
+    rack_location_occupied_by = {}
+    chassis_slot_occupied_by = {}
     unnamed_asset_count = 0
     for asset_data in asset_datas:
-        rack = asset_data["rack"]
-        height = ITModel.objects.get(id=asset_data["model"]).height
-        rack_position = int(asset_data["rack_position"])
-        asset_location_range = [  # THIS IS REPEATED! FACTOR OUT.
-            rack_position + i for i in range(height)
-        ]
-        if rack not in location_occupied_by:
-            location_occupied_by[rack] = {}
-        for location in asset_location_range:
-            if location in location_occupied_by[rack]:
+        if asset_data["offline_storage_site"]:
+            continue
+        model = ITModel.objects.get(id=asset_data["model"])
+        if model.is_rackmount():
+            rack = asset_data["rack"]
+            height = model.height
+            rack_position = int(asset_data["rack_position"])
+            asset_location_range = [  # THIS IS REPEATED! FACTOR OUT.
+                rack_position + i for i in range(height)
+            ]
+            if rack not in rack_location_occupied_by:
+                rack_location_occupied_by[rack] = {}
+            for location in asset_location_range:
+                if location in rack_location_occupied_by[rack]:
+                    raise LocationException(
+                        "Asset '"
+                        + str(asset_data["asset_number"])
+                        + "' conflicts with asset '"
+                        + rack_location_occupied_by[rack][location]
+                        + "'. "
+                    )
+                else:
+                    if ("asset_number" in asset_data) and (asset_data["asset_number"]):
+                        asset_name = asset_data["asset_number"]
+                    elif ("hostname" in asset_data) and (asset_data["hostname"]):
+                        asset_name = asset_data["hostname"]
+                    else:
+                        asset_name = "unnamed_asset_" + str(unnamed_asset_count)
+                        unnamed_asset_count += 1
+                    rack_location_occupied_by[rack][location] = asset_name
+        else:
+            chassis = asset_data["chassis"]
+            print("chassis: ")
+            print(chassis)
+            chassis_slot = asset_data["chassis_slot"]
+            print("chassis slot: ")
+            print(chassis_slot)
+            if chassis not in chassis_slot_occupied_by:
+                chassis_slot_occupied_by[chassis] = {}
+            print(chassis_slot in chassis_slot_occupied_by[chassis])
+            if chassis_slot in chassis_slot_occupied_by[chassis]:
+                print("exception")
                 raise LocationException(
                     "Asset '"
                     + str(asset_data["asset_number"])
                     + "' conflicts with asset '"
-                    + location_occupied_by[rack][location]
+                    + chassis_slot_occupied_by[chassis][chassis_slot]
                     + "'. "
                 )
             else:
@@ -313,7 +336,10 @@ def no_infile_location_conflicts(asset_datas):
                 else:
                     asset_name = "unnamed_asset_" + str(unnamed_asset_count)
                     unnamed_asset_count += 1
-                location_occupied_by[rack][location] = asset_name
+                print("adding to map")
+                chassis_slot_occupied_by[chassis][chassis_slot] = asset_name
+                print("here's the map: ")
+                print(chassis_slot_occupied_by)
     return
 
 

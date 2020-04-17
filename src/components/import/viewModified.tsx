@@ -131,7 +131,7 @@ export class Modifier extends React.PureComponent<
                   return (
                     <td>
                       {obj.existing.chassis
-                        ? obj.existing.chassis.asset_number
+                        ? obj.existing.chassis.hostname
                         : null}
                     </td>
                   );
@@ -204,24 +204,24 @@ export class Modifier extends React.PureComponent<
                 else if (key === "chassis")
                   return (
                     <td>
-                      {obj.existing.chassis
-                        ? obj.existing.chassis.asset_number
+                      {obj.modified.chassis
+                        ? obj.modified.chassis.hostname
                         : null}
                     </td>
                   );
                 else if (key === "datacenter")
                   return (
                     <td>
-                      {obj.existing.datacenter
-                        ? obj.existing.datacenter.abbreviation
+                      {obj.modified.datacenter
+                        ? obj.modified.datacenter.abbreviation
                         : null}
                     </td>
                   );
                 else if (key === "offline_storage_site")
                   return (
                     <td>
-                      {obj.existing.offline_storage_site
-                        ? obj.existing.offline_storage_site.abbreviation
+                      {obj.modified.offline_storage_site
+                        ? obj.modified.offline_storage_site.abbreviation
                         : null}
                     </td>
                   );

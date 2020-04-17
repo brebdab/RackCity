@@ -893,10 +893,9 @@ def asset_bulk_upload(request):
                     {"asset_serializer": asset_serializer, "asset_data": asset_data}
                 )
     try:
-        print("DID NOT CHECK INFILE LOCATION CONFLICTS!")
-        # no_infile_location_conflicts(
-        #     asset_datas
-        # )  # TODO: add check for blades. make sure this doens't break for offline
+        no_infile_location_conflicts(
+            asset_datas
+        )
     except LocationException as error:
         failure_message = (
             Status.IMPORT_ERROR.value
@@ -947,12 +946,9 @@ def asset_bulk_upload(request):
         del existing_data["network_connections"]
         del existing_data["network_graph"]
         del existing_data["blades"]
-        print("going to check if identical")
         if records_are_identical(existing_data, new_data):
             records_ignored += 1
-            print("identical")
         else:
-            print("not identical")
             new_data["id"] = existing_data["id"]
             for field in existing_data.keys():
                 if field not in new_data:
