@@ -23,49 +23,53 @@ class ChassisView extends React.PureComponent<
   generateSlots() {
     const slots = [];
     let blades: Array<AssetObject> = [];
-    for (let i = 1; i < this.numSlots + 1; i++) {
-      blades = this.props.chassis.blades.filter((asset: AssetObject) => {
-        return parseInt(asset.chassis_slot) === i;
-      });
+    if(this.props.chassis.blades) {
+        for (let i = 1; i < this.numSlots + 1; i++) {
+            blades = this.props.chassis.blades.filter((asset: AssetObject) => {
+                return parseInt(asset.chassis_slot) === i;
+            })
 
-      if (blades.length > 0) {
-        const blade = blades[0];
-        const style = {
-          backgroundColor: blade.display_color
-            ? blade.display_color
-            : blade.model.display_color,
-        };
 
-        slots.push(
-          <td
-            className="slot"
-            onClick={() => {
-              console.log(blade);
-              this.props.history.push(ROUTES.ASSETS + "/" + blade.id);
-              this.props.redirectToAsset(blade.id);
-            }}
-            style={style}
-          >
-            <Tooltip
-              className={Classes.DARK}
-              content={
-                "hostname: " +
-                blade.hostname +
-                "\n asset number: " +
-                blade.asset_number
-              }
-            >
-              <div className="vertical">{blade.hostname}</div>
-            </Tooltip>
-          </td>
-        );
-      } else {
-        slots.push(<td className="slot"></td>);
-      }
+            if (blades.length > 0) {
+                const blade = blades[0];
+                const style = {
+                    backgroundColor: blade.display_color
+                        ? blade.display_color
+                        : blade.model.display_color,
+                };
+
+                slots.push(
+                    <td
+                        className="slot"
+                        onClick={() => {
+                            console.log(blade);
+                            this.props.history.push(ROUTES.ASSETS + "/" + blade.id);
+                            this.props.redirectToAsset(blade.id);
+                        }}
+                        style={style}
+                    >
+                        <Tooltip
+                            className={Classes.DARK}
+                            content={
+                                "hostname: " +
+                                blade.hostname +
+                                "\n asset number: " +
+                                blade.asset_number
+                            }
+                        >
+                            <div className="vertical">{blade.hostname}</div>
+                        </Tooltip>
+                    </td>
+                );
+            } else {
+                slots.push(<td className="slot"></td>);
+            }
+        }
     }
 
     return slots;
   }
+
   render() {
     const chassisColor = this.props.chassis.display_color
       ? this.props.chassis.display_color
