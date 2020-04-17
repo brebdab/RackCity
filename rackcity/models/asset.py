@@ -322,6 +322,7 @@ class AssetCP(AbstractAsset):
         null=True,
         blank=True,
     )
+    differs_from_live = models.BooleanField(default=False,blank=True)
 
     class Meta:
         ordering = ["asset_number"]

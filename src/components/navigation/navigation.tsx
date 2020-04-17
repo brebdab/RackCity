@@ -209,7 +209,7 @@ export class Navigation extends React.Component<
                         itemRenderer={renderChangePlanItem}
                         itemPredicate={filterChangePlan}
                         noResults={
-                          <MenuItem disabled={true} text="No results." />
+                          <MenuItem disabled={true} text="No active change plans" />
                         }
                       >
                         <Button
