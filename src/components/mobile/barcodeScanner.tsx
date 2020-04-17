@@ -78,7 +78,6 @@ export class BarcodeScanner extends React.PureComponent<
           getHeaders(token)
         )
         .then((res: any) => {
-          alert(JSON.stringify(res));
           const id = res.data.asset_data.id;
           this.props.history.push(ROUTES.ASSETS + "/" + id)
         })

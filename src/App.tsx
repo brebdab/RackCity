@@ -133,7 +133,7 @@ class App extends React.Component<AppProps> {
             </div>
             <this.PrivateRoute
                 path={ROUTES.ASSETS + "/:rid"}
-                component={MobileAssetView}
+                component={AssetView}
               />
           </div>
         ) : (
