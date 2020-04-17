@@ -360,9 +360,13 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
 
     def get_datacenter(self, assetCP):
         return get_datacenter_of_asset(assetCP)
-    def get_mark_as_cp(self,assetCP):
+
+    def get_mark_as_cp(self, assetCP):
         if assetCP.related_asset:
-            return len(get_changes_on_asset(assetCP.related_asset,assetCP)) > 0 or assetCP.is_decommissioned
+            return (
+                len(get_changes_on_asset(assetCP.related_asset, assetCP)) > 0
+                or assetCP.is_decommissioned
+            )
         return True
 
 

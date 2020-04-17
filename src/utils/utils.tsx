@@ -70,7 +70,7 @@ export interface AssetCPObject extends AssetObject {
   asset_conflict_asset_name: AssetObject;
   asset_conflict_location: AssetObject;
   related_asset: AssetObject;
-  mark_as_cp:boolean;
+  mark_as_cp: boolean;
   is_decommissioned: boolean;
 }
 interface ParentAssetObject extends ElementObject {
@@ -319,7 +319,8 @@ export const getHeaders = (token: string) => {
 
 export const getChangePlanRowStyle = (item: any) => {
   return {
-    fontWeight: isAssetCP(item)  && item.mark_as_cp? ("bold" as any) : ("normal" as any),
+    fontWeight:
+      isAssetCP(item) && item.mark_as_cp ? ("bold" as any) : ("normal" as any),
     color: isAssetCP(item) && item.mark_as_cp ? "#bf8c0a" : "white",
   };
 };

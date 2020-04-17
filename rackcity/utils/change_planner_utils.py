@@ -171,7 +171,7 @@ def get_offline_storage_assets_for_cp(change_plan):
 
     for asset_cp in stored_assets_cp:
         if asset_cp.related_asset and (asset_cp.related_asset in stored_assets):
-           stored_assets = stored_assets.filter(~Q(id=asset_cp.related_asset.id))
+            stored_assets = stored_assets.filter(~Q(id=asset_cp.related_asset.id))
     stored_assets_cp = stored_assets_cp.filter(is_decommissioned=False)
     return stored_assets, stored_assets_cp
 
