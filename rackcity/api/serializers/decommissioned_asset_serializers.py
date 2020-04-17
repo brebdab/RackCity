@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from rackcity.models import DecommissionedAsset, AssetCP
+from rackcity.models import DecommissionedAsset
 
 
 class GetDecommissionedAssetSerializer(serializers.ModelSerializer):

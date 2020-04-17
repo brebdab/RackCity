@@ -108,7 +108,6 @@ class CPDetailView extends React.Component<
       this.state.modifications.length === 0 ||
       !isNullOrUndefined(this.state.changePlan.execution_time)
     ) {
-          console.log("disabled",true)
       this.setState({
         disableButtons: true,
       });
@@ -117,14 +116,12 @@ class CPDetailView extends React.Component<
 
     this.state.modifications.forEach((modification: Modification) => {
       if (modification.conflicts && modification.conflicts.length > 0) {
-            console.log("disabled",true)
         this.setState({
           disableButtons: true,
         });
         return;
       }
     });
-        console.log("disabled",false)
     this.setState({
       disableButtons: false,
     });
