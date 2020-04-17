@@ -1004,10 +1004,21 @@ def asset_bulk_approve(request):
             # blank ones. That's how it's returned in bulk-upload
             if field == "model":
                 value = ITModel.objects.get(id=asset_data[field]["id"])
-            elif field == "rack" and asset_data[field]:
-                value = Rack.objects.get(id=asset_data[field]["id"])
-            elif field == "chassis" and asset_data[field]:
-                value = Rack.objects.get(id=asset_data[field]["id"])
+            elif field == "rack":
+                if asset_data[field]:
+                    value = Rack.objects.get(id=asset_data[field]["id"])
+                else:
+                    value = None
+            elif field == "chassis":
+                if asset_data[field]:
+                    value = Asset.objects.get(id=asset_data[field]["id"])
+                else:
+                    value = None
+            elif field == "offline_storage_site":
+                if asset_data[field]:
+                    value = Site.objects.get(id=asset_data[field]["id"])
+                else:
+                    value = None
             else:
                 value = asset_data[field]
             setattr(existing_asset, field, value)
