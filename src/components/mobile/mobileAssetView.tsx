@@ -119,7 +119,7 @@ export class MobileAssetView extends React.PureComponent<
     return (
       <div className={Classes.DARK}>
         <Callout title={"Asset Properties"}>
-          <table>
+          <table className="bp3-html-table">
             {this.renderData(
                   AssetFieldsTable,
                   this.props.asset
