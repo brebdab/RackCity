@@ -289,7 +289,10 @@ class BulkAssetSerializer(serializers.ModelSerializer):
             return offline_storage_site["abbreviation"]
 
     def get_rack(self, asset):
-        return asset.rack.row_letter + str(asset.rack.rack_num)
+        if asset.rack:
+            return asset.rack.row_letter + str(asset.rack.rack_num)
+        else:
+            return None
 
     def get_chassis_number(self, asset):
         if asset.chassis:
