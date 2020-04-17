@@ -232,6 +232,7 @@ def asset_add(request):
             chassis_id_live = data["chassis"]
             del data["chassis"]
 
+
         serializer = AssetCPSerializer(data=data)
     else:
         serializer = AssetSerializer(data=data)
@@ -246,7 +247,7 @@ def asset_add(request):
         )
     try:
         validate_user_permission_on_new_asset_data(
-            request.user, serializer.validated_data, data_is_validated=True
+            request.user, serializer.validated_data, data_is_validated=True, change_plan=change_plan,chassis_id_live = chassis_id_live
         )
     except UserAssetPermissionException as auth_error:
         return JsonResponse(
@@ -449,7 +450,7 @@ def asset_modify(request):
 
     try:
         validate_user_permission_on_new_asset_data(
-            request.user, data, data_is_validated=False
+            request.user, data, data_is_validated=False, change_plan=change_plan
         )
     except UserAssetPermissionException as auth_error:
         return JsonResponse(

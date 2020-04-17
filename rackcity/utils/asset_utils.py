@@ -507,17 +507,20 @@ def save_all_field_data_cp(data, asset, change_plan, create_asset_cp):
             setattr(asset, field, value)
     chassis = None
     if data["chassis"]:
-        try:
+        if Asset.objects.filter(id=data["chassis"]).exists():
             chassis_live = Asset.objects.get(id=data["chassis"])
-        except ObjectDoesNotExist:
-            return (None, "No existing chassis with id=" + data["chassis"])
-
-        if not AssetCP.objects.filter(id=data["chassis"]).exists():
-            chassis = add_chassis_to_cp(
-                chassis_live, change_plan, ignore_blade_id=asset.id
-            )
+            if not AssetCP.objects.filter(id=data["chassis"]).exists():
+                chassis = add_chassis_to_cp(
+                    chassis_live, change_plan, ignore_blade_id=asset.id
+                )
         else:
-            chassis = AssetCP.objects.get(id=data["chassis"])
+            try:
+                chassis = AssetCP.objects.get(id=data["chassis"])
+            except ObjectDoesNotExist:
+                return (
+                    None,
+                    "Chassis with id " + str(data["chassis"]) + " does not exist",
+                )
 
     try:
         if create_asset_cp:

@@ -16,8 +16,6 @@ from .change_plan_serializers import GetChangePlanSerializer
 from rackcity.api.serializers.fields import RCIntegerField
 import copy
 
-from rackcity.models.model_utils import ModelType
-
 
 class AssetCPSerializer(serializers.ModelSerializer):
     """
@@ -124,9 +122,6 @@ class ChassisSerializer(serializers.ModelSerializer):
 
 
 class BladeSerializer(serializers.ModelSerializer):
-    """
-
-    """
 
     model = ITModelSerializer()
 
@@ -135,6 +130,26 @@ class BladeSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "hostname",
+            "asset_number",
+            "chassis_slot",
+            "model",
+            "display_color",
+        )
+
+
+class BladeCPSerializer(serializers.ModelSerializer):
+
+    related_asset = AssetSerializer()
+    model = ITModelSerializer()
+    change_plan = GetChangePlanSerializer()
+
+    class Meta:
+        model = Asset
+        fields = (
+            "id",
+            "hostname",
+            "related_asset",
+            "change_plan",
             "asset_number",
             "chassis_slot",
             "model",
@@ -474,7 +489,7 @@ def serialize_power_connections(power_port_model, asset):
 
 
 def get_blades_in_chassis(asset):
-    if asset.model.model_type != ModelType.BLADE_CHASSIS.value:
+    if not asset.model.is_blade_chassis():
         return []
 
     blades = Asset.objects.filter(chassis=asset.id)
@@ -483,8 +498,13 @@ def get_blades_in_chassis(asset):
 
 
 def get_blades_in_chassis_cp(asset_cp):
-    # TODO
-    return []
+    if not asset_cp.model.is_blade_chassis():
+        return []
+    blades_cp = AssetCP.objects.filter(
+        chassis=asset_cp.id, change_plan=asset_cp.change_plan
+    )
+    serializer = BladeCPSerializer(blades_cp, many=True)
+    return serializer.data
 
 
 def generate_network_graph(asset):
