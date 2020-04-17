@@ -10,10 +10,13 @@ import {
   getChangePlanRowStyle,
   isDatacenterObject,
   isObject,
-  isModelObject, NetworkConnection, Node, MountTypes,
+  isModelObject,
+  NetworkConnection,
+  Node,
+  MountTypes,
 } from "../../utils/utils";
 import NetworkGraph from "../elementView/detailedView/assetView/graph";
-import {BladePowerView} from "../elementView/powerView/bladePowerView";
+import { BladePowerView } from "../elementView/powerView/bladePowerView";
 import PowerView from "../elementView/powerView/powerView";
 
 interface MobileAssetViewProps {
@@ -29,10 +32,9 @@ interface MobileAssetViewState {
 export class MobileAssetView extends React.PureComponent<
   MobileAssetViewProps & RouteComponentProps
 > {
-
   public state: MobileAssetViewState = {
-    powerShouldUpdate: false
-}
+    powerShouldUpdate: false,
+  };
 
   renderData(fields: Array<any>, data: any) {
     return fields.map((item: string) => {
@@ -160,11 +162,11 @@ export class MobileAssetView extends React.PureComponent<
     );
   }
 
-    private renderPower() {
+  private renderPower() {
     if (this.props.asset && this.props.asset.model) {
       if (this.props.asset.model.model_type === MountTypes.BLADE) {
         return (
-            <p>Blade Power View</p>
+          <p>Blade Power View</p>
           // <BladePowerView
           //   {...this.props}
           //     token={this.props.token}
@@ -289,9 +291,7 @@ export class MobileAssetView extends React.PureComponent<
             </div>
           ) : null}
         </Callout>
-        <Callout title={"Power Connections"}>
-          {this.renderPower()}
-        </Callout>
+        <Callout title={"Power Connections"}>{this.renderPower()}</Callout>
       </div>
     );
   }
