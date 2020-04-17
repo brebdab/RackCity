@@ -1,5 +1,4 @@
 import {
-  // Alert,
   AnchorButton,
   Callout,
   Classes,
@@ -25,7 +24,6 @@ import {
 import "./powerView.scss";
 import { IconNames } from "@blueprintjs/icons";
 import { PermissionState } from "../../../utils/permissionUtils";
-// import { Spin } from "antd";
 
 interface PowerViewProps {
   token: string;
@@ -43,7 +41,6 @@ interface PowerViewState {
   powerConnections: any;
   powerStatus: any;
   statusLoaded: boolean;
-  // alertOpen: boolean;
   confirmationMessage: string;
   username?: string;
 }
@@ -75,7 +72,6 @@ export class PowerView extends React.PureComponent<
     powerConnections: undefined,
     powerStatus: undefined,
     statusLoaded: false,
-    // alertOpen: false,
     confirmationMessage: "",
   };
 
@@ -94,11 +90,6 @@ export class PowerView extends React.PureComponent<
     if (this.props.shouldUpdate && this.shouldShowPower()) {
       this.getPowerStatus();
     }
-    // } else {
-    //   this.setState({
-    //     statusLoaded: true,
-    //   });
-    // }
     this.props.updated();
   }
 
@@ -170,14 +161,8 @@ export class PowerView extends React.PureComponent<
       .then((res) => {
         this.getPowerStatus();
         this.addSuccessToast(res.data.success_message);
-        // this.setState({
-        //   alertOpen: true,
-        //   confirmationMessage: res.data.success_message,
-        // });
-        // this.componentDidMount();
       })
       .catch((err) => {
-        // alert(err);
         if (
           err.response &&
           err.response.data &&
@@ -201,14 +186,8 @@ export class PowerView extends React.PureComponent<
       .then((res) => {
         this.getPowerStatus();
         this.addSuccessToast(res.data.success_message);
-        // this.setState({
-        //   alertOpen: true,
-        //   confirmationMessage: res.data.success_message,
-        // });
-        // this.componentDidMount();
       })
       .catch((err) => {
-        // alert(err);
         if (
           err.response &&
           err.response.data &&
@@ -232,11 +211,6 @@ export class PowerView extends React.PureComponent<
       .then((res) => {
         this.getPowerStatus();
         this.addSuccessToast(res.data.success_message);
-        // this.setState({
-        //   alertOpen: true,
-        //   confirmationMessage: res.data.success_message,
-        // });
-        // this.componentDidMount();
       })
       .catch((err) => {
         if (
@@ -246,7 +220,6 @@ export class PowerView extends React.PureComponent<
         ) {
           this.addErrorToast(err.response.data.failure_message);
         }
-        // alert(err);
       });
   }
 
@@ -288,7 +261,9 @@ export class PowerView extends React.PureComponent<
               this.props.assetIsDecommissioned || this.props.changePlan ? (
                 <td />
               ) : loading ? (
-                <td><Spinner size={Spinner.SIZE_SMALL} /></td>
+                <td>
+                  <Spinner size={Spinner.SIZE_SMALL} />
+                </td>
               ) : this.state.powerStatus ? (
                 <td>{this.state.powerStatus[i]}</td>
               ) : (
@@ -405,23 +380,6 @@ export class PowerView extends React.PureComponent<
             ? this.renderPowerTable(false)
             : this.renderPowerTable(true)
           : this.renderNoPowerPortsCallout()}
-        {/*<Alert*/}
-        {/*  className={Classes.DARK}*/}
-        {/*  confirmButtonText="OK"*/}
-        {/*  isOpen={this.state.alertOpen}*/}
-        {/*  onConfirm={() => {*/}
-        {/*    this.setState({*/}
-        {/*      alertOpen: false,*/}
-        {/*    });*/}
-        {/*  }}*/}
-        {/*  onClose={() => {*/}
-        {/*    this.setState({*/}
-        {/*      alertOpen: false,*/}
-        {/*    });*/}
-        {/*  }}*/}
-        {/*>*/}
-        {/*  <p>{this.state.confirmationMessage}</p>*/}
-        {/*</Alert>*/}
         <Toaster
           autoFocus={false}
           canEscapeKeyClear={true}
