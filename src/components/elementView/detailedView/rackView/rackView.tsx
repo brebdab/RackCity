@@ -1,11 +1,25 @@
-import {Alert, Classes, Intent, IToastProps, Position, Spinner, Toaster,} from "@blueprintjs/core";
+import {
+  Alert,
+  Classes,
+  Intent,
+  IToastProps,
+  Position,
+  Spinner,
+  Toaster,
+} from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
-import {connect} from "react-redux";
-import {RouteComponentProps, withRouter} from "react-router";
-import {API_ROOT} from "../../../../utils/api-config";
-import {AssetObject, getHeaders, MountTypes, RackResponseObject, ROUTES,} from "../../../../utils/utils";
+import { connect } from "react-redux";
+import { RouteComponentProps, withRouter } from "react-router";
+import { API_ROOT } from "../../../../utils/api-config";
+import {
+  AssetObject,
+  getHeaders,
+  MountTypes,
+  RackResponseObject,
+  ROUTES,
+} from "../../../../utils/utils";
 import "./rackView.scss";
 
 //export interface ElementViewProps {}
@@ -70,15 +84,22 @@ class RackView extends React.PureComponent<
           );
         } else {
           currHeight = width + currHeight;
-          const hostname = assets[0].hostname ? " | " + assets[0].hostname : " ";
-          let display=  assets[0].model.vendor +
-                  " " +
-                  assets[0].model.model_number +
-                   
-                  hostname;
-          if (assets[0].model.model_type===MountTypes.BLADE_CHASSIS){
-            display += " | " + assets[0].blades.length + " blades"
+          const hostname = assets[0].hostname
+            ?  assets[0].hostname
+            : " ";
+          let display = hostname;
+          if (assets[0].model.model_type === MountTypes.BLADE_CHASSIS) {
+            if (assets[0].blades.length == 1) {
+              display += "| " +  assets[0].blades.length + " blade";
+            } else {
+              display += "| " +  assets[0].blades.length + " blades";
+            }
 
+            display +=
+              " | " +
+              assets[0].model.vendor +
+              " " +
+              assets[0].model.model_number
           }
 
           rows.unshift(
