@@ -62,7 +62,7 @@ export class BarcodeScanner extends React.PureComponent<
     confirmationIsOpen: false,
     showAsset: false,
     barcode_data: "",
-    token: ""
+    token: "",
   };
 
   constraints = {
