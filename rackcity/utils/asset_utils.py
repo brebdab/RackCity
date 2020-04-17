@@ -60,7 +60,8 @@ def get_existing_power_port(port_name, asset_id, change_plan=None):
 def does_asset_exist(asset_id, change_plan):
     return (
         AssetCP.objects.filter(id=asset_id, change_plan=change_plan.id).exists()
-    ) or (Asset.objects.filter(id=asset_id).exists())
+        or Asset.objects.filter(id=asset_id).exists()
+    )
 
 
 def get_or_create_asset_with_hostname(hostname, change_plan=None):

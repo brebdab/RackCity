@@ -16,6 +16,8 @@ from .change_plan_serializers import GetChangePlanSerializer
 from rackcity.api.serializers.fields import RCIntegerField
 import copy
 
+from ...utils.asset_changes_utils import get_changes_on_asset
+
 
 class AssetCPSerializer(serializers.ModelSerializer):
     """
@@ -119,6 +121,31 @@ class ChassisSerializer(serializers.ModelSerializer):
 
     def get_blades(self, asset):
         return get_blades_in_chassis(asset)
+
+
+class ChassisCPSerializer(serializers.ModelSerializer):
+    """
+    Serializers the information we want for a chassis that a blade is in (only used for serializing info to be sent)
+    """
+
+    rack = RackSerializer()
+    model = ITModelSerializer()
+    blades = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Asset
+        fields = (
+            "id",
+            "hostname",
+            "model",
+            "rack",
+            "rack_position",
+            "display_color",
+            "blades",
+        )
+
+    def get_blades(self, asset):
+        return get_blades_in_chassis_cp(asset)
 
 
 class BladeSerializer(serializers.ModelSerializer):
@@ -305,6 +332,7 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
     related_asset = AssetSerializer()
     blades = serializers.SerializerMethodField()
     datacenter = serializers.SerializerMethodField()
+    mark_as_cp = serializers.SerializerMethodField()
 
     class Meta:
         model = AssetCP
@@ -337,6 +365,7 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
             "display_color",
             "memory_gb",
             "blades",
+            "mark_as_cp",
         )
 
     def get_mac_addresses(self, assetCP):
@@ -356,6 +385,14 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
 
     def get_datacenter(self, assetCP):
         return get_datacenter_of_asset(assetCP)
+
+    def get_mark_as_cp(self, assetCP):
+        if assetCP.related_asset:
+            return (
+                len(get_changes_on_asset(assetCP.related_asset, assetCP)) > 0
+                or assetCP.is_decommissioned
+            )
+        return True
 
 
 class GetDecommissionedAssetCPSerializer(serializers.ModelSerializer):

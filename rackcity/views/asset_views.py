@@ -33,7 +33,6 @@ from rackcity.utils.asset_utils import (
     save_power_connections,
     save_all_field_data_live,
     save_all_field_data_cp,
-    copy_asset_to_new_asset_cp,
     add_chassis_to_cp,
 )
 from rackcity.utils.change_planner_utils import (
@@ -41,7 +40,6 @@ from rackcity.utils.change_planner_utils import (
     get_many_assets_response_for_cp,
     get_page_count_response_for_cp,
     get_cp_already_executed_response,
-    get_changes_on_asset,
 )
 from rackcity.utils.errors_utils import (
     Status,
@@ -163,14 +161,8 @@ def asset_detail(request, id):
             )
             # if id of live asset is given on a change plan, just return the corresponding related assetCP
             if assets_cp.filter(related_asset=id).exists():
-                related_asset = Asset.objects.get(id=id)
                 asset = assets_cp.get(related_asset=id)
-                changes = get_changes_on_asset(related_asset, asset)
-                if len(changes) == 0 and not asset.is_decommissioned:
-                    asset = related_asset
-                    serializer = RecursiveAssetSerializer(asset)
-                else:
-                    serializer = RecursiveAssetCPSerializer(asset)
+                serializer = RecursiveAssetCPSerializer(asset)
             elif assets_cp.filter(id=id).exists():
                 asset = assets_cp.get(id=id)
                 serializer = RecursiveAssetCPSerializer(asset)
@@ -232,7 +224,6 @@ def asset_add(request):
             chassis_id_live = data["chassis"]
             del data["chassis"]
 
-
         serializer = AssetCPSerializer(data=data)
     else:
         serializer = AssetSerializer(data=data)
@@ -247,7 +238,11 @@ def asset_add(request):
         )
     try:
         validate_user_permission_on_new_asset_data(
-            request.user, serializer.validated_data, data_is_validated=True, change_plan=change_plan,chassis_id_live = chassis_id_live
+            request.user,
+            serializer.validated_data,
+            data_is_validated=True,
+            change_plan=change_plan,
+            chassis_id_live=chassis_id_live,
         )
     except UserAssetPermissionException as auth_error:
         return JsonResponse(
@@ -408,15 +403,6 @@ def asset_modify(request):
         failure_response = get_cp_already_executed_response(change_plan)
         if failure_response:
             return failure_response
-
-        create_new_asset_cp = not AssetCP.objects.filter(
-            id=asset_id, change_plan=change_plan.id
-        ).exists()
-
-        if not create_new_asset_cp:
-            existing_asset = AssetCP.objects.get(
-                id=asset_id, change_plan=change_plan.id
-            )
         if not does_asset_exist(asset_id, change_plan):
             return JsonResponse(
                 {
@@ -427,6 +413,13 @@ def asset_modify(request):
                 },
                 status=HTTPStatus.BAD_REQUEST,
             )
+        try:
+            existing_asset = AssetCP.objects.get(
+                id=asset_id, change_plan=change_plan.id
+            )
+        except ObjectDoesNotExist:
+            create_new_asset_cp = True
+
     if create_new_asset_cp or not change_plan:
         try:
             existing_asset = Asset.objects.get(id=asset_id)
