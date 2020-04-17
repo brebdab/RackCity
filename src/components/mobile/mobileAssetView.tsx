@@ -10,8 +10,9 @@ import {
   getChangePlanRowStyle,
   isDatacenterObject,
   isObject,
-  isModelObject,
+  isModelObject, NetworkConnection, Node,
 } from "../../utils/utils";
+import NetworkGraph from "../elementView/detailedView/assetView/graph";
 
 interface MobileAssetViewProps {
   asset: AssetObject;
@@ -141,6 +142,12 @@ export class MobileAssetView extends React.PureComponent<
     });
   }
 
+  getNetworkConnectionForPort(port: string) {
+    return this.props.asset.network_connections.find(
+      (connection: NetworkConnection) => connection.source_port === port
+    );
+  }
+
   render() {
     console.log(this.props.asset);
     return (
@@ -159,7 +166,77 @@ export class MobileAssetView extends React.PureComponent<
           </table>
         </Callout>
         <Callout title={"Network Connections"}>
-          <p>Network Connections</p>
+          {this.props.asset.model &&
+          this.props.asset.model.network_ports &&
+          this.props.asset.model.network_ports.length !== 0 ? (
+            <div className="network-connections">
+              <table className="bp3-html-table bp3-html-table-bordered bp3-html-table-striped">
+                <tr>
+                  <th>Network Port</th>
+                  <th>Mac Address</th>
+                  <th>Destination Asset</th>
+                  <th>Destination Port</th>
+                </tr>
+                <tbody>
+                  {this.props.asset.model.network_ports.map((port: string) => {
+                    var connection = this.getNetworkConnectionForPort(port);
+                    return (
+                      <tr>
+                        {" "}
+                        <td style={getChangePlanRowStyle(this.props.asset)}>
+                          {port}
+                        </td>
+                        <td style={getChangePlanRowStyle(this.props.asset)}>
+                          {this.props.asset.mac_addresses
+                            ? this.props.asset.mac_addresses[port]
+                            : null}
+                        </td>{" "}
+                        {connection
+                          ? [
+                              <td
+                                style={getChangePlanRowStyle(this.props.asset)}
+                                className={
+                                  this.props.asset.decommissioning_user
+                                    ? undefined
+                                    : "asset-link"
+                                }
+                                // onClick={
+                                //   this.props.asset.decommissioning_user
+                                //     ? undefined
+                                //     : (e: any) => {
+                                //         const id = this.getAssetIdFromHostname(
+                                //           connection!.destination_hostname!
+                                //         );
+                                //         if (id) {
+                                //           this.redirectToAsset(id);
+                                //         }
+                                //       }
+                                // }
+                              >
+                                {connection.destination_hostname}
+                              </td>,
+                              <td
+                                style={getChangePlanRowStyle(this.props.asset)}
+                              >
+                                {connection.destination_port}
+                              </td>,
+                            ]
+                          : [<td></td>, <td></td>]}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+
+              <NetworkGraph
+                networkGraph={this.props.asset.network_graph}
+                onClickNode={() => {}}
+                isDecommissioned={
+                  this.props.asset.decommissioning_user !== undefined
+                }
+              />
+            </div>
+          ) : null}
         </Callout>
         <Callout title={"Power Connections"}>
           <p>Power Connections</p>
