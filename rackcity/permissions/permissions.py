@@ -8,7 +8,7 @@ from rackcity.models import (
     Log,
     Rack,
     Site,
-)
+    AssetCP)
 from rackcity.utils.exceptions import UserAssetPermissionException
 from rest_framework.permissions import BasePermission
 from typing import Tuple
@@ -89,7 +89,7 @@ def get_id_from_data(data, field, data_is_validated):
 
 
 def validate_user_permission_on_new_asset_data(
-    user, asset_data, data_is_validated=False
+    user, asset_data, data_is_validated=False, change_plan=None, chassis_id_live=None
 ):
     site = None
     if "offline_storage_site" in asset_data and asset_data["offline_storage_site"]:
@@ -115,15 +115,29 @@ def validate_user_permission_on_new_asset_data(
                     raise Exception("Rack '" + str(rack_id) + "' does not exist. ")
                 site = rack.datacenter
         elif model.is_blade_asset():
+            print(chassis_id_live)
             if "chassis" in asset_data and asset_data["chassis"]:
-                chassis_id = get_id_from_data(asset_data, "chassis", data_is_validated)
-                try:
-                    chassis = Asset.objects.get(id=chassis_id)
-                except ObjectDoesNotExist:
-                    raise Exception(
-                        "Chassis '" + str(chassis_id) + "' does not exist. "
-                    )
-                site = chassis.rack.datacenter
+                if change_plan and not chassis_id_live:
+                    chassis_id = get_id_from_data(asset_data, "chassis", data_is_validated)
+                    try:
+                        chassis = AssetCP.objects.get(id=chassis_id)
+                    except ObjectDoesNotExist:
+                        raise Exception(
+                            "Chassis '" + str(chassis_id) + "' does not exist. "
+                        )
+                    site = chassis.rack.datacenter
+                else:
+                    if chassis_id_live:
+                        chassis_id = chassis_id_live
+                    else:
+                        chassis_id = get_id_from_data(asset_data, "chassis", data_is_validated)
+                    try:
+                        chassis = Asset.objects.get(id=chassis_id)
+                    except ObjectDoesNotExist:
+                        raise Exception(
+                            "Chassis '" + str(chassis_id) + "' does not exist. "
+                        )
+                    site = chassis.rack.datacenter
     if site and not user_has_asset_permission(user, site):
         raise UserAssetPermissionException(
             "User '"
