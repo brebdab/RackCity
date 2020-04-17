@@ -32,7 +32,7 @@ import { ROUTES } from "./utils/utils";
 import CPDetailView from "./components/changePlanner/CPDetailView";
 import { PermissionState } from "./utils/permissionUtils";
 import { BarcodeScanner } from "./components/mobile/barcodeScanner";
-import { MobileAssetView} from "./components/mobile/mobileAssetView";
+import { MobileAssetView, MobileAssetViewWrapper } from "./components/mobile/mobileAssetView";
 
 var console: any = {};
 console.log = function () {};
@@ -133,7 +133,7 @@ class App extends React.Component<AppProps> {
             </div>
             <this.PrivateRoute
                 path={ROUTES.ASSETS + "/:rid"}
-                component={MobileAssetView}
+                component={MobileAssetViewWrapper}
               />
           </div>
         ) : (

@@ -71,6 +71,14 @@ interface MobileAssetViewState {
   token?: string;
 }
 
+export class MobileAssetViewWrapper extends React.PureComponent<RouteComponentProps & MobileAssetViewProps> {
+  render() {
+    return (
+        <MobileAssetView {...this.props} />
+    )
+  }
+}
+
 export class MobileAssetView extends React.PureComponent<
   RouteComponentProps & MobileAssetViewProps,
   MobileAssetViewState
@@ -486,5 +494,5 @@ const mapDispatchToProps = (dispatch: any) => {
 };
 
 export default withRouter(
-  connect(mapStatetoProps, mapDispatchToProps)(MobileAssetView)
+  connect(mapStatetoProps, mapDispatchToProps)(MobileAssetViewWrapper)
 );
