@@ -20,47 +20,65 @@ export class InstructionsLite extends React.PureComponent<
           </h3>
           {this.props.uploadType === "models" ? (
             <ul className={"bp3-list"}>
-              <li>vendor – string</li>
-              <li>model number – string</li>
               <li>
-                height – positive integer; refers to the height in U of the
-                model
+                <b>mount_type</b> – string; one of "asset", "chassis", or
+                "blade"
               </li>
               <li>
-                display color – 6-digit hex triplet (RGB) preceded by a pound
-                sign (#); case insen- sitive; e.g. #7FFFD4, #7fffd4
-              </li>
-              <li>network ports – non-negative integer</li>
-              <li>power ports – non-negative integer</li>
-              <li>cpu – string</li>
-              <li>memory – non-negative integer</li>
-              <li>storage – string</li>
-              <li>
-                comment – string; must be enclosed by double quotes if value
-                contains line breaks
+                <b>vendor</b> – string
               </li>
               <li>
-                network port name 1 – string; if left blank and network port
-                exists, value defaults to ”1”
+                <b>model_number</b> – string
               </li>
               <li>
-                network port name 2 – string; if left blank and network port
-                exists, value defaults to ”2”
+                <b>height</b> – positive integer; refers to the height in U of
+                the model; blank if model is a blade
               </li>
               <li>
-                network port name 3 – string; if left blank and network port
-                exists, value defaults to ”3”
+                <b>display_color</b> – 6-digit hex triplet (RGB) preceded by a
+                pound sign (#); case insensitive; e.g. #7FFFD4, #7fffd4
               </li>
               <li>
-                network port name 4 – string; if left blank and network port
-                exists, value defaults to ”4”
+                <b>network_ports</b> – non-negative integer
+              </li>
+              <li>
+                <b>power_ports</b> – non-negative integer
+              </li>
+              <li>
+                <b>cpu</b> – string
+              </li>
+              <li>
+                <b>memory</b> – non-negative integer
+              </li>
+              <li>
+                <b>storage</b> – string
+              </li>
+              <li>
+                <b>comment</b> – string; must be enclosed by double quotes if
+                value contains line breaks
+              </li>
+              <li>
+                <b>network_port_name 1</b> – string; if left blank and network
+                port exists, value defaults to ”1”
+              </li>
+              <li>
+                <b>network_port_name 2</b> – string; if left blank and network
+                port exists, value defaults to ”2”
+              </li>
+              <li>
+                <b>network_port_name 3</b> – string; if left blank and network
+                port exists, value defaults to ”3”
+              </li>
+              <li>
+                <b>network_port_name 4</b> – string; if left blank and network
+                port exists, value defaults to ”4”
               </li>
             </ul>
           ) : null}
           {this.props.uploadType === "assets" ? (
             <ul className={"bp3-list"}>
               <li>
-                <b>asset number</b> – six-digit integer; must be unique unless
+                <b>asset_number</b> – six-digit integer; must be unique unless
                 modifying an existing asset; if left blank, a value will be
                 generated automatically; matching an existing asset number
                 indicates that this row should modify an existing asset in the
@@ -71,24 +89,42 @@ export class InstructionsLite extends React.PureComponent<
               </li>
               <li>
                 <b>datacenter</b> – string; refers to the abbreviated form of an
-                existing datacenter in the system (e.g. RTP1)
+                existing datacenter in the system (e.g. RTP1); blank if asset is
+                stored offline; blank if asset is a blade
+              </li>
+              <li>
+                <b>offline_site</b> – string; refers to the abbreviated form of
+                an existing offline site in the system (e.g. OFF1); blank if
+                asset is racked
               </li>
               <li>
                 <b>rack</b> – string; the address of a rack is by a row letter
                 (A-Z) and rack number (positive integer); there is no separator
-                between the row letter and rack number
+                between the row letter and rack number; blank if asset is stored
+                offline; blank if asset is a blade
               </li>
               <li>
-                <b>rack position</b> – positive integer; refers to the vertical
+                <b>rack_position</b> – positive integer; refers to the vertical
                 location (on a rack, measured in U) of the bottom of the
-                equipment
+                equipment; blank if asset is stored offline; blank if asset is a
+                blade
+              </li>
+              <li>
+                <b>chassis_number</b> – string; the asset number of a chassis
+                that a blade is mounted in; blank if asset not a blade; blank if
+                asset is stored offline outside a chassis
+              </li>
+              <li>
+                <b>chassis_slot</b> – positive integer; 1-12; refers to the slot
+                of a chassis that a blade is mounted in; blank if asset not a
+                blade; blank if asset is stored offline outside of a chassis
               </li>
               <li>
                 <b>vendor</b> – string; refers to the vendor of the model with
                 which this asset is associated
               </li>
               <li>
-                <b>model number</b> – string; refers to the model number of the
+                <b>model_number</b> – string; refers to the model number of the
                 model with which this asset is associated
               </li>
               <li>
@@ -100,14 +136,35 @@ export class InstructionsLite extends React.PureComponent<
                 value contains line breaks
               </li>
               <li>
-                <b>power port connection 1</b> – reference to a PDU in the rack
+                <b>power_port_connection_1</b> – reference to a PDU in the rack
                 (L or R) and a port number (1 - 24); e.g. L5, R24; if left blank
                 the power port will be disconnected
               </li>
               <li>
-                <b>power port connection 2</b> – reference to a PDU in the rack
+                <b>power_port_connection_2</b> – reference to a PDU in the rack
                 and a port number (1 - 24); e.g.L5, R24; if left blank the power
                 port will be disconnected
+              </li>
+              <li>
+                <b>custom_display_color</b> – optionally override the asset’s
+                model’s value; blank means default model’s value on both import
+                and export; 6-digit hex triplet (RGB) preceded by a pound sign
+                (#); case insensitive; e.g. #7FFFD4, #7fffd4
+              </li>
+              <li>
+                <b>custom_cpu</b> – string; optionally override the asset’s
+                model’s value; blank means default model’s value on both import
+                and export
+              </li>
+              <li>
+                <b>custom_memory</b> – non-negative integer; optionally override
+                the asset’s model’s value; blank means default model’s value on
+                both import and export
+              </li>
+              <li>
+                <b>custom_storage</b> – string; optionally override the asset’s
+                model’s value; blank means default model’s value on both import
+                and export
               </li>
             </ul>
           ) : null}
@@ -140,7 +197,7 @@ export class InstructionsLite extends React.PureComponent<
           ) : null}
           <h3>
             You can find the full technical specification here:&nbsp;
-            <a href="https://d1b10bmlvqabco.cloudfront.net/attach/k4u27qnccr45oo/i515p00jifO/k6wckku7h5ne/ECE458__Bulk_Format_Proposal__v3.2.pdf">
+            <a href="https://d1b10bmlvqabco.cloudfront.net/attach/k4u27qnccr45oo/is4xdnkb8px4ee/k90vqcj1j0tn/ECE458__Bulk_Format_Proposal6.pdf">
               HypoSoft Bulk Import Specifications
             </a>
           </h3>
