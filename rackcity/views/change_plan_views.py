@@ -416,7 +416,6 @@ def change_plan_execute(request, id):
         ~Q(model__model_type=ModelType.BLADE_ASSET.value)
     )
     for asset_cp in rackmount_assets_cp:
-        changes = get_changes_on_asset(asset_cp.related_asset, asset_cp)
         updated_asset, created = get_updated_asset(asset_cp)
         updated_asset_mappings[asset_cp] = updated_asset
         if created:
@@ -425,6 +424,7 @@ def change_plan_execute(request, id):
                 request.user, updated_asset, Action.CREATE, change_plan=change_plan,
             )
         elif not asset_cp.is_decommissioned:
+            changes = get_changes_on_asset(asset_cp.related_asset, asset_cp)
             if len(changes) > 0:
                 num_modified += 1
                 log_action(
@@ -438,7 +438,6 @@ def change_plan_execute(request, id):
     ##blade assets
     blade_assets_cp = assets_cp.filter(model__model_type=ModelType.BLADE_ASSET.value)
     for asset_cp in blade_assets_cp:
-        changes = get_changes_on_asset(asset_cp.related_asset, asset_cp)
         chassis_live = updated_asset_mappings[asset_cp.chassis]
         updated_asset, created = get_updated_asset(asset_cp, chassis_live)
         updated_asset_mappings[asset_cp] = updated_asset
@@ -448,6 +447,7 @@ def change_plan_execute(request, id):
                 request.user, updated_asset, Action.CREATE, change_plan=change_plan,
             )
         elif not asset_cp.is_decommissioned:
+            changes = get_changes_on_asset(asset_cp.related_asset, asset_cp)
             if len(changes) > 0:
                 num_modified += 1
                 log_action(
