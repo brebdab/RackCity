@@ -17,7 +17,8 @@ from rackcity.utils.change_planner_utils import (
     get_modifications_in_cp,
     get_cp_already_executed_response,
     get_cp_modification_conflicts,
-    get_changes_on_asset)
+    get_changes_on_asset,
+)
 from rackcity.utils.errors_utils import (
     Status,
     GenericFailure,
@@ -410,8 +411,10 @@ def change_plan_execute(request, id):
     num_decommissioned = 0
     updated_asset_mappings = {}
 
-    #rackmount assets first
-    rackmount_assets_cp = assets_cp.filter(~Q(model__model_type=ModelType.BLADE_ASSET.value))
+    # rackmount assets first
+    rackmount_assets_cp = assets_cp.filter(
+        ~Q(model__model_type=ModelType.BLADE_ASSET.value)
+    )
     for asset_cp in rackmount_assets_cp:
         changes = get_changes_on_asset(asset_cp.related_asset, asset_cp)
         updated_asset, created = get_updated_asset(asset_cp)
@@ -437,7 +440,7 @@ def change_plan_execute(request, id):
     for asset_cp in blade_assets_cp:
         changes = get_changes_on_asset(asset_cp.related_asset, asset_cp)
         chassis_live = updated_asset_mappings[asset_cp.chassis]
-        updated_asset, created = get_updated_asset(asset_cp,chassis_live)
+        updated_asset, created = get_updated_asset(asset_cp, chassis_live)
         updated_asset_mappings[asset_cp] = updated_asset
         if created:
             num_created += 1

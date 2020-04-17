@@ -346,7 +346,7 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
 class GetDecommissionedAssetCPSerializer(serializers.ModelSerializer):
     decommissioning_user = serializers.SerializerMethodField()
     datacenter = serializers.SerializerMethodField()
-    time_decommissioned =  serializers.SerializerMethodField()
+    time_decommissioned = serializers.SerializerMethodField()
     model = ITModelSerializer()
     rack = RackSerializer()
     chassis = ChassisSerializer()
@@ -386,16 +386,18 @@ class GetDecommissionedAssetCPSerializer(serializers.ModelSerializer):
     def get_network_graph(self, assetCP):
         return generate_network_graph(assetCP)
 
-    def get_decommissioning_user(self,assetCP):
+    def get_decommissioning_user(self, assetCP):
         return assetCP.change_plan.owner.username
 
-    def get_time_decommissioned(self,assetCP):
+    def get_time_decommissioned(self, assetCP):
         return "N/A"
 
     def get_power_connections(self, assetCP):
         return serialize_power_connections(PowerPortCP, assetCP)
+
     def get_network_connections(self, assetCP):
         return serialize_network_connections(NetworkPortCP, assetCP)
+
 
 def normalize_bulk_asset_data(bulk_asset_data):
     power_connections = {}

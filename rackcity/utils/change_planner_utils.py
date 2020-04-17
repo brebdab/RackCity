@@ -168,7 +168,9 @@ def get_racked_assets_for_cp(change_plan):
 
     ## don't return decommissioned asset_cps:
     racked_assets_cp = racked_assets_cp.filter(is_decommissioned=False)
-    racked_assets_cp = racked_assets_cp.exclude(id__in=[asset_cp.id for asset_cp in assets_to_hide])
+    racked_assets_cp = racked_assets_cp.exclude(
+        id__in=[asset_cp.id for asset_cp in assets_to_hide]
+    )
     return racked_assets, racked_assets_cp
 
 
@@ -186,7 +188,9 @@ def get_offline_storage_assets_for_cp(change_plan):
             else:
                 assets_to_hide.append(asset_cp)
     stored_assets_cp = stored_assets_cp.filter(is_decommissioned=False)
-    stored_assets_cp = stored_assets_cp.exclude(id__in=[asset_cp.id for asset_cp in assets_to_hide])
+    stored_assets_cp = stored_assets_cp.exclude(
+        id__in=[asset_cp.id for asset_cp in assets_to_hide]
+    )
     return stored_assets, stored_assets_cp
 
 

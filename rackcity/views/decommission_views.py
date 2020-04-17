@@ -68,9 +68,7 @@ def decommission_asset_parameterized(data, query_params, user):
         response = get_cp_already_executed_response(change_plan)
         if response:
             return response
-        assets, assets_cp = get_assets_for_cp(
-            change_plan.id, show_decommissioned=True
-        )
+        assets, assets_cp = get_assets_for_cp(change_plan.id, show_decommissioned=True)
         if assets_cp.filter(related_asset=id).exists():
             decommissioned_asset_cp = assets_cp.get(related_asset=id)
             decommissioned_asset_cp.is_decommissioned = True
@@ -86,14 +84,20 @@ def decommission_asset_parameterized(data, query_params, user):
             )
 
             for field in existing_asset._meta.fields:
-                if not (field.name == "id" or field.name == "assetid_ptr" or field.name =="chassis"):
+                if not (
+                    field.name == "id"
+                    or field.name == "assetid_ptr"
+                    or field.name == "chassis"
+                ):
                     setattr(
-                         decommissioned_asset_cp,
+                        decommissioned_asset_cp,
                         field.name,
                         getattr(existing_asset, field.name),
                     )
             if existing_asset.chassis:
-                chassis_cp = add_chassis_to_cp(existing_asset.chassis, change_plan, ignore_blade_id=id)
+                chassis_cp = add_chassis_to_cp(
+                    existing_asset.chassis, change_plan, ignore_blade_id=id
+                )
                 decommissioned_asset_cp.chassis = chassis_cp
 
         else:
