@@ -17,8 +17,8 @@ from rackcity.utils.change_planner_utils import (
     get_modifications_in_cp,
     get_cp_already_executed_response,
     get_cp_modification_conflicts,
-    get_changes_on_asset,
 )
+from rackcity.utils.asset_changes_utils import get_changes_on_asset
 from rackcity.utils.errors_utils import (
     Status,
     GenericFailure,

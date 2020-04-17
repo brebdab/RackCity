@@ -41,8 +41,8 @@ from rackcity.utils.change_planner_utils import (
     get_many_assets_response_for_cp,
     get_page_count_response_for_cp,
     get_cp_already_executed_response,
-    get_changes_on_asset,
 )
+from rackcity.utils.asset_changes_utils import get_changes_on_asset
 from rackcity.utils.errors_utils import (
     Status,
     GenericFailure,
@@ -165,12 +165,12 @@ def asset_detail(request, id):
             if assets_cp.filter(related_asset=id).exists():
                 related_asset = Asset.objects.get(id=id)
                 asset = assets_cp.get(related_asset=id)
-                changes = get_changes_on_asset(related_asset, asset)
-                if len(changes) == 0 and not asset.is_decommissioned:
-                    asset = related_asset
-                    serializer = RecursiveAssetSerializer(asset)
-                else:
-                    serializer = RecursiveAssetCPSerializer(asset)
+                # changes = get_changes_on_asset(related_asset, asset)
+                # if len(changes) == 0 and not asset.is_decommissioned:
+                #     asset = related_asset
+                #     serializer = RecursiveAssetSerializer(asset)
+                # else:
+                serializer = RecursiveAssetCPSerializer(asset)
             elif assets_cp.filter(id=id).exists():
                 asset = assets_cp.get(id=id)
                 serializer = RecursiveAssetCPSerializer(asset)
@@ -426,16 +426,7 @@ def asset_modify(request):
                 id=asset_id, change_plan=change_plan.id
             )
         except ObjectDoesNotExist:
-            try:
-                existing_asset = AssetCP.objects.get(
-                    related_asset=asset_id, change_plan=change_plan.id
-                )
-                data["id"] = existing_asset.id
-                asset_id = existing_asset.id
-                if data["chassis"] == existing_asset.chassis.related_asset.id:
-                    data["chassis"] = existing_asset.chassis.id
-            except ObjectDoesNotExist:
-                create_new_asset_cp = True
+            create_new_asset_cp = True
 
     if create_new_asset_cp or not change_plan:
         try:

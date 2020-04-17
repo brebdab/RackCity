@@ -19,11 +19,8 @@ from rackcity.models import (
     AssetCP,
     ChangePlan,
     DecommissionedAsset,
-    NetworkPort,
-    NetworkPortCP,
-    PowerPort,
-    PowerPortCP,
 )
+from rackcity.utils.asset_changes_utils import get_changes_on_asset
 from rackcity.utils.errors_utils import Status, GenericFailure
 from rackcity.utils.exceptions import LocationException
 from rackcity.utils.query_utils import (
@@ -157,20 +154,12 @@ def get_racked_assets_for_cp(change_plan):
     racked_assets_cp = AssetCP.objects.filter(
         change_plan=change_plan, offline_storage_site__isnull=True
     )
-    assets_to_hide = []
     for asset_cp in racked_assets_cp:
         if asset_cp.related_asset and (asset_cp.related_asset in racked_assets):
-            changes = get_changes_on_asset(asset_cp.related_asset, asset_cp)
-            if len(changes) > 0 or asset_cp.is_decommissioned:
-                racked_assets = racked_assets.filter(~Q(id=asset_cp.related_asset.id))
-            else:
-                assets_to_hide.append(asset_cp)
+            racked_assets = racked_assets.filter(~Q(id=asset_cp.related_asset.id))
 
     ## don't return decommissioned asset_cps:
     racked_assets_cp = racked_assets_cp.filter(is_decommissioned=False)
-    racked_assets_cp = racked_assets_cp.exclude(
-        id__in=[asset_cp.id for asset_cp in assets_to_hide]
-    )
     return racked_assets, racked_assets_cp
 
 
@@ -179,18 +168,11 @@ def get_offline_storage_assets_for_cp(change_plan):
     stored_assets_cp = AssetCP.objects.filter(
         change_plan=change_plan, offline_storage_site__isnull=False,
     )
-    assets_to_hide = []
+
     for asset_cp in stored_assets_cp:
         if asset_cp.related_asset and (asset_cp.related_asset in stored_assets):
-            changes = get_changes_on_asset(asset_cp.related_asset, asset_cp)
-            if len(changes) > 0 or asset_cp.is_decommissioned:
-                stored_assets = stored_assets.filter(~Q(id=asset_cp.related_asset.id))
-            else:
-                assets_to_hide.append(asset_cp)
+           stored_assets = stored_assets.filter(~Q(id=asset_cp.related_asset.id))
     stored_assets_cp = stored_assets_cp.filter(is_decommissioned=False)
-    stored_assets_cp = stored_assets_cp.exclude(
-        id__in=[asset_cp.id for asset_cp in assets_to_hide]
-    )
     return stored_assets, stored_assets_cp
 
 
@@ -316,83 +298,6 @@ def get_page_count_response_for_cp(
     count = assets.count() + assets_cp.count()
     page_count = math.ceil(count / page_size)
     return JsonResponse({"page_count": page_count})
-
-
-def network_connections_have_changed(asset, asset_cp):
-    network_ports_cp = NetworkPortCP.objects.filter(asset=asset_cp)
-    network_ports = NetworkPort.objects.filter(asset=asset)
-    for network_port_cp in network_ports_cp:
-        # Get NetworkPort connected to this port live
-        try:
-            network_port = network_ports.get(port_name=network_port_cp.port_name,)
-        except ObjectDoesNotExist:
-            continue
-        connected_port_live = network_port.connected_port
-        # Get NetworkPort associated with the NetworkPortCP connected to this port live
-        cp_connected_port_in_cp = network_port_cp.connected_port
-        real_connected_port_in_cp = None
-        if cp_connected_port_in_cp:
-            related_asset = cp_connected_port_in_cp.asset.related_asset
-            if related_asset:
-                try:
-                    real_connected_port_in_cp = NetworkPort.objects.get(
-                        asset=related_asset,
-                        port_name=cp_connected_port_in_cp.port_name,
-                    )
-                except ObjectDoesNotExist:
-                    real_connected_port_in_cp = None
-        # Check for match
-        if connected_port_live != real_connected_port_in_cp:
-            return True
-    return False
-
-
-def power_connections_have_changed(asset, asset_cp):
-    power_ports_cp = PowerPortCP.objects.filter(asset=asset_cp)
-    power_ports = PowerPort.objects.filter(asset=asset)
-    for power_port_cp in power_ports_cp:
-        # Get PDUPortCP corresponding to this CP connection
-        pdu_port_cp = power_port_cp.power_connection
-        # Get PDUPort corresponding to this live connection
-        try:
-            power_port_live = power_ports.get(port_name=power_port_cp.port_name)
-        except ObjectDoesNotExist:
-            continue
-        pdu_port_live = power_port_live.power_connection
-        # Check for match
-        if pdu_port_cp is None and pdu_port_live is None:
-            continue
-        if (pdu_port_cp is None and pdu_port_live) or (
-            pdu_port_cp and pdu_port_live is None
-        ):
-            return True
-        if (
-            pdu_port_cp.port_number != pdu_port_live.port_number
-            or pdu_port_cp.left_right != pdu_port_live.left_right
-            or pdu_port_cp.rack != pdu_port_live.rack
-        ):
-            return True
-    return False
-
-
-def get_changes_on_asset(asset, asset_cp):
-    fields = [field.name for field in Asset._meta.fields]
-    changes = []
-    for field in fields:
-        if field == "id" or field == "assetid_ptr":
-            continue
-        if field == "chassis":
-            chassis_live = asset.chassis
-            chassis_cp = asset_cp.chassis
-            if chassis_live and (chassis_live != chassis_cp.related_asset):
-                changes.append("chassis")
-        elif getattr(asset, field) != getattr(asset_cp, field):
-            changes.append(field)
-    if network_connections_have_changed(asset, asset_cp):
-        changes.append("network_connections")
-    if power_connections_have_changed(asset, asset_cp):
-        changes.append("power_connections")
-    return changes
 
 
 def get_cp_modification_conflicts(asset_cp):
