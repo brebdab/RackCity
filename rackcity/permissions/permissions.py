@@ -109,7 +109,6 @@ def validate_user_permission_on_new_asset_data(
                     raise Exception("Rack '" + str(rack_id) + "' does not exist. ")
                 site = rack.datacenter
         elif model.is_blade_asset():
-            print(chassis_id_live)
             if "chassis" in asset_data and asset_data["chassis"]:
                 if change_plan and not chassis_id_live:
                     chassis_id = get_id_from_data(
