@@ -241,12 +241,22 @@ def records_are_identical(existing_data, new_data):
             and existing_data[key] != {}
             and key != "id"
         ):
+            print(key)
+            print("existing: ")
+            print(existing_data[key])
+            print("new: ")
+            print(new_data[key])
             return False
         if (key in new_keys) and (new_data[key] != existing_data[key]):
             if not (
                 int_string_comparison(existing_data[key], new_data[key])
                 or empty_vs_null_comparison(existing_data[key], new_data[key])
             ):
+                print(key)
+                print("existing: ")
+                print(existing_data[key])
+                print("new: ")
+                print(new_data[key])
                 return False
     return True
 

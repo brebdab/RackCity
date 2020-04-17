@@ -15,6 +15,7 @@ from rackcity.api.serializers import (
     RackSerializer,
     normalize_bulk_asset_data,
     ChassisSerializer,
+    SiteSerializer,
 )
 from rackcity.models import (
     Asset,
@@ -619,29 +620,33 @@ def asset_bulk_upload(request):
         asset_data["model"] = model.id
         del asset_data["vendor"]
         del asset_data["model_number"]
-        try:
-            chassis = Asset.objects.get(asset_number=asset_data["chassis_number"])
-            if not chassis.model.is_blade_chassis():
+        if asset_data["chassis_number"]:
+            try:
+                chassis = Asset.objects.get(asset_number=asset_data["chassis_number"])
+                if not chassis.model.is_blade_chassis():
+                    failure_message = (
+                        Status.IMPORT_ERROR.value
+                        + "Asset is not a chassis: "
+                        + "asset_number="
+                        + asset_data["chassis_number"]
+                    )
+                    return JsonResponse(
+                        {"failure_message": failure_message},
+                        status=HTTPStatus.BAD_REQUEST,
+                    )
+            except ObjectDoesNotExist:
                 failure_message = (
                     Status.IMPORT_ERROR.value
-                    + "Asset is not a chassis: "
+                    + "Chassis does not exist: "
                     + "asset_number="
                     + asset_data["chassis_number"]
                 )
                 return JsonResponse(
                     {"failure_message": failure_message}, status=HTTPStatus.BAD_REQUEST
                 )
-        except ObjectDoesNotExist:
-            failure_message = (
-                Status.IMPORT_ERROR.value
-                + "Chassis does not exist: "
-                + "asset_number="
-                + asset_data["chassis_number"]
-            )
-            return JsonResponse(
-                {"failure_message": failure_message}, status=HTTPStatus.BAD_REQUEST
-            )
-        asset_data["chassis"] = chassis.id
+            asset_data["chassis"] = chassis.id
+        else:
+            asset_data["chassis"] = None
         del asset_data["chassis_number"]
         if asset_data["datacenter"]:
             try:
@@ -655,25 +660,44 @@ def asset_bulk_upload(request):
                 return JsonResponse(
                     {"failure_message": failure_message}, status=HTTPStatus.BAD_REQUEST
                 )
+            if asset_data["rack"]:
+                try:
+                    row_letter = asset_data["rack"][:1].upper()
+                    rack_num = asset_data["rack"][1:]
+                    rack = Rack.objects.get(
+                        datacenter=datacenter, row_letter=row_letter, rack_num=rack_num
+                    )
+                except ObjectDoesNotExist:
+                    failure_message = (
+                        Status.IMPORT_ERROR.value
+                        + "Provided rack doesn't exist: "
+                        + asset_data["rack"]
+                    )
+                    return JsonResponse(
+                        {"failure_message": failure_message},
+                        status=HTTPStatus.BAD_REQUEST,
+                    )
+                asset_data["rack"] = rack.id
+            else:
+                asset_data["rack"] = None
+        if asset_data["datacenter"]:
             try:
-                row_letter = asset_data["rack"][:1].upper()
-                rack_num = asset_data["rack"][1:]
-                rack = Rack.objects.get(
-                    datacenter=datacenter, row_letter=row_letter, rack_num=rack_num
+                datacenter = Site.objects.get(
+                    abbreviation=asset_data["datacenter"]
                 )
             except ObjectDoesNotExist:
                 failure_message = (
                     Status.IMPORT_ERROR.value
-                    + "Provided rack doesn't exist: "
-                    + asset_data["rack"]
+                    + "Provided datacenter doesn't exist: "
+                    + asset_data["datacenter"]
                 )
                 return JsonResponse(
                     {"failure_message": failure_message}, status=HTTPStatus.BAD_REQUEST
                 )
-            asset_data["rack"] = rack.id
+            else:
+                asset_data["datacenter"] = datacenter.id
         else:
-            asset_data["rack"] = None
-        del asset_data["datacenter"]
+            asset_data["datacenter"] = None
         if asset_data["offline_site"]:
             try:
                 offline_storage_site = Site.objects.get(
@@ -907,6 +931,14 @@ def asset_bulk_upload(request):
             new_data["chassis"] = ChassisSerializer(
                 Asset.objects.get(id=new_data["chassis"])
             ).data
+        if new_data["datacenter"]:
+            new_data["datacenter"] = SiteSerializer(
+                Site.objects.get(id=new_data["datacenter"])
+            ).data
+        if new_data["offline_storage_site"]:
+            new_data["offline_storage_site"] = SiteSerializer(
+                Site.objects.get(id=new_data["offline_storage_site"])
+            ).data
         existing_data = RecursiveAssetSerializer(
             potential_modification["existing_asset"]
         ).data
@@ -914,9 +946,13 @@ def asset_bulk_upload(request):
         del existing_data["mac_addresses"]
         del existing_data["network_connections"]
         del existing_data["network_graph"]
+        del existing_data["blades"]
+        print("going to check if identical")
         if records_are_identical(existing_data, new_data):
             records_ignored += 1
+            print("identical")
         else:
+            print("not identical")
             new_data["id"] = existing_data["id"]
             for field in existing_data.keys():
                 if field not in new_data:
