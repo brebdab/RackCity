@@ -360,6 +360,8 @@ def get_changes_on_asset(asset, asset_cp):
     fields = [field.name for field in Asset._meta.fields]
     changes = []
     for field in fields:
+        if field ==  "id" or field == "assetid_ptr":
+            continue
         if field == "chassis":
             chassis_live = asset.chassis
             chassis_cp = asset_cp.chassis
@@ -517,7 +519,8 @@ def get_modifications_in_cp(change_plan):
         related_asset = asset_cp.related_asset
         if related_asset:
             changes = get_changes_on_asset(related_asset, asset_cp)
-            if changes is None and not asset_cp.is_decommissioned:
+            print(changes)
+            if len(changes) == 0 and not asset_cp.is_decommissioned:
                 continue
             asset_data = RecursiveAssetSerializer(related_asset).data
         else:
@@ -546,8 +549,8 @@ def get_modifications_in_cp(change_plan):
             title = "Create asset"
             if asset_cp.asset_number:
                 title += " " + str(asset_cp.asset_number)
-            if asset_cp.rack:
-                title += get_location_detail(asset_cp)
+
+            title += get_location_detail(asset_cp)
             asset_data = None
         modifications.append(
             {
