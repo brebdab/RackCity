@@ -70,6 +70,8 @@ from rackcity.utils.query_utils import (
     get_page_count_response,
     get_many_response,
     get_filtered_query,
+    assets_online_queryset,
+    assets_offline_queryset,
 )
 from rackcity.utils.rackcity_utils import (
     validate_asset_location_in_rack,
@@ -106,7 +108,7 @@ def asset_many(request):
     if change_plan:
         return get_many_assets_response_for_cp(request, change_plan, stored=False)
     else:
-        racked_assets = Asset.objects.filter(offline_storage_site__isnull=True)
+        racked_assets = assets_online_queryset()
         return get_many_response(
             Asset,
             RecursiveAssetSerializer,
@@ -132,7 +134,7 @@ def offline_storage_asset_many(request):
     if change_plan:
         return get_many_assets_response_for_cp(request, change_plan, stored=True)
     else:
-        stored_assets = Asset.objects.filter(offline_storage_site__isnull=False)
+        stored_assets = assets_offline_queryset()
         return get_many_response(
             Asset,
             RecursiveAssetSerializer,
@@ -682,9 +684,7 @@ def asset_bulk_upload(request):
                 asset_data["rack"] = None
         if asset_data["datacenter"]:
             try:
-                datacenter = Site.objects.get(
-                    abbreviation=asset_data["datacenter"]
-                )
+                datacenter = Site.objects.get(abbreviation=asset_data["datacenter"])
             except ObjectDoesNotExist:
                 failure_message = (
                     Status.IMPORT_ERROR.value
@@ -893,9 +893,7 @@ def asset_bulk_upload(request):
                     {"asset_serializer": asset_serializer, "asset_data": asset_data}
                 )
     try:
-        no_infile_location_conflicts(
-            asset_datas
-        )
+        no_infile_location_conflicts(asset_datas)
     except LocationException as error:
         failure_message = (
             Status.IMPORT_ERROR.value
@@ -1038,7 +1036,7 @@ def asset_bulk_export(request):  # TODO: add a new method for offline
     """
     List all assets in csv form, in accordance with Bulk Spec.
     """
-    assets_query = Asset.objects
+    assets_query = assets_online_queryset()
     filtered_query, failure_response = get_filtered_query(assets_query, request.data)
     if failure_response:
         return failure_response
@@ -1054,7 +1052,37 @@ def asset_bulk_export(request):  # TODO: add a new method for offline
             status=HTTPStatus.BAD_REQUEST,
         )
     assets = filtered_query.order_by(*sort_args)
+    serializer = BulkAssetSerializer(assets, many=True)
+    csv_string = StringIO()
+    fields = serializer.data[0].keys()
+    csv_writer = csv.DictWriter(csv_string, fields)
+    csv_writer.writeheader()
+    csv_writer.writerows(serializer.data)
+    return JsonResponse({"export_csv": csv_string.getvalue()}, status=HTTPStatus.OK)
 
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def asset_bulk_export_offline(request):
+    """
+    List all offline assets in csv form, in accordance with Bulk Spec.
+    """
+    assets_query = assets_offline_queryset()
+    filtered_query, failure_response = get_filtered_query(assets_query, request.data)
+    if failure_response:
+        return failure_response
+    try:
+        sort_args = get_sort_arguments(request.data)
+    except Exception as error:
+        return JsonResponse(
+            {
+                "failure_message": Status.EXPORT_ERROR.value
+                + GenericFailure.SORT.value,
+                "errors": str(error),
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    assets = filtered_query.order_by(*sort_args)
     serializer = BulkAssetSerializer(assets, many=True)
     csv_string = StringIO()
     fields = serializer.data[0].keys()
@@ -1079,7 +1107,7 @@ def asset_page_count(request):
     if change_plan:
         return get_page_count_response_for_cp(request, change_plan, stored=False)
     else:
-        racked_assets = Asset.objects.filter(offline_storage_site__isnull=True)
+        racked_assets = assets_online_queryset()
         return get_page_count_response(
             Asset,
             request.query_params,
@@ -1103,7 +1131,7 @@ def offline_storage_asset_page_count(request):
     if change_plan:
         return get_page_count_response_for_cp(request, change_plan, stored=True)
     else:
-        stored_assets = Asset.objects.filter(offline_storage_site__isnull=False)
+        stored_assets = assets_offline_queryset()
         return get_page_count_response(
             Asset,
             request.query_params,

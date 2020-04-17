@@ -25,6 +25,7 @@ from .asset_views import (
     asset_bulk_upload,
     asset_bulk_approve,
     asset_bulk_export,
+    asset_bulk_export_offline,
     asset_page_count,
     offline_storage_asset_page_count,
     asset_fields,
