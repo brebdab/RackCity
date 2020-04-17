@@ -423,6 +423,8 @@ def change_plan_execute(request, id):
             log_action(
                 request.user, updated_asset, Action.CREATE, change_plan=change_plan,
             )
+            asset_cp.differs_from_live = True
+            asset_cp.save()
         elif not asset_cp.is_decommissioned:
             changes = get_changes_on_asset(asset_cp.related_asset, asset_cp)
             if len(changes) > 0:
@@ -446,6 +448,8 @@ def change_plan_execute(request, id):
             log_action(
                 request.user, updated_asset, Action.CREATE, change_plan=change_plan,
             )
+            asset_cp.differs_from_live = True
+            asset_cp.save()
         elif not asset_cp.is_decommissioned:
             changes = get_changes_on_asset(asset_cp.related_asset, asset_cp)
             if len(changes) > 0:
