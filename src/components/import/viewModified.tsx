@@ -12,7 +12,9 @@ import {
   PowerConnection,
   DatacenterObject,
   AssetObject,
+  TableType,
 } from "../../utils/utils";
+import * as actions from "../../store/actions/state";
 
 interface ModifierProps {
   token: string;
@@ -21,6 +23,7 @@ interface ModifierProps {
   modelsAdded?: number;
   callback: (toasts: Array<string>, types: Array<string>) => void;
   operation: string;
+  markTablesStale(staleTables: TableType[]): void;
 }
 
 export interface AssetObjectMod {
@@ -487,6 +490,11 @@ export class Modifier extends React.PureComponent<
                     //       this.props.modelsModified!.length -
                     //       modified.length)
                     // );
+                    this.props.markTablesStale([
+                      TableType.RACKED_ASSETS,
+                      TableType.STORED_ASSETS,
+                      TableType.MODELS,
+                    ]);
                     let toasts: Array<string>;
                     toasts = [];
                     let types: Array<string>;
@@ -593,10 +601,11 @@ class Checks extends React.PureComponent<RouteComponentProps & CheckboxProps> {
   }
 }
 
-const mapStatetoProps = (state: any) => {
+const mapDispatchToProps = (dispatch: any) => {
   return {
-    token: state.token,
+    markTablesStale: (staleTables: TableType[]) =>
+      dispatch(actions.markTablesStale(staleTables)),
   };
 };
 
-export default withRouter(connect(mapStatetoProps)(Modifier));
+export default withRouter(connect(mapDispatchToProps)(Modifier));
