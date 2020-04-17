@@ -303,7 +303,7 @@ def get_page_count_response_for_cp(
 def get_cp_modification_conflicts(asset_cp):
     conflicts = []
     nonresolvable_message = (
-        "This conflict cannot be resolved; the "
+        "This conflict cannot be resolved automatically; the "
         + "related changes need to be removed from your change plan."
     )
     conflicting_asset_message_1 = (

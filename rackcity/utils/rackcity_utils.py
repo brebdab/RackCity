@@ -117,7 +117,7 @@ def validate_asset_location_in_rack(
 def validate_asset_location_in_chassis(
     chassis_id, chassis_slot, asset_id=None, change_plan=None, related_asset_id=None,
 ):
-    num_slots_in_chassis = 12
+    num_slots_in_chassis = 14
     if chassis_slot < 1 or chassis_slot > num_slots_in_chassis:
         raise LocationException(str(chassis_slot) + " is not a valid slot number. ")
     if change_plan:

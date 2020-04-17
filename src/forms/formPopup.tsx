@@ -1,14 +1,14 @@
 import { Classes, Dialog } from "@blueprintjs/core";
 import * as React from "react";
 import {
+  DatacenterObject,
   ElementObjectType,
   ElementType,
-  isAssetObject,
-  isModelObject,
   FormObjectType,
-  isDatacenterObject,
-  DatacenterObject,
+  isAssetObject,
   isChangePlanObject,
+  isDatacenterObject,
+  isModelObject,
 } from "../utils/utils";
 import { ALL_DATACENTERS } from "../components/elementView/elementTabContainer";
 import RackSelectView from "../components/elementView/rackSelectView";
@@ -86,7 +86,8 @@ class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
         {this.props.elementName === ElementType.USER && !this.props.userId ? (
           <WrappedRegistrationForm authSignup={this.props.submitForm} />
         ) : null}
-        {this.props.elementName === ElementType.DATACENTER ? (
+        {this.props.elementName === ElementType.DATACENTER ||
+        this.props.elementName === ElementType.OFFLINE_STORAGE_SITE ? (
           <DatacenterForm
             type={FormTypes.CREATE}
             submitForm={this.props.submitForm}
@@ -95,6 +96,7 @@ class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
                 ? this.props.initialValues
                 : undefined
             }
+            elementType={this.props.elementName}
           />
         ) : null}
         {this.props.elementName === ElementType.CHANGEPLANS ? (

@@ -143,6 +143,11 @@ export const ModelFieldsTable: any = {
   model_type: "Mount Type",
 };
 
+export const SiteFieldsTable: any = {
+  abbreviation: "Abbreviation",
+  name: "Name",
+};
+
 export enum AssetFormLabels {
   asset_number = "Asset Number",
   hostname = "Hostname",

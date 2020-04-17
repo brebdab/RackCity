@@ -18,7 +18,7 @@ def log_many(request):
     size must also be specified, and a page of assets will be returned.
     """
     return get_many_response(
-        Log, LogSerializer, "logs", request, or_filters=True, default_order="-date",
+        Log, LogSerializer, "logs", request, default_order="-date",
     )
 
 
@@ -30,5 +30,5 @@ def log_page_count(request):
     specified as query parameter.
     """
     return get_page_count_response(
-        Log, request.query_params, data_for_filters=request.data, or_filters=True,
+        Log, request.query_params, data_for_filters=request.data,
     )
