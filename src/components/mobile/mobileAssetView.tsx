@@ -1,5 +1,7 @@
 import {
+  Alert,
   AnchorButton,
+  Callout,
   Classes,
   Dialog,
   Intent,
@@ -13,21 +15,31 @@ import axios from "axios";
 import * as React from "react";
 import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
+import FormPopup from "../../forms/formPopup";
+import { FormTypes } from "../../forms/formUtils";
 import { API_ROOT } from "../../utils/api-config";
 import {
   AssetCPObject,
   AssetObject,
   ChangePlan,
   DatacenterObject,
+  ElementType,
   getChangePlanRowStyle,
   getHeaders,
+  isAssetCPObject,
   MountTypes,
   NetworkConnection,
   Node,
   ROUTES,
   TableType,
 } from "../../utils/utils";
+import {
+  decommissionAsset,
+  deleteAsset,
+  modifyAsset,
+} from "../elementView/elementUtils";
 import PropertiesView from "../elementView/detailedView/propertiesView";
+import DecommissionedPropertiesView from "../elementView/detailedView/decommissionedPropertiesView";
 // import "./assetView.scss";
 import NetworkGraph from "../elementView/detailedView/assetView/graph";
 import PowerView from "../elementView/powerView/powerView";
@@ -56,7 +68,6 @@ interface MobileAssetViewState {
   datacenters: Array<DatacenterObject>;
   powerShouldUpdate: boolean;
   loading: boolean;
-  token?: any;
 }
 
 export class MobileAssetView extends React.PureComponent<
@@ -74,6 +85,27 @@ export class MobileAssetView extends React.PureComponent<
     loading: false,
   };
   successfullyLoadedData = false;
+  private updateAsset = (asset: AssetObject, headers: any): Promise<any> => {
+    let params: any;
+    params = this.props.match.params;
+    return modifyAsset(asset, headers, this.props.changePlan).then(
+      (res: any) => {
+        if (res.data.warning_message) {
+          this.addWarnToast("Modifed asset. " + res.data.warning_message);
+        } else {
+          this.addSuccessToast(res.data.success_message);
+        }
+
+        this.getData(params.rid, this.props.changePlan);
+
+        this.handleFormClose();
+        this.props.markTablesStale([
+          TableType.RACKED_ASSETS,
+          TableType.STORED_ASSETS,
+        ]);
+      }
+    );
+  };
   private toaster: Toaster = {} as Toaster;
   private addToast(toast: IToastProps) {
     toast.timeout = 5000;
@@ -141,6 +173,20 @@ export class MobileAssetView extends React.PureComponent<
     this.getData(rid, this.props.changePlan);
   };
 
+  public updateAssetDataCP = (rid: string, changePlan: ChangePlan) => {
+    this.getData(rid, changePlan);
+  };
+
+  componentWillReceiveProps(
+    nextProps: MobileAssetViewProps & RouteComponentProps
+  ) {
+    if (nextProps.changePlan !== this.props.changePlan) {
+      let params: any;
+      params = this.props.match.params;
+      this.updateAssetDataCP(params.rid, nextProps.changePlan);
+    }
+  }
+
   getNetworkConnectionForPort(port: string) {
     return this.state.asset.network_connections.find(
       (connection: NetworkConnection) => connection.source_port === port
@@ -170,12 +216,6 @@ export class MobileAssetView extends React.PureComponent<
   };
 
   public render() {
-    if (this.props.location.state) {
-      this.setState({
-        token: this.props.location.state
-      });
-    }
-    console.log(this.state.token)
     if (!this.successfullyLoadedData && this.props.token) {
       let params: any;
       params = this.props.match.params;
@@ -185,7 +225,8 @@ export class MobileAssetView extends React.PureComponent<
     if (this.state.datacenters.length === 0) {
       this.getDatacenters();
     }
-
+    console.log(this.state);
+    console.log(this.props);
     return (
       <div className={Classes.DARK + " asset-view"}>
         <Dialog className="spinner-dialog" isOpen={this.state.loading}>
@@ -197,6 +238,131 @@ export class MobileAssetView extends React.PureComponent<
           position={Position.TOP}
           ref={this.refHandlers.toaster}
         />
+        {!this.state.asset.decommissioning_user ? (
+          <div className="detail-buttons-wrapper">
+            <div className={"detail-buttons"}>
+              <AnchorButton
+                intent="primary"
+                icon="edit"
+                text="Edit"
+                minimal
+                onClick={() => this.handleFormOpen()}
+                disabled={
+                  (isAssetCPObject(this.state.asset) &&
+                    this.state.asset.is_decommissioned) ||
+                  !(
+                    this.props.permissionState.admin ||
+                    this.props.permissionState.asset_management ||
+                    (this.state.asset &&
+                      this.state.asset.rack &&
+                      this.props.permissionState.site_permissions.includes(
+                        +this.state.asset.rack.datacenter.id
+                      ))
+                  )
+                }
+              />
+              <FormPopup
+                datacenters={this.state.datacenters}
+                isOpen={this.state.isFormOpen}
+                initialValues={this.state.asset}
+                type={FormTypes.MODIFY}
+                elementName={ElementType.ASSET}
+                handleClose={this.handleFormClose}
+                submitForm={this.updateAsset}
+              />
+              <AnchorButton
+                minimal
+                intent="danger"
+                icon="remove"
+                text="Decommission"
+                onClick={this.handleDecommissionOpen}
+                disabled={
+                  (isAssetCPObject(this.state.asset) &&
+                    this.state.asset.is_decommissioned) ||
+                  !(
+                    this.props.permissionState.admin ||
+                    this.props.permissionState.asset_management ||
+                    (this.state.asset &&
+                      this.state.asset.rack &&
+                      this.props.permissionState.site_permissions.includes(
+                        +this.state.asset.rack.datacenter.id
+                      ))
+                  )
+                }
+              />
+              <Alert
+                cancelButtonText="Cancel"
+                confirmButtonText="Decommission"
+                intent="danger"
+                isOpen={this.state.isDecommissionOpen}
+                onCancel={this.handleDecommissionCancel}
+                onConfirm={this.handleDecommission}
+              >
+                <p>
+                  Are you sure you want to decommission this asset? If it's a
+                  chassis, its blades will also be decommissioned.
+                </p>
+              </Alert>
+              <AnchorButton
+                minimal
+                intent="danger"
+                icon="trash"
+                text="Delete"
+                onClick={this.handleDeleteOpen}
+                disabled={
+                  !isNullOrUndefined(this.props.changePlan) ||
+                  !(
+                    this.props.permissionState.admin ||
+                    this.props.permissionState.asset_management ||
+                    (this.state.asset &&
+                      this.state.asset.rack &&
+                      this.props.permissionState.site_permissions.includes(
+                        +this.state.asset.rack.datacenter.id
+                      ))
+                  )
+                }
+              />
+              <Alert
+                cancelButtonText="Cancel"
+                confirmButtonText="Delete"
+                intent="danger"
+                icon="warning-sign"
+                isOpen={this.state.isDeleteOpen}
+                onCancel={this.handleDeleteCancel}
+                onConfirm={this.handleDelete}
+              >
+                <p>
+                  Are you sure you want to <b>delete</b> this asset? Unless it
+                  was created in error, consider <b>decommissioning</b> instead.
+                </p>
+              </Alert>
+            </div>
+          </div>
+        ) : null}
+        {this.state.asset.decommissioning_user ? (
+          <DecommissionedPropertiesView data={this.state.asset} />
+        ) : null}
+        {isAssetCPObject(this.state.asset) &&
+        this.state.asset.is_decommissioned ? (
+          <Callout
+            className="propsview"
+            intent={Intent.WARNING}
+            title="This asset has been marked as decommissioned on this change plan. "
+          >
+            This asset will actually become decommissioned at the time of change
+            plan execution, but no more modifications can be made to this asset.
+          </Callout>
+        ) : null}
+        {isAssetCPObject(this.state.asset) &&
+        this.detectConflict(this.state.asset) ? (
+          <Callout
+            className="propsview"
+            intent={Intent.DANGER}
+            title="This asset has conflicts "
+          >
+            Please go to change plan detail view for more details
+          </Callout>
+        ) : null}
         <PropertiesView
           redirectToAsset={this.redirectToAsset}
           data={this.state.asset}
@@ -228,7 +394,7 @@ export class MobileAssetView extends React.PureComponent<
                   storage,
                   memory_gb,
                 } = this.state.asset;
-                return {cpu, display_color, storage, memory_gb};
+                return { cpu, display_color, storage, memory_gb };
               }}
             />
           </div>
@@ -398,11 +564,78 @@ export class MobileAssetView extends React.PureComponent<
       return;
     }
   }
+
+  private handleFormOpen = () => {
+    this.setState({
+      isFormOpen: true,
+    });
+  };
+  handleFormSubmit = () => {
+    this.setState({
+      isFormOpen: false,
+    });
+  };
+
+  private handleFormClose = () => this.setState({ isFormOpen: false });
+  private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
+  private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
+  private handleDelete = () => {
+    deleteAsset(this.state.asset!, getHeaders(this.props.token))
+      .then((res: any) => {
+        this.setState({ isDeleteOpen: false });
+        this.addSuccessToast(res.data.success_message);
+        this.props.history.push(ROUTES.DASHBOARD);
+        this.props.markTablesStale([
+          TableType.RACKED_ASSETS,
+          TableType.STORED_ASSETS,
+        ]);
+      })
+      .catch((err: any) => {
+        this.addToast({
+          message: err.response.data.failure_message,
+          intent: Intent.DANGER,
+        });
+      });
+  };
+  private handleDecommissionCancel = () =>
+    this.setState({ isDecommissionOpen: false });
+  private handleDecommissionOpen = () =>
+    this.setState({ isDecommissionOpen: true });
+  private handleDecommission = () => {
+    decommissionAsset(
+      this.state.asset!,
+      getHeaders(this.props.token),
+      this.props.changePlan
+    )
+      .then((res: any) => {
+        this.setState({ isDecommissionOpen: false });
+        this.addSuccessToast("Successfully Decommissioned Asset");
+        let params: any;
+        params = this.props.match.params;
+        this.updateAssetData(params.rid);
+        this.props.markTablesStale([
+          TableType.RACKED_ASSETS,
+          TableType.STORED_ASSETS,
+          TableType.DECOMMISSIONED_ASSETS,
+        ]);
+      })
+      .catch((err: any) => {
+        console.log("there was an error: ");
+        console.log(err);
+        this.addToast({
+          message: err.response.data.failure_message,
+          intent: Intent.DANGER,
+        });
+      });
+  };
 }
 
 const mapStatetoProps = (state: any) => {
   return {
-    token: state.token
+    token: state.token,
+    isAdmin: state.admin,
+    changePlan: state.changePlan,
+    permissionState: state.permissionState,
   };
 };
 
