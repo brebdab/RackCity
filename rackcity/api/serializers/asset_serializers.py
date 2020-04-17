@@ -547,7 +547,12 @@ def get_blades_in_chassis_cp(asset_cp):
 def generate_network_graph(asset):
     try:
         nodes = []
-        nodes.append({"id": asset.id, "label": asset.hostname})
+        if hasattr(asset,"related_asset") and asset.related_asset:
+
+            route_id = asset.related_asset.id
+        else:
+            route_id = asset.id
+        nodes.append({"id": asset.id,"route_id": route_id,"label": asset.hostname})
         edges = []
         # neighbors of distance one
         change_plan = None
@@ -559,11 +564,7 @@ def generate_network_graph(asset):
         [nodes, edges] = get_neighbor_assets(
             asset.hostname, asset.id, nodes, edges, change_plan
         )
-        if asset.model.is_blade_asset():
-            nodes, edges = add_chassis_to_graph(asset.id, nodes, edges, change_plan)
 
-        if asset.model.is_blade_chassis():
-            nodes, edges = add_blades_to_graph(asset.id, nodes, edges, change_plan)
 
         # neighbors of distance two
         nodes_copy = copy.deepcopy(nodes)
@@ -578,19 +579,24 @@ def generate_network_graph(asset):
         return
 
 
-def get_neighbor_assets(hostname, id, nodes, edges, change_plan=None):
+def get_neighbor_assets(hostname, asset_id, nodes, edges, change_plan=None):
     try:
-        source_ports = NetworkPort.objects.filter(asset=id)
+        source_ports = NetworkPort.objects.filter(asset=asset_id)
         if change_plan:
-            if AssetCP.objects.filter(change_plan=change_plan, id=id).exists():
+            if AssetCP.objects.filter(change_plan=change_plan, id=asset_id).exists():
                 source_ports = NetworkPortCP.objects.filter(
-                    asset=id, change_plan=change_plan.id
+                    asset=asset_id, change_plan=change_plan.id
                 )
         for source_port in source_ports:
             if source_port.connected_port:
                 destination_port_asset = source_port.connected_port.asset
+                if hasattr(destination_port_asset,"related_asset") and destination_port_asset.related_asset:
+                    route_id = destination_port_asset.related_asset.id
+                else:
+                    route_id = destination_port_asset.id
                 node = {
                     "id": destination_port_asset.id,
+                    "route_id":route_id,
                     "label": destination_port_asset.hostname,
                 }
                 if node not in nodes:
@@ -598,6 +604,9 @@ def get_neighbor_assets(hostname, id, nodes, edges, change_plan=None):
                 edges.append(
                     {"from": source_port.asset.id, "to": destination_port_asset.id}
                 )
+
+        nodes, edges = add_chassis_to_graph(asset_id, nodes, edges, change_plan)
+        nodes, edges = add_blades_to_graph(asset_id, nodes, edges, change_plan)
         return nodes, edges
     except ObjectDoesNotExist:
         return
@@ -609,8 +618,13 @@ def add_blades_to_graph(chassis_id, nodes, edges, change_plan=None):
     else:
         blades = Asset.objects.filter(chassis=chassis_id)
     for blade in blades:
+        if hasattr(blade,"related_asset") and blade.related_asset:
+            route_id = blade.related_asset.id
+        else:
+            route_id = blade.id
         node = {
             "id": blade.id,
+            "route_id": route_id,
             "label": blade.hostname,
         }
         if node not in nodes:
@@ -626,8 +640,13 @@ def add_chassis_to_graph(blade_id, nodes, edges, change_plan=None):
         chassis = Asset.objects.get(id=blade_id).chassis
     if not chassis:
         return nodes, edges
+    if hasattr(chassis,"related_asset") and chassis.related_asset:
+        route_id = chassis.related_asset.id
+    else:
+        route_id = chassis.id
     node = {
         "id": chassis.id,
+        "route_id": route_id,
         "label": chassis.hostname,
     }
     if node not in nodes:
