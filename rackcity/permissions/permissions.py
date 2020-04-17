@@ -117,9 +117,12 @@ def validate_user_permission_on_new_asset_data(
                     try:
                         chassis = AssetCP.objects.get(id=chassis_id)
                     except ObjectDoesNotExist:
-                        raise Exception(
-                            "Chassis '" + str(chassis_id) + "' does not exist. "
-                        )
+                        try:
+                            chassis = Asset.objects.get(id=chassis_id)
+                        except:
+                            raise Exception(
+                                "Chassis '" + str(chassis_id) + "' does not exist. "
+                            )
                     site = chassis.rack.datacenter
                 else:
                     if chassis_id_live:

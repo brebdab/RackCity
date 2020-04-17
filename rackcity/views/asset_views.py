@@ -408,15 +408,6 @@ def asset_modify(request):
         failure_response = get_cp_already_executed_response(change_plan)
         if failure_response:
             return failure_response
-
-        create_new_asset_cp = not AssetCP.objects.filter(
-            id=asset_id, change_plan=change_plan.id
-        ).exists()
-
-        if not create_new_asset_cp:
-            existing_asset = AssetCP.objects.get(
-                id=asset_id, change_plan=change_plan.id
-            )
         if not does_asset_exist(asset_id, change_plan):
             return JsonResponse(
                 {
@@ -427,6 +418,31 @@ def asset_modify(request):
                 },
                 status=HTTPStatus.BAD_REQUEST,
             )
+
+        # create_new_asset_cp = not AssetCP.objects.filter(
+        #     id=asset_id, change_plan=change_plan.id
+        # ).exists() or not AssetCP.objects.filter(related_asset = asset_id, change_plan = change_plan.id)
+
+        # if not create_new_asset_cp:
+        try:
+            existing_asset = AssetCP.objects.get(
+                id=asset_id, change_plan=change_plan.id
+            )
+        except ObjectDoesNotExist:
+            try:
+                existing_asset = AssetCP.objects.get(
+                    related_asset=asset_id, change_plan=change_plan.id
+                )
+                data["id"] = existing_asset.id
+                asset_id = existing_asset.id
+                if data["chassis"] == existing_asset.chassis.related_asset.id:
+                    data["chassis"] = existing_asset.chassis.id
+            except ObjectDoesNotExist:
+                create_new_asset_cp= True
+        print(existing_asset,create_new_asset_cp,data["id"])
+
+
+
     if create_new_asset_cp or not change_plan:
         try:
             existing_asset = Asset.objects.get(id=asset_id)

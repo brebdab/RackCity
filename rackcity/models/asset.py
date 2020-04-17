@@ -83,7 +83,7 @@ def validate_hostname_uniqueness(value, asset_id, change_plan, related_asset):
 
 def validate_asset_number_uniqueness(value, asset_id, change_plan, related_asset):
     assets, assets_cp = get_assets_for_cp(change_plan.id)
-    matching_assets = assets_cp.filter(asset_number=value, change_plan=change_plan)
+    matching_assets = assets_cp.filter(asset_number=value)
     if value is None:
         return
     if (
@@ -91,7 +91,9 @@ def validate_asset_number_uniqueness(value, asset_id, change_plan, related_asset
         and matching_assets[0].id != asset_id
         and not matching_assets[0].is_decommissioned
     ):
+        print(asset_id,matching_assets[0].id )
         raise ValidationError(
+
             "'"
             + str(value)
             + "'is not a unique asset number. \
