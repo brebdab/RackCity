@@ -89,7 +89,7 @@ class RackView extends React.PureComponent<
             : " ";
           let display = hostname;
           if (assets[0].model.model_type === MountTypes.BLADE_CHASSIS) {
-            if (assets[0].blades.length == 1) {
+            if (assets[0].blades.length === 1) {
               display += " | " +  assets[0].blades.length + " blade";
             } else {
               display += " | " +  assets[0].blades.length + " blades";
