@@ -1641,11 +1641,14 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     ];
   }
   getChassisSlots() {
-    let slots = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
+    let slots = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13","14"];
+
     if (this.state.values.chassis && this.state.values.chassis.blades) {
       this.state.values.chassis.blades.forEach((asset: AssetObject) => {
-        slots = slots.filter((slot: string) => slot !== asset.chassis_slot);
+
+        slots = slots.filter((slot: string) => parseInt(slot) !== parseInt(asset.chassis_slot));
       });
+
     }
     return slots;
   }
