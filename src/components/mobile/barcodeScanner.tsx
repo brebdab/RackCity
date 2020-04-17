@@ -5,6 +5,7 @@ import {
   Toaster,
   IToastProps,
   Intent,
+    Alert
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
@@ -19,6 +20,9 @@ import axios from "axios";
 interface BarcodeScannerState {
   cameraHeight: number;
   cameraWidth: number;
+  token?: string;
+  id: string;
+  confirmationIsOpen: boolean;
 }
 interface RootState {
   token: string;
@@ -53,6 +57,8 @@ export class BarcodeScanner extends React.PureComponent<
   public state = {
     cameraHeight: 0,
     cameraWidth: 0,
+    id: "",
+    confirmationIsOpen: false
   };
 
   constraints = {
@@ -79,9 +85,10 @@ export class BarcodeScanner extends React.PureComponent<
         )
         .then((res: any) => {
           const id = res.data.asset_data.id;
-          this.props.history.push({
-            pathname: ROUTES.ASSETS + "/" + id,
-            state: { detail: token }
+          this.setState({
+            token: token,
+            id: id,
+            confirmationIsOpen: true
           })
         })
         .catch((err: any) => {
@@ -132,6 +139,15 @@ export class BarcodeScanner extends React.PureComponent<
           position={Position.TOP}
           ref={this.refHandlers.toaster}
         />
+        <Alert
+            isOpen={this.state.confirmationIsOpen}
+            onCancel={() => {this.setState({confirmationIsOpen: false})}}
+            onConfirm={() => {
+              console.log(this.state)
+              console.log(this.props)
+            }}
+        >
+        </Alert>
       </div>
     );
   }
