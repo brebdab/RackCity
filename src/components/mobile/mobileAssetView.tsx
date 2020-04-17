@@ -10,18 +10,30 @@ import {
   getChangePlanRowStyle,
   isDatacenterObject,
   isObject,
-  isModelObject, NetworkConnection, Node,
+  isModelObject, NetworkConnection, Node, MountTypes,
 } from "../../utils/utils";
 import NetworkGraph from "../elementView/detailedView/assetView/graph";
+import {BladePowerView} from "../elementView/powerView/bladePowerView";
+import PowerView from "../elementView/powerView/powerView";
 
 interface MobileAssetViewProps {
   asset: AssetObject;
   data_override: any;
+  token: string;
+}
+
+interface MobileAssetViewState {
+  powerShouldUpdate: boolean;
 }
 
 export class MobileAssetView extends React.PureComponent<
   MobileAssetViewProps & RouteComponentProps
 > {
+
+  public state: MobileAssetViewState = {
+    powerShouldUpdate: false
+}
+
   renderData(fields: Array<any>, data: any) {
     return fields.map((item: string) => {
       var dat;
@@ -148,6 +160,45 @@ export class MobileAssetView extends React.PureComponent<
     );
   }
 
+    private renderPower() {
+    if (this.props.asset && this.props.asset.model) {
+      if (this.props.asset.model.model_type === MountTypes.BLADE) {
+        return (
+            <p>Blade Power View</p>
+          // <BladePowerView
+          //   {...this.props}
+          //     token={this.props.token}
+          //   asset={this.props.asset}
+          //   shouldUpdate={this.state.powerShouldUpdate}
+          //   updated={() => {
+          //     this.setState({ powerShouldUpdate: false });
+          //   }}
+          //   assetIsDecommissioned={
+          //     this.props.asset.decommissioning_user !== undefined
+          //   }
+          // />
+        );
+      } else {
+        return (
+          <PowerView
+            {...this.props}
+            isMobile={true}
+            asset={this.props.asset}
+            shouldUpdate={this.state.powerShouldUpdate}
+            updated={() => {
+              this.setState({ powerShouldUpdate: false });
+            }}
+            assetIsDecommissioned={
+              this.props.asset.decommissioning_user !== undefined
+            }
+          />
+        );
+      }
+    } else {
+      return;
+    }
+  }
+
   render() {
     console.log(this.props.asset);
     return (
@@ -239,7 +290,7 @@ export class MobileAssetView extends React.PureComponent<
           ) : null}
         </Callout>
         <Callout title={"Power Connections"}>
-          <p>Power Connections</p>
+          {this.renderPower()}
         </Callout>
       </div>
     );

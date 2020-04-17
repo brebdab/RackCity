@@ -62,6 +62,7 @@ export class BarcodeScanner extends React.PureComponent<
     confirmationIsOpen: false,
     showAsset: false,
     barcode_data: "",
+    token: ""
   };
 
   constraints = {
@@ -69,6 +70,7 @@ export class BarcodeScanner extends React.PureComponent<
     width: 1280,
     facingMode: { exact: "environment" },
   };
+
   WebcamCapture = () => {
     let webcamRef: any;
     webcamRef = React.useRef(null);
@@ -129,6 +131,7 @@ export class BarcodeScanner extends React.PureComponent<
       return (
         <MobileAssetView
           {...this.props}
+          token={this.state.token}
           asset={asset}
           data_override={() => {
             const { cpu, display_color, storage, memory_gb } = asset;

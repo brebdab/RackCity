@@ -36,6 +36,7 @@ interface PowerViewProps {
   changePlan: ChangePlan;
   assetIsDecommissioned: boolean;
   permissionState: PermissionState;
+  isMobile: boolean;
 }
 
 interface PowerViewState {
