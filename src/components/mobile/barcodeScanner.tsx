@@ -127,15 +127,22 @@ export class BarcodeScanner extends React.PureComponent<
   private renderAssetView(asset: AssetObject | null) {
     if (asset) {
       return (
-          <MobileAssetView {...this.props} asset={asset} />
+        <MobileAssetView
+          {...this.props}
+          asset={asset}
+          data_override={() => {
+            const { cpu, display_color, storage, memory_gb } = asset;
+            return { cpu, display_color, storage, memory_gb };
+          }}
+        />
       );
     } else {
       this.addErrorToast("ERROR: No data found for selected asset");
       this.setState({
         asset: null,
-        showAsset: false
+        showAsset: false,
       });
-      return
+      return;
     }
   }
 
@@ -152,7 +159,7 @@ export class BarcodeScanner extends React.PureComponent<
     return (
       <div className={Classes.DARK}>
         {this.state.showAsset && this.state.asset ? (
-            this.renderAssetView(this.state.asset)
+          this.renderAssetView(this.state.asset)
         ) : (
           <>
             <this.WebcamCapture />
