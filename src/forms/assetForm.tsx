@@ -503,6 +503,9 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     });
   };
   getValidAssets = (currSite: DatacenterObject) => {
+    if (!currSite){
+      return
+    }
     this.gettingAssetsInProgress = true;
 
     let body = {};
@@ -1562,6 +1565,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     ];
   }
   private getAvailableChassisAssets() {
+    console.log("Getting chassis assets")
     return this.state.assets.filter(
       (asset: AssetObject) =>
         asset.model && asset.model.model_type === MountTypes.BLADE_CHASSIS
