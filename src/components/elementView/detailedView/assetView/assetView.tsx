@@ -435,16 +435,17 @@ export class AssetView extends React.PureComponent<
         <div className="propsview">
           <h3>Network Connections</h3>
           <div className="network-connections">
-            <table className="bp3-html-table bp3-html-table-bordered bp3-html-table-striped">
+
+              {this.state.asset.model &&
+              this.state.asset.model.network_ports &&
+              this.state.asset.model.network_ports.length !== 0 ? (
+                              <table className="bp3-html-table bp3-html-table-bordered bp3-html-table-striped">
               <tr>
                 <th>Network Port</th>
                 <th>Mac Address</th>
                 <th>Destination Asset</th>
                 <th>Destination Port</th>
               </tr>
-              {this.state.asset.model &&
-              this.state.asset.model.network_ports &&
-              this.state.asset.model.network_ports.length !== 0 ? (
                 <tbody>
                   {this.state.asset.model.network_ports.map((port: string) => {
                     var connection = this.getNetworkConnectionForPort(port);
@@ -494,8 +495,9 @@ export class AssetView extends React.PureComponent<
                     );
                   })}
                 </tbody>
+                                            </table>
               ) : null}
-            </table>
+
             <NetworkGraph
               networkGraph={this.state.asset.network_graph}
               onClickNode={this.redirectToAsset}
