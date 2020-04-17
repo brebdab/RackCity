@@ -291,7 +291,9 @@ export class MobileAssetView extends React.PureComponent<
             </div>
           ) : null}
         </Callout>
-        {this.renderPower()}
+        <Callout title={"Power Connections"}>
+          {this.renderPower()}
+        </Callout>
       </div>
     );
   }
