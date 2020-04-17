@@ -123,6 +123,31 @@ class ChassisSerializer(serializers.ModelSerializer):
         return get_blades_in_chassis(asset)
 
 
+class ChassisCPSerializer(serializers.ModelSerializer):
+    """
+    Serializers the information we want for a chassis that a blade is in (only used for serializing info to be sent)
+    """
+
+    rack = RackSerializer()
+    model = ITModelSerializer()
+    blades = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Asset
+        fields = (
+            "id",
+            "hostname",
+            "model",
+            "rack",
+            "rack_position",
+            "display_color",
+            "blades",
+        )
+
+    def get_blades(self, asset):
+        return get_blades_in_chassis_cp(asset)
+
+
 class BladeSerializer(serializers.ModelSerializer):
 
     model = ITModelSerializer()

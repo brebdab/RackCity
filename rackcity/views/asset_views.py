@@ -33,7 +33,6 @@ from rackcity.utils.asset_utils import (
     save_power_connections,
     save_all_field_data_live,
     save_all_field_data_cp,
-    copy_asset_to_new_asset_cp,
     add_chassis_to_cp,
 )
 from rackcity.utils.change_planner_utils import (
@@ -42,7 +41,6 @@ from rackcity.utils.change_planner_utils import (
     get_page_count_response_for_cp,
     get_cp_already_executed_response,
 )
-from rackcity.utils.asset_changes_utils import get_changes_on_asset
 from rackcity.utils.errors_utils import (
     Status,
     GenericFailure,
