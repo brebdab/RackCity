@@ -80,6 +80,8 @@ import { PowerView } from "./powerView/powerView";
 import "./powerView/powerView.scss";
 import { isNullOrUndefined } from "util";
 import { PermissionState } from "../../utils/permissionUtils";
+import axios from "axios";
+import { API_ROOT } from "../../utils/api-config";
 
 interface ElementTableState {
   items: Array<ElementObjectType>;
@@ -100,6 +102,7 @@ interface ElementTableState {
   selected: Array<string>;
   selectedAll: boolean;
   editUserFormOpen: boolean;
+  username?: string;
 }
 
 interface ElementTableProps {
@@ -165,6 +168,7 @@ class ElementTable extends React.Component<
     selected: [],
     selectedAll: false,
     editUserFormOpen: false,
+    username: undefined,
   };
   validRequestMadeWithToken = false;
 
@@ -555,6 +559,7 @@ class ElementTable extends React.Component<
     } else {
       this.updateTableData();
     }
+    this.getUsername(this.props.token);
   }
 
   updateTableData = () => {
@@ -940,6 +945,21 @@ class ElementTable extends React.Component<
     });
   };
 
+  // PERMISSIONS
+  getUsername(token: string) {
+    const headers = {
+      headers: {
+        Authorization: "Token " + token,
+      },
+    };
+    axios
+      .get(API_ROOT + "api/users/who-am-i", headers)
+      .then((res) => {
+        this.setState({ username: res.data.username });
+      })
+      .catch((err) => {});
+  }
+
   renderPermissionsButton = (item: UserInfoObject) => {
     return (
       <AnchorButton
@@ -954,6 +974,7 @@ class ElementTable extends React.Component<
             isEditFormOpen: false,
           });
         }}
+        disabled={item.username === this.state.username}
       />
     );
   };
@@ -1403,6 +1424,9 @@ class ElementTable extends React.Component<
                                   disabled={
                                     (this.props.changePlan &&
                                       this.props.type !== ElementType.ASSET) ||
+                                    (this.props.type === ElementType.USER &&
+                                      isUserObject(item) &&
+                                      item.username === this.state.username) ||
                                     (this.props.type ===
                                       ElementType.CHANGEPLANS &&
                                       isChangePlanObject(item) &&
