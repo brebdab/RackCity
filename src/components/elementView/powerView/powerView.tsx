@@ -244,8 +244,8 @@ export class PowerView extends React.PureComponent<
               )}
             </div>
           ) : (
-            <div className="propsview">
-              <h3>Power Connections</h3>
+            <div className={this.props.isMobile ? "" : "propsview"}>
+              {this.props.isMobile ? null : <h3>Power Connections</h3>}
               <div className="network-connections">
                 <table className="bp3-html-table bp3-html-table-bordered bp3-html-table-striped">
                   <tr>

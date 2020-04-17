@@ -18,7 +18,6 @@ import {
 import NetworkGraph from "../elementView/detailedView/assetView/graph";
 import { BladePowerView } from "../elementView/powerView/bladePowerView";
 import PowerView from "../elementView/powerView/powerView";
-import "../elementView/detailedView/propertiesView.scss";
 
 interface MobileAssetViewProps {
   asset: AssetObject;
@@ -206,12 +205,12 @@ export class MobileAssetView extends React.PureComponent<
     console.log(this.props.asset);
     return (
       <div className={Classes.DARK}>
-        <Callout title={"Asset Properties"} className={"propsview"}>
+        <Callout title={"Asset Properties"}>
           <table className="bp3-html-table">
             {this.renderData(Object.keys(AssetFieldsTable), this.props.asset)}
           </table>
         </Callout>
-        <Callout title={"Model Properties"} className={"propsview"}>
+        <Callout title={"Model Properties"}>
           <table className="bp3-html-table">
             {this.renderData(
               Object.keys(ModelFieldsTable),
@@ -219,7 +218,7 @@ export class MobileAssetView extends React.PureComponent<
             )}
           </table>
         </Callout>
-        <Callout title={"Network Connections"} className={"propsview"}>
+        <Callout title={"Network Connections"}>
           {this.props.asset.model &&
           this.props.asset.model.network_ports &&
           this.props.asset.model.network_ports.length !== 0 ? (
