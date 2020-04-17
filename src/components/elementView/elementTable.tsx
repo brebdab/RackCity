@@ -83,7 +83,6 @@ import { isNullOrUndefined } from "util";
 import { PermissionState } from "../../utils/permissionUtils";
 import axios from "axios";
 import { API_ROOT } from "../../utils/api-config";
-import User from "../userView/user";
 
 interface ElementTableState {
   items: Array<ElementObjectType>;
