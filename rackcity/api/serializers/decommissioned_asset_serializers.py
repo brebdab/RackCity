@@ -53,3 +53,6 @@ class AddDecommissionedAssetSerializer(serializers.ModelSerializer):
             "network_connections",
             "network_graph",
         )
+
+
+

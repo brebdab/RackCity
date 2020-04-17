@@ -15,6 +15,7 @@ from rackcity.utils.change_planner_utils import (
     get_modifications_in_cp,
     asset_cp_has_conflicts,
     get_cp_already_executed_response,
+    get_cp_modification_conflicts,
 )
 from rackcity.utils.errors_utils import (
     Status,
@@ -307,7 +308,11 @@ def change_plan_page_count(request):
     Return total number of pages according to page size, which must be
     specified as query parameter.
     """
-    return get_page_count_response(ChangePlan, request.query_params)
+    user = request.user
+    user_change_plans = ChangePlan.objects.filter(owner=user)
+    return get_page_count_response(
+        ChangePlan, request.query_params, premade_object_query=user_change_plans
+    )
 
 
 @api_view(["POST"])
@@ -385,7 +390,7 @@ def change_plan_execute(request, id):
 
     assets_cp = AssetCP.objects.filter(change_plan=change_plan)
     for asset_cp in assets_cp:
-        if asset_cp_has_conflicts(asset_cp):
+        if get_cp_modification_conflicts(asset_cp):
             return JsonResponse(
                 {
                     "failure_message": Status.ERROR.value
@@ -411,13 +416,20 @@ def change_plan_execute(request, id):
             log_action(
                 request.user, updated_asset, Action.CREATE, change_plan=change_plan,
             )
-        else:
+        elif not asset_cp.is_decommissioned:
             num_modified += 1
             log_action(
                 request.user, updated_asset, Action.MODIFY, change_plan=change_plan,
             )
         update_network_ports(updated_asset, asset_cp, change_plan)
         update_power_ports(updated_asset, asset_cp, change_plan)
+    for asset_cp in assets_cp:
+        if asset_cp.model.is_blade_chassis():
+            blades_cp = assets_cp.filter(chassis=asset_cp)
+            for blade_cp in blades_cp:
+                updated_asset = updated_asset_mappings[blade_cp]
+                updated_asset.chassis = updated_asset_mappings[asset_cp]
+                updated_asset.save()
 
     for asset_cp in assets_cp:
         # Decommission only after all changes have been made to all CP assets

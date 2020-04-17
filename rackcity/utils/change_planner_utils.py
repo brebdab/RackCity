@@ -9,7 +9,9 @@ import math
 from rackcity.api.serializers import (
     RecursiveAssetSerializer,
     RecursiveAssetCPSerializer,
+    GetDecommissionedAssetSerializer,
 )
+from rackcity.api.serializers.asset_serializers import GetDecommissionedAssetCPSerializer
 from rackcity.models import (
     Asset,
     AssetCP,
@@ -70,11 +72,12 @@ def detect_conflicts_cp(sender, **kwargs):
 
     # asset hostname conflicts with hostnames on an active assetCP
     asset.hostname_conflict.clear()
-    AssetCP.objects.filter(
-        Q(hostname=asset.hostname)
-        & ~Q(related_asset=asset.id)
-        & Q(change_plan__execution_time=None)
-    ).update(asset_conflict_hostname=asset)
+    if asset.hostname:
+        AssetCP.objects.filter(
+            Q(hostname=asset.hostname)
+            & ~Q(related_asset=asset.id)
+            & Q(change_plan__execution_time=None)
+        ).update(asset_conflict_hostname=asset)
 
     # asset rack location conflicts with an active assetCP
     asset.location_conflict.clear()
@@ -85,15 +88,14 @@ def detect_conflicts_cp(sender, **kwargs):
             & Q(change_plan__execution_time=None)
         ):
             try:
-                # TODO: add check for blades
                 validate_asset_location_in_rack(
                     asset.rack_id,
                     asset_cp.rack_position,
                     asset_cp.model.height,
                     asset_id=asset_cp.id,
+                    related_asset_id=asset_cp.related_asset_id,
                 )
-            except LocationException:
-                asset_cp.asset_conflict_location = asset
+            except LocationException as e:
                 AssetCP.objects.filter(id=asset_cp.id).update(
                     asset_conflict_location=asset
                 )
@@ -106,7 +108,10 @@ def detect_conflicts_cp(sender, **kwargs):
             try:
                 # TODO: add check for blades
                 validate_asset_location_in_chassis(
-                    asset.chassis_id, asset_cp.chassis_slot, asset_id=asset_cp.id,
+                    asset.chassis_id,
+                    asset_cp.chassis_slot,
+                    asset_id=asset_cp.id,
+                    related_asset_id=asset_cp.related_asset_id,
                 )
             except LocationException:
                 asset_cp.asset_conflict_location = asset
@@ -147,19 +152,26 @@ def get_change_plan(change_plan_id):
 
 def get_racked_assets_for_cp(change_plan):
     racked_assets = Asset.objects.filter(offline_storage_site__isnull=True)
-    racked_assets_cp = AssetCP.objects.filter(change_plan=change_plan, offline_storage_site__isnull=True)
+    racked_assets_cp = AssetCP.objects.filter(
+        change_plan=change_plan, offline_storage_site__isnull=True
+    )
     for asset_cp in racked_assets_cp:
         if asset_cp.related_asset and (asset_cp.related_asset in racked_assets):
             racked_assets = racked_assets.filter(~Q(id=asset_cp.related_asset.id))
+    ## don't return decommissioned asset_cps:
+    racked_assets_cp = racked_assets_cp.filter(is_decommissioned=False)
     return racked_assets, racked_assets_cp
 
 
 def get_offline_storage_assets_for_cp(change_plan):
     stored_assets = Asset.objects.filter(offline_storage_site__isnull=False)
-    stored_assets_cp = AssetCP.objects.filter(change_plan=change_plan, offline_storage_site__isnull=False)
+    stored_assets_cp = AssetCP.objects.filter(
+        change_plan=change_plan, offline_storage_site__isnull=False,
+    )
     for asset_cp in stored_assets_cp:
         if asset_cp.related_asset and (asset_cp.related_asset in stored_assets):
             stored_assets = stored_assets.filter(~Q(id=asset_cp.related_asset.id))
+    stored_assets_cp = stored_assets_cp.filter(is_decommissioned=False)
     return stored_assets, stored_assets_cp
 
 
@@ -216,7 +228,9 @@ def get_page_of_serialized_assets(all_assets, query_params):
         return all_assets[start:end]
 
 
-def get_many_assets_response_for_cp(request, change_plan, decommissioned=False, stored=False):
+def get_many_assets_response_for_cp(
+    request, change_plan, decommissioned=False, stored=False
+):
     should_paginate = should_paginate_query(request.query_params)
     if should_paginate:
         page_failure_response = get_invalid_paginated_request_response(
@@ -230,9 +244,12 @@ def get_many_assets_response_for_cp(request, change_plan, decommissioned=False, 
     )
     if filter_failure_response:
         return filter_failure_response
-
-    asset_serializer = RecursiveAssetSerializer(assets, many=True,)
-    asset_cp_serializer = RecursiveAssetCPSerializer(assets_cp, many=True,)
+    if decommissioned:
+        asset_serializer = GetDecommissionedAssetSerializer(assets, many=True,)
+        asset_cp_serializer = GetDecommissionedAssetCPSerializer(assets_cp, many=True, )
+    else:
+        asset_serializer = RecursiveAssetSerializer(assets, many=True,)
+        asset_cp_serializer = RecursiveAssetCPSerializer(assets_cp, many=True,)
     all_assets = asset_serializer.data + asset_cp_serializer.data
 
     sorted_assets = sort_serialized_assets(all_assets, request.data)
@@ -257,7 +274,9 @@ def get_many_assets_response_for_cp(request, change_plan, decommissioned=False, 
     return JsonResponse({"assets": assets_data}, status=HTTPStatus.OK,)
 
 
-def get_page_count_response_for_cp(request, change_plan, decommissioned=False, stored=False):
+def get_page_count_response_for_cp(
+    request, change_plan, decommissioned=False, stored=False
+):
     if (
         not request.query_params.get("page_size")
         or int(request.query_params.get("page_size")) <= 0
@@ -341,7 +360,12 @@ def get_changes_on_asset(asset, asset_cp):
     fields = [field.name for field in Asset._meta.fields]
     changes = []
     for field in fields:
-        if getattr(asset, field) != getattr(asset_cp, field):
+        if field == "chassis":
+            chassis_live = asset.chassis
+            chassis_cp = asset_cp.chassis
+            if chassis_live and (chassis_live != chassis_cp.related_asset):
+                changes.append("chassis")
+        elif getattr(asset, field) != getattr(asset_cp, field):
             changes.append(field)
     if network_connections_have_changed(asset, asset_cp):
         changes.append("network_connections")
@@ -362,12 +386,22 @@ def get_cp_modification_conflicts(asset_cp):
     )
     conflicting_asset_message_2 = " now conflicts with a live asset. "
     if asset_cp.is_conflict and asset_cp.related_asset is None:
-        conflicts.append(
-            {
-                "conflict_message": "This asset has been deleted live. "
-                + nonresolvable_message
-            }
-        )
+        if asset_cp.related_decommissioned_asset:
+            conflicts.append(
+                {
+                    "conflict_message": "This asset has been decommissioned in a live change. "
+                    + nonresolvable_message,
+                    "conflicting_asset": None,
+                    "conflict_resolvable": False,
+                }
+            )
+        else:
+            conflicts.append(
+                {
+                    "conflict_message": "This asset has been deleted live. "
+                    + nonresolvable_message
+                }
+            )
     if asset_cp.asset_conflict_hostname:
         conflicts.append(
             {
@@ -412,20 +446,11 @@ def get_cp_modification_conflicts(asset_cp):
                 "conflict_resolvable": False,
             }
         )
-    if asset_cp.rack is None:
+    if asset_cp.model.is_rackmount() and (asset_cp.rack is None):
         conflicts.append(
             {
                 "conflict_message": "The rack"
                 + deleted_relation_message
-                + nonresolvable_message,
-                "conflicting_asset": None,
-                "conflict_resolvable": False,
-            }
-        )
-    if asset_cp.related_decommissioned_asset:
-        conflicts.append(
-            {
-                "conflict_message": "This asset has been decommissioned in a live change. "
                 + nonresolvable_message,
                 "conflicting_asset": None,
                 "conflict_resolvable": False,
@@ -450,36 +475,62 @@ def get_cp_modification_conflicts(asset_cp):
 
 
 def get_location_detail(asset):
-    return (
-        " at rack "
-        + asset.rack.datacenter.abbreviation
-        + " "
-        + asset.rack.row_letter
-        + str(asset.rack.rack_num)
-        + ", position "
-        + str(asset.rack_position)
-    )
+    if asset.is_in_offline_storage():
+        return " in offline storage site " + asset.offline_storage_site.abbreviation
+    if asset.model.is_rackmount() and asset.rack:
+        return (
+            " at "
+            + asset.rack.datacenter.abbreviation
+            + ", "
+            + asset.rack.row_letter
+            + str(asset.rack.rack_num)
+            + ", "
+            + str(asset.rack_position)
+        )
+    if asset.model.is_blade_asset() and asset.chassis:
+        chassis_name = ""
+        if asset.chassis.hostname:
+            chassis_name += " " + asset.chassis.hostname
+        elif asset.chassis.asset_number:
+            chassis_name += " " + str(asset.chassis.asset_number)
+        chassis_detail = (
+            " in chassis" + chassis_name + ", slot " + str(asset.chassis_slot)
+        )
+        if asset.chassis.rack:
+            chassis_detail += (
+                " at "
+                + asset.chassis.rack.datacenter.abbreviation
+                + ", "
+                + asset.chassis.rack.row_letter
+                + str(asset.chassis.rack.rack_num)
+                + ", "
+                + str(asset.chassis.rack_position)
+            )
+        return chassis_detail
+    return ""
 
 
 def get_modifications_in_cp(change_plan):
     assets_cp = AssetCP.objects.filter(change_plan=change_plan)
     modifications = []
     for asset_cp in assets_cp:
-        asset_cp_data = RecursiveAssetCPSerializer(asset_cp).data
         related_asset = asset_cp.related_asset
         if related_asset:
-            asset_data = RecursiveAssetSerializer(related_asset).data
             changes = get_changes_on_asset(related_asset, asset_cp)
+            if changes is None and not asset_cp.is_decommissioned:
+                continue
+            asset_data = RecursiveAssetSerializer(related_asset).data
         else:
             asset_data = None
             changes = None
+        asset_cp_data = RecursiveAssetCPSerializer(asset_cp).data
         if asset_cp.is_decommissioned:
             modification_type = ModificationType.DECOMMISSION
             title = "Decommission asset"
             if asset_cp.asset_number:
                 title += " " + str(asset_cp.asset_number)
-            if asset_cp.rack:
-                title += get_location_detail(asset_cp)
+            title += get_location_detail(asset_cp)
+
         elif related_asset or (asset_cp.is_conflict and related_asset is None):
             modification_type = ModificationType.MODIFY
             if related_asset:
