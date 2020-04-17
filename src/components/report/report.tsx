@@ -92,56 +92,95 @@ export class Report extends React.PureComponent<
     allocation_percent: "Allocation %",
   };
 
-  showReport = (field: string) => {
+  private handleDatacenterSelect(datacenter: DatacenterObject) {
+    this.setState({
+      datacenter: datacenter,
+    });
+    if (!this.state.datacenter) {
+      this.setState({
+        datacenterSelectionAlert: true,
+      });
+    } else {
+      this.setState({
+        datacenter_loaded: true,
+      });
+      getDatacenterReport(this.props.token, this.state.datacenter).then(
+        (result) => {
+          if (
+            result.free_rackspace_percent === null ||
+            result.free_rackspace_percent === undefined
+          ) {
+            this.setState({
+              state_loaded: true,
+              no_data: true,
+            });
+          } else {
+            this.setState({
+              freeRack: result.free_rackspace_percent,
+              model_allocation: result.model_allocation,
+              owner_allocation: result.owner_allocation,
+              vendor_allocation: result.vendor_allocation,
+              state_loaded: true,
+            });
+          }
+        }
+      );
+    }
+  }
+
+  showReport = () => {
     return (
       <div>
         {this.state.state_loaded ? (
           this.state.no_data ? (
-            <Card elevation={Elevation.TWO}>
+            <Card className="report-card" elevation={Elevation.ZERO}>
               <h2 className={"report-title"}>No data available</h2>
             </Card>
           ) : (
-            <Card elevation={Elevation.TWO}>
-              <h2 className={"report-title"}>{field} Datacenter Report</h2>
-              <h4 className={"report-summary"}>
+            <div>
+              <h2 className={"report-summary"}>
                 Percent of unused rack space:{" "}
-                {(this.state.freeRack * 100).toFixed(2)}%
-              </h4>
-              <h4 className={"report-summary"}>
+              </h2>
+              <Card className="report-card" elevation={Elevation.ZERO}>
+                <p>{(this.state.freeRack * 100).toFixed(2)}%</p>
+              </Card>
+              <h2 className={"report-summary"}>
                 Allocation of used rack space:
-              </h4>
-              <div className={"row"}>
-                <div className={"column-third-report"}>
-                  <h5>Used rack space by vendor:</h5>
+              </h2>
+              <Card className="report-card" elevation={Elevation.ZERO}>
+                <div className={"row"}>
+                  <div className={"column-third-report"}>
+                    <h3>Used rack space by vendor:</h3>
+                  </div>
+                  <div className={"column-third-right-report"}>
+                    <h3>Used rack space by model:</h3>
+                  </div>
+                  <div className={"column-third-right-report"}>
+                    <h3>Used rack space by owner:</h3>
+                  </div>
                 </div>
-                <div className={"column-third-right-report"}>
-                  <h5>Used rack space by model:</h5>
+                <div className={"row"}>
+                  <div className={"column-third-report"}>
+                    <Tabular
+                      data={this.state.vendor_allocation}
+                      fields={this.vendorFields}
+                    />
+                  </div>
+                  <div className={"column-third-right-report"}>
+                    <Tabular
+                      data={this.state.model_allocation}
+                      fields={this.modelFields}
+                    />
+                  </div>
+                  <div className={"column-third-right-report"}>
+                    <Tabular
+                      data={this.state.owner_allocation}
+                      fields={this.ownerFields}
+                    />
+                  </div>
                 </div>
-                <div className={"column-third-right-report"}>
-                  <h5>Used rack space by owner:</h5>
-                </div>
-              </div>
-              <div className={"row"}>
-                <div className={"column-third-report"}>
-                  <Tabular
-                    data={this.state.vendor_allocation}
-                    fields={this.vendorFields}
-                  />
-                </div>
-                <div className={"column-third-right-report"}>
-                  <Tabular
-                    data={this.state.model_allocation}
-                    fields={this.modelFields}
-                  />
-                </div>
-                <div className={"column-third-right-report"}>
-                  <Tabular
-                    data={this.state.owner_allocation}
-                    fields={this.ownerFields}
-                  />
-                </div>
-              </div>
-            </Card>
+              </Card>
+            </div>
           )
         ) : (
           <Spinner />
@@ -153,83 +192,37 @@ export class Report extends React.PureComponent<
   showDatacenterReport = () => {
     return (
       <div>
-        <Card elevation={Elevation.TWO} className={"row"}>
-          {this.state.datacenters ? (
-            <FormGroup label="" inline={true}>
-              <DatacenterSelect
-                popoverProps={{
-                  minimal: true,
-                  popoverClassName: "dropdown",
-                  usePortal: true,
-                }}
-                items={this.state.datacenters!}
-                onItemSelect={(datacenter: DatacenterObject) => {
-                  this.onDatacenterSelect(datacenter);
-                }}
-                itemRenderer={renderDatacenterItem}
-                itemPredicate={filterDatacenter}
-                noResults={<MenuItem disabled={true} text="No results." />}
-              >
-                <Button
-                  rightIcon="caret-down"
-                  text={
-                    this.state.datacenter && this.state.datacenter.name
-                      ? this.state.datacenter.name
-                      : "Select datacenter"
-                  }
-                />
-              </DatacenterSelect>
-            </FormGroup>
-          ) : null}
-          <AnchorButton
-            small
-            text={"View Datacenter Report"}
-            onClick={() => {
-              if (!this.state.datacenter) {
-                this.setState({
-                  datacenterSelectionAlert: true,
-                });
-              } else {
-                this.setState({
-                  datacenter_loaded: true,
-                });
-                getDatacenterReport(
-                  this.props.token,
-                  this.state.datacenter
-                ).then((result) => {
-                  if (
-                    result.free_rackspace_percent === null ||
-                    result.free_rackspace_percent === undefined
-                  ) {
-                    this.setState({
-                      state_loaded: true,
-                      no_data: true,
-                    });
-                  } else {
-                    this.setState({
-                      freeRack: result.free_rackspace_percent,
-                      model_allocation: result.model_allocation,
-                      owner_allocation: result.owner_allocation,
-                      vendor_allocation: result.vendor_allocation,
-                      state_loaded: true,
-                    });
-                  }
-                });
-              }
-            }}
-          />
-        </Card>
-        {this.state.datacenter_loaded
-          ? this.showReport(this.state.datacenter!.name)
-          : null}
+        <h2>Select a datacenter</h2>
+        {this.state.datacenters ? (
+          <FormGroup label="" inline={true}>
+            <DatacenterSelect
+              popoverProps={{
+                minimal: true,
+                popoverClassName: "dropdown",
+                usePortal: true,
+              }}
+              items={this.state.datacenters!}
+              onItemSelect={(datacenter: DatacenterObject) => {
+                this.handleDatacenterSelect(datacenter);
+              }}
+              itemRenderer={renderDatacenterItem}
+              itemPredicate={filterDatacenter}
+              noResults={<MenuItem disabled={true} text="No results." />}
+            >
+              <Button
+                rightIcon="caret-down"
+                text={
+                  this.state.datacenter && this.state.datacenter.name
+                    ? this.state.datacenter.name
+                    : "Select datacenter"
+                }
+              />
+            </DatacenterSelect>
+          </FormGroup>
+        ) : null}
+        {this.state.datacenter_loaded ? this.showReport() : null}
       </div>
     );
-  };
-
-  onDatacenterSelect = (datacenter: DatacenterObject) => {
-    this.setState({
-      datacenter: datacenter,
-    });
   };
 
   componentDidMount() {
@@ -258,7 +251,8 @@ export class Report extends React.PureComponent<
 
   render() {
     return (
-      <div className={Classes.DARK + " report-all"}>
+      <div className={Classes.DARK + " report-all report-view"}>
+        <h1>Rack Usage Report</h1>
         <Tabs
           className={"report-all"}
           id="ReportTabs"
@@ -304,13 +298,13 @@ export class Report extends React.PureComponent<
           }}
         >
           <Tab
-            className={"report-all"}
+            className={"report-all report-tab"}
             id="global"
             title="Global Report"
-            panel={this.showReport("Global")}
+            panel={this.showReport()}
           />
           <Tab
-            className={"report-all"}
+            className={"report-all report-tab"}
             id="datacenter"
             title="Datacenter Report"
             panel={this.showDatacenterReport()}
