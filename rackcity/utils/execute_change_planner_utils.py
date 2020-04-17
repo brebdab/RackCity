@@ -19,7 +19,7 @@ from rackcity.utils.errors_utils import (
 )
 
 
-def get_updated_asset(asset_cp):
+def get_updated_asset(asset_cp,chassis_live=None):
     created = False
     related_asset = asset_cp.related_asset
     if related_asset:
@@ -28,8 +28,15 @@ def get_updated_asset(asset_cp):
         updated_asset = Asset()
         created = True
     for field in Asset._meta.fields:
-        if field.name != "id" and field.name != "assetid_ptr":
+        if (
+            field.name != "id"
+            and field.name != "assetid_ptr" and field.name !="chassis"
+        ):
             setattr(updated_asset, field.name, getattr(asset_cp, field.name))
+    if chassis_live:
+        updated_asset.chassis = chassis_live
+    else:
+        updated_asset.chassis = asset_cp.chassis
     # Assigns asset number, creates network & power ports on save
     updated_asset.save()
     if not related_asset:

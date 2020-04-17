@@ -33,12 +33,15 @@ from rackcity.utils.asset_utils import (
     save_power_connections,
     save_all_field_data_live,
     save_all_field_data_cp,
+    copy_asset_to_new_asset_cp,
+    add_chassis_to_cp,
 )
 from rackcity.utils.change_planner_utils import (
     get_change_plan,
     get_many_assets_response_for_cp,
     get_page_count_response_for_cp,
     get_cp_already_executed_response,
+    get_changes_on_asset,
 )
 from rackcity.utils.errors_utils import (
     Status,
@@ -85,6 +88,9 @@ import re
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import JSONParser
+from PIL import Image
+import numpy
+from pyzbar.pyzbar import decode
 
 
 @api_view(["POST"])
@@ -157,8 +163,14 @@ def asset_detail(request, id):
             )
             # if id of live asset is given on a change plan, just return the corresponding related assetCP
             if assets_cp.filter(related_asset=id).exists():
+                related_asset = Asset.objects.get(id=id)
                 asset = assets_cp.get(related_asset=id)
-                serializer = RecursiveAssetCPSerializer(asset)
+                changes = get_changes_on_asset(related_asset, asset)
+                if len(changes) == 0 and not asset.is_decommissioned:
+                    asset = related_asset
+                    serializer = RecursiveAssetSerializer(asset)
+                else:
+                    serializer = RecursiveAssetCPSerializer(asset)
             elif assets_cp.filter(id=id).exists():
                 asset = assets_cp.get(id=id)
                 serializer = RecursiveAssetCPSerializer(asset)
@@ -208,11 +220,18 @@ def asset_add(request):
     )
     if failure_response:
         return failure_response
+    chassis_id_live = None
     if change_plan:
         failure_response = get_cp_already_executed_response(change_plan)
         if failure_response:
             return failure_response
         data["change_plan"] = change_plan.id
+
+        if data["chassis"] and not AssetCP.objects.filter(id=data["chassis"]).exists():
+            # ignore the chassis because we will replace it with a new chassis on AssetCP later
+            chassis_id_live = data["chassis"]
+            del data["chassis"]
+
         serializer = AssetCPSerializer(data=data)
     else:
         serializer = AssetSerializer(data=data)
@@ -271,8 +290,13 @@ def asset_add(request):
                 )
         else:
             if (
-                "chassis" not in serializer.validated_data
-                or not serializer.validated_data["chassis"]
+                (
+                    (
+                        "chassis" not in serializer.validated_data
+                        or not serializer.validated_data["chassis"]
+                    )
+                    and not chassis_id_live
+                )
                 or "chassis_slot" not in serializer.validated_data
                 or not serializer.validated_data["chassis_slot"]
             ):
@@ -283,7 +307,27 @@ def asset_add(request):
                     },
                     status=HTTPStatus.BAD_REQUEST,
                 )
-            chassis_id = serializer.validated_data["chassis"].id
+
+            if chassis_id_live:
+                try:
+                    chassis_live = Asset.objects.get(id=chassis_id_live)
+                except ObjectDoesNotExist:
+                    return JsonResponse(
+                        {
+                            "failure_message": Status.MODIFY_ERROR.value
+                            + "Chassis"
+                            + GenericFailure.DOES_NOT_EXIST.value,
+                            "errors": "No existing chassis with id="
+                            + str(chassis_id_live),
+                        },
+                        status=HTTPStatus.BAD_REQUEST,
+                    )
+                chassis_cp = add_chassis_to_cp(chassis_live, change_plan)
+                chassis_id = chassis_cp.id
+                serializer.validated_data["chassis"] = chassis_cp
+
+            else:
+                chassis_id = serializer.validated_data["chassis"].id
             chassis_slot = serializer.validated_data["chassis_slot"]
             try:
                 validate_asset_location_in_chassis(
@@ -305,6 +349,7 @@ def asset_add(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
+
     warning_message = save_all_connection_data(
         data, asset, request.user, change_plan=change_plan
     )
@@ -1026,9 +1071,49 @@ def get_asset_from_barcode(request):
     corresponding live asset with that number, if it exists
     """
     data = JSONParser().parse(request)
-    if "img_string" in data:
-        return JsonResponse({"img_string": data.img_string}, status=HTTPStatus.OK)
-    else:
+    if "img_string" not in data:
         return JsonResponse(
-            {"failure_message": "failed"}, status=HTTPStatus.BAD_REQUEST
+            {
+                "failure_message": "ERROR: Request must contain base64-encoded image string"
+            },
+            status=HTTPStatus.BAD_REQUEST,
         )
+    img = b64decode(data["img_string"])
+    img_file = BytesIO(img)
+    image = Image.open(img_file).convert("RGB")
+    opencv_img = numpy.array(image)
+    opencv_img = opencv_img[:, :, ::-1].copy()
+    barcodes = decode(opencv_img)
+    if len(barcodes) < 1:
+        return JsonResponse(
+            {"warning_message": "WARNING: No barcode detected"},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    barcode_data = ""
+    try:
+        for barcode in barcodes:
+            barcode_data = barcode.data.decode("utf-8")
+    except Exception as error:
+        return JsonResponse(
+            {"failure_message": "ERROR: Could not decode barcode value"},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    if not barcode_data.isdigit():
+        return JsonResponse(
+            {"failure_message": "ERROR: Barcode contains non-numeric characters"},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    try:
+        asset = Asset.objects.get(asset_number=barcode_data)
+    except Asset.DoesNotExist:
+        return JsonResponse(
+            {
+                "failure_message": "There is no existing asset associated with this barcode"
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    serializer = RecursiveAssetSerializer(asset)
+    return JsonResponse(
+        {"barcode_data": barcode_data, "asset_data": serializer.data},
+        status=HTTPStatus.OK,
+    )

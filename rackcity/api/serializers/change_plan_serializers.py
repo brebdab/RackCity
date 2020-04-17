@@ -9,6 +9,8 @@ class AddChangePlanSerializer(serializers.ModelSerializer):
 
 
 class GetChangePlanSerializer(serializers.ModelSerializer):
+    execution_time = serializers.DateTimeField(format="%m/%d/%Y %I:%M:%S %p")
+
     class Meta:
         model = ChangePlan
         fields = ("name", "execution_time", "id")

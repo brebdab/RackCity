@@ -177,7 +177,6 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
             "rack_position",
             "chassis",
             "chassis_slot",
-            "datacenter",
             "offline_storage_site",
             "owner",
             "comment",
@@ -278,7 +277,7 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
 
     model = ITModelSerializer()
     rack = RackSerializer()
-    chassis = AssetSerializer()
+    chassis = ChassisSerializer()
     offline_storage_site = SiteSerializer()
     asset_conflict_hostname = AssetSerializer()
     asset_conflict_location = AssetSerializer()
@@ -304,7 +303,6 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
             "rack_position",
             "chassis",
             "chassis_slot",
-            "datacenter",
             "offline_storage_site",
             "owner",
             "comment",
@@ -343,6 +341,62 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
 
     def get_datacenter(self, assetCP):
         return get_datacenter_of_asset(assetCP)
+
+
+class GetDecommissionedAssetCPSerializer(serializers.ModelSerializer):
+    decommissioning_user = serializers.SerializerMethodField()
+    datacenter = serializers.SerializerMethodField()
+    time_decommissioned = serializers.SerializerMethodField()
+    model = ITModelSerializer()
+    rack = RackSerializer()
+    chassis = ChassisSerializer()
+    offline_storage_site = SiteSerializer()
+    change_plan = GetChangePlanSerializer()
+    power_connections = serializers.SerializerMethodField()
+    network_connections = serializers.SerializerMethodField()
+    network_graph = serializers.SerializerMethodField()
+    datacenter = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AssetCP
+        fields = (
+            "id",
+            "decommissioning_user",
+            "time_decommissioned",
+            "asset_number",
+            "hostname",
+            "model",
+            "rack",
+            "rack_position",
+            "chassis",
+            "chassis_slot",
+            "datacenter",
+            "change_plan",
+            "offline_storage_site",
+            "owner",
+            "comment",
+            "power_connections",
+            "network_connections",
+            "network_graph",
+        )
+
+    def get_datacenter(self, assetCP):
+        return get_datacenter_of_asset(assetCP)
+
+    def get_network_graph(self, assetCP):
+        return generate_network_graph(assetCP)
+
+    def get_decommissioning_user(self, assetCP):
+        return assetCP.change_plan.owner.username
+
+    def get_time_decommissioned(self, assetCP):
+        return "N/A"
+
+    def get_power_connections(self, assetCP):
+        return serialize_power_connections(PowerPortCP, assetCP)
+
+    def get_network_connections(self, assetCP):
+        return serialize_network_connections(NetworkPortCP, assetCP)
 
 
 def normalize_bulk_asset_data(bulk_asset_data):

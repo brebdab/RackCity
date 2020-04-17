@@ -1,15 +1,20 @@
-import { Classes } from "@blueprintjs/core";
+import { AnchorButton, Classes } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
-import { connect } from "react-redux";
+import { connect, useSelector } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import Webcam from "react-webcam";
+import "./barcodeScanner.scss";
+import { API_ROOT } from "../../utils/api-config";
+import { getHeaders } from "../../utils/utils";
+import axios from "axios";
 
 interface BarcodeScannerState {
-  result: string;
-  image: any;
   cameraHeight: number;
   cameraWidth: number;
+}
+interface RootState {
+  token: string;
 }
 interface BarcodeScannerProps {
   token: string;
@@ -21,20 +26,10 @@ export class BarcodeScanner extends React.PureComponent<
   BarcodeScannerState
 > {
   public state = {
-    result: "",
-    image: undefined,
     cameraHeight: 0,
     cameraWidth: 0,
   };
 
-  handleScan(data: string) {
-    this.setState({
-      result: data,
-    });
-  }
-  handleError(err: any) {
-    console.error(err);
-  }
   constraints = {
     height: 720,
     width: 1280,
@@ -43,12 +38,27 @@ export class BarcodeScanner extends React.PureComponent<
   WebcamCapture = () => {
     let webcamRef: any;
     webcamRef = React.useRef(null);
-    const capture = React.useCallback(() => {
+    let capture: Function;
+    const token = useSelector((state: RootState) => {
+      return state.token;
+    });
+    capture = React.useCallback(() => {
       const imageSrc = webcamRef.current.getScreenshot();
-      this.setState({
-        image: imageSrc,
-      });
-    }, [webcamRef]);
+      let imgStr: string;
+      imgStr = imageSrc.substr(23);
+      axios
+        .post(
+          API_ROOT + "api/assets/asset-barcode",
+          { img_string: imgStr },
+          getHeaders(token)
+        )
+        .then((res: any) => {
+          alert(JSON.stringify(res));
+        })
+        .catch((err: any) => {
+          alert(JSON.stringify(err));
+        });
+    }, [webcamRef, token]);
     return (
       <div>
         <Webcam
@@ -59,7 +69,17 @@ export class BarcodeScanner extends React.PureComponent<
           videoConstraints={this.constraints}
           ref={webcamRef}
         />
-        <button onClick={capture}>Capture photo</button>
+        <AnchorButton
+          className={"scanner-button"}
+          intent={"primary"}
+          minimal
+          icon="camera"
+          onClick={() => {
+            capture();
+          }}
+        >
+          Capture photo
+        </AnchorButton>
       </div>
     );
   };
