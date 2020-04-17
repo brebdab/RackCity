@@ -157,11 +157,18 @@ def get_racked_assets_for_cp(change_plan):
     racked_assets_cp = AssetCP.objects.filter(
         change_plan=change_plan, offline_storage_site__isnull=True
     )
+    assets_to_hide = []
     for asset_cp in racked_assets_cp:
         if asset_cp.related_asset and (asset_cp.related_asset in racked_assets):
-            racked_assets = racked_assets.filter(~Q(id=asset_cp.related_asset.id))
+            changes = get_changes_on_asset(asset_cp.related_asset, asset_cp)
+            if len(changes) > 0 or asset_cp.is_decommissioned:
+                racked_assets = racked_assets.filter(~Q(id=asset_cp.related_asset.id))
+            else:
+                assets_to_hide.append(asset_cp)
+
     ## don't return decommissioned asset_cps:
     racked_assets_cp = racked_assets_cp.filter(is_decommissioned=False)
+    racked_assets_cp = racked_assets_cp.exclude(id__in=[asset_cp.id for asset_cp in assets_to_hide])
     return racked_assets, racked_assets_cp
 
 
