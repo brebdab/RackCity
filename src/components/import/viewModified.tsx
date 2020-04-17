@@ -92,8 +92,8 @@ export class Modifier extends React.PureComponent<
   };
 
   renderOneModification(obj: any, fields: any, model: any) {
-    return (
-      <div>
+    return ([
+      <div className = "single-modification">
         <table className={"bp3-html-table"}>
           <thead>
             <tr>
@@ -269,7 +269,8 @@ export class Modifier extends React.PureComponent<
             </tr>
           </tbody>
         </table>
-        <div className={"upload-button"}>
+
+      </div>     ,   <div className={"upload-button"}>
           <Checks
             {...this.props}
             linkedModel={obj.modified}
@@ -288,8 +289,7 @@ export class Modifier extends React.PureComponent<
               // this.state.modifiedModels[index].checked = !this.state.modifiedModels[index].checked
             }}
           />
-        </div>
-      </div>
+        </div>]
     );
   }
 
