@@ -133,7 +133,7 @@ export class MobileAssetView extends React.PureComponent<
     }
     const config = {
       headers: {
-        Authorization: "Token " + this.props.token,
+        Authorization: "Token " + this.state.token,
       },
 
       params: params,
@@ -208,7 +208,7 @@ export class MobileAssetView extends React.PureComponent<
     );
   }
   getDatacenters = () => {
-    const headers = getHeaders(this.props.token);
+    const headers = getHeaders(this.state.token);
 
     axios
       .post(API_ROOT + "api/sites/datacenters/get-many", {}, headers)
@@ -229,7 +229,6 @@ export class MobileAssetView extends React.PureComponent<
       this.setState({
         token: token.detail
       })
-      console.log(this.state.token)
       let params: any;
       params = this.props.match.params;
       this.updateAssetData(params.rid);
