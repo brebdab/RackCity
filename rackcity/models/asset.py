@@ -91,9 +91,7 @@ def validate_asset_number_uniqueness(value, asset_id, change_plan, related_asset
         and matching_assets[0].id != asset_id
         and not matching_assets[0].is_decommissioned
     ):
-        print(asset_id,matching_assets[0].id )
         raise ValidationError(
-
             "'"
             + str(value)
             + "'is not a unique asset number. \
@@ -324,7 +322,7 @@ class AssetCP(AbstractAsset):
         null=True,
         blank=True,
     )
-    differs_from_live = models.BooleanField(default=False,blank=True)
+    differs_from_live = models.BooleanField(default=False, blank=True)
 
     class Meta:
         ordering = ["asset_number"]

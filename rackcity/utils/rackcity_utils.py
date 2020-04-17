@@ -207,7 +207,9 @@ def validate_location_modification(data, existing_asset, change_plan=None):
                     chassis = Asset.objects.get(id=data["chassis"])
                     chassis_id = chassis.id
                 except ObjectDoesNotExist:
-                    raise Exception("Chassis '" + str(chassis_id) + "' does not exist. ")
+                    raise Exception(
+                        "Chassis '" + str(chassis_id) + "' does not exist. "
+                    )
         else:
             try:
                 chassis = Asset.objects.get(id=data["chassis"])
