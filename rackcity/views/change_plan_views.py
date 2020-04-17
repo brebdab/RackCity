@@ -1,5 +1,6 @@
 from datetime import datetime
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Q
 from django.http import JsonResponse
 from rackcity.api.serializers import (
     AddChangePlanSerializer,
@@ -10,12 +11,13 @@ from rackcity.models import (
     ChangePlan,
     AssetCP,
 )
+from rackcity.models.model_utils import ModelType
 from rackcity.utils.change_planner_utils import (
     get_change_plan,
     get_modifications_in_cp,
-    asset_cp_has_conflicts,
     get_cp_already_executed_response,
     get_cp_modification_conflicts,
+    get_changes_on_asset,
 )
 from rackcity.utils.errors_utils import (
     Status,
@@ -408,7 +410,13 @@ def change_plan_execute(request, id):
     num_modified = 0
     num_decommissioned = 0
     updated_asset_mappings = {}
-    for asset_cp in assets_cp:
+
+    # rackmount assets first
+    rackmount_assets_cp = assets_cp.filter(
+        ~Q(model__model_type=ModelType.BLADE_ASSET.value)
+    )
+    for asset_cp in rackmount_assets_cp:
+        changes = get_changes_on_asset(asset_cp.related_asset, asset_cp)
         updated_asset, created = get_updated_asset(asset_cp)
         updated_asset_mappings[asset_cp] = updated_asset
         if created:
@@ -417,19 +425,39 @@ def change_plan_execute(request, id):
                 request.user, updated_asset, Action.CREATE, change_plan=change_plan,
             )
         elif not asset_cp.is_decommissioned:
-            num_modified += 1
-            log_action(
-                request.user, updated_asset, Action.MODIFY, change_plan=change_plan,
-            )
+            if len(changes) > 0:
+                num_modified += 1
+                log_action(
+                    request.user, updated_asset, Action.MODIFY, change_plan=change_plan,
+                )
+                asset_cp.differs_from_live = True
+                asset_cp.save()
+
         update_network_ports(updated_asset, asset_cp, change_plan)
         update_power_ports(updated_asset, asset_cp, change_plan)
-    for asset_cp in assets_cp:
-        if asset_cp.model.is_blade_chassis():
-            blades_cp = assets_cp.filter(chassis=asset_cp)
-            for blade_cp in blades_cp:
-                updated_asset = updated_asset_mappings[blade_cp]
-                updated_asset.chassis = updated_asset_mappings[asset_cp]
-                updated_asset.save()
+    ##blade assets
+    blade_assets_cp = assets_cp.filter(model__model_type=ModelType.BLADE_ASSET.value)
+    for asset_cp in blade_assets_cp:
+        changes = get_changes_on_asset(asset_cp.related_asset, asset_cp)
+        chassis_live = updated_asset_mappings[asset_cp.chassis]
+        updated_asset, created = get_updated_asset(asset_cp, chassis_live)
+        updated_asset_mappings[asset_cp] = updated_asset
+        if created:
+            num_created += 1
+            log_action(
+                request.user, updated_asset, Action.CREATE, change_plan=change_plan,
+            )
+        elif not asset_cp.is_decommissioned:
+            if len(changes) > 0:
+                num_modified += 1
+                log_action(
+                    request.user, updated_asset, Action.MODIFY, change_plan=change_plan,
+                )
+                asset_cp.differs_from_live = True
+                asset_cp.save()
+        update_network_ports(updated_asset, asset_cp, change_plan)
+        update_power_ports(updated_asset, asset_cp, change_plan)
+        updated_asset.save()
 
     for asset_cp in assets_cp:
         # Decommission only after all changes have been made to all CP assets

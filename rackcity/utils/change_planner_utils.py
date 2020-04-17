@@ -11,7 +11,9 @@ from rackcity.api.serializers import (
     RecursiveAssetCPSerializer,
     GetDecommissionedAssetSerializer,
 )
-from rackcity.api.serializers.asset_serializers import GetDecommissionedAssetCPSerializer
+from rackcity.api.serializers.asset_serializers import (
+    GetDecommissionedAssetCPSerializer,
+)
 from rackcity.models import (
     Asset,
     AssetCP,
@@ -155,11 +157,20 @@ def get_racked_assets_for_cp(change_plan):
     racked_assets_cp = AssetCP.objects.filter(
         change_plan=change_plan, offline_storage_site__isnull=True
     )
+    assets_to_hide = []
     for asset_cp in racked_assets_cp:
         if asset_cp.related_asset and (asset_cp.related_asset in racked_assets):
-            racked_assets = racked_assets.filter(~Q(id=asset_cp.related_asset.id))
+            changes = get_changes_on_asset(asset_cp.related_asset, asset_cp)
+            if len(changes) > 0 or asset_cp.is_decommissioned:
+                racked_assets = racked_assets.filter(~Q(id=asset_cp.related_asset.id))
+            else:
+                assets_to_hide.append(asset_cp)
+
     ## don't return decommissioned asset_cps:
     racked_assets_cp = racked_assets_cp.filter(is_decommissioned=False)
+    racked_assets_cp = racked_assets_cp.exclude(
+        id__in=[asset_cp.id for asset_cp in assets_to_hide]
+    )
     return racked_assets, racked_assets_cp
 
 
@@ -168,10 +179,18 @@ def get_offline_storage_assets_for_cp(change_plan):
     stored_assets_cp = AssetCP.objects.filter(
         change_plan=change_plan, offline_storage_site__isnull=False,
     )
+    assets_to_hide = []
     for asset_cp in stored_assets_cp:
         if asset_cp.related_asset and (asset_cp.related_asset in stored_assets):
-            stored_assets = stored_assets.filter(~Q(id=asset_cp.related_asset.id))
+            changes = get_changes_on_asset(asset_cp.related_asset, asset_cp)
+            if len(changes) > 0 or asset_cp.is_decommissioned:
+                stored_assets = stored_assets.filter(~Q(id=asset_cp.related_asset.id))
+            else:
+                assets_to_hide.append(asset_cp)
     stored_assets_cp = stored_assets_cp.filter(is_decommissioned=False)
+    stored_assets_cp = stored_assets_cp.exclude(
+        id__in=[asset_cp.id for asset_cp in assets_to_hide]
+    )
     return stored_assets, stored_assets_cp
 
 
@@ -246,7 +265,7 @@ def get_many_assets_response_for_cp(
         return filter_failure_response
     if decommissioned:
         asset_serializer = GetDecommissionedAssetSerializer(assets, many=True,)
-        asset_cp_serializer = GetDecommissionedAssetCPSerializer(assets_cp, many=True, )
+        asset_cp_serializer = GetDecommissionedAssetCPSerializer(assets_cp, many=True,)
     else:
         asset_serializer = RecursiveAssetSerializer(assets, many=True,)
         asset_cp_serializer = RecursiveAssetCPSerializer(assets_cp, many=True,)
@@ -360,6 +379,8 @@ def get_changes_on_asset(asset, asset_cp):
     fields = [field.name for field in Asset._meta.fields]
     changes = []
     for field in fields:
+        if field == "id" or field == "assetid_ptr":
+            continue
         if field == "chassis":
             chassis_live = asset.chassis
             chassis_cp = asset_cp.chassis
@@ -517,7 +538,13 @@ def get_modifications_in_cp(change_plan):
         related_asset = asset_cp.related_asset
         if related_asset:
             changes = get_changes_on_asset(related_asset, asset_cp)
-            if changes is None and not asset_cp.is_decommissioned:
+
+            if (
+                not change_plan.execution_time
+                and len(changes) == 0
+                and not asset_cp.is_decommissioned
+            ) or (change_plan.execution_time and not asset_cp.differs_from_live):
+
                 continue
             asset_data = RecursiveAssetSerializer(related_asset).data
         else:
@@ -546,8 +573,8 @@ def get_modifications_in_cp(change_plan):
             title = "Create asset"
             if asset_cp.asset_number:
                 title += " " + str(asset_cp.asset_number)
-            if asset_cp.rack:
-                title += get_location_detail(asset_cp)
+
+            title += get_location_detail(asset_cp)
             asset_data = None
         modifications.append(
             {
@@ -560,18 +587,6 @@ def get_modifications_in_cp(change_plan):
             }
         )
     return modifications
-
-
-def asset_cp_has_conflicts(asset_cp):
-    return (
-        asset_cp.is_conflict
-        or asset_cp.asset_conflict_hostname
-        or asset_cp.asset_conflict_asset_number
-        or asset_cp.asset_conflict_location
-        or asset_cp.related_decommissioned_asset
-        or asset_cp.model is None
-        or asset_cp.rack is None
-    )
 
 
 def get_cp_already_executed_response(change_plan):
