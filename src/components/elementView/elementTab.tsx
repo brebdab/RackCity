@@ -478,7 +478,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                 if (
                   this.state.fileName === "" ||
                   (this.state.networkFileName === "" &&
-                    this.props.element === ElementType.ASSET) ||
+                    this.props.element === ElementType.ASSET &&
+                    this.props.assetType !== AssetType.STORED) ||
                   (this.state.fileName === "" &&
                     this.props.element === ElementType.MODEL)
                 ) {
@@ -537,7 +538,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                   type="text"
                 />
               </FormGroup>
-              {this.props.element === ElementType.ASSET ? (
+              {this.props.element === ElementType.ASSET &&
+              this.props.assetType !== AssetType.STORED ? (
                 <div>
                   <FormGroup label="network connections:">
                     <InputGroup
