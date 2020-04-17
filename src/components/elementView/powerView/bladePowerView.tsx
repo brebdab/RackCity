@@ -1,7 +1,6 @@
 import * as React from "react";
 import { RouteComponentProps, withRouter } from "react-router";
 import {
-  Alert,
   AnchorButton,
   Callout,
   Classes,
@@ -45,7 +44,6 @@ interface BladePowerViewProps {
 interface BladePowerViewState {
   powerStatus?: string;
   statusLoaded: boolean;
-  alertOpen: boolean;
   confirmationMessage: string;
   username?: string;
 }
@@ -74,8 +72,7 @@ export class BladePowerView extends React.PureComponent<
 
   public state: BladePowerViewState = {
     powerStatus: undefined,
-    statusLoaded: true,
-    alertOpen: false,
+    statusLoaded: false,
     confirmationMessage: "",
     username: undefined,
   };
@@ -94,8 +91,6 @@ export class BladePowerView extends React.PureComponent<
   componentDidUpdate() {
     if (this.props.shouldUpdate && this.shouldShowPower()) {
       this.getPowerStatus();
-    } else {
-      this.setState({ statusLoaded: true });
     }
     this.props.updated();
   }
@@ -171,6 +166,9 @@ export class BladePowerView extends React.PureComponent<
   }
 
   private requestPowerAction(action: PowerAction) {
+    this.setState({
+      statusLoaded: false,
+    });
     axios
       .post(
         API_ROOT + "api/chassis-power/" + action,
@@ -181,18 +179,21 @@ export class BladePowerView extends React.PureComponent<
         getHeaders(this.props.token)
       )
       .then((res) => {
-        this.setState({
-          alertOpen: true,
-          confirmationMessage: res.data.success_message,
-        });
         this.getPowerStatus();
+        this.addSuccessToast(res.data.success_message);
       })
       .catch((err) => {
-        alert(err);
+        if (
+          err.response &&
+          err.response.data &&
+          err.response.data.failure_message
+        ) {
+          this.addErrorToast(err.response.data.failure_message);
+        }
       });
   }
 
-  private renderPowerTable() {
+  private renderPowerTable(loading: boolean) {
     return (
       <div className="blade-power-table">
         <div className="network-connections">
@@ -211,7 +212,11 @@ export class BladePowerView extends React.PureComponent<
                   {this.props.asset?.chassis_slot}
                 </td>
                 <td style={getChangePlanRowStyle(this.props.asset)}>
-                  {this.state.powerStatus}
+                  {loading ? (
+                    <Spinner size={Spinner.SIZE_SMALL} />
+                  ) : (
+                    this.state.powerStatus
+                  )}
                 </td>
               </tr>
             </tbody>
@@ -273,36 +278,15 @@ export class BladePowerView extends React.PureComponent<
     return (
       <div className={Classes.DARK + " propsview"}>
         <h3>Power Connections</h3>
-        {this.state.statusLoaded ? (
-          this.props.asset &&
-          this.props.asset.chassis &&
-          this.props.asset.chassis.model &&
-          this.props.asset.chassis.model.vendor &&
-          this.isBladePowerNetworkControlled() ? (
-            this.renderPowerTable()
-          ) : (
-            this.renderNoPowerCallout()
-          )
-        ) : (
-          <Spinner />
-        )}
-        <Alert
-          className={Classes.DARK}
-          confirmButtonText="OK"
-          isOpen={this.state.alertOpen}
-          onConfirm={() => {
-            this.setState({
-              alertOpen: false,
-            });
-          }}
-          onClose={() => {
-            this.setState({
-              alertOpen: false,
-            });
-          }}
-        >
-          <p>{this.state.confirmationMessage}</p>
-        </Alert>
+        {this.props.asset &&
+        this.props.asset.chassis &&
+        this.props.asset.chassis.model &&
+        this.props.asset.chassis.model.vendor &&
+        this.isBladePowerNetworkControlled()
+          ? this.state.statusLoaded
+            ? this.renderPowerTable(false)
+            : this.renderPowerTable(true)
+          : this.renderNoPowerCallout()}
         <Toaster
           autoFocus={false}
           canEscapeKeyClear={true}
