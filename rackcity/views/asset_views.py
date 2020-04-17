@@ -421,12 +421,6 @@ def asset_modify(request):
                 },
                 status=HTTPStatus.BAD_REQUEST,
             )
-
-        # create_new_asset_cp = not AssetCP.objects.filter(
-        #     id=asset_id, change_plan=change_plan.id
-        # ).exists() or not AssetCP.objects.filter(related_asset = asset_id, change_plan = change_plan.id)
-
-        # if not create_new_asset_cp:
         try:
             existing_asset = AssetCP.objects.get(
                 id=asset_id, change_plan=change_plan.id
