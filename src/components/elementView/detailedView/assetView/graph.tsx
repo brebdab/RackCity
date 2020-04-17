@@ -54,7 +54,7 @@ class NetworkGraph extends React.Component<
       .map((node: Node) => {
         return node.route_id;
       })
-      .filter((route_id: number) => route_id == id);
+      .filter((route_id: number) => route_id === id);
   }
   render() {
     return (
