@@ -134,7 +134,7 @@ export class BarcodeScanner extends React.PureComponent<
       this.setState({
         asset: null,
         showAsset: false
-      })
+      });
       return
     }
   }
