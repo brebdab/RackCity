@@ -68,7 +68,7 @@ interface MobileAssetViewState {
   datacenters: Array<DatacenterObject>;
   powerShouldUpdate: boolean;
   loading: boolean;
-  token?: string;
+  token: string;
 }
 
 export class MobileAssetViewWrapper extends React.PureComponent<RouteComponentProps & MobileAssetViewProps> {
@@ -92,6 +92,7 @@ export class MobileAssetView extends React.PureComponent<
     datacenters: [],
     powerShouldUpdate: false,
     loading: false,
+    token: ""
   };
   successfullyLoadedData = false;
   // private updateAsset = (asset: AssetObject, headers: any): Promise<any> => {
