@@ -12,7 +12,7 @@ interface ChassisViewProps {
 class ChassisView extends React.PureComponent<
   RouteComponentProps & ChassisViewProps
 > {
-  numSlots = 12;
+  numSlots = 14;
   generateSlotNumbers() {
     const slots = [];
     for (let i = 1; i < this.numSlots + 1; i++) {

@@ -319,7 +319,7 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
 
     model = ITModelSerializer()
     rack = RackSerializer()
-    chassis = ChassisSerializer()
+    chassis = ChassisCPSerializer()
     offline_storage_site = SiteSerializer()
     asset_conflict_hostname = AssetSerializer()
     asset_conflict_location = AssetSerializer()
@@ -603,11 +603,11 @@ def get_neighbor_assets(hostname, id, nodes, edges, change_plan=None):
         return
 
 
-def add_blades_to_graph(id, nodes, edges, change_plan=None):
+def add_blades_to_graph(chassis_id, nodes, edges, change_plan=None):
     if change_plan:
-        blades = AssetCP.objects.filter(chassis=id, change_plan=change_plan)
+        blades = AssetCP.objects.filter(chassis=chassis_id, change_plan=change_plan)
     else:
-        blades = Asset.objects.filter(chassis=id)
+        blades = Asset.objects.filter(chassis=chassis_id)
     for blade in blades:
         node = {
             "id": blade.id,
@@ -615,12 +615,15 @@ def add_blades_to_graph(id, nodes, edges, change_plan=None):
         }
         if node not in nodes:
             nodes.append(node)
-        edges.append({"from": id, "to": blade.id})
+        edges.append({"from": chassis_id, "to": blade.id})
     return nodes, edges
 
 
-def add_chassis_to_graph(id, nodes, edges, change_plan=None):
-    chassis = Asset.objects.get(id=id).chassis
+def add_chassis_to_graph(blade_id, nodes, edges, change_plan=None):
+    if change_plan:
+        chassis = AssetCP.objects.get(id=blade_id).chassis
+    else:
+        chassis = Asset.objects.get(id=blade_id).chassis
     if not chassis:
         return nodes, edges
     node = {
@@ -629,7 +632,7 @@ def add_chassis_to_graph(id, nodes, edges, change_plan=None):
     }
     if node not in nodes:
         nodes.append(node)
-    edges.append({"from": id, "to": chassis.id})
+    edges.append({"from": blade_id, "to": chassis.id})
     return nodes, edges
 
 
