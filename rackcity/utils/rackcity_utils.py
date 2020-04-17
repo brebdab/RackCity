@@ -310,12 +310,11 @@ def no_infile_location_conflicts(asset_datas):
                         unnamed_asset_count += 1
                     rack_location_occupied_by[rack][location] = asset_name
         else:
-            chassis = asset_data["chassis"]
-            print("chassis: ")
-            print(chassis)
+            if "chassis" in asset_data:
+                chassis = asset_data["chassis"]
+            else:
+                chassis = "new_" + asset_data["chassis_number"]
             chassis_slot = asset_data["chassis_slot"]
-            print("chassis slot: ")
-            print(chassis_slot)
             if chassis not in chassis_slot_occupied_by:
                 chassis_slot_occupied_by[chassis] = {}
             print(chassis_slot in chassis_slot_occupied_by[chassis])

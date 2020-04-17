@@ -599,6 +599,7 @@ def asset_bulk_upload(request):
     hostnames_in_import = set()
     asset_numbers_in_import = set()
     asset_datas = []
+    chassis_asset_numbers = set()
     warning_message = ""
     for bulk_asset_data in bulk_asset_datas:
         asset_data = normalize_bulk_asset_data(bulk_asset_data)
@@ -619,6 +620,9 @@ def asset_bulk_upload(request):
             return JsonResponse(
                 {"failure_message": failure_message}, status=HTTPStatus.BAD_REQUEST
             )
+        if model.is_blade_chassis():
+            if asset_data["asset_number"]:
+                chassis_asset_numbers.add(asset_data["asset_number"])
         asset_data["model"] = model.id
         del asset_data["vendor"]
         del asset_data["model_number"]
@@ -637,19 +641,22 @@ def asset_bulk_upload(request):
                         status=HTTPStatus.BAD_REQUEST,
                     )
             except ObjectDoesNotExist:
-                failure_message = (
-                    Status.IMPORT_ERROR.value
-                    + "Chassis does not exist: "
-                    + "asset_number="
-                    + asset_data["chassis_number"]
-                )
-                return JsonResponse(
-                    {"failure_message": failure_message}, status=HTTPStatus.BAD_REQUEST
-                )
-            asset_data["chassis"] = chassis.id
+                if not asset_data["chassis_number"] in chassis_asset_numbers:
+                    failure_message = (
+                        Status.IMPORT_ERROR.value
+                        + "Chassis does not exist: "
+                        + "asset_number="
+                        + asset_data["chassis_number"]
+                    )
+                    return JsonResponse(
+                        {"failure_message": failure_message}, status=HTTPStatus.BAD_REQUEST
+                    )
+            else:
+                asset_data["chassis"] = chassis.id
+                del asset_data["chassis_number"]
         else:
             asset_data["chassis"] = None
-        del asset_data["chassis_number"]
+            del asset_data["chassis_number"]
         if asset_data["datacenter"]:
             try:
                 datacenter = Site.objects.get(abbreviation=asset_data["datacenter"])
@@ -867,7 +874,7 @@ def asset_bulk_upload(request):
                     "chassis" in asset_serializer.validated_data
                     and asset_serializer.validated_data["chassis"]
                 ):
-                    validate_asset_location_in_chassis(
+                    validate_asset_location_in_chassis( # TODO: don't do this if chassis is new
                         asset_serializer.validated_data["chassis"].id,
                         asset_serializer.validated_data["chassis_slot"],
                     )
@@ -893,7 +900,7 @@ def asset_bulk_upload(request):
                     {"asset_serializer": asset_serializer, "asset_data": asset_data}
                 )
     try:
-        no_infile_location_conflicts(asset_datas)
+        no_infile_location_conflicts(asset_datas) # TODO: make sure this works if chassis in the file
     except LocationException as error:
         failure_message = (
             Status.IMPORT_ERROR.value
@@ -908,6 +915,12 @@ def asset_bulk_upload(request):
         records_added += 1
         asset_serializer = asset_to_add["asset_serializer"]
         asset_data = asset_to_add["asset_data"]
+        if "chassis_number" in asset_data:
+            print("adding chassis")
+            chassis = Asset.objects.get(asset_number=asset_data["chassis_number"])
+            asset_serializer.validated_data["chassis"] = chassis
+            asset_data["chassis"] = chassis.id
+            del asset_data["chassis_number"]
         asset_added = asset_serializer.save()
         try:
             save_power_connections(asset_data=asset_data, asset_id=asset_added.id)
