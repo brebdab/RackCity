@@ -376,8 +376,8 @@ export class PowerView extends React.PureComponent<
 
   render() {
     return (
-      <div className={Classes.DARK + " propsview"}>
-        <h3>Power Connections</h3>
+      <div className={this.props.isMobile ? Classes.DARK : Classes.DARK + " propsview"}>
+        {this.props.isMobile ? null : <h3>Power Connections</h3>}
         {this.state.statusLoaded ? (
           this.assetHasPowerPorts() ? (
             this.renderPowerTable()
