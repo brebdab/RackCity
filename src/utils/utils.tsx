@@ -142,6 +142,13 @@ export const ModelFieldsTable: any = {
   model_type: "Mount Type",
 };
 
+export const UserFieldsTable: any = {
+  username: "Username",
+  email: "Email Address",
+  first_name: "First Name",
+  last_name: "Last Name",
+};
+
 export enum AssetFormLabels {
   asset_number = "Asset Number",
   hostname = "Hostname",

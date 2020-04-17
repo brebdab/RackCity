@@ -46,6 +46,7 @@ import {
   ROUTES,
   SortFilterBody,
   TableType,
+  UserFieldsTable,
   UserInfoObject,
 } from "../../utils/utils";
 import * as actions from "../../store/actions/state";
@@ -82,6 +83,7 @@ import { isNullOrUndefined } from "util";
 import { PermissionState } from "../../utils/permissionUtils";
 import axios from "axios";
 import { API_ROOT } from "../../utils/api-config";
+import User from "../userView/user";
 
 interface ElementTableState {
   items: Array<ElementObjectType>;
@@ -255,6 +257,8 @@ class ElementTable extends React.Component<
       field = AssetFieldsTable[item.field];
     } else if (this.props.type === ElementType.MODEL) {
       field = ModelFieldsTable[item.field];
+    } else if (this.props.type === ElementType.USER) {
+      field = UserFieldsTable[item.field];
     }
     return (
       <div className="drag-drop-text">
@@ -1193,6 +1197,15 @@ class ElementTable extends React.Component<
                       <th className="header-cell">
                         <div className="header-text">
                           <span>{ModelFieldsTable[col]}</span>
+                          {this.getScrollIcon(col)}
+                        </div>
+                      </th>
+                    );
+                  } else if (this.props.type === ElementType.USER) {
+                    return (
+                      <th className="header-cell">
+                        <div className="header-text">
+                          <span>{UserFieldsTable[col]}</span>
                           {this.getScrollIcon(col)}
                         </div>
                       </th>
