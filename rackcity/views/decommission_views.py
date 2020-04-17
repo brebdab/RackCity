@@ -6,7 +6,9 @@ from rackcity.api.serializers import (
     GetDecommissionedAssetSerializer,
 )
 from rackcity.models import Asset, DecommissionedAsset, AssetCP
+from rackcity.models.asset import get_assets_for_cp
 from rackcity.permissions.permissions import validate_user_permission_on_existing_asset
+from rackcity.utils.asset_utils import add_chassis_to_cp
 from rackcity.utils.change_planner_utils import (
     get_change_plan,
     get_cp_already_executed_response,
@@ -66,23 +68,34 @@ def decommission_asset_parameterized(data, query_params, user):
         response = get_cp_already_executed_response(change_plan)
         if response:
             return response
-        if (
-            not AssetCP.objects.filter(id=id).exists()
-            and Asset.objects.filter(id=id).exists()
-        ):
-            existing_asset = Asset.objects.get(id=id)
+        assets, assets_cp = get_assets_for_cp(
+            change_plan.id, show_decommissioned=True
+        )
+        if assets_cp.filter(related_asset=id).exists():
+            decommissioned_asset_cp = assets_cp.get(related_asset=id)
+            decommissioned_asset_cp.is_decommissioned = True
+        elif assets_cp.filter(id=id).exists():
+            decommissioned_asset_cp = assets_cp.get(id=id)
+            decommissioned_asset_cp.is_decommissioned = True
+        elif assets.filter(id=id).exists():
+            existing_asset = assets.get(id=id)
             decommissioned_asset_cp = AssetCP(
                 change_plan=change_plan,
                 related_asset=existing_asset,
                 is_decommissioned=True,
             )
+
             for field in existing_asset._meta.fields:
-                if not (field.name == "id" or field.name == "assetid_ptr"):
+                if not (field.name == "id" or field.name == "assetid_ptr" or field.name =="chassis"):
                     setattr(
-                        decommissioned_asset_cp,
+                         decommissioned_asset_cp,
                         field.name,
                         getattr(existing_asset, field.name),
                     )
+            if existing_asset.chassis:
+                chassis_cp = add_chassis_to_cp(existing_asset.chassis, change_plan, ignore_blade_id=id)
+                decommissioned_asset_cp.chassis = chassis_cp
+
         else:
             try:
                 decommissioned_asset_cp = AssetCP.objects.get(id=id)
@@ -128,7 +141,7 @@ def decommission_asset_parameterized(data, query_params, user):
             )
 
     if change_plan:
-        blades = AssetCP.objects.filter(chassis=decommissioned_asset_cp.id)
+        blades = assets_cp.filter(chassis=decommissioned_asset_cp.id)
         for blade in blades:
             data_for_blade = data.copy()
             data_for_blade["id"] = blade.id

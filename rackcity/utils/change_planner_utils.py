@@ -177,10 +177,16 @@ def get_offline_storage_assets_for_cp(change_plan):
     stored_assets_cp = AssetCP.objects.filter(
         change_plan=change_plan, offline_storage_site__isnull=False,
     )
+    assets_to_hide = []
     for asset_cp in stored_assets_cp:
         if asset_cp.related_asset and (asset_cp.related_asset in stored_assets):
-            stored_assets = stored_assets.filter(~Q(id=asset_cp.related_asset.id))
+            changes = get_changes_on_asset(asset_cp.related_asset, asset_cp)
+            if len(changes) > 0 or asset_cp.is_decommissioned:
+                stored_assets = stored_assets.filter(~Q(id=asset_cp.related_asset.id))
+            else:
+                assets_to_hide.append(asset_cp)
     stored_assets_cp = stored_assets_cp.filter(is_decommissioned=False)
+    stored_assets_cp = stored_assets_cp.exclude(id__in=[asset_cp.id for asset_cp in assets_to_hide])
     return stored_assets, stored_assets_cp
 
 
