@@ -16,7 +16,7 @@ from .change_plan_serializers import GetChangePlanSerializer
 from rackcity.api.serializers.fields import RCIntegerField
 import copy
 
-from rackcity.models.model_utils import ModelType
+from ...utils.asset_changes_utils import get_changes_on_asset
 
 
 class AssetCPSerializer(serializers.ModelSerializer):
@@ -123,10 +123,32 @@ class ChassisSerializer(serializers.ModelSerializer):
         return get_blades_in_chassis(asset)
 
 
-class BladeSerializer(serializers.ModelSerializer):
+class ChassisCPSerializer(serializers.ModelSerializer):
+    """
+    Serializers the information we want for a chassis that a blade is in (only used for serializing info to be sent)
     """
 
-    """
+    rack = RackSerializer()
+    model = ITModelSerializer()
+    blades = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Asset
+        fields = (
+            "id",
+            "hostname",
+            "model",
+            "rack",
+            "rack_position",
+            "display_color",
+            "blades",
+        )
+
+    def get_blades(self, asset):
+        return get_blades_in_chassis_cp(asset)
+
+
+class BladeSerializer(serializers.ModelSerializer):
 
     model = ITModelSerializer()
 
@@ -135,6 +157,26 @@ class BladeSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "hostname",
+            "asset_number",
+            "chassis_slot",
+            "model",
+            "display_color",
+        )
+
+
+class BladeCPSerializer(serializers.ModelSerializer):
+
+    related_asset = AssetSerializer()
+    model = ITModelSerializer()
+    change_plan = GetChangePlanSerializer()
+
+    class Meta:
+        model = Asset
+        fields = (
+            "id",
+            "hostname",
+            "related_asset",
+            "change_plan",
             "asset_number",
             "chassis_slot",
             "model",
@@ -290,6 +332,7 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
     related_asset = AssetSerializer()
     blades = serializers.SerializerMethodField()
     datacenter = serializers.SerializerMethodField()
+    mark_as_cp = serializers.SerializerMethodField()
 
     class Meta:
         model = AssetCP
@@ -322,6 +365,7 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
             "display_color",
             "memory_gb",
             "blades",
+            "mark_as_cp",
         )
 
     def get_mac_addresses(self, assetCP):
@@ -341,6 +385,14 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
 
     def get_datacenter(self, assetCP):
         return get_datacenter_of_asset(assetCP)
+
+    def get_mark_as_cp(self, assetCP):
+        if assetCP.related_asset:
+            return (
+                len(get_changes_on_asset(assetCP.related_asset, assetCP)) > 0
+                or assetCP.is_decommissioned
+            )
+        return True
 
 
 class GetDecommissionedAssetCPSerializer(serializers.ModelSerializer):
@@ -473,7 +525,7 @@ def serialize_power_connections(power_port_model, asset):
 
 
 def get_blades_in_chassis(asset):
-    if asset.model.model_type != ModelType.BLADE_CHASSIS.value:
+    if not asset.model.is_blade_chassis():
         return []
 
     blades = Asset.objects.filter(chassis=asset.id)
@@ -482,8 +534,13 @@ def get_blades_in_chassis(asset):
 
 
 def get_blades_in_chassis_cp(asset_cp):
-    # TODO
-    return []
+    if not asset_cp.model.is_blade_chassis():
+        return []
+    blades_cp = AssetCP.objects.filter(
+        chassis=asset_cp.id, change_plan=asset_cp.change_plan
+    )
+    serializer = BladeCPSerializer(blades_cp, many=True)
+    return serializer.data
 
 
 def generate_network_graph(asset):

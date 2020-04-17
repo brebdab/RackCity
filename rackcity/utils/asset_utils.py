@@ -60,7 +60,8 @@ def get_existing_power_port(port_name, asset_id, change_plan=None):
 def does_asset_exist(asset_id, change_plan):
     return (
         AssetCP.objects.filter(id=asset_id, change_plan=change_plan.id).exists()
-    ) or (Asset.objects.filter(id=asset_id).exists())
+        or Asset.objects.filter(id=asset_id).exists()
+    )
 
 
 def get_or_create_asset_with_hostname(hostname, change_plan=None):
@@ -508,16 +509,18 @@ def save_all_field_data_cp(data, asset, change_plan, create_asset_cp):
     chassis = None
     if data["chassis"]:
         try:
-            chassis_live = Asset.objects.get(id=data["chassis"])
-        except ObjectDoesNotExist:
-            return (None, "No existing chassis with id=" + data["chassis"])
-
-        if not AssetCP.objects.filter(id=data["chassis"]).exists():
-            chassis = add_chassis_to_cp(
-                chassis_live, change_plan, ignore_blade_id=asset.id
-            )
-        else:
             chassis = AssetCP.objects.get(id=data["chassis"])
+        except ObjectDoesNotExist:
+            if Asset.objects.filter(id=data["chassis"]).exists():
+                chassis_live = Asset.objects.get(id=data["chassis"])
+                chassis = add_chassis_to_cp(
+                    chassis_live, change_plan, ignore_blade_id=asset.id
+                )
+            else:
+                return (
+                    None,
+                    "Chassis with id " + str(data["chassis"]) + " does not exist",
+                )
 
     try:
         if create_asset_cp:

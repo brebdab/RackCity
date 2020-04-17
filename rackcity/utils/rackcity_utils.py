@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from http import HTTPStatus
 from rackcity.api.serializers import RecursiveAssetSerializer, RackSerializer
@@ -197,11 +198,26 @@ def validate_location_modification(data, existing_asset, change_plan=None):
             raise Exception("No existing rack with id=" + str(data["rack"]) + ".")
 
     if "chassis" in data and data["chassis"]:
-        try:
-            chassis = Asset.objects.get(id=data["chassis"])
-            chassis_id = chassis.id
-        except Exception:
-            raise Exception("No existing chassis with id=" + str(data["chassis"]) + ".")
+        if change_plan:
+            try:
+                chassis = AssetCP.objects.get(id=data["chassis"])
+                chassis_id = chassis.id
+            except ObjectDoesNotExist:
+                try:
+                    chassis = Asset.objects.get(id=data["chassis"])
+                    chassis_id = chassis.id
+                except ObjectDoesNotExist:
+                    raise Exception(
+                        "Chassis '" + str(chassis_id) + "' does not exist. "
+                    )
+        else:
+            try:
+                chassis = Asset.objects.get(id=data["chassis"])
+                chassis_id = chassis.id
+            except ObjectDoesNotExist:
+                raise Exception(
+                    "No existing chassis with id=" + str(data["chassis"]) + "."
+                )
 
     if not ("offline_storage_site" in data and data["offline_storage_site"]):
         if existing_asset.model.is_rackmount():
