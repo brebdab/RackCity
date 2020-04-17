@@ -101,3 +101,4 @@ class ITModel(models.Model):
             self.model_type == ModelType.BLADE_CHASSIS.value
             or self.model_type == ModelType.RACKMOUNT_ASSET.value
         )
+

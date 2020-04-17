@@ -30,6 +30,7 @@ from .asset_views import (
     offline_storage_asset_page_count,
     asset_fields,
     asset_number,
+    get_asset_from_barcode,
 )
 from .network_connections_views import (
     network_bulk_upload,

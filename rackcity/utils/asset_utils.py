@@ -1,4 +1,6 @@
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.db.models import Q
+
 from rackcity.models import (
     Asset,
     AssetCP,
@@ -114,7 +116,19 @@ def get_or_create_pdu_port(asset, power_connection_data, change_plan=None):
         return pdu_port_live
 
 
-def copy_asset_to_new_asset_cp(asset_live, change_plan):
+def add_chassis_to_cp(chassis_live, change_plan, ignore_blade_id=None):
+    """
+    Takes a live chassis and change plan, adds its blades to the AssetCP table,
+    then adds the chassis to the AssetCP table.
+    """
+    chassis_cp = copy_asset_to_new_asset_cp(chassis_live, change_plan)
+    blades = Asset.objects.filter(Q(chassis=chassis_live) & ~Q(id=ignore_blade_id))
+    for blade in blades:
+        copy_asset_to_new_asset_cp(blade, change_plan, chassis_cp)
+    return chassis_cp
+
+
+def copy_asset_to_new_asset_cp(asset_live, change_plan, chassis_cp=None):
     """
     Copies an existing Asset (asset_live) to the AssetCP table, assigning
     the given change_plan. Copies all Asset fields, network port mac addresses,
@@ -123,8 +137,16 @@ def copy_asset_to_new_asset_cp(asset_live, change_plan):
     # Copy existing asset to AssetCP table
     asset_cp = AssetCP(related_asset=asset_live, change_plan=change_plan)
     for field in asset_live._meta.fields:
-        if field.name != "id" and field.name != "assetid_ptr":
+        if (
+            field.name != "id"
+            and field.name != "assetid_ptr"
+            and field.name != "chassis"
+        ):
             setattr(asset_cp, field.name, getattr(asset_live, field.name))
+    if chassis_cp:
+        asset_cp.chassis = chassis_cp
+    else:
+        asset_cp.chassis = asset_live.chassis
     asset_cp.save()
     # Copy mac address values
     # Note: actual connections get made later in create_network_connections()
@@ -481,18 +503,37 @@ def save_all_field_data_cp(data, asset, change_plan, create_asset_cp):
             value = data[field]
         else:
             value = data[field]
-
-        if field is not "id":
+        if field != "id" and field != "chassis":
             setattr(asset, field, value)
+    chassis = None
+    if data["chassis"]:
+        try:
+            chassis_live = Asset.objects.get(id=data["chassis"])
+        except ObjectDoesNotExist:
+            return (None, "No existing chassis with id=" + data["chassis"])
+
+        if not AssetCP.objects.filter(id=data["chassis"]).exists():
+            chassis = add_chassis_to_cp(
+                chassis_live, change_plan, ignore_blade_id=asset.id
+            )
+        else:
+            chassis = AssetCP.objects.get(id=data["chassis"])
 
     try:
         if create_asset_cp:
-            asset_cp = copy_asset_to_new_asset_cp(asset, change_plan)
+            if asset.model.is_blade_chassis():
+                asset_cp = add_chassis_to_cp(asset, change_plan)
+            else:
+                asset_cp = copy_asset_to_new_asset_cp(
+                    asset, change_plan, chassis_cp=chassis
+                )
             asset_cp.save()
             return asset_cp, None
 
         else:
+            asset.chassis = chassis
             asset.save()
             return asset, None
     except Exception as error:
+
         return None, parse_save_validation_error(error, "Asset")
