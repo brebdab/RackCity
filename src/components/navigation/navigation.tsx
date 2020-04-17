@@ -210,7 +210,10 @@ export class Navigation extends React.Component<
                         itemRenderer={renderChangePlanItem}
                         itemPredicate={filterChangePlan}
                         noResults={
-                          <MenuItem disabled={true} text="No active change plans" />
+                          <MenuItem
+                            disabled={true}
+                            text="No active change plans"
+                          />
                         }
                       >
                         <Button
@@ -230,7 +233,7 @@ export class Navigation extends React.Component<
 
                       {this.props.changePlan ? (
                         <Tooltip
-                          content={"Exit Change Planner"}
+                          content={"Exit Change Plan"}
                           position={Position.BOTTOM}
                           disabled={this.props.location.pathname.includes(
                             "/dashboard/change-plans/"
