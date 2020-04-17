@@ -92,9 +92,6 @@ export class BladePowerView extends React.PureComponent<
     if (this.props.shouldUpdate && this.shouldShowPower()) {
       this.getPowerStatus();
     }
-    // } else {
-    //   this.setState({ statusLoaded: true });
-    // }
     this.props.updated();
   }
 
