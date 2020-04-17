@@ -317,9 +317,7 @@ def no_infile_location_conflicts(asset_datas):
             chassis_slot = asset_data["chassis_slot"]
             if chassis not in chassis_slot_occupied_by:
                 chassis_slot_occupied_by[chassis] = {}
-            print(chassis_slot in chassis_slot_occupied_by[chassis])
             if chassis_slot in chassis_slot_occupied_by[chassis]:
-                print("exception")
                 raise LocationException(
                     "Asset '"
                     + str(asset_data["asset_number"])
@@ -335,10 +333,7 @@ def no_infile_location_conflicts(asset_datas):
                 else:
                     asset_name = "unnamed_asset_" + str(unnamed_asset_count)
                     unnamed_asset_count += 1
-                print("adding to map")
                 chassis_slot_occupied_by[chassis][chassis_slot] = asset_name
-                print("here's the map: ")
-                print(chassis_slot_occupied_by)
     return
 
 

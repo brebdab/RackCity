@@ -649,7 +649,8 @@ def asset_bulk_upload(request):
                         + asset_data["chassis_number"]
                     )
                     return JsonResponse(
-                        {"failure_message": failure_message}, status=HTTPStatus.BAD_REQUEST
+                        {"failure_message": failure_message},
+                        status=HTTPStatus.BAD_REQUEST,
                     )
             else:
                 asset_data["chassis"] = chassis.id
@@ -874,7 +875,7 @@ def asset_bulk_upload(request):
                     "chassis" in asset_serializer.validated_data
                     and asset_serializer.validated_data["chassis"]
                 ):
-                    validate_asset_location_in_chassis( # TODO: don't do this if chassis is new
+                    validate_asset_location_in_chassis(  # TODO: don't do this if chassis is new
                         asset_serializer.validated_data["chassis"].id,
                         asset_serializer.validated_data["chassis_slot"],
                     )
@@ -900,7 +901,9 @@ def asset_bulk_upload(request):
                     {"asset_serializer": asset_serializer, "asset_data": asset_data}
                 )
     try:
-        no_infile_location_conflicts(asset_datas) # TODO: make sure this works if chassis in the file
+        no_infile_location_conflicts(
+            asset_datas
+        )  # TODO: make sure this works if chassis in the file
     except LocationException as error:
         failure_message = (
             Status.IMPORT_ERROR.value
@@ -916,7 +919,6 @@ def asset_bulk_upload(request):
         asset_serializer = asset_to_add["asset_serializer"]
         asset_data = asset_to_add["asset_data"]
         if "chassis_number" in asset_data:
-            print("adding chassis")
             chassis = Asset.objects.get(asset_number=asset_data["chassis_number"])
             asset_serializer.validated_data["chassis"] = chassis
             asset_data["chassis"] = chassis.id
