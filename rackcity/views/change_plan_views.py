@@ -427,6 +427,9 @@ def change_plan_execute(request, id):
                 log_action(
                     request.user, updated_asset, Action.MODIFY, change_plan=change_plan,
                 )
+                asset_cp.differs_from_live = True
+                asset_cp.save()
+
         update_network_ports(updated_asset, asset_cp, change_plan)
         update_power_ports(updated_asset, asset_cp, change_plan)
     ##blade assets
@@ -447,6 +450,8 @@ def change_plan_execute(request, id):
                 log_action(
                     request.user, updated_asset, Action.MODIFY, change_plan=change_plan,
                 )
+                asset_cp.differs_from_live = True
+                asset_cp.save()
         update_network_ports(updated_asset, asset_cp, change_plan)
         update_power_ports(updated_asset, asset_cp, change_plan)
         updated_asset.save()

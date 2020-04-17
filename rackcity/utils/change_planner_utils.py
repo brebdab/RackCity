@@ -11,7 +11,9 @@ from rackcity.api.serializers import (
     RecursiveAssetCPSerializer,
     GetDecommissionedAssetSerializer,
 )
-from rackcity.api.serializers.asset_serializers import GetDecommissionedAssetCPSerializer
+from rackcity.api.serializers.asset_serializers import (
+    GetDecommissionedAssetCPSerializer,
+)
 from rackcity.models import (
     Asset,
     AssetCP,
@@ -246,7 +248,7 @@ def get_many_assets_response_for_cp(
         return filter_failure_response
     if decommissioned:
         asset_serializer = GetDecommissionedAssetSerializer(assets, many=True,)
-        asset_cp_serializer = GetDecommissionedAssetCPSerializer(assets_cp, many=True, )
+        asset_cp_serializer = GetDecommissionedAssetCPSerializer(assets_cp, many=True,)
     else:
         asset_serializer = RecursiveAssetSerializer(assets, many=True,)
         asset_cp_serializer = RecursiveAssetCPSerializer(assets_cp, many=True,)
@@ -360,8 +362,7 @@ def get_changes_on_asset(asset, asset_cp):
     fields = [field.name for field in Asset._meta.fields]
     changes = []
     for field in fields:
-        print(field, getattr(asset, field), getattr(asset_cp, field))
-        if field ==  "id" or field == "assetid_ptr":
+        if field == "id" or field == "assetid_ptr":
             continue
         if field == "chassis":
             chassis_live = asset.chassis
@@ -374,7 +375,6 @@ def get_changes_on_asset(asset, asset_cp):
         changes.append("network_connections")
     if power_connections_have_changed(asset, asset_cp):
         changes.append("power_connections")
-    print(changes)
     return changes
 
 
@@ -521,8 +521,13 @@ def get_modifications_in_cp(change_plan):
         related_asset = asset_cp.related_asset
         if related_asset:
             changes = get_changes_on_asset(related_asset, asset_cp)
-            print(changes)
-            if len(changes) == 0 and not asset_cp.is_decommissioned:
+
+            if (
+                not change_plan.execution_time
+                and len(changes) == 0
+                and not asset_cp.is_decommissioned
+            ) or (change_plan.execution_time and not asset_cp.differs_from_live):
+
                 continue
             asset_data = RecursiveAssetSerializer(related_asset).data
         else:
@@ -565,7 +570,6 @@ def get_modifications_in_cp(change_plan):
             }
         )
     return modifications
-
 
 
 def get_cp_already_executed_response(change_plan):
