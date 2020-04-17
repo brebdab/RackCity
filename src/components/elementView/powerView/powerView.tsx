@@ -298,7 +298,8 @@ export class PowerView extends React.PureComponent<
         {this.props.asset &&
         this.state.powerStatus &&
         this.state.statusLoaded &&
-        this.shouldShowPowerButtons() ? (
+        this.shouldShowPowerButtons() &&
+        !this.props.isMobile ? (
           <AnchorButton
             className={"power-close"}
             intent={
@@ -331,7 +332,8 @@ export class PowerView extends React.PureComponent<
         {this.props.asset &&
         this.state.powerStatus &&
         this.state.statusLoaded &&
-        this.shouldShowPowerButtons() ? (
+        this.shouldShowPowerButtons() &&
+        !this.props.isMobile ? (
           <AnchorButton
             className={"power-close"}
             minimal
@@ -376,163 +378,17 @@ export class PowerView extends React.PureComponent<
 
   render() {
     return (
-      <div className={this.props.isMobile ? Classes.DARK : Classes.DARK + " propsview"}>
+      <div
+        className={
+          this.props.isMobile ? Classes.DARK : Classes.DARK + " propsview"
+        }
+      >
         {this.props.isMobile ? null : <h3>Power Connections</h3>}
         {this.state.statusLoaded ? (
           this.assetHasPowerPorts() ? (
             this.renderPowerTable()
           ) : (
-            <div className={this.props.isMobile ? "" : "propsview"}>
-              {this.props.isMobile ? null : <h3>Power Connections</h3>}
-              <div className="network-connections">
-                <table className="bp3-html-table bp3-html-table-bordered bp3-html-table-striped">
-                  <tr>
-                    <th>Power Port Number</th>
-                    <th>PDU Port Number</th>
-                    <th>Power Status</th>
-                  </tr>
-                  <tbody>{this.getPowerPortRows()}</tbody>
-                </table>
-              </div>
-              {this.props.asset!.rack &&
-              this.props.asset!.rack.is_network_controlled &&
-              Object.keys(this.props.asset!.power_connections).length > 0 &&
-              this.state.powerStatus &&
-              !this.props.assetIsDecommissioned &&
-              !this.props.changePlan && !this.props.isMobile ? (
-                <AnchorButton
-                  className={"power-close"}
-                  intent={
-                    this.state.powerStatus[
-                      Object.keys(this.state.powerStatus)[0]
-                    ] === "OFF"
-                      ? "primary"
-                      : "danger"
-                  }
-                  minimal
-                  text={
-                    this.state.powerStatus[
-                      Object.keys(this.state.powerStatus)[0]
-                    ] === "OFF"
-                      ? "Turn on"
-                      : "Turn off"
-                  }
-                  icon="power"
-                  disabled={
-                    !(
-                      this.props.permissionState.admin ||
-                      this.props.permissionState.power_control ||
-                      this.state.username === this.props.asset!.owner
-                    )
-                  }
-                  onClick={
-                    this.state.powerStatus[
-                      Object.keys(this.state.powerStatus)[0]
-                    ] === "OFF"
-                      ? () => {
-                          this.setState({
-                            statusLoaded: !this.state.statusLoaded,
-                          });
-                          axios
-                            .post(
-                              API_ROOT + "api/rack-power/on",
-                              { id: this.props.asset!.id },
-                              getHeaders(this.props.token)
-                            )
-                            .then((res) => {
-                              this.setState({
-                                alertOpen: true,
-                                confirmationMessage: res.data.success_message,
-                              });
-                              this.componentDidMount();
-                            })
-                            .catch((err) => {
-                              alert(err);
-                            });
-                        }
-                      : () => {
-                          this.setState({
-                            statusLoaded: !this.state.statusLoaded,
-                          });
-                          axios
-                            .post(
-                              API_ROOT + "api/rack-power/off",
-                              { id: this.props.asset!.id },
-                              getHeaders(this.props.token)
-                            )
-                            .then((res) => {
-                              this.setState({
-                                alertOpen: true,
-                                confirmationMessage: res.data.success_message,
-                              });
-                              this.componentDidMount();
-                            })
-                            .catch((err) => {
-                              alert(err);
-                            });
-                        }
-                  }
-                />
-              ) : null}
-              {this.props.asset!.rack &&
-              this.props.asset!.rack.is_network_controlled &&
-              Object.keys(this.props.asset!.power_connections).length > 0 &&
-              this.state.powerStatus &&
-              !this.props.assetIsDecommissioned &&
-              !this.props.changePlan && !this.props.isMobile ? (
-                <AnchorButton
-                  className={"power-close"}
-                  minimal
-                  intent="warning"
-                  text={"Cycle Power"}
-                  disabled={
-                    !(
-                      this.props.permissionState.admin ||
-                      this.props.permissionState.power_control ||
-                      this.state.username === this.props.asset!.owner
-                    )
-                  }
-                  onClick={() => {
-                    this.setState({
-                      statusLoaded: !this.state.statusLoaded,
-                    });
-                    axios
-                      .post(
-                        API_ROOT + "api/rack-power/cycle",
-                        { id: this.props.asset!.id },
-                        getHeaders(this.props.token)
-                      )
-                      .then((res) => {
-                        this.setState({
-                          alertOpen: true,
-                          confirmationMessage: res.data.success_message,
-                        });
-                        this.componentDidMount();
-                      })
-                      .catch((err) => {
-                        alert(err);
-                      });
-                  }}
-                />
-              ) : null}
-              {this.props.callback === undefined ? null : (
-                <AnchorButton
-                  className={"power-close"}
-                  intent="danger"
-                  minimal
-                  text="Close"
-                  onClick={() => {
-                    this.setState({
-                      powerConnections: undefined,
-                      powerStatus: undefined,
-                      statusLoaded: false,
-                    });
-                    this.props.callback!();
-                  }}
-                />
-              )}
-            </div>
-            // {this.renderNoPowerPortsCallout()}
+            this.renderNoPowerPortsCallout()
           )
         ) : (
           <Spinner />
