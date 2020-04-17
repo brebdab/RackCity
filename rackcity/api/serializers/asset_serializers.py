@@ -502,6 +502,12 @@ def generate_network_graph(asset):
         [nodes, edges] = get_neighbor_assets(
             asset.hostname, asset.id, nodes, edges, change_plan
         )
+        if asset.model.is_blade_asset():
+            nodes, edges = add_chassis_to_graph(asset.id, nodes, edges, change_plan)
+
+        if asset.model.is_blade_chassis():
+            nodes, edges = add_blades_to_graph(asset.id, nodes, edges, change_plan)
+
         # neighbors of distance two
         nodes_copy = copy.deepcopy(nodes)
         for node in nodes_copy:
@@ -535,8 +541,6 @@ def get_neighbor_assets(hostname, id, nodes, edges, change_plan=None):
                 edges.append(
                     {"from": source_port.asset.id, "to": destination_port_asset.id}
                 )
-        nodes, edges = add_blades_to_graph(id, nodes, edges, change_plan)
-        nodes, edges = add_chassis_to_graph(id, nodes, edges, change_plan)
         return nodes, edges
     except ObjectDoesNotExist:
         return
