@@ -1410,7 +1410,7 @@ class ElementTable extends React.Component<
                                               .asset_management) ||
                                           (this.props.type ===
                                             ElementType.ASSET &&
-                                            isAssetObject(item) &&
+                                            isAssetObject(item) && item.datacenter &&
                                             this.props.permissionState.site_permissions.includes(
                                               +item.datacenter.id
                                             ))
@@ -1457,7 +1457,7 @@ class ElementTable extends React.Component<
                                               .asset_management) ||
                                           (this.props.type ===
                                             ElementType.ASSET &&
-                                            isAssetObject(item) &&
+                                            isAssetObject(item) && item.datacenter&&
                                             this.props.permissionState.site_permissions.includes(
                                               +item.datacenter.id
                                             ))
