@@ -130,6 +130,10 @@ class App extends React.Component<AppProps> {
               </this.RedirectToLoginRoute>
               <Route path="/" component={Fallback}></Route>
             </div>
+            <this.PrivateRoute
+                path={ROUTES.ASSETS + "/:rid"}
+                component={AssetView}
+              />
           </div>
         ) : (
           <div>

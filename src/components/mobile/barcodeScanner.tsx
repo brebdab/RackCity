@@ -13,7 +13,7 @@ import { RouteComponentProps, withRouter } from "react-router";
 import Webcam from "react-webcam";
 import "./barcodeScanner.scss";
 import { API_ROOT } from "../../utils/api-config";
-import { getHeaders } from "../../utils/utils";
+import {getHeaders, ROUTES} from "../../utils/utils";
 import axios from "axios";
 
 interface BarcodeScannerState {
@@ -79,6 +79,8 @@ export class BarcodeScanner extends React.PureComponent<
         )
         .then((res: any) => {
           alert(JSON.stringify(res));
+          const id = res.data.asset_data.id;
+          this.props.history.push(ROUTES.ASSETS + "/" + id)
         })
         .catch((err: any) => {
           this.addErrorToast(err.response.data.failure_message);
