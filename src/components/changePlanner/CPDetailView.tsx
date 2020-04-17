@@ -102,6 +102,7 @@ class CPDetailView extends React.Component<
   };
 
   setButtonState() {
+
     if (
       this.loading ||
       this.state.modifications.length === 0 ||

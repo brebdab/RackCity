@@ -212,6 +212,7 @@ export class AssetView extends React.PureComponent<
   };
 
   public render() {
+    console.log(this.state.asset)
     if (!this.successfullyLoadedData && this.props.token) {
       let params: any;
       params = this.props.match.params;

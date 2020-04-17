@@ -11,6 +11,7 @@ from rackcity.api.serializers import (
     RecursiveAssetCPSerializer,
     GetDecommissionedAssetSerializer,
 )
+from rackcity.api.serializers.asset_serializers import GetDecommissionedAssetCPSerializer
 from rackcity.models import (
     Asset,
     AssetCP,
@@ -245,10 +246,10 @@ def get_many_assets_response_for_cp(
         return filter_failure_response
     if decommissioned:
         asset_serializer = GetDecommissionedAssetSerializer(assets, many=True,)
-
+        asset_cp_serializer = GetDecommissionedAssetCPSerializer(assets_cp, many=True, )
     else:
         asset_serializer = RecursiveAssetSerializer(assets, many=True,)
-    asset_cp_serializer = RecursiveAssetCPSerializer(assets_cp, many=True,)
+        asset_cp_serializer = RecursiveAssetCPSerializer(assets_cp, many=True,)
     all_assets = asset_serializer.data + asset_cp_serializer.data
 
     sorted_assets = sort_serialized_assets(all_assets, request.data)
@@ -359,7 +360,12 @@ def get_changes_on_asset(asset, asset_cp):
     fields = [field.name for field in Asset._meta.fields]
     changes = []
     for field in fields:
-        if getattr(asset, field) != getattr(asset_cp, field):
+        if field == "chassis":
+            chassis_live = asset.chassis
+            chassis_cp = asset_cp.chassis
+            if chassis_live and (chassis_live != chassis_cp.related_asset):
+                changes.append("chassis")
+        elif getattr(asset, field) != getattr(asset_cp, field):
             changes.append(field)
     if network_connections_have_changed(asset, asset_cp):
         changes.append("network_connections")
@@ -468,44 +474,63 @@ def get_cp_modification_conflicts(asset_cp):
         return conflicts
 
 
-def get_location_detail(asset,):
-    if asset.model.is_rackmount():
-        if asset.rack:
-            return (
-                " at rack "
-                + asset.rack.datacenter.abbreviation
-                + " "
-                + asset.rack.row_letter
-                + str(asset.rack.rack_num)
-                + ", position "
-                + str(asset.rack_position)
+def get_location_detail(asset):
+    if asset.is_in_offline_storage():
+        return " in offline storage site " + asset.offline_storage_site.abbreviation
+    if asset.model.is_rackmount() and asset.rack:
+        return (
+            " at "
+            + asset.rack.datacenter.abbreviation
+            + ", "
+            + asset.rack.row_letter
+            + str(asset.rack.rack_num)
+            + ", "
+            + str(asset.rack_position)
+        )
+    if asset.model.is_blade_asset() and asset.chassis:
+        chassis_name = ""
+        if asset.chassis.hostname:
+            chassis_name += " " + asset.chassis.hostname
+        elif asset.chassis.asset_number:
+            chassis_name += " " + str(asset.chassis.asset_number)
+        chassis_detail = (
+            " in chassis" + chassis_name + ", slot " + str(asset.chassis_slot)
+        )
+        if asset.chassis.rack:
+            chassis_detail += (
+                " at "
+                + asset.chassis.rack.datacenter.abbreviation
+                + ", "
+                + asset.chassis.rack.row_letter
+                + str(asset.chassis.rack.rack_num)
+                + ", "
+                + str(asset.chassis.rack_position)
             )
-        ## TODO error message if asset is in an offline site
-        return ""
-
-    else:
-        return " in chassis " + asset.chassis.hostname
+        return chassis_detail
+    return ""
 
 
 def get_modifications_in_cp(change_plan):
     assets_cp = AssetCP.objects.filter(change_plan=change_plan)
     modifications = []
     for asset_cp in assets_cp:
-        asset_cp_data = RecursiveAssetCPSerializer(asset_cp).data
         related_asset = asset_cp.related_asset
         if related_asset:
-            asset_data = RecursiveAssetSerializer(related_asset).data
             changes = get_changes_on_asset(related_asset, asset_cp)
+            if changes is None and not asset_cp.is_decommissioned:
+                continue
+            asset_data = RecursiveAssetSerializer(related_asset).data
         else:
             asset_data = None
             changes = None
+        asset_cp_data = RecursiveAssetCPSerializer(asset_cp).data
         if asset_cp.is_decommissioned:
             modification_type = ModificationType.DECOMMISSION
             title = "Decommission asset"
             if asset_cp.asset_number:
                 title += " " + str(asset_cp.asset_number)
-            if asset_cp.rack:
-                title += get_location_detail(asset_cp)
+            title += get_location_detail(asset_cp)
+
         elif related_asset or (asset_cp.is_conflict and related_asset is None):
             modification_type = ModificationType.MODIFY
             if related_asset:
