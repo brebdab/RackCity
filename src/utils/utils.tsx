@@ -167,7 +167,7 @@ export interface Link {
 export interface Node {
   id: number;
   label: string;
-  route_id:number;
+  route_id: number;
 }
 export interface NetworkGraphData {
   nodes: Array<Node>;
