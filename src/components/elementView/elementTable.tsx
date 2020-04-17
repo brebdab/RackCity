@@ -45,6 +45,7 @@ import {
   MountTypes,
   RackRangeFields,
   ROUTES,
+  SiteFieldsTable,
   SortFilterBody,
   TableType,
   UserInfoObject,
@@ -253,6 +254,11 @@ class ElementTable extends React.Component<
       field = AssetFieldsTable[item.field];
     } else if (this.props.type === ElementType.MODEL) {
       field = ModelFieldsTable[item.field];
+    } else if (
+      this.props.type === ElementType.DATACENTER ||
+      this.props.type === ElementType.OFFLINE_STORAGE_SITE
+    ) {
+      field = SiteFieldsTable[item.field];
     }
     return (
       <div className="drag-drop-text">
@@ -636,6 +642,7 @@ class ElementTable extends React.Component<
           col !== "network_connections" &&
           col !== "network_graph" &&
           col !== "is_admin" &&
+          col !== "is_storage" &&
           !(
             col === "offline_storage_site" &&
             this.props.assetType === AssetType.RACKED
@@ -853,6 +860,7 @@ class ElementTable extends React.Component<
       col !== "comment" &&
       col !== "is_admin" &&
       col !== "decommissioned_id" &&
+      col !== "is_storage" &&
       !isObject(item[col])
     );
   };
@@ -1209,6 +1217,18 @@ class ElementTable extends React.Component<
                         </div>
                       </th>
                     );
+                  } else if (
+                    this.props.type === ElementType.DATACENTER ||
+                    this.props.type === ElementType.OFFLINE_STORAGE_SITE
+                  ) {
+                    return (
+                      <th className="header-cell">
+                        <div className="header-text">
+                          <span>{SiteFieldsTable[col]}</span>
+                          {this.getScrollIcon(col)}
+                        </div>
+                      </th>
+                    );
                   } else {
                     return (
                       <th className="header-cell">
@@ -1513,10 +1533,7 @@ class ElementTable extends React.Component<
           ) : null}
           {(!this.state.items || this.state.items.length === 0) &&
           !this.state.getDataInProgress ? (
-            <Callout
-              icon={IconNames.ERROR}
-              title={"No " + this.props.type}
-            ></Callout>
+            <Callout icon={IconNames.ERROR} title={"No " + this.props.type} />
           ) : null}
         </div>
       </div>
