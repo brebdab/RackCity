@@ -2,13 +2,7 @@ from django.contrib.auth.models import Permission, User
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from enum import Enum
-from rackcity.models import (
-    Asset,
-    ITModel,
-    Log,
-    Rack,
-    Site,
-    AssetCP)
+from rackcity.models import Asset, ITModel, Log, Rack, Site, AssetCP
 from rackcity.utils.exceptions import UserAssetPermissionException
 from rest_framework.permissions import BasePermission
 from typing import Tuple
@@ -118,7 +112,9 @@ def validate_user_permission_on_new_asset_data(
             print(chassis_id_live)
             if "chassis" in asset_data and asset_data["chassis"]:
                 if change_plan and not chassis_id_live:
-                    chassis_id = get_id_from_data(asset_data, "chassis", data_is_validated)
+                    chassis_id = get_id_from_data(
+                        asset_data, "chassis", data_is_validated
+                    )
                     try:
                         chassis = AssetCP.objects.get(id=chassis_id)
                     except ObjectDoesNotExist:
@@ -130,7 +126,9 @@ def validate_user_permission_on_new_asset_data(
                     if chassis_id_live:
                         chassis_id = chassis_id_live
                     else:
-                        chassis_id = get_id_from_data(asset_data, "chassis", data_is_validated)
+                        chassis_id = get_id_from_data(
+                            asset_data, "chassis", data_is_validated
+                        )
                     try:
                         chassis = Asset.objects.get(id=chassis_id)
                     except ObjectDoesNotExist:

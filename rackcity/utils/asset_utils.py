@@ -517,8 +517,10 @@ def save_all_field_data_cp(data, asset, change_plan, create_asset_cp):
             try:
                 chassis = AssetCP.objects.get(id=data["chassis"])
             except ObjectDoesNotExist:
-                return (None, "Chassis with id " + str(data["chassis"]) + " does not exist")
-
+                return (
+                    None,
+                    "Chassis with id " + str(data["chassis"]) + " does not exist",
+                )
 
     try:
         if create_asset_cp:

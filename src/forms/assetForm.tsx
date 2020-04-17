@@ -503,8 +503,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     });
   };
   getValidAssets = (currSite: DatacenterObject) => {
-    if (!currSite){
-      return
+    if (!currSite) {
+      return;
     }
     this.gettingAssetsInProgress = true;
 
@@ -1565,7 +1565,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     ];
   }
   private getAvailableChassisAssets() {
-    console.log("Getting chassis assets")
+    console.log("Getting chassis assets");
     return this.state.assets.filter(
       (asset: AssetObject) =>
         asset.model && asset.model.model_type === MountTypes.BLADE_CHASSIS
@@ -1645,16 +1645,34 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     ];
   }
   getChassisSlots() {
-    let slots = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13","14"];
+    let slots = [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+    ];
 
     if (this.state.values.chassis && this.state.values.chassis.blades) {
       this.state.values.chassis.blades.forEach((asset: AssetObject) => {
-        if (parseInt(asset.chassis_slot) !== parseInt(this.state.values.chassis_slot)) {
-
-          slots = slots.filter((slot: string) => parseInt(slot) !== parseInt(asset.chassis_slot));
+        if (
+          parseInt(asset.chassis_slot) !==
+          parseInt(this.state.values.chassis_slot)
+        ) {
+          slots = slots.filter(
+            (slot: string) => parseInt(slot) !== parseInt(asset.chassis_slot)
+          );
         }
       });
-
     }
     return slots;
   }

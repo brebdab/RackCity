@@ -16,9 +16,6 @@ from .change_plan_serializers import GetChangePlanSerializer
 from rackcity.api.serializers.fields import RCIntegerField
 import copy
 
-from rackcity.models.model_utils import ModelType
-from ...models.asset import get_assets_for_cp
-
 
 class AssetCPSerializer(serializers.ModelSerializer):
     """
@@ -139,6 +136,7 @@ class BladeSerializer(serializers.ModelSerializer):
             "display_color",
         )
 
+
 class BladeCPSerializer(serializers.ModelSerializer):
 
     related_asset = AssetSerializer()
@@ -157,6 +155,7 @@ class BladeCPSerializer(serializers.ModelSerializer):
             "model",
             "display_color",
         )
+
 
 class RecursiveAssetSerializer(serializers.ModelSerializer):
     """
