@@ -41,6 +41,7 @@ from rackcity.utils.change_planner_utils import (
     get_many_assets_response_for_cp,
     get_page_count_response_for_cp,
     get_cp_already_executed_response,
+    get_changes_on_asset,
 )
 from rackcity.utils.errors_utils import (
     Status,
@@ -162,8 +163,14 @@ def asset_detail(request, id):
             )
             # if id of live asset is given on a change plan, just return the corresponding related assetCP
             if assets_cp.filter(related_asset=id).exists():
+                related_asset = Asset.objects.get(id=id)
                 asset = assets_cp.get(related_asset=id)
-                serializer = RecursiveAssetCPSerializer(asset)
+                changes = get_changes_on_asset(related_asset, asset)
+                if len(changes) == 0 and not asset.is_decommissioned:
+                    asset = related_asset
+                    serializer = RecursiveAssetSerializer(asset)
+                else:
+                    serializer = RecursiveAssetCPSerializer(asset)
             elif assets_cp.filter(id=id).exists():
                 asset = assets_cp.get(id=id)
                 serializer = RecursiveAssetCPSerializer(asset)
@@ -221,7 +228,7 @@ def asset_add(request):
         data["change_plan"] = change_plan.id
 
         if data["chassis"] and not AssetCP.objects.filter(id=data["chassis"]).exists():
-            #ignore the chassis because we will replace it with a new chassis on AssetCP later
+            # ignore the chassis because we will replace it with a new chassis on AssetCP later
             chassis_id_live = data["chassis"]
             del data["chassis"]
 
@@ -283,8 +290,13 @@ def asset_add(request):
                 )
         else:
             if (
-                (("chassis" not in serializer.validated_data
-                or not serializer.validated_data["chassis"]) and not chassis_id_live)
+                (
+                    (
+                        "chassis" not in serializer.validated_data
+                        or not serializer.validated_data["chassis"]
+                    )
+                    and not chassis_id_live
+                )
                 or "chassis_slot" not in serializer.validated_data
                 or not serializer.validated_data["chassis_slot"]
             ):
@@ -305,7 +317,8 @@ def asset_add(request):
                             "failure_message": Status.MODIFY_ERROR.value
                             + "Chassis"
                             + GenericFailure.DOES_NOT_EXIST.value,
-                            "errors": "No existing chassis with id=" + str(chassis_id_live),
+                            "errors": "No existing chassis with id="
+                            + str(chassis_id_live),
                         },
                         status=HTTPStatus.BAD_REQUEST,
                     )
