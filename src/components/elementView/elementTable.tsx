@@ -42,6 +42,7 @@ import {
   isRackRangeFields,
   isUserObject,
   ModelFieldsTable,
+  MountTypes,
   RackRangeFields,
   ROUTES,
   SortFilterBody,
@@ -80,6 +81,7 @@ import { PowerView } from "./powerView/powerView";
 import "./powerView/powerView.scss";
 import { isNullOrUndefined } from "util";
 import { PermissionState } from "../../utils/permissionUtils";
+import { BladePowerView } from "./powerView/bladePowerView";
 
 interface ElementTableState {
   items: Array<ElementObjectType>;
@@ -674,6 +676,20 @@ class ElementTable extends React.Component<
       });
     }
   };
+  shouldShowPowerInline = (item: ElementObjectType) => {
+    return (
+      isAssetObject(item) &&
+      this.props.assetType === AssetType.RACKED &&
+      ((item.rack && item.rack.is_network_controlled) ||
+        (item.chassis &&
+          item.chassis.hostname &&
+          !item.chassis.hostname.includes("-") &&
+          item.chassis.model.vendor === "BMI"))
+    );
+  };
+  shouldDisablePowerInline = () => {
+    return !!this.props.changePlan;
+  };
   //EDIT LOGIC
   handleEditFormClose = () => this.setState({ isEditFormOpen: false });
   getEditForm = () => {
@@ -722,16 +738,31 @@ class ElementTable extends React.Component<
           this.setState({ isPowerOptionsOpen: false });
         }}
       >
-        <PowerView
-          {...this.props}
-          callback={() => {
-            this.setState({ isPowerOptionsOpen: false });
-          }}
-          asset={this.state.assetPower}
-          shouldUpdate={false}
-          updated={() => {}}
-          assetIsDecommissioned={this.props.isDecommissioned}
-        />
+        {this.state.assetPower &&
+        this.state.assetPower.model &&
+        this.state.assetPower.model.model_type === MountTypes.BLADE ? (
+          <BladePowerView
+            {...this.props}
+            callback={() => {
+              this.setState({ isPowerOptionsOpen: false });
+            }}
+            asset={this.state.assetPower}
+            shouldUpdate={false}
+            updated={() => {}}
+            assetIsDecommissioned={this.props.isDecommissioned}
+          />
+        ) : (
+          <PowerView
+            {...this.props}
+            callback={() => {
+              this.setState({ isPowerOptionsOpen: false });
+            }}
+            asset={this.state.assetPower}
+            shouldUpdate={false}
+            updated={() => {}}
+            assetIsDecommissioned={this.props.isDecommissioned}
+          />
+        )}
       </Dialog>
     );
   };
@@ -933,11 +964,13 @@ class ElementTable extends React.Component<
     this.handleDecommissionOpen();
   };
 
-  handlePowerButtonClick = (data: AssetObject) => {
-    this.setState({
-      isPowerOptionsOpen: true,
-      assetPower: data,
-    });
+  handlePowerButtonClick = (data: ElementObjectType) => {
+    if (isAssetObject(data)) {
+      this.setState({
+        isPowerOptionsOpen: true,
+        assetPower: data,
+      });
+    }
   };
 
   renderPermissionsButton = (item: UserInfoObject) => {
@@ -1445,18 +1478,13 @@ class ElementTable extends React.Component<
                                   }
                                 />
                               ) : null}
-                              {isAssetObject(item) &&
-                              item.rack &&
-                              item.rack.is_network_controlled &&
-                              !this.props.isDecommissioned ? (
+                              {this.shouldShowPowerInline(item) ? (
                                 <AnchorButton
                                   className="button-table"
                                   intent="warning"
                                   minimal
                                   icon="offline"
-                                  disabled={
-                                    this.props.changePlan ? true : false
-                                  }
+                                  disabled={this.shouldDisablePowerInline()}
                                   onClick={(event: any) => {
                                     this.handlePowerButtonClick(item);
                                     event.stopPropagation();
