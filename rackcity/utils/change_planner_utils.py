@@ -360,6 +360,7 @@ def get_changes_on_asset(asset, asset_cp):
     fields = [field.name for field in Asset._meta.fields]
     changes = []
     for field in fields:
+        print(field, getattr(asset, field), getattr(asset_cp, field))
         if field ==  "id" or field == "assetid_ptr":
             continue
         if field == "chassis":
@@ -373,6 +374,7 @@ def get_changes_on_asset(asset, asset_cp):
         changes.append("network_connections")
     if power_connections_have_changed(asset, asset_cp):
         changes.append("power_connections")
+    print(changes)
     return changes
 
 
@@ -564,17 +566,6 @@ def get_modifications_in_cp(change_plan):
         )
     return modifications
 
-
-def asset_cp_has_conflicts(asset_cp):
-    return (
-        asset_cp.is_conflict
-        or asset_cp.asset_conflict_hostname
-        or asset_cp.asset_conflict_asset_number
-        or asset_cp.asset_conflict_location
-        or asset_cp.related_decommissioned_asset
-        or asset_cp.model is None
-        or asset_cp.rack is None
-    )
 
 
 def get_cp_already_executed_response(change_plan):
