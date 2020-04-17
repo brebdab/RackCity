@@ -241,6 +241,21 @@ export class BladePowerView extends React.PureComponent<
             this.requestPowerAction(PowerAction.CYCLE);
           }}
         />
+        {this.props.callback === undefined ? null : (
+          <AnchorButton
+            className={"power-close"}
+            intent="danger"
+            minimal
+            text="Close"
+            onClick={() => {
+              this.setState({
+                powerStatus: undefined,
+                statusLoaded: false,
+              });
+              this.props.callback!();
+            }}
+          />
+        )}
       </div>
     );
   }
@@ -256,7 +271,7 @@ export class BladePowerView extends React.PureComponent<
 
   render() {
     return (
-      <div className="propsview">
+      <div className={Classes.DARK + " propsview"}>
         <h3>Power Connections</h3>
         {this.state.statusLoaded ? (
           this.props.asset &&
@@ -273,7 +288,7 @@ export class BladePowerView extends React.PureComponent<
         )}
         <Alert
           className={Classes.DARK}
-          confirmButtonText="Okay"
+          confirmButtonText="OK"
           isOpen={this.state.alertOpen}
           onConfirm={() => {
             this.setState({
