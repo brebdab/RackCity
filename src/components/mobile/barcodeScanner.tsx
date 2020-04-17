@@ -1,4 +1,11 @@
-import { AnchorButton, Classes } from "@blueprintjs/core";
+import {
+  AnchorButton,
+  Classes,
+  Position,
+  Toaster,
+  IToastProps,
+  Intent,
+} from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
 import { connect, useSelector } from "react-redux";
@@ -25,6 +32,24 @@ export class BarcodeScanner extends React.PureComponent<
   RouteComponentProps & BarcodeScannerProps,
   BarcodeScannerState
 > {
+  private toaster: Toaster = {} as Toaster;
+  private addToast = (toast: IToastProps) => {
+    toast.timeout = 5000;
+    if (this.toaster) {
+      this.toaster.show(toast);
+    }
+  };
+  private addSuccessToast = (message: string) => {
+    this.addToast({ message: message, intent: Intent.PRIMARY });
+  };
+  private addErrorToast = (message: string) => {
+    this.addToast({ message: message, intent: Intent.DANGER });
+  };
+
+  private refHandlers = {
+    toaster: (ref: Toaster) => (this.toaster = ref),
+  };
+
   public state = {
     cameraHeight: 0,
     cameraWidth: 0,
@@ -56,7 +81,7 @@ export class BarcodeScanner extends React.PureComponent<
           alert(JSON.stringify(res));
         })
         .catch((err: any) => {
-          alert(JSON.stringify(err));
+          this.addErrorToast(err.response.data.failure_message);
         });
     }, [webcamRef, token]);
     return (
@@ -97,6 +122,12 @@ export class BarcodeScanner extends React.PureComponent<
     return (
       <div className={Classes.DARK}>
         <this.WebcamCapture />
+        <Toaster
+          autoFocus={false}
+          canEscapeKeyClear={true}
+          position={Position.TOP}
+          ref={this.refHandlers.toaster}
+        />
       </div>
     );
   }
