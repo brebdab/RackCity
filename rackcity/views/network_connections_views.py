@@ -31,7 +31,8 @@ from rackcity.utils.log_utils import (
 )
 from rackcity.utils.query_utils import (
     get_sort_arguments,
-    get_filter_arguments,
+    get_filtered_query,
+    assets_online_queryset,
 )
 from rackcity.utils.rackcity_utils import records_are_identical
 from rackcity.permissions.permissions import validate_user_permission_on_existing_asset
@@ -207,20 +208,10 @@ def network_bulk_approve(request):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def network_bulk_export(request):
-    assets_query = Asset.objects
-    try:
-        filter_args = get_filter_arguments(request.data)
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message": Status.EXPORT_ERROR.value
-                + GenericFailure.FILTER.value,
-                "errors": str(error),
-            },
-            status=HTTPStatus.BAD_REQUEST,
-        )
-    for filter_arg in filter_args:
-        assets_query = assets_query.filter(**filter_arg)  # TODO: make this use the new method
+    assets_query = assets_online_queryset()
+    filtered_query, failure_response = get_filtered_query(assets_query, request.data)
+    if failure_response:
+        return failure_response
 
     try:
         sort_args = get_sort_arguments(request.data)
@@ -233,7 +224,7 @@ def network_bulk_export(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
-    assets = assets_query.order_by(*sort_args)
+    assets = filtered_query.order_by(*sort_args)
     all_ports = []
     for asset in assets:
         ports = NetworkPort.objects.filter(asset=asset)
