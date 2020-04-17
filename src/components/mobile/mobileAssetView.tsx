@@ -68,6 +68,7 @@ interface MobileAssetViewState {
   datacenters: Array<DatacenterObject>;
   powerShouldUpdate: boolean;
   loading: boolean;
+  token?: string;
 }
 
 export class MobileAssetView extends React.PureComponent<
@@ -214,7 +215,13 @@ export class MobileAssetView extends React.PureComponent<
   };
 
   public render() {
-    if (!this.successfullyLoadedData && this.props.token) {
+    let token: any;
+    token = this.props.location.state;
+    if (!this.successfullyLoadedData && token.detail) {
+      this.setState({
+        token: token.detail
+      })
+      console.log(this.state.token)
       let params: any;
       params = this.props.match.params;
       this.updateAssetData(params.rid);
@@ -225,8 +232,7 @@ export class MobileAssetView extends React.PureComponent<
     }
     console.log(this.state);
     console.log(this.props);
-    const token = this.props.location.state
-    console.log(token)
+    console.log(token);
     return (
       <div className={Classes.DARK + " asset-view"}>
         <Dialog className="spinner-dialog" isOpen={this.state.loading}>
