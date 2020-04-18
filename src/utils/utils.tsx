@@ -70,6 +70,7 @@ export interface AssetCPObject extends AssetObject {
   asset_conflict_asset_name: AssetObject;
   asset_conflict_location: AssetObject;
   related_asset: AssetObject;
+  mark_as_cp: boolean;
   is_decommissioned: boolean;
 }
 interface ParentAssetObject extends ElementObject {
@@ -142,6 +143,13 @@ export const ModelFieldsTable: any = {
   model_type: "Mount Type",
 };
 
+export const UserFieldsTable: any = {
+  username: "Username",
+  email: "Email Address",
+  first_name: "First Name",
+  last_name: "Last Name",
+}
+
 export const SiteFieldsTable: any = {
   abbreviation: "Abbreviation",
   name: "Name",
@@ -171,6 +179,7 @@ export interface Link {
 export interface Node {
   id: number;
   label: string;
+  route_id: number;
 }
 export interface NetworkGraphData {
   nodes: Array<Node>;
@@ -323,8 +332,9 @@ export const getHeaders = (token: string) => {
 
 export const getChangePlanRowStyle = (item: any) => {
   return {
-    fontWeight: isAssetCP(item) ? ("bold" as any) : ("normal" as any),
-    color: isAssetCP(item) ? "#bf8c0a" : "white",
+    fontWeight:
+      isAssetCP(item) && item.mark_as_cp ? ("bold" as any) : ("normal" as any),
+    color: isAssetCP(item) && item.mark_as_cp ? "#bf8c0a" : "white",
   };
 };
 

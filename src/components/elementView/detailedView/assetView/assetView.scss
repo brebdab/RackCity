@@ -17,14 +17,12 @@
   cursor: pointer;
 }
 .graph-container {
-  // overflow: auto;
-  // background-color: red !important;
-  // width: 100% !important;
-  // height: 100% !important;
+
   max-height: 400px;
   border: 1px dotted gray;
   border-radius: 10pt;
   margin-left: 20px;
+    margin-right: 20px;
   margin-top: 4px;
   z-index: 1;
   overflow: hidden;
@@ -34,9 +32,7 @@
 }
 
 .graph-container div {
-  // overflow: auto;
-  // background-color: red !important;
-  // width: 100% !important;
+
 
   display: block;
 }
@@ -44,7 +40,8 @@
   width: 100% !important;
 }
 .network-connections {
-  display: flex;
+  display: block;
+
 }
 .chassis-view table{
 margin:auto;

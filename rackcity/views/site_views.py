@@ -19,7 +19,9 @@ def site_all(request):
     """
     Return list of all sites (datacenters and offline storage sites).
     """
-    return get_many_response(Site, SiteSerializer, "sites", request)
+    return get_many_response(
+        Site, SiteSerializer, "sites", request, default_order="name"
+    )
 
 
 @api_view(["POST"])
@@ -30,7 +32,12 @@ def datacenter_all(request):
     """
     datacenters = Site.get_datacenters()
     return get_many_response(
-        Site, SiteSerializer, "datacenters", request, premade_object_query=datacenters
+        Site,
+        SiteSerializer,
+        "datacenters",
+        request,
+        premade_object_query=datacenters,
+        default_order="name",
     )
 
 
@@ -47,6 +54,7 @@ def offline_storage_site_all(request):
         "offline_storage_sites",
         request,
         premade_object_query=offline_storage_sites,
+        default_order="name",
     )
 
 
