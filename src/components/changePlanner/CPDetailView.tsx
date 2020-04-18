@@ -115,16 +115,16 @@ class CPDetailView extends React.Component<
       return;
     }
 
+    let disableButtons = false
     this.state.modifications.forEach((modification: Modification) => {
       if (modification.conflicts && modification.conflicts.length > 0) {
-        this.setState({
-          disableButtons: true,
-        });
-        return;
+        disableButtons = true
+
       }
     });
+
     this.setState({
-      disableButtons: false,
+      disableButtons: disableButtons
     });
   }
   removeModification(modification: Modification) {
@@ -545,11 +545,16 @@ class CPDetailView extends React.Component<
                         {modification.conflicts
                           ? modification.conflicts.map((conflict: Conflict) => {
                               return (
+                                  <div>
                                 <Callout intent={Intent.DANGER}>
                                   {conflict.conflict_message}
-                                  {conflict.conflict_resolvable ? (
+
+                                </Callout>
+                                    {conflict.conflict_resolvable ? (
                                     <div className="merge-options">
                                       <AnchorButton
+
+
                                         onClick={() =>
                                           this.resolveConflict(
                                             modification,
@@ -557,8 +562,7 @@ class CPDetailView extends React.Component<
                                             false
                                           )
                                         }
-                                        icon="properties"
-                                        text="Discard change plan modifications"
+                                        text="Take live changes"
                                       />
                                       <AnchorButton
                                         onClick={() =>
@@ -568,12 +572,12 @@ class CPDetailView extends React.Component<
                                             true
                                           )
                                         }
-                                        icon="properties"
-                                        text="Keep change plan modifications"
+
+                                        text="Take change plan changes"
                                       />
                                     </div>
                                   ) : null}
-                                </Callout>
+                                  </div>
                               );
                             })
                           : null}
