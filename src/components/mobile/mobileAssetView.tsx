@@ -17,6 +17,7 @@ import {
 import NetworkGraph from "../elementView/detailedView/assetView/graph";
 import { BladePowerView } from "../elementView/powerView/bladePowerView";
 import PowerView from "../elementView/powerView/powerView";
+import { IconNames } from "@blueprintjs/icons";
 
 interface MobileAssetViewProps {
   asset: AssetObject;
@@ -265,18 +266,6 @@ export class MobileAssetView extends React.PureComponent<
                                         ? undefined
                                         : "asset-link"
                                     }
-                                    // onClick={
-                                    //   this.props.asset.decommissioning_user
-                                    //     ? undefined
-                                    //     : (e: any) => {
-                                    //         const id = this.getAssetIdFromHostname(
-                                    //           connection!.destination_hostname!
-                                    //         );
-                                    //         if (id) {
-                                    //           this.redirectToAsset(id);
-                                    //         }
-                                    //       }
-                                    // }
                                   >
                                     {connection.destination_hostname}
                                   </td>,
@@ -306,9 +295,13 @@ export class MobileAssetView extends React.PureComponent<
                 />
               </div>
             </>
-          ) : null}
+          ) : (
+            <Callout title="No network connections" icon={IconNames.INFO_SIGN} />
+          )}
         </Callout>
-        <Callout title={"Power Connections"} className={"propsview"}>{this.renderPower()}</Callout>
+        <Callout title={"Power Connections"} className={"propsview"}>
+          {this.renderPower()}
+        </Callout>
       </div>
     );
   }
