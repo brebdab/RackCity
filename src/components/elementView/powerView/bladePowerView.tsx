@@ -281,8 +281,8 @@ export class BladePowerView extends React.PureComponent<
 
   render() {
     return (
-      <div className={Classes.DARK + " propsview"}>
-        <h3>Power Connections</h3>
+      <div className={this.props.isMobile ? Classes.DARK : Classes.DARK + " propsview"}>
+        {this.props.isMobile ? null : <h3>Power Connections</h3>}
         {this.props.asset &&
         this.props.asset.chassis &&
         this.props.asset.chassis.model &&

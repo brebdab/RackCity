@@ -213,12 +213,12 @@ export class MobileAssetView extends React.PureComponent<
     console.log(this.props.asset);
     return (
       <div className={Classes.DARK}>
-        <Callout title={"Asset Properties"}>
+        <Callout title={"Asset Properties"} className={"propsview"}>
           <table className="bp3-html-table">
             {this.renderData(Object.keys(AssetFieldsTable), this.props.asset)}
           </table>
         </Callout>
-        <Callout title={"Model Properties"}>
+        <Callout title={"Model Properties"} className={"propsview"}>
           <table className="bp3-html-table">
             {this.renderData(
               Object.keys(ModelFieldsTable),
@@ -226,7 +226,7 @@ export class MobileAssetView extends React.PureComponent<
             )}
           </table>
         </Callout>
-        <Callout title={"Network Connections"}>
+        <Callout title={"Network Connections"} className={"propsview"}>
           {this.props.asset.model &&
           this.props.asset.model.network_ports &&
           this.props.asset.model.network_ports.length !== 0 ? (
@@ -296,7 +296,7 @@ export class MobileAssetView extends React.PureComponent<
                   </tbody>
                 </table>
               </div>
-              <Callout title={"Network Graph"} className={"propsview"}>
+              <div>
                 <NetworkGraph
                   networkGraph={this.props.asset.network_graph}
                   onClickNode={() => {}}
@@ -304,11 +304,11 @@ export class MobileAssetView extends React.PureComponent<
                     this.props.asset.decommissioning_user !== undefined
                   }
                 />
-              </Callout>
+              </div>
             </>
           ) : null}
         </Callout>
-        <Callout title={"Power Connections"}>{this.renderPower()}</Callout>
+        <Callout title={"Power Connections"} className={"propsview"}>{this.renderPower()}</Callout>
       </div>
     );
   }
