@@ -408,6 +408,7 @@ class GetDecommissionedAssetCPSerializer(serializers.ModelSerializer):
     network_connections = serializers.SerializerMethodField()
     network_graph = serializers.SerializerMethodField()
     datacenter = serializers.SerializerMethodField()
+    mark_as_cp = serializers.SerializerMethodField()
 
     class Meta:
         model = AssetCP
@@ -430,6 +431,7 @@ class GetDecommissionedAssetCPSerializer(serializers.ModelSerializer):
             "power_connections",
             "network_connections",
             "network_graph",
+            "mark_as_cp",
         )
 
     def get_datacenter(self, assetCP):
@@ -450,6 +452,13 @@ class GetDecommissionedAssetCPSerializer(serializers.ModelSerializer):
     def get_network_connections(self, assetCP):
         return serialize_network_connections(NetworkPortCP, assetCP)
 
+    def get_mark_as_cp(self, assetCP):
+        if assetCP.related_asset:
+            return (
+                    len(get_changes_on_asset(assetCP.related_asset, assetCP)) > 0
+                    or assetCP.is_decommissioned
+            )
+        return True
 
 def normalize_bulk_asset_data(bulk_asset_data):
     power_connections = {}
