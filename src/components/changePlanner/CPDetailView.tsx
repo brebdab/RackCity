@@ -101,6 +101,7 @@ class CPDetailView extends React.Component<
     this.openPrint = true;
   };
 
+
   setButtonState() {
 
     if (
@@ -576,17 +577,17 @@ class CPDetailView extends React.Component<
                               );
                             })
                           : null}
-
+                        {this.state.changePlan.execution_time? null:
                         <AnchorButton
                           className="asset-detail"
-                          icon="properties"
+                          icon="document-open"
                           onClick={(e: any) => {
                             this.props.history.push(
                               ROUTES.ASSETS + "/" + modification.asset_cp.id
                             );
                           }}
                           text="Go to change plan asset detail page"
-                        />
+                        />}
                         {modification.asset &&
                         isNullOrUndefined(
                           this.state.changePlan.execution_time

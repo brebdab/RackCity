@@ -416,13 +416,13 @@ def change_plan_execute(request, id):
         ~Q(model__model_type=ModelType.BLADE_ASSET.value)
     )
     for asset_cp in rackmount_assets_cp:
-        print(asset_cp)
-        updated_asset, created = get_updated_asset(asset_cp)
-        updated_asset_mappings[asset_cp] = updated_asset
-        differs_from_live = True
         changes = []
         if asset_cp.related_asset:
             changes = get_changes_on_asset(asset_cp.related_asset, asset_cp)
+        updated_asset, created = get_updated_asset(asset_cp)
+        updated_asset_mappings[asset_cp] = updated_asset
+        differs_from_live = True
+
         if created:
             num_created += 1
             log_action(
@@ -444,14 +444,14 @@ def change_plan_execute(request, id):
     ##blade assets
     blade_assets_cp = assets_cp.filter(model__model_type=ModelType.BLADE_ASSET.value)
     for asset_cp in blade_assets_cp:
-        print(asset_cp)
+        changes = []
+        if asset_cp.related_asset:
+            changes = get_changes_on_asset(asset_cp.related_asset, asset_cp)
         chassis_live = updated_asset_mappings[asset_cp.chassis]
         updated_asset, created = get_updated_asset(asset_cp, chassis_live)
         updated_asset_mappings[asset_cp] = updated_asset
         differs_from_live = True
-        changes = []
-        if asset_cp.related_asset:
-            changes = get_changes_on_asset(asset_cp.related_asset, asset_cp)
+
         if created:
             num_created += 1
             log_action(
