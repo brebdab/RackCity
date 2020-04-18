@@ -3,31 +3,32 @@ import {
   Callout,
   Classes,
   FormGroup,
+  InputGroup,
   Intent,
   MenuItem,
-  InputGroup,
-  Spinner
+  Radio,
+  RadioGroup,
+  Spinner,
+  Card,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
 import * as React from "react";
 import { connect } from "react-redux";
 import { API_ROOT } from "../utils/api-config";
-import { ModelObject } from "../utils/utils";
+import { ModelObject, MountTypes } from "../utils/utils";
 import { updateObject } from "../store/utility";
 import Field from "./field";
 import "./forms.scss";
 import $ from "jquery";
 import {
   filterString,
+  FormTypes,
   renderStringItem,
   StringSuggest,
-  FormTypes
 } from "./formUtils";
 
-//TO DO : add validation of types!!!
-var console: any = {};
-console.log = function() {};
+// values mirror backend/database strings
 
 interface ModelFormProps {
   token: string;
@@ -65,43 +66,43 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
     errors: [],
     networkPortsTemp: this.initialState.network_ports
       ? this.initialState.network_ports
-      : []
+      : [],
   };
   headers = {
     headers: {
-      Authorization: "Token " + this.props.token
-    }
+      Authorization: "Token " + this.props.token,
+    },
   };
-
+  loadedVendors = false;
   private handleSubmit = (e: any) => {
     e.preventDefault();
     if (this.state.values) {
       this.setState({
         errors: [],
-        loading: true
+        loading: true,
       });
       if (this.props.initialValues) {
         this.setState({
           values: updateObject(this.state.values, {
-            id: this.props.initialValues.id
-          })
+            id: this.props.initialValues.id,
+          }),
         });
       }
 
       const resp = this.props.submitForm(this.state.values, this.headers);
       if (resp) {
-        resp.then(res =>
+        resp.then((res) =>
           this.setState({
-            loading: false
+            loading: false,
           })
         );
-        resp.catch(err => {
+        resp.catch((err) => {
           $(".bp3-overlay-scroll-container").scrollTop(0);
           let errors: Array<string> = this.state.errors;
           errors.push(err.response.data.failure_message as string);
           this.setState({
             errors: errors,
-            loading: false
+            loading: false,
           });
         });
       }
@@ -109,35 +110,27 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
   };
 
   private getVendors() {
-    axios
-      //.get("https://rack-city-dev.herokuapp.com/api/" + path)
-      .get(API_ROOT + "api/models/vendors", this.headers)
-      .then(res => {
-        const vendors: Array<string> = res.data.vendors;
-        this.setState({
-          vendors: vendors
-        });
-      })
-      .catch(err => {
-        console.log(err);
+    axios.get(API_ROOT + "api/models/vendors", this.headers).then((res) => {
+      this.loadedVendors = true;
+      const vendors: Array<string> = res.data.vendors;
+      this.setState({
+        vendors: vendors,
       });
+    });
   }
 
   handleChange = (field: { [key: string]: any }) => {
     let network_ports: Array<string> = this.state.values.network_ports
       ? this.state.values.network_ports
       : [];
-    console.log("new change", field);
     if (field["num_network_ports"]) {
       let num_network_ports = field["num_network_ports"];
-      console.log(num_network_ports, network_ports);
       let index = network_ports.length;
       if (!isNaN(num_network_ports) && num_network_ports < 0) {
         num_network_ports = 0;
       }
 
       while (network_ports.length < num_network_ports) {
-        console.log(index, this.state.networkPortsTemp.length);
         if (index < this.state.networkPortsTemp.length) {
           network_ports.push(this.state.networkPortsTemp[index]);
         } else {
@@ -149,9 +142,8 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
         network_ports.pop();
       }
     } else if (field["num_network_ports"] === "") {
-      console.log(network_ports);
       this.setState({
-        networkPortsTemp: network_ports
+        networkPortsTemp: network_ports,
       });
       network_ports = [];
     }
@@ -159,12 +151,9 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
     this.setState({
       values: updateObject(this.state.values, {
         ...field,
-        network_ports
-      })
+        network_ports,
+      }),
     });
-
-    console.log(this.props.initialValues);
-    console.log(this.state.values);
   };
 
   handleNetworkPortNameChange = (index: number, name: string) => {
@@ -174,13 +163,13 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
     network_ports[index] = name;
     this.setState({
       values: updateObject(this.state.values, {
-        ...network_ports
-      })
+        ...network_ports,
+      }),
     });
   };
   selectText = (event: any) => event.target.select();
   componentDidMount = () => {
-    $(".suggest").keydown(function(event) {
+    $(".suggest").keydown(function (event) {
       if (event.keyCode === 13) {
         event.preventDefault();
         return false;
@@ -189,11 +178,11 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
   };
 
   render() {
-    if (this.state.vendors.length === 0) {
+    if (!this.loadedVendors) {
       this.getVendors();
     }
-    const { values } = this.state;
-    console.log("vendor", this.state.values.vendor);
+
+    const values = this.state.values;
     return (
       <div className={Classes.DARK + " login-container"}>
         {this.state.errors.map((err: string) => {
@@ -201,151 +190,182 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
         })}
         <form
           onSubmit={this.handleSubmit}
-          className="create-model-form bp3-form-group"
+          className="create-form bp3-form-group"
         >
-          <FormGroup className="suggest" label="Vendor (required)">
-            <StringSuggest
-              inputProps={{
-                placeholder: "vendor"
-              }}
-              popoverProps={{
-                minimal: true,
-                popoverClassName: "dropdown",
-                usePortal: true
-              }}
-              defaultSelectedItem={this.state.values.vendor}
-              inputValueRenderer={(vendor: string) => this.state.values.vendor}
-              items={this.state.vendors}
-              onItemSelect={(vendor: string) => {
-                console.log("item selected ");
+          <Card>
+            <FormGroup className="suggest" label="Vendor*">
+              <StringSuggest
+                inputProps={{
+                  placeholder: "vendor",
+                }}
+                popoverProps={{
+                  minimal: true,
+                  popoverClassName: "dropdown",
+                  usePortal: true,
+                }}
+                defaultSelectedItem={this.state.values.vendor}
+                inputValueRenderer={(vendor: string) =>
+                  this.state.values.vendor
+                }
+                items={this.state.vendors}
+                onItemSelect={(vendor: string) => {
+                  this.setState({
+                    values: updateObject(values, { vendor: vendor }),
+                  });
+                }}
+                onQueryChange={(vendor: string) => {
+                  this.setState({
+                    values: updateObject(values, { vendor: vendor }),
+                  });
+                }}
+                itemRenderer={renderStringItem}
+                itemPredicate={filterString}
+                noResults={<MenuItem disabled={true} text="No results." />}
+              />
+            </FormGroup>
+
+            <FormGroup label="Model Number*" inline={false}>
+              <Field
+                placeholder="model_number"
+                onChange={this.handleChange}
+                value={values.model_number}
+                field="model_number"
+              />
+            </FormGroup>
+            <FormGroup label="Display Color">
+              <Field
+                field="display_color"
+                type="color"
+                value={values.display_color ? values.display_color : "#394B59"}
+                onChange={this.handleChange}
+              />
+            </FormGroup>
+          </Card>
+          <Card>
+            <RadioGroup
+              label="Mount Type*"
+              className="radio-group"
+              onChange={(e: any) => {
                 this.setState({
-                  values: updateObject(values, { vendor: vendor })
+                  values: updateObject(values, {
+                    model_type: e.currentTarget.value,
+                  }),
                 });
               }}
-              onQueryChange={(vendor: string) => {
-                console.log("CHANGE", vendor);
-                this.setState({
-                  values: updateObject(values, { vendor: vendor })
-                });
-              }}
-              itemRenderer={renderStringItem}
-              itemPredicate={filterString}
-              noResults={<MenuItem disabled={true} text="No results." />}
-            />
-          </FormGroup>
+              selectedValue={values.model_type}
+            >
+              <Radio
+                label={MountTypes.RACKMOUNT}
+                value={MountTypes.RACKMOUNT}
+              />
+              <Radio
+                label={MountTypes.BLADE_CHASSIS}
+                value={MountTypes.BLADE_CHASSIS}
+              />
+              <Radio label={MountTypes.BLADE} value={MountTypes.BLADE} />
+            </RadioGroup>
 
-          <FormGroup label="Model Number (required)" inline={false}>
-            <Field
-              placeholder="model_number"
-              onChange={this.handleChange}
-              value={values.model_number}
-              field="model_number"
-            />
-          </FormGroup>
-          <FormGroup label="Height (required)" inline={false}>
-            <Field
-              field="height"
-              placeholder="height"
-              value={values.height}
-              onChange={this.handleChange}
-            />
-          </FormGroup>
-          <FormGroup label="Display Color">
-            <Field
-              field="display_color"
-              type="color"
-              value={values.display_color ? values.display_color : "#394B59"}
-              onChange={this.handleChange}
-            />
-          </FormGroup>
-          <FormGroup label="Number of Network Ports " inline={false}>
-            <Field
-              field="num_network_ports"
-              value={values.num_network_ports}
-              onChange={this.handleChange}
-            />
+            {values.model_type === MountTypes.RACKMOUNT ||
+            values.model_type === MountTypes.BLADE_CHASSIS ? (
+              <div>
+                <FormGroup
+                  label="Height*
+          "
+                  inline={false}
+                >
+                  <Field
+                    field="height"
+                    placeholder="height"
+                    value={values.height}
+                    onChange={this.handleChange}
+                  />
+                </FormGroup>
+                <FormGroup label="Number of Network Ports " inline={false}>
+                  <Field
+                    field="num_network_ports"
+                    value={values.num_network_ports}
+                    onChange={this.handleChange}
+                  />
 
-            {!(
-              values.network_ports && values.network_ports.length !== 0
-            ) ? null : (
-              <table className="port-table">
-                <thead>
-                  <th>Port Name(s) </th>
-                </thead>
-                <tbody>
-                  {values.network_ports.map((port, index) => {
-                    return (
-                      <tr>
-                        <td>
-                          <InputGroup
-                            onClick={this.selectText}
-                            value={port}
-                            type="string"
-                            className="network-name"
-                            onChange={(e: any) =>
-                              this.handleNetworkPortNameChange(
-                                index,
-                                e.currentTarget.value
-                              )
-                            }
-                          />
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            )}
-
-            {/* <Field
-              field="num_ethernet_ports"
-              placeholder="num_ethernet_ports"
-              value={values.num_ethernet_ports}
-              onChange={this.handleChange}
-            /> */}
-          </FormGroup>
-          <FormGroup label="# Power Ports" inline={false}>
-            <Field
-              field="num_power_ports"
-              placeholder="num_power_ports"
-              value={values.num_power_ports}
-              onChange={this.handleChange}
-            />
-          </FormGroup>
-          <FormGroup label="CPU" inline={false}>
-            <Field
-              field="cpu"
-              placeholder="cpu"
-              value={values.cpu}
-              onChange={this.handleChange}
-            />
-          </FormGroup>
-          <FormGroup label="Memory(GB)" inline={false}>
-            <Field
-              field="memory_gb"
-              placeholder="memory_gb"
-              value={values.memory_gb}
-              onChange={this.handleChange}
-            />
-          </FormGroup>
-          <FormGroup label="Storage" inline={false}>
-            <Field
-              field="storage"
-              placeholder="storage"
-              value={values.storage}
-              onChange={this.handleChange}
-            />
-          </FormGroup>
-          <FormGroup label="Comment" inline={false}>
-            <textarea
-              className={Classes.INPUT}
-              placeholder="comment"
-              value={values.comment}
-              onChange={(e: any) =>
-                this.handleChange({ comment: e.currentTarget.value })
-              }
-            ></textarea>
-          </FormGroup>
+                  {!(
+                    values.network_ports && values.network_ports.length !== 0
+                  ) ? null : (
+                    <table className="port-table">
+                      <thead>
+                        <th>Port Name(s) </th>
+                      </thead>
+                      <tbody>
+                        {values.network_ports.map((port, index) => {
+                          return (
+                            <tr>
+                              <td>
+                                <InputGroup
+                                  onClick={this.selectText}
+                                  value={port}
+                                  type="string"
+                                  className="network-name"
+                                  onChange={(e: any) =>
+                                    this.handleNetworkPortNameChange(
+                                      index,
+                                      e.currentTarget.value
+                                    )
+                                  }
+                                />
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  )}
+                </FormGroup>
+                <FormGroup label="# Power Ports" inline={false}>
+                  <Field
+                    field="num_power_ports"
+                    placeholder="num_power_ports"
+                    value={values.num_power_ports}
+                    onChange={this.handleChange}
+                  />
+                </FormGroup>
+              </div>
+            ) : null}
+          </Card>
+          <Card>
+            <FormGroup label="CPU" inline={false}>
+              <Field
+                field="cpu"
+                placeholder="cpu"
+                value={values.cpu}
+                onChange={this.handleChange}
+              />
+            </FormGroup>
+            <FormGroup label="Memory(GB)" inline={false}>
+              <Field
+                field="memory_gb"
+                placeholder="memory_gb"
+                value={values.memory_gb}
+                onChange={this.handleChange}
+              />
+            </FormGroup>
+            <FormGroup label="Storage" inline={false}>
+              <Field
+                field="storage"
+                placeholder="storage"
+                value={values.storage}
+                onChange={this.handleChange}
+              />
+            </FormGroup>
+            <FormGroup label="Comment" inline={false}>
+              <textarea
+                className={Classes.INPUT}
+                placeholder="comment"
+                value={values.comment}
+                onChange={(e: any) =>
+                  this.handleChange({ comment: e.currentTarget.value })
+                }
+              />
+            </FormGroup>
+          </Card>
 
           <Button className="login-button" type="submit">
             {this.state.loading ? "Submitting..." : "Submit"}
@@ -362,7 +382,7 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
 
 const mapStateToProps = (state: any) => {
   return {
-    token: state.token
+    token: state.token,
   };
 };
 export default connect(mapStateToProps)(ModelForm);

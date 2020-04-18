@@ -10,7 +10,7 @@ import {
   Toaster,
   Spinner,
   Intent,
-  Position
+  Position,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -22,11 +22,14 @@ import { FileSelector } from "../lib/fileSelect";
 import "./import.scss";
 import InstructionsLite from "./importInstructionsLite";
 import { Modifier } from "./viewModified";
+import { TableType } from "../../utils/utils";
+import * as actions from "../../store/actions/state";
 
 var console: any = {};
-console.log = function() {};
+console.log = function () {};
 interface ImportProps {
   token: string;
+  markTablesStale(staleTables: TableType[]): void;
 }
 
 interface AlertState {
@@ -65,7 +68,7 @@ export class BulkImport extends React.PureComponent<
     loadedAssets: [],
     uploading: false,
     notify: false,
-    assetUploadType: "assets"
+    assetUploadType: "assets",
   };
 
   private toaster: Toaster = {} as Toaster;
@@ -82,11 +85,11 @@ export class BulkImport extends React.PureComponent<
   private addWarnToast = (message: string) => {
     this.addToast({
       message: message,
-      intent: Intent.WARNING
+      intent: Intent.WARNING,
     });
   };
   private refHandlers = {
-    toaster: (ref: Toaster) => (this.toaster = ref)
+    toaster: (ref: Toaster) => (this.toaster = ref),
   };
 
   private createAlertToasts(toasts: Array<string>, types: Array<string>) {
@@ -190,7 +193,7 @@ export class BulkImport extends React.PureComponent<
               this.setState({
                 modelAlterationsIsOpen: false,
                 loadedModels: undefined,
-                modifiedModels: undefined
+                modifiedModels: undefined,
               })
             }
             className={Classes.DARK + " modify-table"}
@@ -207,7 +210,7 @@ export class BulkImport extends React.PureComponent<
                 this.setState({
                   modelAlterationsIsOpen: false,
                   modifiedModels: undefined,
-                  loadedModels: undefined
+                  loadedModels: undefined,
                 });
                 console.log(this.state);
                 this.createAlertToasts(toast, messageType);
@@ -230,7 +233,7 @@ export class BulkImport extends React.PureComponent<
               this.setState({
                 assetAlterationsIsOpen: false,
                 loadedAssets: undefined,
-                modifiedAssets: undefined
+                modifiedAssets: undefined,
               })
             }
             className={Classes.DARK + " modify-table"}
@@ -247,7 +250,7 @@ export class BulkImport extends React.PureComponent<
                 this.setState({
                   assetAlterationsIsOpen: false,
                   modifiedAssets: undefined,
-                  loadedAssets: undefined
+                  loadedAssets: undefined,
                 });
                 this.createAlertToasts(toast, messageType);
               }}
@@ -261,7 +264,7 @@ export class BulkImport extends React.PureComponent<
             onClose={() =>
               this.setState({
                 networkAlterationsIsOpen: false,
-                modifiedNetwork: undefined
+                modifiedNetwork: undefined,
               })
             }
             className={Classes.DARK + " modify-table"}
@@ -277,7 +280,7 @@ export class BulkImport extends React.PureComponent<
               callback={(toast: Array<string>, messageType: Array<string>) => {
                 this.setState({
                   networkAlterationsIsOpen: false,
-                  modifiedNetwork: undefined
+                  modifiedNetwork: undefined,
                 });
                 this.createAlertToasts(toast, messageType);
               }}
@@ -306,11 +309,11 @@ export class BulkImport extends React.PureComponent<
       getBase64(this.state.selectedFile).then(
         (res: any) => {
           this.setState({
-            encodedFile: res
+            encodedFile: res,
           });
           this.handleUpload(res);
         },
-        err => {
+        (err) => {
           this.addErrorToast(err.response.data.failure_message);
         }
       );
@@ -330,7 +333,7 @@ export class BulkImport extends React.PureComponent<
     if (encodedFile !== undefined) {
       this.setState({ uploading: true });
       uploadBulk(encodedFile, this.props.token, uploadType).then(
-        res => {
+        (res) => {
           console.log(res);
           if (res.modifications.length !== 0) {
             console.log(res.modifications);
@@ -340,7 +343,7 @@ export class BulkImport extends React.PureComponent<
                 uploading: false,
                 modifiedModels: res.modifications,
                 ignoredModels: res.ignored,
-                addedModels: res.added
+                addedModels: res.added,
               });
             } else if (uploadType === "assets") {
               this.setState({
@@ -348,7 +351,7 @@ export class BulkImport extends React.PureComponent<
                 uploading: false,
                 modifiedAssets: res.modifications,
                 ignoredAssets: res.ignored,
-                addedAssets: res.added
+                addedAssets: res.added,
               });
             } else {
               this.setState({
@@ -356,10 +359,15 @@ export class BulkImport extends React.PureComponent<
                 uploading: false,
                 modifiedNetwork: res.modifications,
                 ignoredNetwork: res.ignored,
-                addedNetwork: res.added
+                addedNetwork: res.added,
               });
             }
           } else {
+            this.props.markTablesStale([
+              TableType.RACKED_ASSETS,
+              TableType.STORED_ASSETS,
+              TableType.MODELS,
+            ]);
             this.addSuccessToast(
               "Success! Modified: 0; Added: " +
                 res.added +
@@ -373,7 +381,7 @@ export class BulkImport extends React.PureComponent<
             }
           }
         },
-        err => {
+        (err) => {
           this.setState({ uploading: false });
           this.addErrorToast(err.response.data.failure_message);
         }
@@ -386,7 +394,7 @@ export class BulkImport extends React.PureComponent<
       loadedModels: undefined,
       loadedAssets: undefined,
       modifiedModels: undefined,
-      modifiedAssets: undefined
+      modifiedAssets: undefined,
     });
   };
 
@@ -396,7 +404,7 @@ export class BulkImport extends React.PureComponent<
    */
   private setFile = (file: File) => {
     this.setState({
-      selectedFile: file
+      selectedFile: file,
     });
   };
 }
@@ -410,11 +418,11 @@ async function uploadBulk(encodedFile: string, token: string, type: string) {
   console.log(token);
   const headers = {
     headers: {
-      Authorization: "Token " + token
-    }
+      Authorization: "Token " + token,
+    },
   };
   const postBody = { import_csv: encodedFile };
-  return await axios.post(url, postBody, headers).then(res => {
+  return await axios.post(url, postBody, headers).then((res) => {
     console.log(res.data);
     const data = res.data;
     return data;
@@ -425,12 +433,12 @@ async function getBase64(file: File) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     let content = "";
-    reader.onload = function(e: any) {
+    reader.onload = function (e: any) {
       content = e.target.result;
       const result = content;
       resolve(result);
     };
-    reader.onerror = function(e: any) {
+    reader.onerror = function (e: any) {
       reject(e);
     };
     reader.readAsDataURL(file);
@@ -439,8 +447,17 @@ async function getBase64(file: File) {
 
 const mapStatetoProps = (state: any) => {
   return {
-    token: state.token
+    token: state.token,
   };
 };
 
-export default withRouter(connect(mapStatetoProps)(BulkImport));
+const mapDispatchToProps = (dispatch: any) => {
+  return {
+    markTablesStale: (staleTables: TableType[]) =>
+      dispatch(actions.markTablesStale(staleTables)),
+  };
+};
+
+export default withRouter(
+  connect(mapStatetoProps, mapDispatchToProps)(BulkImport)
+);

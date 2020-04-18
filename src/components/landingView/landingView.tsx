@@ -5,15 +5,15 @@ import ElementTabContainer from "../elementView/elementTabContainer";
 
 // var console: any = {};
 // console.log = function() {};
-interface LandingViewState { }
-interface LandingViewProps { }
+interface LandingViewState {}
+interface LandingViewProps {}
 class LandingView extends React.Component<
   RouteComponentProps & LandingViewProps,
   LandingViewState
-  > {
+> {
   showTabs() {
     const regex = new RegExp(
-      "^/dashboard/(assets|models|datacenters|racks)|^/dashboard$"
+      "^/dashboard/(assets|stored-assets|decommissioned-assets|models|datacenters|racks|offline-storage-sites)|^/dashboard$"
     );
     if (regex.exec(this.props.location.pathname)) {
       return true;

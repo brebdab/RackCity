@@ -6,7 +6,7 @@ import {
   Tooltip,
   Position,
   HTMLSelect,
-  Icon
+  Icon,
 } from "@blueprintjs/core";
 import { RouteComponentProps } from "react-router";
 import "../elementView//elementView.scss";
@@ -17,41 +17,64 @@ import "./logs.scss";
 import {
   FilterTypes,
   TextFilterTypes,
-  PagingTypes
+  PagingTypes,
 } from "../elementView/elementUtils";
 import { IconNames } from "@blueprintjs/icons";
 import { ROUTES } from "../../utils/utils";
 
-export function getLogFilters(filterValue: string) {
-  const username_filter = {
-    field: "user__username",
-    filter_type: FilterTypes.TEXT,
-    filter: {
-      value: filterValue,
-      match_type: TextFilterTypes.CONTAINS
+export function getTextInQuotes(str: string) {
+  const re = /(".*?")/g;
+  const result = [];
+  let current;
+  while ((current = re.exec(str))) {
+    if (current) {
+      result.push(current.pop());
     }
-  };
-  const hostname_filter = {
-    field: "related_asset__hostname",
-    filter_type: FilterTypes.TEXT,
-    filter: {
-      value: filterValue,
-      match_type: TextFilterTypes.CONTAINS
-    }
-  };
-  if (Number(filterValue)) {
-    const asset_number_filter = {
-      field: "related_asset__asset_number",
-      filter_type: FilterTypes.NUMERIC,
-      filter: {
-        max: Number(filterValue),
-        min: Number(filterValue)
-      }
-    };
-    return [username_filter, hostname_filter, asset_number_filter];
-  } else {
-    return [username_filter, hostname_filter];
   }
+  return result.length > 0 ? result : [str];
+}
+
+export function getTextNotInQuotes(str: string) {
+  let result = str;
+  const textInQuotes = getTextInQuotes(str);
+  textInQuotes.forEach((value) => {
+    if (value) {
+      result = result.replace(value, "");
+    }
+  });
+  return result.split(/(\s+)/);
+}
+
+export function getLogFilters(searchValue: string) {
+  let logs = Array<any>();
+  const textInQuotes = getTextInQuotes(searchValue);
+  textInQuotes.forEach((value) => {
+    if (value) {
+      let filterValue = value.replace(/^"|"$/g, "");
+      logs.push({
+        field: "log_content",
+        filter_type: FilterTypes.TEXT,
+        filter: {
+          value: filterValue,
+          match_type: TextFilterTypes.CONTAINS,
+        },
+      });
+    }
+  });
+  const textNotInQuotes = getTextNotInQuotes(searchValue);
+  textNotInQuotes.forEach((value) => {
+    if (value) {
+      logs.push({
+        field: "log_content",
+        filter_type: FilterTypes.TEXT,
+        filter: {
+          value: value,
+          match_type: TextFilterTypes.CONTAINS,
+        },
+      });
+    }
+  });
+  return logs;
 }
 interface LogEntry {
   id: number;
@@ -81,7 +104,7 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
     page_type: PagingTypes.FIFTY,
     search_query: undefined,
     filters: undefined,
-    is_state_loaded: false
+    is_state_loaded: false,
   };
   private getTotalPages = async (
     page_size: number,
@@ -89,21 +112,21 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
   ): Promise<number> => {
     const config = {
       headers: {
-        Authorization: "Token " + this.props.token
+        Authorization: "Token " + this.props.token,
       },
       params: {
-        page_size
-      }
+        page_size,
+      },
     };
     const body =
       filters !== undefined
         ? {
-            filters: filters
+            filters: filters,
           }
         : {};
     return await axios
       .post(API_ROOT + "api/logs/pages", body, config)
-      .then(res => {
+      .then((res) => {
         return res.data.page_count;
       });
   };
@@ -114,25 +137,25 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
   ): Promise<Array<LogEntry>> => {
     const config = {
       headers: {
-        Authorization: "Token " + this.props.token
+        Authorization: "Token " + this.props.token,
       },
       params:
         page_type === PagingTypes.ALL
           ? {}
           : {
               page_size: page_type,
-              page
-            }
+              page,
+            },
     };
     const body =
       filters !== undefined
         ? {
-            filters: filters
+            filters: filters,
           }
         : {};
     return await axios
       .post(API_ROOT + "api/logs/get-many", body, config)
-      .then(res => {
+      .then((res) => {
         return res.data.logs;
       });
   };
@@ -141,31 +164,31 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
     page_type: PagingTypes,
     filters?: Array<any>
   ) => {
-    this.getLogs(page_number, page_type, filters).then(res => {
+    this.getLogs(page_number, page_type, filters).then((res) => {
       this.setState({
-        logs: res
+        logs: res,
       });
     });
     if (page_type !== PagingTypes.ALL) {
-      this.getTotalPages(page_type, filters).then(res => {
+      this.getTotalPages(page_type, filters).then((res) => {
         this.setState({
-          total_pages: res
+          total_pages: res,
         });
       });
     }
   };
   private resetPage = () => {
     this.setState({
-      curr_page: 1
+      curr_page: 1,
     });
   };
   private previousPage = () => {
     if (this.state.curr_page > 1) {
       const next_page = this.state.curr_page - 1;
-      this.getLogs(next_page, this.state.page_type).then(res => {
+      this.getLogs(next_page, this.state.page_type).then((res) => {
         this.setState({
           logs: res,
-          curr_page: next_page
+          curr_page: next_page,
         });
       });
     }
@@ -173,10 +196,10 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
   private nextPage = () => {
     if (this.state.curr_page < this.state.total_pages) {
       const next_page = this.state.curr_page + 1;
-      this.getLogs(next_page, this.state.page_type).then(res => {
+      this.getLogs(next_page, this.state.page_type).then((res) => {
         this.setState({
           logs: res,
-          curr_page: next_page
+          curr_page: next_page,
         });
       });
     }
@@ -184,7 +207,7 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
   private handlePagingChange = (page: PagingTypes) => {
     this.resetPage();
     this.setState({
-      page_type: page
+      page_type: page,
     });
     this.updateLogsAndPages(1, page, this.state.filters);
   };
@@ -192,13 +215,13 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
     if (this.state.search_query !== undefined) {
       const query_filters = getLogFilters(this.state.search_query);
       this.setState({
-        filters: query_filters
+        filters: query_filters,
       });
       this.resetPage();
       this.updateLogsAndPages(1, this.state.page_type, query_filters);
     } else {
       this.setState({
-        filters: undefined
+        filters: undefined,
       });
       this.resetPage();
       this.updateLogsAndPages(1, this.state.page_type);
@@ -250,7 +273,7 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
   public render() {
     if (!this.state.is_state_loaded) {
       this.setState({
-        is_state_loaded: true
+        is_state_loaded: true,
       });
       this.updateLogsAndPages(
         this.state.curr_page,
@@ -262,24 +285,24 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
       <div className={Classes.DARK + " log-view"}>
         <h1>Audit Logs</h1>
         <div className={Classes.DARK + " bp3-input-group .modifier"}>
-          <span className="search-span bp3-icon bp3-icon-search"></span>
+          <span className="search-span bp3-icon bp3-icon-search" />
           <form onSubmit={this.onFormSubmit}>
-            <span></span>
+            <span />
             <input
               className="search-input bp3-input .modifier"
               type="text"
-              placeholder="Search logs by username, asset number, or asset hostname"
+              placeholder="Search logs (enclose any text in double quotes to find exact matches)"
               dir="auto"
               onChange={(e: any) =>
                 this.setState({
-                  search_query: e.currentTarget.value
+                  search_query: e.currentTarget.value,
                 })
               }
             />
             <button
               className="search-button bp3-button bp3-minimal bp3-intent-primary bp3-icon-arrow-right .modifier"
               onClick={() => this.handleSearch()}
-            ></button>
+            />
           </form>
         </div>
         <div className="page-control">
@@ -311,13 +334,13 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
                     iconSize={Icon.SIZE_LARGE}
                     onClick={() => this.nextPage()}
                   />
-                </span>
+                </span>,
               ]
             : null}
         </div>
         <div>
           <Pre className="log-block">
-            {this.state.logs.map(log => this.renderLinkedLog(log))}
+            {this.state.logs.map((log) => this.renderLinkedLog(log))}
           </Pre>
         </div>
       </div>
@@ -327,7 +350,7 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
 
 const mapStateToProps = (state: any) => {
   return {
-    token: state.token
+    token: state.token,
   };
 };
 

@@ -8,9 +8,10 @@
   flex: 50%;
 }
 
-.model-link:hover {
+.link:hover {
   background-color: #394b59 !important;
   cursor: pointer !important;
+  //border-radius:10pt !important;
 }
 .propsview {
   margin: 10pt;
@@ -34,7 +35,10 @@
   padding-right: 30pt;
 }
 .label {
-  color: #bfccd6 !important;
+  color: #bfccd6;
 }
-
-//
+.custom-message {
+  float: right;
+  color: #48aff0;
+  margin-top: -10pt;
+}

@@ -30,6 +30,9 @@
   font-weight: 1 !important;
   white-space: pre-line;
 }
+.nav-bar-button:focus{
+  outline:0!important;
+}
 .banner:hover {
   cursor: pointer !important;
 }

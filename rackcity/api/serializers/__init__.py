@@ -1,10 +1,11 @@
-from .datacenter_serializers import DatacenterSerializer
+from .site_serializers import SiteSerializer
 from .asset_serializers import (
     AssetSerializer,
     AssetCPSerializer,
     RecursiveAssetSerializer,
     BulkAssetSerializer,
     RecursiveAssetCPSerializer,
+    ChassisSerializer,
     normalize_bulk_asset_data,
     serialize_power_connections,
 )
@@ -18,7 +19,7 @@ from .rack_serializers import RackSerializer
 from .user_serializers import RegisterNameSerializer, UserSerializer
 from .network_port_serializers import (
     BulkNetworkPortSerializer,
-    normalize_bulk_network_data
+    normalize_bulk_network_data,
 )
 from .decommissioned_asset_serializers import (
     AddDecommissionedAssetSerializer,

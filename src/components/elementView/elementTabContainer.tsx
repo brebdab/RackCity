@@ -1,19 +1,21 @@
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
-import { Tabs, Tab, Classes } from "@blueprintjs/core";
+import { Classes, Tab, Tabs } from "@blueprintjs/core";
 import ElementTab from "./elementTab";
 import { RouteComponentProps } from "react-router";
 import "./elementView.scss";
 import { connect } from "react-redux";
 import {
   ElementType,
+  AssetType,
   DatacenterObject,
   getHeaders,
-  PermissionState
+  ROUTES,
 } from "../../utils/utils";
 import RackTab from "./rackTab";
 import { API_ROOT } from "../../utils/api-config";
 import axios from "axios";
+import { PermissionState } from "../../utils/permissionUtils";
 
 interface ElementTabContainerProps {
   isAdmin: boolean;
@@ -27,7 +29,8 @@ interface ElementTabContainerState {
 export const ALL_DATACENTERS: DatacenterObject = {
   id: "",
   name: "All datacenters",
-  abbreviation: "ALL"
+  abbreviation: "ALL",
+  is_storage: false,
 };
 // var console: any = {};
 // console.log = function() {};
@@ -38,26 +41,26 @@ class ElementTabContainer extends React.Component<
 > {
   state = {
     datacenters: [],
-    currDatacenter: ALL_DATACENTERS
+    currDatacenter: ALL_DATACENTERS,
   };
 
   onDatacenterSelect = (datacenter: DatacenterObject) => {
     this.setState({
-      currDatacenter: datacenter
+      currDatacenter: datacenter,
     });
   };
   getDatacenters = () => {
     const headers = getHeaders(this.props.token);
     axios
-      .post(API_ROOT + "api/datacenters/get-many", {}, headers)
-      .then(res => {
+      .post(API_ROOT + "api/sites/datacenters/get-many", {}, headers)
+      .then((res) => {
         const datacenters = res.data.datacenters as Array<DatacenterObject>;
         datacenters.push(ALL_DATACENTERS);
         this.setState({
-          datacenters
+          datacenters,
         });
       })
-      .catch(err => {});
+      .catch((err) => {});
   };
   componentDidMount = () => {
     this.getDatacenters();
@@ -65,7 +68,7 @@ class ElementTabContainer extends React.Component<
 
   getTabName = (pathname: string) => {
     if (pathname === "/dashboard") {
-      return "racks";
+      return ElementType.ASSET;
     }
     const regex = new RegExp("dashboard/(.*$)");
     const match = regex.exec(pathname);
@@ -73,7 +76,15 @@ class ElementTabContainer extends React.Component<
       return match[1];
     }
   };
-
+  private handleTabClick(tab: string) {
+    if (tab === "assets-parent") {
+      this.props.history.push(ROUTES.ASSETS);
+    } else if (tab === "sites") {
+      this.props.history.push(ROUTES.DATACENTERS);
+    } else {
+      this.props.history.push("/dashboard/" + tab);
+    }
+  }
   public render() {
     return (
       <Tabs
@@ -85,8 +96,71 @@ class ElementTabContainer extends React.Component<
         renderActiveTabPanelOnly={false}
         vertical={true}
         large
-        onChange={(tab: any) => this.props.history.push("/dashboard/" + tab)}
+        onChange={(tab: string) => this.handleTabClick(tab)}
       >
+        <Tab
+          className="tab-header do-not-print"
+          id="assets-parent"
+          title="Assets"
+        />
+
+        <Tab
+          className="tab-sub do-not-print"
+          id="assets"
+          title="Racked Assets"
+          panel={
+            <ElementTab
+              datacenters={this.state.datacenters}
+              currDatacenter={this.state.currDatacenter}
+              onDatacenterSelect={this.onDatacenterSelect}
+              {...this.props}
+              element={ElementType.ASSET}
+              assetType={AssetType.RACKED}
+              isActive={false}
+            />
+          }
+        />
+
+        <Tab
+          className="tab-sub do-not-print"
+          id="stored-assets"
+          title="Stored Assets"
+          panel={
+            <ElementTab
+              datacenters={this.state.datacenters}
+              currDatacenter={this.state.currDatacenter}
+              onDatacenterSelect={this.onDatacenterSelect}
+              {...this.props}
+              element={ElementType.ASSET}
+              assetType={AssetType.STORED}
+              isActive={false}
+            />
+          }
+        />
+
+        <Tab
+          className="tab-sub do-not-print"
+          id="decommissioned-assets"
+          title="Decommissioned Assets"
+          panel={
+            <ElementTab
+              datacenters={this.state.datacenters}
+              currDatacenter={this.state.currDatacenter}
+              onDatacenterSelect={this.onDatacenterSelect}
+              {...this.props}
+              element={ElementType.ASSET}
+              assetType={AssetType.DECOMMISSIONED}
+              isActive={false}
+            />
+          }
+        />
+
+        <Tab
+          className="tab do-not-print"
+          id="models"
+          title="Models"
+          panel={<ElementTab {...this.props} element={ElementType.MODEL} />}
+        />
         <Tab
           className="tab"
           id="racks"
@@ -99,31 +173,21 @@ class ElementTabContainer extends React.Component<
             />
           }
         />
+
         <Tab
-          className="tab do-not-print"
-          id="assets"
-          title="Assets"
-          panel={
-            <ElementTab
-              datacenters={this.state.datacenters}
-              currDatacenter={this.state.currDatacenter}
-              onDatacenterSelect={this.onDatacenterSelect}
-              {...this.props}
-              element={ElementType.ASSET}
-              isActive={false}
-            />
+          className="tab-header do-not-print"
+          id="sites"
+          title="Sites"
+          disabled={
+            !(
+              this.props.permissionState.admin ||
+              this.props.permissionState.asset_management
+            )
           }
         />
 
         <Tab
-          className="tab do-not-print"
-          id="models"
-          title="Models"
-          panel={<ElementTab {...this.props} element={ElementType.MODEL} />}
-        />
-
-        <Tab
-          className="tab do-not-print"
+          className="tab-sub do-not-print"
           id="datacenters"
           title="Datacenters"
           disabled={
@@ -141,6 +205,24 @@ class ElementTabContainer extends React.Component<
           }
         />
 
+        <Tab
+          className="tab-sub do-not-print"
+          id="offline-storage-sites"
+          title="Offline Storage Sites"
+          disabled={
+            !(
+              this.props.permissionState.admin ||
+              this.props.permissionState.asset_management
+            )
+          }
+          panel={
+            <ElementTab
+              {...this.props}
+              element={ElementType.OFFLINE_STORAGE_SITE}
+            />
+          }
+        />
+
         <Tabs.Expander />
       </Tabs>
     );
@@ -151,7 +233,7 @@ const mapStateToProps = (state: any) => {
   return {
     isAdmin: state.admin,
     permissionState: state.permissionState,
-    token: state.token
+    token: state.token,
   };
 };
 

@@ -1,14 +1,14 @@
 import { Classes, Dialog } from "@blueprintjs/core";
 import * as React from "react";
 import {
+  DatacenterObject,
   ElementObjectType,
   ElementType,
-  isAssetObject,
-  isModelObject,
   FormObjectType,
+  isAssetObject,
+  isChangePlanObject,
   isDatacenterObject,
-  DatacenterObject,
-  isChangePlanObject
+  isModelObject,
 } from "../utils/utils";
 import { ALL_DATACENTERS } from "../components/elementView/elementTabContainer";
 import RackSelectView from "../components/elementView/rackSelectView";
@@ -20,7 +20,7 @@ import { FormTypes } from "./formUtils";
 import ChangePlanForm from "./changePlanForm";
 import UserForm from "./userForm";
 
-interface FormPopupState { }
+interface FormPopupState {}
 interface FormPopupProps {
   isOpen: boolean;
   type: FormTypes;
@@ -35,7 +35,7 @@ interface FormPopupProps {
 }
 
 var console: any = {};
-console.log = function () { };
+console.log = function () {};
 class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
   render() {
     return (
@@ -62,8 +62,7 @@ class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
         ) : null}
         {this.props.elementName === ElementType.ASSET ? (
           <AssetForm
-            datacenters={this.props.datacenters ? this.props.datacenters : []}
-            currDatacenter={
+            currSite={
               this.props.currDatacenter
                 ? this.props.currDatacenter
                 : ALL_DATACENTERS
@@ -87,7 +86,8 @@ class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
         {this.props.elementName === ElementType.USER && !this.props.userId ? (
           <WrappedRegistrationForm authSignup={this.props.submitForm} />
         ) : null}
-        {this.props.elementName === ElementType.DATACENTER ? (
+        {this.props.elementName === ElementType.DATACENTER ||
+        this.props.elementName === ElementType.OFFLINE_STORAGE_SITE ? (
           <DatacenterForm
             type={FormTypes.CREATE}
             submitForm={this.props.submitForm}
@@ -96,6 +96,7 @@ class FormPopup extends React.Component<FormPopupProps, FormPopupState> {
                 ? this.props.initialValues
                 : undefined
             }
+            elementType={this.props.elementName}
           />
         ) : null}
         {this.props.elementName === ElementType.CHANGEPLANS ? (

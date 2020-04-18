@@ -10,63 +10,64 @@ import {
   isModelObject,
   isObject,
   ModelFieldsTable,
-  ROUTES,
-  ChangePlan
+  ChangePlan,
+  isDatacenterObject,
 } from "../../../utils/utils";
 import "./propertiesView.scss";
 import { connect } from "react-redux";
 
-export interface AlertState {
+interface PropertiesViewState {
   isDeleteOpen: boolean;
   fields: Array<string>;
 }
-// var console: any = {};
-// console.log = function() {};
 
 interface PropertiesViewProps {
   data: ElementObjectType;
   changePlan: ChangePlan;
+  title?: string;
+  data_override?: any;
+  redirectToAsset?(id: string): void;
 }
 
 class PropertiesView extends React.PureComponent<
   RouteComponentProps & PropertiesViewProps,
-  AlertState
+  PropertiesViewState
 > {
   setFieldNamesFromData = () => {
     let fields: Array<string> = [];
     Object.keys(this.props.data).forEach((col: string) => {
       if (
-        col !== "id" &&
-        col !== "power_connections" &&
-        col !== "mac_addresses" &&
-        col !== "network_connections" &&
-        col !== "network_graph" &&
-        col !== "decommissioned_id" &&
-        col !== "decommissioning_user" &&
-        col !== "time_decommissioned"
+        (isAssetObject(this.props.data) && AssetFieldsTable[col]) ||
+        (isModelObject(this.props.data) && ModelFieldsTable[col])
       ) {
         fields.push(col);
       }
     });
     return fields;
   };
-  public state: AlertState = {
+  public state: PropertiesViewState = {
     isDeleteOpen: false,
-    fields: this.setFieldNamesFromData()
+    fields: this.setFieldNamesFromData(),
   };
 
   renderData(fields: Array<any>, data: any) {
     return fields.map((item: string) => {
+      var dat;
       if (item === "display_color") {
-        var dat;
+        const isCustomField =
+          this.props.data_override && this.props.data_override[item];
+        const color = isCustomField
+          ? this.props.data_override[item]
+          : data[item];
+
         dat = (
           <p
             className="color"
             style={{
-              backgroundColor: data[item]
+              backgroundColor: color,
             }}
           >
-            {data[item]}
+            {color}
           </p>
         );
       } else if (item === "network_ports") {
@@ -75,21 +76,15 @@ class PropertiesView extends React.PureComponent<
           dat = <p>{network_ports.toString()}</p>;
         }
       } else if (item === "model") {
-        const isDecommissioned = data["decommissioning_user"];
-        dat = (
-          <p
-            className={isDecommissioned ? undefined : "model-link"}
-            onClick={
-              isDecommissioned
-                ? undefined
-                : () =>
-                    this.props.history.push(ROUTES.MODELS + "/" + data[item].id)
-            }
-          >
-            {data[item].vendor + " " + data[item].model_number}
-          </p>
-        );
-      } else if (item === "rack") {
+        dat = <p>{data[item].vendor + " " + data[item].model_number}</p>;
+      } else if (isAssetObject(data) && item === "rack") {
+        let rack = null;
+        if (data.rack) {
+          rack = data.rack;
+        }
+        if (data.chassis) {
+          rack = data.chassis.rack;
+        }
         return [
           <tr>
             <td key={item}>
@@ -98,24 +93,27 @@ class PropertiesView extends React.PureComponent<
 
             <td style={getChangePlanRowStyle(data)}>
               {" "}
-              <p>{data[item].row_letter + "" + data[item].rack_num}</p>
+              <p>{rack ? rack.row_letter + "" + rack.rack_num : null}</p>
             </td>
           </tr>,
+        ];
+      } else if (isAssetObject(data) && item === "chassis") {
+        return [
           <tr>
-            <td key={"datacenter"}>
-              <p className="label">
-                {AssetFieldsTable["rack__datacenter__name"]}:
-              </p>
+            <td key={item}>
+              <p className="label">{AssetFieldsTable[item]}:</p>
             </td>
 
             <td style={getChangePlanRowStyle(data)}>
               {" "}
-              <p>{data[item].datacenter.name}</p>
+              <p>{data.chassis ? data.chassis.hostname : null}</p>
             </td>
-          </tr>
+          </tr>,
         ];
       } else if (item === "comment") {
         dat = <p className="comment">{data[item]}</p>;
+      } else if (isDatacenterObject(data[item])) {
+        dat = <p>{data[item].name}</p>;
       } else if (!isObject(data[item])) {
         //TO DO: decide how to render dicts
         dat = <p>{data[item]}</p>;
@@ -133,13 +131,29 @@ class PropertiesView extends React.PureComponent<
         ) : null;
       }
       if (isModelObject(this.props.data)) {
+        const isCustomField =
+          this.props.data_override && this.props.data_override[item];
         return (
           <tr>
             <td key={item}>
-              <p className="label">{ModelFieldsTable[item]}:</p>
+              <p
+                className="label"
+                style={{
+                  fontWeight: isCustomField
+                    ? ("bold" as any)
+                    : ("normal" as any),
+                  color: isCustomField ? "#48AFF0" : "#bfccd6",
+                }}
+              >
+                {ModelFieldsTable[item]}:
+              </p>
             </td>
 
-            <td>{dat}</td>
+            {isCustomField && item !== "display_color" ? (
+              <td>{this.props.data_override[item]}</td>
+            ) : (
+              <td>{dat}</td>
+            )}
           </tr>
         );
       } else {
@@ -162,55 +176,63 @@ class PropertiesView extends React.PureComponent<
       Object.keys(this.props.data).length !== 0
     ) {
       this.setState({
-        fields: this.setFieldNamesFromData()
+        fields: this.setFieldNamesFromData(),
       });
     }
     const length = Math.ceil(this.state.fields.length / 4);
 
     return (
       <div className={Classes.DARK + " propsview"}>
-        <h3>Properties</h3>
-        <div className="propsdetail">
-          <div className="props-column">
-            <table className="bp3-html-table">
-              {this.renderData(
-                this.state.fields.slice(0, length),
-                this.props.data
-              )}
-            </table>
+        <h3>{this.props.title ? this.props.title : "Properties"}</h3>
+
+        {Object.keys(this.props.data).length !== 0 ? (
+          <div className="propsdetail">
+            <div className="props-column">
+              <table className="bp3-html-table">
+                {this.renderData(
+                  this.state.fields.slice(0, length),
+                  this.props.data
+                )}
+              </table>
+            </div>
+            <div className="props-column">
+              <table className="bp3-html-table">
+                {this.renderData(
+                  this.state.fields.slice(length, 2 * length),
+                  this.props.data
+                )}
+              </table>
+            </div>
+            <div className="props-column">
+              <table className="bp3-html-table">
+                {this.renderData(
+                  this.state.fields.slice(2 * length, 3 * length),
+                  this.props.data
+                )}
+              </table>
+            </div>
+            <div className="props-column">
+              <table className="bp3-html-table">
+                {this.renderData(
+                  this.state.fields.slice(3 * length),
+                  this.props.data
+                )}
+              </table>
+            </div>
           </div>
-          <div className="props-column">
-            <table className="bp3-html-table">
-              {this.renderData(
-                this.state.fields.slice(length, 2 * length),
-                this.props.data
-              )}
-            </table>
-          </div>
-          <div className="props-column">
-            <table className="bp3-html-table">
-              {this.renderData(
-                this.state.fields.slice(2 * length, 3 * length),
-                this.props.data
-              )}
-            </table>
-          </div>
-          <div className="props-column">
-            <table className="bp3-html-table">
-              {this.renderData(
-                this.state.fields.slice(3 * length),
-                this.props.data
-              )}
-            </table>
-          </div>
-        </div>
+        ) : null}
+        <p className="custom-message">
+          {this.props.data_override
+            ? "*Custom fields highlighted in blue"
+            : null}
+        </p>
       </div>
     );
   }
 }
 const mapStateToProps = (state: any) => {
   return {
-    changePlan: state.changePlan
+    changePlan: state.changePlan,
   };
 };
 export default connect(mapStateToProps)(withRouter(PropertiesView));

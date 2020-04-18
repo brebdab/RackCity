@@ -1,6 +1,7 @@
 import axios from "axios";
 import { API_ROOT } from "./api-config";
-import { ITableSort, IFilter } from "../components/elementView/elementUtils";
+import { IFilter, ITableSort } from "../components/elementView/elementUtils";
+
 export interface ElementObject {
   id: string;
 }
@@ -9,8 +10,11 @@ export enum ROUTES {
   LOGIN = "/login",
   RACKS = "/dashboard/racks",
   DATACENTERS = "/dashboard/datacenters",
+  OFFLINE_STORAGE_SITES = "/dashboard/offline-storage-sites",
   MODELS = "/dashboard/models",
   ASSETS = "/dashboard/assets",
+  STORED_ASSETS = "/dashboard/stored-assets",
+  DECOMMISSIONED_ASSETS = "/dashboard/decommissioned-assets",
   DASHBOARD = "/dashboard",
   REPORT = "/dashboard/report",
   LOGS = "/dashboard/logs",
@@ -18,7 +22,8 @@ export enum ROUTES {
   BULK_IMPORT = "/dashboard/bulk-upload/:resourceType",
   USERS = "/dashboard/users",
   CHANGE_PLAN = "/dashboard/change-plans",
-  BARCODE_PRINT = "/assets/barcode-print"
+  BARCODE_PRINT = "/assets/barcode-print",
+  SCANNER = "/mobile/scanner",
 }
 export enum ElementType {
   RACK = "racks",
@@ -26,38 +31,37 @@ export enum ElementType {
   MODEL = "models",
   USER = "users",
   DATACENTER = "datacenters",
-  CHANGEPLANS = "change-plans"
+  OFFLINE_STORAGE_SITE = "offline-storage-sites",
+  CHANGEPLANS = "change-plans",
+}
+export enum AssetType {
+  RACKED = "Racked",
+  STORED = "Stored",
+  DECOMMISSIONED = "Decommissioned",
+}
+export enum TableType {
+  RACKED_ASSETS = "RACKED_ASSETS",
+  STORED_ASSETS = "STORED_ASSETS",
+  DECOMMISSIONED_ASSETS = "DECOMMISSIONED_ASSETS",
+  MODELS = "MODELS",
 }
 export enum PowerSide {
   LEFT = "L",
-  RIGHT = "R"
+  RIGHT = "R",
 }
 export interface ChangePlan extends ElementObject {
   name: string;
   execution_time?: string;
 }
-export interface PermissionState {
-  model_management: boolean;
-  asset_management: boolean;
-  power_control: boolean;
-  audit_read: boolean;
-  admin: boolean;
-  datacenter_permissions: Array<number>;
-}
-export interface AssetObjectOld extends ElementObject {
-  hostname: string;
-  rack_position: string;
-  model?: ModelObject;
-  rack?: RackObject;
-  network_connections: {};
-  owner?: string;
-  comment?: string;
-}
 
 export interface AssetObject extends ParentAssetObject {
+  chassis?: AssetObject;
   model: ModelObject;
-  rack: RackObject;
+  rack?: RackObject;
   network_graph: NetworkGraphData;
+  blades: Array<AssetObject>;
+  datacenter: DatacenterObject;
+  offline_storage_site?: DatacenterObject;
 }
 export interface AssetCPObject extends AssetObject {
   change_plan: ChangePlan;
@@ -66,12 +70,14 @@ export interface AssetCPObject extends AssetObject {
   asset_conflict_asset_name: AssetObject;
   asset_conflict_location: AssetObject;
   related_asset: AssetObject;
+  mark_as_cp: boolean;
   is_decommissioned: boolean;
 }
 interface ParentAssetObject extends ElementObject {
-  asset_number: string;
-  hostname: string;
+  asset_number: string | null;
+  hostname: string | null;
   rack_position: string;
+  chassis_slot: string;
   mac_addresses: { [port: string]: string };
   network_connections: Array<NetworkConnection>;
   power_connections: { [port: string]: PowerConnection };
@@ -79,6 +85,10 @@ interface ParentAssetObject extends ElementObject {
   comment: string;
   decommissioning_user?: string;
   time_decommissioned?: string;
+  cpu: string;
+  storage: string;
+  display_color: string;
+  memory_gb: string | null;
 }
 
 export interface RackRangeFields {
@@ -102,18 +112,20 @@ export const AssetFieldsTable: any = {
   model__vendor: "Model Vendor",
   model__model_number: "Model Number",
   rack: "Rack",
-
-  rack__datacenter__name: "Datacenter",
+  datacenter: "Datacenter",
+  offline_storage_site: "Offline Storage Site",
   rack_position: "Rack Position",
+  chassis: "Chassis",
+  chassis_slot: "Chassis Slot",
   owner: "Owner",
   comment: "Comment",
   decommissioning_user: "Decommissioning User",
-  time_decommissioned: "Time Decommissioned"
+  time_decommissioned: "Time Decommissioned",
 };
 
 export const DecommissionedFieldsTable: any = {
   decommissioning_user: "User",
-  time_decommissioned: "Time"
+  time_decommissioned: "Time",
 };
 
 export const ModelFieldsTable: any = {
@@ -127,21 +139,38 @@ export const ModelFieldsTable: any = {
   cpu: "CPU",
   memory_gb: "Memory (GB)",
   storage: "Storage",
-  comment: "Comment"
+  comment: "Comment",
+  model_type: "Mount Type",
+};
+
+export const UserFieldsTable: any = {
+  username: "Username",
+  email: "Email Address",
+  first_name: "First Name",
+  last_name: "Last Name",
+}
+
+export const SiteFieldsTable: any = {
+  abbreviation: "Abbreviation",
+  name: "Name",
 };
 
 export enum AssetFormLabels {
   asset_number = "Asset Number",
   hostname = "Hostname",
   datacenter = "Datacenter*",
+  site = "Site*",
   rack = "Rack*",
   rack_position = "Rack Position*",
+  chassis = "Chassis*",
+  chassis_slot = "Chassis Slot*",
   model = "Model*",
   owner = "Owner",
   comment = "Comment",
   network_ports = "Network Ports",
-  power_connections = "Power Connections"
+  power_connections = "Power Connections",
 }
+
 export interface Link {
   to: number;
   from: number;
@@ -150,6 +179,7 @@ export interface Link {
 export interface Node {
   id: number;
   label: string;
+  route_id: number;
 }
 export interface NetworkGraphData {
   nodes: Array<Node>;
@@ -162,6 +192,8 @@ export interface PowerConnection {
 export interface ShallowAssetObject extends ParentAssetObject {
   model: string | null | undefined;
   rack: string | null | undefined;
+  chassis: string | null | undefined;
+  offline_storage_site: string | null | undefined;
 }
 
 export interface SortFilterBody {
@@ -202,36 +234,26 @@ export interface RackObject extends ElementObject {
 
 export interface RackResponseObject {
   rack: RackObject;
-  assets: Array<AssetObjectOld>;
+  assets: Array<AssetObject>;
 }
 
 export interface DatacenterObject extends ElementObject {
   name: string;
   abbreviation: string;
+  is_storage: boolean;
 }
 
-export interface ModificationsObject {
-  existing: Array<ModelObjectOld>;
-  modified: Array<ModelObjectOld>;
-}
-
-export interface ModelObjectOld extends ElementObject {
-  vendor: string;
-  model_number: string;
-  height: string;
-  display_color?: string;
-  num_ethernet_ports?: string; //
-  num_power_ports?: string; //
-  cpu?: string;
-  memory_gb?: string; //
-  storage?: string;
-  comment?: string;
+export enum MountTypes {
+  RACKMOUNT = "Asset",
+  BLADE_CHASSIS = "Blade Chassis",
+  BLADE = "Blade Server ",
 }
 
 export interface ModelObject extends ElementObject {
   vendor: string;
   model_number: string;
   height: string;
+  model_type: MountTypes;
   display_color?: string;
   num_network_ports?: string;
   network_ports?: Array<string>; //
@@ -241,10 +263,6 @@ export interface ModelObject extends ElementObject {
   storage?: string;
   comment?: string;
 }
-export interface ModelDetailObject {
-  model: ModelObjectOld;
-  assets: Array<AssetObjectOld>;
-}
 
 export interface UserPermissionsObject {
   [index: string]: any;
@@ -253,14 +271,12 @@ export interface UserPermissionsObject {
   power_control: boolean;
   audit_read: boolean;
   admin: boolean;
-  datacenter_permissions: Array<string>;
+  site_permissions: Array<string>;
 }
 
 export type ElementObjectType =
-  | ModelObjectOld
   | ModelObject
   | RackObject
-  | AssetObjectOld
   | AssetObject
   | ShallowAssetObject
   | UserInfoObject
@@ -268,10 +284,9 @@ export type ElementObjectType =
   | ChangePlan;
 
 export type FormObjectType =
-  | ModelObjectOld
   | RackObject
-  | AssetObjectOld
   | AssetObject
+  | ModelObject
   | DatacenterObject
   | RackRangeFields
   | ShallowAssetObject
@@ -310,15 +325,16 @@ export function isAssetCPObject(obj: any): obj is AssetCPObject {
 export const getHeaders = (token: string) => {
   return {
     headers: {
-      Authorization: "Token " + token
-    }
+      Authorization: "Token " + token,
+    },
   };
 };
 
 export const getChangePlanRowStyle = (item: any) => {
   return {
-    fontWeight: isAssetCP(item) ? ("bold" as any) : ("normal" as any),
-    color: isAssetCP(item) ? "#bf8c0a" : "white"
+    fontWeight:
+      isAssetCP(item) && item.mark_as_cp ? ("bold" as any) : ("normal" as any),
+    color: isAssetCP(item) && item.mark_as_cp ? "#bf8c0a" : "white",
   };
 };
 
@@ -330,12 +346,12 @@ export const isAdmin = (headers: any) => {
   let isAdmin = false;
   axios
     .get(API_ROOT + "api/iamadmin", headers)
-    .then(res => {
+    .then((res) => {
       if (res.data.is_admin) {
         isAdmin = true;
       }
     })
-    .catch(err => {
+    .catch((err) => {
       console.log(err);
     });
   return isAdmin;
@@ -348,7 +364,7 @@ export function getFields(type: string, headers: any) {
       { sort_by: [], filters: [] },
       headers
     )
-    .then(res => {
+    .then((res) => {
       let items: Array<string>;
       if (type === ElementType.MODEL) {
         items = Object.keys(res.data.models[0]);

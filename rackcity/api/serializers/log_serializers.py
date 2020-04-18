@@ -6,10 +6,10 @@ class LogSerializer(serializers.ModelSerializer):
     class Meta:
         model = Log
         fields = (
-            'id',
-            'date',
-            'log_content',
-            'user',
-            'related_asset',
-            'related_model',
+            "id",
+            "date",
+            "log_content",
+            "user",
+            "related_asset",
+            "related_model",
         )

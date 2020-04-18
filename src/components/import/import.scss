@@ -42,15 +42,16 @@
 }
 
 .modify-table {
-  width: fit-content;
+  width:95%;
+  padding:10pt;
+
 }
-.import .bp3-dialog {
-  width: fit-content;
-  padding: 10pt;
+.single-modification{
+  width:100%;
+  overflow:auto;
 }
-.bp3-dialog td {
-  white-space: pre-wrap;
-}
+
+
 .uploading-overlay {
   align-items: center;
   text-align: center;

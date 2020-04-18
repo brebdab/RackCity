@@ -12,17 +12,17 @@ interface RackRangeFormState {
 }
 
 var console: any = {};
-console.log = function() {};
+console.log = function () {};
 class RackRangeForm extends React.Component<
   RackRangeFormProps,
   RackRangeFormState
 > {
   public state = {
-    values: {} as RackRangeFields
+    values: {} as RackRangeFields,
   };
   componentDidMount = () => {
     this.setState({
-      values: JSON.parse(JSON.stringify(this.props.values))
+      values: JSON.parse(JSON.stringify(this.props.values)),
     });
   };
   componentWillReceiveProps = (nextProps: RackRangeFormProps) => {
@@ -30,7 +30,7 @@ class RackRangeForm extends React.Component<
       JSON.stringify(nextProps.values) !== JSON.stringify(this.props.values)
     ) {
       this.setState({
-        values: JSON.parse(JSON.stringify(nextProps.values))
+        values: JSON.parse(JSON.stringify(nextProps.values)),
       });
     }
   };

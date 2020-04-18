@@ -5,7 +5,7 @@ import {
   DatacenterObject,
   UserInfoObject,
   ChangePlan,
-  UserPermissionsObject
+  UserPermissionsObject,
 } from "../../utils/utils";
 import { API_ROOT } from "../../utils/api-config";
 import axios from "axios";
@@ -20,25 +20,25 @@ export enum ElementTableOpenAlert {
   DELETE = "delete",
   DECOMMISSION = "decommission",
   GRANT_ADMIN = "grant_admin",
-  REVOKE_ADMIN = "revoke_admin"
+  REVOKE_ADMIN = "revoke_admin",
 }
 
 export enum FilterTypes {
   TEXT = "text",
   NUMERIC = "numeric",
   RACKRANGE = "rack_range",
-  DATETIME = "datetime"
+  DATETIME = "datetime",
 }
 
 export enum PagingTypes {
   TEN = 10,
   FIFTY = 50,
   HUNDRED = 100,
-  ALL = "View All"
+  ALL = "View All",
 }
 export enum TextFilterTypes {
   EXACT = "exact",
-  CONTAINS = "contains"
+  CONTAINS = "contains",
 }
 
 export interface IFilter {
@@ -53,7 +53,7 @@ const numberFields = [
   "num_ethernet_ports",
   "num_power_ports",
   "memory_gb",
-  "num_network_ports"
+  "num_network_ports",
 ];
 
 export function getFilterType(field: string | undefined) {
@@ -139,8 +139,8 @@ export const modifyAsset = (
     config = {
       headers: headers["headers"],
       params: {
-        change_plan: changePlan.id
-      }
+        change_plan: changePlan.id,
+      },
     };
   }
   return axios.post(API_ROOT + "api/assets/modify", asset, config);
@@ -157,8 +157,8 @@ export const decommissionAsset = (
     config = {
       headers: headers["headers"],
       params: {
-        change_plan: changePlan.id
-      }
+        change_plan: changePlan.id,
+      },
     };
   }
 
@@ -184,14 +184,14 @@ export const deleteDatacenter = (
   headers: any
 ): Promise<any> => {
   const data = { id: dc.id };
-  return axios.post(API_ROOT + "api/datacenters/delete", data, headers);
+  return axios.post(API_ROOT + "api/sites/delete", data, headers);
 };
 
 export const modifyDatacenter = (
   dc: DatacenterObject,
   headers: any
 ): Promise<any> => {
-  return axios.post(API_ROOT + "api/datacenters/modify", dc, headers);
+  return axios.post(API_ROOT + "api/sites/modify", dc, headers);
 };
 export const deleteUser = (
   user: UserInfoObject,

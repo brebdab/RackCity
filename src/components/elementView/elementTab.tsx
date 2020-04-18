@@ -10,7 +10,7 @@ import {
   IToastProps,
   MenuItem,
   Position,
-  Toaster
+  Toaster,
 } from "@blueprintjs/core";
 import * as actions from "../../store/actions/state";
 import "@blueprintjs/core/lib/css/blueprint.css";
@@ -23,21 +23,21 @@ import {
   DatacenterSelect,
   filterDatacenter,
   FormTypes,
-  renderDatacenterItem
+  renderDatacenterItem,
 } from "../../forms/formUtils";
 import { updateObject } from "../../store/utility";
 import { API_ROOT } from "../../utils/api-config";
 import {
+  AssetType,
+  ChangePlan,
   CreateUserObject,
   DatacenterObject,
   ElementObjectType,
   ElementType,
   ModelObject,
+  ROUTES,
   ShallowAssetObject,
   SortFilterBody,
-  ChangePlan,
-  PermissionState,
-  ROUTES
 } from "../../utils/utils";
 import { ALL_DATACENTERS } from "./elementTabContainer";
 import ElementTable from "./elementTable";
@@ -45,10 +45,14 @@ import {
   FilterTypes,
   IFilter,
   PagingTypes,
-  TextFilterTypes
+  TextFilterTypes,
 } from "./elementUtils";
 import "./elementView.scss";
 import { Link } from "react-router-dom";
+import {
+  hasAddElementPermission,
+  PermissionState,
+} from "../../utils/permissionUtils";
 
 // var console: any = {};
 // console.log = function() {};
@@ -62,10 +66,10 @@ interface ElementViewState {
   networkFileName: string;
   updateTable: boolean;
   barcodes: Array<String>;
-  isDecommissioned: boolean;
 }
 interface ElementViewProps {
   element: ElementType;
+  assetType?: AssetType;
   isAdmin: boolean;
   token: string;
   datacenters?: Array<DatacenterObject>;
@@ -88,7 +92,6 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     networkFileName: "",
     updateTable: false,
     barcodes: [],
-    isDecommissioned: false
   };
 
   getExportData = (
@@ -100,8 +103,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
   ) => {
     const config = {
       headers: {
-        Authorization: "Token " + token
-      }
+        Authorization: "Token " + token,
+      },
     };
     let filtersCopy = filters.slice();
     if (path === "assets") {
@@ -111,34 +114,41 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
           datacenterName = this.props.currDatacenter.name;
           filtersCopy.push({
             id: "",
-            field: "rack__datacenter__name",
+            field: "datacenter",
             filter_type: FilterTypes.TEXT,
-            filter: { value: datacenterName, match_type: TextFilterTypes.EXACT }
+            filter: {
+              value: datacenterName,
+              match_type: TextFilterTypes.EXACT,
+            },
           });
         }
       }
     }
     const body = {
       sort_by: [],
-      filters: filtersCopy
+      filters: filtersCopy,
     };
-
+    let endpoint =
+      this.props.assetType === AssetType.STORED
+        ? "/bulk-export-offline"
+        : "/bulk-export";
+    let url = API_ROOT + "api/" + path + endpoint;
     axios
-      .post(API_ROOT + "api/" + path + "/bulk-export", body, config)
-      .then(res => {
+      .post(url, body, config)
+      .then((res) => {
         fs(res.data.export_csv, file);
         return 0;
       })
-      .catch(err => this.addErrorToast("Failed to export data to " + file));
+      .catch((err) => this.addErrorToast("Failed to export data to " + file));
 
-    if (path === "assets") {
+    if (path === "assets" && this.props.assetType !== AssetType.STORED) {
       axios
         .post(API_ROOT + "api/" + path + "/network-bulk-export", body, config)
-        .then(res => {
+        .then((res) => {
           fs(res.data.export_csv, networkFile);
           return 0;
         })
-        .catch(err => this.addErrorToast("Failed to export data to " + file));
+        .catch((err) => this.addErrorToast("Failed to export data to " + file));
     }
   };
   getPages = (
@@ -153,10 +163,10 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     }
     const config = {
       headers: {
-        Authorization: "Token " + token
+        Authorization: "Token " + token,
       },
 
-      params: params
+      params: params,
     };
     const filtersCopy = filters.slice();
     let datacenterName;
@@ -165,18 +175,23 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
         datacenterName = this.props.currDatacenter.name;
         filtersCopy.push({
           id: "",
-          field: "rack__datacenter__name",
+          field: "datacenter",
           filter_type: FilterTypes.TEXT,
-          filter: { value: datacenterName, match_type: TextFilterTypes.EXACT }
+          filter: { value: datacenterName, match_type: TextFilterTypes.EXACT },
         });
       }
     }
-    let url = this.state.isDecommissioned
-      ? "api/assets/pages-decommissioned"
-      : "api/" + path + "/pages";
+    let url =
+      this.props.assetType === AssetType.DECOMMISSIONED
+        ? "api/assets/pages-decommissioned"
+        : this.props.assetType === AssetType.STORED
+        ? "api/assets/pages-offline-storage"
+        : path === "datacenters" || path === "offline-storage-sites"
+        ? "api/sites/" + path + "/pages"
+        : "api/" + path + "/pages";
     return axios
       .post(API_ROOT + url, { filters: filtersCopy }, config)
-      .then(res => {
+      .then((res) => {
         return res.data.page_count;
       });
   };
@@ -194,17 +209,17 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
         ? {}
         : {
             page_size: page_type,
-            page
+            page,
           };
     if (this.props.changePlan) {
       params["change_plan"] = this.props.changePlan.id;
     }
     const config = {
       headers: {
-        Authorization: "Token " + token
+        Authorization: "Token " + token,
       },
 
-      params: params
+      params: params,
     };
     let bodyCopy = JSON.parse(JSON.stringify(body));
     const { filters } = bodyCopy;
@@ -214,42 +229,48 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
         datacenterName = this.props.currDatacenter.name;
         filters.push({
           id: "",
-          field: "rack__datacenter__name",
+          field: "datacenter",
           filter_type: FilterTypes.TEXT,
-          filter: { value: datacenterName, match_type: TextFilterTypes.EXACT }
+          filter: { value: datacenterName, match_type: TextFilterTypes.EXACT },
         });
         bodyCopy = updateObject(bodyCopy, { filters });
       }
     }
-    let url = this.state.isDecommissioned
-      ? API_ROOT + "api/assets/get-many-decommissioned"
-      : API_ROOT + "api/" + path + "/get-many";
-
-    return axios.post(url, bodyCopy, config).then(res => {
-      const items = res.data[path];
-
-      return items;
+    let url =
+      this.props.assetType === AssetType.DECOMMISSIONED
+        ? "api/assets/get-many-decommissioned"
+        : this.props.assetType === AssetType.STORED
+        ? "api/assets/get-many-offline-storage"
+        : path === "datacenters" || path === "offline-storage-sites"
+        ? "api/sites/" + path + "/get-many"
+        : "api/" + path + "/get-many";
+    return axios.post(API_ROOT + url, bodyCopy, config).then((res) => {
+      const dataKey =
+        path === "offline-storage-sites" ? "offline_storage_sites" : path;
+      return res.data[dataKey];
     });
   };
 
   public handleDataUpdate = (status: boolean) => {
     this.setState({
-      updateTable: status
+      updateTable: status,
     });
   };
   private handleOpen = () => {
     this.setState({
-      isOpen: true
+      isOpen: true,
     });
   };
   private handleClose = () => this.setState({ isOpen: false });
 
   private createModel = (model: ModelObject, headers: any): Promise<any> => {
-    return axios.post(API_ROOT + "api/models/add", model, headers).then(res => {
-      this.handleDataUpdate(true);
-      this.handleClose();
-      this.addSuccessToast(res.data.success_message);
-    });
+    return axios
+      .post(API_ROOT + "api/models/add", model, headers)
+      .then((res) => {
+        this.handleDataUpdate(true);
+        this.handleClose();
+        this.addSuccessToast(res.data.success_message);
+      });
   };
 
   private createAsset = (
@@ -263,25 +284,27 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       config = {
         headers: headers["headers"],
         params: {
-          change_plan: this.props.changePlan.id
-        }
+          change_plan: this.props.changePlan.id,
+        },
       };
     }
 
-    return axios.post(API_ROOT + "api/assets/add", asset, config).then(res => {
-      this.handleDataUpdate(true);
-      this.handleClose();
-      if (res.data.warning_message) {
-        this.addWarnToast("Created asset. " + res.data.warning_message);
-      } else {
-        this.addSuccessToast(res.data.success_message);
-      }
-    });
+    return axios
+      .post(API_ROOT + "api/assets/add", asset, config)
+      .then((res) => {
+        this.handleDataUpdate(true);
+        this.handleClose();
+        if (res.data.warning_message) {
+          this.addWarnToast("Created asset. " + res.data.warning_message);
+        } else {
+          this.addSuccessToast(res.data.success_message);
+        }
+      });
   };
   private addWarnToast = (message: string) => {
     this.addToast({
       message: message,
-      intent: Intent.WARNING
+      intent: Intent.WARNING,
     });
   };
   componentWillReceiveProps(nextProps: ElementTabProps & RouteComponentProps) {
@@ -294,24 +317,33 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
     dc: DatacenterObject,
     headers: any
   ): Promise<any> => {
-    return axios
-      .post(API_ROOT + "api/datacenters/add", dc, headers)
-      .then(res => {
-        this.handleDataUpdate(true);
-        this.handleClose();
-        this.addSuccessToast(res.data.success_message);
-        if (this.props.updateDatacenters) {
-          this.props.updateDatacenters();
-        }
-      });
-  };
-
-  private createUser = (user: CreateUserObject, headers: any): Promise<any> => {
-    return axios.post(API_ROOT + "api/users/add", user, headers).then(res => {
+    return axios.post(API_ROOT + "api/sites/add", dc, headers).then((res) => {
       this.handleDataUpdate(true);
       this.handleClose();
       this.addSuccessToast(res.data.success_message);
+      if (this.props.updateDatacenters) {
+        this.props.updateDatacenters();
+      }
     });
+  };
+
+  private createUser = (user: CreateUserObject, headers: any): Promise<any> => {
+    const username = user.username;
+    return axios
+      .post(API_ROOT + "api/users/add", user, headers)
+      .then((res) => {
+        this.handleDataUpdate(true);
+        this.handleClose();
+        this.addSuccessToast("SUCCESS: User " + username + " created.");
+      })
+      .catch((err) => {
+        for (let key in err.response.data) {
+          let errors = err.response.data[key];
+          errors.forEach((message: string) => {
+            this.addErrorToast(message);
+          });
+        }
+      });
   };
 
   private createChangePlan = (
@@ -320,7 +352,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
   ): Promise<any> => {
     return axios
       .post(API_ROOT + "api/change-plans/add", changePlan, headers)
-      .then(res => {
+      .then((res) => {
         this.props.updateChangePlans(true);
 
         this.handleDataUpdate(true);
@@ -342,7 +374,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
   }
 
   private refHandlers = {
-    toaster: (ref: Toaster) => (this.toaster = ref)
+    toaster: (ref: Toaster) => (this.toaster = ref),
   };
 
   public render() {
@@ -355,14 +387,16 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
           ref={this.refHandlers.toaster}
         />
         <div>
-          {this.props.datacenters && this.props.onDatacenterSelect ? (
+          {this.props.datacenters &&
+          this.props.onDatacenterSelect &&
+          this.props.assetType === AssetType.RACKED ? (
             <Callout>
               <FormGroup label="Datacenter" inline={true}>
                 <DatacenterSelect
                   popoverProps={{
                     minimal: true,
                     popoverClassName: "dropdown",
-                    usePortal: true
+                    usePortal: true,
                   }}
                   items={this.props.datacenters!}
                   onItemSelect={(datacenter: DatacenterObject) => {
@@ -386,24 +420,11 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             </Callout>
           ) : null}
         </div>
-        {this.state.isDecommissioned ? (
-          <Callout icon="warning-sign">
-            <FormGroup label="Showing decommissioned assets" inline={true}>
-              <Button
-                onClick={() => {
-                  /* handle data based on state */
-                  this.setState({ isDecommissioned: false });
-                  this.handleDataUpdate(true);
-                }}
-              >
-                View Live Assets
-              </Button>
-            </FormGroup>
-          </Callout>
-        ) : (
+        {this.props.assetType === AssetType.DECOMMISSIONED ? null : (
           <div className="element-tab-buttons">
             {this.props.element !== ElementType.USER &&
             this.props.element !== ElementType.DATACENTER &&
+            this.props.element !== ElementType.OFFLINE_STORAGE_SITE &&
             this.props.element !== ElementType.CHANGEPLANS ? (
               <AnchorButton
                 className="add"
@@ -425,15 +446,9 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                 disabled={
                   this.props.changePlan
                     ? true
-                    : !(
-                        this.props.permissionState.admin ||
-                        (this.props.element === ElementType.MODEL &&
-                          this.props.permissionState.model_management) ||
-                        (this.props.element === ElementType.ASSET &&
-                          this.props.permissionState.asset_management) ||
-                        (this.props.element === ElementType.ASSET &&
-                          this.props.permissionState.datacenter_permissions
-                            .length > 0)
+                    : !hasAddElementPermission(
+                        this.props.element,
+                        this.props.permissionState
                       )
                 }
                 onClick={() => {
@@ -463,7 +478,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                 if (
                   this.state.fileName === "" ||
                   (this.state.networkFileName === "" &&
-                    this.props.element === ElementType.ASSET) ||
+                    this.props.element === ElementType.ASSET &&
+                    this.props.assetType !== AssetType.STORED) ||
                   (this.state.fileName === "" &&
                     this.props.element === ElementType.MODEL)
                 ) {
@@ -504,7 +520,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                     this.setState({
                       fileNameIsOpen: false,
                       fileName: "",
-                      networkFileName: ""
+                      networkFileName: "",
                     });
                   }
                 }
@@ -522,13 +538,14 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                   type="text"
                 />
               </FormGroup>
-              {this.props.element === ElementType.ASSET ? (
+              {this.props.element === ElementType.ASSET &&
+              this.props.assetType !== AssetType.STORED ? (
                 <div>
                   <FormGroup label="network connections:">
                     <InputGroup
                       onChange={(event: any) => {
                         this.setState({
-                          networkFileName: event.currentTarget.value
+                          networkFileName: event.currentTarget.value,
                         });
                       }}
                       fill={true}
@@ -549,34 +566,15 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                 this.props.element !== ElementType.ASSET &&
                 this.props.changePlan
                   ? true
-                  : !(
-                      this.props.permissionState.admin ||
-                      (this.props.element === ElementType.DATACENTER &&
-                        this.props.permissionState.asset_management) ||
-                      (this.props.element === ElementType.MODEL &&
-                        this.props.permissionState.model_management) ||
-                      (this.props.element === ElementType.ASSET &&
-                        this.props.permissionState.asset_management) ||
-                      (this.props.element === ElementType.ASSET &&
-                        this.props.permissionState.datacenter_permissions
-                          .length > 0)
+                  : !hasAddElementPermission(
+                      this.props.element,
+                      this.props.permissionState
                     )
               }
             />
             {this.props.element === ElementType.ASSET
               ? this.renderBarcodeButton()
               : null}
-            {this.props.element === ElementType.ASSET ? (
-              <Button
-                onClick={() => {
-                  this.setState({ isDecommissioned: true });
-                  this.handleDataUpdate(true);
-                }}
-                text="View Decommissioned"
-                minimal
-                icon="archive"
-              ></Button>
-            ) : null}
             <FormPopup
               {...this.props}
               type={FormTypes.CREATE}
@@ -586,7 +584,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                   ? this.createModel
                   : this.props.element === ElementType.ASSET
                   ? this.createAsset
-                  : this.props.element === ElementType.DATACENTER
+                  : this.props.element === ElementType.DATACENTER ||
+                    this.props.element === ElementType.OFFLINE_STORAGE_SITE
                   ? this.createDatacenter
                   : this.props.element === ElementType.CHANGEPLANS
                   ? this.createChangePlan
@@ -606,17 +605,16 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             getPages={this.getPages}
             updateBarcodes={(data: Array<string>) => {
               this.setState({
-                barcodes: data
+                barcodes: data,
               });
             }}
             callback={(data: Array<any>) => {
               this.setState({ filters: data });
             }}
             shouldUpdateData={this.state.updateTable}
-            disableSorting={this.props.element === ElementType.DATACENTER}
-            disableFiltering={this.props.element === ElementType.DATACENTER}
             currDatacenter={this.props.currDatacenter}
-            isDecommissioned={this.state.isDecommissioned}
+            isDecommissioned={this.props.assetType === AssetType.DECOMMISSIONED}
+            assetType={this.props.assetType}
           />
         </div>
       </div>
@@ -664,13 +662,13 @@ const mapStateToProps = (state: any) => {
     token: state.token,
     isAdmin: state.admin,
     permissionState: state.permissionState,
-    changePlan: state.changePlan
+    changePlan: state.changePlan,
   };
 };
 const mapDispatchToProps = (dispatch: any) => {
   return {
     updateChangePlans: (status: boolean) =>
-      dispatch(actions.updateChangePlans(status))
+      dispatch(actions.updateChangePlans(status)),
   };
 };
 export default connect(mapStateToProps, mapDispatchToProps)(ElementTab);

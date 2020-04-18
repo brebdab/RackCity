@@ -21,15 +21,21 @@ from .asset_views import (
     asset_modify,
     asset_delete,
     asset_many,
+    offline_storage_asset_many,
     asset_bulk_upload,
     asset_bulk_approve,
     asset_bulk_export,
+    asset_bulk_export_offline,
+    asset_page_count,
+    offline_storage_asset_page_count,
+    asset_fields,
+    asset_number,
+    get_asset_from_barcode,
+)
+from .network_connections_views import (
     network_bulk_upload,
     network_bulk_approve,
     network_bulk_export,
-    asset_page_count,
-    asset_fields,
-    asset_number,
 )
 from .decommission_views import (
     decommission_asset,
@@ -43,10 +49,7 @@ from .rack_views import (
     rack_delete,
     rack_summary,
 )
-from .report_views import (
-    report_rack_usage,
-    rack_report_datacenter
-)
+from .report_views import report_rack_usage_global, report_rack_usage_datacenter
 from .user_views import (
     netid_login,
     RegisterNameView,
@@ -63,19 +66,26 @@ from .user_views import (
     all_user_groups,
     user_get_my_groups,
 )
-from .datacenter_views import (
+from .site_views import (
     datacenter_all,
-    datacenter_create,
-    datacenter_delete,
     datacenter_page_count,
-    datacenter_modify
+    offline_storage_site_all,
+    offline_storage_site_page_count,
+    site_all,
+    site_create,
+    site_delete,
+    site_modify,
 )
-from .pdu_views import (
-    power_status,
-    power_on,
-    power_off,
-    power_cycle,
-    power_availability
+from .power_views import (
+    pdu_power_status,
+    pdu_power_on,
+    pdu_power_off,
+    pdu_power_cycle,
+    pdu_port_availability,
+    chassis_power_status,
+    chassis_power_on,
+    chassis_power_off,
+    chassis_power_cycle,
 )
 from .change_plan_views import (
     change_plan_many,
@@ -86,5 +96,5 @@ from .change_plan_views import (
     change_plan_execute,
     change_plan_detail,
     change_plan_remove_asset,
-    change_plan_resolve_conflict
+    change_plan_resolve_conflict,
 )

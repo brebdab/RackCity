@@ -2,7 +2,7 @@ import { Button, Callout, Classes, FormGroup, Intent } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
 import { connect } from "react-redux";
-import { DatacenterObject } from "../utils/utils";
+import { DatacenterObject, ElementType } from "../utils/utils";
 import { updateObject } from "../store/utility";
 import Field from "./field";
 import "./forms.scss";
@@ -10,13 +10,14 @@ import { FormTypes } from "./formUtils";
 
 //TO DO : add validation of types!!!
 var console: any = {};
-console.log = function() {};
+console.log = function () {};
 
 export interface DatacenterFormProps {
   token: string;
   type: FormTypes;
   initialValues?: DatacenterObject;
   submitForm(model: DatacenterObject, headers: any): Promise<any> | void;
+  elementType: ElementType;
 }
 interface DatacenterFormState {
   values: DatacenterObject;
@@ -42,17 +43,17 @@ class DatacenterForm extends React.Component<
     : ({} as DatacenterObject);
   public state = {
     values: this.initialState,
-    errors: []
+    errors: [],
   };
   headers = {
     headers: {
-      Authorization: "Token " + this.props.token
-    }
+      Authorization: "Token " + this.props.token,
+    },
   };
 
   private handleSubmit = (e: any) => {
     this.setState({
-      errors: []
+      errors: [],
     });
     e.preventDefault();
     console.log(this.state);
@@ -61,19 +62,23 @@ class DatacenterForm extends React.Component<
         console.log(this.props.initialValues);
         this.setState({
           values: updateObject(this.state.values, {
-            id: this.props.initialValues.id
-          })
+            id: this.props.initialValues.id,
+          }),
         });
       }
 
-      const resp = this.props.submitForm(this.state.values, this.headers);
+      let newValues = this.state.values;
+      newValues.is_storage =
+        this.props.elementType === ElementType.OFFLINE_STORAGE_SITE;
+
+      const resp = this.props.submitForm(newValues, this.headers);
       if (resp) {
-        resp.catch(err => {
+        resp.catch((err) => {
           console.log(err.response.data.failure_message);
           let errors: Array<string> = this.state.errors;
           errors.push(err.response.data.failure_message as string);
           this.setState({
-            errors: errors
+            errors: errors,
           });
         });
       }
@@ -83,8 +88,8 @@ class DatacenterForm extends React.Component<
   handleChange = (field: { [key: string]: any }) => {
     this.setState({
       values: updateObject(this.state.values, {
-        ...field
-      })
+        ...field,
+      }),
     });
   };
   selectText = (event: any) => event.target.select();
@@ -128,7 +133,7 @@ class DatacenterForm extends React.Component<
 
 const mapStateToProps = (state: any) => {
   return {
-    token: state.token
+    token: state.token,
   };
 };
 export default connect(mapStateToProps)(DatacenterForm);

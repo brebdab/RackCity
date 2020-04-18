@@ -5,7 +5,7 @@ import {
   Intent,
   IToastProps,
   Position,
-  Toaster
+  Toaster,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -22,11 +22,13 @@ import {
   ModelObject,
   ROUTES,
   ChangePlan,
-  PermissionState
+  TableType,
 } from "../../../../utils/utils";
 import ElementTable from "../../elementTable";
 import { deleteModel, modifyModel } from "../../elementUtils";
 import PropertiesView from "../propertiesView";
+import { PermissionState } from "../../../../utils/permissionUtils";
+import * as actions from "../../../../store/actions/state";
 
 export interface ModelViewProps {
   token: string;
@@ -34,10 +36,11 @@ export interface ModelViewProps {
   isAdmin: boolean;
   changePlan: ChangePlan;
   permissionState: PermissionState;
+  markTablesStale(staleTables: TableType[]): void;
 }
 
 var console: any = {};
-console.log = function() {};
+console.log = function () {};
 interface ModelViewState {
   assets: Array<AssetObject>;
   model: ModelObject;
@@ -56,14 +59,14 @@ async function getData(
   }
   const config = {
     headers: {
-      Authorization: "Token " + token
+      Authorization: "Token " + token,
     },
-    params
+    params,
   };
 
   return await axios
     .get(API_ROOT + "api/models/" + modelkey, config)
-    .then(res => {
+    .then((res) => {
       const data = res.data;
       return data;
     });
@@ -77,34 +80,39 @@ export class ModelView extends React.PureComponent<
     assets: [],
     model: {} as ModelObject,
     isFormOpen: false,
-    isDeleteOpen: false
+    isDeleteOpen: false,
   };
 
   private updateModel = (model: ModelObject, headers: any): Promise<any> => {
-    return modifyModel(model, headers).then(res => {
+    return modifyModel(model, headers).then((res) => {
       let params: any;
       params = this.props.match.params;
       getData(params.rid, this.props.token, this.props.changePlan).then(
-        result => {
+        (result) => {
           this.setState({
             model: result.model,
-            assets: result.assets
+            assets: result.assets,
           });
         }
       );
       this.handleFormClose();
+      this.props.markTablesStale([
+        TableType.RACKED_ASSETS,
+        TableType.STORED_ASSETS,
+        TableType.MODELS,
+      ]);
     });
   };
   private handleDeleteOpen = () => this.setState({ isDeleteOpen: true });
   private handleDeleteCancel = () => this.setState({ isDeleteOpen: false });
   private handleFormOpen = () => {
     this.setState({
-      isFormOpen: true
+      isFormOpen: true,
     });
   };
   handleFormSubmit = () => {
     this.setState({
-      isFormOpen: false
+      isFormOpen: false,
     });
   };
   private toaster: Toaster = {} as Toaster;
@@ -114,24 +122,25 @@ export class ModelView extends React.PureComponent<
   }
 
   private refHandlers = {
-    toaster: (ref: Toaster) => (this.toaster = ref)
+    toaster: (ref: Toaster) => (this.toaster = ref),
   };
 
   private handleFormClose = () => this.setState({ isFormOpen: false });
   private handleDelete = () => {
     deleteModel(this.state.model!, getHeaders(this.props.token))
-      .then(res => {
+      .then((res) => {
         this.setState({ isDeleteOpen: false });
         this.addToast({
           message: "Succesfully Deleted Model",
-          intent: Intent.PRIMARY
+          intent: Intent.PRIMARY,
         });
         this.props.history.push(ROUTES.DASHBOARD);
+        this.props.markTablesStale([TableType.MODELS]);
       })
-      .catch(err => {
+      .catch((err) => {
         this.addToast({
           message: err.response.data.failure_message,
-          intent: Intent.DANGER
+          intent: Intent.DANGER,
         });
         this.handleDeleteCancel();
       });
@@ -143,10 +152,10 @@ export class ModelView extends React.PureComponent<
       params = this.props.match.params;
 
       getData(params.rid, this.props.token, nextProps.changePlan).then(
-        result => {
+        (result) => {
           this.setState({
             model: result.model,
-            assets: result.assets
+            assets: result.assets,
           });
         }
       );
@@ -157,10 +166,10 @@ export class ModelView extends React.PureComponent<
     params = this.props.match.params;
     if (Object.keys(this.state.model).length === 0) {
       getData(params.rid, this.props.token, this.props.changePlan).then(
-        result => {
+        (result) => {
           this.setState({
             model: result.model,
-            assets: result.assets
+            assets: result.assets,
           });
         }
       );
@@ -247,8 +256,17 @@ const mapStatetoProps = (state: any) => {
     token: state.token,
     isAdmin: state.admin,
     changePlan: state.changePlan,
-    permissionState: state.permissionState
+    permissionState: state.permissionState,
   };
 };
 
-export default withRouter(connect(mapStatetoProps)(ModelView));
+const mapDispatchToProps = (dispatch: any) => {
+  return {
+    markTablesStale: (staleTables: TableType[]) =>
+      dispatch(actions.markTablesStale(staleTables)),
+  };
+};
+
+export default withRouter(
+  connect(mapStatetoProps, mapDispatchToProps)(ModelView)
+);

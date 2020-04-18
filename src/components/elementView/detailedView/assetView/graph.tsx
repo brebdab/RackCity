@@ -1,7 +1,7 @@
 import React from "react";
 import Graph from "react-graph-vis";
 import { RouteComponentProps, withRouter } from "react-router";
-import { NetworkGraphData } from "../../../../utils/utils";
+import { NetworkGraphData, Node } from "../../../../utils/utils";
 
 interface NetworkGraphProps {
   onClickNode(id: string): any;
@@ -11,15 +11,15 @@ interface NetworkGraphProps {
 
 class NetworkGraph extends React.Component<
   NetworkGraphProps & RouteComponentProps
-  > {
+> {
   options = {
     layout: {},
     edges: {
       color: "#5C7080",
       arrows: {
         to: false,
-        from: false
-      }
+        from: false,
+      },
     },
     nodes: {
       color: {
@@ -27,16 +27,16 @@ class NetworkGraph extends React.Component<
         border: "#202B33",
         highlight: {
           background: "#182026",
-          border: "#30404D"
-        }
+          border: "#30404D",
+        },
       },
       font: { color: "white" },
-      physics: false
+      physics: false,
     },
     interaction: {
       hover: !this.props.isDecommissioned,
-      zoomView: false
-    }
+      zoomView: false,
+    },
   };
 
   onClickNode = (event: any) => {
@@ -46,9 +46,16 @@ class NetworkGraph extends React.Component<
     }
   };
   events = {
-    select: this.onClickNode
+    select: this.onClickNode,
   };
 
+  getRouteID(id: number) {
+    this.props.networkGraph.nodes
+      .map((node: Node) => {
+        return node.route_id;
+      })
+      .filter((route_id: number) => route_id === id);
+  }
   render() {
     return (
       <div className="graph-container">

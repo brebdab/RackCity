@@ -1,6 +1,6 @@
 .log-view {
-  padding-left: 50px;
-  padding-right: 50px;
+  padding-left: 20pt;
+  padding-right: 20pt;
 }
 .log-link {
   color: white !important;
@@ -13,7 +13,7 @@
   text-decoration: none !important;
   line-height: 0em;
 }
-.log-no-link:hover{
+.log-no-link:hover {
   cursor: default !important;
 }
 .log-no-link:focus {
@@ -25,10 +25,12 @@
   padding-bottom: 5px;
 }
 form {
-  display:flex;
-  flex-direction:row;
+  display: flex;
+  flex-direction: row;
 }
-.search-span, .search-input, .search-button {
+.search-span,
+.search-input,
+.search-button {
   padding: 0.2em;
   margin: 0.1em 0.2em;
   -moz-box-sizing: content-box;

@@ -2,7 +2,7 @@ import {
   ItemPredicate,
   ItemRenderer,
   Suggest,
-  Select
+  Select,
 } from "@blueprintjs/select";
 import React from "react";
 import { MenuItem } from "@blueprintjs/core";
@@ -13,13 +13,13 @@ import {
   AssetObject,
   AssetFieldsTable,
   ModelFieldsTable,
-  ChangePlan
+  ChangePlan,
 } from "../utils/utils";
 
 export enum FormTypes {
-  CREATE = "create",
-  MODIFY = "modify",
-  DELETE = "delete"
+  CREATE = "Create",
+  MODIFY = "Modify",
+  DELETE = "Delete",
 }
 export function escapeRegExpChars(text: string) {
   // eslint-disable-next-line
@@ -58,7 +58,6 @@ export const filterAssetField: ItemPredicate<string> = (
   _index,
   exactMatch
 ) => {
-
   let normalizedTitle;
   if (AssetFieldsTable[field]) {
     normalizedTitle = AssetFieldsTable[field].toLowerCase();
@@ -206,7 +205,7 @@ function highlightText(text: string, query: string) {
   let lastIndex = 0;
   const words = query
     .split(/\s+/)
-    .filter(word => word.length > 0)
+    .filter((word) => word.length > 0)
     .map(escapeRegExpChars);
   if (words.length === 0) {
     return [text];
@@ -242,13 +241,16 @@ export const renderAssetFieldItem: ItemRenderer<string> = (
     return null;
   }
   const text = AssetFieldsTable[field];
-  return (
-    <MenuItem
-      active={modifiers.active}
-      text={highlightText(text, query)}
-      onClick={handleClick}
-    />
-  );
+  if(text) {
+    return (
+        <MenuItem
+            active={modifiers.active}
+            text={highlightText(text, query)}
+            onClick={handleClick}
+        />
+    );
+  }
+  return null;
 };
 export const renderModelFieldItem: ItemRenderer<string> = (
   field,
@@ -312,6 +314,25 @@ export const renderDatacenterItem: ItemRenderer<DatacenterObject> = (
     <MenuItem
       active={modifiers.active}
       label={datacenter.abbreviation}
+      text={highlightText(text, query)}
+      onClick={handleClick}
+    />
+  );
+};
+
+export const renderSiteItem: ItemRenderer<DatacenterObject> = (
+  site: DatacenterObject,
+  { handleClick, modifiers, query }
+) => {
+  if (!modifiers.matchesPredicate) {
+    return null;
+  }
+  const text = site.name + " (" + site.abbreviation + ")";
+  const siteType = site.is_storage ? "Offline Storage" : "Datacenter";
+  return (
+    <MenuItem
+      active={modifiers.active}
+      label={siteType}
       text={highlightText(text, query)}
       onClick={handleClick}
     />

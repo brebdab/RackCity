@@ -6,12 +6,14 @@ import { RouteComponentProps } from "react-router";
 class Fallback extends React.Component<RouteComponentProps> {
   isExistingPath() {
     const regex = new RegExp(
-      "^/dashboard/(assets|models|datacenters|racks|bulk-upload|change-plans)|^/dashboard$"
+      "^/dashboard/(assets|stored-assets|decommissioned-assets|models|datacenters|racks|bulk-upload|change-plans|offline-storage-sites)|^/dashboard$"
     );
     if (regex.exec(this.props.location.pathname)) {
       return true;
     }
-    return Object.values(ROUTES).some(v => v === this.props.location.pathname);
+    return Object.values(ROUTES).some(
+      (v) => v === this.props.location.pathname
+    );
   }
   render() {
     return this.isExistingPath() ? null : NotFound;
