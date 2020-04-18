@@ -12,11 +12,10 @@ import {
   isObject,
   isModelObject,
   NetworkConnection,
-  // Node,
   MountTypes,
 } from "../../utils/utils";
 import NetworkGraph from "../elementView/detailedView/assetView/graph";
-// import { BladePowerView } from "../elementView/powerView/bladePowerView";
+import { BladePowerView } from "../elementView/powerView/bladePowerView";
 import PowerView from "../elementView/powerView/powerView";
 
 interface MobileAssetViewProps {
@@ -166,19 +165,28 @@ export class MobileAssetView extends React.PureComponent<
     if (this.props.asset && this.props.asset.model) {
       if (this.props.asset.model.model_type === MountTypes.BLADE) {
         return (
-          <p>Blade Power View</p>
-          // <BladePowerView
-          //   {...this.props}
-          //     token={this.props.token}
-          //   asset={this.props.asset}
-          //   shouldUpdate={this.state.powerShouldUpdate}
-          //   updated={() => {
-          //     this.setState({ powerShouldUpdate: false });
-          //   }}
-          //   assetIsDecommissioned={
-          //     this.props.asset.decommissioning_user !== undefined
-          //   }
-          // />
+          <BladePowerView
+            {...this.props}
+            token={this.props.token}
+            isAdmin={false}
+            isMobile={true}
+            permissionState={{
+              model_management: false,
+              asset_management: false,
+              power_control: false,
+              audit_read: false,
+              admin: false,
+              site_permissions: [],
+            }}
+            asset={this.props.asset}
+            shouldUpdate={this.state.powerShouldUpdate}
+            updated={() => {
+              this.setState({ powerShouldUpdate: false });
+            }}
+            assetIsDecommissioned={
+              this.props.asset.decommissioning_user !== undefined
+            }
+          />
         );
       } else {
         return (
@@ -288,7 +296,7 @@ export class MobileAssetView extends React.PureComponent<
                   </tbody>
                 </table>
               </div>
-              <div className={"network-connections"}>
+              <Callout title={"Network Graph"} className={"propsview"}>
                 <NetworkGraph
                   networkGraph={this.props.asset.network_graph}
                   onClickNode={() => {}}
@@ -296,7 +304,7 @@ export class MobileAssetView extends React.PureComponent<
                     this.props.asset.decommissioning_user !== undefined
                   }
                 />
-              </div>
+              </Callout>
             </>
           ) : null}
         </Callout>

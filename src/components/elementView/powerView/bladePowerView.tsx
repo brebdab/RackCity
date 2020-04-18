@@ -36,9 +36,10 @@ interface BladePowerViewProps {
   shouldUpdate: boolean;
   updated: Function;
   isAdmin: boolean;
-  changePlan: ChangePlan;
+  changePlan?: ChangePlan;
   assetIsDecommissioned: boolean;
   permissionState: PermissionState;
+  isMobile?: boolean;
 }
 
 interface BladePowerViewState {
@@ -222,30 +223,34 @@ export class BladePowerView extends React.PureComponent<
             </tbody>
           </table>
         </div>
-        <AnchorButton
-          className={"blade-power-close"}
-          intent={this.state.powerStatus === "OFF" ? "primary" : "danger"}
-          minimal
-          text={this.state.powerStatus === "OFF" ? "Turn on" : "Turn off"}
-          icon="power"
-          disabled={this.shouldDisablePowerButtons()}
-          onClick={() => {
-            this.state.powerStatus === "OFF"
-              ? this.requestPowerAction(PowerAction.ON)
-              : this.requestPowerAction(PowerAction.OFF);
-          }}
-        />
-        <AnchorButton
-          className={"blade-power-close"}
-          intent={"warning"}
-          minimal
-          text={"Cycle Power"}
-          icon="power"
-          disabled={this.shouldDisablePowerButtons()}
-          onClick={() => {
-            this.requestPowerAction(PowerAction.CYCLE);
-          }}
-        />
+        {this.props.isMobile ? null : (
+          <AnchorButton
+            className={"blade-power-close"}
+            intent={this.state.powerStatus === "OFF" ? "primary" : "danger"}
+            minimal
+            text={this.state.powerStatus === "OFF" ? "Turn on" : "Turn off"}
+            icon="power"
+            disabled={this.shouldDisablePowerButtons()}
+            onClick={() => {
+              this.state.powerStatus === "OFF"
+                ? this.requestPowerAction(PowerAction.ON)
+                : this.requestPowerAction(PowerAction.OFF);
+            }}
+          />
+        )}
+        {this.props.isMobile ? null : (
+          <AnchorButton
+            className={"blade-power-close"}
+            intent={"warning"}
+            minimal
+            text={"Cycle Power"}
+            icon="power"
+            disabled={this.shouldDisablePowerButtons()}
+            onClick={() => {
+              this.requestPowerAction(PowerAction.CYCLE);
+            }}
+          />
+        )}
         {this.props.callback === undefined ? null : (
           <AnchorButton
             className={"power-close"}
