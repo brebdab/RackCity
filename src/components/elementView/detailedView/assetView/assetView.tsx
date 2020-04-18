@@ -212,7 +212,6 @@ export class AssetView extends React.PureComponent<
   };
 
   public render() {
-    console.log(this.state.asset)
     if (!this.successfullyLoadedData && this.props.token) {
       let params: any;
       params = this.props.match.params;
@@ -390,7 +389,7 @@ export class AssetView extends React.PureComponent<
                   storage,
                   memory_gb,
                 } = this.state.asset;
-                return {cpu, display_color, storage, memory_gb};
+                return { cpu, display_color, storage, memory_gb };
               }}
             />
           </div>
@@ -434,18 +433,18 @@ export class AssetView extends React.PureComponent<
         ) : null}
         <div className="propsview">
           <h3>Network Connections</h3>
+          <div className="network-connections">
 
-          {this.state.asset.model &&
-          this.state.asset.model.network_ports &&
-          this.state.asset.model.network_ports.length !== 0 ? (
-            <div className="network-connections">
-              <table className="bp3-html-table bp3-html-table-bordered bp3-html-table-striped">
-                <tr>
-                  <th>Network Port</th>
-                  <th>Mac Address</th>
-                  <th>Destination Asset</th>
-                  <th>Destination Port</th>
-                </tr>
+              {this.state.asset.model &&
+              this.state.asset.model.network_ports &&
+              this.state.asset.model.network_ports.length !== 0 ? (
+                              <table className="bp3-html-table bp3-html-table-bordered bp3-html-table-striped">
+              <tr>
+                <th>Network Port</th>
+                <th>Mac Address</th>
+                <th>Destination Asset</th>
+                <th>Destination Port</th>
+              </tr>
                 <tbody>
                   {this.state.asset.model.network_ports.map((port: string) => {
                     var connection = this.getNetworkConnectionForPort(port);
@@ -495,17 +494,17 @@ export class AssetView extends React.PureComponent<
                     );
                   })}
                 </tbody>
-              </table>
+                                            </table>
+              ) : null}
 
-              <NetworkGraph
-                networkGraph={this.state.asset.network_graph}
-                onClickNode={this.redirectToAsset}
-                isDecommissioned={
-                  this.state.asset.decommissioning_user !== undefined
-                }
-              />
-            </div>
-          ) : null}
+            <NetworkGraph
+              networkGraph={this.state.asset.network_graph}
+              onClickNode={this.redirectToAsset}
+              isDecommissioned={
+                this.state.asset.decommissioning_user !== undefined
+              }
+            />
+          </div>
         </div>
         {this.renderPower()}
       </div>

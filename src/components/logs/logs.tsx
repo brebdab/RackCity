@@ -22,36 +22,59 @@ import {
 import { IconNames } from "@blueprintjs/icons";
 import { ROUTES } from "../../utils/utils";
 
-export function getLogFilters(filterValue: string) {
-  const username_filter = {
-    field: "user__username",
-    filter_type: FilterTypes.TEXT,
-    filter: {
-      value: filterValue,
-      match_type: TextFilterTypes.CONTAINS,
-    },
-  };
-  const hostname_filter = {
-    field: "related_asset__hostname",
-    filter_type: FilterTypes.TEXT,
-    filter: {
-      value: filterValue,
-      match_type: TextFilterTypes.CONTAINS,
-    },
-  };
-  if (Number(filterValue)) {
-    const asset_number_filter = {
-      field: "related_asset__asset_number",
-      filter_type: FilterTypes.NUMERIC,
-      filter: {
-        max: Number(filterValue),
-        min: Number(filterValue),
-      },
-    };
-    return [username_filter, hostname_filter, asset_number_filter];
-  } else {
-    return [username_filter, hostname_filter];
+export function getTextInQuotes(str: string) {
+  const re = /(".*?")/g;
+  const result = [];
+  let current;
+  while ((current = re.exec(str))) {
+    if (current) {
+      result.push(current.pop());
+    }
   }
+  return result.length > 0 ? result : [str];
+}
+
+export function getTextNotInQuotes(str: string) {
+  let result = str;
+  const textInQuotes = getTextInQuotes(str);
+  textInQuotes.forEach((value) => {
+    if (value) {
+      result = result.replace(value, "");
+    }
+  });
+  return result.split(/(\s+)/);
+}
+
+export function getLogFilters(searchValue: string) {
+  let logs = Array<any>();
+  const textInQuotes = getTextInQuotes(searchValue);
+  textInQuotes.forEach((value) => {
+    if (value) {
+      let filterValue = value.replace(/^"|"$/g, "");
+      logs.push({
+        field: "log_content",
+        filter_type: FilterTypes.TEXT,
+        filter: {
+          value: filterValue,
+          match_type: TextFilterTypes.CONTAINS,
+        },
+      });
+    }
+  });
+  const textNotInQuotes = getTextNotInQuotes(searchValue);
+  textNotInQuotes.forEach((value) => {
+    if (value) {
+      logs.push({
+        field: "log_content",
+        filter_type: FilterTypes.TEXT,
+        filter: {
+          value: value,
+          match_type: TextFilterTypes.CONTAINS,
+        },
+      });
+    }
+  });
+  return logs;
 }
 interface LogEntry {
   id: number;
@@ -262,13 +285,13 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
       <div className={Classes.DARK + " log-view"}>
         <h1>Audit Logs</h1>
         <div className={Classes.DARK + " bp3-input-group .modifier"}>
-          <span className="search-span bp3-icon bp3-icon-search"></span>
+          <span className="search-span bp3-icon bp3-icon-search" />
           <form onSubmit={this.onFormSubmit}>
-            <span></span>
+            <span />
             <input
               className="search-input bp3-input .modifier"
               type="text"
-              placeholder="Search logs by username, asset number, or asset hostname"
+              placeholder="Search logs (enclose any text in double quotes to find exact matches)"
               dir="auto"
               onChange={(e: any) =>
                 this.setState({
@@ -279,7 +302,7 @@ class Logs extends React.Component<LogsProps & RouteComponentProps, LogsState> {
             <button
               className="search-button bp3-button bp3-minimal bp3-intent-primary bp3-icon-arrow-right .modifier"
               onClick={() => this.handleSearch()}
-            ></button>
+            />
           </form>
         </div>
         <div className="page-control">

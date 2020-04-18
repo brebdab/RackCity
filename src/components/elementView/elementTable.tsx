@@ -42,8 +42,10 @@ import {
   isRackRangeFields,
   isUserObject,
   ModelFieldsTable,
+  MountTypes,
   RackRangeFields,
   ROUTES,
+  SiteFieldsTable,
   SortFilterBody,
   TableType,
   UserFieldsTable,
@@ -83,6 +85,7 @@ import { isNullOrUndefined } from "util";
 import { PermissionState } from "../../utils/permissionUtils";
 import axios from "axios";
 import { API_ROOT } from "../../utils/api-config";
+import { BladePowerView } from "./powerView/bladePowerView";
 
 interface ElementTableState {
   items: Array<ElementObjectType>;
@@ -258,6 +261,11 @@ class ElementTable extends React.Component<
       field = ModelFieldsTable[item.field];
     } else if (this.props.type === ElementType.USER) {
       field = UserFieldsTable[item.field];
+    } else if (
+      this.props.type === ElementType.DATACENTER ||
+      this.props.type === ElementType.OFFLINE_STORAGE_SITE
+    ) {
+      field = SiteFieldsTable[item.field];
     }
     return (
       <div className="drag-drop-text">
@@ -642,6 +650,7 @@ class ElementTable extends React.Component<
           col !== "network_connections" &&
           col !== "network_graph" &&
           col !== "is_admin" &&
+          col !== "is_storage" &&
           !(
             col === "offline_storage_site" &&
             this.props.assetType === AssetType.RACKED
@@ -681,6 +690,20 @@ class ElementTable extends React.Component<
         editFormValues: data,
       });
     }
+  };
+  shouldShowPowerInline = (item: ElementObjectType) => {
+    return (
+      isAssetObject(item) &&
+      this.props.assetType === AssetType.RACKED &&
+      ((item.rack && item.rack.is_network_controlled) ||
+        (item.chassis &&
+          item.chassis.hostname &&
+          !item.chassis.hostname.includes("-") &&
+          item.chassis.model.vendor === "BMI"))
+    );
+  };
+  shouldDisablePowerInline = () => {
+    return !!this.props.changePlan;
   };
   //EDIT LOGIC
   handleEditFormClose = () => this.setState({ isEditFormOpen: false });
@@ -730,16 +753,31 @@ class ElementTable extends React.Component<
           this.setState({ isPowerOptionsOpen: false });
         }}
       >
-        <PowerView
-          {...this.props}
-          callback={() => {
-            this.setState({ isPowerOptionsOpen: false });
-          }}
-          asset={this.state.assetPower}
-          shouldUpdate={false}
-          updated={() => {}}
-          assetIsDecommissioned={this.props.isDecommissioned}
-        />
+        {this.state.assetPower &&
+        this.state.assetPower.model &&
+        this.state.assetPower.model.model_type === MountTypes.BLADE ? (
+          <BladePowerView
+            {...this.props}
+            callback={() => {
+              this.setState({ isPowerOptionsOpen: false });
+            }}
+            asset={this.state.assetPower}
+            shouldUpdate={false}
+            updated={() => {}}
+            assetIsDecommissioned={this.props.isDecommissioned}
+          />
+        ) : (
+          <PowerView
+            {...this.props}
+            callback={() => {
+              this.setState({ isPowerOptionsOpen: false });
+            }}
+            asset={this.state.assetPower}
+            shouldUpdate={false}
+            updated={() => {}}
+            assetIsDecommissioned={this.props.isDecommissioned}
+          />
+        )}
       </Dialog>
     );
   };
@@ -830,6 +868,7 @@ class ElementTable extends React.Component<
       col !== "comment" &&
       col !== "is_admin" &&
       col !== "decommissioned_id" &&
+      col !== "is_storage" &&
       !isObject(item[col])
     );
   };
@@ -941,11 +980,13 @@ class ElementTable extends React.Component<
     this.handleDecommissionOpen();
   };
 
-  handlePowerButtonClick = (data: AssetObject) => {
-    this.setState({
-      isPowerOptionsOpen: true,
-      assetPower: data,
-    });
+  handlePowerButtonClick = (data: ElementObjectType) => {
+    if (isAssetObject(data)) {
+      this.setState({
+        isPowerOptionsOpen: true,
+        assetPower: data,
+      });
+    }
   };
 
   // PERMISSIONS
@@ -1209,6 +1250,18 @@ class ElementTable extends React.Component<
                         </div>
                       </th>
                     );
+                  } else if (
+                    this.props.type === ElementType.DATACENTER ||
+                    this.props.type === ElementType.OFFLINE_STORAGE_SITE
+                  ) {
+                    return (
+                      <th className="header-cell">
+                        <div className="header-text">
+                          <span>{SiteFieldsTable[col]}</span>
+                          {this.getScrollIcon(col)}
+                        </div>
+                      </th>
+                    );
                   } else {
                     return (
                       <th className="header-cell">
@@ -1410,7 +1463,7 @@ class ElementTable extends React.Component<
                                               .asset_management) ||
                                           (this.props.type ===
                                             ElementType.ASSET &&
-                                            isAssetObject(item) &&
+                                            isAssetObject(item) && item.datacenter &&
                                             this.props.permissionState.site_permissions.includes(
                                               +item.datacenter.id
                                             ))
@@ -1460,7 +1513,7 @@ class ElementTable extends React.Component<
                                               .asset_management) ||
                                           (this.props.type ===
                                             ElementType.ASSET &&
-                                            isAssetObject(item) &&
+                                            isAssetObject(item) && item.datacenter&&
                                             this.props.permissionState.site_permissions.includes(
                                               +item.datacenter.id
                                             ))
@@ -1481,18 +1534,13 @@ class ElementTable extends React.Component<
                                   }
                                 />
                               ) : null}
-                              {isAssetObject(item) &&
-                              item.rack &&
-                              item.rack.is_network_controlled &&
-                              !this.props.isDecommissioned ? (
+                              {this.shouldShowPowerInline(item) ? (
                                 <AnchorButton
                                   className="button-table"
                                   intent="warning"
                                   minimal
                                   icon="offline"
-                                  disabled={
-                                    this.props.changePlan ? true : false
-                                  }
+                                  disabled={this.shouldDisablePowerInline()}
                                   onClick={(event: any) => {
                                     this.handlePowerButtonClick(item);
                                     event.stopPropagation();
@@ -1521,10 +1569,7 @@ class ElementTable extends React.Component<
           ) : null}
           {(!this.state.items || this.state.items.length === 0) &&
           !this.state.getDataInProgress ? (
-            <Callout
-              icon={IconNames.ERROR}
-              title={"No " + this.props.type}
-            ></Callout>
+            <Callout icon={IconNames.ERROR} title={"No " + this.props.type} />
           ) : null}
         </div>
       </div>
