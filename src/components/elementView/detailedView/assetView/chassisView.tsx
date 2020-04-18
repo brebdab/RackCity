@@ -1,6 +1,6 @@
 import * as React from "react";
 import { RouteComponentProps } from "react-router";
-import { AssetObject, ROUTES } from "../../../../utils/utils";
+import {AssetCPObject, AssetObject, isAssetCPObject, ROUTES} from "../../../../utils/utils";
 import { withRouter } from "react-router-dom";
 import { Classes, Tooltip } from "@blueprintjs/core";
 
@@ -12,7 +12,7 @@ interface ChassisViewProps {
 class ChassisView extends React.PureComponent<
   RouteComponentProps & ChassisViewProps
 > {
-  numSlots = 12;
+  numSlots = 14;
   generateSlotNumbers() {
     const slots = [];
     for (let i = 1; i < this.numSlots + 1; i++) {
@@ -25,7 +25,7 @@ class ChassisView extends React.PureComponent<
     let blades: Array<AssetObject> = [];
     if(this.props.chassis.blades) {
         for (let i = 1; i < this.numSlots + 1; i++) {
-            blades = this.props.chassis.blades.filter((asset: AssetObject) => {
+            blades = this.props.chassis.blades.filter((asset: AssetObject|AssetCPObject) => {
                 return parseInt(asset.chassis_slot) === i;
             })
 
@@ -42,9 +42,15 @@ class ChassisView extends React.PureComponent<
                     <td
                         className="slot"
                         onClick={() => {
-                            console.log(blade);
-                            this.props.history.push(ROUTES.ASSETS + "/" + blade.id);
-                            this.props.redirectToAsset(blade.id);
+                            let blade_id
+                            if(isAssetCPObject(blade) && blade.related_asset){
+                                blade_id = blade.related_asset.id
+                            }
+                            else{
+                                blade_id = blade.id
+                            }
+                            this.props.history.push(ROUTES.ASSETS + "/" + blade_id);
+                            this.props.redirectToAsset(blade_id);
                         }}
                         style={style}
                     >

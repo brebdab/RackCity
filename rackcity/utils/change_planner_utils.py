@@ -11,17 +11,16 @@ from rackcity.api.serializers import (
     RecursiveAssetCPSerializer,
     GetDecommissionedAssetSerializer,
 )
-from rackcity.api.serializers.asset_serializers import GetDecommissionedAssetCPSerializer
+from rackcity.api.serializers.asset_serializers import (
+    GetDecommissionedAssetCPSerializer,
+)
 from rackcity.models import (
     Asset,
     AssetCP,
     ChangePlan,
     DecommissionedAsset,
-    NetworkPort,
-    NetworkPortCP,
-    PowerPort,
-    PowerPortCP,
 )
+from rackcity.utils.asset_changes_utils import get_changes_on_asset
 from rackcity.utils.errors_utils import Status, GenericFailure
 from rackcity.utils.exceptions import LocationException
 from rackcity.utils.query_utils import (
@@ -158,6 +157,7 @@ def get_racked_assets_for_cp(change_plan):
     for asset_cp in racked_assets_cp:
         if asset_cp.related_asset and (asset_cp.related_asset in racked_assets):
             racked_assets = racked_assets.filter(~Q(id=asset_cp.related_asset.id))
+
     ## don't return decommissioned asset_cps:
     racked_assets_cp = racked_assets_cp.filter(is_decommissioned=False)
     return racked_assets, racked_assets_cp
@@ -168,6 +168,7 @@ def get_offline_storage_assets_for_cp(change_plan):
     stored_assets_cp = AssetCP.objects.filter(
         change_plan=change_plan, offline_storage_site__isnull=False,
     )
+
     for asset_cp in stored_assets_cp:
         if asset_cp.related_asset and (asset_cp.related_asset in stored_assets):
             stored_assets = stored_assets.filter(~Q(id=asset_cp.related_asset.id))
@@ -246,7 +247,7 @@ def get_many_assets_response_for_cp(
         return filter_failure_response
     if decommissioned:
         asset_serializer = GetDecommissionedAssetSerializer(assets, many=True,)
-        asset_cp_serializer = GetDecommissionedAssetCPSerializer(assets_cp, many=True, )
+        asset_cp_serializer = GetDecommissionedAssetCPSerializer(assets_cp, many=True,)
     else:
         asset_serializer = RecursiveAssetSerializer(assets, many=True,)
         asset_cp_serializer = RecursiveAssetCPSerializer(assets_cp, many=True,)
@@ -299,85 +300,10 @@ def get_page_count_response_for_cp(
     return JsonResponse({"page_count": page_count})
 
 
-def network_connections_have_changed(asset, asset_cp):
-    network_ports_cp = NetworkPortCP.objects.filter(asset=asset_cp)
-    network_ports = NetworkPort.objects.filter(asset=asset)
-    for network_port_cp in network_ports_cp:
-        # Get NetworkPort connected to this port live
-        try:
-            network_port = network_ports.get(port_name=network_port_cp.port_name,)
-        except ObjectDoesNotExist:
-            continue
-        connected_port_live = network_port.connected_port
-        # Get NetworkPort associated with the NetworkPortCP connected to this port live
-        cp_connected_port_in_cp = network_port_cp.connected_port
-        real_connected_port_in_cp = None
-        if cp_connected_port_in_cp:
-            related_asset = cp_connected_port_in_cp.asset.related_asset
-            if related_asset:
-                try:
-                    real_connected_port_in_cp = NetworkPort.objects.get(
-                        asset=related_asset,
-                        port_name=cp_connected_port_in_cp.port_name,
-                    )
-                except ObjectDoesNotExist:
-                    real_connected_port_in_cp = None
-        # Check for match
-        if connected_port_live != real_connected_port_in_cp:
-            return True
-    return False
-
-
-def power_connections_have_changed(asset, asset_cp):
-    power_ports_cp = PowerPortCP.objects.filter(asset=asset_cp)
-    power_ports = PowerPort.objects.filter(asset=asset)
-    for power_port_cp in power_ports_cp:
-        # Get PDUPortCP corresponding to this CP connection
-        pdu_port_cp = power_port_cp.power_connection
-        # Get PDUPort corresponding to this live connection
-        try:
-            power_port_live = power_ports.get(port_name=power_port_cp.port_name)
-        except ObjectDoesNotExist:
-            continue
-        pdu_port_live = power_port_live.power_connection
-        # Check for match
-        if pdu_port_cp is None and pdu_port_live is None:
-            continue
-        if (pdu_port_cp is None and pdu_port_live) or (
-            pdu_port_cp and pdu_port_live is None
-        ):
-            return True
-        if (
-            pdu_port_cp.port_number != pdu_port_live.port_number
-            or pdu_port_cp.left_right != pdu_port_live.left_right
-            or pdu_port_cp.rack != pdu_port_live.rack
-        ):
-            return True
-    return False
-
-
-def get_changes_on_asset(asset, asset_cp):
-    fields = [field.name for field in Asset._meta.fields]
-    changes = []
-    for field in fields:
-        if field == "chassis":
-            chassis_live = asset.chassis
-            chassis_cp = asset_cp.chassis
-            if chassis_live and (chassis_live != chassis_cp.related_asset):
-                changes.append("chassis")
-        elif getattr(asset, field) != getattr(asset_cp, field):
-            changes.append(field)
-    if network_connections_have_changed(asset, asset_cp):
-        changes.append("network_connections")
-    if power_connections_have_changed(asset, asset_cp):
-        changes.append("power_connections")
-    return changes
-
-
 def get_cp_modification_conflicts(asset_cp):
     conflicts = []
     nonresolvable_message = (
-        "This conflict cannot be resolved; the "
+        "This conflict cannot be resolved automatically; the "
         + "related changes need to be removed from your change plan."
     )
     conflicting_asset_message_1 = (
@@ -517,7 +443,13 @@ def get_modifications_in_cp(change_plan):
         related_asset = asset_cp.related_asset
         if related_asset:
             changes = get_changes_on_asset(related_asset, asset_cp)
-            if changes is None and not asset_cp.is_decommissioned:
+
+            if (
+                not change_plan.execution_time
+                and len(changes) == 0
+                and not asset_cp.is_decommissioned
+            ) or (change_plan.execution_time and not asset_cp.differs_from_live):
+
                 continue
             asset_data = RecursiveAssetSerializer(related_asset).data
         else:
@@ -546,8 +478,8 @@ def get_modifications_in_cp(change_plan):
             title = "Create asset"
             if asset_cp.asset_number:
                 title += " " + str(asset_cp.asset_number)
-            if asset_cp.rack:
-                title += get_location_detail(asset_cp)
+
+            title += get_location_detail(asset_cp)
             asset_data = None
         modifications.append(
             {
@@ -560,18 +492,6 @@ def get_modifications_in_cp(change_plan):
             }
         )
     return modifications
-
-
-def asset_cp_has_conflicts(asset_cp):
-    return (
-        asset_cp.is_conflict
-        or asset_cp.asset_conflict_hostname
-        or asset_cp.asset_conflict_asset_number
-        or asset_cp.asset_conflict_location
-        or asset_cp.related_decommissioned_asset
-        or asset_cp.model is None
-        or asset_cp.rack is None
-    )
 
 
 def get_cp_already_executed_response(change_plan):

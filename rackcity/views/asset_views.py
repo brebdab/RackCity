@@ -35,7 +35,6 @@ from rackcity.utils.asset_utils import (
     save_power_connections,
     save_all_field_data_live,
     save_all_field_data_cp,
-    copy_asset_to_new_asset_cp,
     add_chassis_to_cp,
 )
 from rackcity.utils.change_planner_utils import (
@@ -226,7 +225,7 @@ def asset_add(request):
         data["change_plan"] = change_plan.id
 
         if data["chassis"] and not AssetCP.objects.filter(id=data["chassis"]).exists():
-            #ignore the chassis because we will replace it with a new chassis on AssetCP later
+            # ignore the chassis because we will replace it with a new chassis on AssetCP later
             chassis_id_live = data["chassis"]
             del data["chassis"]
 
@@ -244,7 +243,11 @@ def asset_add(request):
         )
     try:
         validate_user_permission_on_new_asset_data(
-            request.user, serializer.validated_data, data_is_validated=True
+            request.user,
+            serializer.validated_data,
+            data_is_validated=True,
+            change_plan=change_plan,
+            chassis_id_live=chassis_id_live,
         )
     except UserAssetPermissionException as auth_error:
         return JsonResponse(
@@ -288,8 +291,13 @@ def asset_add(request):
                 )
         else:
             if (
-                (("chassis" not in serializer.validated_data
-                or not serializer.validated_data["chassis"]) and not chassis_id_live)
+                (
+                    (
+                        "chassis" not in serializer.validated_data
+                        or not serializer.validated_data["chassis"]
+                    )
+                    and not chassis_id_live
+                )
                 or "chassis_slot" not in serializer.validated_data
                 or not serializer.validated_data["chassis_slot"]
             ):
@@ -310,7 +318,8 @@ def asset_add(request):
                             "failure_message": Status.MODIFY_ERROR.value
                             + "Chassis"
                             + GenericFailure.DOES_NOT_EXIST.value,
-                            "errors": "No existing chassis with id=" + str(chassis_id_live),
+                            "errors": "No existing chassis with id="
+                            + str(chassis_id_live),
                         },
                         status=HTTPStatus.BAD_REQUEST,
                     )
@@ -399,15 +408,6 @@ def asset_modify(request):
         failure_response = get_cp_already_executed_response(change_plan)
         if failure_response:
             return failure_response
-
-        create_new_asset_cp = not AssetCP.objects.filter(
-            id=asset_id, change_plan=change_plan.id
-        ).exists()
-
-        if not create_new_asset_cp:
-            existing_asset = AssetCP.objects.get(
-                id=asset_id, change_plan=change_plan.id
-            )
         if not does_asset_exist(asset_id, change_plan):
             return JsonResponse(
                 {
@@ -418,6 +418,13 @@ def asset_modify(request):
                 },
                 status=HTTPStatus.BAD_REQUEST,
             )
+        try:
+            existing_asset = AssetCP.objects.get(
+                id=asset_id, change_plan=change_plan.id
+            )
+        except ObjectDoesNotExist:
+            create_new_asset_cp = True
+
     if create_new_asset_cp or not change_plan:
         try:
             existing_asset = Asset.objects.get(id=asset_id)
@@ -441,7 +448,7 @@ def asset_modify(request):
 
     try:
         validate_user_permission_on_new_asset_data(
-            request.user, data, data_is_validated=False
+            request.user, data, data_is_validated=False, change_plan=change_plan
         )
     except UserAssetPermissionException as auth_error:
         return JsonResponse(
