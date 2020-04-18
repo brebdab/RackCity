@@ -34,7 +34,7 @@ from rest_framework.decorators import permission_classes, api_view
 from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAuthenticated
 
-
+import traceback
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def decommission_asset(request):
@@ -50,6 +50,7 @@ def decommission_asset_parameterized(data, query_params, user):
     """
     Decommission a live asset
     """
+    print(data)
     (change_plan, failure_response) = get_change_plan(query_params.get("change_plan"))
     if failure_response:
         return failure_response
@@ -62,26 +63,32 @@ def decommission_asset_parameterized(data, query_params, user):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
-    id = data["id"]
+    asset_id = data["id"]
     decommissioned_asset_cp = None
     if change_plan:
         response = get_cp_already_executed_response(change_plan)
         if response:
             return response
         assets, assets_cp = get_assets_for_cp(change_plan.id, show_decommissioned=True)
-        if assets_cp.filter(related_asset=id).exists():
-            decommissioned_asset_cp = assets_cp.get(related_asset=id)
+        if assets_cp.filter(related_asset=asset_id).exists():
+            print("1")
+            decommissioned_asset_cp = assets_cp.get(related_asset=asset_id)
             decommissioned_asset_cp.is_decommissioned = True
-        elif assets_cp.filter(id=id).exists():
-            decommissioned_asset_cp = assets_cp.get(id=id)
+            asset_id = decommissioned_asset_cp.id
+        elif assets_cp.filter(id=asset_id).exists():
+            print("2")
+            decommissioned_asset_cp = assets_cp.get(id=asset_id)
             decommissioned_asset_cp.is_decommissioned = True
-        elif assets.filter(id=id).exists():
-            existing_asset = assets.get(id=id)
+            asset_id = decommissioned_asset_cp.id
+        elif assets.filter(id=asset_id).exists():
+            print("3")
+            existing_asset = assets.get(id=asset_id)
             decommissioned_asset_cp = AssetCP(
                 change_plan=change_plan,
                 related_asset=existing_asset,
                 is_decommissioned=True,
             )
+            print("creating asset with related asset", existing_asset)
 
             for field in existing_asset._meta.fields:
                 if not (
@@ -94,27 +101,26 @@ def decommission_asset_parameterized(data, query_params, user):
                         field.name,
                         getattr(existing_asset, field.name),
                     )
-            if existing_asset.chassis:
+            if existing_asset.chassis and not assets_cp.filter(related_asset=existing_asset.chassis.id).exists():
                 chassis_cp = add_chassis_to_cp(
-                    existing_asset.chassis, change_plan, ignore_blade_id=id
+                    existing_asset.chassis, change_plan, ignore_blade_id=existing_asset.id
                 )
                 decommissioned_asset_cp.chassis = chassis_cp
+            elif existing_asset.chassis:
+                decommissioned_asset_cp.chassis = assets_cp.get(related_asset=existing_asset.chassis.id)
+            decommissioned_asset_cp.save()
+            print("asset id", decommissioned_asset_cp.id)
 
         else:
-            try:
-                decommissioned_asset_cp = AssetCP.objects.get(id=id)
-                decommissioned_asset_cp.is_decommissioned = True
-
-            except Asset.DoesNotExist:
-                return JsonResponse(
-                    {
-                        "failure_message": Status.ERROR.value
-                        + "Asset"
-                        + GenericFailure.DOES_NOT_EXIST.value,
-                        "errors": "No existing asset in change plan with id=" + str(id),
-                    },
-                    status=HTTPStatus.BAD_REQUEST,
-                )
+            return JsonResponse(
+                {
+                    "failure_message": Status.ERROR.value
+                    + "Asset"
+                    + GenericFailure.DOES_NOT_EXIST.value,
+                    "errors": "No existing asset in change plan with id=" + str(asset_id),
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
         try:
             validate_user_permission_on_existing_asset(user, decommissioned_asset_cp)
         except UserAssetPermissionException as auth_error:
@@ -125,28 +131,37 @@ def decommission_asset_parameterized(data, query_params, user):
 
     else:
         try:
-            asset = Asset.objects.get(id=id)
+            asset = Asset.objects.get(id=asset_id)
         except Asset.DoesNotExist:
             return JsonResponse(
                 {
                     "failure_message": Status.ERROR.value
                     + "Asset"
                     + GenericFailure.DOES_NOT_EXIST.value,
-                    "errors": "No existing asset with id=" + str(id),
+                    "errors": "No existing asset with id=" + str(asset_id),
                 },
                 status=HTTPStatus.BAD_REQUEST,
             )
         try:
             validate_user_permission_on_existing_asset(user, asset)
         except UserAssetPermissionException as auth_error:
+            print("error 1")
             return JsonResponse(
                 {"failure_message": Status.AUTH_ERROR.value + str(auth_error)},
                 status=HTTPStatus.UNAUTHORIZED,
             )
 
     if change_plan:
-        blades = assets_cp.filter(chassis=decommissioned_asset_cp.id)
+        print("here")
+        print(asset_id,decommissioned_asset_cp.id)
+        if asset_id != decommissioned_asset_cp.id:
+            ## a new asset cp was created for decommissioning, blades are not on assetxp
+            blades = assets.filter(chassis=asset_id)
+        else:
+            blades = assets_cp.filter(chassis=asset_id)
+        print(blades)
         for blade in blades:
+            print("decomissioning blade", blade.id)
             data_for_blade = data.copy()
             data_for_blade["id"] = blade.id
             try:
@@ -154,6 +169,7 @@ def decommission_asset_parameterized(data, query_params, user):
                 # Assume that if this call doesn't raise an exception, it was successful
                 # None of the failed responses above are possible
             except Exception as error:
+                traceback.format_exc(error)
                 return JsonResponse(
                     {
                         "failure_message": Status.DECOMMISSION_ERROR.value
@@ -166,7 +182,10 @@ def decommission_asset_parameterized(data, query_params, user):
                 )
         try:
             decommissioned_asset_cp.save()
+            print("asset id 2", decommissioned_asset_cp.id)
+
         except Exception as error:
+            traceback.format_exc(error)
             return JsonResponse(
                 {
                     "failure_message": Status.DECOMMISSION_ERROR.value
@@ -183,6 +202,7 @@ def decommission_asset_parameterized(data, query_params, user):
             },
             status=HTTPStatus.OK,
         )
+
     blades = Asset.objects.filter(chassis=asset.id)
     for blade in blades:
         data_for_blade = data.copy()
@@ -228,7 +248,7 @@ def decommission_asset_parameterized(data, query_params, user):
             status=HTTPStatus.BAD_REQUEST,
         )
     else:
-        for assetcp in AssetCP.objects.filter(related_asset=id):
+        for assetcp in AssetCP.objects.filter(related_asset=asset_id):
             assetcp.related_decommissioned_asset = decommissioned_asset_object
             assetcp.save()
         log_action(
