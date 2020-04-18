@@ -199,7 +199,7 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
     chassis_slot = RCIntegerField(
         allow_null=True, max_value=2147483647, min_value=0, required=False
     )
-    offline_storage_site = SiteSerializer()
+    offline_storage_site = serializers.SerializerMethodField()
     mac_addresses = serializers.SerializerMethodField()
     power_connections = serializers.SerializerMethodField()
     network_connections = serializers.SerializerMethodField()
@@ -251,6 +251,9 @@ class RecursiveAssetSerializer(serializers.ModelSerializer):
     def get_datacenter(self, asset):
         return get_datacenter_of_asset(asset)
 
+    def get_offline_storage_site(self, asset):
+        return get_offline_storage_site_of_asset(asset)
+
 
 class BulkAssetSerializer(serializers.ModelSerializer):
     """
@@ -258,9 +261,8 @@ class BulkAssetSerializer(serializers.ModelSerializer):
     for bulk export.
     """
 
-    datacenter = serializers.SlugRelatedField(
-        source="rack.datacenter", slug_field="abbreviation", many=False, read_only=True,
-    )
+    datacenter = serializers.SerializerMethodField()
+    offline_site = serializers.SerializerMethodField()
     vendor = serializers.SlugRelatedField(
         source="model", slug_field="vendor", many=False, read_only=True,
     )
@@ -269,9 +271,31 @@ class BulkAssetSerializer(serializers.ModelSerializer):
     )
     # by default, calls get_<field> - in this case, get_rack
     rack = serializers.SerializerMethodField()
-    # TODO: add chassis
+    rack_position = RCIntegerField(
+        allow_null=True,
+        max_value=2147483647,
+        min_value=0,
+        required=False,
+    )
+    chassis_number = serializers.SerializerMethodField()
+    chassis_slot = RCIntegerField(
+        allow_null=True,
+        max_value=2147483647,
+        min_value=0,
+        required=False,
+    )
     power_port_connection_1 = serializers.SerializerMethodField()
     power_port_connection_2 = serializers.SerializerMethodField()
+    custom_display_color = serializers.CharField(source="display_color")
+    custom_cpu = serializers.CharField(source="cpu")
+    custom_storage = serializers.CharField(source="storage")
+    custom_memory = RCIntegerField(
+        source="memory_gb",
+        allow_null=True,
+        max_value=2147483647,
+        min_value=0,
+        required=False,
+    )
 
     class Meta:
         model = Asset
@@ -279,18 +303,44 @@ class BulkAssetSerializer(serializers.ModelSerializer):
             "asset_number",
             "hostname",
             "datacenter",
+            "offline_site",
             "rack",
             "rack_position",
+            "chassis_number",
+            "chassis_slot",
             "vendor",
             "model_number",
             "owner",
             "comment",
             "power_port_connection_1",
             "power_port_connection_2",
+            "custom_display_color",
+            "custom_cpu",
+            "custom_storage",
+            "custom_memory",
         )
 
+    def get_datacenter(self, asset):
+        datacenter = get_datacenter_of_asset(asset)
+        if datacenter:
+            return datacenter["abbreviation"]
+
+    def get_offline_site(self, asset):
+        offline_storage_site = get_offline_storage_site_of_asset(asset)
+        if offline_storage_site:
+            return offline_storage_site["abbreviation"]
+
     def get_rack(self, asset):
-        return asset.rack.row_letter + str(asset.rack.rack_num)
+        if asset.rack:
+            return asset.rack.row_letter + str(asset.rack.rack_num)
+        else:
+            return None
+
+    def get_chassis_number(self, asset):
+        if asset.chassis:
+            return asset.chassis.asset_number
+        else:
+            return None
 
     def get_power_port_connection_1(self, asset):
         return self.power_port_connection(asset, port_number=1)
@@ -319,8 +369,8 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
 
     model = ITModelSerializer()
     rack = RackSerializer()
+    offline_storage_site = serializers.SerializerMethodField()
     chassis = ChassisCPSerializer()
-    offline_storage_site = SiteSerializer()
     asset_conflict_hostname = AssetSerializer()
     asset_conflict_location = AssetSerializer()
     asset_conflict_asset_number = AssetSerializer()
@@ -385,6 +435,9 @@ class RecursiveAssetCPSerializer(serializers.ModelSerializer):
 
     def get_datacenter(self, assetCP):
         return get_datacenter_of_asset(assetCP)
+
+    def get_offline_storage_site(self, assetCP):
+        return get_offline_storage_site_of_asset(assetCP)
 
     def get_mark_as_cp(self, assetCP):
         if assetCP.related_asset:
@@ -470,6 +523,14 @@ def normalize_bulk_asset_data(bulk_asset_data):
         del bulk_asset_data["asset_number"]
     if not bulk_asset_data["hostname"]:
         del bulk_asset_data["hostname"]
+    bulk_asset_data["display_color"] = bulk_asset_data["custom_display_color"]
+    del bulk_asset_data["custom_display_color"]
+    bulk_asset_data["cpu"] = bulk_asset_data["custom_cpu"]
+    del bulk_asset_data["custom_cpu"]
+    bulk_asset_data["storage"] = bulk_asset_data["custom_storage"]
+    del bulk_asset_data["custom_storage"]
+    bulk_asset_data["memory_gb"] = bulk_asset_data["custom_memory"]
+    del bulk_asset_data["custom_memory"]
     return bulk_asset_data
 
 
@@ -664,5 +725,16 @@ def get_datacenter_of_asset(asset):
         datacenter = asset.chassis.rack.datacenter
     if datacenter:
         return SiteSerializer(datacenter).data
+    else:
+        return None
+
+def get_offline_storage_site_of_asset(asset):
+    offline_storage_site = None
+    if asset.offline_storage_site:
+        offline_storage_site = asset.offline_storage_site
+    if asset.chassis and asset.chassis.offline_storage_site:
+        offline_storage_site = asset.chassis.offline_storage_site
+    if offline_storage_site:
+        return SiteSerializer(offline_storage_site).data
     else:
         return None

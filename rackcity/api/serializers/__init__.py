@@ -5,6 +5,7 @@ from .asset_serializers import (
     RecursiveAssetSerializer,
     BulkAssetSerializer,
     RecursiveAssetCPSerializer,
+    ChassisSerializer,
     normalize_bulk_asset_data,
     serialize_power_connections,
 )

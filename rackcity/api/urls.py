@@ -25,6 +25,7 @@ urlpatterns = [
     path("assets/bulk-upload", views.asset_bulk_upload),
     path("assets/bulk-approve", views.asset_bulk_approve),
     path("assets/bulk-export", views.asset_bulk_export),
+    path("assets/bulk-export-offline", views.asset_bulk_export_offline),
     path("assets/network-bulk-upload", views.network_bulk_upload),
     path("assets/network-bulk-approve", views.network_bulk_approve),
     path("assets/network-bulk-export", views.network_bulk_export),

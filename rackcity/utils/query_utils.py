@@ -10,6 +10,7 @@ from rackcity.utils.errors_utils import (
     get_invalid_paginated_request_response,
 )
 from rest_framework.pagination import PageNumberPagination
+from rackcity.models import Asset
 
 
 def get_sort_arguments(data):
@@ -429,3 +430,17 @@ def get_page_count_response(
     count = object_query.count()
     page_count = math.ceil(count / page_size)
     return JsonResponse({"page_count": page_count})
+
+
+def assets_online_queryset():
+    filter = Q(offline_storage_site__isnull=True) & Q(
+        chassis__offline_storage_site__isnull=True
+    )
+    return Asset.objects.filter(filter)
+
+
+def assets_offline_queryset():
+    filter = Q(offline_storage_site__isnull=False) | Q(
+        chassis__offline_storage_site__isnull=False
+    )
+    return Asset.objects.filter(filter)
