@@ -205,7 +205,7 @@ def validate_model_change(new_model_data, existing_model):
 
 
 def validate_model_height_change(new_model_data, existing_model):
-    if "height" not in new_model_data:
+    if "height" not in new_model_data or not new_model_data["height"]:
         return
     new_model_height = int(new_model_data["height"])
     if new_model_height <= existing_model.height:
