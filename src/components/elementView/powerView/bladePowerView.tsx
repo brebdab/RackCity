@@ -116,10 +116,7 @@ export class BladePowerView extends React.PureComponent<
       this.props.asset.chassis &&
       this.props.asset.chassis.hostname
     ) {
-      return (
-        !this.props.asset.chassis.hostname.includes("-") &&
-        this.props.asset.chassis.model.vendor === vendorBMI
-      );
+      return this.props.asset.chassis.model.vendor === vendorBMI;
     } else {
       return false;
     }
