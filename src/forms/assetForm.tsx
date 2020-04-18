@@ -253,15 +253,17 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       });
   }
   getAssetNumber() {
-    axios
-      .get(API_ROOT + "api/assets/asset-number", getHeaders(this.props.token))
-      .then((res: any) => {
-        this.setState({
-          values: updateObject(this.state.values, {
-            asset_number: res.data.asset_number,
-          }),
-        });
-      });
+    if(!this.props.changePlan) {
+      axios
+          .get(API_ROOT + "api/assets/asset-number", getHeaders(this.props.token))
+          .then((res: any) => {
+            this.setState({
+              values: updateObject(this.state.values, {
+                asset_number: res.data.asset_number,
+              }),
+            });
+          });
+    }
   }
   componentDidMount() {
     this.setPowerPortInputState();

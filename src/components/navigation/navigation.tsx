@@ -204,7 +204,7 @@ export class Navigation extends React.Component<
                           popoverClassName: "dropdown",
                           usePortal: true,
                         }}
-                        disabled={this.props.location.pathname.includes(
+                        disabled={this.props.changePlan && this.props.location.pathname.includes(
                           "/dashboard/change-plans/"
                         )}
                         items={this.state.changePlans}
@@ -222,9 +222,9 @@ export class Navigation extends React.Component<
                       >
                         <Button
                           minimal
-                          disabled={this.props.location.pathname.includes(
-                            "/dashboard/change-plans/"
-                          )}
+                          disabled={this.props.changePlan && this.props.location.pathname.includes(
+                          "/dashboard/change-plans/"
+                        )}
                           rightIcon="caret-down"
                           text={
                             this.props.changePlan

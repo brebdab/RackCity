@@ -138,6 +138,7 @@ class CPDetailView extends React.Component<
         getHeaders(this.props.token)
       )
       .then((res) => {
+        this.setButtonState();
         this.loading = false;
         this.addSuccessToast(res.data.success_message);
         this.updateData();
@@ -146,7 +147,7 @@ class CPDetailView extends React.Component<
           TableType.STORED_ASSETS,
           TableType.DECOMMISSIONED_ASSETS,
         ]);
-        this.setButtonState();
+
       })
       .catch((err) => {
         this.loading = false;
