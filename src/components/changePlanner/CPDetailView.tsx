@@ -608,7 +608,7 @@ class CPDetailView extends React.Component<
               <AnchorButton
                 onClick={() => this.printWorkOrder()}
                 disabled={
-                  !isNullOrUndefined(this.state.changePlan.execution_time) &&
+                  !isNullOrUndefined(this.state.changePlan.execution_time) ||
                   this.state.modifications.length === 0
                 }
                 intent="none"
@@ -624,7 +624,7 @@ class CPDetailView extends React.Component<
             <div>
               <AnchorButton
                 disabled={
-                  !isNullOrUndefined(this.state.changePlan.execution_time) &&
+                  !isNullOrUndefined(this.state.changePlan.execution_time) ||
                   this.state.modifications.length === 0
                 }
                 icon="build"
