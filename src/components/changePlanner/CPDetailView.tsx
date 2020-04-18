@@ -532,12 +532,11 @@ class CPDetailView extends React.Component<
                             this.state.changePlan.execution_time
                           )
                         }
-                        icon="delete"
                         onClick={(e: any) => {
                           this.removeModification(modification);
                           e.stopPropagation();
                         }}
-                        text="Discard change"
+                        text="Remove change"
                       />
                     </Callout>
                     <Collapse isOpen={this.state.isOpen[index]}>
