@@ -83,7 +83,7 @@ def validate_hostname_uniqueness(value, asset_id, change_plan, related_asset):
 
 def validate_asset_number_uniqueness(value, asset_id, change_plan, related_asset):
     assets, assets_cp = get_assets_for_cp(change_plan.id)
-    matching_assets = assets_cp.filter(asset_number=value, change_plan=change_plan)
+    matching_assets = assets_cp.filter(asset_number=value)
     if value is None:
         return
     if (
@@ -318,7 +318,7 @@ class AssetCP(AbstractAsset):
         null=True,
         blank=True,
     )
-    differs_from_live = models.BooleanField(default=False,blank=True)
+    differs_from_live = models.BooleanField(default=False, blank=True)
 
     class Meta:
         ordering = ["asset_number"]

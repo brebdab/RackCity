@@ -4,8 +4,8 @@ import {
   Intent,
   IToastProps,
   Position,
-  Toaster,
   Spinner,
+  Toaster,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -14,12 +14,14 @@ import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import { API_ROOT } from "../../../../utils/api-config";
 import {
-  getHeaders,
   AssetObject,
+  getHeaders,
+  MountTypes,
   RackResponseObject,
   ROUTES,
 } from "../../../../utils/utils";
 import "./rackView.scss";
+
 //export interface ElementViewProps {}
 
 export interface RackViewProps {
@@ -82,7 +84,24 @@ class RackView extends React.PureComponent<
           );
         } else {
           currHeight = width + currHeight;
-          const hostname = assets[0].hostname ? assets[0].hostname : " ";
+          const hostname = assets[0].hostname
+            ?  assets[0].hostname
+            : " ";
+          let display = hostname;
+          if (assets[0].model.model_type === MountTypes.BLADE_CHASSIS) {
+            if (assets[0].blades.length === 1) {
+              display += " | " +  assets[0].blades.length + " blade";
+            } else {
+              display += " | " +  assets[0].blades.length + " blades";
+            }
+
+            display +=
+              " | " +
+              assets[0].model.vendor +
+              " " +
+              assets[0].model.model_number
+          }
+
           rows.unshift(
             <tr
               className="rack-row"
@@ -97,11 +116,7 @@ class RackView extends React.PureComponent<
                   this.props.history.push(ROUTES.ASSETS + "/" + id)
                 }
               >
-                {assets[0].model.vendor +
-                  " " +
-                  assets[0].model.model_number +
-                  " | " +
-                  hostname}
+                {display}
               </td>
             </tr>
           );
@@ -129,7 +144,7 @@ class RackView extends React.PureComponent<
     for (let i = 1; i <= maxHeight; i++) {
       unitBarRows.unshift(
         <tr className="rack-row" style={{ lineHeight: 1 }}>
-          <td className="cell unit"> {i}U </td>
+          <td className="cell unit"> {i} </td>
         </tr>
       );
     }
@@ -228,7 +243,16 @@ class RackView extends React.PureComponent<
                       {" "}
                       <p>Are you sure you want to delete?</p>
                     </Alert>
+
                     <div className={Classes.DARK + " rack"}>
+                      <table className="bp3-html-table loc-table">
+                        <thead>
+                          <tr>
+                            <th className=" cell header"> (U)</th>
+                          </tr>
+                        </thead>
+                        <tbody>{this.getUnitRows(rackResp)}</tbody>
+                      </table>
                       <table className=" bp3-html-table bp3-interactive rack-table">
                         <thead>
                           <tr>
