@@ -443,6 +443,7 @@ def get_modifications_in_cp(change_plan):
         related_asset = asset_cp.related_asset
         if related_asset:
             changes = get_changes_on_asset(related_asset, asset_cp)
+            print(related_asset, change_plan.execution_time,asset_cp.differs_from_live)
 
             if (
                 not change_plan.execution_time
@@ -491,6 +492,7 @@ def get_modifications_in_cp(change_plan):
                 "changes": changes,
             }
         )
+
     return modifications
 
 

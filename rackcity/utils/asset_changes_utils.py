@@ -7,6 +7,7 @@ def get_changes_on_asset(asset, asset_cp):
     fields = [field.name for field in Asset._meta.fields]
     changes = []
     for field in fields:
+        print(field,getattr(asset, field),getattr(asset_cp, field))
         if field == "id" or field == "assetid_ptr":
             continue
         if field == "chassis":
