@@ -138,8 +138,9 @@ export class Navigation extends React.Component<
                   className="nav-bar-button"
                   minimal
                   icon="barcode"
-                  text="Barcode Scanner"
-                  onClick={() => this.props.history.push(ROUTES.SCANNER)}
+                  text="Scanner"
+                  onClick={() => {this.props.history.push("/")}}
+                  // onClick={() => this.props.history.push(ROUTES.SCANNER)}
                 />
               ) : null}
 
