@@ -243,7 +243,7 @@ def get_many_assets_response_for_cp(
         filtered_assets,
         filtered_assets_cp,
         filter_failure_response,
-    ) = get_filtered_assets_for_cp(change_plan, request.data, decommissioned, stored,)
+    ) = get_filtered_assets_for_cp(change_plan, request.data, decommissioned, stored)
     if filter_failure_response:
         return filter_failure_response
 
@@ -289,7 +289,7 @@ def get_many_assets_response_for_cp(
                 asset_serializer = RecursiveAssetCPSerializer(asset)
                 assets_data.append(asset_serializer.data)
 
-    return JsonResponse({"assets": assets_data}, status=HTTPStatus.OK,)
+    return JsonResponse({"assets": assets_data}, status=HTTPStatus.OK)
 
 
 def get_page_count_response_for_cp(
