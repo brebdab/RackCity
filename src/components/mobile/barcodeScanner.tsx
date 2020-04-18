@@ -1,4 +1,12 @@
-import { AnchorButton, Classes } from "@blueprintjs/core";
+import {
+  AnchorButton,
+  Classes,
+  Position,
+  Toaster,
+  IToastProps,
+  Intent,
+  Alert,
+} from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
 import { connect, useSelector } from "react-redux";
@@ -6,12 +14,18 @@ import { RouteComponentProps, withRouter } from "react-router";
 import Webcam from "react-webcam";
 import "./barcodeScanner.scss";
 import { API_ROOT } from "../../utils/api-config";
-import { getHeaders } from "../../utils/utils";
+import { AssetObject, getHeaders } from "../../utils/utils";
 import axios from "axios";
+import { MobileAssetView } from "./mobileAssetView";
 
 interface BarcodeScannerState {
   cameraHeight: number;
   cameraWidth: number;
+  token?: string;
+  asset: AssetObject | null;
+  barcode_data: string;
+  confirmationIsOpen: boolean;
+  showAsset: boolean;
 }
 interface RootState {
   token: string;
@@ -25,9 +39,30 @@ export class BarcodeScanner extends React.PureComponent<
   RouteComponentProps & BarcodeScannerProps,
   BarcodeScannerState
 > {
+  private toaster: Toaster = {} as Toaster;
+  private addToast = (toast: IToastProps) => {
+    toast.timeout = 5000;
+    if (this.toaster) {
+      this.toaster.show(toast);
+    }
+  };
+
+  private addErrorToast = (message: string) => {
+    this.addToast({ message: message, intent: Intent.DANGER });
+  };
+
+  private refHandlers = {
+    toaster: (ref: Toaster) => (this.toaster = ref),
+  };
+
   public state = {
     cameraHeight: 0,
     cameraWidth: 0,
+    asset: null,
+    confirmationIsOpen: false,
+    showAsset: false,
+    barcode_data: "",
+    token: "",
   };
 
   constraints = {
@@ -35,6 +70,7 @@ export class BarcodeScanner extends React.PureComponent<
     width: 1280,
     facingMode: { exact: "environment" },
   };
+
   WebcamCapture = () => {
     let webcamRef: any;
     webcamRef = React.useRef(null);
@@ -53,10 +89,16 @@ export class BarcodeScanner extends React.PureComponent<
           getHeaders(token)
         )
         .then((res: any) => {
-          alert(JSON.stringify(res));
+          const asset_data = res.data.asset_data;
+          this.setState({
+            token: token,
+            barcode_data: res.data.barcode_data,
+            asset: asset_data,
+            confirmationIsOpen: true,
+          });
         })
         .catch((err: any) => {
-          alert(JSON.stringify(err));
+          this.addErrorToast(err.response.data.failure_message);
         });
     }, [webcamRef, token]);
     return (
@@ -84,6 +126,29 @@ export class BarcodeScanner extends React.PureComponent<
     );
   };
 
+  private renderAssetView(asset: AssetObject | null) {
+    if (asset) {
+      return (
+        <MobileAssetView
+          {...this.props}
+          token={this.state.token}
+          asset={asset}
+          data_override={() => {
+            const { cpu, display_color, storage, memory_gb } = asset;
+            return { cpu, display_color, storage, memory_gb };
+          }}
+        />
+      );
+    } else {
+      this.addErrorToast("ERROR: No data found for selected asset");
+      this.setState({
+        asset: null,
+        showAsset: false,
+      });
+      return;
+    }
+  }
+
   render() {
     const height = window.innerHeight;
     const width = document.body.offsetWidth;
@@ -95,8 +160,42 @@ export class BarcodeScanner extends React.PureComponent<
     }
 
     return (
-      <div className={Classes.DARK}>
-        <this.WebcamCapture />
+      <div className={Classes.DARK} id={"mobile-app"}>
+        {this.state.showAsset && this.state.asset ? (
+          this.renderAssetView(this.state.asset)
+        ) : (
+          <>
+            <this.WebcamCapture />
+            <Toaster
+              autoFocus={false}
+              canEscapeKeyClear={true}
+              position={Position.TOP}
+              ref={this.refHandlers.toaster}
+            />
+            <Alert
+              className={Classes.DARK}
+              isOpen={this.state.confirmationIsOpen}
+              onCancel={() => {
+                this.setState({
+                  confirmationIsOpen: false,
+                  asset: null,
+                });
+              }}
+              onConfirm={() => {
+                this.setState({
+                  showAsset: true,
+                });
+              }}
+              cancelButtonText={"Cancel"}
+              confirmButtonText={"View Asset"}
+            >
+              <p>
+                Found barcode with value: {this.state.barcode_data}. Would you
+                like to view this asset?
+              </p>
+            </Alert>
+          </>
+        )}
       </div>
     );
   }

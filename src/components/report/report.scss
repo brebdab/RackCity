@@ -1,7 +1,6 @@
 .column-third-right-report {
   text-align: left;
   flex: 33%;
-  border-left: 1px solid white;
   padding-left: 10px;
 }
 
@@ -20,14 +19,12 @@
 .report-title {
   text-align: center;
   padding-bottom: 15px;
-  border-bottom: 1px solid white;
 }
 
 .report-summary {
   text-align: left;
   padding-bottom: 15px;
   padding-top: 15px;
-  border-bottom: 1px solid white;
 }
 
 .row {
@@ -36,4 +33,19 @@
 
 .report-all {
   overflow: auto;
+}
+
+.report-view {
+  padding-left: 20pt;
+  padding-right: 20pt;
+}
+
+.report-tab:focus {
+  outline: none;
+}
+
+.report-card {
+  background-color: #202b33 !important;
+  border-radius: 5pt;
+  padding: 20pt !important;
 }

@@ -25,6 +25,7 @@ from .asset_views import (
     asset_bulk_upload,
     asset_bulk_approve,
     asset_bulk_export,
+    asset_bulk_export_offline,
     asset_page_count,
     offline_storage_asset_page_count,
     asset_fields,
@@ -48,7 +49,7 @@ from .rack_views import (
     rack_delete,
     rack_summary,
 )
-from .report_views import report_rack_usage, rack_report_datacenter
+from .report_views import report_rack_usage_global, report_rack_usage_datacenter
 from .user_views import (
     netid_login,
     RegisterNameView,

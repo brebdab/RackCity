@@ -6,7 +6,15 @@ import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import { API_ROOT } from "../../utils/api-config";
 import "./import.scss";
-import { ModelObject, RackObject, PowerConnection } from "../../utils/utils";
+import {
+  ModelObject,
+  RackObject,
+  PowerConnection,
+  DatacenterObject,
+  AssetObject,
+  TableType,
+} from "../../utils/utils";
+import * as actions from "../../store/actions/state";
 
 interface ModifierProps {
   token: string;
@@ -15,29 +23,36 @@ interface ModifierProps {
   modelsAdded?: number;
   callback: (toasts: Array<string>, types: Array<string>) => void;
   operation: string;
+  markTablesStale(staleTables: TableType[]): void;
 }
-var console: any = {};
-console.log = function () {};
 
-export interface AssetObject {
+export interface AssetObjectMod {
   [key: string]: any;
+  asset_number: number;
   hostname: string;
-  rack_position: string;
   model: ModelObject;
   rack: RackObject;
+  rack_position: string;
+  chassis: AssetObject;
+  chassis_slot: string;
+  datacenter: DatacenterObject;
+  offline_storage_site: DatacenterObject;
   owner?: string;
   comment?: string;
   id: string;
-  asset_number: number;
-  datacenter: string;
   power_port_connection_1: PowerConnection;
   power_port_connection_2: PowerConnection;
+  display_color: string;
+  cpu: string;
+  storage: string;
+  memory_gb: string;
 }
 
 export interface ModelObjectMod {
   [key: string]: any;
   vendor: string;
   model_number: string;
+  mount_type: string;
   height: string;
   display_color?: string;
   network_ports?: string; //
@@ -77,13 +92,14 @@ export class Modifier extends React.PureComponent<
   };
 
   renderOneModification(obj: any, fields: any, model: any) {
-    return (
-      <div>
+    return ([
+      <div className = "single-modification">
         <table className={"bp3-html-table"}>
           <thead>
             <tr>
               <th>Modified or Original?</th>
               {Object.keys(model).map((item: string) => {
+                console.log("item: ");
                 console.log(item);
                 if (item !== "id") {
                   if (item === "power_connections") {
@@ -107,9 +123,35 @@ export class Modifier extends React.PureComponent<
                 if (key === "rack")
                   return (
                     <td>
-                      {obj.existing.rack.row_letter +
-                        "" +
-                        obj.existing.rack.rack_num}
+                      {obj.existing.rack
+                        ? obj.existing.rack.row_letter +
+                          "" +
+                          obj.existing.rack.rack_num
+                        : null}
+                    </td>
+                  );
+                else if (key === "chassis")
+                  return (
+                    <td>
+                      {obj.existing.chassis
+                        ? obj.existing.chassis.hostname
+                        : null}
+                    </td>
+                  );
+                else if (key === "datacenter")
+                  return (
+                    <td>
+                      {obj.existing.datacenter
+                        ? obj.existing.datacenter.abbreviation
+                        : null}
+                    </td>
+                  );
+                else if (key === "offline_storage_site")
+                  return (
+                    <td>
+                      {obj.existing.offline_storage_site
+                        ? obj.existing.offline_storage_site.abbreviation
+                        : null}
                     </td>
                   );
                 else if (key === "model")
@@ -155,9 +197,35 @@ export class Modifier extends React.PureComponent<
                 if (key === "rack")
                   return (
                     <td>
-                      {obj.modified.rack.row_letter +
-                        "" +
-                        obj.modified.rack.rack_num}
+                      {obj.modified.rack
+                        ? obj.modified.rack.row_letter +
+                          "" +
+                          obj.modified.rack.rack_num
+                        : null}
+                    </td>
+                  );
+                else if (key === "chassis")
+                  return (
+                    <td>
+                      {obj.modified.chassis
+                        ? obj.modified.chassis.hostname
+                        : null}
+                    </td>
+                  );
+                else if (key === "datacenter")
+                  return (
+                    <td>
+                      {obj.modified.datacenter
+                        ? obj.modified.datacenter.abbreviation
+                        : null}
+                    </td>
+                  );
+                else if (key === "offline_storage_site")
+                  return (
+                    <td>
+                      {obj.modified.offline_storage_site
+                        ? obj.modified.offline_storage_site.abbreviation
+                        : null}
                     </td>
                   );
                 else if (key === "model")
@@ -201,7 +269,8 @@ export class Modifier extends React.PureComponent<
             </tr>
           </tbody>
         </table>
-        <div className={"upload-button"}>
+
+      </div>     ,   <div className={"upload-button"}>
           <Checks
             {...this.props}
             linkedModel={obj.modified}
@@ -220,8 +289,7 @@ export class Modifier extends React.PureComponent<
               // this.state.modifiedModels[index].checked = !this.state.modifiedModels[index].checked
             }}
           />
-        </div>
-      </div>
+        </div>]
     );
   }
 
@@ -246,6 +314,7 @@ export class Modifier extends React.PureComponent<
         fields = {
           vendor: "Vendor",
           model_number: "Model Number",
+          model_type: "Mount Type",
           height: "Height",
           display_color: "Display Color",
           network_ports: "Network Ports",
@@ -264,15 +333,22 @@ export class Modifier extends React.PureComponent<
         fields = {
           asset_number: "Asset Number",
           hostname: "Hostname",
-          datacenter: "Datacenter",
-          rack_position: "Rack position (U)",
           model: "Model",
           rack: "Rack",
+          rack_position: "Rack position",
+          chassis: "Chassis",
+          chassis_slot: "Chassis Slot",
+          datacenter: "Datacenter",
+          offline_storage_site: "Offline Storage Site",
           owner: "Owner",
           comment: "Comments",
           id: "",
           power_port_connection_1: "Power Port #1 Connection",
           power_port_connection_2: "Power Port #2 Connection",
+          display_color: "Display Color",
+          cpu: "CPU",
+          storage: "Storage",
+          memory_gb: "Memory",
         };
       } else if (this.props.operation === "network") {
         fields = {
@@ -348,7 +424,7 @@ export class Modifier extends React.PureComponent<
                 this.props.operation === "assets"
               ) {
                 // TODO check this works and refactor
-                let modified: Array<AssetObject>;
+                let modified: Array<AssetObjectMod>;
                 modified = [];
                 for (i = 0; i < this.state.modifiedModels.length; i++) {
                   if (this.state.modifiedModels[i].checked)
@@ -414,6 +490,11 @@ export class Modifier extends React.PureComponent<
                     //       this.props.modelsModified!.length -
                     //       modified.length)
                     // );
+                    this.props.markTablesStale([
+                      TableType.RACKED_ASSETS,
+                      TableType.STORED_ASSETS,
+                      TableType.MODELS,
+                    ]);
                     let toasts: Array<string>;
                     toasts = [];
                     let types: Array<string>;
@@ -520,10 +601,11 @@ class Checks extends React.PureComponent<RouteComponentProps & CheckboxProps> {
   }
 }
 
-const mapStatetoProps = (state: any) => {
+const mapDispatchToProps = (dispatch: any) => {
   return {
-    token: state.token,
+    markTablesStale: (staleTables: TableType[]) =>
+      dispatch(actions.markTablesStale(staleTables)),
   };
 };
 
-export default withRouter(connect(mapStatetoProps)(Modifier));
+export default withRouter(connect(mapDispatchToProps)(Modifier));

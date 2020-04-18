@@ -48,6 +48,7 @@ import {
   SiteFieldsTable,
   SortFilterBody,
   TableType,
+  UserFieldsTable,
   UserInfoObject,
 } from "../../utils/utils";
 import * as actions from "../../store/actions/state";
@@ -82,6 +83,8 @@ import { PowerView } from "./powerView/powerView";
 import "./powerView/powerView.scss";
 import { isNullOrUndefined } from "util";
 import { PermissionState } from "../../utils/permissionUtils";
+import axios from "axios";
+import { API_ROOT } from "../../utils/api-config";
 import { BladePowerView } from "./powerView/bladePowerView";
 
 interface ElementTableState {
@@ -103,6 +106,7 @@ interface ElementTableState {
   selected: Array<string>;
   selectedAll: boolean;
   editUserFormOpen: boolean;
+  username?: string;
 }
 
 interface ElementTableProps {
@@ -168,6 +172,7 @@ class ElementTable extends React.Component<
     selected: [],
     selectedAll: false,
     editUserFormOpen: false,
+    username: undefined,
   };
   validRequestMadeWithToken = false;
 
@@ -254,6 +259,8 @@ class ElementTable extends React.Component<
       field = AssetFieldsTable[item.field];
     } else if (this.props.type === ElementType.MODEL) {
       field = ModelFieldsTable[item.field];
+    } else if (this.props.type === ElementType.USER) {
+      field = UserFieldsTable[item.field];
     } else if (
       this.props.type === ElementType.DATACENTER ||
       this.props.type === ElementType.OFFLINE_STORAGE_SITE
@@ -563,6 +570,7 @@ class ElementTable extends React.Component<
     } else {
       this.updateTableData();
     }
+    this.getUsername(this.props.token);
   }
 
   updateTableData = () => {
@@ -690,7 +698,6 @@ class ElementTable extends React.Component<
       ((item.rack && item.rack.is_network_controlled) ||
         (item.chassis &&
           item.chassis.hostname &&
-          !item.chassis.hostname.includes("-") &&
           item.chassis.model.vendor === "BMI"))
     );
   };
@@ -981,6 +988,21 @@ class ElementTable extends React.Component<
     }
   };
 
+  // PERMISSIONS
+  getUsername(token: string) {
+    const headers = {
+      headers: {
+        Authorization: "Token " + token,
+      },
+    };
+    axios
+      .get(API_ROOT + "api/users/who-am-i", headers)
+      .then((res) => {
+        this.setState({ username: res.data.username });
+      })
+      .catch((err) => {});
+  }
+
   renderPermissionsButton = (item: UserInfoObject) => {
     return (
       <AnchorButton
@@ -995,6 +1017,7 @@ class ElementTable extends React.Component<
             isEditFormOpen: false,
           });
         }}
+        disabled={item.username === this.state.username}
       />
     );
   };
@@ -1217,6 +1240,15 @@ class ElementTable extends React.Component<
                         </div>
                       </th>
                     );
+                  } else if (this.props.type === ElementType.USER) {
+                    return (
+                      <th className="header-cell">
+                        <div className="header-text">
+                          <span>{UserFieldsTable[col]}</span>
+                          {this.getScrollIcon(col)}
+                        </div>
+                      </th>
+                    );
                   } else if (
                     this.props.type === ElementType.DATACENTER ||
                     this.props.type === ElementType.OFFLINE_STORAGE_SITE
@@ -1430,7 +1462,8 @@ class ElementTable extends React.Component<
                                               .asset_management) ||
                                           (this.props.type ===
                                             ElementType.ASSET &&
-                                            isAssetObject(item) && item.datacenter &&
+                                            isAssetObject(item) &&
+                                            item.datacenter &&
                                             this.props.permissionState.site_permissions.includes(
                                               +item.datacenter.id
                                             ))
@@ -1456,6 +1489,9 @@ class ElementTable extends React.Component<
                                   disabled={
                                     (this.props.changePlan &&
                                       this.props.type !== ElementType.ASSET) ||
+                                    (this.props.type === ElementType.USER &&
+                                      isUserObject(item) &&
+                                      item.username === this.state.username) ||
                                     (this.props.type ===
                                       ElementType.CHANGEPLANS &&
                                       isChangePlanObject(item) &&
@@ -1477,7 +1513,8 @@ class ElementTable extends React.Component<
                                               .asset_management) ||
                                           (this.props.type ===
                                             ElementType.ASSET &&
-                                            isAssetObject(item) && item.datacenter&&
+                                            isAssetObject(item) &&
+                                            item.datacenter &&
                                             this.props.permissionState.site_permissions.includes(
                                               +item.datacenter.id
                                             ))

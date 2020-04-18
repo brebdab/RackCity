@@ -35,6 +35,7 @@ interface PowerViewProps {
   changePlan: ChangePlan;
   assetIsDecommissioned: boolean;
   permissionState: PermissionState;
+  isMobile?: boolean;
 }
 
 interface PowerViewState {
@@ -295,7 +296,8 @@ export class PowerView extends React.PureComponent<
         {this.props.asset &&
         this.state.powerStatus &&
         this.state.statusLoaded &&
-        this.shouldShowPowerButtons() ? (
+        this.shouldShowPowerButtons() &&
+        !this.props.isMobile ? (
           <AnchorButton
             className={"power-close"}
             intent={
@@ -328,7 +330,8 @@ export class PowerView extends React.PureComponent<
         {this.props.asset &&
         this.state.powerStatus &&
         this.state.statusLoaded &&
-        this.shouldShowPowerButtons() ? (
+        this.shouldShowPowerButtons() &&
+        !this.props.isMobile ? (
           <AnchorButton
             className={"power-close"}
             minimal
@@ -373,8 +376,12 @@ export class PowerView extends React.PureComponent<
 
   render() {
     return (
-      <div className={Classes.DARK + " propsview"}>
-        <h3>Power Connections</h3>
+      <div
+        className={
+          this.props.isMobile ? Classes.DARK : Classes.DARK + " propsview"
+        }
+      >
+        {this.props.isMobile ? null : <h3>Power Connections</h3>}
         {this.assetHasPowerPorts()
           ? this.state.statusLoaded
             ? this.renderPowerTable(false)

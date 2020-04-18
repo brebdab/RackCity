@@ -626,7 +626,6 @@ def is_asset_power_controllable_by_bcman(asset):
         and not asset.is_in_offline_storage()
         and asset.model.vendor == "BMI"
         and asset.hostname is not None
-        and "-" not in asset.hostname
     )
 
 
