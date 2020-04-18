@@ -23,11 +23,15 @@ class NetworkGraph extends React.Component<
     },
     nodes: {
       color: {
-        background: "#202B33",
-        border: "#202B33",
+        background: "#30404D",
+        border: "#293742",
         highlight: {
-          background: "#182026",
-          border: "#30404D",
+          background: "#5C7080",
+          border: "#394B59",
+        },
+                hover: {
+          background: "#5C7080",
+          border: "#394B59",
         },
       },
       font: { color: "white" },

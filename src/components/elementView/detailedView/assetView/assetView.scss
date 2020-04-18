@@ -21,14 +21,18 @@
   max-height: 400px;
   border: 1px dotted gray;
   border-radius: 10pt;
-  margin-left: 20px;
-    margin-right: 20px;
-  margin-top: 4px;
+  margin-top: 10px;
   z-index: 1;
   overflow: hidden;
   display: block;
   flex: 1;
-  background-color: #394b59;
+  background-color: #182026;
+    height:300pt;
+  width:95%;
+ margin-left:auto;
+  margin-right:auto;
+  outline:none;
+  border:none;
 }
 
 .graph-container div {
@@ -38,22 +42,24 @@
 }
 .graph-container svg {
   width: 100% !important;
+
 }
 .network-connections {
   display: block;
 
 }
-.chassis-view table{
-margin:auto;
 
-
+.chassis-view table {
+  margin: auto;
 }
+
 .spinner-dialog{
   background-color:transparent !important;
   outline:none !important;
   border:none!important;
   shadow:none!important;
   width:fit-content;
+
 }
 .slot{
  height:200pt;
