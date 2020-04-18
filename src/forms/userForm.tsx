@@ -14,6 +14,8 @@ import {
   Position,
   Elevation,
   Card,
+  Icon,
+  Tooltip,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
@@ -38,6 +40,13 @@ export interface UserFormProps {
 export enum AssetPermissionSelection {
   GLOBAL = "Global",
   PER_SITE = "Per-Site",
+}
+export enum PermissionInfo {
+  MODEL = "Allows creation, modification, and deletion of models.",
+  ASSET = "Allows creation, modification, decommissioning, and deletion of assets. May be conferred globally or per-site.",
+  POWER = "Allows power control of assets for users that are not the explicit owners of the asset in question.",
+  AUDIT = "Allows reading of the audit log.",
+  ADMIN = "Inherits all of the abilities listed below. Can also confer or revoke permissions onto users.",
 }
 interface UserFormState {
   initialValues: UserPermissionsObject;
@@ -158,7 +167,7 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
             >
               <FormGroup inline={true}>
                 <Checkbox
-                  label="Administrator"
+                  label="Administrator  "
                   alignIndicator={Alignment.LEFT}
                   checked={this.state.permissions.admin}
                   onChange={() => {
@@ -176,11 +185,15 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
                       show_asset_options: false,
                     });
                   }}
-                />
+                >
+                  <Tooltip content={PermissionInfo.ADMIN} position={Position.RIGHT}>
+                    <Icon icon="info-sign" />
+                  </Tooltip>
+                </Checkbox>
               </FormGroup>
               <FormGroup inline={true}>
                 <Checkbox
-                  label="Model management permission"
+                  label="Model management permission  "
                   alignIndicator={Alignment.LEFT}
                   checked={
                     this.state.permissions.admin
@@ -195,11 +208,15 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
                       ),
                     });
                   }}
-                />
+                >
+                  <Tooltip content={PermissionInfo.MODEL} position={Position.RIGHT}>
+                    <Icon icon="info-sign" />
+                  </Tooltip>
+                </Checkbox>
               </FormGroup>
               <FormGroup inline={true}>
                 <Checkbox
-                  label="Asset management permission"
+                  label="Asset management permission  "
                   checked={
                     this.state.permissions.admin
                       ? true
@@ -212,14 +229,18 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
                       show_asset_options: !this.state.show_asset_options,
                     });
                   }}
-                />
+                >
+                  <Tooltip content={PermissionInfo.ASSET} position={Position.RIGHT}>
+                    <Icon icon="info-sign" />
+                  </Tooltip>
+                </Checkbox>
               </FormGroup>
               {this.state.show_asset_options
                 ? this.renderAssetPermissionDetails()
                 : null}
               <FormGroup inline={true}>
                 <Checkbox
-                  label="Power permission"
+                  label="Power permission  "
                   alignIndicator={Alignment.LEFT}
                   checked={
                     this.state.permissions.admin
@@ -234,11 +255,15 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
                       ),
                     });
                   }}
-                />
+                >
+                  <Tooltip content={PermissionInfo.POWER} position={Position.RIGHT}>
+                    <Icon icon="info-sign" />
+                  </Tooltip>
+                </Checkbox>
               </FormGroup>
               <FormGroup inline={true}>
                 <Checkbox
-                  label="Audit permission"
+                  label="Audit permission  "
                   checked={
                     this.state.permissions.admin
                       ? true
@@ -251,7 +276,11 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
                       permissions: this.updateBooleanPermissions("audit_read"),
                     });
                   }}
-                />
+                >
+                  <Tooltip content={PermissionInfo.AUDIT} position={Position.RIGHT}>
+                    <Icon icon="info-sign" />
+                  </Tooltip>
+                </Checkbox>
               </FormGroup>
               <Button className="login-button" type="submit">
                 Submit
