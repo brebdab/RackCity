@@ -59,6 +59,8 @@ def validate_asset_location_in_rack(
     change_plan=None,
     related_asset_id=None,
 ):
+    if asset_rack_position is None:
+        return
     new_asset_location_range = [asset_rack_position + i for i in range(asset_height)]
     rack_height = Rack.objects.get(id=rack_id).height
     for location in new_asset_location_range:
@@ -117,6 +119,8 @@ def validate_asset_location_in_rack(
 def validate_asset_location_in_chassis(
     chassis_id, chassis_slot, asset_id=None, change_plan=None, related_asset_id=None,
 ):
+    if chassis_slot is None:
+        return
     num_slots_in_chassis = 14
     if chassis_slot < 1 or chassis_slot > num_slots_in_chassis:
         raise LocationException(str(chassis_slot) + " is not a valid slot number. ")

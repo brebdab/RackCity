@@ -137,10 +137,6 @@ def validate_location_type(
                 "Rackmount assets must not have a chassis or chassis slot. "
             )
     else:
-        if offline_storage_site and (chassis or chassis_slot):
-            raise ValidationError(
-                "Blade assets in storage must not have a chassis or chassis slot. "
-            )
         if (not offline_storage_site) and (not chassis or not chassis_slot):
             raise ValidationError(
                 "Blade assets not in storage must have a chassis and chassis slot. "
