@@ -40,6 +40,7 @@ from rackcity.utils.query_utils import (
     get_filter_arguments,
     get_page_count_response,
     get_many_response,
+    get_filtered_query,
 )
 from rackcity.utils.rackcity_utils import (
     validate_asset_location_in_rack,
@@ -173,6 +174,8 @@ def model_modify(request):
 
 
 def validate_model_change(new_model_data, existing_model):
+    if "model_type" in new_model_data and new_model_data["model_type"] != existing_model.model_type:
+        raise ModelModificationException("Unable to modify model type. ")
     if (
         "network_ports" not in new_model_data
         and "num_power_ports" not in new_model_data
@@ -205,7 +208,7 @@ def validate_model_change(new_model_data, existing_model):
 
 
 def validate_model_height_change(new_model_data, existing_model):
-    if "height" not in new_model_data:
+    if "height" not in new_model_data or not new_model_data["height"]:
         return
     new_model_height = int(new_model_data["height"])
     if new_model_height <= existing_model.height:
@@ -539,21 +542,9 @@ def model_bulk_export(request):
     List all models in csv form, in accordance with Bulk Spec.
     """
     models_query = ITModel.objects
-
-    try:
-        filter_args = get_filter_arguments(request.data)
-    except Exception as error:
-        return JsonResponse(
-            {
-                "failure_message": Status.EXPORT_ERROR.value
-                + GenericFailure.FILTER.value,
-                "errors": str(error),
-            },
-            status=HTTPStatus.BAD_REQUEST,
-        )
-    for filter_arg in filter_args:
-        models_query = models_query.filter(**filter_arg)
-
+    filtered_query, failure_response = get_filtered_query(models_query, request.data)
+    if failure_response:
+        return failure_response
     try:
         sort_args = get_sort_arguments(request.data)
     except Exception as error:
@@ -565,7 +556,7 @@ def model_bulk_export(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
-    models = models_query.order_by(*sort_args)
+    models = filtered_query.order_by(*sort_args)
 
     serializer = BulkITModelSerializer(models, many=True)
     csv_string = StringIO()

@@ -22,11 +22,14 @@ import { FileSelector } from "../lib/fileSelect";
 import "./import.scss";
 import InstructionsLite from "./importInstructionsLite";
 import { Modifier } from "./viewModified";
+import { TableType } from "../../utils/utils";
+import * as actions from "../../store/actions/state";
 
 var console: any = {};
 console.log = function () {};
 interface ImportProps {
   token: string;
+  markTablesStale(staleTables: TableType[]): void;
 }
 
 interface AlertState {
@@ -360,6 +363,11 @@ export class BulkImport extends React.PureComponent<
               });
             }
           } else {
+            this.props.markTablesStale([
+              TableType.RACKED_ASSETS,
+              TableType.STORED_ASSETS,
+              TableType.MODELS,
+            ]);
             this.addSuccessToast(
               "Success! Modified: 0; Added: " +
                 res.added +
@@ -443,4 +451,13 @@ const mapStatetoProps = (state: any) => {
   };
 };
 
-export default withRouter(connect(mapStatetoProps)(BulkImport));
+const mapDispatchToProps = (dispatch: any) => {
+  return {
+    markTablesStale: (staleTables: TableType[]) =>
+      dispatch(actions.markTablesStale(staleTables)),
+  };
+};
+
+export default withRouter(
+  connect(mapStatetoProps, mapDispatchToProps)(BulkImport)
+);

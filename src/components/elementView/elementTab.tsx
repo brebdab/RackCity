@@ -128,16 +128,20 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
       sort_by: [],
       filters: filtersCopy,
     };
-
+    let endpoint =
+      this.props.assetType === AssetType.STORED
+        ? "/bulk-export-offline"
+        : "/bulk-export";
+    let url = API_ROOT + "api/" + path + endpoint;
     axios
-      .post(API_ROOT + "api/" + path + "/bulk-export", body, config)
+      .post(url, body, config)
       .then((res) => {
         fs(res.data.export_csv, file);
         return 0;
       })
       .catch((err) => this.addErrorToast("Failed to export data to " + file));
 
-    if (path === "assets") {
+    if (path === "assets" && this.props.assetType !== AssetType.STORED) {
       axios
         .post(API_ROOT + "api/" + path + "/network-bulk-export", body, config)
         .then((res) => {
@@ -474,7 +478,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                 if (
                   this.state.fileName === "" ||
                   (this.state.networkFileName === "" &&
-                    this.props.element === ElementType.ASSET) ||
+                    this.props.element === ElementType.ASSET &&
+                    this.props.assetType !== AssetType.STORED) ||
                   (this.state.fileName === "" &&
                     this.props.element === ElementType.MODEL)
                 ) {
@@ -533,7 +538,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
                   type="text"
                 />
               </FormGroup>
-              {this.props.element === ElementType.ASSET ? (
+              {this.props.element === ElementType.ASSET &&
+              this.props.assetType !== AssetType.STORED ? (
                 <div>
                   <FormGroup label="network connections:">
                     <InputGroup
