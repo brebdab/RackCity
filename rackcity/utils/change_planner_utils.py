@@ -27,6 +27,7 @@ from rackcity.utils.query_utils import (
     get_filtered_query,
     get_invalid_paginated_request_response,
     should_paginate_query,
+    get_sorted_query,
 )
 from rackcity.utils.rackcity_utils import (
     validate_asset_location_in_rack,
@@ -200,20 +201,18 @@ def get_filtered_assets_for_cp(change_plan, data, decommissioned, stored):
     return filtered_assets, filtered_assets_cp, None
 
 
-def sort_serialized_assets(all_assets, data):
-    sorted_assets = all_assets
-    if "sort_by" in data:
-        for sort in data["sort_by"]:
-            if (
-                "field" in sort
-                and "ascending" in sort
-                and isinstance(sort["field"], str)
-                and isinstance(sort["ascending"], bool)
-            ):
-                sorted_assets.sort(
-                    key=lambda i: i[sort["field"]], reverse=not sort["ascending"],
-                )
-    return sorted_assets
+def get_sorted_assets_for_cp(assets, assets_cp, data):
+    sorted_assets, sort_failure_response = get_sorted_query(
+        assets, data, default_order="asset_number"
+    )
+    if sort_failure_response:
+        return None, None, sort_failure_response
+    sorted_assets_cp, sort_failure_response = get_sorted_query(
+        assets_cp, data, default_order="asset_number"
+    )
+    if sort_failure_response:
+        return None, None, sort_failure_response
+    return sorted_assets, sorted_assets_cp, None
 
 
 def get_page_of_serialized_assets(all_assets, query_params):
@@ -240,25 +239,26 @@ def get_many_assets_response_for_cp(
         if page_failure_response:
             return page_failure_response
 
-    assets, assets_cp, filter_failure_response = get_filtered_assets_for_cp(
-        change_plan, request.data, decommissioned, stored,
-    )
+    (
+        filtered_assets,
+        filtered_assets_cp,
+        filter_failure_response,
+    ) = get_filtered_assets_for_cp(change_plan, request.data, decommissioned, stored,)
     if filter_failure_response:
         return filter_failure_response
-    if decommissioned:
-        asset_serializer = GetDecommissionedAssetSerializer(assets, many=True,)
-        asset_cp_serializer = GetDecommissionedAssetCPSerializer(assets_cp, many=True,)
-    else:
-        asset_serializer = RecursiveAssetSerializer(assets, many=True,)
-        asset_cp_serializer = RecursiveAssetCPSerializer(assets_cp, many=True,)
-    all_assets = asset_serializer.data + asset_cp_serializer.data
 
-    sorted_assets = sort_serialized_assets(all_assets, request.data)
+    sorted_assets, sorted_assets_cp, sort_failure_response = get_sorted_assets_for_cp(
+        filtered_assets, filtered_assets_cp, request.data,
+    )
+    if sort_failure_response:
+        return sort_failure_response
+
+    all_assets = list(sorted_assets_cp) + list(sorted_assets)
 
     if should_paginate:
         try:
-            assets_data = get_page_of_serialized_assets(
-                sorted_assets, request.query_params,
+            page_of_assets = get_page_of_serialized_assets(
+                all_assets, request.query_params,
             )
         except Exception as error:
             return JsonResponse(
@@ -270,7 +270,24 @@ def get_many_assets_response_for_cp(
                 status=HTTPStatus.BAD_REQUEST,
             )
     else:
-        assets_data = sorted_assets
+        page_of_assets = all_assets
+
+    assets_data = []
+    for asset in page_of_assets:
+        if decommissioned:
+            if isinstance(asset, DecommissionedAsset):
+                asset_serializer = GetDecommissionedAssetSerializer(asset)
+                assets_data.append(asset_serializer.data)
+            elif isinstance(asset, AssetCP):
+                asset_serializer = GetDecommissionedAssetCPSerializer(asset)
+                assets_data.append(asset_serializer.data)
+        else:
+            if isinstance(asset, Asset):
+                asset_serializer = RecursiveAssetSerializer(asset)
+                assets_data.append(asset_serializer.data)
+            elif isinstance(asset, AssetCP):
+                asset_serializer = RecursiveAssetCPSerializer(asset)
+                assets_data.append(asset_serializer.data)
 
     return JsonResponse({"assets": assets_data}, status=HTTPStatus.OK,)
 
