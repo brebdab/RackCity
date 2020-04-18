@@ -160,7 +160,7 @@ export class BarcodeScanner extends React.PureComponent<
     }
 
     return (
-      <div className={Classes.DARK}>
+      <div className={Classes.DARK} id={"mobile-app"}>
         {this.state.showAsset && this.state.asset ? (
           this.renderAssetView(this.state.asset)
         ) : (
