@@ -101,13 +101,13 @@ export class Report extends React.PureComponent<
       .get(API_ROOT + "api/report/" + path, headers)
       .then((res) => {
         this.setState({
-            freeRack: res.data.free_rackspace_percent,
-            model_allocation: res.data.model_allocation,
-            owner_allocation: res.data.owner_allocation,
-            vendor_allocation: res.data.vendor_allocation,
-            stateLoaded: true,
-            noData: false,
-          });
+          freeRack: res.data.free_rackspace_percent,
+          model_allocation: res.data.model_allocation,
+          owner_allocation: res.data.owner_allocation,
+          vendor_allocation: res.data.vendor_allocation,
+          stateLoaded: true,
+          noData: false,
+        });
       })
       .catch((err) => {
         this.setState({ stateLoaded: true, noData: true });
@@ -311,8 +311,6 @@ class Tabular extends React.PureComponent<TabProps> {
             return (
               <tr>
                 {Object.keys(entry).map((item: string) => {
-                  if (item === "owner" && entry[item] === null)
-                    entry[item] = "(No owner)";
                   if (item === "allocation_percent")
                     return <td>{(entry[item] * 100).toFixed(2)}</td>;
                   else return <td>{entry[item]}</td>;
