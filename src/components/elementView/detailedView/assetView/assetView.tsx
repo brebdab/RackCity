@@ -114,6 +114,16 @@ export class AssetView extends React.PureComponent<
     toaster: (ref: Toaster) => (this.toaster = ref),
   };
 
+  getDataOverride(){
+     const {
+                  cpu,
+                  display_color,
+                  storage,
+                  memory_gb,
+                } = this.state.asset;
+     console.log(cpu, display_color, storage, memory_gb )
+                return { cpu, display_color, storage, memory_gb };
+  }
   getData(assetKey: string, changePlan: ChangePlan) {
     this.setState({
       loading: true,
@@ -382,15 +392,9 @@ export class AssetView extends React.PureComponent<
             <PropertiesView
               data={this.state.asset.model}
               title="Model Properties"
-              data_override={() => {
-                const {
-                  cpu,
-                  display_color,
-                  storage,
-                  memory_gb,
-                } = this.state.asset;
-                return { cpu, display_color, storage, memory_gb };
-              }}
+              data_override={
+               this.getDataOverride()
+              }
             />
           </div>
         ) : null}
