@@ -389,13 +389,15 @@ def chassis_power_status(request):
             status=HTTPStatus.UNAUTHORIZED,
         )
     result, exit_status = make_bcman_request(chassis.hostname, str(blade_slot), "")
-    if exit_status != 0:
+    if (exit_status != 0) or (result is None):
         return JsonResponse(
             {
                 "failure_message": Status.CONNECTION.value
                 + "Unable to contact network controlled blade chassis power management.",
-                "errors": "Request to bcman exited with non-zero status: "
-                + str(exit_status),
+                "errors": "Request to bcman exited with status: "
+                + str(exit_status)
+                + ", result: "
+                + str(result),
             },
             status=HTTPStatus.REQUEST_TIMEOUT,
         )
@@ -555,8 +557,6 @@ def make_bcman_request(chassis, blade, power_command):
         result = fp.read().splitlines()[0]
         fp.close()
         os.remove("temp.txt")
-    else:
-        result = "temp.txt file does not exist"
     return result, exit_status
 
 
