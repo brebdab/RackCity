@@ -6,6 +6,7 @@ import {
   IToastProps,
   Intent,
   Alert,
+  Card
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
@@ -68,7 +69,7 @@ export class BarcodeScanner extends React.PureComponent<
   constraints = {
     // height: 720,
     // width: 1280,
-    height: 1400,
+    height: 1280,
     width: 360,
     facingMode: { exact: "environment" },
   };
@@ -105,14 +106,16 @@ export class BarcodeScanner extends React.PureComponent<
     }, [webcamRef, token]);
     return (
       <div>
-        <Webcam
-          audio={false}
-          height={this.state.cameraHeight * 0.8}
-          screenshotFormat={"image/jpeg"}
-          width={this.state.cameraWidth}
-          videoConstraints={this.constraints}
-          ref={webcamRef}
-        />
+        <Card>
+          <Webcam
+            audio={false}
+            height={this.state.cameraHeight * 0.5}
+            screenshotFormat={"image/jpeg"}
+            width={this.state.cameraWidth}
+            videoConstraints={this.constraints}
+            ref={webcamRef}
+          />
+        </Card>
         <AnchorButton
           className={"scanner-button"}
           intent={"primary"}
