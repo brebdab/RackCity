@@ -1471,6 +1471,10 @@ class ElementTable extends React.Component<
                                             this.props.permissionState
                                               .asset_management) ||
                                           (this.props.type ===
+                                            ElementType.OFFLINE_STORAGE_SITE &&
+                                            this.props.permissionState
+                                              .asset_management) ||
+                                          (this.props.type ===
                                             ElementType.MODEL &&
                                             this.props.permissionState
                                               .model_management) ||
@@ -1481,10 +1485,20 @@ class ElementTable extends React.Component<
                                           (this.props.type ===
                                             ElementType.ASSET &&
                                             isAssetObject(item) &&
-                                            item.datacenter &&
-                                            this.props.permissionState.site_permissions.includes(
-                                              +item.datacenter.id
-                                            ))
+                                            ((item.datacenter &&
+                                              this.props.permissionState.site_permissions.includes(
+                                                +item.datacenter.id
+                                              )) ||
+                                              (item.offline_storage_site &&
+                                                this.props.permissionState.site_permissions.includes(
+                                                  +item.offline_storage_site.id
+                                                )))) ||
+                                          (this.props.type ===
+                                            ElementType.CHANGEPLANS &&
+                                            (this.props.permissionState
+                                              .asset_management ||
+                                              this.props.permissionState
+                                                .site_permissions.length > 0))
                                         )
                                   }
                                   onClick={(event: any) => {
@@ -1522,6 +1536,10 @@ class ElementTable extends React.Component<
                                             this.props.permissionState
                                               .asset_management) ||
                                           (this.props.type ===
+                                            ElementType.OFFLINE_STORAGE_SITE &&
+                                            this.props.permissionState
+                                              .asset_management) ||
+                                          (this.props.type ===
                                             ElementType.MODEL &&
                                             this.props.permissionState
                                               .model_management) ||
@@ -1532,10 +1550,20 @@ class ElementTable extends React.Component<
                                           (this.props.type ===
                                             ElementType.ASSET &&
                                             isAssetObject(item) &&
-                                            item.datacenter &&
-                                            this.props.permissionState.site_permissions.includes(
-                                              +item.datacenter.id
-                                            ))
+                                            ((item.datacenter &&
+                                              this.props.permissionState.site_permissions.includes(
+                                                +item.datacenter.id
+                                              )) ||
+                                              (item.offline_storage_site &&
+                                                this.props.permissionState.site_permissions.includes(
+                                                  +item.offline_storage_site.id
+                                                )))) ||
+                                          (this.props.type ===
+                                            ElementType.CHANGEPLANS &&
+                                            (this.props.permissionState
+                                              .asset_management ||
+                                              this.props.permissionState
+                                                .site_permissions.length > 0))
                                         )
                                   }
                                   onClick={
