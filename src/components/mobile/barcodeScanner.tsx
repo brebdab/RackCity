@@ -112,6 +112,7 @@ export class BarcodeScanner extends React.PureComponent<
           width={this.state.cameraWidth * 0.8}
           videoConstraints={this.constraints}
           ref={webcamRef}
+          className={"mobile-scanner-heading"}
         />
         <AnchorButton
           className={"scanner-button"}
@@ -168,10 +169,10 @@ export class BarcodeScanner extends React.PureComponent<
           this.renderAssetView(this.state.asset)
         ) : (
           <>
-            <h3 className={"mobile-scanner-heading"}>Scan barcodes below</h3>
-            <div className={"mobile-scanner-heading"}>
-              <this.WebcamCapture/>
+            <div>
+              <h3 className={"mobile-scanner-heading"}>Scan barcodes below</h3>
             </div>
+            <this.WebcamCapture />
             <Toaster
               autoFocus={false}
               canEscapeKeyClear={true}
