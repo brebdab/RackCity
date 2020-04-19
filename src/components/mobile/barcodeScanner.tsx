@@ -69,7 +69,7 @@ export class BarcodeScanner extends React.PureComponent<
     // height: 720,
     // width: 1280,
     height: 1280,
-    width: 400,
+    width: 500,
     facingMode: { exact: "environment" },
   };
 
@@ -107,9 +107,9 @@ export class BarcodeScanner extends React.PureComponent<
       <div>
         <Webcam
           audio={false}
-          height={this.state.cameraHeight * 0.3}
+          height={this.state.cameraHeight * 0.5}
           screenshotFormat={"image/jpeg"}
-          width={this.state.cameraWidth * 0.8}
+          width={this.state.cameraWidth}
           videoConstraints={this.constraints}
           ref={webcamRef}
           className={"mobile-scanner-heading"}
