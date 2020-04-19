@@ -423,7 +423,7 @@ def change_plan_execute(request, id):
         updated_asset_mappings[asset_cp] = updated_asset
         differs_from_live = True
 
-        if created:
+        if created and not asset_cp.is_decommissioned:
             num_created += 1
             log_action(
                 request.user, updated_asset, Action.CREATE, change_plan=change_plan,
