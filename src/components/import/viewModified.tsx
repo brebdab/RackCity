@@ -298,7 +298,7 @@ export class Modifier extends React.PureComponent<
     for (let i = 0; i < this.props.modelsModified!.length; i++) {
       let obj = this.props.modelsModified![i];
       let checkObj: Check;
-      checkObj = { model: obj.modified, checked: false };
+      checkObj = { model: obj.modified, checked: true };
       this.state.modifiedModels.push(checkObj);
       mods.push(this.renderOneModification(obj, fields, model));
     }
@@ -580,16 +580,24 @@ interface CheckboxProps {
   callback: Function;
 }
 
-class Checks extends React.PureComponent<RouteComponentProps & CheckboxProps> {
+interface CheckboxState {
+  isChecked: boolean;
+}
+
+class Checks extends React.PureComponent<RouteComponentProps & CheckboxProps, CheckboxState> {
   constructor(props: any) {
     super(props);
     this.handleChange = this.handleChange.bind(this);
   }
 
+  state: CheckboxState = {
+    isChecked: true
+  };
+
   render() {
     return (
       <label className={"bp3-control bp3-checkbox"}>
-        <input type="checkbox" onChange={this.handleChange} />
+        <input type="checkbox" checked={this.state.isChecked} onChange={this.handleChange} />
         <span className={"bp3-control-indicator"}></span>
         Replace existing with modified?
       </label>
@@ -598,6 +606,9 @@ class Checks extends React.PureComponent<RouteComponentProps & CheckboxProps> {
 
   private handleChange() {
     this.props.callback(this.props.linkedModel);
+    this.setState({
+      isChecked: !this.state.isChecked
+    })
   }
 }
 
