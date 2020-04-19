@@ -193,7 +193,7 @@ export class BarcodeScanner extends React.PureComponent<
               confirmButtonText={"View Asset"}
             >
               <p>
-                Found barcode with value: {this.state.barcode_data}. Would you
+                Found barcode with value: {this.state.barcode_data}.<br/>Would you
                 like to view this asset?
               </p>
             </Alert>
