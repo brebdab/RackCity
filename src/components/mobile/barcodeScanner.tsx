@@ -17,7 +17,6 @@ import { API_ROOT } from "../../utils/api-config";
 import { AssetObject, getHeaders } from "../../utils/utils";
 import axios from "axios";
 import { MobileAssetView } from "./mobileAssetView";
-import PropertiesView from "../elementView/detailedView/propertiesView";
 
 interface BarcodeScannerState {
   cameraHeight: number;
