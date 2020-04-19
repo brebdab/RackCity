@@ -70,7 +70,7 @@ export class BarcodeScanner extends React.PureComponent<
     // height: 720,
     // width: 1280,
     height: 1280,
-    width: 360,
+    width: 400,
     facingMode: { exact: "environment" },
   };
 
