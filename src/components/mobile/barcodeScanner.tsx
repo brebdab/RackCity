@@ -189,6 +189,7 @@ export class BarcodeScanner extends React.PureComponent<
                   showAsset: true,
                 });
               }}
+              style={{width: "80%"}}
               cancelButtonText={"Cancel"}
               confirmButtonText={"View Asset"}
             >
