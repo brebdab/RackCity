@@ -17,6 +17,7 @@ import { API_ROOT } from "../../utils/api-config";
 import { AssetObject, getHeaders } from "../../utils/utils";
 import axios from "axios";
 import { MobileAssetView } from "./mobileAssetView";
+import PropertiesView from "../elementView/detailedView/propertiesView";
 
 interface BarcodeScannerState {
   cameraHeight: number;
@@ -126,6 +127,10 @@ export class BarcodeScanner extends React.PureComponent<
     );
   };
 
+  getDataOverride(asset:AssetObject ){
+    const { cpu, display_color, storage, memory_gb } = asset
+    return { cpu, display_color, storage, memory_gb };
+  }
   private renderAssetView(asset: AssetObject | null) {
     if (asset) {
       return (
@@ -133,10 +138,7 @@ export class BarcodeScanner extends React.PureComponent<
           {...this.props}
           token={this.state.token}
           asset={asset}
-          data_override={() => {
-            const { cpu, display_color, storage, memory_gb } = asset;
-            return { cpu, display_color, storage, memory_gb };
-          }}
+          data_override={this.getDataOverride(asset)}
         />
       );
     } else {
