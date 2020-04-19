@@ -95,10 +95,7 @@ def decommission_asset_parameterized(asset_id, query_params, user, change_plan):
             existing_asset = assets.get(id=asset_id)
 
             if existing_asset.model.is_blade_chassis():
-                decommissioned_asset_cp = add_chassis_to_cp(
-                    existing_asset,
-                    change_plan
-                )
+                decommissioned_asset_cp = add_chassis_to_cp(existing_asset, change_plan)
 
             else:
                 chassis_cp = None
@@ -116,46 +113,11 @@ def decommission_asset_parameterized(asset_id, query_params, user, change_plan):
                             related_asset=existing_asset.chassis.id
                         )
 
-                decommissioned_asset_cp = copy_asset_to_new_asset_cp(existing_asset, change_plan, chassis_cp=chassis_cp)
+                decommissioned_asset_cp = copy_asset_to_new_asset_cp(
+                    existing_asset, change_plan, chassis_cp=chassis_cp
+                )
             decommissioned_asset_cp.is_decommissioned = True
             decommissioned_asset_cp.save()
-
-
-            # decommissioned_asset_cp = AssetCP(
-            #     change_plan=change_plan,
-            #     related_asset=existing_asset,
-            #     is_decommissioned=True,
-            # )
-            #
-            # for field in existing_asset._meta.fields:
-            #     if not (
-            #         field.name == "id"
-            #         or field.name == "assetid_ptr"
-            #         or field.name == "chassis"
-            #     ):
-            #         setattr(
-            #             decommissioned_asset_cp,
-            #             field.name,
-            #             getattr(existing_asset, field.name),
-            # #         )
-            # if (
-            #     existing_asset.chassis
-            #     and not assets_cp.filter(
-            #         related_asset=existing_asset.chassis.id
-            #     ).exists()
-            # ):
-            #     chassis_cp = add_chassis_to_cp(
-            #         existing_asset.chassis,
-            #         change_plan,
-            #         ignore_blade_id=existing_asset.id,
-            #     )
-            #     decommissioned_asset_cp.chassis = chassis_cp
-            # elif existing_asset.chassis:
-            #     decommissioned_asset_cp.chassis = assets_cp.get(
-            #         related_asset=existing_asset.chassis.id
-            #     )
-            # decommissioned_asset_cp = copy_asset_to_new_asset_cp(existing_asset, change_plan, chassis_cp=None)
-            # decommissioned_asset_cp.save()
 
         else:
             return (
