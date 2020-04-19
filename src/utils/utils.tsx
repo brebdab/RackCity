@@ -244,9 +244,9 @@ export interface DatacenterObject extends ElementObject {
 }
 
 export enum MountTypes {
-  RACKMOUNT = "Asset",
-  BLADE_CHASSIS = "Blade Chassis",
-  BLADE = "Blade Server ",
+  RACKMOUNT = "Rackmount",
+  BLADE_CHASSIS = "Chassis",
+  BLADE = "Blade",
 }
 
 export interface ModelObject extends ElementObject {
