@@ -1,5 +1,4 @@
 import {
-  Alert,
   AnchorButton,
   Button,
   Callout,
