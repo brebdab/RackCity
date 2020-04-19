@@ -126,7 +126,7 @@ def change_plan_remove_asset(request, id):
     asset_cp = data["asset_cp"]
 
     try:
-        asset_cp_model = AssetCP.objects.get(id=asset_cp)
+        asset_cp_object = AssetCP.objects.get(id=asset_cp)
     except ObjectDoesNotExist:
         return JsonResponse(
             {
@@ -138,7 +138,25 @@ def change_plan_remove_asset(request, id):
             status=HTTPStatus.BAD_REQUEST,
         )
     try:
-        asset_cp_model.delete()
+        if asset_cp_object.model.is_blade_chassis():
+            blades = AssetCP.objects.filter(chassis=asset_cp_object, change_plan=change_plan)
+            remove_chassis = True
+            for blade in blades:
+                if len(get_changes_on_asset(blade.related_asset, blade)) == 0:
+                    remove_chassis = False
+            if remove_chassis:
+                asset_cp_object.delete()
+            else:
+                for field in asset_cp.related_asset._meta.fields:
+                    if (
+                            field.name != "id"
+                            and field.name != "assetid_ptr"
+                            and field.name != "chassis"
+                    ):
+                        setattr(asset_cp, field.name, getattr(asset_cp.related_asset, field.name))
+
+        else:
+            asset_cp_object.delete()
     except Exception as error:
         return JsonResponse(
             {
