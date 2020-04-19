@@ -516,6 +516,7 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
             ) : null}
             <Dialog
               title={"Export Table Data"}
+              icon="import"
               className={Classes.DARK + " export-dialog"}
               onClose={() => {
                 this.setState({ fileNameIsOpen: false });
