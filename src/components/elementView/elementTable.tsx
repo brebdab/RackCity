@@ -698,7 +698,6 @@ class ElementTable extends React.Component<
       ((item.rack && item.rack.is_network_controlled) ||
         (item.chassis &&
           item.chassis.hostname &&
-          !item.chassis.hostname.includes("-") &&
           item.chassis.model.vendor === "BMI"))
     );
   };
@@ -1463,7 +1462,8 @@ class ElementTable extends React.Component<
                                               .asset_management) ||
                                           (this.props.type ===
                                             ElementType.ASSET &&
-                                            isAssetObject(item) && item.datacenter &&
+                                            isAssetObject(item) &&
+                                            item.datacenter &&
                                             this.props.permissionState.site_permissions.includes(
                                               +item.datacenter.id
                                             ))
@@ -1513,7 +1513,8 @@ class ElementTable extends React.Component<
                                               .asset_management) ||
                                           (this.props.type ===
                                             ElementType.ASSET &&
-                                            isAssetObject(item) && item.datacenter&&
+                                            isAssetObject(item) &&
+                                            item.datacenter &&
                                             this.props.permissionState.site_permissions.includes(
                                               +item.datacenter.id
                                             ))
