@@ -55,12 +55,22 @@ def network_connections_have_changed(asset, asset_cp):
             connected_port_live and not connected_port_cp
         ):
             return True
-        if (
-            connected_port_live
-            and connected_port_cp
-            and connected_port_live.asset.hostname != connected_port_cp.asset.hostname
-        ):
+
+        live_connected_port_cp = None
+        if connected_port_cp:
+            related_asset = connected_port_cp.asset.related_asset
+            if related_asset:
+                try:
+                    live_connected_port_cp = NetworkPort.objects.get(
+                        asset=related_asset,
+                        port_name=connected_port_cp.port_name,
+                    )
+                except ObjectDoesNotExist:
+                    live_connected_port_cp = None
+        # Check for match
+        if connected_port_live != live_connected_port_cp:
             return True
+
     return False
 
 
