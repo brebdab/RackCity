@@ -12,6 +12,7 @@ import {
   Position,
   Spinner,
   Toaster,
+  Tooltip,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { IconNames } from "@blueprintjs/icons";
@@ -691,6 +692,8 @@ class ElementTable extends React.Component<
       });
     }
   };
+
+  // BUTTONZ
   shouldShowPowerInline = (item: ElementObjectType) => {
     return (
       isAssetObject(item) &&
@@ -701,9 +704,37 @@ class ElementTable extends React.Component<
           item.chassis.model.vendor === "BMI"))
     );
   };
+
   shouldDisablePowerInline = () => {
     return !!this.props.changePlan;
   };
+
+  shouldDisableDecommissionOrDeleteInline = (item: ElementObjectType) => {
+    return (this.props.changePlan && this.props.type !== ElementType.ASSET) ||
+      (this.props.type === ElementType.USER &&
+        isUserObject(item) &&
+        item.username === this.state.username) ||
+      (this.props.type === ElementType.CHANGEPLANS &&
+        isChangePlanObject(item) &&
+        item.execution_time)
+      ? true
+      : !(
+          this.props.permissionState.admin ||
+          (this.props.type === ElementType.DATACENTER &&
+            this.props.permissionState.asset_management) ||
+          (this.props.type === ElementType.MODEL &&
+            this.props.permissionState.model_management) ||
+          (this.props.type === ElementType.ASSET &&
+            this.props.permissionState.asset_management) ||
+          (this.props.type === ElementType.ASSET &&
+            isAssetObject(item) &&
+            item.datacenter &&
+            this.props.permissionState.site_permissions.includes(
+              +item.datacenter.id
+            ))
+        );
+  };
+
   //EDIT LOGIC
   handleEditFormClose = () => this.setState({ isEditFormOpen: false });
   getEditForm = () => {
@@ -1480,63 +1511,43 @@ class ElementTable extends React.Component<
                               ) : null}
                               {!this.props.data &&
                               !this.props.isDecommissioned ? (
-                                <AnchorButton
-                                  className="button-table"
-                                  intent="danger"
-                                  minimal
-                                  icon={
-                                    this.props.type === ElementType.ASSET
-                                      ? "remove"
-                                      : "trash"
-                                  }
+                                <Tooltip
+                                  content={"Decommission"}
+                                  position={Position.BOTTOM}
                                   disabled={
-                                    (this.props.changePlan &&
-                                      this.props.type !== ElementType.ASSET) ||
-                                    (this.props.type === ElementType.USER &&
-                                      isUserObject(item) &&
-                                      item.username === this.state.username) ||
-                                    (this.props.type ===
-                                      ElementType.CHANGEPLANS &&
-                                      isChangePlanObject(item) &&
-                                      item.execution_time)
-                                      ? true
-                                      : !(
-                                          this.props.permissionState.admin ||
-                                          (this.props.type ===
-                                            ElementType.DATACENTER &&
-                                            this.props.permissionState
-                                              .asset_management) ||
-                                          (this.props.type ===
-                                            ElementType.MODEL &&
-                                            this.props.permissionState
-                                              .model_management) ||
-                                          (this.props.type ===
-                                            ElementType.ASSET &&
-                                            this.props.permissionState
-                                              .asset_management) ||
-                                          (this.props.type ===
-                                            ElementType.ASSET &&
-                                            isAssetObject(item) &&
-                                            item.datacenter &&
-                                            this.props.permissionState.site_permissions.includes(
-                                              +item.datacenter.id
-                                            ))
-                                        )
+                                    this.props.type !== ElementType.ASSET ||
+                                    this.shouldDisableDecommissionOrDeleteInline(
+                                      item
+                                    )
                                   }
-                                  onClick={
-                                    this.props.type === ElementType.ASSET
-                                      ? (event: any) => {
-                                          this.handleDecommissionButtonClick(
-                                            item
-                                          );
-                                          event.stopPropagation();
-                                        }
-                                      : (event: any) => {
-                                          this.handleDeleteButtonClick(item);
-                                          event.stopPropagation();
-                                        }
-                                  }
-                                />
+                                >
+                                  <AnchorButton
+                                    className="button-table"
+                                    intent="danger"
+                                    minimal
+                                    icon={
+                                      this.props.type === ElementType.ASSET
+                                        ? "remove"
+                                        : "trash"
+                                    }
+                                    disabled={this.shouldDisableDecommissionOrDeleteInline(
+                                      item
+                                    )}
+                                    onClick={
+                                      this.props.type === ElementType.ASSET
+                                        ? (event: any) => {
+                                            this.handleDecommissionButtonClick(
+                                              item
+                                            );
+                                            event.stopPropagation();
+                                          }
+                                        : (event: any) => {
+                                            this.handleDeleteButtonClick(item);
+                                            event.stopPropagation();
+                                          }
+                                    }
+                                  />
+                                </Tooltip>
                               ) : null}
                               {this.shouldShowPowerInline(item) ? (
                                 <AnchorButton
