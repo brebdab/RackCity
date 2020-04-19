@@ -22,7 +22,7 @@ class ChassisView extends React.PureComponent<
   generateSlotNumbers() {
     const slots = [];
     for (let i = 1; i < this.numSlots + 1; i++) {
-      if (this.props.currBladeSlot && parseInt(this.props.currBladeSlot) == i) {
+      if (this.props.currBladeSlot && parseInt(this.props.currBladeSlot) === i) {
         slots.push(
           <td style={{ border: "3px solid #EBF1F5 " }} className="slot-number">
             {i}
@@ -56,7 +56,7 @@ class ChassisView extends React.PureComponent<
           };
           if (
             this.props.currBladeSlot &&
-            parseInt(this.props.currBladeSlot) == i
+            parseInt(this.props.currBladeSlot) === i
           ) {
             style = {
               backgroundColor: blade.display_color
