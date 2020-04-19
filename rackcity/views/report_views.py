@@ -21,7 +21,7 @@ def report_rack_usage_global(request):
     )
     if len(racks) == 0 or len(assets) == 0:
         return JsonResponse(
-            {"warning_message": "There are no racks or assets."},
+            {"failure_message": "There are no racked assets."},
             status=HTTPStatus.BAD_REQUEST,
         )
     return compute_rack_report(racks, assets)
@@ -42,7 +42,7 @@ def report_rack_usage_datacenter(request, id):
     )
     if len(racks) == 0 or len(assets) == 0:
         return JsonResponse(
-            {"warning_message": "There are no racks or assets."},
+            {"failure_message": "There are no racked assets in this datacenter."},
             status=HTTPStatus.BAD_REQUEST,
         )
     return compute_rack_report(racks, assets)

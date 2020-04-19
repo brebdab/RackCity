@@ -100,10 +100,7 @@ export class Report extends React.PureComponent<
     axios
       .get(API_ROOT + "api/report/" + path, headers)
       .then((res) => {
-        if (res.data.warning_message) {
-          this.setState({ stateLoaded: true, noData: true });
-        } else {
-          this.setState({
+        this.setState({
             freeRack: res.data.free_rackspace_percent,
             model_allocation: res.data.model_allocation,
             owner_allocation: res.data.owner_allocation,
@@ -111,7 +108,6 @@ export class Report extends React.PureComponent<
             stateLoaded: true,
             noData: false,
           });
-        }
       })
       .catch((err) => {
         this.setState({ stateLoaded: true, noData: true });
