@@ -459,5 +459,5 @@ def get_online_filter():
     # 2a. it has no chassis OR 2b. it has a chassis, but its chassis has no storage site
     return Q(offline_storage_site__isnull=True) & (
         (Q(chassis__isnull=False) & Q(chassis__offline_storage_site__isnull=True))
-        | (Q(chassis_isnull=True))
+        | (Q(chassis__isnull=True))
     )
