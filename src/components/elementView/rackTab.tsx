@@ -39,7 +39,6 @@ import RackSelectView from "./rackSelectView";
 import { RouteComponentProps, withRouter } from "react-router";
 import { Link } from "react-router-dom";
 import { PermissionState } from "../../utils/permissionUtils";
-import {AssetViewProps} from "./detailedView/assetView/assetView";
 
 interface RackTabState {
   isOpen: boolean;

@@ -57,10 +57,7 @@ class RackView extends React.PureComponent<
     let maxHeight: number = +height;
 
     while (currHeight < maxHeight) {
-      //temporary fix to ignore the second conflicting asset
-      if (assets.length > 0 && currHeight > +assets[0].rack_position) {
-        const inst = assets.shift();
-      }
+
       if (
         assets.length > 0 &&
         assets[0] &&
