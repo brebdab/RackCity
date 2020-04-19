@@ -1,6 +1,8 @@
+from django.db.models.query_utils import Q
 from django.http import JsonResponse
 from http import HTTPStatus
 from rackcity.models import Rack, Asset
+from rackcity.models.model_utils import ModelType
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
 
@@ -12,7 +14,17 @@ def report_rack_usage_global(request):
     Get summary of rack usage across ALL site: the percentage of rackspace free versus used,
     allocated per vendor, allocated per model, and allocated per owner.
     """
-    return compute_rack_report()
+    racks = Rack.objects.all()
+    assets = Asset.objects.filter(
+        ~Q(model__model_type=ModelType.BLADE_ASSET.value)
+        & Q(offline_storage_site__isnull=True)
+    )
+    if len(racks) == 0 or len(assets) == 0:
+        return JsonResponse(
+            {"failure_message": "There are no racked assets."},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    return compute_rack_report(racks, assets)
 
 
 @api_view(["GET"])
@@ -22,32 +34,31 @@ def report_rack_usage_datacenter(request, id):
     Get summary of rack usage for ONE datacenter: the percentage of rackspace free versus used,
     allocated per vendor, allocated per model, and allocated per owner.
     """
-    return compute_rack_report(datacenter_id=id)
+    racks = Rack.objects.filter(datacenter=id)
+    assets = Asset.objects.filter(
+        ~Q(model__model_type=ModelType.BLADE_ASSET.value)
+        & Q(offline_storage_site__isnull=True)
+        & Q(rack__datacenter=id)
+    )
+    if len(racks) == 0 or len(assets) == 0:
+        return JsonResponse(
+            {"failure_message": "There are no racked assets in this datacenter."},
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    return compute_rack_report(racks, assets)
 
 
-def compute_rack_report(datacenter_id=None):
-    racks = Rack.objects.all()
-    assets = Asset.objects.all()
-    if datacenter_id is not None:
-        racks = racks.filter(datacenter=datacenter_id)
-        assets = assets.filter(rack__isnull=False)
-        assets = assets.filter(rack__datacenter=datacenter_id)
+def compute_rack_report(racks, assets):
     total_num_rack_slots = 0
     for rack in racks:
         total_num_rack_slots += rack.height
-
-    if total_num_rack_slots == 0:
-        return JsonResponse(
-            {"description": "No existing racks."}, status=HTTPStatus.NO_CONTENT
-        )
 
     model_allocation = {}
     vendor_allocation = {}
     owner_allocation = {}
     num_full_rack_slots = 0
+    assets = assets.order_by("model__vendor", "model__model_number")
     for asset in assets:
-        if asset.model.is_blade_asset():
-            continue
         vendor = asset.model.vendor
         model = asset.model
         height = asset.model.height
@@ -59,6 +70,8 @@ def compute_rack_report(datacenter_id=None):
         if model not in model_allocation:
             model_allocation[model] = 0
         model_allocation[model] += height
+        if owner is None or owner == "":
+            owner = "(No owner)"
         if owner not in owner_allocation:
             owner_allocation[owner] = 0
         owner_allocation[owner] += height
