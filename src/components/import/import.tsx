@@ -10,7 +10,7 @@ import {
   Toaster,
   Spinner,
   Intent,
-  Position,
+  Position, Callout, Card,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -118,16 +118,19 @@ export class BulkImport extends React.PureComponent<
     const selectButtonText = "Select " + uploadType + " file";
     return (
       <div className={Classes.DARK + " import"}>
+
+
+
         <Toaster
           autoFocus={false}
           canEscapeKeyClear={true}
           position={Position.TOP}
           ref={this.refHandlers.toaster}
         />
-        <div className={"row"}>
-          <div className={"column-third-import"}>
+
+                  <Card className="instructions-card"><h3>Bulk Import</h3>
             {resourceType === "assets" ? (
-              <ButtonGroup fill={false} style={{ marginTop: 40 }}>
+              <div className={"import-buttons-asset"}>
                 <Button
                   className="import-button"
                   active={this.state.assetUploadType === "assets"}
@@ -144,22 +147,18 @@ export class BulkImport extends React.PureComponent<
                     this.setState({ assetUploadType: "network connections" });
                   }}
                 />
-              </ButtonGroup>
+              </div>
             ) : null}
-          </div>
-        </div>
-        <div className={"row"}>
-          <div className={"column-third-import"}>
-            <p> </p>
-            <AnchorButton
+            <div className={"import-buttons-asset"}>
+             <AnchorButton
               className="import-button"
-              large={true}
+
               intent="primary"
               icon="import"
               text={selectButtonText}
               onClick={this.handleFilepickerOpen}
-              style={{ marginTop: 20, marginBottom: 40 }}
             />
+            </div>
             <Overlay
               isOpen={this.state.uploading}
               className={"uploading-overlay"}
@@ -183,6 +182,13 @@ export class BulkImport extends React.PureComponent<
                 <Spinner size={Spinner.SIZE_STANDARD} />
               </div>
             ) : null}
+            </Card>
+
+
+        <div className={"row"}>
+          <div className={"column-third-import"}>
+            <p> </p>
+
           </div>
         </div>
 
