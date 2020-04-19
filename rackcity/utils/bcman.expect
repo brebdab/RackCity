@@ -1,4 +1,4 @@
-#!/usr/bin/expect
+#!/app/.apt/usr/bin/expect
 
 log_user 0
 set timeout 60
