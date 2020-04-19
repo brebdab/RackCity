@@ -170,6 +170,9 @@ export class PowerView extends React.PureComponent<
           err.response.data.failure_message
         ) {
           this.addErrorToast(err.response.data.failure_message);
+          this.setState({
+            statusLoaded: true,
+          });
         }
       });
   }
@@ -195,6 +198,9 @@ export class PowerView extends React.PureComponent<
           err.response.data.failure_message
         ) {
           this.addErrorToast(err.response.data.failure_message);
+          this.setState({
+            statusLoaded: true,
+          });
         }
       });
   }
@@ -220,6 +226,9 @@ export class PowerView extends React.PureComponent<
           err.response.data.failure_message
         ) {
           this.addErrorToast(err.response.data.failure_message);
+          this.setState({
+            statusLoaded: true,
+          });
         }
       });
   }
@@ -283,7 +292,7 @@ export class PowerView extends React.PureComponent<
   private renderPowerTable(loading: boolean) {
     return (
       <div className="power-table">
-        <div className = "network-connections">
+        <div className="network-connections">
           <table className="bp3-html-table bp3-html-table-bordered bp3-html-table-striped">
             <tr>
               <th>Power Port Number</th>
@@ -292,7 +301,7 @@ export class PowerView extends React.PureComponent<
             </tr>
             <tbody>{this.getPowerPortRows(loading)}</tbody>
           </table>
-          </div>
+        </div>
 
         {this.props.asset &&
         this.state.powerStatus &&
