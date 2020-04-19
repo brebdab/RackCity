@@ -399,23 +399,22 @@ def chassis_power_status(request):
             },
             status=HTTPStatus.REQUEST_TIMEOUT,
         )
-    return JsonResponse({"result": result}, status=HTTPStatus.BAD_REQUEST)
-    # if "is ON" in result:
-    #     blade_slot_power_status = "ON"
-    # elif "is OFF" in result:
-    #     blade_slot_power_status = "OFF"
-    # else:
-    #     return JsonResponse(
-    #         {
-    #             "failure_message": Status.CONNECTION.value
-    #             + "Unable to contact network controlled blade chassis power management.",
-    #             "errors": "Power status returned as: " + result,
-    #         },
-    #         status=HTTPStatus.REQUEST_TIMEOUT,
-    #     )
-    # return JsonResponse(
-    #     {"power_status": blade_slot_power_status}, status=HTTPStatus.OK,
-    # )
+    if "is ON" in result:
+        blade_slot_power_status = "ON"
+    elif "is OFF" in result:
+        blade_slot_power_status = "OFF"
+    else:
+        return JsonResponse(
+            {
+                "failure_message": Status.CONNECTION.value
+                + "Unable to contact network controlled blade chassis power management.",
+                "errors": "Power status returned as: " + result,
+            },
+            status=HTTPStatus.REQUEST_TIMEOUT,
+        )
+    return JsonResponse(
+        {"power_status": blade_slot_power_status}, status=HTTPStatus.OK,
+    )
 
 
 @api_view(["POST"])
@@ -551,11 +550,13 @@ def make_bcman_request(chassis, blade, power_command):
     )
     exit_status = os.system(cmd)
     result = None
-    if os.path.exists("temp.txt") and (exit_status == 0):
+    if os.path.exists("temp.txt"):
         fp = open("temp.txt", "r")
         result = fp.read().splitlines()[0]
         fp.close()
         os.remove("temp.txt")
+    else:
+        result = "temp.txt file does not exist"
     return result, exit_status
 
 
