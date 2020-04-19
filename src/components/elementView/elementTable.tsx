@@ -1151,6 +1151,7 @@ class ElementTable extends React.Component<
           <table
             className={
               this.props.type !== ElementType.DATACENTER &&
+              this.props.type !== ElementType.OFFLINE_STORAGE_SITE &&
               this.props.type !== ElementType.USER
                 ? "bp3-html-table bp3-interactive bp3-html-table-striped bp3-html-table-bordered element-table"
                 : "bp3-html-table bp3-html-table-striped bp3-html-table-bordered element-table"
@@ -1286,6 +1287,8 @@ class ElementTable extends React.Component<
                           key={item.id}
                           onClick={
                             this.props.type === ElementType.DATACENTER ||
+                            this.props.type ===
+                              ElementType.OFFLINE_STORAGE_SITE ||
                             this.props.type === ElementType.USER
                               ? () => {}
                               : () => {

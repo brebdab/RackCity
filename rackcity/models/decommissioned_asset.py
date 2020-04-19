@@ -18,6 +18,7 @@ class DecommissionedAsset(models.Model):
     datacenter = JSONField(null=True, blank=True)
     offline_storage_site = JSONField(null=True, blank=True)
     chassis = JSONField(null=True, blank=True)
+    blades = JSONField(null=True, blank=True)
     owner = models.CharField(  # don't validate owner
         max_length=150, null=True, blank=True,
     )

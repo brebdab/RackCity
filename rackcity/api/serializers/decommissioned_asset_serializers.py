@@ -28,6 +28,7 @@ class GetDecommissionedAssetSerializer(serializers.ModelSerializer):
             "power_connections",
             "network_connections",
             "network_graph",
+            "blades",
         )
 
 
@@ -52,6 +53,7 @@ class AddDecommissionedAssetSerializer(serializers.ModelSerializer):
             "power_connections",
             "network_connections",
             "network_graph",
+            "blades",
         )
 
 

@@ -224,6 +224,11 @@ export class MobileAssetView extends React.PureComponent<
               Object.keys(ModelFieldsTable),
               this.props.asset.model
             )}
+            <p className="custom-message">
+              {this.props.data_override
+                ? "*Custom fields highlighted in blue"
+                : null}
+            </p>
           </table>
         </Callout>
         <Callout title={"Network Connections"} className={"propsview"}>

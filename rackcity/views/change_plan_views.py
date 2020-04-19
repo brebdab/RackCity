@@ -470,20 +470,23 @@ def change_plan_execute(request, id):
         update_network_ports(updated_asset, asset_cp, change_plan)
         update_power_ports(updated_asset, asset_cp, change_plan)
         updated_asset.save()
-
-    for asset_cp in assets_cp:
-        # Decommission only after all changes have been made to all CP assets
-        updated_asset = updated_asset_mappings[asset_cp]
-        if asset_cp.is_decommissioned:
-            failure_response = decommission_asset_cp(
-                updated_asset, asset_cp, change_plan,
-            )
-            if failure_response:
-                return failure_response
-            num_decommissioned += 1
-            log_action(
-                request.user, None, Action.DECOMMISSION, change_plan=change_plan,
-            )
+    ## decomission blades first
+    blades_cp = assets_cp.filter(model__model_type=ModelType.BLADE_ASSET.value)
+    rackmount_cp = assets_cp.filter(~Q(model__model_type=ModelType.BLADE_ASSET.value))
+    for asset_cp_query in [blades_cp, rackmount_cp]:
+        for asset_cp in asset_cp_query:
+            # Decommission only after all changes have been made to all CP assets
+            updated_asset = updated_asset_mappings[asset_cp]
+            if asset_cp.is_decommissioned:
+                failure_response = decommission_asset_cp(
+                    updated_asset, asset_cp, change_plan,
+                )
+                if failure_response:
+                    return failure_response
+                num_decommissioned += 1
+                log_action(
+                    request.user, None, Action.DECOMMISSION, change_plan=change_plan,
+                )
 
     log_execute_change_plan(
         request.user, change_plan.name, num_created, num_modified, num_decommissioned,

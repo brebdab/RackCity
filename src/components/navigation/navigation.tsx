@@ -110,7 +110,7 @@ export class Navigation extends React.Component<
 
     return (
       <Router>
-        <div>
+        <div className={"navigation"}>
           {this.props.changePlan ? (
             <div
               onClick={() =>
