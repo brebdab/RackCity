@@ -1,3 +1,5 @@
 libzbar-dev
-tcl
+libtcl8.6
+tcl-expect
+tcl8.6
 expect
