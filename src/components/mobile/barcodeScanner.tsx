@@ -120,7 +120,7 @@ export class BarcodeScanner extends React.PureComponent<
             capture();
           }}
         >
-          Capture photo
+          Scan Barcode
         </AnchorButton>
       </div>
     );
