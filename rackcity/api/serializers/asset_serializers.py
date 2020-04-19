@@ -66,6 +66,7 @@ class AssetSerializer(serializers.ModelSerializer):
     hostname = serializers.CharField(
         validators=[UniqueValidator(queryset=Asset.objects.all(), lookup="iexact")],
         required=False,
+        allow_null=True
     )
     rack_position = RCIntegerField(
         allow_null=True, max_value=2147483647, min_value=0, required=False
