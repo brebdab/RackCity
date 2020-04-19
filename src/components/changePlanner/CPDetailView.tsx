@@ -341,9 +341,8 @@ class CPDetailView extends React.Component<
                 </td>
               </tr>
             );
-          }
-          else if (col==="mac_addresses"){
-                        return (
+          } else if (col === "mac_addresses") {
+            return (
               <tr>
                 <td style={this.getHighlightStyle(modification, col)} key={col}>
                   Mac Addresses
@@ -353,7 +352,6 @@ class CPDetailView extends React.Component<
                 </td>
               </tr>
             );
-
           }
 
           return AssetFieldsTable[col] ? (

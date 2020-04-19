@@ -20,16 +20,17 @@ def get_changes_on_asset(asset, asset_cp):
         changes.append("network_connections")
     if power_connections_have_changed(asset, asset_cp):
         changes.append("power_connections")
-    if mac_addresses_have_changed(asset,asset_cp):
+    if mac_addresses_have_changed(asset, asset_cp):
         changes.append("mac_addresses")
     return changes
 
-def mac_addresses_have_changed(asset,asset_cp):
+
+def mac_addresses_have_changed(asset, asset_cp):
     network_ports_cp = NetworkPortCP.objects.filter(asset=asset_cp)
     network_ports = NetworkPort.objects.filter(asset=asset)
     for network_port_cp in network_ports_cp:
         try:
-            network_port = network_ports.get(port_name=network_port_cp.port_name, )
+            network_port = network_ports.get(port_name=network_port_cp.port_name,)
             if network_port.mac_address != network_port_cp.mac_address:
                 return True
         except ObjectDoesNotExist:
@@ -50,9 +51,15 @@ def network_connections_have_changed(asset, asset_cp):
             continue
         connected_port_live = network_port.connected_port
         connected_port_cp = network_port_cp.connected_port
-        if (not connected_port_live and  connected_port_cp) or (connected_port_live and not connected_port_cp):
+        if (not connected_port_live and connected_port_cp) or (
+            connected_port_live and not connected_port_cp
+        ):
             return True
-        if connected_port_live and  connected_port_cp and connected_port_live.asset.hostname != connected_port_cp.asset.hostname:
+        if (
+            connected_port_live
+            and connected_port_cp
+            and connected_port_live.asset.hostname != connected_port_cp.asset.hostname
+        ):
             return True
     return False
 
