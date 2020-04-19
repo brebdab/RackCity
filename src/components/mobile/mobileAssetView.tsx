@@ -302,7 +302,7 @@ export class MobileAssetView extends React.PureComponent<
             </>
           ) : (
             <Callout
-              title="No network connections"
+              title="No network ports"
               icon={IconNames.INFO_SIGN}
             />
           )}

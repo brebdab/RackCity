@@ -111,7 +111,7 @@ def asset_many(request):
     if failure_response:
         return failure_response
     if change_plan:
-        return get_many_assets_response_for_cp(request, change_plan, stored=False)
+        return get_many_asAsets_response_for_cp(request, change_plan, stored=False)
     else:
         racked_assets = assets_online_queryset()
         return get_many_response(
