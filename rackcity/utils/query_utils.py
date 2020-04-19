@@ -433,14 +433,22 @@ def get_page_count_response(
 
 
 def assets_online_queryset():
-    filter = Q(offline_storage_site__isnull=True) & Q(
-        chassis__offline_storage_site__isnull=True
-    )
+    filter = get_online_filter()
     return Asset.objects.filter(filter)
 
 
 def assets_offline_queryset():
-    filter = Q(offline_storage_site__isnull=False) | Q(
+    filter = get_offline_filter()
+    return Asset.objects.filter(filter)
+
+
+def get_offline_filter():
+    return Q(offline_storage_site__isnull=False) | Q(
         chassis__offline_storage_site__isnull=False
     )
-    return Asset.objects.filter(filter)
+
+
+def get_online_filter():
+    return Q(offline_storage_site__isnull=True) & Q(
+        chassis__offline_storage_site__isnull=True
+    )
