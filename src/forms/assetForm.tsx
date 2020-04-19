@@ -819,14 +819,15 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   handleSiteSelect(site: DatacenterObject) {
     const clearedNetworkConnections = this.getClearedNetworkConnections();
     const clearedPowerConnections = this.getClearedPowerSelections();
+
     const newValues = updateObject(this.state.values, {
       rack: undefined,
-      rack_position: null,
       chassis: undefined,
-      chassis_slot: null,
       power_connections: clearedPowerConnections,
       network_connections: clearedNetworkConnections,
     });
+    delete newValues.rack_position;
+    delete newValues.chassis_slot;
 
     this.setState({
       currSite: site,
@@ -839,11 +840,13 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
   handleRackSelect(rack: RackObject) {
     const clearedPowerConnections = this.getClearedPowerSelections();
-    this.setState({
-      values: updateObject(this.state.values, {
+    const newValues = updateObject(this.state.values, {
         rack: rack,
         power_connections: clearedPowerConnections,
-      }),
+      })
+    delete newValues.rack_position
+    this.setState({
+      values: newValues,
     });
 
     this.getPowerPortAvailability(rack);
@@ -1592,6 +1595,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
           onItemSelect={(asset: AssetObject) => {
             const newValues = this.state.values;
             newValues.chassis = asset;
+            delete newValues.chassis_slot
 
             this.setState({
               values: newValues,
