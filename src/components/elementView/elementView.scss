@@ -171,11 +171,14 @@
   margin-right: 3pt;
 }
 
-.header-text {
-  white-space: nowrap !important;
+.header-text span {
+  white-space: pre-wrap !important;
   overflow: auto;
-  width: max-content !important;
-  display: inline-block;
+  max-width: 100pt;
+}
+.header-text {
+  display: inline-flex;
+  text-align: center;
 }
 
 .drag-drop-text span ~ span {
@@ -228,12 +231,13 @@
   float: right;
 }
 
-.header-text icon {
-  float: right;
-}
 .icon {
   cursor: pointer !important;
+  text-align: center !important;
+  vertical-align: middle;
+  margin: auto;
 }
+
 .icon:hover {
   background-color: #394b59 !important;
 }
@@ -254,4 +258,9 @@ input {
 }
 .table-control {
   float: right !important;
+}
+.table-wrapper th {
+  text-align: center !important;
+
+  vertical-align: middle !important;
 }
