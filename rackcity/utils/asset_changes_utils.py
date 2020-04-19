@@ -35,8 +35,6 @@ def mac_addresses_have_changed(asset, asset_cp):
                 return True
         except ObjectDoesNotExist:
             continue
-        if network_port.mac_address != network_port_cp.mac_address:
-            return True
     return False
 
 
