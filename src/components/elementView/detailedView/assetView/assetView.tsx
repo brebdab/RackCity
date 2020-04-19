@@ -418,12 +418,19 @@ export class AssetView extends React.PureComponent<
                   chassis={this.state.asset}
                   redirectToAsset={this.redirectToAsset}
                 />
-              ) : this.state.asset.chassis ? (
-                <ChassisView
-                  chassis={this.state.asset.chassis}
-                  currBladeSlot={this.state.asset.chassis_slot}
-                  redirectToAsset={this.redirectToAsset}
-                />
+              ) : this.state.asset.model.model_type === MountTypes.BLADE ? (
+                this.state.asset.chassis ? (
+                  <ChassisView
+                    chassis={this.state.asset.chassis}
+                    currBladeSlot={this.state.asset.chassis_slot}
+                    redirectToAsset={this.redirectToAsset}
+                  />
+                ) : (
+                  <Callout
+                    title={"This blade asset is currently in offline storage outside of a blade chassis"}
+                    icon={IconNames.INFO_SIGN}
+                  />
+                )
               ) : null}
             </div>
           </div>
