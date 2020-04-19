@@ -186,7 +186,10 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
                     });
                   }}
                 >
-                  <Tooltip content={PermissionInfo.ADMIN} position={Position.RIGHT}>
+                  <Tooltip
+                    content={PermissionInfo.ADMIN}
+                    position={Position.RIGHT}
+                  >
                     <Icon icon="info-sign" />
                   </Tooltip>
                 </Checkbox>
@@ -209,7 +212,10 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
                     });
                   }}
                 >
-                  <Tooltip content={PermissionInfo.MODEL} position={Position.RIGHT}>
+                  <Tooltip
+                    content={PermissionInfo.MODEL}
+                    position={Position.RIGHT}
+                  >
                     <Icon icon="info-sign" />
                   </Tooltip>
                 </Checkbox>
@@ -230,7 +236,10 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
                     });
                   }}
                 >
-                  <Tooltip content={PermissionInfo.ASSET} position={Position.RIGHT}>
+                  <Tooltip
+                    content={PermissionInfo.ASSET}
+                    position={Position.RIGHT}
+                  >
                     <Icon icon="info-sign" />
                   </Tooltip>
                 </Checkbox>
@@ -256,7 +265,10 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
                     });
                   }}
                 >
-                  <Tooltip content={PermissionInfo.POWER} position={Position.RIGHT}>
+                  <Tooltip
+                    content={PermissionInfo.POWER}
+                    position={Position.RIGHT}
+                  >
                     <Icon icon="info-sign" />
                   </Tooltip>
                 </Checkbox>
@@ -277,7 +289,10 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
                     });
                   }}
                 >
-                  <Tooltip content={PermissionInfo.AUDIT} position={Position.RIGHT}>
+                  <Tooltip
+                    content={PermissionInfo.AUDIT}
+                    position={Position.RIGHT}
+                  >
                     <Icon icon="info-sign" />
                   </Tooltip>
                 </Checkbox>
@@ -348,10 +363,12 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
             value={AssetPermissionSelection.PER_SITE}
           />
         </RadioGroup>
-        {this.state.asset_permission_selection ===
-        AssetPermissionSelection.PER_SITE
-          ? this.renderSiteChecks()
-          : null}
+        <div className={"renderSiteChecks"}>
+          {this.state.asset_permission_selection ===
+          AssetPermissionSelection.PER_SITE
+            ? this.renderSiteChecks()
+            : null}
+        </div>
       </Card>
     );
   }
