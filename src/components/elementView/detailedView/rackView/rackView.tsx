@@ -107,7 +107,7 @@ class RackView extends React.PureComponent<
               className="rack-row"
               style={{
                 lineHeight: unit * width,
-                backgroundColor: assets[0].model.display_color,
+                backgroundColor: assets[0].display_color? assets[0].display_color : assets[0].model.display_color,
               }}
             >
               <td
