@@ -21,10 +21,10 @@ code {
 }
 
 .asset-view {
-  width: 100%;
+  width: calc(100vw - 136pt);
 }
 .model-view {
-  width: 100%;
+  width: calc(100vw - 136pt);
 }
 .landing-view {
   width: content;
