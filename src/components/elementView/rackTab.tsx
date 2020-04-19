@@ -106,8 +106,20 @@ class RackTab extends React.Component<
       datacenter: this.props.currDatacenter.id,
     });
 
+      let config;
+  if (!this.props.changePlan) {
+    config = headers;
+  } else {
+    config = {
+      headers: headers["headers"],
+      params: {
+        change_plan: this.props.changePlan.id,
+      },
+    };
+  }
+
     return axios
-      .post(API_ROOT + "api/racks/get", rack_datacenter, headers)
+      .post(API_ROOT + "api/racks/get", rack_datacenter, config)
       .then((res) => {
         this.setState({
           racks: res.data.racks,
@@ -180,6 +192,8 @@ class RackTab extends React.Component<
       });
   };
 
+
+
   updateRackData = (showError: boolean) => {
     if (this.state.selectedRackRange.num_start) {
       this.viewRackForm(
@@ -191,8 +205,9 @@ class RackTab extends React.Component<
       this.getAllRacks(this.props.currDatacenter);
     }
   };
+
   componentWillReceiveProps(nextProps: RackTabProps) {
-    if (nextProps.currDatacenter !== this.props.currDatacenter) {
+    if ((nextProps.currDatacenter !== this.props.currDatacenter) || (nextProps.changePlan !== this.props.changePlan)){
       this.setState({
         racks: [],
         selectedRackRange: {} as RackRangeFields,
@@ -229,12 +244,13 @@ class RackTab extends React.Component<
   };
 
   getAllRacks = (datacenter: DatacenterObject) => {
-    console.log(this.props);
     this.setState({
       loading: true,
       viewAll: true,
     });
-    const config = {
+    let config;
+    if (!this.props.changePlan){
+      config = {
       headers: {
         Authorization: "Token " + this.props.token,
       },
@@ -242,6 +258,20 @@ class RackTab extends React.Component<
         datacenter: datacenter.id,
       },
     };
+    }
+    else{
+      config = {
+      headers: {
+        Authorization: "Token " + this.props.token,
+      },
+      params: {
+        datacenter: datacenter.id,
+        change_plan: this.props.changePlan.id
+      },
+    };
+    }
+
+
     axios
       .get(API_ROOT + "api/racks/get-all", config)
       .then((res) => {
