@@ -4,6 +4,7 @@ from rackcity.models import Rack, Asset
 from rackcity.api.serializers import RackSerializer
 from rackcity.api.objects import RackRangeSerializer
 from rackcity.permissions.permissions import user_has_asset_permission
+from rackcity.utils.change_planner_utils import get_change_plan
 from rackcity.utils.log_utils import (
     log_rack_action,
     Action,
@@ -21,7 +22,7 @@ from rackcity.utils.errors_utils import (
 from rest_framework.decorators import permission_classes, api_view
 from rest_framework.permissions import IsAuthenticated
 from http import HTTPStatus
-from rackcity.utils.rackcity_utils import get_rack_detailed_response
+from rackcity.utils.rack_utils import get_rack_detailed_response
 
 
 @api_view(["GET"])
@@ -30,6 +31,7 @@ def rack_get_all(request):
     """
     List all racks
     """
+
     datacenter_id = request.query_params.get("datacenter")
     if not datacenter_id:
         return JsonResponse(
@@ -39,8 +41,13 @@ def rack_get_all(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
+    (change_plan, failure_response) = get_change_plan(
+        request.query_params.get("change_plan")
+    )
+    if failure_response:
+        return failure_response
     racks = Rack.objects.filter(datacenter=datacenter_id)
-    return get_rack_detailed_response(racks)
+    return get_rack_detailed_response(racks,change_plan)
 
 
 @api_view(["POST"])
@@ -60,14 +67,18 @@ def rack_get(request):
             },
             status=HTTPStatus.BAD_REQUEST,
         )
-
+    (change_plan, failure_response) = get_change_plan(
+        request.query_params.get("change_plan")
+    )
+    if failure_response:
+        return failure_response
     racks = Rack.objects.filter(
         datacenter=range_serializer.get_datacenter(),
         rack_num__range=range_serializer.get_number_range(),  # inclusive range
         row_letter__range=range_serializer.get_row_range(),
     )
 
-    return get_rack_detailed_response(racks)
+    return get_rack_detailed_response(racks,change_plan)
 
 
 @api_view(["POST"])

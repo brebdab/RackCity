@@ -14,8 +14,9 @@ import { connect } from "react-redux";
 import { RouteComponentProps, withRouter } from "react-router";
 import { API_ROOT } from "../../../../utils/api-config";
 import {
+  AssetCPObject,
   AssetObject,
-  getHeaders,
+  getHeaders, isAssetCPObject,
   MountTypes,
   RackResponseObject,
   ROUTES,
@@ -51,10 +52,7 @@ class RackView extends React.PureComponent<
     let unit = 1;
     let currHeight = 0;
     const { height } = rackResp.rack;
-    let assets: Array<AssetObject> = Object.assign([], rackResp.assets);
-    // console.log(row_letter, rack_num, height);
-    // console.log("rackResp", rackResp);
-    // console.log("initial", assets, rackResp.assets);
+    let assets: Array<AssetObject|AssetCPObject> = Object.assign([], rackResp.assets);
 
     let maxHeight: number = +height;
 
@@ -62,7 +60,6 @@ class RackView extends React.PureComponent<
       //temporary fix to ignore the second conflicting asset
       if (assets.length > 0 && currHeight > +assets[0].rack_position) {
         const inst = assets.shift();
-        console.warn("CONFLICTING ASSETS ", inst);
       }
       if (
         assets.length > 0 &&
@@ -70,10 +67,10 @@ class RackView extends React.PureComponent<
         currHeight === +assets[0].rack_position - 1
       ) {
         const width = +assets[0].model.height;
-        const id: number = +assets[0].id;
+        const asset = assets[0]
+        const id = isAssetCPObject(asset)? asset.related_asset.id : +assets[0].id;
 
         if (width + currHeight > maxHeight) {
-          console.warn("ASSET OUT OF RANGE ", assets[0]);
 
           currHeight++;
 
