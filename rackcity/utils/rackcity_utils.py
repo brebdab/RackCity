@@ -1,31 +1,7 @@
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import JsonResponse
-from http import HTTPStatus
-from rackcity.api.serializers import RecursiveAssetSerializer, RackSerializer
 from rackcity.models import Asset, AssetCP, ITModel, Rack, PowerPort, NetworkPort
 from rackcity.models.asset import get_assets_for_cp
 from rackcity.utils.exceptions import LocationException, AssetModificationException
-
-
-def get_rack_detailed_response(racks):
-    if racks.count() == 0:
-        return JsonResponse(
-            {"failure_message": "There are no existing racks within this range. "},
-            status=HTTPStatus.BAD_REQUEST,
-        )
-
-    racks_with_assets = []
-    for rack in racks:
-        rack_serializer = RackSerializer(rack)
-        assets = Asset.objects.filter(rack=rack.id).order_by("rack_position")
-        assets_serializer = RecursiveAssetSerializer(assets, many=True)
-        rack_detail = {
-            "rack": rack_serializer.data,
-            "assets": assets_serializer.data,
-        }
-        racks_with_assets.append(rack_detail)
-
-    return JsonResponse({"racks": racks_with_assets}, status=HTTPStatus.OK)
 
 
 def validate_asset_datacenter_move(data, asset):
