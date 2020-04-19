@@ -6,7 +6,7 @@ import {
   IToastProps,
   Intent,
   Alert,
-  Card
+  Callout,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import * as React from "react";
@@ -106,16 +106,16 @@ export class BarcodeScanner extends React.PureComponent<
     }, [webcamRef, token]);
     return (
       <div>
-        <Card>
+        <Callout>
           <Webcam
             audio={false}
             height={this.state.cameraHeight * 0.5}
             screenshotFormat={"image/jpeg"}
-            width={this.state.cameraWidth}
+            width={this.state.cameraWidth * 0.8}
             videoConstraints={this.constraints}
             ref={webcamRef}
           />
-        </Card>
+        </Callout>
         <AnchorButton
           className={"scanner-button"}
           intent={"primary"}
@@ -131,8 +131,8 @@ export class BarcodeScanner extends React.PureComponent<
     );
   };
 
-  getDataOverride(asset:AssetObject ){
-    const { cpu, display_color, storage, memory_gb } = asset
+  getDataOverride(asset: AssetObject) {
+    const { cpu, display_color, storage, memory_gb } = asset;
     return { cpu, display_color, storage, memory_gb };
   }
   private renderAssetView(asset: AssetObject | null) {
@@ -192,13 +192,13 @@ export class BarcodeScanner extends React.PureComponent<
                   showAsset: true,
                 });
               }}
-              style={{width: "80%"}}
+              style={{ width: "80%" }}
               cancelButtonText={"Cancel"}
               confirmButtonText={"View Asset"}
             >
               <p>
-                Found barcode with value: {this.state.barcode_data}.<br/>Would you
-                like to view this asset?
+                Found barcode with value: {this.state.barcode_data}.<br />
+                Would you like to view this asset?
               </p>
             </Alert>
           </>
