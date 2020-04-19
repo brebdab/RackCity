@@ -49,6 +49,13 @@
 
 }
 
+.chassis-view table{
+margin:auto;
+    -webkit-text-stroke-width: 0.2px;
+  -webkit-text-stroke-color: black;
+
+
+
 .chassis-view table {
   margin: auto;
 }
@@ -66,7 +73,7 @@
 
   max-width:30pt;
   min-width:30pt;
-  border: 1px solid #BFCCD6 !important;
+  border: 1px solid #BFCCD6;
   overflow: auto;
     background-color:#10161A
 
@@ -77,9 +84,9 @@
     cursor: pointer;
 }
 .slot-number{
-  border: 1px solid #BFCCD6 !important;
+  border: 1px solid #BFCCD6 ;
   text-align:center !important;
-    background-color:#10161A!important
+    background-color:#10161A
 
 }
 

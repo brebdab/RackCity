@@ -416,49 +416,57 @@ def change_plan_execute(request, id):
         ~Q(model__model_type=ModelType.BLADE_ASSET.value)
     )
     for asset_cp in rackmount_assets_cp:
+        changes = []
+        if asset_cp.related_asset:
+            changes = get_changes_on_asset(asset_cp.related_asset, asset_cp)
         updated_asset, created = get_updated_asset(asset_cp)
         updated_asset_mappings[asset_cp] = updated_asset
+        differs_from_live = True
+
         if created:
             num_created += 1
             log_action(
                 request.user, updated_asset, Action.CREATE, change_plan=change_plan,
             )
-            asset_cp.differs_from_live = True
-            asset_cp.save()
         elif not asset_cp.is_decommissioned:
-            changes = get_changes_on_asset(asset_cp.related_asset, asset_cp)
             if len(changes) > 0:
                 num_modified += 1
                 log_action(
                     request.user, updated_asset, Action.MODIFY, change_plan=change_plan,
                 )
-                asset_cp.differs_from_live = True
-                asset_cp.save()
+            else:
+                differs_from_live = False
+        asset_cp.differs_from_live = differs_from_live
+        asset_cp.save()
 
         update_network_ports(updated_asset, asset_cp, change_plan)
         update_power_ports(updated_asset, asset_cp, change_plan)
     ##blade assets
     blade_assets_cp = assets_cp.filter(model__model_type=ModelType.BLADE_ASSET.value)
     for asset_cp in blade_assets_cp:
+        changes = []
+        if asset_cp.related_asset:
+            changes = get_changes_on_asset(asset_cp.related_asset, asset_cp)
         chassis_live = updated_asset_mappings[asset_cp.chassis]
         updated_asset, created = get_updated_asset(asset_cp, chassis_live)
         updated_asset_mappings[asset_cp] = updated_asset
+        differs_from_live = True
+
         if created:
             num_created += 1
             log_action(
                 request.user, updated_asset, Action.CREATE, change_plan=change_plan,
             )
-            asset_cp.differs_from_live = True
-            asset_cp.save()
         elif not asset_cp.is_decommissioned:
-            changes = get_changes_on_asset(asset_cp.related_asset, asset_cp)
             if len(changes) > 0:
                 num_modified += 1
                 log_action(
                     request.user, updated_asset, Action.MODIFY, change_plan=change_plan,
                 )
-                asset_cp.differs_from_live = True
-                asset_cp.save()
+            else:
+                differs_from_live = False
+        asset_cp.differs_from_live = differs_from_live
+        asset_cp.save()
         update_network_ports(updated_asset, asset_cp, change_plan)
         update_power_ports(updated_asset, asset_cp, change_plan)
         updated_asset.save()

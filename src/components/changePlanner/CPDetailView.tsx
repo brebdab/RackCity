@@ -101,31 +101,6 @@ class CPDetailView extends React.Component<
     this.openPrint = true;
   };
 
-  setButtonState() {
-
-    if (
-      this.loading ||
-      this.state.modifications.length === 0 ||
-      !isNullOrUndefined(this.state.changePlan.execution_time)
-    ) {
-      this.setState({
-        disableButtons: true,
-      });
-      return;
-    }
-
-    this.state.modifications.forEach((modification: Modification) => {
-      if (modification.conflicts && modification.conflicts.length > 0) {
-        this.setState({
-          disableButtons: true,
-        });
-        return;
-      }
-    });
-    this.setState({
-      disableButtons: false,
-    });
-  }
   removeModification(modification: Modification) {
     this.loading = true;
     axios
@@ -146,7 +121,6 @@ class CPDetailView extends React.Component<
           TableType.STORED_ASSETS,
           TableType.DECOMMISSIONED_ASSETS,
         ]);
-        this.setButtonState();
       })
       .catch((err) => {
         this.loading = false;
@@ -201,7 +175,6 @@ class CPDetailView extends React.Component<
           TableType.RACKED_ASSETS,
           TableType.STORED_ASSETS,
         ]);
-        this.setButtonState();
       })
       .catch((err) => {
         this.loading = false;
@@ -401,7 +374,6 @@ class CPDetailView extends React.Component<
           } else {
             this.props.setChangePlan(null);
           }
-          this.setButtonState();
           const isOpen = new Array(res.data.modifications.length).fill(false);
           this.setState({
             changePlan: res.data.change_plan,
@@ -450,7 +422,6 @@ class CPDetailView extends React.Component<
           } else {
             this.props.setChangePlan(null);
           }
-          this.setButtonState();
           const isOpen = new Array(res.data.modifications.length).fill(false);
           this.setState({
             changePlan: res.data.change_plan,
@@ -530,12 +501,11 @@ class CPDetailView extends React.Component<
                             this.state.changePlan.execution_time
                           )
                         }
-                        icon="delete"
                         onClick={(e: any) => {
                           this.removeModification(modification);
                           e.stopPropagation();
                         }}
-                        text="Discard change"
+                        text="Remove change"
                       />
                     </Callout>
                     <Collapse isOpen={this.state.isOpen[index]}>
@@ -543,8 +513,10 @@ class CPDetailView extends React.Component<
                         {modification.conflicts
                           ? modification.conflicts.map((conflict: Conflict) => {
                               return (
-                                <Callout intent={Intent.DANGER}>
-                                  {conflict.conflict_message}
+                                <div>
+                                  <Callout intent={Intent.DANGER}>
+                                    {conflict.conflict_message}
+                                  </Callout>
                                   {conflict.conflict_resolvable ? (
                                     <div className="merge-options">
                                       <AnchorButton
@@ -555,8 +527,7 @@ class CPDetailView extends React.Component<
                                             false
                                           )
                                         }
-                                        icon="properties"
-                                        text="Discard change plan modifications"
+                                        text="Take live changes"
                                       />
                                       <AnchorButton
                                         onClick={() =>
@@ -566,26 +537,26 @@ class CPDetailView extends React.Component<
                                             true
                                           )
                                         }
-                                        icon="properties"
-                                        text="Keep change plan modifications"
+                                        text="Take change plan changes"
                                       />
                                     </div>
                                   ) : null}
-                                </Callout>
+                                </div>
                               );
                             })
                           : null}
-
-                        <AnchorButton
-                          className="asset-detail"
-                          icon="properties"
-                          onClick={(e: any) => {
-                            this.props.history.push(
-                              ROUTES.ASSETS + "/" + modification.asset_cp.id
-                            );
-                          }}
-                          text="Go to change plan asset detail page"
-                        />
+                        {this.state.changePlan.execution_time ? null : (
+                          <AnchorButton
+                            className="asset-detail"
+                            icon="document-open"
+                            onClick={(e: any) => {
+                              this.props.history.push(
+                                ROUTES.ASSETS + "/" + modification.asset_cp.id
+                              );
+                            }}
+                            text="Go to change plan asset detail page"
+                          />
+                        )}
                         {modification.asset &&
                         isNullOrUndefined(
                           this.state.changePlan.execution_time
@@ -636,7 +607,10 @@ class CPDetailView extends React.Component<
             <div>
               <AnchorButton
                 onClick={() => this.printWorkOrder()}
-                disabled={this.state.disableButtons}
+                disabled={
+                  !isNullOrUndefined(this.state.changePlan.execution_time) ||
+                  this.state.modifications.length === 0
+                }
                 intent="none"
                 icon="document-open"
                 text="Generate Work Order"
@@ -649,7 +623,10 @@ class CPDetailView extends React.Component<
             </div>
             <div>
               <AnchorButton
-                disabled={this.state.disableButtons}
+                disabled={
+                  !isNullOrUndefined(this.state.changePlan.execution_time) ||
+                  this.state.modifications.length === 0
+                }
                 icon="build"
                 intent="primary"
                 text="Execute Change Plan"

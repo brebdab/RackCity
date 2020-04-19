@@ -420,11 +420,13 @@ export class AssetView extends React.PureComponent<
               MountTypes.BLADE_CHASSIS ? (
                 <ChassisView
                   chassis={this.state.asset}
+
                   redirectToAsset={this.redirectToAsset}
                 />
               ) : this.state.asset.chassis ? (
                 <ChassisView
                   chassis={this.state.asset.chassis}
+                  currBladeSlot={this.state.asset.chassis_slot}
                   redirectToAsset={this.redirectToAsset}
                 />
               ) : null}

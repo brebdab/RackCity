@@ -37,6 +37,13 @@
 .merge-options {
   text-align: center;
   width: 100%;
+  padding-left:43pt;
+}
+.merge-options  .bp3-button{
+  margin-left:80pt;
+  margin-right:80pt;
+
+  margin-bottom:10pt;
 }
 .bp3-list-unstyled {
   margin-top: 30pt;
@@ -80,7 +87,7 @@
   .bp3-button {
     display: none;
   }
-  .bp3-callout {
+ .bp3-callout {
     color: black !important;
     font-weight: bold;
     box-shadow: inset 0 0 0 1px rgba(16, 22, 26, 0.4);

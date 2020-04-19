@@ -508,6 +508,7 @@ def get_modifications_in_cp(change_plan):
                 "changes": changes,
             }
         )
+
     return modifications
 
 
