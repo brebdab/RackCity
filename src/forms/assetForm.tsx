@@ -253,16 +253,16 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       });
   }
   getAssetNumber() {
-    if(!this.props.changePlan) {
+    if (!this.props.changePlan) {
       axios
-          .get(API_ROOT + "api/assets/asset-number", getHeaders(this.props.token))
-          .then((res: any) => {
-            this.setState({
-              values: updateObject(this.state.values, {
-                asset_number: res.data.asset_number,
-              }),
-            });
+        .get(API_ROOT + "api/assets/asset-number", getHeaders(this.props.token))
+        .then((res: any) => {
+          this.setState({
+            values: updateObject(this.state.values, {
+              asset_number: res.data.asset_number,
+            }),
           });
+        });
     }
   }
   componentDidMount() {
@@ -1126,7 +1126,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                 onItemSelect={(site: DatacenterObject) => {
                   this.state.currSite
                     ? this.showChangeWarningAlert(
-                        "Are you sure you want to change site? This will clear all site related properties.",
+                        "Are you sure you want to change site? This will clear all site related properties. If you move a chassis to storage, its blades will also be moved to storage.",
                         site
                       )
                     : this.handleSiteSelect(site);
