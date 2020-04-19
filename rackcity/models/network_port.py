@@ -33,7 +33,7 @@ class AbstractNetworkPort(models.Model):
         # force this to lowercase and make delimeters :
     )
     connected_port = models.OneToOneField(
-        "self", on_delete=models.CASCADE, null=True, blank=True,
+        "self", on_delete=models.SET_NULL, null=True, blank=True,
     )
 
     def create_network_connection(self, destination_port):

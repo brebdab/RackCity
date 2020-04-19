@@ -94,6 +94,10 @@ export class PowerView extends React.PureComponent<
     this.props.updated();
   }
 
+  private isAssetInStorage() {
+    return this.props.asset && this.props.asset.offline_storage_site;
+  }
+
   private isAssetPowerNetworkControlled() {
     return (
       this.props.asset &&
@@ -170,6 +174,9 @@ export class PowerView extends React.PureComponent<
           err.response.data.failure_message
         ) {
           this.addErrorToast(err.response.data.failure_message);
+          this.setState({
+            statusLoaded: true,
+          });
         }
       });
   }
@@ -195,6 +202,9 @@ export class PowerView extends React.PureComponent<
           err.response.data.failure_message
         ) {
           this.addErrorToast(err.response.data.failure_message);
+          this.setState({
+            statusLoaded: true,
+          });
         }
       });
   }
@@ -220,6 +230,9 @@ export class PowerView extends React.PureComponent<
           err.response.data.failure_message
         ) {
           this.addErrorToast(err.response.data.failure_message);
+          this.setState({
+            statusLoaded: true,
+          });
         }
       });
   }
@@ -259,16 +272,20 @@ export class PowerView extends React.PureComponent<
             )}
             {this.props.asset!.rack &&
             this.props.asset!.rack.is_network_controlled ? (
-              this.props.assetIsDecommissioned || this.props.changePlan ? (
-                <td />
-              ) : loading ? (
-                <td>
-                  <Spinner size={Spinner.SIZE_SMALL} />
-                </td>
-              ) : this.state.powerStatus ? (
-                <td>{this.state.powerStatus[i]}</td>
+              this.props.asset!.power_connections[i] ? (
+                this.props.assetIsDecommissioned || this.props.changePlan ? (
+                  <td />
+                ) : loading ? (
+                  <td>
+                    <Spinner size={Spinner.SIZE_SMALL} />
+                  </td>
+                ) : this.state.powerStatus ? (
+                  <td>{this.state.powerStatus[i]}</td>
+                ) : (
+                  <td>Unable to contact PDU controller</td>
+                )
               ) : (
-                <td>Unable to contact PDU controller</td>
+                <td>Ports not connected</td>
               )
             ) : (
               <td>PDU not network controlled</td>
@@ -283,7 +300,7 @@ export class PowerView extends React.PureComponent<
   private renderPowerTable(loading: boolean) {
     return (
       <div className="power-table">
-        <div className = "network-connections">
+        <div className="network-connections">
           <table className="bp3-html-table bp3-html-table-bordered bp3-html-table-striped">
             <tr>
               <th>Power Port Number</th>
@@ -292,7 +309,7 @@ export class PowerView extends React.PureComponent<
             </tr>
             <tbody>{this.getPowerPortRows(loading)}</tbody>
           </table>
-          </div>
+        </div>
 
         {this.props.asset &&
         this.state.powerStatus &&
@@ -365,7 +382,21 @@ export class PowerView extends React.PureComponent<
   }
 
   private renderNoPowerPortsCallout() {
-    return <Callout title="No power ports" icon={IconNames.INFO_SIGN} />;
+    return (
+      <Callout
+        title="This asset does not have any power ports"
+        icon={IconNames.INFO_SIGN}
+      />
+    );
+  }
+
+  private renderInStorageCallout() {
+    return (
+      <Callout
+        title="This rackmount asset is currently in offline storage"
+        icon={IconNames.INFO_SIGN}
+      />
+    );
   }
 
   private assetHasPowerPorts() {
@@ -384,7 +415,9 @@ export class PowerView extends React.PureComponent<
       >
         {this.props.isMobile ? null : <h3>Power Connections</h3>}
         {this.assetHasPowerPorts()
-          ? this.state.statusLoaded
+          ? this.isAssetInStorage()
+            ? this.renderInStorageCallout()
+            : this.state.statusLoaded
             ? this.renderPowerTable(false)
             : this.renderPowerTable(true)
           : this.renderNoPowerPortsCallout()}

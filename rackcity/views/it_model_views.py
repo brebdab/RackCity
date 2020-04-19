@@ -14,7 +14,7 @@ from rackcity.api.serializers import (
     normalize_bulk_model_data,
 )
 from rackcity.models import ITModel, Asset, validate_ports, validate_height
-from rackcity.models.asset import get_assets_for_cp
+from rackcity.models.asset import get_assets_for_cp, AssetCP
 from rackcity.permissions.permissions import PermissionPath
 from rackcity.utils.change_planner_utils import get_change_plan
 from rackcity.utils.errors_utils import (
@@ -264,6 +264,15 @@ def model_delete(request):
             {
                 "failure_message": Status.DELETE_ERROR.value
                 + "Cannot delete this model because assets of it exist"
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    assets_cp = AssetCP.objects.filter(model=id)
+    if assets_cp:
+        return JsonResponse(
+            {
+                "failure_message": Status.DELETE_ERROR.value
+                + "Cannot delete this model because assets of it exist on change plan(s)"
             },
             status=HTTPStatus.BAD_REQUEST,
         )

@@ -443,12 +443,21 @@ def assets_offline_queryset():
 
 
 def get_offline_filter():
-    return Q(offline_storage_site__isnull=False) | Q(
-        chassis__offline_storage_site__isnull=False
+    # An asset is in storage (offline) if:
+    # 1. it has a storage site
+    # OR
+    # 2. it has a chassis, and its chassis has a storage site
+    return Q(offline_storage_site__isnull=False) | (
+        Q(chassis__isnull=False) & Q(chassis__offline_storage_site__isnull=False)
     )
 
 
 def get_online_filter():
-    return Q(offline_storage_site__isnull=True) & Q(
-        chassis__offline_storage_site__isnull=True
+    # An asset is not in storage (online) if:
+    # 1. it has no storage site
+    # AND
+    # 2a. it has no chassis OR 2b. it has a chassis, but its chassis has no storage site
+    return Q(offline_storage_site__isnull=True) & (
+        (Q(chassis__isnull=False) & Q(chassis__offline_storage_site__isnull=True))
+        | (Q(chassis__isnull=True))
     )

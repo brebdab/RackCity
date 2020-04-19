@@ -52,8 +52,9 @@ class BarcodeView extends React.PureComponent<
     for (var i = 0; i < barcodes.length; i++) {
       width++;
       if (width < 5) {
+        const str = "barcode-container-" + width;
         row.push(
-          <td className={"barcode-container"}>
+          <td className={str}>
             <Barcode
               value={barcodes[i]}
               text={"Hyposoft " + barcodes[i]}
@@ -68,10 +69,11 @@ class BarcodeView extends React.PureComponent<
         );
       } else {
         width = 1;
+        const str = "barcode-container-" + width;
         rows.push(<tr className={"barcode-row"}>{row}</tr>);
         row = [];
         row.push(
-          <td className={"barcode-container"}>
+          <td className={str}>
             <Barcode
               value={barcodes[i]}
               text={"Hyposoft " + barcodes[i]}
