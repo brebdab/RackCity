@@ -471,6 +471,8 @@ def save_all_field_data_cp(data, asset, change_plan, create_asset_cp):
             value = ITModel.objects.get(id=data[field])
         elif field == "rack" and data["rack"]:
             value = Rack.objects.get(id=data[field])
+        elif field == "offline_storage_site" and data["offline_storage_site"]:
+            value = Site.objects.get(id=data[field])
         elif field == "hostname" and data["hostname"]:
             assets, assets_cp = get_assets_for_cp(change_plan.id)
             assets_with_hostname = assets.filter(hostname__iexact=data[field])
