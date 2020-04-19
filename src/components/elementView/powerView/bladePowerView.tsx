@@ -230,7 +230,7 @@ export class BladePowerView extends React.PureComponent<
             </tbody>
           </table>
         </div>
-        {this.props.isMobile ? null : (
+        {this.props.isMobile ? null : this.state.statusLoaded ? (
           <AnchorButton
             className={"blade-power-close"}
             intent={this.state.powerStatus === "OFF" ? "primary" : "danger"}
@@ -244,8 +244,8 @@ export class BladePowerView extends React.PureComponent<
                 : this.requestPowerAction(PowerAction.OFF);
             }}
           />
-        )}
-        {this.props.isMobile ? null : (
+        ) : null}
+        {this.props.isMobile ? null : this.state.statusLoaded ? (
           <AnchorButton
             className={"blade-power-close"}
             intent={"warning"}
@@ -257,7 +257,7 @@ export class BladePowerView extends React.PureComponent<
               this.requestPowerAction(PowerAction.CYCLE);
             }}
           />
-        )}
+        ) : null}
         {this.props.callback === undefined ? null : (
           <AnchorButton
             className={"power-close"}
