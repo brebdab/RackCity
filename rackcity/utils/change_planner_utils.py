@@ -151,7 +151,9 @@ def get_change_plan(change_plan_id):
 
 
 def get_racked_assets_for_cp(change_plan):
-    racked_assets = Asset.objects.filter(offline_storage_site__isnull=True)
+    racked_assets = Asset.objects.filter(Q(offline_storage_site__isnull=True) & Q(
+        chassis__offline_storage_site__isnull=True
+    ))
     racked_assets_cp = AssetCP.objects.filter(
         change_plan=change_plan, offline_storage_site__isnull=True
     )
