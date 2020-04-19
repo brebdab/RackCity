@@ -443,12 +443,12 @@ def assets_offline_queryset():
 
 
 def get_offline_filter():
-    return Q(offline_storage_site__isnull=False) | Q(
-        chassis__offline_storage_site__isnull=False
+    return Q(offline_storage_site__isnull=False) | (
+        Q(chassis__isnull=False) & Q(chassis__offline_storage_site__isnull=False)
     )
 
 
 def get_online_filter():
-    return Q(offline_storage_site__isnull=True) & Q(
-        chassis__offline_storage_site__isnull=True
+    return Q(offline_storage_site__isnull=True) & (
+        Q(chassis__isnull=False) & Q(chassis__offline_storage_site__isnull=True)
     )
