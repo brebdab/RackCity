@@ -287,8 +287,8 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
           this.props.element.slice(0, -1) + "s",
           this.state.filters,
           this.props.token,
-          this.state.fileName,
-          this.state.networkFileName
+          fileName,
+          networkFileName
         );
 
         this.setState({
