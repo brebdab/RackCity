@@ -1433,6 +1433,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
           onItemSelect={(model: ModelObject) => {
             const values = this.state.values;
             values.model = model;
+            delete values.chassis_slot;
+            delete values.chassis;
 
             this.setState({
               values: this.resetCustomValuesToDefault(values),
