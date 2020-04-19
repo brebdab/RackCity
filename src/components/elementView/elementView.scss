@@ -255,3 +255,29 @@ input {
 .table-control {
   float: right !important;
 }
+
+.export-file-name{
+  display:inline-flex;
+}
+.export-file-name .bp3-input{
+  width:170pt;
+  padding-right:25pt !important;
+}
+.export-file-name p{
+  margin-top:4pt;
+  margin-right:5pt;
+  margin-left:5pt;
+  //color:#8A9BA8;
+
+}
+.export-body{
+  margin-left:40pt;
+  width:150pt;
+}
+.export-dialog{
+  width:250pt;
+
+}
+.export-dialog h3{
+  padding-left:40pt;
+}
