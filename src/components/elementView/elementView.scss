@@ -36,13 +36,13 @@
 .inline-buttons {
   display: inline-block;
   white-space: nowrap;
-  overflow: auto;
+  //overflow: auto;
 }
 
 .inline-buttons-user {
   display: inline-block;
   white-space: nowrap;
-  overflow: hidden;
+  //overflow: hidden;
 }
 
 .no-data-text {
@@ -290,3 +290,15 @@ input {
   vertical-align: middle !important;
 
 }
+
+//.inline-tooltip {
+//  display: inline-block !important;
+//  white-space: normal !important;
+//  overflow: auto !important;
+//}
+//
+//.inline-button-inside-tooltip {
+//  display: inline-block !important;
+//  white-space: nowrap !important;
+//  overflow: auto !important;
+//}

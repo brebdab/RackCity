@@ -1513,7 +1513,7 @@ class ElementTable extends React.Component<
                               !this.props.isDecommissioned ? (
                                 <Tooltip
                                   content={"Decommission"}
-                                  position={Position.BOTTOM}
+                                  position={Position.LEFT}
                                   disabled={
                                     this.props.type !== ElementType.ASSET ||
                                     this.shouldDisableDecommissionOrDeleteInline(
@@ -1522,7 +1522,7 @@ class ElementTable extends React.Component<
                                   }
                                 >
                                   <AnchorButton
-                                    className="button-table"
+                                    className="button-table inline-button-inside-tooltip"
                                     intent="danger"
                                     minimal
                                     icon={
