@@ -221,7 +221,7 @@ class RackTab extends React.Component<
           submitInProgress: false,
         });
 
-        this.addErrorToast(err.data.failure_message);
+        this.addErrorToast(err.response.data.failure_message);
       });
   };
   private addErrorToast = (message: string) => {
