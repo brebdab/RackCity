@@ -154,6 +154,10 @@ class App extends React.Component<AppProps> {
                 component={ModelView}
               />
               <this.PrivateRoute
+                path={ROUTES.BULK_IMPORT}
+                component={BulkImport}
+              />
+              <this.PrivateRoute
                 path={ROUTES.ASSETS + "/:rid"}
                 component={AssetView}
               />
@@ -162,21 +166,17 @@ class App extends React.Component<AppProps> {
                 component={CPDetailView}
               />
             </div>
+            <this.PrivateRoute
+              exact
+              path={ROUTES.CHANGE_PLAN}
+              component={ChangePlannerView}
+            />
             <this.PrivateRoute path={ROUTES.REPORT} component={Report} />
             <this.PrivateRoute path={ROUTES.LOGS} component={Logs} />
             <this.PrivateRoute path={ROUTES.RACK_PRINT} component={RackView} />
             <this.PrivateRoute
               path={ROUTES.BARCODE_PRINT}
               component={BarcodeView}
-            />
-            <this.PrivateRoute
-              exact
-              path={ROUTES.CHANGE_PLAN}
-              component={ChangePlannerView}
-            />
-            <this.PrivateRoute
-              path={ROUTES.BULK_IMPORT}
-              component={BulkImport}
             />
 
             {/* admin paths */}

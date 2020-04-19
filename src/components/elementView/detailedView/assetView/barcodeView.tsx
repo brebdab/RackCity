@@ -25,6 +25,7 @@ class BarcodeView extends React.PureComponent<
   }
 
   public render() {
+    document.body.style.background = "white";
     const barcodeString = localStorage.getItem("barcodes")!;
     let barcodes: Array<string>;
     barcodes = barcodeString.split(",");
@@ -36,6 +37,10 @@ class BarcodeView extends React.PureComponent<
         </table>
       </div>
     );
+  }
+
+  public componentWillUnmount(): void {
+    document.body.style.background = "#293742";
   }
 
   private renderBarcodes(barcodes: Array<string>) {

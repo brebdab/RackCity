@@ -6,9 +6,9 @@ DEFAULT_DISPLAY_COLOR = "#394B59"
 
 
 class ModelType(Enum):
-    RACKMOUNT_ASSET = "Asset"
-    BLADE_CHASSIS = "Blade Chassis"
-    BLADE_ASSET = "Blade Server "
+    RACKMOUNT_ASSET = "Rackmount"
+    BLADE_CHASSIS = "Chassis"
+    BLADE_ASSET = "Blade"
 
 
 def validate_display_color(value):
