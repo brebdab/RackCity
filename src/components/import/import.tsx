@@ -131,6 +131,7 @@ export class BulkImport extends React.PureComponent<
                   <Card className="instructions-card"><h3>Bulk Import</h3>
             {resourceType === "assets" ? (
               <div className={"import-buttons-asset"}>
+                <ButtonGroup>
                 <Button
                   className="import-button"
                   active={this.state.assetUploadType === "assets"}
@@ -147,7 +148,9 @@ export class BulkImport extends React.PureComponent<
                     this.setState({ assetUploadType: "network connections" });
                   }}
                 />
+                      </ButtonGroup>
               </div>
+
             ) : null}
             <div className={"import-buttons-asset"}>
              <AnchorButton
