@@ -10,7 +10,9 @@ import {
   Toaster,
   Spinner,
   Intent,
-  Position, Callout, Card,
+  Position,
+  Callout,
+  Card,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import axios from "axios";
@@ -118,9 +120,6 @@ export class BulkImport extends React.PureComponent<
     const selectButtonText = "Select " + uploadType + " file";
     return (
       <div className={Classes.DARK + " import"}>
-
-
-
         <Toaster
           autoFocus={false}
           canEscapeKeyClear={true}
@@ -128,10 +127,11 @@ export class BulkImport extends React.PureComponent<
           ref={this.refHandlers.toaster}
         />
 
-                  <Card className="instructions-card"><h3>Bulk Import</h3>
-            {resourceType === "assets" ? (
-              <div className={"import-buttons-asset"}>
-                <ButtonGroup>
+        <Card className="instructions-card">
+          <h3>Bulk Import</h3>
+          {resourceType === "assets" ? (
+            <div className={"import-buttons-asset"}>
+              <ButtonGroup>
                 <Button
                   className="import-button"
                   active={this.state.assetUploadType === "assets"}
@@ -148,50 +148,46 @@ export class BulkImport extends React.PureComponent<
                     this.setState({ assetUploadType: "network connections" });
                   }}
                 />
-                      </ButtonGroup>
-              </div>
-
-            ) : null}
-            <div className={"import-buttons-asset"}>
-             <AnchorButton
+              </ButtonGroup>
+            </div>
+          ) : null}
+          <div className={"import-buttons-asset"}>
+            <AnchorButton
               className="import-button"
-
               intent="primary"
               icon="import"
               text={selectButtonText}
               onClick={this.handleFilepickerOpen}
             />
+          </div>
+          <Overlay
+            isOpen={this.state.uploading}
+            className={"uploading-overlay"}
+          >
+            {" "}
+          </Overlay>
+          <Alert
+            cancelButtonText="Cancel"
+            confirmButtonText="Confirm Upload"
+            intent="primary"
+            isOpen={this.state.uploadFileIsOpen}
+            onCancel={this.handleFilepickerCancel}
+            onConfirm={this.handleFileUpload}
+          >
+            <p>Choose a file</p>
+            <FileSelector {...this.props} callback={this.setFile} />
+          </Alert>
+          {this.state.uploading ? (
+            <div>
+              <p>Uploading data...</p>
+              <Spinner size={Spinner.SIZE_STANDARD} />
             </div>
-            <Overlay
-              isOpen={this.state.uploading}
-              className={"uploading-overlay"}
-            >
-              {" "}
-            </Overlay>
-            <Alert
-              cancelButtonText="Cancel"
-              confirmButtonText="Confirm Upload"
-              intent="primary"
-              isOpen={this.state.uploadFileIsOpen}
-              onCancel={this.handleFilepickerCancel}
-              onConfirm={this.handleFileUpload}
-            >
-              <p>Choose a file</p>
-              <FileSelector {...this.props} callback={this.setFile} />
-            </Alert>
-            {this.state.uploading ? (
-              <div>
-                <p>Uploading data...</p>
-                <Spinner size={Spinner.SIZE_STANDARD} />
-              </div>
-            ) : null}
-            </Card>
-
+          ) : null}
+        </Card>
 
         <div className={"row"}>
           <div className={"column-third-import"}>
             <p> </p>
-
           </div>
         </div>
 
