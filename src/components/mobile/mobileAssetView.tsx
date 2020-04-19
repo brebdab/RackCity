@@ -225,11 +225,11 @@ export class MobileAssetView extends React.PureComponent<
               Object.keys(ModelFieldsTable),
               this.props.asset.model
             )}
-                    <p className="custom-message">
-          {this.props.data_override
-            ? "*Custom fields highlighted in blue"
-            : null}
-        </p>
+            <p className="custom-message">
+              {this.props.data_override
+                ? "*Custom fields highlighted in blue"
+                : null}
+            </p>
           </table>
         </Callout>
         <Callout title={"Network Connections"} className={"propsview"}>
@@ -301,7 +301,10 @@ export class MobileAssetView extends React.PureComponent<
               </div>
             </>
           ) : (
-            <Callout title="No network connections" icon={IconNames.INFO_SIGN} />
+            <Callout
+              title="No network connections"
+              icon={IconNames.INFO_SIGN}
+            />
           )}
         </Callout>
         <Callout title={"Power Connections"} className={"propsview"}>

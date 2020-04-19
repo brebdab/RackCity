@@ -314,7 +314,7 @@ class AssetCP(AbstractAsset):
     chassis = models.ForeignKey(
         "self",
         on_delete=models.CASCADE,
-        verbose_name="blade chassis",
+        verbose_name="chassis",
         null=True,
         blank=True,
     )
