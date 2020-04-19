@@ -1,12 +1,18 @@
 import * as React from "react";
 import { RouteComponentProps } from "react-router";
-import {AssetCPObject, AssetObject, isAssetCPObject, ROUTES} from "../../../../utils/utils";
+import {
+  AssetCPObject,
+  AssetObject,
+  isAssetCPObject,
+  ROUTES,
+} from "../../../../utils/utils";
 import { withRouter } from "react-router-dom";
 import { Classes, Tooltip } from "@blueprintjs/core";
 
 interface ChassisViewProps {
   chassis: AssetObject;
   redirectToAsset(id: string): void;
+  currBladeSlot?: string;
 }
 
 class ChassisView extends React.PureComponent<
@@ -16,61 +22,83 @@ class ChassisView extends React.PureComponent<
   generateSlotNumbers() {
     const slots = [];
     for (let i = 1; i < this.numSlots + 1; i++) {
-      slots.push(<td className="slot-number">{i}</td>);
+      if (this.props.currBladeSlot && parseInt(this.props.currBladeSlot) === i) {
+        slots.push(
+          <td style={{ border: "3px solid #EBF1F5 " }} className="slot-number">
+            {i}
+          </td>
+        );
+      } else {
+        slots.push(<td className="slot-number">{i}</td>);
+      }
     }
     return slots;
   }
   generateSlots() {
     const slots = [];
     let blades: Array<AssetObject> = [];
-    if(this.props.chassis.blades) {
-        for (let i = 1; i < this.numSlots + 1; i++) {
-            blades = this.props.chassis.blades.filter((asset: AssetObject|AssetCPObject) => {
-                return parseInt(asset.chassis_slot) === i;
-            })
 
+    for (let i = 1; i < this.numSlots + 1; i++) {
+      if (this.props.chassis.blades) {
+        blades = this.props.chassis.blades.filter(
+          (asset: AssetObject | AssetCPObject) => {
+            return parseInt(asset.chassis_slot) === i;
+          }
+        );
 
-            if (blades.length > 0) {
-                const blade = blades[0];
-                const style = {
-                    backgroundColor: blade.display_color
-                        ? blade.display_color
-                        : blade.model.display_color,
-                };
+        let style = {};
+        if (blades.length > 0) {
+          const blade = blades[0];
+          style = {
+            backgroundColor: blade.display_color
+              ? blade.display_color
+              : blade.model.display_color,
+          };
+          if (
+            this.props.currBladeSlot &&
+            parseInt(this.props.currBladeSlot) === i
+          ) {
+            style = {
+              backgroundColor: blade.display_color
+                ? blade.display_color
+                : blade.model.display_color,
 
-                slots.push(
-                    <td
-                        className="slot"
-                        onClick={() => {
-                            let blade_id
-                            if(isAssetCPObject(blade) && blade.related_asset){
-                                blade_id = blade.related_asset.id
-                            }
-                            else{
-                                blade_id = blade.id
-                            }
-                            this.props.history.push(ROUTES.ASSETS + "/" + blade_id);
-                            this.props.redirectToAsset(blade_id);
-                        }}
-                        style={style}
-                    >
-                        <Tooltip
-                            className={Classes.DARK}
-                            content={
-                                "hostname: " +
-                                blade.hostname +
-                                "\n asset number: " +
-                                blade.asset_number
-                            }
-                        >
-                            <div className="vertical">{blade.hostname}</div>
-                        </Tooltip>
-                    </td>
-                );
-            } else {
-                slots.push(<td className="slot"></td>);
-            }
+              border: "3px solid #EBF1F5 ",
+            };
+          }
+
+          slots.push(
+            <td
+              className="slot"
+              onClick={() => {
+                let blade_id;
+                if (isAssetCPObject(blade) && blade.related_asset) {
+                  blade_id = blade.related_asset.id;
+                } else {
+                  blade_id = blade.id;
+                }
+                this.props.history.push(ROUTES.ASSETS + "/" + blade_id);
+                this.props.redirectToAsset(blade_id);
+              }}
+              style={style}
+            >
+              <Tooltip
+                className={Classes.DARK}
+                content={
+                  "hostname: " +
+                  blade.hostname +
+                  "\n asset number: " +
+                  blade.asset_number
+                }
+              >
+                <div className="vertical">{blade.hostname}</div>
+              </Tooltip>
+            </td>
+          );
+        } else {
+          slots.push(<td className="slot"></td>);
         }
+      }
     }
 
     return slots;
