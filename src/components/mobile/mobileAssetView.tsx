@@ -261,11 +261,11 @@ export class MobileAssetView extends React.PureComponent<
                           ? [
                               <td
                                 style={getChangePlanRowStyle(this.props.asset)}
-                                className={
-                                  this.props.asset.decommissioning_user
-                                    ? undefined
-                                    : "asset-link"
-                                }
+                                // className={
+                                //   this.props.asset.decommissioning_user
+                                //     ? undefined
+                                //     : "asset-link"
+                                // }
                               >
                                 {connection.destination_hostname}
                               </td>,
