@@ -37,6 +37,9 @@ export class MobileAssetView extends React.PureComponent<
 
   renderData(fields: Array<any>, data: any) {
     return fields.map((item: string) => {
+      if (item.includes("decommission")) {
+        return null;
+      }
       var dat;
       if (item === "display_color") {
         const isCustomField =
