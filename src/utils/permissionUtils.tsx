@@ -16,10 +16,13 @@ export function hasAddElementPermission(
   return (
     permissions.admin ||
     (elementType === ElementType.DATACENTER && permissions.asset_management) ||
+    (elementType === ElementType.OFFLINE_STORAGE_SITE &&
+      permissions.asset_management) ||
     (elementType === ElementType.MODEL && permissions.model_management) ||
     (elementType === ElementType.ASSET &&
       (permissions.asset_management ||
         permissions.site_permissions.length > 0)) ||
-    elementType === ElementType.CHANGEPLANS
+    (elementType === ElementType.CHANGEPLANS &&
+      (permissions.asset_management || permissions.site_permissions.length > 0))
   );
 }

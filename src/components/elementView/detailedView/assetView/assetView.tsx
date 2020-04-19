@@ -253,10 +253,14 @@ export class AssetView extends React.PureComponent<
                     this.props.permissionState.admin ||
                     this.props.permissionState.asset_management ||
                     (this.state.asset &&
-                      this.state.asset.rack &&
-                      this.props.permissionState.site_permissions.includes(
-                        +this.state.asset.rack.datacenter.id
-                      ))
+                      ((this.state.asset.datacenter &&
+                        this.props.permissionState.site_permissions.includes(
+                          +this.state.asset.datacenter.id
+                        )) ||
+                        (this.state.asset.offline_storage_site &&
+                          this.props.permissionState.site_permissions.includes(
+                            +this.state.asset.offline_storage_site.id
+                          ))))
                   )
                 }
               />
@@ -282,10 +286,14 @@ export class AssetView extends React.PureComponent<
                     this.props.permissionState.admin ||
                     this.props.permissionState.asset_management ||
                     (this.state.asset &&
-                      this.state.asset.rack &&
-                      this.props.permissionState.site_permissions.includes(
-                        +this.state.asset.rack.datacenter.id
-                      ))
+                      ((this.state.asset.datacenter &&
+                        this.props.permissionState.site_permissions.includes(
+                          +this.state.asset.datacenter.id
+                        )) ||
+                        (this.state.asset.offline_storage_site &&
+                          this.props.permissionState.site_permissions.includes(
+                            +this.state.asset.offline_storage_site.id
+                          ))))
                   )
                 }
               />
@@ -314,10 +322,14 @@ export class AssetView extends React.PureComponent<
                     this.props.permissionState.admin ||
                     this.props.permissionState.asset_management ||
                     (this.state.asset &&
-                      this.state.asset.rack &&
-                      this.props.permissionState.site_permissions.includes(
-                        +this.state.asset.rack.datacenter.id
-                      ))
+                      ((this.state.asset.datacenter &&
+                        this.props.permissionState.site_permissions.includes(
+                          +this.state.asset.datacenter.id
+                        )) ||
+                        (this.state.asset.offline_storage_site &&
+                          this.props.permissionState.site_permissions.includes(
+                            +this.state.asset.offline_storage_site.id
+                          ))))
                   )
                 }
               />
