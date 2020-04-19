@@ -1038,14 +1038,12 @@ class ElementTable extends React.Component<
     return (
       <Tooltip
         content={
+          !(!!this.props.changePlan || item.username === this.state.username) ? "Edit permissions" :
           item.username === this.state.username
             ? "Cannot edit your own user permissions"
             : "Cannot edit within change plan"
         }
-        position={Position.BOTTOM_RIGHT}
-        disabled={
-          !(!!this.props.changePlan || item.username === this.state.username)
-        }
+        position={Position.LEFT}
       >
         <AnchorButton
           className="button-table"
