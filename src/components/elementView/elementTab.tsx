@@ -253,58 +253,53 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
   };
 
   private confirmExport = () => {
-                if (
-                  this.state.fileName === "" ||
-                  (this.state.networkFileName === "" &&
-                    this.props.element === ElementType.ASSET &&
-                    this.props.assetType !== AssetType.STORED) ||
-                  (this.state.fileName === "" &&
-                    this.props.element === ElementType.MODEL)
-                ) {
-                  this.addErrorToast("Please provide filenames for both files");
-                } else {
-                  const fileName = this.state.fileName + ".csv"
-                  const networkFileName = this.state.networkFileName + ".csv"
-                  let fileRegEx = /.*\.(\w+)/;
-                  let extension = fileName.match(fileRegEx);
-                  let ext = extension ? extension[extension.length - 1] : null;
-                  let networkExtension = networkFileName.match(
-                    fileRegEx
-                  );
-                  let networkExt = networkExtension
-                    ? networkExtension[networkExtension.length - 1]
-                    : null;
-                  if (
-                    (networkExt && (ext !== "csv" || networkExt !== "csv")) ||
-                    (!networkExt && ext !== "csv")
-                  ) {
-                    this.addErrorToast("Filenames must end in .csv");
-                  } else if (
-                    (networkExt &&
-                      (fileName.split(".")[0].length === 0 ||
-                        networkFileName.split(".")[0].length ===
-                          0)) ||
-                    (!networkExt &&
-                      fileName.split(".")[0].length === 0)
-                  ) {
-                    this.addErrorToast(".csv file must have non-empty name");
-                  } else {
-                    this.getExportData(
-                      this.props.element.slice(0, -1) + "s",
-                      this.state.filters,
-                      this.props.token,
-                      this.state.fileName,
-                      this.state.networkFileName
-                    );
+    if (
+      this.state.fileName === "" ||
+      (this.state.networkFileName === "" &&
+        this.props.element === ElementType.ASSET &&
+        this.props.assetType !== AssetType.STORED) ||
+      (this.state.fileName === "" && this.props.element === ElementType.MODEL)
+    ) {
+      this.addErrorToast("Please provide filenames for both files");
+    } else {
+      const fileName = this.state.fileName + ".csv";
+      const networkFileName = this.state.networkFileName + ".csv";
+      let fileRegEx = /.*\.(\w+)/;
+      let extension = fileName.match(fileRegEx);
+      let ext = extension ? extension[extension.length - 1] : null;
+      let networkExtension = networkFileName.match(fileRegEx);
+      let networkExt = networkExtension
+        ? networkExtension[networkExtension.length - 1]
+        : null;
+      if (
+        (networkExt && (ext !== "csv" || networkExt !== "csv")) ||
+        (!networkExt && ext !== "csv")
+      ) {
+        this.addErrorToast("Filenames must end in .csv");
+      } else if (
+        (networkExt &&
+          (fileName.split(".")[0].length === 0 ||
+            networkFileName.split(".")[0].length === 0)) ||
+        (!networkExt && fileName.split(".")[0].length === 0)
+      ) {
+        this.addErrorToast(".csv file must have non-empty name");
+      } else {
+        this.getExportData(
+          this.props.element.slice(0, -1) + "s",
+          this.state.filters,
+          this.props.token,
+          this.state.fileName,
+          this.state.networkFileName
+        );
 
-                    this.setState({
-                      fileNameIsOpen: false,
-                      fileName: "",
-                      networkFileName: "",
-                    });
-                  }
-                }
-              }
+        this.setState({
+          fileNameIsOpen: false,
+          fileName: "",
+          networkFileName: "",
+        });
+      }
+    }
+  };
   public handleDataUpdate = (status: boolean) => {
     this.setState({
       updateTable: status,
@@ -521,62 +516,62 @@ class ElementTab extends React.Component<ElementTabProps, ElementViewState> {
               />
             ) : null}
             <Dialog
-                title ={"Export Table Data"}
+              title={"Export Table Data"}
               className={Classes.DARK + " export-dialog"}
-              onClose = {() => {
+              onClose={() => {
                 this.setState({ fileNameIsOpen: false });
               }}
               isOpen={this.state.fileNameIsOpen}
-
             >
               <h3>Export data to: </h3>
-              <div className = "export-body">
-              <div className="export-file-name">
-                <FormGroup label={this.props.element + ":"}>
-                  <InputGroup
-                      onClick = {this.selectText}
-                      value = {this.state.fileName}
-                    onChange={(event: any) => {
-                      this.setState({ fileName: event.currentTarget.value });
-                    }}
-                    rightElement={ <p>.csv</p>}
-                  />
-                </FormGroup>
-              </div>
-              {this.props.element === ElementType.ASSET &&
-              this.props.assetType !== AssetType.STORED ? (
+              <div className="export-body">
                 <div className="export-file-name">
-                  <FormGroup label="network connections:">
+                  <FormGroup label={this.props.element + ":"}>
                     <InputGroup
-                        onClick = {this.selectText}
-                        value = {this.state.networkFileName}
+                      onClick={this.selectText}
+                      value={this.state.fileName}
                       onChange={(event: any) => {
-                        this.setState({
-                          networkFileName: event.currentTarget.value,
-                        });
+                        this.setState({ fileName: event.currentTarget.value });
                       }}
-
-                      rightElement={ <p>.csv</p>}
+                      rightElement={<p>.csv</p>}
                     />
                   </FormGroup>
                 </div>
-
-              ) : null}
-                   </div>
-                                  <div className={Classes.DIALOG_FOOTER}>
-                        <div className={Classes.DIALOG_FOOTER_ACTIONS}>
-
-                                <Button onClick={() => {
-                this.setState({ fileNameIsOpen: false });
-              }}>Cancel</Button>
-                            <AnchorButton
-                                onClick = {() => this.confirmExport()}
-                                intent={Intent.PRIMARY}
-                            >
-                                Confirm Export
-                            </AnchorButton>
-                        </div>
-                    </div>
+                {this.props.element === ElementType.ASSET &&
+                this.props.assetType !== AssetType.STORED ? (
+                  <div className="export-file-name">
+                    <FormGroup label="network connections:">
+                      <InputGroup
+                        onClick={this.selectText}
+                        value={this.state.networkFileName}
+                        onChange={(event: any) => {
+                          this.setState({
+                            networkFileName: event.currentTarget.value,
+                          });
+                        }}
+                        rightElement={<p>.csv</p>}
+                      />
+                    </FormGroup>
+                  </div>
+                ) : null}
+              </div>
+              <div className={Classes.DIALOG_FOOTER}>
+                <div className={Classes.DIALOG_FOOTER_ACTIONS}>
+                  <Button
+                    onClick={() => {
+                      this.setState({ fileNameIsOpen: false });
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <AnchorButton
+                    onClick={() => this.confirmExport()}
+                    intent={Intent.PRIMARY}
+                  >
+                    Confirm Export
+                  </AnchorButton>
+                </div>
+              </div>
             </Dialog>
             <AnchorButton
               className="add"
