@@ -62,8 +62,7 @@ def network_connections_have_changed(asset, asset_cp):
             if related_asset:
                 try:
                     live_connected_port_cp = NetworkPort.objects.get(
-                        asset=related_asset,
-                        port_name=connected_port_cp.port_name,
+                        asset=related_asset, port_name=connected_port_cp.port_name,
                     )
                 except ObjectDoesNotExist:
                     live_connected_port_cp = None
