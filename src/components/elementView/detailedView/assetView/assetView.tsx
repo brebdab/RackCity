@@ -116,7 +116,6 @@ export class AssetView extends React.PureComponent<
 
   getDataOverride() {
     const { cpu, display_color, storage, memory_gb } = this.state.asset;
-
     return { cpu, display_color, storage, memory_gb };
   }
   getData(assetKey: string, changePlan: ChangePlan) {
@@ -417,7 +416,6 @@ export class AssetView extends React.PureComponent<
               MountTypes.BLADE_CHASSIS ? (
                 <ChassisView
                   chassis={this.state.asset}
-
                   redirectToAsset={this.redirectToAsset}
                 />
               ) : this.state.asset.chassis ? (
