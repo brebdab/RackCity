@@ -12,6 +12,7 @@ import {
   Position,
   Spinner,
   Toaster,
+  Tooltip,
 } from "@blueprintjs/core";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import { IconNames } from "@blueprintjs/icons";
@@ -1005,20 +1006,34 @@ class ElementTable extends React.Component<
 
   renderPermissionsButton = (item: UserInfoObject) => {
     return (
-      <AnchorButton
-        className="button-table"
-        intent="primary"
-        icon="shield"
-        minimal
-        onClick={() => {
-          this.setState({
-            editUserFormOpen: true,
-            selected_userid: item.id,
-            isEditFormOpen: false,
-          });
-        }}
-        disabled={item.username === this.state.username}
-      />
+      <Tooltip
+        content={
+          item.username === this.state.username
+            ? "Cannot edit your own user permissions"
+            : "Cannot edit within change plan"
+        }
+        position={Position.BOTTOM_RIGHT}
+        disabled={
+          !(!!this.props.changePlan || item.username === this.state.username)
+        }
+      >
+        <AnchorButton
+          className="button-table"
+          intent="primary"
+          icon="shield"
+          minimal
+          onClick={() => {
+            this.setState({
+              editUserFormOpen: true,
+              selected_userid: item.id,
+              isEditFormOpen: false,
+            });
+          }}
+          disabled={
+            !!this.props.changePlan || item.username === this.state.username
+          }
+        />
+      </Tooltip>
     );
   };
 
