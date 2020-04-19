@@ -441,10 +441,12 @@ def assets_offline_queryset():
     filter = get_offline_filter()
     return Asset.objects.filter(filter)
 
+
 def get_offline_filter():
     return Q(offline_storage_site__isnull=False) | Q(
         chassis__offline_storage_site__isnull=False
     )
+
 
 def get_online_filter():
     return Q(offline_storage_site__isnull=True) & Q(

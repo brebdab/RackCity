@@ -28,7 +28,9 @@ from rackcity.utils.query_utils import (
     get_invalid_paginated_request_response,
     should_paginate_query,
     get_sorted_query,
-    get_online_filter, get_offline_filter)
+    get_online_filter,
+    get_offline_filter,
+)
 from rackcity.utils.rackcity_utils import (
     validate_asset_location_in_rack,
     validate_asset_location_in_chassis,
@@ -153,9 +155,7 @@ def get_change_plan(change_plan_id):
 def get_racked_assets_for_cp(change_plan):
     online_filter = get_online_filter()
     racked_assets = Asset.objects.filter(online_filter)
-    racked_assets_cp = AssetCP.objects.filter(
-        online_filter, change_plan=change_plan,
-    )
+    racked_assets_cp = AssetCP.objects.filter(online_filter, change_plan=change_plan,)
     for asset_cp in racked_assets_cp:
         if asset_cp.related_asset and (asset_cp.related_asset in racked_assets):
             racked_assets = racked_assets.filter(~Q(id=asset_cp.related_asset.id))
