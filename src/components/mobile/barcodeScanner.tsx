@@ -68,8 +68,8 @@ export class BarcodeScanner extends React.PureComponent<
   constraints = {
     // height: 720,
     // width: 1280,
-    height: 360,
-    width: 1400,
+    height: 1400,
+    width: 360,
     facingMode: { exact: "environment" },
   };
 
