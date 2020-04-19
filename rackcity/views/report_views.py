@@ -15,7 +15,10 @@ def report_rack_usage_global(request):
     allocated per vendor, allocated per model, and allocated per owner.
     """
     racks = Rack.objects.all()
-    assets = Asset.objects.filter(~Q(model__model_type=ModelType.BLADE_ASSET.value))
+    assets = Asset.objects.filter(
+        ~Q(model__model_type=ModelType.BLADE_ASSET.value)
+        & Q(offline_storage_site__isnull=True)
+    )
     if len(racks) == 0 or len(assets) == 0:
         return JsonResponse(
             {"warning_message": "There are no racks or assets."},
@@ -33,7 +36,9 @@ def report_rack_usage_datacenter(request, id):
     """
     racks = Rack.objects.filter(datacenter=id)
     assets = Asset.objects.filter(
-        ~Q(model__model_type=ModelType.BLADE_ASSET.value) & Q(rack__datacenter=id)
+        ~Q(model__model_type=ModelType.BLADE_ASSET.value)
+        & Q(offline_storage_site__isnull=True)
+        & Q(rack__datacenter=id)
     )
     if len(racks) == 0 or len(assets) == 0:
         return JsonResponse(

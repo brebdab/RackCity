@@ -150,7 +150,7 @@ export class Report extends React.PureComponent<
         {this.state.stateLoaded ? (
           this.state.noData ? (
             <Callout
-              title="No existing racks or assets."
+              title="No existing racked assets"
               icon={IconNames.INFO_SIGN}
             />
           ) : (
@@ -262,7 +262,7 @@ export class Report extends React.PureComponent<
   render() {
     return (
       <div className={Classes.DARK + " report-all report-view"}>
-        <h1>Report</h1>
+        <h1>Rack Usage Report</h1>
         <Tabs
           className={"report-all"}
           id="ReportTabs"
