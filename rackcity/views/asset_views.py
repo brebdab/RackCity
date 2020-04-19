@@ -765,6 +765,7 @@ def asset_bulk_upload(request):
         else:
             asset_data["offline_storage_site"] = None
         del asset_data["offline_site"]
+
         asset_serializer = AssetSerializer(data=asset_data)  # non-recursive to validate
         if not asset_serializer.is_valid():
             errors = asset_serializer.errors
@@ -796,6 +797,28 @@ def asset_bulk_upload(request):
                     },
                     status=HTTPStatus.BAD_REQUEST,
                 )
+            else:
+                # HACKY FIX! There were validation errors with asset number and hostname but it's just because this is a modification. Let's try again
+                asset_number = asset_data["asset_number"]
+                del asset_data["asset_number"]
+                hostname = asset_data["hostname"]
+                del asset_data["hostname"]
+                asset_serializer = AssetSerializer(data=asset_data)
+                if not asset_serializer.is_valid():
+                    return JsonResponse(
+                        {
+                            "failure_message": Status.IMPORT_ERROR.value
+                            + BulkFailure.ASSET_INVALID.value
+                            + parse_serializer_errors(asset_serializer.errors),
+                            "errors": str(asset_serializer.errors),
+                        },
+                        status=HTTPStatus.BAD_REQUEST,
+                    )
+                else:
+                    asset_serializer.validated_data["asset_number"] = asset_number
+                    asset_serializer.validated_data["hostname"] = hostname
+                    asset_data["asset_number"] = asset_number
+                    asset_data["hostname"] = hostname
         try:
             validate_location_type(
                 asset_serializer.validated_data["model"],
