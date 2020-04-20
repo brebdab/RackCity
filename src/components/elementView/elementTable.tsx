@@ -641,7 +641,10 @@ class ElementTable extends React.Component<
         if (col === "model") {
           fields.push("model__vendor");
           fields.push("model__model_number");
-        } else if (
+        }
+        else if (col ==="chassis"){
+          fields.push("chassis__hostname")}
+        else if (
           col !== "id" &&
           col !== "decommissioned_id" &&
           col !== "network_ports" &&
@@ -1273,7 +1276,16 @@ class ElementTable extends React.Component<
                         </div>
                       </th>,
                     ];
-                  } else if (this.props.type === ElementType.ASSET) {
+                  }
+                  else if (col==="chassis"){
+                    return                     <th className="header-cell">
+                        <div className="header-text">
+                          <span>Chassis</span>
+                          {this.getScrollIcon("chassis__hostname")}
+                        </div>
+                      </th>
+                  }
+                  else if (this.props.type === ElementType.ASSET) {
                     if (AssetFieldsTable[col]) {
                       return (
                         <th className="header-cell">

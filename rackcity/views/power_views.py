@@ -404,7 +404,9 @@ def toggle_pdu_power(asset, asset_port_number, goal_state):
 @permission_classes([IsAuthenticated])
 def chassis_power_status(request):
     try:
-        chassis, blade_slot = get_chassis_power_request_parameters(request)
+        chassis, blade_slot = get_chassis_power_request_parameters(
+            request, permission_needed=False
+        )
     except PowerManagementException as error:
         return JsonResponse(
             {"failure_message": Status.ERROR.value + str(error)},
@@ -590,7 +592,7 @@ def make_bcman_request(chassis, blade, power_command):
     return result, exit_status
 
 
-def get_chassis_power_request_parameters(request):
+def get_chassis_power_request_parameters(request, permission_needed=True):
     data = JSONParser().parse(request)
     if ("chassis_id" not in data) or ("blade_slot" not in data):
         raise PowerManagementException(
@@ -607,12 +609,12 @@ def get_chassis_power_request_parameters(request):
         chassis = Asset.objects.get(id=chassis_id)
     except ObjectDoesNotExist:
         raise PowerManagementException("Chassis" + GenericFailure.DOES_NOT_EXIST.value)
-    if not user_has_power_permission(request.user, asset=chassis):
+    if permission_needed and not user_has_power_permission(request.user, asset=chassis):
         raise UserPowerPermissionException(
             "User "
             + request.user.username
             + " does not have power permission and does not own asset with id="
-            + str(data["id"])
+            + str(data["chassis_id"])
             + ". "
         )
     if not is_asset_power_controllable_by_bcman(chassis):
