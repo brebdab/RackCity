@@ -822,12 +822,12 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
     const newValues = updateObject(this.state.values, {
       rack: undefined,
+      rack_position:null,
+      chassis_slot:null,
       chassis: undefined,
       power_connections: clearedPowerConnections,
       network_connections: clearedNetworkConnections,
     });
-    delete newValues.rack_position;
-    delete newValues.chassis_slot;
 
     this.setState({
       currSite: site,
@@ -843,8 +843,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     const newValues = updateObject(this.state.values, {
         rack: rack,
         power_connections: clearedPowerConnections,
+        rack_position:null,
       })
-    delete newValues.rack_position
     this.setState({
       values: newValues,
     });
