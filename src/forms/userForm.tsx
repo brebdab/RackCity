@@ -116,7 +116,9 @@ class UserForm extends React.Component<UserFormProps, UserFormState> {
       site_permissions: this.state.permissions.site_permissions,
     };
     modifyUser(body, getHeaders(this.props.token))
-      .then(this.props.submitForm())
+      .then((res) => {
+        this.props.submitForm()
+      })
       .catch((err) => {
         let errors: Array<string> = this.state.errors;
         errors.push(err.response.data.failure_message as string);
