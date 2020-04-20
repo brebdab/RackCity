@@ -36,13 +36,13 @@
 .inline-buttons {
   display: inline-block;
   white-space: nowrap;
-  overflow: auto;
+  //overflow: auto;
 }
 
 .inline-buttons-user {
   display: inline-block;
   white-space: nowrap;
-  overflow: hidden;
+  //overflow: hidden;
 }
 
 .no-data-text {
@@ -288,5 +288,4 @@ input {
   text-align: center !important;
 
   vertical-align: middle !important;
-
 }
