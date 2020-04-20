@@ -220,7 +220,9 @@ export class BladePowerView extends React.PureComponent<
                   {this.props.asset?.chassis_slot}
                 </td>
                 <td style={getChangePlanRowStyle(this.props.asset)}>
-                  {loading ? (
+                  {this.props.assetIsDecommissioned ? (
+                    "Asset is decommissioned"
+                  ) : loading ? (
                     <Spinner size={Spinner.SIZE_SMALL} />
                   ) : (
                     this.state.powerStatus
@@ -230,7 +232,9 @@ export class BladePowerView extends React.PureComponent<
             </tbody>
           </table>
         </div>
-        {this.props.isMobile ? null : this.state.statusLoaded ? (
+        {this.props.isMobile ||
+        this.props.assetIsDecommissioned ||
+        !this.state.statusLoaded ? null : (
           <AnchorButton
             className={"blade-power-close"}
             intent={this.state.powerStatus === "OFF" ? "primary" : "danger"}
@@ -244,8 +248,10 @@ export class BladePowerView extends React.PureComponent<
                 : this.requestPowerAction(PowerAction.OFF);
             }}
           />
-        ) : null}
-        {this.props.isMobile ? null : this.state.statusLoaded ? (
+        )}
+        {this.props.isMobile ||
+        this.props.assetIsDecommissioned ||
+        !this.state.statusLoaded ? null : (
           <AnchorButton
             className={"blade-power-close"}
             intent={"warning"}
@@ -257,7 +263,7 @@ export class BladePowerView extends React.PureComponent<
               this.requestPowerAction(PowerAction.CYCLE);
             }}
           />
-        ) : null}
+        )}
         {this.props.callback === undefined ? null : (
           <AnchorButton
             className={"power-close"}

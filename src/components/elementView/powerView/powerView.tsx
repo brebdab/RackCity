@@ -383,10 +383,28 @@ export class PowerView extends React.PureComponent<
 
   private renderNoPowerPortsCallout() {
     return (
-      <Callout
-        title="This asset does not have any power ports"
-        icon={IconNames.INFO_SIGN}
-      />
+      <div>
+        <Callout
+          title="This asset does not have any power ports"
+          icon={IconNames.INFO_SIGN}
+        />
+        {this.props.callback === undefined ? null : (
+          <AnchorButton
+            className={"power-close"}
+            intent="danger"
+            minimal
+            text="Close"
+            onClick={() => {
+              this.setState({
+                powerConnections: undefined,
+                powerStatus: undefined,
+                statusLoaded: false,
+              });
+              this.props.callback!();
+            }}
+          />
+        )}
+      </div>
     );
   }
 

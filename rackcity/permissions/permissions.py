@@ -150,12 +150,25 @@ def validate_user_permission_on_new_asset_data(
 
 def validate_user_permission_on_existing_asset(user, asset):
     site = None
-    if asset.is_in_offline_storage():
-        site = asset.offline_storage_site
+    if asset.model.is_blade_asset():
+        if asset.chassis:
+            if asset.chassis.is_in_offline_storage():
+                # Blade asset, inside a chassis, in storage
+                site = asset.chassis.offline_storage_site
+            else:
+                # Blade asset, inside a chassis, on a rack
+                site = asset.chassis.rack.datacenter
+        else:
+            if asset.is_in_offline_storage():
+                # Blade asset, outside of chassis, in storage
+                site = asset.offline_storage_site
     elif asset.model.is_rackmount():
-        site = asset.rack.datacenter
-    elif asset.model.is_blade_asset():
-        site = asset.chassis.rack.datacenter
+        if asset.is_in_offline_storage():
+            # Rackmount asset, in storage
+            site = asset.offline_storage_site
+        else:
+            # Rackmount asset, on a rack
+            site = asset.rack.datacenter
     if site and not user_has_asset_permission(user, site):
         raise UserAssetPermissionException(
             "User '"

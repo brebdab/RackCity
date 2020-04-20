@@ -127,9 +127,6 @@ class ElementTabContainer extends React.Component<
           title="Stored Assets"
           panel={
             <ElementTab
-              datacenters={this.state.datacenters}
-              currDatacenter={this.state.currDatacenter}
-              onDatacenterSelect={this.onDatacenterSelect}
               {...this.props}
               element={ElementType.ASSET}
               assetType={AssetType.STORED}
@@ -144,9 +141,6 @@ class ElementTabContainer extends React.Component<
           title="Decommissioned Assets"
           panel={
             <ElementTab
-              datacenters={this.state.datacenters}
-              currDatacenter={this.state.currDatacenter}
-              onDatacenterSelect={this.onDatacenterSelect}
               {...this.props}
               element={ElementType.ASSET}
               assetType={AssetType.DECOMMISSIONED}
