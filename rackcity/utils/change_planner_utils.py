@@ -168,8 +168,9 @@ def get_racked_assets_for_cp(change_plan):
 def get_offline_storage_assets_for_cp(change_plan):
     offline_filter = get_offline_filter()
     stored_assets = Asset.objects.filter(offline_filter)
+    offline_filter = get_offline_filter()
     stored_assets_cp = AssetCP.objects.filter(
-        change_plan=change_plan, offline_storage_site__isnull=False,
+        offline_filter, change_plan=change_plan
     )
 
     for asset_cp in stored_assets_cp:
