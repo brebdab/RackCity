@@ -169,9 +169,6 @@ export class BarcodeScanner extends React.PureComponent<
           this.renderAssetView(this.state.asset)
         ) : (
           <>
-            <div>
-              <h3 className={"mobile-scanner-heading"}>Scan barcodes below</h3>
-            </div>
             <this.WebcamCapture />
             <Toaster
               autoFocus={false}
