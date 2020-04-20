@@ -253,16 +253,16 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       });
   }
   getAssetNumber() {
-    if(!this.props.changePlan) {
+    if (!this.props.changePlan) {
       axios
-          .get(API_ROOT + "api/assets/asset-number", getHeaders(this.props.token))
-          .then((res: any) => {
-            this.setState({
-              values: updateObject(this.state.values, {
-                asset_number: res.data.asset_number,
-              }),
-            });
+        .get(API_ROOT + "api/assets/asset-number", getHeaders(this.props.token))
+        .then((res: any) => {
+          this.setState({
+            values: updateObject(this.state.values, {
+              asset_number: res.data.asset_number,
+            }),
           });
+        });
     }
   }
   componentDidMount() {
@@ -819,14 +819,15 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   handleSiteSelect(site: DatacenterObject) {
     const clearedNetworkConnections = this.getClearedNetworkConnections();
     const clearedPowerConnections = this.getClearedPowerSelections();
+
     const newValues = updateObject(this.state.values, {
       rack: undefined,
-      rack_position: null,
       chassis: undefined,
-      chassis_slot: null,
       power_connections: clearedPowerConnections,
       network_connections: clearedNetworkConnections,
     });
+    delete newValues.rack_position;
+    delete newValues.chassis_slot;
 
     this.setState({
       currSite: site,
@@ -839,11 +840,13 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
   handleRackSelect(rack: RackObject) {
     const clearedPowerConnections = this.getClearedPowerSelections();
-    this.setState({
-      values: updateObject(this.state.values, {
+    const newValues = updateObject(this.state.values, {
         rack: rack,
         power_connections: clearedPowerConnections,
-      }),
+      })
+    delete newValues.rack_position
+    this.setState({
+      values: newValues,
     });
 
     this.getPowerPortAvailability(rack);
@@ -1126,7 +1129,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
                 onItemSelect={(site: DatacenterObject) => {
                   this.state.currSite
                     ? this.showChangeWarningAlert(
-                        "Are you sure you want to change site? This will clear all site related properties.",
+                        "Are you sure you want to change site? This will clear all site related properties. If you move a chassis to storage, its blades will also be moved to storage.",
                         site
                       )
                     : this.handleSiteSelect(site);
@@ -1430,6 +1433,8 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
           onItemSelect={(model: ModelObject) => {
             const values = this.state.values;
             values.model = model;
+            delete values.chassis_slot;
+            delete values.chassis;
 
             this.setState({
               values: this.resetCustomValuesToDefault(values),
@@ -1592,6 +1597,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
           onItemSelect={(asset: AssetObject) => {
             const newValues = this.state.values;
             newValues.chassis = asset;
+            delete newValues.chassis_slot
 
             this.setState({
               values: newValues,

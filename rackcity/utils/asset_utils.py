@@ -245,7 +245,8 @@ def handle_network_connection_delete_on_cp(port_name, asset_id, change_plan):
         destination_port_live = NetworkPort.objects.get(
             id=network_port_live.connected_port_id
         )
-        _ = copy_asset_to_new_asset_cp(destination_port_live, change_plan)
+        destination_asset_live = Asset.objects.get(id=destination_port_live.asset.id)
+        _ = copy_asset_to_new_asset_cp(destination_asset_live, change_plan)
         # Copy over network connections for the new AssetCP
         destination_network_ports_live = NetworkPort.objects.filter(
             asset=destination_port_live
@@ -285,9 +286,7 @@ def save_network_connections(asset_data, asset_id, change_plan=None):
             failure_message += "Port name '" + port_name + "' is not valid. "
             continue
         if not network_connection_data_has_destination(network_connection):
-            # Delete network connection
-            if change_plan:
-                handle_network_connection_delete_on_cp(port_name, asset_id, change_plan)
+
             network_port.delete_network_connection()
         else:
             # Modify network connection

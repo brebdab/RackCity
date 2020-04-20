@@ -1288,7 +1288,7 @@ def get_asset_from_barcode(request):
     barcodes = decode(opencv_img)
     if len(barcodes) < 1:
         return JsonResponse(
-            {"failure_message": "WARNING: No barcode detected"},
+            {"failure_message": "No barcode detected"},
             status=HTTPStatus.BAD_REQUEST,
         )
     barcode_data = ""
