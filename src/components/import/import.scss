@@ -58,16 +58,29 @@
 }
 
 .instructions-card {
-  width: 80%;
+  background-color: #202b33 !important;
+  width: 95%;
   // align-items: center;
   margin: auto;
 }
 
-.instructions-div {
-  // align-items: center !important;
-  // text-align: center;
-}
+
 
 .import-button:focus {
   outline: none;
+}
+.import{
+  width:100%
+}
+.import h3{
+padding:0;
+  margin:0;
+}
+.import-buttons-asset{
+  margin-top:10pt;
+  margin-bottom:10pt;
+  width:100%;
+  text-align:center;
+
+
 }

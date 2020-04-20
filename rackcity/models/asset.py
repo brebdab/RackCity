@@ -55,7 +55,8 @@ def validate_hostname_uniqueness(value, asset_id, change_plan, related_asset):
     assets, assets_cp = get_assets_for_cp(change_plan.id)
     matching_assets = assets_cp.filter(hostname=value, change_plan=change_plan)
     if (
-        len(matching_assets) > 0
+        value
+        and len(matching_assets) > 0
         and matching_assets[0].id != asset_id
         and not matching_assets[0].is_decommissioned
     ):
@@ -70,8 +71,10 @@ def validate_hostname_uniqueness(value, asset_id, change_plan, related_asset):
         related_asset_id = related_asset.id
 
     matching_assets = assets.filter(hostname=value)
-    if len(matching_assets) > 0 and not (
-        related_asset and matching_assets[0].id == related_asset_id
+    if (
+        value
+        and len(matching_assets) > 0
+        and not (related_asset and matching_assets[0].id == related_asset_id)
     ):
         raise ValidationError(
             "'"
@@ -312,11 +315,7 @@ class AssetCP(AbstractAsset):
         blank=True,
     )
     chassis = models.ForeignKey(
-        "self",
-        on_delete=models.CASCADE,
-        verbose_name="blade chassis",
-        null=True,
-        blank=True,
+        "self", on_delete=models.CASCADE, verbose_name="chassis", null=True, blank=True,
     )
     differs_from_live = models.BooleanField(default=False, blank=True)
 

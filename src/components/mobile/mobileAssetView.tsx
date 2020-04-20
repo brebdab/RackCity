@@ -14,7 +14,6 @@ import {
   NetworkConnection,
   MountTypes,
 } from "../../utils/utils";
-import NetworkGraph from "../elementView/detailedView/assetView/graph";
 import { BladePowerView } from "../elementView/powerView/bladePowerView";
 import PowerView from "../elementView/powerView/powerView";
 import { IconNames } from "@blueprintjs/icons";
@@ -38,6 +37,9 @@ export class MobileAssetView extends React.PureComponent<
 
   renderData(fields: Array<any>, data: any) {
     return fields.map((item: string) => {
+      if (item.includes("decommission")) {
+        return null;
+      }
       var dat;
       if (item === "display_color") {
         const isCustomField =
@@ -225,78 +227,64 @@ export class MobileAssetView extends React.PureComponent<
               Object.keys(ModelFieldsTable),
               this.props.asset.model
             )}
+            <p className="custom-message">
+              {this.props.data_override
+                ? "*Custom fields highlighted in blue"
+                : null}
+            </p>
           </table>
         </Callout>
         <Callout title={"Network Connections"} className={"propsview"}>
           {this.props.asset.model &&
           this.props.asset.model.network_ports &&
           this.props.asset.model.network_ports.length !== 0 ? (
-            <>
-              <div className="network-connections">
-                <table className="bp3-html-table bp3-html-table-bordered bp3-html-table-striped">
-                  <tr>
-                    <th>Network Port</th>
-                    <th>Mac Address</th>
-                    <th>Destination Asset</th>
-                    <th>Destination Port</th>
-                  </tr>
-                  <tbody>
-                    {this.props.asset.model.network_ports.map(
-                      (port: string) => {
-                        var connection = this.getNetworkConnectionForPort(port);
-                        return (
-                          <tr>
-                            {" "}
-                            <td style={getChangePlanRowStyle(this.props.asset)}>
-                              {port}
-                            </td>
-                            <td style={getChangePlanRowStyle(this.props.asset)}>
-                              {this.props.asset.mac_addresses
-                                ? this.props.asset.mac_addresses[port]
-                                : null}
-                            </td>{" "}
-                            {connection
-                              ? [
-                                  <td
-                                    style={getChangePlanRowStyle(
-                                      this.props.asset
-                                    )}
-                                    className={
-                                      this.props.asset.decommissioning_user
-                                        ? undefined
-                                        : "asset-link"
-                                    }
-                                  >
-                                    {connection.destination_hostname}
-                                  </td>,
-                                  <td
-                                    style={getChangePlanRowStyle(
-                                      this.props.asset
-                                    )}
-                                  >
-                                    {connection.destination_port}
-                                  </td>,
-                                ]
-                              : [<td></td>, <td></td>]}
-                          </tr>
-                        );
-                      }
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              <div>
-                <NetworkGraph
-                  networkGraph={this.props.asset.network_graph}
-                  onClickNode={() => {}}
-                  isDecommissioned={
-                    this.props.asset.decommissioning_user !== undefined
-                  }
-                />
-              </div>
-            </>
+            <div className="network-connections">
+              <table className="bp3-html-table bp3-html-table-bordered bp3-html-table-striped">
+                <tr>
+                  <th>Network Port</th>
+                  <th>Mac Address</th>
+                  <th>Destination Asset</th>
+                  <th>Destination Port</th>
+                </tr>
+                <tbody>
+                  {this.props.asset.model.network_ports.map((port: string) => {
+                    var connection = this.getNetworkConnectionForPort(port);
+                    return (
+                      <tr>
+                        {" "}
+                        <td style={getChangePlanRowStyle(this.props.asset)}>
+                          {port}
+                        </td>
+                        <td style={getChangePlanRowStyle(this.props.asset)}>
+                          {this.props.asset.mac_addresses
+                            ? this.props.asset.mac_addresses[port]
+                            : null}
+                        </td>{" "}
+                        {connection
+                          ? [
+                              <td
+                                style={getChangePlanRowStyle(this.props.asset)}
+                              >
+                                {connection.destination_hostname}
+                              </td>,
+                              <td
+                                style={getChangePlanRowStyle(this.props.asset)}
+                              >
+                                {connection.destination_port}
+                              </td>,
+                            ]
+                          : [<td></td>, <td></td>]}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           ) : (
-            <Callout title="No network connections" icon={IconNames.INFO_SIGN} />
+            <Callout
+              title="No network ports"
+              icon={IconNames.INFO_SIGN}
+            />
           )}
         </Callout>
         <Callout title={"Power Connections"} className={"propsview"}>

@@ -79,21 +79,19 @@ export class Navigation extends React.Component<
       .catch((err) => {});
   }
   clearInformationAndLogout() {
-    this.props.setChangePlan(null)
+    this.props.setChangePlan(null);
     this.sucessfulChangePlanRequest = false;
-    this.setState({ username: undefined,changePlans:[] });
+    this.setState({ username: undefined, changePlans: [] });
     this.props.logout();
   }
-
-
 
   public render() {
     if (this.props.isAuthenticated && !this.state.username) {
       this.getUsername(this.props.token);
     }
     if (
-        this.props.token && (!this.sucessfulChangePlanRequest ||
-      this.props.updateChangePlansBoolean)
+      this.props.token &&
+      (!this.sucessfulChangePlanRequest || this.props.updateChangePlansBoolean)
     ) {
       getChangePlanList(this.props.token).then((res) => {
         this.sucessfulChangePlanRequest = true;
@@ -110,7 +108,7 @@ export class Navigation extends React.Component<
 
     return (
       <Router>
-        <div>
+        <div className={"navigation"}>
           {this.props.changePlan ? (
             <div
               onClick={() =>
@@ -143,7 +141,9 @@ export class Navigation extends React.Component<
                   minimal
                   icon="barcode"
                   text="Scanner"
-                  onClick={() => {this.props.history.push("/")}}
+                  onClick={() => {
+                    this.props.history.push("/");
+                  }}
                   // onClick={() => this.props.history.push(ROUTES.SCANNER)}
                 />
               ) : null}
@@ -223,9 +223,17 @@ export class Navigation extends React.Component<
                       >
                         <Button
                           minimal
-                          disabled={this.props.location.pathname.includes(
-                            "/dashboard/change-plans/"
-                          )}
+                          disabled={
+                            this.props.location.pathname.includes(
+                              "/dashboard/change-plans/"
+                            ) ||
+                            !(
+                              this.props.permissionState.admin ||
+                              this.props.permissionState.asset_management ||
+                              this.props.permissionState.site_permissions
+                                .length > 0
+                            )
+                          }
                           rightIcon="caret-down"
                           text={
                             this.props.changePlan
@@ -263,6 +271,14 @@ export class Navigation extends React.Component<
                         icon="clipboard"
                         minimal
                         text="Change Plans"
+                        disabled={
+                          !(
+                            this.props.permissionState.admin ||
+                            this.props.permissionState.asset_management ||
+                            this.props.permissionState.site_permissions.length >
+                              0
+                          )
+                        }
                       />
                       <NavbarDivider />
                       {this.state.username ? (

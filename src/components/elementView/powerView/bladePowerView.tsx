@@ -123,11 +123,21 @@ export class BladePowerView extends React.PureComponent<
     }
   }
 
+  private isBladeInStorage() {
+    return (
+      this.props.asset &&
+      (this.props.asset.offline_storage_site ||
+        (this.props.asset.chassis &&
+          this.props.asset.chassis.offline_storage_site))
+    );
+  }
+
   private shouldShowPower() {
     return (
       !this.props.assetIsDecommissioned &&
       !this.props.changePlan &&
-      this.isBladePowerNetworkControlled()
+      this.isBladePowerNetworkControlled() &&
+      !this.isBladeInStorage()
     );
   }
 
@@ -220,7 +230,7 @@ export class BladePowerView extends React.PureComponent<
             </tbody>
           </table>
         </div>
-        {this.props.isMobile ? null : (
+        {this.props.isMobile ? null : this.state.statusLoaded ? (
           <AnchorButton
             className={"blade-power-close"}
             intent={this.state.powerStatus === "OFF" ? "primary" : "danger"}
@@ -234,8 +244,8 @@ export class BladePowerView extends React.PureComponent<
                 : this.requestPowerAction(PowerAction.OFF);
             }}
           />
-        )}
-        {this.props.isMobile ? null : (
+        ) : null}
+        {this.props.isMobile ? null : this.state.statusLoaded ? (
           <AnchorButton
             className={"blade-power-close"}
             intent={"warning"}
@@ -247,7 +257,7 @@ export class BladePowerView extends React.PureComponent<
               this.requestPowerAction(PowerAction.CYCLE);
             }}
           />
-        )}
+        ) : null}
         {this.props.callback === undefined ? null : (
           <AnchorButton
             className={"power-close"}
@@ -276,6 +286,15 @@ export class BladePowerView extends React.PureComponent<
     );
   }
 
+  private renderInStorageCallout() {
+    return (
+      <Callout
+        title="This blade asset is currently in offline storage"
+        icon={IconNames.INFO_SIGN}
+      />
+    );
+  }
+
   render() {
     return (
       <div
@@ -289,9 +308,13 @@ export class BladePowerView extends React.PureComponent<
         this.props.asset.chassis.model &&
         this.props.asset.chassis.model.vendor &&
         this.isBladePowerNetworkControlled()
-          ? this.state.statusLoaded
+          ? this.isBladeInStorage()
+            ? this.renderInStorageCallout()
+            : this.state.statusLoaded
             ? this.renderPowerTable(false)
             : this.renderPowerTable(true)
+          : this.isBladeInStorage()
+          ? this.renderInStorageCallout()
           : this.renderNoPowerCallout()}
         <Toaster
           autoFocus={false}

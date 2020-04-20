@@ -66,8 +66,10 @@ export class BarcodeScanner extends React.PureComponent<
   };
 
   constraints = {
-    height: 720,
-    width: 1280,
+    // height: 720,
+    // width: 1280,
+    height: 1280,
+    width: 500,
     facingMode: { exact: "environment" },
   };
 
@@ -105,11 +107,12 @@ export class BarcodeScanner extends React.PureComponent<
       <div>
         <Webcam
           audio={false}
-          height={this.state.cameraHeight * 0.8}
+          height={this.state.cameraHeight * 0.5}
           screenshotFormat={"image/jpeg"}
           width={this.state.cameraWidth}
           videoConstraints={this.constraints}
           ref={webcamRef}
+          className={"mobile-scanner-heading"}
         />
         <AnchorButton
           className={"scanner-button"}
@@ -120,12 +123,16 @@ export class BarcodeScanner extends React.PureComponent<
             capture();
           }}
         >
-          Capture photo
+          Scan Barcode
         </AnchorButton>
       </div>
     );
   };
 
+  getDataOverride(asset: AssetObject) {
+    const { cpu, display_color, storage, memory_gb } = asset;
+    return { cpu, display_color, storage, memory_gb };
+  }
   private renderAssetView(asset: AssetObject | null) {
     if (asset) {
       return (
@@ -133,10 +140,7 @@ export class BarcodeScanner extends React.PureComponent<
           {...this.props}
           token={this.state.token}
           asset={asset}
-          data_override={() => {
-            const { cpu, display_color, storage, memory_gb } = asset;
-            return { cpu, display_color, storage, memory_gb };
-          }}
+          data_override={this.getDataOverride(asset)}
         />
       );
     } else {
@@ -186,12 +190,13 @@ export class BarcodeScanner extends React.PureComponent<
                   showAsset: true,
                 });
               }}
+              style={{ width: "80%" }}
               cancelButtonText={"Cancel"}
               confirmButtonText={"View Asset"}
             >
               <p>
-                Found barcode with value: {this.state.barcode_data}. Would you
-                like to view this asset?
+                Found barcode with value: {this.state.barcode_data}.<br />
+                Would you like to view this asset?
               </p>
             </Alert>
           </>

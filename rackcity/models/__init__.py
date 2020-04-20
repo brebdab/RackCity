@@ -1,6 +1,6 @@
-from .asset import Asset, AbstractAsset, AssetCP, AssetID
+from .asset import Asset, AbstractAsset, AssetCP, AssetID, validate_location_type
 from .log import Log
-from .it_model import ITModel
+from .it_model import ITModel, validate_ports, validate_height
 from .rack import Rack
 from .site import Site
 from .network_port import NetworkPort, NetworkPortCP

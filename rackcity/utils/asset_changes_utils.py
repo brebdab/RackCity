@@ -20,7 +20,22 @@ def get_changes_on_asset(asset, asset_cp):
         changes.append("network_connections")
     if power_connections_have_changed(asset, asset_cp):
         changes.append("power_connections")
+    if mac_addresses_have_changed(asset, asset_cp):
+        changes.append("mac_addresses")
     return changes
+
+
+def mac_addresses_have_changed(asset, asset_cp):
+    network_ports_cp = NetworkPortCP.objects.filter(asset=asset_cp)
+    network_ports = NetworkPort.objects.filter(asset=asset)
+    for network_port_cp in network_ports_cp:
+        try:
+            network_port = network_ports.get(port_name=network_port_cp.port_name,)
+            if network_port.mac_address != network_port_cp.mac_address:
+                return True
+        except ObjectDoesNotExist:
+            continue
+    return False
 
 
 def network_connections_have_changed(asset, asset_cp):
@@ -33,22 +48,26 @@ def network_connections_have_changed(asset, asset_cp):
         except ObjectDoesNotExist:
             continue
         connected_port_live = network_port.connected_port
-        # Get NetworkPort associated with the NetworkPortCP connected to this port live
-        cp_connected_port_in_cp = network_port_cp.connected_port
-        real_connected_port_in_cp = None
-        if cp_connected_port_in_cp:
-            related_asset = cp_connected_port_in_cp.asset.related_asset
+        connected_port_cp = network_port_cp.connected_port
+        if (not connected_port_live and connected_port_cp) or (
+            connected_port_live and not connected_port_cp
+        ):
+            return True
+
+        live_connected_port_cp = None
+        if connected_port_cp:
+            related_asset = connected_port_cp.asset.related_asset
             if related_asset:
                 try:
-                    real_connected_port_in_cp = NetworkPort.objects.get(
-                        asset=related_asset,
-                        port_name=cp_connected_port_in_cp.port_name,
+                    live_connected_port_cp = NetworkPort.objects.get(
+                        asset=related_asset, port_name=connected_port_cp.port_name,
                     )
                 except ObjectDoesNotExist:
-                    real_connected_port_in_cp = None
+                    live_connected_port_cp = None
         # Check for match
-        if connected_port_live != real_connected_port_in_cp:
+        if connected_port_live != live_connected_port_cp:
             return True
+
     return False
 
 

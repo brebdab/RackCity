@@ -36,20 +36,19 @@
 .inline-buttons {
   display: inline-block;
   white-space: nowrap;
-  overflow: auto;
+  //overflow: auto;
 }
 
 .inline-buttons-user {
   display: inline-block;
   white-space: nowrap;
-  overflow: hidden;
+  //overflow: hidden;
 }
 
 .no-data-text {
   padding: 30px;
   overflow: clip;
 }
-
 
 .element-table {
   position: relative;
@@ -172,11 +171,14 @@
   margin-right: 3pt;
 }
 
-.header-text {
-  white-space: nowrap !important;
+.header-text span {
+  white-space: pre-wrap !important;
   overflow: auto;
-  width: max-content !important;
-  display: inline-block;
+  max-width: 100pt;
+}
+.header-text {
+  display: inline-flex;
+  text-align: center;
 }
 
 .drag-drop-text span ~ span {
@@ -229,12 +231,13 @@
   float: right;
 }
 
-.header-text icon {
-  float: right;
-}
 .icon {
   cursor: pointer !important;
+  text-align: center !important;
+  vertical-align: middle;
+  margin: auto;
 }
+
 .icon:hover {
   background-color: #394b59 !important;
 }
@@ -255,4 +258,34 @@ input {
 }
 .table-control {
   float: right !important;
+}
+
+.export-file-name {
+  display: inline-flex;
+}
+.export-file-name .bp3-input {
+  width: 170pt;
+  padding-right: 25pt !important;
+}
+.export-file-name p {
+  margin-top: 4pt;
+  margin-right: 5pt;
+  margin-left: 5pt;
+  //color:#8A9BA8;
+}
+.export-body {
+  margin-left: 40pt;
+  width: 150pt;
+}
+.export-dialog {
+  width: 250pt;
+}
+.export-dialog h3 {
+  padding-left: 40pt;
+}
+
+.table-wrapper th {
+  text-align: center !important;
+
+  vertical-align: middle !important;
 }

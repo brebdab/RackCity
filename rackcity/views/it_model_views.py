@@ -1,6 +1,7 @@
 from base64 import b64decode
 import csv
 from django.http import HttpResponse, JsonResponse
+from django.core.exceptions import ValidationError
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ObjectDoesNotExist
 from http import HTTPStatus
@@ -12,8 +13,8 @@ from rackcity.api.serializers import (
     BulkITModelSerializer,
     normalize_bulk_model_data,
 )
-from rackcity.models import ITModel, Asset
-from rackcity.models.asset import get_assets_for_cp
+from rackcity.models import ITModel, Asset, validate_ports, validate_height
+from rackcity.models.asset import get_assets_for_cp, AssetCP
 from rackcity.permissions.permissions import PermissionPath
 from rackcity.utils.change_planner_utils import get_change_plan
 from rackcity.utils.errors_utils import (
@@ -174,7 +175,10 @@ def model_modify(request):
 
 
 def validate_model_change(new_model_data, existing_model):
-    if "model_type" in new_model_data and new_model_data["model_type"] != existing_model.model_type:
+    if (
+        "model_type" in new_model_data
+        and new_model_data["model_type"] != existing_model.model_type
+    ):
         raise ModelModificationException("Unable to modify model type. ")
     if (
         "network_ports" not in new_model_data
@@ -260,6 +264,15 @@ def model_delete(request):
             {
                 "failure_message": Status.DELETE_ERROR.value
                 + "Cannot delete this model because assets of it exist"
+            },
+            status=HTTPStatus.BAD_REQUEST,
+        )
+    assets_cp = AssetCP.objects.filter(model=id)
+    if assets_cp:
+        return JsonResponse(
+            {
+                "failure_message": Status.DELETE_ERROR.value
+                + "Cannot delete this model because assets of it exist on change plan(s)"
             },
             status=HTTPStatus.BAD_REQUEST,
         )
@@ -397,6 +410,35 @@ def model_bulk_upload(request):
                 },
                 status=HTTPStatus.BAD_REQUEST,
             )
+        try:
+            validate_ports(
+                model_serializer.validated_data["model_type"],
+                model_serializer.validated_data["num_power_ports"],
+                model_serializer.validated_data["network_ports"],
+            )
+        except ValidationError as error:
+            return JsonResponse(
+                {
+                    "failure_message": Status.IMPORT_ERROR.value
+                    + BulkFailure.MODEL_INVALID.value
+                    + str(error.message)
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
+        try:
+            validate_height(
+                model_serializer.validated_data["model_type"],
+                model_serializer.validated_data["height"],
+            )
+        except ValidationError as error:
+            return JsonResponse(
+                {
+                    "failure_message": Status.IMPORT_ERROR.value
+                    + BulkFailure.MODEL_INVALID.value
+                    + str(error.message)
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
         if (model_data["vendor"], model_data["model_number"]) in models_in_import:
             failure_message = (
                 Status.IMPORT_ERROR.value
@@ -450,7 +492,7 @@ def model_bulk_upload(request):
                 )
                 return JsonResponse(
                     {
-                        "failure_message": Status.MODIFY_ERROR.value
+                        "failure_message": Status.IMPORT_ERROR.value
                         + modification_failure
                     },
                     status=HTTPStatus.BAD_REQUEST,

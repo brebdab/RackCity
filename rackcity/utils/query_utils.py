@@ -433,14 +433,31 @@ def get_page_count_response(
 
 
 def assets_online_queryset():
-    filter = Q(offline_storage_site__isnull=True) & Q(
-        chassis__offline_storage_site__isnull=True
-    )
+    filter = get_online_filter()
     return Asset.objects.filter(filter)
 
 
 def assets_offline_queryset():
-    filter = Q(offline_storage_site__isnull=False) | Q(
-        chassis__offline_storage_site__isnull=False
-    )
+    filter = get_offline_filter()
     return Asset.objects.filter(filter)
+
+
+def get_offline_filter():
+    # An asset is in storage (offline) if:
+    # 1. it has a storage site
+    # OR
+    # 2. it has a chassis, and its chassis has a storage site
+    return Q(offline_storage_site__isnull=False) | (
+        Q(chassis__isnull=False) & Q(chassis__offline_storage_site__isnull=False)
+    )
+
+
+def get_online_filter():
+    # An asset is not in storage (online) if:
+    # 1. it has no storage site
+    # AND
+    # 2a. it has no chassis OR 2b. it has a chassis, but its chassis has no storage site
+    return Q(offline_storage_site__isnull=True) & (
+        (Q(chassis__isnull=False) & Q(chassis__offline_storage_site__isnull=True))
+        | (Q(chassis__isnull=True))
+    )

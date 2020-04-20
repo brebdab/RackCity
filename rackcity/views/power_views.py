@@ -140,7 +140,16 @@ def pdu_power_on(request):
             html.text, power_connections[connection]["port_number"]
         )[0]
         if power_status != "ON":
-            toggle_pdu_power(asset, connection, "on")
+            try:
+                toggle_pdu_power(asset, connection, "on")
+            except ConnectionError:
+                return JsonResponse(
+                    {
+                        "failure_message": Status.CONNECTION.value
+                        + PowerFailure.CONNECTION.value
+                    },
+                    status=HTTPStatus.REQUEST_TIMEOUT,
+                )
     log_power_action(
         request.user, PowerAction.ON, asset,
     )
@@ -194,7 +203,16 @@ def pdu_power_off(request):
             html.text, power_connections[connection]["port_number"]
         )[0]
         if power_status == "ON":
-            toggle_pdu_power(asset, connection, "off")
+            try:
+                toggle_pdu_power(asset, connection, "off")
+            except ConnectionError:
+                return JsonResponse(
+                    {
+                        "failure_message": Status.CONNECTION.value
+                        + PowerFailure.CONNECTION.value
+                    },
+                    status=HTTPStatus.REQUEST_TIMEOUT,
+                )
     log_power_action(
         request.user, PowerAction.OFF, asset,
     )
@@ -224,10 +242,28 @@ def pdu_power_cycle(request):
         )
     power_connections = serialize_power_connections(PowerPort, asset)
     for connection in power_connections:
-        toggle_pdu_power(asset, connection, "off")
+        try:
+            toggle_pdu_power(asset, connection, "off")
+        except ConnectionError:
+            return JsonResponse(
+                {
+                    "failure_message": Status.CONNECTION.value
+                    + PowerFailure.CONNECTION.value
+                },
+                status=HTTPStatus.REQUEST_TIMEOUT,
+            )
     time.sleep(2)
     for connection in power_connections:
-        toggle_pdu_power(asset, connection, "on")
+        try:
+            toggle_pdu_power(asset, connection, "on")
+        except ConnectionError:
+            return JsonResponse(
+                {
+                    "failure_message": Status.CONNECTION.value
+                    + PowerFailure.CONNECTION.value
+                },
+                status=HTTPStatus.REQUEST_TIMEOUT,
+            )
     log_power_action(request.user, PowerAction.CYCLE, asset)
     return JsonResponse(
         {
@@ -360,13 +396,7 @@ def toggle_pdu_power(asset, asset_port_number, goal_state):
             PDU_URL + TOGGLE_PDU, {"pdu": pdu, "port": pdu_port, "v": goal_state}
         )
     except ConnectionError:
-        return JsonResponse(
-            {
-                "failure_message": Status.CONNECTION.value
-                + PowerFailure.CONNECTION.value
-            },
-            status=HTTPStatus.REQUEST_TIMEOUT,
-        )
+        raise ConnectionError("Cannot contact PDU Network Controller")
     return
 
 
@@ -389,13 +419,15 @@ def chassis_power_status(request):
             status=HTTPStatus.UNAUTHORIZED,
         )
     result, exit_status = make_bcman_request(chassis.hostname, str(blade_slot), "")
-    if exit_status != 0:
+    if (exit_status != 0) or (result is None):
         return JsonResponse(
             {
                 "failure_message": Status.CONNECTION.value
                 + "Unable to contact network controlled blade chassis power management.",
-                "errors": "Request to bcman exited with non-zero status: "
-                + str(exit_status),
+                "errors": "Request to bcman exited with status: "
+                + str(exit_status)
+                + ", result: "
+                + str(result),
             },
             status=HTTPStatus.REQUEST_TIMEOUT,
         )
@@ -550,7 +582,7 @@ def make_bcman_request(chassis, blade, power_command):
     )
     exit_status = os.system(cmd)
     result = None
-    if os.path.exists("temp.txt") and (exit_status == 0):
+    if os.path.exists("temp.txt"):
         fp = open("temp.txt", "r")
         result = fp.read().splitlines()[0]
         fp.close()

@@ -114,6 +114,10 @@ export class AssetView extends React.PureComponent<
     toaster: (ref: Toaster) => (this.toaster = ref),
   };
 
+  getDataOverride() {
+    const { cpu, display_color, storage, memory_gb } = this.state.asset;
+    return { cpu, display_color, storage, memory_gb };
+  }
   getData(assetKey: string, changePlan: ChangePlan) {
     this.setState({
       loading: true,
@@ -249,10 +253,14 @@ export class AssetView extends React.PureComponent<
                     this.props.permissionState.admin ||
                     this.props.permissionState.asset_management ||
                     (this.state.asset &&
-                      this.state.asset.rack &&
-                      this.props.permissionState.site_permissions.includes(
-                        +this.state.asset.rack.datacenter.id
-                      ))
+                      ((this.state.asset.datacenter &&
+                        this.props.permissionState.site_permissions.includes(
+                          +this.state.asset.datacenter.id
+                        )) ||
+                        (this.state.asset.offline_storage_site &&
+                          this.props.permissionState.site_permissions.includes(
+                            +this.state.asset.offline_storage_site.id
+                          ))))
                   )
                 }
               />
@@ -278,10 +286,14 @@ export class AssetView extends React.PureComponent<
                     this.props.permissionState.admin ||
                     this.props.permissionState.asset_management ||
                     (this.state.asset &&
-                      this.state.asset.rack &&
-                      this.props.permissionState.site_permissions.includes(
-                        +this.state.asset.rack.datacenter.id
-                      ))
+                      ((this.state.asset.datacenter &&
+                        this.props.permissionState.site_permissions.includes(
+                          +this.state.asset.datacenter.id
+                        )) ||
+                        (this.state.asset.offline_storage_site &&
+                          this.props.permissionState.site_permissions.includes(
+                            +this.state.asset.offline_storage_site.id
+                          ))))
                   )
                 }
               />
@@ -310,10 +322,14 @@ export class AssetView extends React.PureComponent<
                     this.props.permissionState.admin ||
                     this.props.permissionState.asset_management ||
                     (this.state.asset &&
-                      this.state.asset.rack &&
-                      this.props.permissionState.site_permissions.includes(
-                        +this.state.asset.rack.datacenter.id
-                      ))
+                      ((this.state.asset.datacenter &&
+                        this.props.permissionState.site_permissions.includes(
+                          +this.state.asset.datacenter.id
+                        )) ||
+                        (this.state.asset.offline_storage_site &&
+                          this.props.permissionState.site_permissions.includes(
+                            +this.state.asset.offline_storage_site.id
+                          ))))
                   )
                 }
               />
@@ -382,15 +398,7 @@ export class AssetView extends React.PureComponent<
             <PropertiesView
               data={this.state.asset.model}
               title="Model Properties"
-              data_override={() => {
-                const {
-                  cpu,
-                  display_color,
-                  storage,
-                  memory_gb,
-                } = this.state.asset;
-                return { cpu, display_color, storage, memory_gb };
-              }}
+              data_override={this.getDataOverride()}
             />
           </div>
         ) : null}
@@ -422,11 +430,19 @@ export class AssetView extends React.PureComponent<
                   chassis={this.state.asset}
                   redirectToAsset={this.redirectToAsset}
                 />
-              ) : this.state.asset.chassis ? (
-                <ChassisView
-                  chassis={this.state.asset.chassis}
-                  redirectToAsset={this.redirectToAsset}
-                />
+              ) : this.state.asset.model.model_type === MountTypes.BLADE ? (
+                this.state.asset.chassis ? (
+                  <ChassisView
+                    chassis={this.state.asset.chassis}
+                    currBladeSlot={this.state.asset.chassis_slot}
+                    redirectToAsset={this.redirectToAsset}
+                  />
+                ) : (
+                  <Callout
+                    title={"This blade asset is currently in offline storage outside of a blade chassis"}
+                    icon={IconNames.INFO_SIGN}
+                  />
+                )
               ) : null}
             </div>
           </div>
@@ -434,17 +450,16 @@ export class AssetView extends React.PureComponent<
         <div className="propsview">
           <h3>Network Connections</h3>
           <div className="network-connections">
-
-              {this.state.asset.model &&
-              this.state.asset.model.network_ports &&
-              this.state.asset.model.network_ports.length !== 0 ? (
-                              <table className="bp3-html-table bp3-html-table-bordered bp3-html-table-striped">
-              <tr>
-                <th>Network Port</th>
-                <th>Mac Address</th>
-                <th>Destination Asset</th>
-                <th>Destination Port</th>
-              </tr>
+            {this.state.asset.model &&
+            this.state.asset.model.network_ports &&
+            this.state.asset.model.network_ports.length !== 0 ? (
+              <table className="bp3-html-table bp3-html-table-bordered bp3-html-table-striped">
+                <tr>
+                  <th>Network Port</th>
+                  <th>Mac Address</th>
+                  <th>Destination Asset</th>
+                  <th>Destination Port</th>
+                </tr>
                 <tbody>
                   {this.state.asset.model.network_ports.map((port: string) => {
                     var connection = this.getNetworkConnectionForPort(port);
@@ -494,8 +509,8 @@ export class AssetView extends React.PureComponent<
                     );
                   })}
                 </tbody>
-                                            </table>
-              ) : null}
+              </table>
+            ) : null}
 
             <NetworkGraph
               networkGraph={this.state.asset.network_graph}

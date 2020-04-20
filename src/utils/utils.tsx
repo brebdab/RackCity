@@ -113,7 +113,7 @@ export const AssetFieldsTable: any = {
   model__model_number: "Model Number",
   rack: "Rack",
   datacenter: "Datacenter",
-  offline_storage_site: "Offline Storage Site",
+  offline_storage_site: "Storage Site",
   rack_position: "Rack Position",
   chassis: "Chassis",
   chassis_slot: "Chassis Slot",
@@ -244,9 +244,9 @@ export interface DatacenterObject extends ElementObject {
 }
 
 export enum MountTypes {
-  RACKMOUNT = "Asset",
-  BLADE_CHASSIS = "Blade Chassis",
-  BLADE = "Blade Server ",
+  RACKMOUNT = "Rackmount",
+  BLADE_CHASSIS = "Chassis",
+  BLADE = "Blade",
 }
 
 export interface ModelObject extends ElementObject {

@@ -1,6 +1,6 @@
 from base64 import b64decode
 import csv
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.http import JsonResponse
 from http import HTTPStatus
 from io import StringIO, BytesIO
@@ -23,6 +23,7 @@ from rackcity.models import (
     ITModel,
     Rack,
     Site,
+    validate_location_type,
 )
 from rackcity.models.asset import (
     get_assets_for_cp,
@@ -660,7 +661,7 @@ def asset_bulk_upload(request):
                 {"failure_message": failure_message}, status=HTTPStatus.BAD_REQUEST
             )
         if model.is_blade_chassis():
-            if asset_data["asset_number"]:
+            if "asset_number" in asset_data and asset_data["asset_number"]:
                 chassis_asset_numbers.add(asset_data["asset_number"])
         asset_data["model"] = model.id
         del asset_data["vendor"]
@@ -764,6 +765,7 @@ def asset_bulk_upload(request):
         else:
             asset_data["offline_storage_site"] = None
         del asset_data["offline_site"]
+
         asset_serializer = AssetSerializer(data=asset_data)  # non-recursive to validate
         if not asset_serializer.is_valid():
             errors = asset_serializer.errors
@@ -795,6 +797,46 @@ def asset_bulk_upload(request):
                     },
                     status=HTTPStatus.BAD_REQUEST,
                 )
+            else:
+                # HACKY FIX! There were validation errors with asset number and hostname but it's just because this is a modification. Let's try again
+                asset_number = asset_data["asset_number"]
+                del asset_data["asset_number"]
+                hostname = asset_data["hostname"]
+                del asset_data["hostname"]
+                asset_serializer = AssetSerializer(data=asset_data)
+                if not asset_serializer.is_valid():
+                    return JsonResponse(
+                        {
+                            "failure_message": Status.IMPORT_ERROR.value
+                            + BulkFailure.ASSET_INVALID.value
+                            + parse_serializer_errors(asset_serializer.errors),
+                            "errors": str(asset_serializer.errors),
+                        },
+                        status=HTTPStatus.BAD_REQUEST,
+                    )
+                else:
+                    asset_serializer.validated_data["asset_number"] = asset_number
+                    asset_serializer.validated_data["hostname"] = hostname
+                    asset_data["asset_number"] = asset_number
+                    asset_data["hostname"] = hostname
+        try:
+            validate_location_type(
+                asset_serializer.validated_data["model"],
+                asset_serializer.validated_data["rack"],
+                asset_serializer.validated_data["rack_position"],
+                asset_serializer.validated_data["chassis"],
+                asset_serializer.validated_data["chassis_slot"],
+                asset_serializer.validated_data["offline_storage_site"],
+            )
+        except ValidationError as error:
+            return JsonResponse(
+                {
+                    "failure_message": Status.IMPORT_ERROR.value
+                    + BulkFailure.ASSET_INVALID.value
+                    + str(error.message)
+                },
+                status=HTTPStatus.BAD_REQUEST,
+            )
         # Check that all hostnames in file are case insensitive unique
         if "hostname" in asset_data and asset_data["hostname"]:
             asset_data_hostname_lower = asset_data["hostname"].lower()
@@ -940,9 +982,7 @@ def asset_bulk_upload(request):
                     {"asset_serializer": asset_serializer, "asset_data": asset_data}
                 )
     try:
-        no_infile_location_conflicts(
-            asset_datas
-        )
+        no_infile_location_conflicts(asset_datas)
     except LocationException as error:
         failure_message = (
             Status.IMPORT_ERROR.value
@@ -1248,7 +1288,7 @@ def get_asset_from_barcode(request):
     barcodes = decode(opencv_img)
     if len(barcodes) < 1:
         return JsonResponse(
-            {"failure_message": "WARNING: No barcode detected"},
+            {"failure_message": "No barcode detected"},
             status=HTTPStatus.BAD_REQUEST,
         )
     barcode_data = ""
