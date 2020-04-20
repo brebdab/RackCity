@@ -442,6 +442,10 @@ def save_all_field_data_live(data, asset):
                 )
             value = data[field]
         elif field == "asset_number":
+            try: 
+                int(data[field])
+            except ValueError:
+                return data[field] +  " is not a valid hostname. Asset number must be a number between 100000 and 999999"
             assets_with_asset_number = Asset.objects.filter(asset_number=data[field])
             if (
                 data[field]
