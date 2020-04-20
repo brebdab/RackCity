@@ -132,9 +132,9 @@ class ModelForm extends React.Component<ModelFormProps, ModelFormState> {
 
       while (network_ports.length < num_network_ports) {
         if (index < this.state.networkPortsTemp.length) {
-          network_ports.push(this.state.networkPortsTemp[index]);
+          network_ports.push(this.state.networkPortsTemp[index].toString());
         } else {
-          network_ports.push(((index + 1) as unknown) as string);
+          network_ports.push((index + 1).toString());
         }
         index++;
       }
