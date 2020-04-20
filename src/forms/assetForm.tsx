@@ -365,6 +365,22 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
           newValues.memory_gb = null;
         }
       }
+      if (!newValues.rack_position){
+        // @ts-ignore
+        newValues.rack_position = null
+      }
+      if (!newValues.chassis_slot){
+        // @ts-ignore
+        newValues.chassis_slot = null;
+      }
+      if (this.state.values.rack_position===""){
+                // @ts-ignore
+        newValues.rack_position = null;
+      }
+      if (this.state.values.chassis_slot===""){
+                // @ts-ignore
+        newValues.rack_position = null;
+      }
 
       if (this.state.values.hostname === "") {
         newValues.hostname = null;
@@ -822,12 +838,14 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
     const newValues = updateObject(this.state.values, {
       rack: undefined,
-      rack_position:null,
-      chassis_slot:null,
+      rack_position:"",
+      chassis_slot:"",
       chassis: undefined,
       power_connections: clearedPowerConnections,
       network_connections: clearedNetworkConnections,
     });
+
+    // console.log(newValues)
 
     this.setState({
       currSite: site,
@@ -843,7 +861,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     const newValues = updateObject(this.state.values, {
         rack: rack,
         power_connections: clearedPowerConnections,
-        rack_position:null,
+        rack_position:""
       })
     this.setState({
       values: newValues,
