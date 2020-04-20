@@ -168,8 +168,9 @@ def get_racked_assets_for_cp(change_plan):
 def get_offline_storage_assets_for_cp(change_plan):
     offline_filter = get_offline_filter()
     stored_assets = Asset.objects.filter(offline_filter)
+    offline_filter = get_offline_filter()
     stored_assets_cp = AssetCP.objects.filter(
-        change_plan=change_plan, offline_storage_site__isnull=False,
+        offline_filter, change_plan=change_plan
     )
 
     for asset_cp in stored_assets_cp:
@@ -391,7 +392,7 @@ def get_cp_modification_conflicts(asset_cp):
                 "conflict_resolvable": False,
             }
         )
-    if asset_cp.model.is_rackmount() and (asset_cp.rack is None):
+    if asset_cp.model.is_rackmount() and asset_cp.offline_storage_site is None and asset_cp.rack is None:
         conflicts.append(
             {
                 "conflict_message": "The rack"

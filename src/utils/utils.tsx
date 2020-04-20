@@ -116,6 +116,7 @@ export const AssetFieldsTable: any = {
   offline_storage_site: "Storage Site",
   rack_position: "Rack Position",
   chassis: "Chassis",
+  chassis__hostname:"Chassis",
   chassis_slot: "Chassis Slot",
   owner: "Owner",
   comment: "Comment",
