@@ -345,6 +345,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         return;
       }
       let newValues = this.mapAssetObject(this.state.values);
+
       if (this.state.values.model) {
         if (
           this.state.values.display_color ===
@@ -366,6 +367,15 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
         }
       }
 
+      if (this.state.values.rack_position === "") {
+        // @ts-ignore
+        newValues.rack_position = null;
+      }
+
+      if (this.state.values.chassis_slot === "") {
+        // @ts-ignore
+        newValues.chassis_slot = null;
+      }
       if (this.state.values.hostname === "") {
         newValues.hostname = null;
       }
@@ -375,7 +385,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
       if (this.props.initialValues) {
         newValues.id = this.props.initialValues.id;
       }
-
       if (this.state.currSite && this.state.currSite.is_storage) {
         newValues.offline_storage_site = this.state.currSite.id;
       }
@@ -822,12 +831,12 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
 
     const newValues = updateObject(this.state.values, {
       rack: undefined,
+      rack_position: "",
+      chassis_slot: "",
       chassis: undefined,
       power_connections: clearedPowerConnections,
       network_connections: clearedNetworkConnections,
     });
-    delete newValues.rack_position;
-    delete newValues.chassis_slot;
 
     this.setState({
       currSite: site,
@@ -841,10 +850,10 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
   handleRackSelect(rack: RackObject) {
     const clearedPowerConnections = this.getClearedPowerSelections();
     const newValues = updateObject(this.state.values, {
-        rack: rack,
-        power_connections: clearedPowerConnections,
-      })
-    delete newValues.rack_position
+      rack: rack,
+      power_connections: clearedPowerConnections,
+      rack_position: "",
+    });
     this.setState({
       values: newValues,
     });
@@ -1575,7 +1584,6 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
     ];
   }
   private getAvailableChassisAssets() {
-    console.log("Getting chassis assets");
     return this.state.assets.filter(
       (asset: AssetObject) =>
         asset.model && asset.model.model_type === MountTypes.BLADE_CHASSIS
@@ -1597,7 +1605,7 @@ class AssetForm extends React.Component<AssetFormProps, AssetFormState> {
           onItemSelect={(asset: AssetObject) => {
             const newValues = this.state.values;
             newValues.chassis = asset;
-            delete newValues.chassis_slot
+            delete newValues.chassis_slot;
 
             this.setState({
               values: newValues,
